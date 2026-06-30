@@ -72,7 +72,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
-import { authApi, tokenStore, adminApi } from './lib/api.js'
+import { authApi, tokenStore, adminApi, dealsApi } from './lib/api.js'
 
 import './App.css'
 
@@ -4445,6 +4445,10 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
         return <PosDevicesPanel />;
       case 'domain-mappings':
         return <DomainMappingsPanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} />;
+      case 'publishing-election':
+        return <PublishingElectionPanel sessionUser={sessionUser} />;
+      case 'distribution-election':
+        return <DistributionElectionPanel sessionUser={sessionUser} />;
       default:
         return <div>Tab not found</div>;
     }
@@ -4468,16 +4472,18 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
       'pos-inventory': { id: 'pos-inventory', label: 'POS Inventory', icon: Database, category: 'M-Pesa POS App' },
       'pos-settlement': { id: 'pos-settlement', label: 'POS Settlement', icon: Coins, category: 'M-Pesa POS App' },
       'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: Smartphone, category: 'M-Pesa POS App' },
+      'publishing-election': { id: 'publishing-election', label: 'Publishing Election', icon: BookOpen, category: 'Royalty Ledgers' },
+      'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: Globe, category: 'Royalty Ledgers' },
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: Globe, category: 'Admin' },
     };
 
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'catalog', 'splits', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'profile'];
+        visibleKeys = ['home', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'profile'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'splits', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
+        visibleKeys = ['home', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
         break;
       case 'dj':
         visibleKeys = ['home', 'djpool', 'library', 'tips', 'profile'];
@@ -4491,7 +4497,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'splits', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
+        visibleKeys = ['home', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
         break;
     }
 
@@ -4605,6 +4611,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
           setActiveTab={setActiveTab}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
+          <OnboardingStripe sessionUser={sessionUser} setActiveTab={setActiveTab} />
           {renderActivePanel()}
         </div>
         {/* Task 4: thin copyright strip pinned at bottom of admin */}
@@ -4614,6 +4621,402 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
           <span>Operating on the shared Intermaven network.</span>
         </div>
       </main>
+    </div>
+  );
+}
+
+// ================= Onboarding Stripe — top-of-dashboard checklist =================
+// Shows the user what's still missing in their setup. Status derives live from
+// what's actually in Mongo (publishing_deals, distribution_deals, users.apps),
+// so the stripe shrinks naturally as the user completes each step.
+function OnboardingStripe({ sessionUser, setActiveTab }) {
+  const [pubDeals, setPubDeals] = useState([]);
+  const [distDeals, setDistDeals] = useState([]);
+  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('onboarding_dismissed') === 'true');
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (dismissed) return;
+    let cancelled = false;
+    Promise.all([
+      dealsApi.publishing.list().catch(() => []),
+      dealsApi.distribution.list().catch(() => []),
+    ]).then(([p, d]) => {
+      if (cancelled) return;
+      setPubDeals(p || []);
+      setDistDeals(d || []);
+    });
+    return () => { cancelled = true; };
+  }, [dismissed]);
+
+  if (dismissed) return null;
+  if (sessionUser?.role === 'consumer' || sessionUser?.role === 'admin') return null;
+
+  const profileDone = !!(sessionUser?.name && sessionUser?.brand_name && sessionUser?.country);
+  const publishingDone = pubDeals.length > 0;
+  const distributionDone = distDeals.length > 0;
+  const appActivated = (sessionUser?.apps || []).length > 0;
+  const catalogStarted = false; // wired in Phase 4
+
+  const steps = [
+    { id: 'profile', label: 'Complete your profile', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+    { id: 'publishing', label: 'Elect your publishing tier', done: publishingDone, tab: 'publishing-election', cta: 'Choose Tier' },
+    { id: 'distribution', label: 'Elect your distribution path', done: distributionDone, tab: 'distribution-election', cta: 'Choose Path' },
+    { id: 'apps', label: 'Activate a Dashboard App', done: appActivated, tab: 'home', cta: 'Browse Apps', external: '/apps' },
+    { id: 'catalog', label: 'Port your first track', done: catalogStarted, tab: 'catalog', cta: 'Start Catalog' },
+  ];
+
+  const completed = steps.filter(s => s.done).length;
+  const percent = Math.round((completed / steps.length) * 100);
+  const allDone = completed === steps.length;
+  if (allDone) return null;
+
+  const nextStep = steps.find(s => !s.done);
+
+  const dismiss = () => {
+    sessionStorage.setItem('onboarding_dismissed', 'true');
+    setDismissed(true);
+  };
+
+  return (
+    <div className="onboarding-stripe" data-testid="onboarding-stripe">
+      <div className="onboarding-stripe-header">
+        <div>
+          <div className="onboarding-stripe-eyebrow">
+            <span className="onboarding-stripe-pulse" />
+            <span>Welcome aboard · {completed}/{steps.length} steps complete · {percent}%</span>
+          </div>
+          <h3 className="onboarding-stripe-title">
+            {nextStep ? `Next: ${nextStep.label.toLowerCase()}` : 'You\u2019re all set'}
+          </h3>
+        </div>
+        <div className="onboarding-stripe-controls">
+          <button
+            type="button"
+            className="onboarding-collapse-btn"
+            onClick={() => setCollapsed(c => !c)}
+            data-testid="onboarding-collapse"
+            aria-label={collapsed ? 'Expand' : 'Collapse'}
+          >
+            <ChevronDown size={14} style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+          </button>
+          <button
+            type="button"
+            className="onboarding-dismiss-btn"
+            onClick={dismiss}
+            title="Dismiss until next session"
+            data-testid="onboarding-dismiss"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      </div>
+
+      <div className="onboarding-progress-track">
+        <div className="onboarding-progress-bar" style={{ width: `${percent}%` }} />
+      </div>
+
+      {!collapsed && (
+        <ul className="onboarding-steps">
+          {steps.map(s => (
+            <li
+              key={s.id}
+              className={`onboarding-step ${s.done ? 'done' : ''}`}
+              data-testid={`onboarding-step-${s.id}`}
+            >
+              <div className="onboarding-step-status" aria-hidden="true">
+                {s.done ? <CheckCircle2 size={16} /> : <span className="onboarding-step-bullet" />}
+              </div>
+              <div className="onboarding-step-body">
+                <span className="onboarding-step-label">{s.label}</span>
+              </div>
+              {!s.done && (
+                <button
+                  type="button"
+                  className="onboarding-step-cta"
+                  onClick={() => {
+                    if (s.external) window.location.hash = s.external;
+                    else if (setActiveTab) setActiveTab(s.tab);
+                  }}
+                  data-testid={`onboarding-cta-${s.id}`}
+                >
+                  {s.cta} <ArrowRight size={12} />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ================= Publishing Election Panel (Phase 3) =================
+// Lets a creator pick one of the 3 tiers from §9.3.1 and persist to publishing_deals.
+function PublishingElectionPanel({ sessionUser }) {
+  const [existing, setExisting] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [tier, setTier] = useState('standard_admin');
+  const [partner, setPartner] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    dealsApi.publishing.list().then(setExisting).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const tiers = [
+    {
+      key: 'standard_admin',
+      title: 'Standard Administration',
+      headline: '50/50 publisher\u2019s share',
+      desc: 'We register your works with PROs, collect publishing royalties, and pay you out. No pitching service \u2014 admin only.',
+      badge: 'Self-publisher friendly',
+    },
+    {
+      key: 'full_service_copub',
+      title: 'Full-Service Co-Publishing',
+      headline: 'Co-publishing with active pitching',
+      desc: 'A named publishing partner pitches your catalogue for sync + placement. Optional writer/production credit captured per work.',
+      badge: 'Most popular for sync-led artists',
+    },
+    {
+      key: 'catalogue_acquisition',
+      title: 'Catalogue Acquisition / Advance',
+      headline: 'Recoupable advance against your earnings',
+      desc: 'Take an upfront advance or sell your catalogue outright. Standard recoupment applies until cleared.',
+      badge: 'Capital-forward path',
+      disabled: true,
+    },
+  ];
+
+  const submit = async () => {
+    setError('');
+    setSuccess('');
+    setSubmitting(true);
+    try {
+      const payload = {
+        creator_id: sessionUser?.id || 'self',
+        tier,
+        ...(tier === 'full_service_copub' && partner ? { copublisher_partner_id: partner } : {}),
+      };
+      const deal = await dealsApi.publishing.create(payload);
+      setExisting(x => [...x, deal]);
+      setSuccess(`Publishing tier locked in: ${tiers.find(t => t.key === tier).title}`);
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not save election');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="dashboard-card" data-testid="publishing-election-panel">
+      <PanelHeader
+        title="Publishing Election"
+        desc="Choose how TuneMavens administers your publishing rights. Per DOCUMENTATION.md §9.3.1 \u2014 three configurations, signed contract follows."
+      />
+
+      {existing.length > 0 && (
+        <div style={{ padding: '12px 14px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '3px', marginBottom: '18px' }}>
+          <div style={{ color: '#10b981', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Current Election</div>
+          <div style={{ color: '#f1f5f9', fontSize: '13px' }}>{existing[0].tier} · contract id: <code style={{ color: '#94a3b8' }}>{existing[0].contract_id || 'pending e-sign'}</code></div>
+        </div>
+      )}
+
+      {loading ? (
+        <p style={{ color: '#94a3b8' }}>Loading current election…</p>
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', marginBottom: '18px' }}>
+            {tiers.map(t => (
+              <button
+                key={t.key}
+                type="button"
+                disabled={t.disabled}
+                onClick={() => setTier(t.key)}
+                className="election-card"
+                data-testid={`publishing-tier-${t.key}`}
+                style={{
+                  textAlign: 'left',
+                  padding: '18px',
+                  border: tier === t.key ? '2px solid var(--cyan)' : '1px solid rgba(255,255,255,0.08)',
+                  background: tier === t.key ? 'rgba(34, 211, 238, 0.06)' : 'rgba(255,255,255,0.02)',
+                  borderRadius: '3px',
+                  cursor: t.disabled ? 'not-allowed' : 'pointer',
+                  opacity: t.disabled ? 0.45 : 1,
+                  color: 'inherit', fontFamily: 'inherit',
+                }}
+              >
+                <div style={{ fontSize: '9px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px' }}>{t.badge}</div>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', marginBottom: '4px' }}>{t.title}</div>
+                <div style={{ fontSize: '12px', color: 'var(--cyan)', fontWeight: 700, marginBottom: '10px' }}>{t.headline}</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.55' }}>{t.desc}</div>
+                {t.disabled && <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748b' }}>Coming soon — Phase 8</div>}
+              </button>
+            ))}
+          </div>
+
+          {tier === 'full_service_copub' && (
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Co-publishing partner (optional)</label>
+              <input
+                type="text"
+                value={partner}
+                onChange={(e) => setPartner(e.target.value)}
+                placeholder="Sony ATV, Warner Chappell, etc."
+                className="form-control"
+                style={{ width: '100%', maxWidth: '360px', background: 'rgba(11, 15, 30, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9', padding: '10px', fontSize: '13px' }}
+                data-testid="publishing-partner-input"
+              />
+            </div>
+          )}
+
+          {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="publishing-error">{error}</p>}
+          {success && <p style={{ color: '#10b981', fontSize: '12px', marginBottom: '10px' }} data-testid="publishing-success">{success}</p>}
+
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={submitting}
+            onClick={submit}
+            style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 800 }}
+            data-testid="publishing-submit"
+          >
+            {submitting ? 'Saving…' : 'Lock in publishing election'}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ================= Distribution Election Panel (Phase 3) =================
+function DistributionElectionPanel({ sessionUser }) {
+  const [existing, setExisting] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [path, setPath] = useState('tunemavens_native');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    dealsApi.distribution.list().then(setExisting).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const paths = [
+    {
+      key: 'standard_fee_matched',
+      fee_structure: 'flat_fee',
+      title: 'Standard (Fee-Matched)',
+      headline: 'Flat fee · you keep 100% of DSP royalties',
+      desc: 'Mirrors DistroKid-style pricing. Pay an annual or per-release flat fee; we ship your music to 150+ DSPs and you keep every cent of royalties.',
+      badge: 'Familiar pricing',
+    },
+    {
+      key: 'tunemavens_native',
+      fee_structure: 'rev_share',
+      title: 'TuneMavens Native',
+      headline: '45 / 55 revenue share',
+      desc: 'Distribute through tunemavens.com\u2019s native network. We take 45%, you keep 55% \u2014 admin-editable per release.',
+      badge: 'Best for our network',
+    },
+    {
+      key: 'label_negotiated',
+      fee_structure: 'rev_share',
+      title: 'Label / Catalogue Negotiation',
+      headline: 'AI-wizard negotiated split',
+      desc: 'For labels with existing catalogue. AI opens at 50/50 and iterates counter-offers until both parties lock terms.',
+      badge: 'For labels & catalogue owners',
+      disabled: sessionUser?.role !== 'label',
+    },
+  ];
+
+  const submit = async () => {
+    setError('');
+    setSuccess('');
+    setSubmitting(true);
+    try {
+      const p = paths.find(x => x.key === path);
+      const payload = {
+        creator_id: sessionUser?.id || 'self',
+        path,
+        fee_structure: p.fee_structure,
+        ...(path === 'tunemavens_native' ? { tunemavens_split_pct: 45, creator_split_pct: 55 } : {}),
+      };
+      const deal = await dealsApi.distribution.create(payload);
+      setExisting(x => [...x, deal]);
+      setSuccess(`Distribution path locked in: ${p.title}`);
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not save election');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="dashboard-card" data-testid="distribution-election-panel">
+      <PanelHeader
+        title="Distribution Election"
+        desc="Choose how your music reaches DSPs and how revenue splits. Per DOCUMENTATION.md §9.3.2 \u2014 three paths."
+      />
+
+      {existing.length > 0 && (
+        <div style={{ padding: '12px 14px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '3px', marginBottom: '18px' }}>
+          <div style={{ color: '#10b981', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Current Path</div>
+          <div style={{ color: '#f1f5f9', fontSize: '13px' }}>{existing[0].path} · {existing[0].fee_structure}</div>
+        </div>
+      )}
+
+      {loading ? (
+        <p style={{ color: '#94a3b8' }}>Loading current path…</p>
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', marginBottom: '18px' }}>
+            {paths.map(p => (
+              <button
+                key={p.key}
+                type="button"
+                disabled={p.disabled}
+                onClick={() => setPath(p.key)}
+                className="election-card"
+                data-testid={`distribution-path-${p.key}`}
+                style={{
+                  textAlign: 'left',
+                  padding: '18px',
+                  border: path === p.key ? '2px solid var(--purple)' : '1px solid rgba(255,255,255,0.08)',
+                  background: path === p.key ? 'rgba(139, 92, 246, 0.06)' : 'rgba(255,255,255,0.02)',
+                  borderRadius: '3px',
+                  cursor: p.disabled ? 'not-allowed' : 'pointer',
+                  opacity: p.disabled ? 0.45 : 1,
+                  color: 'inherit', fontFamily: 'inherit',
+                }}
+              >
+                <div style={{ fontSize: '9px', color: 'var(--purple)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px' }}>{p.badge}</div>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', marginBottom: '4px' }}>{p.title}</div>
+                <div style={{ fontSize: '12px', color: 'var(--purple)', fontWeight: 700, marginBottom: '10px' }}>{p.headline}</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.55' }}>{p.desc}</div>
+                {p.disabled && <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748b' }}>Available for label-role accounts</div>}
+              </button>
+            ))}
+          </div>
+
+          {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="distribution-error">{error}</p>}
+          {success && <p style={{ color: '#10b981', fontSize: '12px', marginBottom: '10px' }} data-testid="distribution-success">{success}</p>}
+
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={submitting}
+            onClick={submit}
+            style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 800 }}
+            data-testid="distribution-submit"
+          >
+            {submitting ? 'Saving…' : 'Lock in distribution path'}
+          </button>
+        </>
+      )}
     </div>
   );
 }
