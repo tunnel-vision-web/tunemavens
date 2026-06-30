@@ -74,6 +74,7 @@ import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
 import { authApi, tokenStore, adminApi, dealsApi, usersApi } from './lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
+import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
 
 import './App.css'
 
@@ -5084,7 +5085,8 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
   const [activated, setActivated] = useState(sessionUser?.apps || []);
   const [busySlug, setBusySlug] = useState(null);
   const [error, setError] = useState('');
-  const [activeMarketTab, setActiveMarketTab] = useState('tunemavens'); // 'tunemavens' | 'intermaven'
+  // 'tunemavens' | 'native' | 'intermaven'
+  const [activeMarketTab, setActiveMarketTab] = useState('tunemavens');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -5197,7 +5199,9 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
               <button
                 type="button"
                 onClick={() => {
-                  if (a.landingPath) {
+                  if (a.launchUrl) {
+                    window.open(a.launchUrl, '_blank', 'noopener,noreferrer');
+                  } else if (a.landingPath) {
                     navigate(a.landingPath);
                   } else if (setActiveTab) {
                     setActiveTab(a.tab);
@@ -5206,7 +5210,7 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
                 data-testid={`app-marketplace-open-${a.slug}`}
                 style={{ flex: 1, padding: '8px 12px', background: a.accent, color: '#0b0f1e', fontWeight: 800, fontSize: '12px', border: 'none', borderRadius: '3px', cursor: 'pointer', letterSpacing: '0.3px' }}
               >
-                {a.landingPath ? 'View App' : 'Open'}
+                {a.launchUrl ? 'Launch \u2197' : a.landingPath ? 'View App' : 'Open'}
               </button>
               <button
                 type="button"
@@ -5250,7 +5254,7 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
     <div className="dashboard-card" data-testid="app-marketplace-panel">
       <PanelHeader
         title="App Marketplace"
-        desc={"Activate the dashboard apps that match your workflow. Each one unlocks a panel in this console \u2014 or jump to the Intermaven Network tab to add a flagship native experience."}
+        desc={"Activate dashboard apps, flagship native apps, and Intermaven Platform tools \u2014 all from one console."}
       />
 
       {/* Top-level tab switcher */}
@@ -5266,7 +5270,8 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
       >
         {[
           { key: 'tunemavens', label: 'TuneMavens Apps', testid: 'app-marketplace-tab-tunemavens' },
-          { key: 'intermaven', label: 'Intermaven Network', testid: 'app-marketplace-tab-intermaven' },
+          { key: 'native', label: 'Native Apps', testid: 'app-marketplace-tab-native' },
+          { key: 'intermaven', label: 'Intermaven Platform', testid: 'app-marketplace-tab-intermaven' },
         ].map((t) => {
           const isActive = activeMarketTab === t.key;
           return (
@@ -5324,16 +5329,30 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
         </>
       )}
 
-      {activeMarketTab === 'intermaven' && (
-        <div data-testid="app-marketplace-intermaven">
+      {activeMarketTab === 'native' && (
+        <div data-testid="app-marketplace-native">
           <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '6px' }}>
-            Intermaven Network
+            Native Apps
           </div>
           <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: 0, marginBottom: '16px', lineHeight: '1.55' }}>
-            The same flagship native apps featured on the Intermaven network landing page. Activate to add a quick-launch entry to your dashboard, then tap <em>View App</em> to open the full app surface.
+            The 3 flagship mobile experiences shipped through the Intermaven Network. Activate to add a quick-launch entry to your dashboard, then tap <em>View App</em> to open the full app surface.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
             {intermavenCards.map(renderCard)}
+          </div>
+        </div>
+      )}
+
+      {activeMarketTab === 'intermaven' && (
+        <div data-testid="app-marketplace-intermaven">
+          <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '6px' }}>
+            Intermaven Platform
+          </div>
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: 0, marginBottom: '16px', lineHeight: '1.55' }}>
+            Operational and AI tools hosted on intermaven.io. Activation pins each tool to your dashboard, and <em>Launch &#8599;</em> opens it on the Intermaven platform with your shared session.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+            {INTERMAVEN_PLATFORM_APPS.map(renderCard)}
           </div>
         </div>
       )}

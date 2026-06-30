@@ -36,11 +36,22 @@ ALLOWED_APP_SLUGS = {
     "mpesa-pos-settlement",
     "mpesa-pos-devices",
     # Intermaven Network — the 3 flagship native apps. Slugs mirror
-    # src/lib/nativeApps.js so the dashboard's "Intermaven Network" tab in
-    # the App Marketplace persists activations cleanly.
+    # src/lib/nativeApps.js so the dashboard's "Native Apps" tab in the
+    # App Marketplace persists activations cleanly.
     "intermaven-tunemavens",
     "intermaven-creator-companion",
     "intermaven-mpesa-pos",
+    # Intermaven Platform — tools from intermaven.io. Slugs mirror
+    # src/lib/intermavenPlatformApps.js. "Open" routes to the canonical
+    # app on intermaven.io; the shared Intermaven JWT cookie carries the
+    # session across the subdomain boundary.
+    "intermaven-social-ai",
+    "intermaven-brandkit-ai",
+    "intermaven-smart-crm",
+    "intermaven-pitch-deck-ai",
+    "intermaven-pos-system",
+    "intermaven-invoicing-payments",
+    "intermaven-contracts",
 }
 
 
