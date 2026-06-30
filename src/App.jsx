@@ -4639,12 +4639,12 @@ function OnboardingStripe({ sessionUser, setActiveTab }) {
     if (dismissed) return;
     let cancelled = false;
     Promise.all([
-      dealsApi.publishing.list().catch(() => []),
-      dealsApi.distribution.list().catch(() => []),
+      dealsApi.publishing.list({ active_only: true }).catch(() => []),
+      dealsApi.distribution.list({ active_only: true }).catch(() => []),
     ]).then(([p, d]) => {
       if (cancelled) return;
-      setPubDeals(p || []);
-      setDistDeals(d || []);
+      setPubDeals(Array.isArray(p) ? p : []);
+      setDistDeals(Array.isArray(d) ? d : []);
     });
     return () => { cancelled = true; };
   }, [dismissed]);
@@ -4761,10 +4761,23 @@ function PublishingElectionPanel({ sessionUser }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+
+  const loadDeals = () => {
+    setLoading(true);
+    dealsApi.publishing
+      .list()
+      .then((list) => setExisting(Array.isArray(list) ? list : []))
+      .catch(() => setExisting([]))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    dealsApi.publishing.list().then(setExisting).catch(() => {}).finally(() => setLoading(false));
+    loadDeals();
   }, []);
+
+  const current = existing.find((d) => d.status === 'active') || null;
+  const history = existing.filter((d) => d.status !== 'active');
 
   const tiers = [
     {
@@ -4802,8 +4815,11 @@ function PublishingElectionPanel({ sessionUser }) {
         ...(tier === 'full_service_copub' && partner ? { copublisher_partner_id: partner } : {}),
       };
       const deal = await dealsApi.publishing.create(payload);
-      setExisting(x => [...x, deal]);
       setSuccess(`Publishing tier locked in: ${tiers.find(t => t.key === tier).title}`);
+      // Reload so the superseded → active transition is reflected from the
+      // backend (single source of truth for audit history).
+      loadDeals();
+      return deal;
     } catch (e) {
       setError(e.data?.detail || e.message || 'Could not save election');
     } finally {
@@ -4818,10 +4834,35 @@ function PublishingElectionPanel({ sessionUser }) {
         desc="Choose how TuneMavens administers your publishing rights. Per DOCUMENTATION.md §9.3.1 \u2014 three configurations, signed contract follows."
       />
 
-      {existing.length > 0 && (
-        <div style={{ padding: '12px 14px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '3px', marginBottom: '18px' }}>
+      {current && (
+        <div style={{ padding: '12px 14px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '3px', marginBottom: '18px' }} data-testid="publishing-current-election">
           <div style={{ color: '#10b981', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Current Election</div>
-          <div style={{ color: '#f1f5f9', fontSize: '13px' }}>{existing[0].tier} · contract id: <code style={{ color: '#94a3b8' }}>{existing[0].contract_id || 'pending e-sign'}</code></div>
+          <div style={{ color: '#f1f5f9', fontSize: '13px' }}>
+            <strong>{current.tier === 'standard_admin' ? 'Standard Administration' : 'Full-Service Co-Publishing'}</strong>
+            {current.copublisher_partner_id ? ` · partner: ${current.copublisher_partner_id}` : ''}
+            {' · '}contract id: <code style={{ color: '#94a3b8' }}>{current.contract_id || 'pending e-sign'}</code>
+          </div>
+          {history.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowHistory(h => !h)}
+              data-testid="publishing-history-toggle"
+              style={{ marginTop: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', padding: '4px 10px', borderRadius: '3px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.5px', textTransform: 'uppercase', fontWeight: 700 }}
+            >
+              {showHistory ? 'Hide' : 'Show'} history ({history.length})
+            </button>
+          )}
+          {showHistory && history.length > 0 && (
+            <ul data-testid="publishing-history-list" style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {history.map((h) => (
+                <li key={h.id} style={{ padding: '8px 0', fontSize: '12px', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '10px', fontWeight: 800 }}>{h.status}</span>
+                  {' · '}{h.tier === 'standard_admin' ? 'Standard Administration' : 'Full-Service Co-Publishing'}
+                  {h.created_at ? ` · ${new Date(h.created_at).toLocaleDateString()}` : ''}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
@@ -4900,10 +4941,23 @@ function DistributionElectionPanel({ sessionUser }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+
+  const loadDeals = () => {
+    setLoading(true);
+    dealsApi.distribution
+      .list()
+      .then((list) => setExisting(Array.isArray(list) ? list : []))
+      .catch(() => setExisting([]))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    dealsApi.distribution.list().then(setExisting).catch(() => {}).finally(() => setLoading(false));
+    loadDeals();
   }, []);
+
+  const current = existing.find((d) => d.status === 'active') || null;
+  const history = existing.filter((d) => d.status !== 'active');
 
   const paths = [
     {
@@ -4946,8 +5000,9 @@ function DistributionElectionPanel({ sessionUser }) {
         ...(path === 'tunemavens_native' ? { tunemavens_split_pct: 45, creator_split_pct: 55 } : {}),
       };
       const deal = await dealsApi.distribution.create(payload);
-      setExisting(x => [...x, deal]);
       setSuccess(`Distribution path locked in: ${p.title}`);
+      loadDeals();
+      return deal;
     } catch (e) {
       setError(e.data?.detail || e.message || 'Could not save election');
     } finally {
@@ -4962,10 +5017,35 @@ function DistributionElectionPanel({ sessionUser }) {
         desc="Choose how your music reaches DSPs and how revenue splits. Per DOCUMENTATION.md §9.3.2 \u2014 three paths."
       />
 
-      {existing.length > 0 && (
-        <div style={{ padding: '12px 14px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '3px', marginBottom: '18px' }}>
+      {current && (
+        <div style={{ padding: '12px 14px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '3px', marginBottom: '18px' }} data-testid="distribution-current-election">
           <div style={{ color: '#10b981', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Current Path</div>
-          <div style={{ color: '#f1f5f9', fontSize: '13px' }}>{existing[0].path} · {existing[0].fee_structure}</div>
+          <div style={{ color: '#f1f5f9', fontSize: '13px' }}>
+            <strong>{current.path === 'standard_fee_matched' ? 'Standard (Fee-Matched)' : current.path === 'tunemavens_native' ? 'TuneMavens Native' : 'Label / Catalogue Negotiation'}</strong>
+            {' · '}{current.fee_structure === 'flat_fee' ? 'Flat fee' : 'Revenue share'}
+            {current.path === 'tunemavens_native' && current.tunemavens_split_pct != null ? ` · ${current.tunemavens_split_pct}/${current.creator_split_pct}` : ''}
+          </div>
+          {history.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowHistory(h => !h)}
+              data-testid="distribution-history-toggle"
+              style={{ marginTop: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', padding: '4px 10px', borderRadius: '3px', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.5px', textTransform: 'uppercase', fontWeight: 700 }}
+            >
+              {showHistory ? 'Hide' : 'Show'} history ({history.length})
+            </button>
+          )}
+          {showHistory && history.length > 0 && (
+            <ul data-testid="distribution-history-list" style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {history.map((h) => (
+                <li key={h.id} style={{ padding: '8px 0', fontSize: '12px', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '10px', fontWeight: 800 }}>{h.status}</span>
+                  {' · '}{h.path}
+                  {h.created_at ? ` · ${new Date(h.created_at).toLocaleDateString()}` : ''}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

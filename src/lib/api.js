@@ -10,9 +10,22 @@
  */
 const BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
+// Token persistence helpers (for the Bearer-token fallback path when the
+// cross-subdomain cookie isn't reachable, e.g. local dev across ports).
+const TOKEN_KEY = 'tunemavens_token';
+export const tokenStore = {
+  get: () => sessionStorage.getItem(TOKEN_KEY),
+  set: (t) => sessionStorage.setItem(TOKEN_KEY, t),
+  clear: () => sessionStorage.removeItem(TOKEN_KEY),
+};
+
 async function request(path, { method = 'GET', body, token } = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  if (token) headers.Authorization = `Bearer ${token}`;
+  // Auto-attach the Bearer token from sessionStorage if caller didn't pass one
+  // explicitly. Keeps the cookie path working (production) while letting
+  // local dev across ports authenticate via the stored token.
+  const effectiveToken = token || tokenStore.get();
+  if (effectiveToken) headers.Authorization = `Bearer ${effectiveToken}`;
 
   const res = await fetch(`${BASE}${path}`, {
     method,
@@ -47,14 +60,20 @@ export const dashboardApi = {
     request('/api/dashboard/layout', { method: 'PUT', body: { dashboard_layout: layout } }),
 };
 
-// --- Deals (§9.7 stubs — full logic in Phase 7) ---
+// --- Deals (§9.7) ---
 export const dealsApi = {
   publishing: {
-    list: () => request('/api/deals/publishing'),
+    list: (params = {}) => {
+      const q = params.active_only ? '?active_only=true' : '';
+      return request(`/api/deals/publishing${q}`);
+    },
     create: (deal) => request('/api/deals/publishing', { method: 'POST', body: deal }),
   },
   distribution: {
-    list: () => request('/api/deals/distribution'),
+    list: (params = {}) => {
+      const q = params.active_only ? '?active_only=true' : '';
+      return request(`/api/deals/distribution${q}`);
+    },
     create: (deal) => request('/api/deals/distribution', { method: 'POST', body: deal }),
   },
   catalogueAcquisitions: {
@@ -76,13 +95,4 @@ export const adminApi = {
     remove: (id) =>
       request(`/api/admin/domain-mappings/${id}`, { method: 'DELETE' }),
   },
-};
-
-// Token persistence helpers (for the Bearer-token fallback path when the
-// cross-subdomain cookie isn't reachable, e.g. local dev across ports).
-const TOKEN_KEY = 'tunemavens_token';
-export const tokenStore = {
-  get: () => sessionStorage.getItem(TOKEN_KEY),
-  set: (t) => sessionStorage.setItem(TOKEN_KEY, t),
-  clear: () => sessionStorage.removeItem(TOKEN_KEY),
 };

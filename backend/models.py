@@ -136,7 +136,8 @@ class PublishingDeal(BaseDocument):
     publisher_share_split: PublisherShareSplit = Field(default_factory=PublisherShareSplit)
     writer_credit_share: WriterCreditShare = Field(default_factory=WriterCreditShare)
     recoupment_balance: float = 0.0
-    status: str = "active"  # 'active' | 'terminated'
+    status: str = "active"  # 'active' | 'superseded' | 'terminated'
+    superseded_at: Optional[datetime] = None
     contract_id: Optional[PyObjectId] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -151,6 +152,8 @@ class DistributionDeal(BaseDocument):
     tunemavens_split_pct: Optional[float] = None  # 45 for native default
     creator_split_pct: Optional[float] = None  # 55 for native default
     negotiation_history: List[dict] = Field(default_factory=list)
+    status: str = "active"  # 'active' | 'superseded' | 'terminated'
+    superseded_at: Optional[datetime] = None
     contract_id: Optional[PyObjectId] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
