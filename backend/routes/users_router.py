@@ -35,6 +35,12 @@ ALLOWED_APP_SLUGS = {
     "mpesa-pos-inventory",
     "mpesa-pos-settlement",
     "mpesa-pos-devices",
+    # Intermaven Network — the 3 flagship native apps. Slugs mirror
+    # src/lib/nativeApps.js so the dashboard's "Intermaven Network" tab in
+    # the App Marketplace persists activations cleanly.
+    "intermaven-tunemavens",
+    "intermaven-creator-companion",
+    "intermaven-mpesa-pos",
 }
 
 

@@ -73,6 +73,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
 import { authApi, tokenStore, adminApi, dealsApi, usersApi } from './lib/api.js'
+import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 
 import './App.css'
 
@@ -2216,42 +2217,10 @@ function NativeAppLandingView() {
 
 // ================= Native Apps View (3 flagship mobile apps) =================
 // Per DEVELOPMENT_PLAN.md §5.1 — TuneMavens Consumer App / Creator Companion App / M-Pesa POS App.
+// App definitions live in src/lib/nativeApps.js so the dashboard App Marketplace
+// can render the same exact entries inside its "Intermaven Network" tab.
 function NativeAppsView() {
-  const apps = [
-    {
-      id: 'consumer',
-      name: 'TuneMavens',
-      tagline: 'Stream. Tip. Carry the catalogue.',
-      icon: Headphones,
-      accent: 'var(--cyan)',
-      accentGlow: 'rgba(34, 211, 238, 0.18)',
-      desc: 'The consumer-facing wrapper: offline-cached HQ audio, region-aware playlists, and one-tap tipping that lands directly in the creator\u2019s payout split.',
-      features: ['Offline-cached HQ audio', 'One-tap tipping to creators', 'Region-aware editorial playlists', 'Shared credits vault with intermaven.io'],
-      target: 'For listeners',
-    },
-    {
-      id: 'creator',
-      name: 'Creator Companion',
-      tagline: 'Your split ledger in your pocket.',
-      icon: TrendingUp,
-      accent: 'var(--purple)',
-      accentGlow: 'rgba(139, 92, 246, 0.18)',
-      desc: 'Mobile metrics dashboard for artists and managers: real-time split ledger, payout balance, sync alerts, and AI-drafted release strategy plays on the go.',
-      features: ['Real-time split cascade ledger', 'Payout balance + tip stream', 'Sync brief alerts', 'AI release playbook drafts'],
-      target: 'For artists & managers',
-    },
-    {
-      id: 'pos',
-      name: 'M-Pesa POS',
-      tagline: 'Sell at the show. Settle by morning.',
-      icon: CreditCard,
-      accent: '#10b981',
-      accentGlow: 'rgba(16, 185, 129, 0.18)',
-      desc: 'Portable point-of-sale for live events: merch, ticket scans, and CD/vinyl on a phone or tablet, with M-Pesa, card, and digital-wallet acceptance.',
-      features: ['M-Pesa STK + card + wallet', 'Merch & ticket-scan modes', 'Per-event settlement reports', 'Geo-gated payout routing'],
-      target: 'For labels & venues',
-    },
-  ];
+  const apps = INTERMAVEN_NATIVE_APPS;
 
   const StoreButton = ({ kind, label, sublabel }) => (
     <button
@@ -2321,7 +2290,7 @@ function NativeAppsView() {
                 </div>
 
                 <Link
-                  to={`/native-apps/${a.id === 'consumer' ? 'tunemavens' : a.id === 'creator' ? 'creator-companion' : 'mpesa-pos'}`}
+                  to={a.landingPath}
                   className="native-app-more-info"
                   data-testid={`native-app-more-info-${a.id}`}
                 >
@@ -5105,13 +5074,18 @@ function DistributionElectionPanel({ sessionUser }) {
 }
 
 // ================= App Marketplace (Phase 3) =================
-// Curated dashboard apps a user can activate. Activation persists to
-// `users.apps[]` via POST /api/users/me/apps, which ticks off the "Activate a
-// Dashboard App" step in the OnboardingStripe.
+// Two tabs:
+//   1. "TuneMavens Apps" — dashboard panels native to this console (Phase 1+)
+//   2. "Intermaven Network" — the 3 flagship native apps from the shared
+//      Intermaven catalogue (NativeAppsView source-of-truth in nativeApps.js).
+// Activation persists to `users.apps[]` via POST /api/users/me/apps and ticks
+// off the "Activate a Dashboard App" step in the OnboardingStripe.
 function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
   const [activated, setActivated] = useState(sessionUser?.apps || []);
   const [busySlug, setBusySlug] = useState(null);
   const [error, setError] = useState('');
+  const [activeMarketTab, setActiveMarketTab] = useState('tunemavens'); // 'tunemavens' | 'intermaven'
+  const navigate = useNavigate();
 
   useEffect(() => {
     usersApi.listMyApps()
@@ -5222,11 +5196,17 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
             <>
               <button
                 type="button"
-                onClick={() => setActiveTab && setActiveTab(a.tab)}
+                onClick={() => {
+                  if (a.landingPath) {
+                    navigate(a.landingPath);
+                  } else if (setActiveTab) {
+                    setActiveTab(a.tab);
+                  }
+                }}
                 data-testid={`app-marketplace-open-${a.slug}`}
                 style={{ flex: 1, padding: '8px 12px', background: a.accent, color: '#0b0f1e', fontWeight: 800, fontSize: '12px', border: 'none', borderRadius: '3px', cursor: 'pointer', letterSpacing: '0.3px' }}
               >
-                Open
+                {a.landingPath ? 'View App' : 'Open'}
               </button>
               <button
                 type="button"
@@ -5254,33 +5234,106 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
     );
   };
 
+  // The Intermaven Network apps share the exact same shape as the dashboard
+  // catalogue (slug + name + icon + desc + accent) plus a `landingPath` that
+  // routes to the matching native-app marketing page.
+  const intermavenCards = INTERMAVEN_NATIVE_APPS.map((a) => ({
+    slug: a.slug,
+    name: a.name,
+    desc: a.desc,
+    icon: a.icon,
+    accent: a.accent,
+    landingPath: a.landingPath,
+  }));
+
   return (
     <div className="dashboard-card" data-testid="app-marketplace-panel">
       <PanelHeader
         title="App Marketplace"
-        desc="Activate the dashboard apps that match your workflow. Each one unlocks a panel in this console."
+        desc={"Activate the dashboard apps that match your workflow. Each one unlocks a panel in this console \u2014 or jump to the Intermaven Network tab to add a flagship native experience."}
       />
+
+      {/* Top-level tab switcher */}
+      <div
+        role="tablist"
+        data-testid="app-marketplace-tabs"
+        style={{
+          display: 'flex',
+          gap: '0',
+          marginBottom: '24px',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        {[
+          { key: 'tunemavens', label: 'TuneMavens Apps', testid: 'app-marketplace-tab-tunemavens' },
+          { key: 'intermaven', label: 'Intermaven Network', testid: 'app-marketplace-tab-intermaven' },
+        ].map((t) => {
+          const isActive = activeMarketTab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setActiveMarketTab(t.key)}
+              data-testid={t.testid}
+              style={{
+                padding: '12px 18px',
+                background: 'transparent',
+                color: isActive ? '#f1f5f9' : '#94a3b8',
+                border: 'none',
+                borderBottom: isActive ? '2px solid var(--cyan)' : '2px solid transparent',
+                fontWeight: 800,
+                fontSize: '13px',
+                letterSpacing: '0.3px',
+                cursor: 'pointer',
+                marginBottom: '-1px',
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
 
       {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="app-marketplace-error">{error}</p>}
 
-      {recommended.length > 0 && (
-        <div style={{ marginBottom: '24px' }} data-testid="app-marketplace-recommended">
-          <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>
-            Recommended for {role}s
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-            {recommended.map(renderCard)}
-          </div>
-        </div>
+      {activeMarketTab === 'tunemavens' && (
+        <>
+          {recommended.length > 0 && (
+            <div style={{ marginBottom: '24px' }} data-testid="app-marketplace-recommended">
+              <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>
+                Recommended for {role}s
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+                {recommended.map(renderCard)}
+              </div>
+            </div>
+          )}
+
+          {other.length > 0 && (
+            <div data-testid="app-marketplace-all">
+              <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>
+                All available apps
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+                {other.map(renderCard)}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {other.length > 0 && (
-        <div data-testid="app-marketplace-all">
-          <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>
-            All available apps
+      {activeMarketTab === 'intermaven' && (
+        <div data-testid="app-marketplace-intermaven">
+          <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '6px' }}>
+            Intermaven Network
           </div>
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: 0, marginBottom: '16px', lineHeight: '1.55' }}>
+            The same flagship native apps featured on the Intermaven network landing page. Activate to add a quick-launch entry to your dashboard, then tap <em>View App</em> to open the full app surface.
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-            {other.map(renderCard)}
+            {intermavenCards.map(renderCard)}
           </div>
         </div>
       )}
