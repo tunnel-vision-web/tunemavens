@@ -14,7 +14,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db
-from routes import auth_router, dashboard_router, deals_router
+from routes import admin_router, auth_router, dashboard_router, deals_router
+from routes.admin_router import seed_domain_mappings_if_empty
 
 app = FastAPI(title="TuneMavens API", version="0.1.0 (Phase 1)")
 
@@ -29,6 +30,10 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(dashboard_router)
 app.include_router(deals_router)
+app.include_router(admin_router)
+
+# Seed default domain mappings on first boot (idempotent).
+seed_domain_mappings_if_empty()
 
 
 @app.get("/api/health")

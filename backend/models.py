@@ -168,3 +168,33 @@ class CatalogueAcquisition(BaseDocument):
     linked_contract_id: Optional[PyObjectId] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ======================================================================
+# Domain Mappings (admin-only) — maps in-app routes to public subdomains
+# ======================================================================
+class DomainMapping(BaseDocument):
+    key: str                       # unique stable id (e.g. 'native-app-tunemavens')
+    label: str                     # human-readable name
+    category: str                  # 'native-app' | 'dashboard-app' | 'ai-tool' | 'subdomain-portal'
+    path: str                      # local SPA route (e.g. '/native-apps/tunemavens')
+    subdomain: str                 # e.g. 'app' -> app.tunemavens.com
+    enabled: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_by: Optional[str] = None
+
+
+class DomainMappingUpdate(BaseModel):
+    label: Optional[str] = None
+    subdomain: Optional[str] = None
+    enabled: Optional[bool] = None
+
+
+class DomainMappingCreate(BaseModel):
+    key: str
+    label: str
+    category: str
+    path: str
+    subdomain: str
+    enabled: bool = True

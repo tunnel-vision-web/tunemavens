@@ -64,6 +64,20 @@ export const dealsApi = {
   },
 };
 
+// --- Admin (admin role only) ---
+export const adminApi = {
+  becomeAdmin: () => request('/api/admin/become-admin', { method: 'POST' }),
+  domainMappings: {
+    list: () => request('/api/admin/domain-mappings'),
+    create: (mapping) =>
+      request('/api/admin/domain-mappings', { method: 'POST', body: mapping }),
+    update: (id, patch) =>
+      request(`/api/admin/domain-mappings/${id}`, { method: 'PUT', body: patch }),
+    remove: (id) =>
+      request(`/api/admin/domain-mappings/${id}`, { method: 'DELETE' }),
+  },
+};
+
 // Token persistence helpers (for the Bearer-token fallback path when the
 // cross-subdomain cookie isn't reachable, e.g. local dev across ports).
 const TOKEN_KEY = 'tunemavens_token';

@@ -72,7 +72,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
-import { authApi, tokenStore } from './lib/api.js'
+import { authApi, tokenStore, adminApi } from './lib/api.js'
 
 import './App.css'
 
@@ -1895,7 +1895,9 @@ function NativeAppLandingView() {
   const [titleHovered, setTitleHovered] = useState(false);
   const progressRef = useRef(null);
   const timerRef = useRef(null);
-  const SLIDE_DURATION = 18000;
+  // Slower than HomeView so the dense product copy has time to land.
+  const SLIDE_DURATION = 24000;
+  const TRANSITION_OUT_MS = 700;
 
   const slides = data?.heroSlides || [];
   const slideCount = slides.length;
@@ -1910,7 +1912,7 @@ function NativeAppLandingView() {
       setCurrentSlide(index);
       setProgress(0);
       setSlideState('in');
-    }, 400);
+    }, TRANSITION_OUT_MS);
   };
   const goToPrevSlide = () => goToSlide((currentSlide - 1 + slideCount) % slideCount);
   const goToNextSlide = () => goToSlide((currentSlide + 1) % slideCount);
@@ -1933,7 +1935,7 @@ function NativeAppLandingView() {
         setCurrentSlide((prev) => (prev + 1) % slideCount);
         setProgress(0);
         setSlideState('in');
-      }, 400);
+      }, TRANSITION_OUT_MS);
     }, SLIDE_DURATION);
     return () => {
       if (progressRef.current) cancelAnimationFrame(progressRef.current);
@@ -2082,9 +2084,16 @@ function NativeAppLandingView() {
         </div>
       </div>
 
-      {/* APP AT A GLANCE — phone mockup + lede + cross-links */}
-      <section className="landing-section">
+      {/* APP AT A GLANCE — 1/4 logo column + 3/4 content column */}
+      <section className="landing-section landing-glance-section">
         <div className="container landing-glance">
+          <div className="landing-glance-logo" aria-hidden="true">
+            <div className="landing-app-tile">
+              <div className="landing-app-tile-icon">{HeroIcon && <HeroIcon size={48} />}</div>
+              <div className="landing-app-tile-label">{data.name}</div>
+              <div className="landing-app-tile-pill">{data.target}</div>
+            </div>
+          </div>
           <div className="landing-glance-text">
             <span className="landing-section-eyebrow">{data.target}</span>
             <h2 className="landing-section-title" style={{ marginBottom: '20px' }}>{data.name}</h2>
@@ -2096,15 +2105,6 @@ function NativeAppLandingView() {
               <Link to={data.adminLink.to} className="landing-cross-link" data-testid="landing-admin-link">
                 <Settings size={13} /> {data.adminLink.label}
               </Link>
-            </div>
-          </div>
-          <div className="landing-glance-phone" aria-hidden="true">
-            <div className="landing-phone-mockup">
-              <div className="landing-phone-screen">
-                <div className="landing-phone-icon">{HeroIcon && <HeroIcon size={48} />}</div>
-                <div className="landing-phone-name">{data.name}</div>
-                <div className="landing-phone-shine" />
-              </div>
             </div>
           </div>
         </div>
@@ -4443,6 +4443,8 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
         return <PosSettlementPanel />;
       case 'pos-devices':
         return <PosDevicesPanel />;
+      case 'domain-mappings':
+        return <DomainMappingsPanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} />;
       default:
         return <div>Tab not found</div>;
     }
@@ -4466,10 +4468,14 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
       'pos-inventory': { id: 'pos-inventory', label: 'POS Inventory', icon: Database, category: 'M-Pesa POS App' },
       'pos-settlement': { id: 'pos-settlement', label: 'POS Settlement', icon: Coins, category: 'M-Pesa POS App' },
       'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: Smartphone, category: 'M-Pesa POS App' },
+      'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: Globe, category: 'Admin' },
     };
 
     let visibleKeys = [];
     switch (role) {
+      case 'admin':
+        visibleKeys = ['home', 'catalog', 'splits', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'profile'];
+        break;
       case 'label':
         visibleKeys = ['home', 'catalog', 'splits', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
         break;
@@ -4608,6 +4614,262 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
           <span>Operating on the shared Intermaven network.</span>
         </div>
       </main>
+    </div>
+  );
+}
+
+// ================= SUB-PANEL: Domain Mappings (admin-only) =================
+// Per user request, every route/app/tool is mapped to a public subdomain;
+// only `admin` users see this tab.
+function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
+  const [mappings, setMappings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [edits, setEdits] = useState({});      // id → { subdomain, label }
+  const [showAdd, setShowAdd] = useState(false);
+  const [newMap, setNewMap] = useState({ key: '', label: '', category: 'dashboard-app', path: '', subdomain: '' });
+
+  const ROOT_DOMAIN = 'tunemavens.com';
+
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const list = await adminApi.domainMappings.list();
+      setMappings(list);
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Failed to load mappings');
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => { load(); }, []);
+
+  const categories = ['all', 'native-app', 'dashboard-app', 'ai-tool', 'subdomain-portal'];
+  const filtered = filter === 'all' ? mappings : mappings.filter(m => m.category === filter);
+
+  const stage = (id, field, value) => setEdits(e => ({ ...e, [id]: { ...e[id], [field]: value } }));
+
+  const saveRow = async (m) => {
+    const patch = edits[m.id];
+    if (!patch) return;
+    setSavingId(m.id);
+    try {
+      const updated = await adminApi.domainMappings.update(m.id, patch);
+      setMappings(ms => ms.map(x => x.id === m.id ? updated : x));
+      setEdits(e => { const c = { ...e }; delete c[m.id]; return c; });
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Save failed');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const toggleEnabled = async (m) => {
+    setSavingId(m.id);
+    try {
+      const updated = await adminApi.domainMappings.update(m.id, { enabled: !m.enabled });
+      setMappings(ms => ms.map(x => x.id === m.id ? updated : x));
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Toggle failed');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const deleteRow = async (m) => {
+    if (!window.confirm(`Delete mapping for "${m.label}"?`)) return;
+    try {
+      await adminApi.domainMappings.remove(m.id);
+      setMappings(ms => ms.filter(x => x.id !== m.id));
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Delete failed');
+    }
+  };
+
+  const addRow = async () => {
+    if (!newMap.key || !newMap.label || !newMap.path || !newMap.subdomain) {
+      setError('Key, Label, Path, and Subdomain are required.');
+      return;
+    }
+    try {
+      const created = await adminApi.domainMappings.create(newMap);
+      setMappings(ms => [...ms, created]);
+      setNewMap({ key: '', label: '', category: 'dashboard-app', path: '', subdomain: '' });
+      setShowAdd(false);
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Create failed');
+    }
+  };
+
+  if (sessionUser?.role !== 'admin') {
+    return (
+      <div className="dashboard-card">
+        <PanelHeader title="Domain Mappings" desc="Admin-only — your account does not have access." />
+        <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', fontSize: '13px' }}>
+          <Lock size={28} style={{ color: '#475569', marginBottom: '10px' }} />
+          <p>You need the <strong style={{ color: '#f1f5f9' }}>admin</strong> role to manage domain mappings.</p>
+          <button
+            className="btn-primary"
+            style={{ marginTop: '12px', padding: '10px 18px', fontSize: '12px', fontWeight: 700 }}
+            data-testid="become-admin-btn"
+            onClick={async () => {
+              try {
+                await adminApi.becomeAdmin();
+                const merged = { ...sessionUser, role: 'admin' };
+                if (onUpdateUser) onUpdateUser(merged);
+                sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
+                window.location.reload();
+              } catch (e) {
+                alert(e.data?.detail || e.message || 'Could not elevate to admin');
+              }
+            }}
+          >
+            Sandbox: elevate me to admin
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard-card" data-testid="domain-mappings-panel">
+      <PanelHeader
+        title="Domain Mappings"
+        desc={`Map every route, native app, dashboard app and AI tool to a public subdomain under *.${ROOT_DOMAIN}. Changes take effect once DNS + reverse proxy pick them up.`}
+      />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+        {categories.map(c => (
+          <button
+            key={c}
+            onClick={() => setFilter(c)}
+            className={filter === c ? 'btn-primary' : 'plan-btn outline'}
+            style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase' }}
+            data-testid={`mapping-filter-${c}`}
+          >
+            {c.replace('-', ' ')}
+          </button>
+        ))}
+        <span style={{ marginLeft: 'auto' }} />
+        <button
+          className="btn-primary"
+          style={{ padding: '6px 14px', fontSize: '11px', fontWeight: 700 }}
+          onClick={() => setShowAdd(s => !s)}
+          data-testid="mapping-add-toggle"
+        >
+          {showAdd ? 'Cancel' : '+ Add Mapping'}
+        </button>
+      </div>
+
+      {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="mapping-error">{error}</p>}
+
+      {showAdd && (
+        <div className="dashboard-card" style={{ marginBottom: '14px', padding: '14px', background: 'rgba(34, 211, 238, 0.04)', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
+            <input className="form-control" placeholder="key (e.g. dashboard-app-bio)" value={newMap.key} onChange={e => setNewMap({ ...newMap, key: e.target.value })} data-testid="mapping-new-key" />
+            <input className="form-control" placeholder="Label" value={newMap.label} onChange={e => setNewMap({ ...newMap, label: e.target.value })} data-testid="mapping-new-label" />
+            <select className="form-control" value={newMap.category} onChange={e => setNewMap({ ...newMap, category: e.target.value })} data-testid="mapping-new-category">
+              <option value="native-app">native-app</option>
+              <option value="dashboard-app">dashboard-app</option>
+              <option value="ai-tool">ai-tool</option>
+              <option value="subdomain-portal">subdomain-portal</option>
+            </select>
+            <input className="form-control" placeholder="/path" value={newMap.path} onChange={e => setNewMap({ ...newMap, path: e.target.value })} data-testid="mapping-new-path" />
+            <input className="form-control" placeholder="subdomain" value={newMap.subdomain} onChange={e => setNewMap({ ...newMap, subdomain: e.target.value })} data-testid="mapping-new-subdomain" />
+            <button className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 700 }} onClick={addRow} data-testid="mapping-new-save">Add</button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <p style={{ color: '#94a3b8', textAlign: 'center', padding: '24px' }}>Loading mappings…</p>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+          <thead>
+            <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <th style={{ padding: '10px 8px' }}>Label</th>
+              <th style={{ padding: '10px 8px' }}>Category</th>
+              <th style={{ padding: '10px 8px' }}>Path</th>
+              <th style={{ padding: '10px 8px' }}>Subdomain</th>
+              <th style={{ padding: '10px 8px' }}>Resolves to</th>
+              <th style={{ padding: '10px 8px' }}>Enabled</th>
+              <th style={{ padding: '10px 8px' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(m => {
+              const stagedSubdomain = edits[m.id]?.subdomain ?? m.subdomain;
+              const stagedLabel = edits[m.id]?.label ?? m.label;
+              const dirty = edits[m.id] && Object.keys(edits[m.id]).length > 0;
+              return (
+                <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: m.enabled ? 1 : 0.55 }} data-testid={`mapping-row-${m.key}`}>
+                  <td style={{ padding: '8px' }}>
+                    <input
+                      className="form-control"
+                      value={stagedLabel}
+                      onChange={(e) => stage(m.id, 'label', e.target.value)}
+                      style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#f1f5f9', fontSize: '12px', padding: '6px 10px', width: '100%' }}
+                      data-testid={`mapping-label-${m.key}`}
+                    />
+                  </td>
+                  <td style={{ padding: '8px', color: '#94a3b8', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', fontWeight: 700 }}>{m.category}</td>
+                  <td style={{ padding: '8px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '11px' }}>{m.path}</td>
+                  <td style={{ padding: '8px' }}>
+                    <input
+                      className="form-control"
+                      value={stagedSubdomain}
+                      onChange={(e) => stage(m.id, 'subdomain', e.target.value)}
+                      style={{ background: 'transparent', border: '1px solid rgba(34, 211, 238, 0.2)', color: 'var(--cyan)', fontSize: '12px', padding: '6px 10px', width: '100%', fontWeight: 700 }}
+                      data-testid={`mapping-subdomain-${m.key}`}
+                    />
+                  </td>
+                  <td style={{ padding: '8px', color: '#94a3b8', fontFamily: 'monospace', fontSize: '11px' }}>
+                    <span style={{ color: 'var(--cyan)' }}>{stagedSubdomain}</span>.{ROOT_DOMAIN}
+                  </td>
+                  <td style={{ padding: '8px' }}>
+                    <button
+                      onClick={() => toggleEnabled(m)}
+                      disabled={savingId === m.id}
+                      className={m.enabled ? 'btn-primary' : 'plan-btn outline'}
+                      style={{ padding: '5px 10px', fontSize: '10px', fontWeight: 700 }}
+                      data-testid={`mapping-toggle-${m.key}`}
+                    >
+                      {m.enabled ? 'ON' : 'OFF'}
+                    </button>
+                  </td>
+                  <td style={{ padding: '8px', display: 'flex', gap: '6px' }}>
+                    {dirty && (
+                      <button
+                        onClick={() => saveRow(m)}
+                        disabled={savingId === m.id}
+                        className="btn-primary"
+                        style={{ padding: '5px 10px', fontSize: '10px', fontWeight: 700 }}
+                        data-testid={`mapping-save-${m.key}`}
+                      >
+                        {savingId === m.id ? '…' : 'Save'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => deleteRow(m)}
+                      style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '11px' }}
+                      data-testid={`mapping-delete-${m.key}`}
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+
+      <p style={{ fontSize: '11px', color: '#64748b', marginTop: '14px', lineHeight: '1.6' }}>
+        Note: Updating a mapping rewrites the published DNS contract. The reverse-proxy (per <code>backend/README.md</code>) reads these mappings live — changes propagate within ~30 seconds. Until Phase 1.1 ships the DNS automation, the strings stored here are picked up at next deploy.
+      </p>
     </div>
   );
 }

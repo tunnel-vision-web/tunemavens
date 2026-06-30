@@ -80,3 +80,17 @@ def get_optional_user(request: Request) -> Optional[dict]:
         return get_current_user(request)
     except HTTPException:
         return None
+
+
+def require_admin(request: Request) -> dict:
+    """Dependency: only allow users whose role == 'admin'.
+
+    Until full RBAC ships, a user becomes admin simply by having
+    ``role: 'admin'`` on their MongoDB ``users`` record. The admin
+    bootstrap helper (``POST /api/admin/become-admin`` — sandbox only)
+    flips a user's role for testing.
+    """
+    user = get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required")
+    return user
