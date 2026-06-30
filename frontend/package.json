@@ -61,8 +61,8 @@
     "zod": "3.24.4"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
+    "start": "cd /app/tunemavens_repo && npx vite --host 0.0.0.0 --port 3000 --strictPort",
+    "build": "cd /app/tunemavens_repo && npx vite build",
     "test": "craco test"
   },
   "browserslist": {
