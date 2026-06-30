@@ -83,6 +83,13 @@ export const dealsApi = {
   },
 };
 
+// --- Users (self-service: app activation, etc.) ---
+export const usersApi = {
+  listMyApps: () => request('/api/users/me/apps'),
+  activateApp: (slug) => request('/api/users/me/apps', { method: 'POST', body: { slug } }),
+  deactivateApp: (slug) => request(`/api/users/me/apps/${encodeURIComponent(slug)}`, { method: 'DELETE' }),
+};
+
 // --- Admin (admin role only) ---
 export const adminApi = {
   becomeAdmin: () => request('/api/admin/become-admin', { method: 'POST' }),

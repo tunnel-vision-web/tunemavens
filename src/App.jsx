@@ -72,7 +72,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
-import { authApi, tokenStore, adminApi, dealsApi } from './lib/api.js'
+import { authApi, tokenStore, adminApi, dealsApi, usersApi } from './lib/api.js'
 
 import './App.css'
 
@@ -4449,6 +4449,8 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
         return <PublishingElectionPanel sessionUser={sessionUser} />;
       case 'distribution-election':
         return <DistributionElectionPanel sessionUser={sessionUser} />;
+      case 'app-marketplace':
+        return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} />;
       default:
         return <div>Tab not found</div>;
     }
@@ -4474,30 +4476,31 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
       'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: Smartphone, category: 'M-Pesa POS App' },
       'publishing-election': { id: 'publishing-election', label: 'Publishing Election', icon: BookOpen, category: 'Royalty Ledgers' },
       'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: Globe, category: 'Royalty Ledgers' },
+      'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: Zap, category: 'Apps & Marketplace' },
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: Globe, category: 'Admin' },
     };
 
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'profile'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
         break;
       case 'dj':
-        visibleKeys = ['home', 'djpool', 'library', 'tips', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'djpool', 'library', 'tips', 'profile'];
         break;
       case 'studio':
       case 'supervisor':
-        visibleKeys = ['home', 'sync', 'escrow', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'sync', 'escrow', 'profile'];
         break;
       case 'consumer':
         visibleKeys = ['home', 'library', 'tips', 'stream-controls', 'profile'];
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
         break;
     }
 
@@ -4662,7 +4665,7 @@ function OnboardingStripe({ sessionUser, setActiveTab }) {
     { id: 'profile', label: 'Complete your profile', done: profileDone, tab: 'profile', cta: 'Open Profile' },
     { id: 'publishing', label: 'Elect your publishing tier', done: publishingDone, tab: 'publishing-election', cta: 'Choose Tier' },
     { id: 'distribution', label: 'Elect your distribution path', done: distributionDone, tab: 'distribution-election', cta: 'Choose Path' },
-    { id: 'apps', label: 'Activate a Dashboard App', done: appActivated, tab: 'home', cta: 'Browse Apps', external: '/apps' },
+    { id: 'apps', label: 'Activate a Dashboard App', done: appActivated, tab: 'app-marketplace', cta: 'Browse Apps' },
     { id: 'catalog', label: 'Port your first track', done: catalogStarted, tab: 'catalog', cta: 'Start Catalog' },
   ];
 
@@ -5100,6 +5103,191 @@ function DistributionElectionPanel({ sessionUser }) {
     </div>
   );
 }
+
+// ================= App Marketplace (Phase 3) =================
+// Curated dashboard apps a user can activate. Activation persists to
+// `users.apps[]` via POST /api/users/me/apps, which ticks off the "Activate a
+// Dashboard App" step in the OnboardingStripe.
+function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
+  const [activated, setActivated] = useState(sessionUser?.apps || []);
+  const [busySlug, setBusySlug] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    usersApi.listMyApps()
+      .then((apps) => setActivated(Array.isArray(apps) ? apps : []))
+      .catch(() => {});
+  }, []);
+
+  // Role-aware recommendations. Each slug matches the backend allow-list and
+  // is paired with the dashboard tab it unlocks so we can route directly.
+  const role = sessionUser?.role || 'creator';
+  const catalogue = [
+    { slug: 'catalog-porting', name: 'Catalog Porting', desc: 'Bring your back-catalogue in via CSV or DDEX, validate metadata, and stage releases.', icon: Database, accent: 'var(--cyan)', tab: 'catalog', roles: ['creator', 'label', 'admin'] },
+    { slug: 'split-cascade', name: 'Split Cascade', desc: 'See exactly how every dollar flows through writer / producer / publisher splits.', icon: Coins, accent: 'var(--purple)', tab: 'splits', roles: ['creator', 'label', 'admin'] },
+    { slug: 'publishing-election', name: 'Publishing Election', desc: 'Lock in your publishing tier — standard admin or full-service co-pub.', icon: BookOpen, accent: 'var(--cyan)', tab: 'publishing-election', roles: ['creator', 'label', 'admin'] },
+    { slug: 'distribution-election', name: 'Distribution Election', desc: 'Choose how your music reaches DSPs and how revenue splits.', icon: Globe, accent: 'var(--purple)', tab: 'distribution-election', roles: ['creator', 'label', 'admin'] },
+    { slug: 'djpool', name: 'DJ Pool MVP', desc: 'Distribute promo cuts to vetted DJs, gate by region, track plays.', icon: Radio, accent: '#10b981', tab: 'djpool', roles: ['creator', 'dj', 'admin'] },
+    { slug: 'sync-marketplace', name: 'Sync Marketplace', desc: 'Pitch and license tracks for film, TV, ads, and game placements.', icon: Globe, accent: 'var(--cyan)', tab: 'sync', roles: ['creator', 'label', 'studio', 'supervisor', 'admin'] },
+    { slug: 'escrow-contracts', name: 'Escrow Contracts', desc: 'Hold funds in escrow until contractual milestones clear.', icon: Shield, accent: 'var(--purple)', tab: 'escrow', roles: ['creator', 'studio', 'supervisor', 'admin'] },
+    { slug: 'tunemavens-library', name: 'My Library', desc: 'Personal media library — playlists, downloads, and offline cache.', icon: Music, accent: 'var(--cyan)', tab: 'library', roles: ['creator', 'consumer', 'dj', 'admin'] },
+    { slug: 'tunemavens-tips', name: 'Tips & Purchases', desc: 'See incoming tips and your TuneMavens app purchases.', icon: Coins, accent: '#10b981', tab: 'tips', roles: ['creator', 'consumer', 'dj', 'admin'] },
+    { slug: 'mpesa-pos-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: Database, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'admin'] },
+    { slug: 'mpesa-pos-settlement', name: 'POS Settlement', desc: 'Reconcile M-Pesa POS settlement runs against your ledger.', icon: Coins, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
+    { slug: 'mpesa-pos-devices', name: 'POS Devices', desc: 'Pair and manage M-Pesa POS hardware tied to your account.', icon: Smartphone, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'admin'] },
+  ];
+
+  const visible = catalogue.filter((a) => a.roles.includes(role));
+  const recommendedSlugs = role === 'label'
+    ? ['catalog-porting', 'distribution-election', 'mpesa-pos-inventory']
+    : role === 'dj'
+      ? ['djpool', 'tunemavens-library']
+      : role === 'studio' || role === 'supervisor'
+        ? ['sync-marketplace', 'escrow-contracts']
+        : role === 'consumer'
+          ? ['tunemavens-library', 'tunemavens-tips']
+          : ['publishing-election', 'distribution-election', 'split-cascade'];
+
+  const recommended = visible.filter((a) => recommendedSlugs.includes(a.slug));
+  const other = visible.filter((a) => !recommendedSlugs.includes(a.slug));
+
+  const activate = async (slug) => {
+    setError('');
+    setBusySlug(slug);
+    try {
+      const apps = await usersApi.activateApp(slug);
+      setActivated(apps);
+      if (onUpdateUser && sessionUser) {
+        onUpdateUser({ ...sessionUser, apps });
+      }
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not activate app');
+    } finally {
+      setBusySlug(null);
+    }
+  };
+
+  const deactivate = async (slug) => {
+    setError('');
+    setBusySlug(slug);
+    try {
+      const apps = await usersApi.deactivateApp(slug);
+      setActivated(apps);
+      if (onUpdateUser && sessionUser) {
+        onUpdateUser({ ...sessionUser, apps });
+      }
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not deactivate app');
+    } finally {
+      setBusySlug(null);
+    }
+  };
+
+  const renderCard = (a) => {
+    const isActive = activated.includes(a.slug);
+    const isBusy = busySlug === a.slug;
+    const Icon = a.icon;
+    return (
+      <div
+        key={a.slug}
+        className="app-marketplace-card"
+        data-testid={`app-marketplace-card-${a.slug}`}
+        style={{
+          padding: '18px',
+          background: 'rgba(255,255,255,0.02)',
+          border: isActive ? `1px solid ${a.accent}` : '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '3px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          transition: 'border-color 0.2s ease, transform 0.2s ease',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '38px', height: '38px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${a.accent}1f`, color: a.accent, flexShrink: 0 }}>
+            <Icon size={20} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#f1f5f9' }}>{a.name}</div>
+            {isActive && (
+              <div style={{ fontSize: '9px', color: '#10b981', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginTop: '2px' }} data-testid={`app-marketplace-status-${a.slug}`}>
+                <CheckCircle2 size={10} style={{ display: 'inline', marginRight: '4px', verticalAlign: '-1px' }} /> Activated
+              </div>
+            )}
+          </div>
+        </div>
+        <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.55', margin: 0, flex: 1 }}>{a.desc}</p>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {isActive ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveTab && setActiveTab(a.tab)}
+                data-testid={`app-marketplace-open-${a.slug}`}
+                style={{ flex: 1, padding: '8px 12px', background: a.accent, color: '#0b0f1e', fontWeight: 800, fontSize: '12px', border: 'none', borderRadius: '3px', cursor: 'pointer', letterSpacing: '0.3px' }}
+              >
+                Open
+              </button>
+              <button
+                type="button"
+                onClick={() => deactivate(a.slug)}
+                disabled={isBusy}
+                data-testid={`app-marketplace-deactivate-${a.slug}`}
+                style={{ padding: '8px 12px', background: 'transparent', color: '#94a3b8', fontWeight: 700, fontSize: '12px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                {isBusy ? '…' : 'Remove'}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => activate(a.slug)}
+              disabled={isBusy}
+              data-testid={`app-marketplace-activate-${a.slug}`}
+              style={{ flex: 1, padding: '8px 12px', background: a.accent, color: '#0b0f1e', fontWeight: 800, fontSize: '12px', border: 'none', borderRadius: '3px', cursor: isBusy ? 'wait' : 'pointer', opacity: isBusy ? 0.6 : 1, letterSpacing: '0.3px' }}
+            >
+              {isBusy ? 'Activating…' : 'Activate'}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="dashboard-card" data-testid="app-marketplace-panel">
+      <PanelHeader
+        title="App Marketplace"
+        desc="Activate the dashboard apps that match your workflow. Each one unlocks a panel in this console."
+      />
+
+      {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="app-marketplace-error">{error}</p>}
+
+      {recommended.length > 0 && (
+        <div style={{ marginBottom: '24px' }} data-testid="app-marketplace-recommended">
+          <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>
+            Recommended for {role}s
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+            {recommended.map(renderCard)}
+          </div>
+        </div>
+      )}
+
+      {other.length > 0 && (
+        <div data-testid="app-marketplace-all">
+          <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>
+            All available apps
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+            {other.map(renderCard)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 // ================= SUB-PANEL: Domain Mappings (admin-only) =================
 // Per user request, every route/app/tool is mapped to a public subdomain;
