@@ -2837,6 +2837,39 @@
   color: #f1f5f9;
 }
 
+/* Overlay back-link sitting on top of the carousel hero */
+.landing-back-overlay {
+  position: absolute;
+  top: 18px;
+  left: 28px;
+  z-index: 5;
+  margin-bottom: 0;
+  background: rgba(6, 8, 19, 0.55);
+  backdrop-filter: blur(10px);
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+.landing-back-overlay:hover {
+  background: rgba(6, 8, 19, 0.8);
+}
+
+/* "App at a glance" 2-column section right under the carousel */
+.landing-glance {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .landing-glance { grid-template-columns: 1fr; }
+  .landing-glance-phone { display: none; }
+}
+.landing-glance-phone {
+  display: flex;
+  justify-content: center;
+}
+
 .landing-hero {
   position: relative;
   padding: 80px 0 100px;

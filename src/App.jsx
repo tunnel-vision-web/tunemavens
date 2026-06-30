@@ -1614,29 +1614,71 @@ function MpesaPosTerminal({ goBack }) {
 }
 
 // ================= Native App Landing Pages (per-app marketing) =================
+// Each app gets a 3-slide hero carousel (same pattern as HomeView), with
+// targeting + CTAs specific to that app's user. `bgKey` resolves to one of
+// the image imports at the top of this file via the HERO_IMAGE_MAP below.
 const NATIVE_APP_LANDING_DATA = {
   tunemavens: {
     slug: 'tunemavens',
     name: 'TuneMavens',
     target: 'For listeners',
-    tagline: 'Stream. Tip. Carry the catalogue.',
-    lede: 'A consumer music app built around the African catalogue — offline HQ audio, region-aware editorial playlists, and a tip jar that pays the creator directly through the shared TuneMavens / Intermaven split ledger.',
     accent: 'var(--cyan)',
     accentGlow: 'rgba(34, 211, 238, 0.18)',
     icon: 'Headphones',
-    heroBg: 'linear-gradient(135deg, rgba(34,211,238,0.18) 0%, rgba(11,15,30,0.0) 60%)',
+    heroSlides: [
+      {
+        dot: '#22d3ee',
+        badge: 'Streaming & Library · iOS / Android',
+        hLine1: 'Carry the catalogue.',
+        hLine2: 'Even off-grid.',
+        hLine2Color: '#22d3ee',
+        s: 'Cache 8GB of HQ FLAC locally. Stream cellular-aware. Your library follows you between Wi-Fi, 4G, and no-signal subways.',
+        b1: 'Download on App Store',
+        b1action: 'appstore',
+        b2: 'Use the Web Player',
+        b2link: '/stream',
+        bgKey: 'listenHero',
+      },
+      {
+        dot: '#10b981',
+        badge: 'Direct Creator Support',
+        hLine1: 'Skip the middleman.',
+        hLine2: 'Tip mid-track.',
+        hLine2Color: '#10b981',
+        s: 'One tap mid-listen sends value through the Compensation Engine straight to the creator\u2019s wallet within 24 hours.',
+        b1: 'Get on Google Play',
+        b1action: 'googleplay',
+        b2: 'How tipping works',
+        b2link: '/help',
+        bgKey: 'heroMusic1',
+      },
+      {
+        dot: '#c084fc',
+        badge: 'Shared Credits Vault',
+        hLine1: 'One account,',
+        hLine2: 'every surface.',
+        hLine2Color: '#c084fc',
+        s: 'Your credits, follow list and tip history sync between web, iOS, Android, and the wider intermaven.io toolset.',
+        b1: 'Start Listening Free',
+        b1link: '/register',
+        b2: 'Browse Pricing',
+        b2link: '/pricing',
+        bgKey: 'distributeHero',
+      },
+    ],
+    lede: 'A consumer music app built around the African catalogue \u2014 offline HQ audio, region-aware editorial playlists, and a tip jar that pays the creator directly through the shared TuneMavens / Intermaven split ledger.',
     webEquivalent: { label: 'Use the web player', to: '/stream' },
     adminLink: { label: 'Manage your library', to: '/dashboard' },
     features: [
       { title: 'HQ offline cache', desc: 'Up to 8GB of FLAC / 320 kbps audio stored locally for low-bandwidth listening.' },
-      { title: 'One-tap creator tipping', desc: 'Send a tip mid-track — it flows through the Compensation Engine and lands in the creator\u2019s wallet within 24h.' },
+      { title: 'One-tap creator tipping', desc: 'Send a tip mid-track \u2014 it flows through the Compensation Engine and lands in the creator\u2019s wallet within 24h.' },
       { title: 'Region-aware playlists', desc: 'Editorial picks tailored to your detected market: Naija, EA, SA, US/UK and beyond.' },
       { title: 'Smart discovery', desc: 'AI surfaces tracks that pair with what you already love, weighted by your follow list.' },
-      { title: 'Shared credits vault', desc: 'Your TuneMavens credits work on intermaven.io tools too — one account, one balance.' },
+      { title: 'Shared credits vault', desc: 'Your TuneMavens credits work on intermaven.io tools too \u2014 one account, one balance.' },
       { title: 'Live event drops', desc: 'Get notified when an artist you follow lists tickets or merch on the M-Pesa POS network.' },
     ],
     howItWorks: [
-      { step: '01', title: 'Sign in once', body: 'Use your existing TuneMavens / Intermaven account — no separate native-app credentials.' },
+      { step: '01', title: 'Sign in once', body: 'Use your existing TuneMavens / Intermaven account \u2014 no separate native-app credentials.' },
       { step: '02', title: 'Pick three creators', body: 'During onboarding you follow 3 creators; your home feed seeds from their catalogue and collaborators.' },
       { step: '03', title: 'Stream or download', body: 'Tap to stream, long-press to cache offline. Toggle data-saver in regions where bandwidth is metered.' },
       { step: '04', title: 'Support directly', body: 'Tip, buy, or pre-save. Every interaction is logged in the creator\u2019s ledger you can verify in their EPK.' },
@@ -1646,11 +1688,11 @@ const NATIVE_APP_LANDING_DATA = {
       { quote: 'Offline mode survived my whole 6-hour matatu ride. Bandwidth-aware caching actually works.', author: 'Brian, Nairobi', role: 'Daily commuter' },
     ],
     faq: [
-      { q: 'Is TuneMavens free to use?', a: 'Yes — listening and tipping are free. The free tier includes 150 signup credits used across the wider Intermaven network.' },
-      { q: 'How are creators paid when I tip?', a: 'Tips enter the Compensation Engine cascade (Commission → Label → Artist → Manager → Investor). The split is governed by the creator\u2019s signed contract on file.' },
-      { q: 'Can I switch between web and native?', a: 'Yes — the web player lives at /stream and shares the same session, library, and tip history.' },
+      { q: 'Is TuneMavens free to use?', a: 'Yes \u2014 listening and tipping are free. The free tier includes 150 signup credits used across the wider Intermaven network.' },
+      { q: 'How are creators paid when I tip?', a: 'Tips enter the Compensation Engine cascade (Commission \u2192 Label \u2192 Artist \u2192 Manager \u2192 Investor). The split is governed by the creator\u2019s signed contract on file.' },
+      { q: 'Can I switch between web and native?', a: 'Yes \u2014 the web player lives at /stream and shares the same session, library, and tip history.' },
       { q: 'Which devices are supported?', a: 'iOS 15+ and Android 9+. The native shells are Capacitor-wrapped, so the same engine runs on both platforms.' },
-      { q: 'Does it work without reliable internet?', a: 'Yes — cache up to 8GB locally. Tips queue offline and settle when you reconnect.' },
+      { q: 'Does it work without reliable internet?', a: 'Yes \u2014 cache up to 8GB locally. Tips queue offline and settle when you reconnect.' },
     ],
     pricingLine: 'Free tier · 150 credits at signup · unlimited streaming',
   },
@@ -1658,36 +1700,75 @@ const NATIVE_APP_LANDING_DATA = {
     slug: 'creator-companion',
     name: 'Creator Companion',
     target: 'For artists & managers',
-    tagline: 'Your split ledger in your pocket.',
-    lede: 'A mobile-first admin for the people who make the music: split-cascade ledger live on your phone, sync-brief alerts, AI release playbooks, and payout balances you can verify the moment a stream pays out.',
     accent: 'var(--purple)',
     accentGlow: 'rgba(139, 92, 246, 0.18)',
     icon: 'TrendingUp',
-    heroBg: 'linear-gradient(135deg, rgba(139,92,246,0.22) 0%, rgba(11,15,30,0.0) 60%)',
+    heroSlides: [
+      {
+        dot: '#8b5cf6',
+        badge: 'Split Cascade · Live',
+        hLine1: 'Watch every cent settle.',
+        hLine2: 'From green room to wire.',
+        hLine2Color: '#8b5cf6',
+        s: 'See Commission \u2192 Label \u2192 Artist \u2192 Manager \u2192 Investor resolve in real time, on the phone in your pocket.',
+        b1: 'Download Companion',
+        b1action: 'appstore',
+        b2: 'Open the Web Admin',
+        b2link: '/dashboard',
+        bgKey: 'heroMusic2',
+      },
+      {
+        dot: '#22d3ee',
+        badge: 'Sync Brief Alerts',
+        hLine1: 'Close placements',
+        hLine2: 'before soundcheck.',
+        hLine2Color: '#22d3ee',
+        s: 'Push notifications the moment a film, ad, or playlist brief matches your catalogue. Approve, counter, or pitch \u2014 in two taps.',
+        b1: 'Get on Google Play',
+        b1action: 'googleplay',
+        b2: 'See Sync Marketplace',
+        b2link: '/tools',
+        bgKey: 'heroMusic3',
+      },
+      {
+        dot: '#f59e0b',
+        badge: 'Manager Mode',
+        hLine1: 'Every artist you rep.',
+        hLine2: 'One switcher.',
+        hLine2Color: '#f59e0b',
+        s: 'Toggle between every artist on your roster \u2014 no separate logins. Approve cascade settlements while they\u2019re on stage.',
+        b1: 'Start 14-Day Trial',
+        b1link: '/register',
+        b2: 'View Pricing',
+        b2link: '/pricing',
+        bgKey: 'distributeHero',
+      },
+    ],
+    lede: 'A mobile-first admin for the people who make the music: split-cascade ledger live on your phone, sync-brief alerts, AI release playbooks, and payout balances you can verify the moment a stream pays out.',
     webEquivalent: { label: 'Open the web dashboard', to: '/dashboard' },
     adminLink: { label: 'Full admin console', to: '/dashboard' },
     features: [
-      { title: 'Live split cascade', desc: 'Watch a transaction resolve through Commission → Label → Artist → Manager → Investor in real time.' },
+      { title: 'Live split cascade', desc: 'Watch a transaction resolve through Commission \u2192 Label \u2192 Artist \u2192 Manager \u2192 Investor in real time.' },
       { title: 'Payout balance ticker', desc: 'Net to wallet, recoupment runoff and pending escrow, refreshed every minute.' },
       { title: 'Sync brief alerts', desc: 'Push notification the moment a film or ad-house brief matches your catalogue.' },
       { title: 'AI release playbook', desc: 'Drafts a 6-week rollout: pre-save windows, pitch targets, sync openings, content calendar.' },
-      { title: 'Catalogue overview', desc: 'ISRC status, DSP ingestion checks, and per-track stream counts — all on one screen.' },
-      { title: 'Manager mode', desc: 'Managers see every artist they represent in a single switcher — no separate logins.' },
+      { title: 'Catalogue overview', desc: 'ISRC status, DSP ingestion checks, and per-track stream counts \u2014 all on one screen.' },
+      { title: 'Manager mode', desc: 'Managers see every artist they represent in a single switcher \u2014 no separate logins.' },
     ],
     howItWorks: [
       { step: '01', title: 'Sign in', body: 'Same JWT as your TuneMavens.com profile. No separate native credentials.' },
-      { step: '02', title: 'Pin your dashboard', body: 'Re-order panels — payout, splits, sync alerts, contacts — to match how you actually work.' },
+      { step: '02', title: 'Pin your dashboard', body: 'Re-order panels \u2014 payout, splits, sync alerts, contacts \u2014 to match how you actually work.' },
       { step: '03', title: 'Act on alerts', body: 'Accept a sync brief, approve a split, or e-sign a contract amendment in two taps.' },
-      { step: '04', title: 'Settle in the field', body: 'Approve M-Pesa POS settlements from the same app — no laptop required.' },
+      { step: '04', title: 'Settle in the field', body: 'Approve M-Pesa POS settlements from the same app \u2014 no laptop required.' },
     ],
     testimonials: [
       { quote: 'I approved a sync brief from a green room ten minutes before stage time. Closed a placement that would have died in email.', author: 'Caleb, Lagos', role: 'Producer' },
       { quote: 'My manager and I watch the same split cascade resolve, on two phones, at the same time. No more spreadsheets.', author: 'Aisha Okoro', role: 'Artist · Okoro Sounds' },
     ],
     faq: [
-      { q: 'Is Creator Companion separate from the web dashboard?', a: 'No — it\u2019s the same admin, sized for mobile. Every action you take in either surface mirrors instantly.' },
+      { q: 'Is Creator Companion separate from the web dashboard?', a: 'No \u2014 it\u2019s the same admin, sized for mobile. Every action you take in either surface mirrors instantly.' },
       { q: 'Can I sign contracts on mobile?', a: 'Yes. E-signature flows are tap-optimised and routed through the same Contract Creation System spec\u2019d in §8.' },
-      { q: 'Does it support multi-artist managers?', a: 'Yes — see "Manager mode" above. One switcher, every artist you represent.' },
+      { q: 'Does it support multi-artist managers?', a: 'Yes \u2014 see "Manager mode" above. One switcher, every artist you represent.' },
       { q: 'How are notifications delivered?', a: 'Per §9.4, you pick a primary channel (push, email, WhatsApp, SMS). Failover to a secondary channel happens automatically.' },
       { q: 'Will my data sync if I switch phones?', a: 'Your data lives in MongoDB, not on the device. Sign in on a new device and everything is there.' },
     ],
@@ -1697,21 +1778,60 @@ const NATIVE_APP_LANDING_DATA = {
     slug: 'mpesa-pos',
     name: 'M-Pesa POS',
     target: 'For labels & venues',
-    tagline: 'Sell at the show. Settle by morning.',
-    lede: 'A portable point-of-sale for live events: merch, ticket scans, CD/vinyl. M-Pesa STK Push, card-present, and digital-wallet acceptance — all geo-routed to the right settlement rail per region.',
     accent: '#10b981',
     accentGlow: 'rgba(16, 185, 129, 0.18)',
     icon: 'CreditCard',
-    heroBg: 'linear-gradient(135deg, rgba(16,185,129,0.22) 0%, rgba(11,15,30,0.0) 60%)',
+    heroSlides: [
+      {
+        dot: '#10b981',
+        badge: 'M-Pesa STK · Daraja',
+        hLine1: 'Sell at the show.',
+        hLine2: 'Settle by morning.',
+        hLine2Color: '#10b981',
+        s: 'M-Pesa STK Push closes in under 10 seconds. Settlement runs the Compensation Engine cascade overnight \u2014 artist payouts hit by 7am.',
+        b1: 'Provision POS App',
+        b1action: 'appstore',
+        b2: 'Open the Web POS',
+        b2link: '/apps',
+        bgKey: 'heroMusic3',
+      },
+      {
+        dot: '#22d3ee',
+        badge: 'Multi-Rail · Geo-Routed',
+        hLine1: 'Tap, scan, or text.',
+        hLine2: 'Every payment rail.',
+        hLine2Color: '#22d3ee',
+        s: 'Stripe Terminal in US/UK. Flutterwave in Nigeria. M-Pesa in Kenya. The app picks the rail by detected country \u2014 zero config.',
+        b1: 'Get on Google Play',
+        b1action: 'googleplay',
+        b2: 'See Bulk Label Pricing',
+        b2link: '/pricing',
+        bgKey: 'heroMusic4',
+      },
+      {
+        dot: '#f59e0b',
+        badge: 'Per-Event Settlement',
+        hLine1: '240 t-shirts. 60 vinyls.',
+        hLine2: 'Cleared by 7am.',
+        hLine2Color: '#f59e0b',
+        s: 'Close an event session and the cascade fires automatically. Per-SKU, per-method, per-artist commissions settled within 24h.',
+        b1: 'Book a Demo',
+        b1link: '/help',
+        b2: 'Manage From Admin',
+        b2link: '/dashboard',
+        bgKey: 'heroMusic2',
+      },
+    ],
+    lede: 'A portable point-of-sale for live events: merch, ticket scans, CD/vinyl. M-Pesa STK Push, card-present, and digital-wallet acceptance \u2014 all geo-routed to the right settlement rail per region.',
     webEquivalent: { label: 'Open the web POS', to: '/apps' },
     adminLink: { label: 'Manage inventory & settlements', to: '/dashboard' },
     features: [
-      { title: 'M-Pesa STK Push', desc: 'Live Daraja integration. Customers enter PIN on their phone — checkout completes in under 10 seconds.' },
+      { title: 'M-Pesa STK Push', desc: 'Live Daraja integration. Customers enter PIN on their phone \u2014 checkout completes in under 10 seconds.' },
       { title: 'Card present + wallet', desc: 'Tap-to-pay via Stripe Terminal for Western markets; Flutterwave for Nigeria; mobile money for EA.' },
       { title: 'Merch & ticket modes', desc: 'Switch between SKU-based merch sales and barcode/QR ticket validation per event session.' },
       { title: 'Per-event settlement', desc: 'Daily settlement reports broken down by SKU, payment method, and per-artist commission cascade.' },
       { title: 'Offline queue', desc: 'Lose signal mid-show? Sales queue locally and settle the instant connectivity returns.' },
-      { title: 'Geo-gated routing', desc: 'The app picks the right settlement rail by detected country — no manual configuration.' },
+      { title: 'Geo-gated routing', desc: 'The app picks the right settlement rail by detected country \u2014 no manual configuration.' },
     ],
     howItWorks: [
       { step: '01', title: 'Provision a device', body: 'Issue a POS profile per device from the admin console. Lost devices can be remote-wiped.' },
@@ -1724,10 +1844,10 @@ const NATIVE_APP_LANDING_DATA = {
       { quote: 'Switched from a clunky Square terminal. The M-Pesa flow alone closed the gap on every cash-only segment of our crowd.', author: 'Lagos label ops', role: 'Independent label' },
     ],
     faq: [
-      { q: 'Do I need special hardware?', a: 'No — runs on any iOS 15+ or Android 9+ device. Optional thermal printer, barcode scanner, and Stripe BBPOS reader if you want them.' },
+      { q: 'Do I need special hardware?', a: 'No \u2014 runs on any iOS 15+ or Android 9+ device. Optional thermal printer, barcode scanner, and Stripe BBPOS reader if you want them.' },
       { q: 'Which countries are supported today?', a: 'Kenya (M-Pesa Daraja), Nigeria (Flutterwave), and US/UK (Stripe Terminal) at launch. ZA / UG / TZ ship in the next sprint.' },
       { q: 'How does the artist get paid?', a: 'Every sale fires the Compensation Engine cascade. Artist + manager + label shares are settled per the signed contracts on file.' },
-      { q: 'Can I manage POS devices from the web?', a: 'Yes — the admin console has a dedicated POS Devices panel for provisioning, monitoring, and remote-wipe.' },
+      { q: 'Can I manage POS devices from the web?', a: 'Yes \u2014 the admin console has a dedicated POS Devices panel for provisioning, monitoring, and remote-wipe.' },
       { q: 'What happens if the device goes offline?', a: 'Payments queue locally with cryptographic receipts. They settle the instant the device reconnects.' },
     ],
     pricingLine: 'Included in Label Bulk Package · 10,000 credits · $149.99 one-time',
@@ -1758,6 +1878,68 @@ function NativeAppLandingView() {
 
   // Icon lookup table — kept simple to avoid dynamic import gymnastics.
   const ICONS = { Headphones, TrendingUp, CreditCard };
+  // bgKey -> image asset (re-uses HomeView's hero imagery for visual cohesion)
+  const HERO_IMAGE_MAP = {
+    listenHero: listenHeroImg,
+    heroMusic1: heroMusic1Img,
+    heroMusic2: heroMusic2Img,
+    heroMusic3: heroMusic3Img,
+    heroMusic4: heroMusic4Img,
+    distributeHero: distributeHeroImg,
+  };
+
+  // --- Hero carousel state (same shape as HomeView) ---
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideState, setSlideState] = useState('in');
+  const [progress, setProgress] = useState(0);
+  const [titleHovered, setTitleHovered] = useState(false);
+  const progressRef = useRef(null);
+  const timerRef = useRef(null);
+  const SLIDE_DURATION = 18000;
+
+  const slides = data?.heroSlides || [];
+  const slideCount = slides.length;
+  const currentSlideData = slides[currentSlide] || null;
+
+  const goToSlide = (index) => {
+    if (index === currentSlide) return;
+    if (progressRef.current) cancelAnimationFrame(progressRef.current);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setSlideState('out');
+    setTimeout(() => {
+      setCurrentSlide(index);
+      setProgress(0);
+      setSlideState('in');
+    }, 400);
+  };
+  const goToPrevSlide = () => goToSlide((currentSlide - 1 + slideCount) % slideCount);
+  const goToNextSlide = () => goToSlide((currentSlide + 1) % slideCount);
+
+  useEffect(() => {
+    if (!slideCount) return undefined;
+    const startTime = Date.now();
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const newProgress = Math.min((elapsed / SLIDE_DURATION) * 100, 100);
+      setProgress(newProgress);
+      if (newProgress < 100) {
+        progressRef.current = requestAnimationFrame(updateProgress);
+      }
+    };
+    progressRef.current = requestAnimationFrame(updateProgress);
+    timerRef.current = setTimeout(() => {
+      setSlideState('out');
+      setTimeout(() => {
+        setCurrentSlide((prev) => (prev + 1) % slideCount);
+        setProgress(0);
+        setSlideState('in');
+      }, 400);
+    }, SLIDE_DURATION);
+    return () => {
+      if (progressRef.current) cancelAnimationFrame(progressRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [currentSlide, slideCount]);
 
   if (!data) {
     return (
@@ -1772,49 +1954,141 @@ function NativeAppLandingView() {
 
   const HeroIcon = ICONS[data.icon];
 
+  const renderHeroCta = (slide, which) => {
+    const label = which === 'b1' ? slide.b1 : slide.b2;
+    const link = which === 'b1' ? slide.b1link : slide.b2link;
+    const action = which === 'b1' ? slide.b1action : slide.b2action;
+    const cls = which === 'b1' ? 'hbp' : 'hbg';
+    const testId = `landing-hero-${which}-${slug}`;
+    if (action === 'appstore' || action === 'googleplay') {
+      const storeName = action === 'appstore' ? 'App Store' : 'Google Play';
+      return (
+        <button
+          type="button"
+          className={cls}
+          onClick={() => alert(`${storeName} listing for ${data.name} ships in Phase 5+ \u2014 native builds are Capacitor-wrapped per DEVELOPMENT_PLAN.md \u00A75.1.`)}
+          data-testid={testId}
+          style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          {label}
+        </button>
+      );
+    }
+    return (
+      <Link to={link} className={cls} data-testid={testId}>{label}</Link>
+    );
+  };
+
   return (
     <div
       className="native-app-landing"
       style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow }}
       data-testid={`native-app-landing-${data.slug}`}
     >
-      {/* HERO */}
-      <section className="landing-hero" style={{ background: data.heroBg }}>
-        <div className="container landing-hero-inner">
-          <div className="landing-hero-left">
-            <Link to="/native-apps" className="landing-back-link">
-              <ArrowLeft size={14} /> All native apps
-            </Link>
-            <span className="landing-target">{data.target}</span>
-            <h1 className="landing-name">{data.name}</h1>
-            <p className="landing-tagline">{data.tagline}</p>
-            <p className="landing-lede">{data.lede}</p>
-            <div className="landing-hero-ctas">
-              <button
-                type="button"
-                className="store-cta landing-cta"
-                onClick={() => alert(`App Store listing for ${data.name} coming in Phase 5+`)}
-                data-testid="landing-hero-appstore"
-              >
-                <div className="store-cta-icon"><Apple size={22} /></div>
-                <div className="store-cta-text">
-                  <span className="store-cta-sub">Download on the</span>
-                  <span className="store-cta-label">App Store</span>
-                </div>
-              </button>
-              <button
-                type="button"
-                className="store-cta landing-cta"
-                onClick={() => alert(`Google Play listing for ${data.name} coming in Phase 5+`)}
-                data-testid="landing-hero-googleplay"
-              >
-                <div className="store-cta-icon"><Download size={22} /></div>
-                <div className="store-cta-text">
-                  <span className="store-cta-sub">Get it on</span>
-                  <span className="store-cta-label">Google Play</span>
-                </div>
-              </button>
+      {/* HERO CAROUSEL — same pattern as HomeView */}
+      <div className="hw">
+        <div className="bgs">
+          {slides.map((s, idx) => (
+            <div
+              key={idx}
+              className={`bg ${currentSlide === idx ? 'on' : ''}`}
+              style={{
+                backgroundImage: `url(${HERO_IMAGE_MAP[s.bgKey] || listenHeroImg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: currentSlide === idx
+                  ? (titleHovered ? 'brightness(1.05) blur(0px)' : 'brightness(0.7) blur(1.5px)')
+                  : 'none',
+                transform: currentSlide === idx && titleHovered ? 'scale(1.04)' : 'scale(1)',
+                transition: 'filter 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)',
+              }}
+            />
+          ))}
+          <div
+            className="bgo"
+            style={{
+              opacity: titleHovered ? 0.3 : 0.8,
+              transition: 'opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1)',
+            }}
+          />
+        </div>
+
+        <div className="hs">
+          {/* Sticky back-to-gallery anchor */}
+          <Link to="/native-apps" className="landing-back-link landing-back-overlay" data-testid="landing-back-to-gallery">
+            <ArrowLeft size={14} /> All native apps
+          </Link>
+
+          <div
+            className="hcont"
+            key={currentSlide}
+            onMouseEnter={() => setTitleHovered(true)}
+            onMouseLeave={() => setTitleHovered(false)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className={`he hbadge ${slideState}`}>
+              <span
+                className="bdot"
+                style={{
+                  background: currentSlideData.dot,
+                  animation: 'pulseGlow 2s infinite',
+                }}
+              />
+              <span>{data.target} · {currentSlideData.badge}</span>
             </div>
+
+            <h1 className="ht htitle">
+              <span className={`ht-line ht-line-1 ${slideState}`}>{currentSlideData.hLine1}</span>
+              <span
+                className={`ht-line ht-line-2 ${slideState}`}
+                style={{ color: currentSlideData.hLine2Color }}
+              >
+                {currentSlideData.hLine2}
+              </span>
+            </h1>
+
+            <p className={`hp hsub ${slideState}`}>
+              {currentSlideData.s}
+            </p>
+
+            <div className={`hb hbtns ${slideState}`}>
+              {renderHeroCta(currentSlideData, 'b1')}
+              {renderHeroCta(currentSlideData, 'b2')}
+            </div>
+          </div>
+        </div>
+
+        <div className={`sui-arrows ${slideState}`}>
+          <button type="button" className="slide-nav prev" onClick={goToPrevSlide} aria-label="Previous slide" data-testid="landing-hero-prev">‹</button>
+          <button type="button" className="slide-nav next" onClick={goToNextSlide} aria-label="Next slide" data-testid="landing-hero-next">›</button>
+        </div>
+
+        <div className={`sui-bottom ${slideState}`}>
+          <div className="spr">
+            <div className="spb" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="sdots">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                className={`sd ${index === currentSlide ? 'on' : ''}`}
+                onClick={() => goToSlide(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                data-testid={`landing-hero-dot-${index}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* APP AT A GLANCE — phone mockup + lede + cross-links */}
+      <section className="landing-section">
+        <div className="container landing-glance">
+          <div className="landing-glance-text">
+            <span className="landing-section-eyebrow">{data.target}</span>
+            <h2 className="landing-section-title" style={{ marginBottom: '20px' }}>{data.name}</h2>
+            <p className="landing-lede" style={{ maxWidth: 'none', marginBottom: '24px' }}>{data.lede}</p>
             <div className="landing-cross-links">
               <Link to={data.webEquivalent.to} className="landing-cross-link" data-testid="landing-web-link">
                 <ExternalLink size={13} /> {data.webEquivalent.label}
@@ -1824,7 +2098,7 @@ function NativeAppLandingView() {
               </Link>
             </div>
           </div>
-          <div className="landing-hero-right" aria-hidden="true">
+          <div className="landing-glance-phone" aria-hidden="true">
             <div className="landing-phone-mockup">
               <div className="landing-phone-screen">
                 <div className="landing-phone-icon">{HeroIcon && <HeroIcon size={48} />}</div>
@@ -1837,10 +2111,10 @@ function NativeAppLandingView() {
       </section>
 
       {/* FEATURES */}
-      <section className="landing-section">
+      <section className="landing-section landing-section-alt">
         <div className="container">
           <span className="landing-section-eyebrow">Capabilities</span>
-          <h2 className="landing-section-title">Everything the {data.target.toLowerCase().replace('for ', '')} actually need</h2>
+          <h2 className="landing-section-title">Everything {data.target.toLowerCase().replace('for ', '')} actually need</h2>
           <div className="landing-features-grid">
             {data.features.map((f, i) => (
               <div key={i} className="landing-feature-card" data-testid={`landing-feature-${i}`}>
@@ -1854,7 +2128,7 @@ function NativeAppLandingView() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="landing-section landing-section-alt">
+      <section className="landing-section">
         <div className="container">
           <span className="landing-section-eyebrow">How it works</span>
           <h2 className="landing-section-title">Four steps from sign-in to settlement</h2>
@@ -1871,7 +2145,7 @@ function NativeAppLandingView() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="landing-section">
+      <section className="landing-section landing-section-alt">
         <div className="container">
           <span className="landing-section-eyebrow">In the field</span>
           <h2 className="landing-section-title">What people say</h2>
@@ -1890,7 +2164,7 @@ function NativeAppLandingView() {
       </section>
 
       {/* FAQ */}
-      <section className="landing-section landing-section-alt">
+      <section className="landing-section">
         <div className="container">
           <span className="landing-section-eyebrow">FAQ</span>
           <h2 className="landing-section-title">Common questions</h2>
@@ -1906,7 +2180,7 @@ function NativeAppLandingView() {
       <section className="landing-section landing-cta-section">
         <div className="container" style={{ textAlign: 'center' }}>
           <span className="landing-section-eyebrow">Get it</span>
-          <h2 className="landing-section-title">{data.tagline}</h2>
+          <h2 className="landing-section-title" style={{ margin: '0 auto 12px' }}>{data.heroSlides[0].hLine1} {data.heroSlides[0].hLine2}</h2>
           <p className="landing-pricing-line">{data.pricingLine}</p>
           <div className="landing-hero-ctas" style={{ justifyContent: 'center', marginTop: '24px' }}>
             <button
