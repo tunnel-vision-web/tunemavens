@@ -1,28 +1,56 @@
-"""Shim: route Emergent's supervisor (which runs `/app/backend/server.py`)
-to the TuneMavens Phase 1 backend living in the repo at
-`/app/tunemavens_repo/backend/`.
+"""TuneMavens FastAPI app — Phase 1 (Foundation & Subdomains).
+
+What lives here (and only here in Phase 1):
+  - Health check
+  - Auth (register / login / me / logout) — shares JWT_SECRET with intermaven.io
+  - Dashboard layout persistence (§9.6)
+  - Stubs for the §9.7 deal collections (no business logic yet)
+
+Phases 2-10 layer on top of this foundation.
 """
-import importlib.util
-import sys
-from pathlib import Path
+from __future__ import annotations
 
-from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-_TUNEMAVENS_BACKEND = Path("/app/tunemavens_repo/backend").resolve()
+from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db
+from routes import auth_router, dashboard_router, deals_router
 
-# Make the repo's backend modules importable as top-level names without
-# colliding with this shim module (which is also named `server`).
-if str(_TUNEMAVENS_BACKEND) not in sys.path:
-    sys.path.insert(0, str(_TUNEMAVENS_BACKEND))
+app = FastAPI(title="TuneMavens API", version="0.1.0 (Phase 1)")
 
-load_dotenv(_TUNEMAVENS_BACKEND / ".env", override=True)
-
-# Load the repo's server.py under a distinct module name to avoid recursion.
-_spec = importlib.util.spec_from_file_location(
-    "tunemavens_server", _TUNEMAVENS_BACKEND / "server.py"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-_module = importlib.util.module_from_spec(_spec)
-sys.modules["tunemavens_server"] = _module
-_spec.loader.exec_module(_module)
 
-app = _module.app  # re-export for uvicorn
+app.include_router(auth_router)
+app.include_router(dashboard_router)
+app.include_router(deals_router)
+
+
+@app.get("/api/health")
+def health():
+    """Liveness + Mongo sanity probe."""
+    try:
+        db.command("ping")
+        mongo_ok = True
+    except Exception as e:  # noqa: BLE001
+        mongo_ok = False
+        return {"status": "degraded", "mongo": False, "error": str(e), "db": DB_NAME}
+    return {
+        "status": "ok",
+        "service": "tunemavens-api",
+        "phase": 1,
+        "mongo": mongo_ok,
+        "db": DB_NAME,
+        # mask credentials
+        "mongo_host_set": bool(MONGO_URL),
+    }
+
+
+@app.get("/api/")
+def root():
+    return {"service": "tunemavens-api", "phase": 1, "ok": True}
