@@ -249,3 +249,57 @@ class Recommendation(BaseModel):
     rationale: str
     priority: int                               # 1 = strongest pick
     source: str = "rules"                       # rules | llm
+
+
+# ======================================================================
+# Contracts & Negotiation
+# ======================================================================
+# Every publishing / distribution / catalogue-acquisition election that
+# reaches the point of a signed agreement flows through a `Contract`. The
+# owner drafts it, invites the other parties, everyone can propose edits
+# to negotiable clauses, and each party signs when they're happy. Clauses
+# flagged non_negotiable are locked because they encode industry-standard
+# music-business legal protections (writer credit share floor,
+# indemnity boilerplate, governing law, etc.).
+class ContractProposal(BaseModel):
+    proposed_by: str            # user_id
+    proposed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    new_body: str
+    note: Optional[str] = None
+    status: str = "pending"    # 'pending' | 'accepted' | 'rejected'
+    resolved_by: Optional[str] = None
+    resolved_at: Optional[datetime] = None
+
+
+class ContractClause(BaseModel):
+    id: str                     # short slug within contract
+    title: str
+    body: str
+    negotiable: bool = True
+    non_negotiable_reason: Optional[str] = None
+    proposals: List[ContractProposal] = Field(default_factory=list)
+
+
+class ContractInvitee(BaseModel):
+    email: str
+    role: str = "counterparty"  # 'counterparty' | 'witness' | 'legal_review'
+    channel: str = "email"      # 'email' | 'whatsapp' | 'sms' | 'in_app'
+    invited_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    signed_at: Optional[datetime] = None
+    accepted_at: Optional[datetime] = None
+    user_id: Optional[str] = None  # populated when the invitee has an account
+
+
+class Contract(BaseDocument):
+    owner_id: PyObjectId
+    kind: str                   # 'publishing' | 'distribution' | 'catalogue_acquisition'
+    linked_deal_id: Optional[str] = None
+    title: str
+    status: str = "draft"      # 'draft' | 'negotiating' | 'signed' | 'cancelled'
+    clauses: List[ContractClause] = Field(default_factory=list)
+    invitees: List[ContractInvitee] = Field(default_factory=list)
+    owner_signed_at: Optional[datetime] = None
+    share_token: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+

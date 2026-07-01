@@ -83,6 +83,18 @@ export const dealsApi = {
   },
 };
 
+// --- Contracts (negotiation + e-sign) ---
+export const contractsApi = {
+  list: () => request('/api/contracts'),
+  get: (id) => request(`/api/contracts/${id}`),
+  create: (payload) => request('/api/contracts', { method: 'POST', body: payload }),
+  invite: (id, invite) => request(`/api/contracts/${id}/invite`, { method: 'POST', body: invite }),
+  propose: (id, proposal) => request(`/api/contracts/${id}/propose`, { method: 'POST', body: proposal }),
+  resolveProposal: (id, res) => request(`/api/contracts/${id}/resolve-proposal`, { method: 'POST', body: res }),
+  sign: (id) => request(`/api/contracts/${id}/sign`, { method: 'POST' }),
+  cancel: (id) => request(`/api/contracts/${id}/cancel`, { method: 'POST' }),
+};
+
 // --- Users (self-service: app activation, onboarding, recommendations) ---
 export const usersApi = {
   listMyApps: () => request('/api/users/me/apps'),

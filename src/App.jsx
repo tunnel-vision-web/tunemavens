@@ -23,7 +23,8 @@ import {
   Lock, Database, Layers, Settings, Terminal, Radio, FileText, 
   Key, RefreshCw, Cpu, HelpCircle, ChevronDown, ChevronLeft, ChevronRight, Menu, X, MessageSquare, BookOpen, Coins,
   Bell, User, LogOut, ExternalLink, CheckCircle2,
-  Smartphone, Download, Home, Apple, CreditCard, Headphones, TrendingUp
+  Smartphone, Download, Home, Apple, CreditCard, Headphones, TrendingUp,
+  RotateCcw, Send, Users as UsersIcon, PenTool, Link2, Mail
 } from 'lucide-react'
 
 // Local assets
@@ -72,7 +73,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
-import { authApi, tokenStore, adminApi, dealsApi, usersApi } from './lib/api.js'
+import { authApi, tokenStore, adminApi, dealsApi, usersApi, contractsApi } from './lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
 import { lookupApp } from './lib/appCatalog.js'
@@ -1770,10 +1771,10 @@ const NATIVE_APP_LANDING_DATA = {
     ],
     faq: [
       { q: 'Is Creator Companion separate from the web dashboard?', a: 'No \u2014 it\u2019s the same admin, sized for mobile. Every action you take in either surface mirrors instantly.' },
-      { q: 'Can I sign contracts on mobile?', a: 'Yes. E-signature flows are tap-optimised and routed through the same Contract Creation System spec\u2019d in §8.' },
+      { q: 'Can I sign contracts on mobile?', a: 'Yes. E-signature works on any phone, tap-optimised, and every party gets their own signed copy.' },
       { q: 'Does it support multi-artist managers?', a: 'Yes \u2014 see "Manager mode" above. One switcher, every artist you represent.' },
-      { q: 'How are notifications delivered?', a: 'Per §9.4, you pick a primary channel (push, email, WhatsApp, SMS). Failover to a secondary channel happens automatically.' },
-      { q: 'Will my data sync if I switch phones?', a: 'Your data lives in MongoDB, not on the device. Sign in on a new device and everything is there.' },
+      { q: 'How are notifications delivered?', a: 'Pick a primary channel (push, email, WhatsApp, SMS). If it fails, we\u2019ll try the next one automatically so you never miss anything.' },
+      { q: 'Will my data sync if I switch phones?', a: 'Your data lives in the cloud, not on the device. Sign in on a new phone and everything is right where you left it.' },
     ],
     pricingLine: 'Bundled with Creator Package · 1,200 credits · $29.99 one-time',
   },
@@ -1971,7 +1972,7 @@ function NativeAppLandingView() {
         <button
           type="button"
           className={cls}
-          onClick={() => alert(`${storeName} listing for ${data.name} ships in Phase 5+ \u2014 native builds are Capacitor-wrapped per DEVELOPMENT_PLAN.md \u00A75.1.`)}
+          onClick={() => alert(`${storeName} listing for ${data.name} coming soon.`)}
           data-testid={testId}
           style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
         >
@@ -2218,9 +2219,9 @@ function NativeAppLandingView() {
 }
 
 // ================= Native Apps View (3 flagship mobile apps) =================
-// Per DEVELOPMENT_PLAN.md §5.1 — TuneMavens Consumer App / Creator Companion App / M-Pesa POS App.
-// App definitions live in src/lib/nativeApps.js so the dashboard App Marketplace
-// can render the same exact entries inside its "Intermaven Network" tab.
+// TuneMavens Consumer App · Creator Companion App · M-Pesa POS App.
+// App definitions live in src/lib/nativeApps.js so the dashboard App
+// Marketplace can render the same exact entries inside its "Native Apps" tab.
 function NativeAppsView() {
   const apps = INTERMAVEN_NATIVE_APPS;
 
@@ -2228,7 +2229,7 @@ function NativeAppsView() {
     <button
       type="button"
       className="store-cta"
-      onClick={() => alert(`${label} listing for the ${kind} build coming soon. Native packages are wrapped via Capacitor (DEVELOPMENT_PLAN.md \u00A75.1).`)}
+      onClick={() => alert(`${label} listing for the ${kind} build coming soon.`)}
       data-testid={`store-cta-${kind}`}
     >
       <div className="store-cta-icon">
@@ -2254,7 +2255,7 @@ function NativeAppsView() {
           Three flagship native experiences. One shared TuneMavens / Intermaven account.
         </p>
         <p style={{ textAlign: 'center', color: 'var(--mu)', fontSize: '12px', marginBottom: '56px', maxWidth: '640px', margin: '0 auto 56px' }}>
-          Sign in once on the web; every native app picks up the same session, credits, and split ledger via the shared JWT.
+          Sign in once on the web and every native app picks up your same session, credits, and split ledger \u2014 no separate accounts to juggle.
         </p>
 
         <div className="native-apps-grid" data-testid="native-apps-grid">
@@ -4200,11 +4201,10 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab }) {
   const notifRef = useRef(null);
   const accountRef = useRef(null);
 
-  // Mock notification feed — Phase 1 placeholder. Real notifications wire in
-  // when §9.4 AI Notification Layer ships (DOCUMENTATION.md).
+  // Placeholder notification feed — real live updates are on the roadmap.
   const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Welcome to TuneMavens', body: 'Your shared Intermaven session is active. Credits: 600.', read: false, at: '2m ago' },
-    { id: 2, title: 'Phase 1 Foundation live', body: 'Shared JWT and the §9.7 deal schemas are wired up.', read: false, at: '12m ago' },
+    { id: 1, title: 'Welcome to TuneMavens', body: 'You\u2019re signed in across the whole network. Credits: 600.', read: false, at: '2m ago' },
+    { id: 2, title: 'Your workspace is ready', body: 'Publishing, distribution and split panels are wired up and waiting.', read: false, at: '12m ago' },
     { id: 3, title: 'Tip: complete your profile', body: 'Add a brand bio so labels can find you in Sync Marketplace.', read: true, at: '1h ago' },
   ]);
   const unread = notifications.filter(n => !n.read).length;
@@ -4281,7 +4281,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab }) {
               </ul>
               <div className="topbar-dropdown-footer">
                 <span style={{ fontSize: '11px', color: '#64748b' }}>
-                  Live feed lands in §9.4 (AI Notification Layer).
+                  Live notifications coming soon.
                 </span>
               </div>
             </div>
@@ -4696,6 +4696,16 @@ function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wizardAnswe
           </h3>
         </div>
         <div className="onboarding-stripe-controls">
+          {onOpenWizard && (
+            <button
+              type="button"
+              className="onboarding-reeval-btn"
+              onClick={onOpenWizard}
+              data-testid="onboarding-reeval"
+            >
+              <RotateCcw size={12} /> Re-evaluate goals
+            </button>
+          )}
           <button
             type="button"
             className="onboarding-collapse-btn"
@@ -4709,7 +4719,7 @@ function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wizardAnswe
             type="button"
             className="onboarding-dismiss-btn"
             onClick={dismiss}
-            title="Dismiss until next session"
+            title="Hide until next session"
             data-testid="onboarding-dismiss"
           >
             <X size={14} />
@@ -5114,16 +5124,20 @@ function RecommendationHero({ activatedSlugs, onActivate, onOpen, onOpenWizard, 
 
 
 // ================= Publishing Election Panel (Phase 3) =================
-// Lets a creator pick one of the 3 tiers from §9.3.1 and persist to publishing_deals.
+// Lets a creator pick one of the 3 publishing tiers and save it.
 function PublishingElectionPanel({ sessionUser }) {
   const [existing, setExisting] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tier, setTier] = useState('standard_admin');
   const [partner, setPartner] = useState('');
+  const [advanceAmount, setAdvanceAmount] = useState('');
+  const [recoupmentRate, setRecoupmentRate] = useState('70');
+  const [acquirer, setAcquirer] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [contractDraft, setContractDraft] = useState(null); // opened after save
 
   const loadDeals = () => {
     setLoading(true);
@@ -5162,7 +5176,6 @@ function PublishingElectionPanel({ sessionUser }) {
       headline: 'Recoupable advance against your earnings',
       desc: 'Take an upfront advance or sell your catalogue outright. Standard recoupment applies until cleared.',
       badge: 'Capital-forward path',
-      disabled: true,
     },
   ];
 
@@ -5171,17 +5184,49 @@ function PublishingElectionPanel({ sessionUser }) {
     setSuccess('');
     setSubmitting(true);
     try {
-      const payload = {
-        creator_id: sessionUser?.id || 'self',
-        tier,
-        ...(tier === 'full_service_copub' && partner ? { copublisher_partner_id: partner } : {}),
-      };
-      const deal = await dealsApi.publishing.create(payload);
-      setSuccess(`Publishing tier locked in: ${tiers.find(t => t.key === tier).title}`);
-      // Reload so the superseded → active transition is reflected from the
-      // backend (single source of truth for audit history).
+      let dealResp = null;
+      let contractContext = { tier };
+      if (tier === 'catalogue_acquisition') {
+        const amount = parseFloat(advanceAmount);
+        const rate = parseFloat(recoupmentRate);
+        if (!amount || amount <= 0) {
+          throw new Error('Enter an advance amount greater than zero');
+        }
+        // Persist to the catalogue-acquisitions ledger instead of publishing_deals.
+        dealResp = await dealsApi.catalogueAcquisitions.create({
+          creator_id: sessionUser?.id || 'self',
+          deal_type: 'publishing_advance',
+          original_amount: amount,
+          remaining_balance: amount,
+          recouped_to_date: 0,
+        });
+        contractContext = {
+          tier,
+          advance_amount: amount,
+          recoupment_rate: rate,
+          acquirer: acquirer || 'TuneMavens Catalogue Partners',
+        };
+        setSuccess(`Advance captured: USD ${amount.toLocaleString()} at ${rate}% recoupment. Draft a contract to lock the terms with your acquirer.`);
+      } else {
+        const payload = {
+          creator_id: sessionUser?.id || 'self',
+          tier,
+          ...(tier === 'full_service_copub' && partner ? { copublisher_partner_id: partner } : {}),
+        };
+        dealResp = await dealsApi.publishing.create(payload);
+        contractContext = { tier, ...(partner ? { copublisher_partner_id: partner } : {}) };
+        setSuccess(`Publishing tier locked in: ${tiers.find(t => t.key === tier).title}`);
+      }
       loadDeals();
-      return deal;
+      // Auto-draft the contract so users can invite counterparties immediately.
+      const contractKind = tier === 'catalogue_acquisition' ? 'catalogue_acquisition' : 'publishing';
+      const draft = await contractsApi.create({
+        kind: contractKind,
+        linked_deal_id: dealResp?.id || dealResp?._id,
+        context: contractContext,
+      });
+      setContractDraft(draft);
+      return dealResp;
     } catch (e) {
       setError(e.data?.detail || e.message || 'Could not save election');
     } finally {
@@ -5193,7 +5238,7 @@ function PublishingElectionPanel({ sessionUser }) {
     <div className="dashboard-card" data-testid="publishing-election-panel">
       <PanelHeader
         title="Publishing Election"
-        desc="Choose how TuneMavens administers your publishing rights. Per DOCUMENTATION.md §9.3.1 \u2014 three configurations, signed contract follows."
+        desc="Choose how TuneMavens administers your publishing rights. Three configurations \u2014 you sign a contract afterwards to lock the terms."
       />
 
       {current && (
@@ -5256,7 +5301,7 @@ function PublishingElectionPanel({ sessionUser }) {
                 <div style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', marginBottom: '4px' }}>{t.title}</div>
                 <div style={{ fontSize: '12px', color: 'var(--cyan)', fontWeight: 700, marginBottom: '10px' }}>{t.headline}</div>
                 <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.55' }}>{t.desc}</div>
-                {t.disabled && <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748b' }}>Coming soon — Phase 8</div>}
+                {t.disabled && <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748b' }}>Coming soon</div>}
               </button>
             ))}
           </div>
@@ -5276,6 +5321,53 @@ function PublishingElectionPanel({ sessionUser }) {
             </div>
           )}
 
+          {tier === 'catalogue_acquisition' && (
+            <div style={{ marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }} data-testid="catalogue-acquisition-fields">
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Advance amount (USD)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={advanceAmount}
+                  onChange={(e) => setAdvanceAmount(e.target.value)}
+                  placeholder="e.g. 50000"
+                  className="form-control"
+                  style={{ width: '100%', background: 'rgba(11, 15, 30, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9', padding: '10px', fontSize: '13px' }}
+                  data-testid="catalogue-advance-input"
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Recoupment rate (%)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={recoupmentRate}
+                  onChange={(e) => setRecoupmentRate(e.target.value)}
+                  placeholder="70"
+                  className="form-control"
+                  style={{ width: '100%', background: 'rgba(11, 15, 30, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9', padding: '10px', fontSize: '13px' }}
+                  data-testid="catalogue-recoup-input"
+                />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Acquirer / advancer (optional)</label>
+                <input
+                  type="text"
+                  value={acquirer}
+                  onChange={(e) => setAcquirer(e.target.value)}
+                  placeholder="Blue Note Music, TuneMavens Catalogue Partners, etc."
+                  className="form-control"
+                  style={{ width: '100%', background: 'rgba(11, 15, 30, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9', padding: '10px', fontSize: '13px' }}
+                  data-testid="catalogue-acquirer-input"
+                />
+              </div>
+              <p style={{ gridColumn: '1 / -1', fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
+                The advance is repaid from your future publisher share at the recoupment rate above. Your writer credit share is protected and cannot be reduced.
+              </p>
+            </div>
+          )}
+
           {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="publishing-error">{error}</p>}
           {success && <p style={{ color: '#10b981', fontSize: '12px', marginBottom: '10px' }} data-testid="publishing-success">{success}</p>}
 
@@ -5287,9 +5379,18 @@ function PublishingElectionPanel({ sessionUser }) {
             style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 800 }}
             data-testid="publishing-submit"
           >
-            {submitting ? 'Saving…' : 'Lock in publishing election'}
+            {submitting ? 'Saving…' : (tier === 'catalogue_acquisition' ? 'Save advance & draft contract' : 'Lock in publishing election')}
           </button>
         </>
+      )}
+
+      {contractDraft && (
+        <ContractDrawer
+          contract={contractDraft}
+          onClose={() => setContractDraft(null)}
+          onUpdated={(next) => setContractDraft(next)}
+          sessionUser={sessionUser}
+        />
       )}
     </div>
   );
@@ -5304,6 +5405,7 @@ function DistributionElectionPanel({ sessionUser }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [contractDraft, setContractDraft] = useState(null);
 
   const loadDeals = () => {
     setLoading(true);
@@ -5364,6 +5466,13 @@ function DistributionElectionPanel({ sessionUser }) {
       const deal = await dealsApi.distribution.create(payload);
       setSuccess(`Distribution path locked in: ${p.title}`);
       loadDeals();
+      // Auto-draft a contract so users can invite counterparties immediately.
+      const draft = await contractsApi.create({
+        kind: 'distribution',
+        linked_deal_id: deal?.id || deal?._id,
+        context: payload,
+      });
+      setContractDraft(draft);
       return deal;
     } catch (e) {
       setError(e.data?.detail || e.message || 'Could not save election');
@@ -5376,7 +5485,7 @@ function DistributionElectionPanel({ sessionUser }) {
     <div className="dashboard-card" data-testid="distribution-election-panel">
       <PanelHeader
         title="Distribution Election"
-        desc="Choose how your music reaches DSPs and how revenue splits. Per DOCUMENTATION.md §9.3.2 \u2014 three paths."
+        desc="Choose how your music reaches DSPs and how revenue splits. Three paths, each with its own trade-offs."
       />
 
       {current && (
@@ -5459,9 +5568,256 @@ function DistributionElectionPanel({ sessionUser }) {
           </button>
         </>
       )}
+
+      {contractDraft && (
+        <ContractDrawer
+          contract={contractDraft}
+          onClose={() => setContractDraft(null)}
+          onUpdated={(next) => setContractDraft(next)}
+          sessionUser={sessionUser}
+        />
+      )}
     </div>
   );
 }
+
+// ================= Contract Drawer =================
+// Full-height side panel that opens after a deal is saved. Shows every
+// clause, marks locked clauses clearly, lets the owner invite
+// counterparties (email + shareable link over email/WhatsApp/SMS),
+// review incoming proposals, accept or reject them, and sign.
+function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteChannel, setInviteChannel] = useState('email');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [proposingClause, setProposingClause] = useState(null);
+  const [proposalBody, setProposalBody] = useState('');
+  const [proposalNote, setProposalNote] = useState('');
+
+  if (!contract) return null;
+
+  const isOwner = String(contract.owner_id) === String(sessionUser?.id);
+  const cid = contract.id || contract._id;
+  const shareUrl = contract.share_token
+    ? `${window.location.origin}/#/contracts/${cid}?t=${contract.share_token}`
+    : null;
+
+  const invite = async () => {
+    if (!inviteEmail.trim()) return;
+    setBusy(true); setError('');
+    try {
+      const next = await contractsApi.invite(cid, { email: inviteEmail.trim(), channel: inviteChannel });
+      onUpdated && onUpdated(next);
+      setInviteEmail('');
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not send invite');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitProposal = async () => {
+    if (!proposingClause || !proposalBody.trim()) return;
+    setBusy(true); setError('');
+    try {
+      const next = await contractsApi.propose(cid, {
+        clause_id: proposingClause,
+        new_body: proposalBody,
+        note: proposalNote || undefined,
+      });
+      onUpdated && onUpdated(next);
+      setProposingClause(null); setProposalBody(''); setProposalNote('');
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not submit proposal');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resolveProposal = async (clauseId, idx, accept) => {
+    setBusy(true); setError('');
+    try {
+      const next = await contractsApi.resolveProposal(cid, { clause_id: clauseId, proposal_index: idx, accept });
+      onUpdated && onUpdated(next);
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not resolve');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sign = async () => {
+    setBusy(true); setError('');
+    try {
+      const next = await contractsApi.sign(cid);
+      onUpdated && onUpdated(next);
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not sign');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copyShare = () => {
+    if (!shareUrl) return;
+    navigator.clipboard?.writeText(shareUrl);
+  };
+
+  const channelHref = (channel, email) => {
+    if (!shareUrl) return null;
+    const msg = encodeURIComponent(`You have been invited to view and negotiate a music-business contract: ${shareUrl}`);
+    if (channel === 'whatsapp') return `https://wa.me/?text=${msg}`;
+    if (channel === 'sms') return `sms:?body=${msg}`;
+    return `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent(contract.title)}&body=${msg}`;
+  };
+
+  const statusColor = { draft: '#64748b', negotiating: '#F4D35E', signed: '#10b981', cancelled: '#94a3b8' }[contract.status] || '#94a3b8';
+
+  return (
+    <div
+      data-testid="contract-drawer"
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(3,7,18,0.7)', backdropFilter: 'blur(6px)', display: 'flex', justifyContent: 'flex-end', zIndex: 1050 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: 'min(720px, 100%)', height: '100%', background: '#0b0f1e', borderLeft: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column' }}
+      >
+        <header style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+          <div>
+            <div style={{ fontSize: '10px', color: statusColor, letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }} data-testid="contract-status">{contract.status}</div>
+            <h3 style={{ fontSize: '18px', color: '#f1f5f9', margin: 0, fontWeight: 800, letterSpacing: '-0.3px' }} data-testid="contract-title">{contract.title}</h3>
+          </div>
+          <button type="button" onClick={onClose} data-testid="contract-drawer-close" style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
+            <X size={18} />
+          </button>
+        </header>
+
+        <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
+          {error && <p style={{ color: '#f87171', fontSize: '12px' }} data-testid="contract-error">{error}</p>}
+
+          {isOwner && (
+            <section style={{ marginBottom: '24px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>Invite counterparties</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="email@example.com" data-testid="contract-invite-email"
+                  style={{ flex: '1 1 200px', padding: '10px 12px', background: 'rgba(11,15,30,0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9', fontSize: '13px', borderRadius: '3px' }} />
+                <select value={inviteChannel} onChange={(e) => setInviteChannel(e.target.value)} data-testid="contract-invite-channel"
+                  style={{ padding: '10px 12px', background: 'rgba(11,15,30,0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9', fontSize: '13px', borderRadius: '3px' }}>
+                  <option value="email">Email</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="sms">SMS</option>
+                  <option value="in_app">In-app only</option>
+                </select>
+                <button type="button" onClick={invite} disabled={busy || !inviteEmail.trim()} data-testid="contract-invite-submit"
+                  style={{ padding: '10px 16px', background: 'var(--cyan)', color: '#0b0f1e', border: 'none', borderRadius: '3px', fontWeight: 800, fontSize: '12px', cursor: busy ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
+                  <Send size={12} style={{ display: 'inline', marginRight: 4 }} /> Invite
+                </button>
+              </div>
+              {shareUrl && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                  <button type="button" onClick={copyShare} data-testid="contract-copy-share-link"
+                    style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#cbd5e1', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
+                    <Link2 size={11} style={{ display: 'inline', marginRight: 4 }} /> Copy share link
+                  </button>
+                  {['email', 'whatsapp', 'sms'].map((ch) => (
+                    <a key={ch} href={channelHref(ch, inviteEmail) || '#'} target="_blank" rel="noopener noreferrer" data-testid={`contract-share-${ch}`}
+                      style={{ padding: '6px 10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8', borderRadius: '3px', fontSize: '11px', fontWeight: 700, textDecoration: 'none', textTransform: 'capitalize' }}>
+                      Share via {ch}
+                    </a>
+                  ))}
+                </div>
+              )}
+              {(contract.invitees || []).length > 0 && (
+                <ul data-testid="contract-invitees-list" style={{ listStyle: 'none', padding: 0, margin: '12px 0 0' }}>
+                  {contract.invitees.map((inv, i) => (
+                    <li key={i} style={{ fontSize: '12px', color: '#cbd5e1', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <UsersIcon size={11} style={{ display: 'inline', marginRight: 6, color: '#64748b' }} />
+                      <strong>{inv.email}</strong>
+                      <span style={{ color: '#64748b' }}> \u00b7 {inv.role} \u00b7 via {inv.channel}</span>
+                      {inv.signed_at && <span style={{ color: '#10b981', marginLeft: 6 }}>signed</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
+          <section data-testid="contract-clauses">
+            <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>Clauses ({(contract.clauses || []).length})</div>
+            {(contract.clauses || []).map((c) => (
+              <div key={c.id} data-testid={`contract-clause-${c.id}`} style={{ padding: '12px 14px', border: `1px solid ${c.negotiable ? 'rgba(255,255,255,0.08)' : 'rgba(244, 211, 94, 0.35)'}`, borderRadius: '3px', marginBottom: '8px', background: 'rgba(255,255,255,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '6px' }}>
+                  <strong style={{ color: '#f1f5f9', fontSize: '13px' }}>{c.title}</strong>
+                  {!c.negotiable ? (
+                    <span data-testid={`clause-locked-${c.id}`} style={{ fontSize: '9px', color: '#F4D35E', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                      <Lock size={10} style={{ display: 'inline', marginRight: 2, verticalAlign: '-1px' }} /> Locked
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '9px', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 800 }}>Negotiable</span>
+                  )}
+                </div>
+                <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.55, margin: '0 0 8px' }}>{c.body}</p>
+                {!c.negotiable && c.non_negotiable_reason && (
+                  <p style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic', margin: '0 0 6px' }}>Why it\u2019s locked: {c.non_negotiable_reason}</p>
+                )}
+                {(c.proposals || []).map((p, idx) => (
+                  <div key={idx} style={{ marginTop: '8px', padding: '8px 10px', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', background: 'rgba(255,255,255,0.02)' }} data-testid={`clause-proposal-${c.id}-${idx}`}>
+                    <div style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>Proposal \u00b7 {p.status}</div>
+                    <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 6px' }}>{p.new_body}</p>
+                    {p.note && <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 6px', fontStyle: 'italic' }}>Note: {p.note}</p>}
+                    {isOwner && p.status === 'pending' && (
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button type="button" onClick={() => resolveProposal(c.id, idx, true)} data-testid={`proposal-accept-${c.id}-${idx}`}
+                          style={{ padding: '4px 10px', background: '#10b981', color: '#0b0f1e', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>Accept</button>
+                        <button type="button" onClick={() => resolveProposal(c.id, idx, false)} data-testid={`proposal-reject-${c.id}-${idx}`}
+                          style={{ padding: '4px 10px', background: 'transparent', color: '#f87171', border: '1px solid #f87171', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>Reject</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {c.negotiable && proposingClause !== c.id && (
+                  <button type="button" onClick={() => { setProposingClause(c.id); setProposalBody(c.body); }} data-testid={`clause-propose-btn-${c.id}`}
+                    style={{ marginTop: '6px', padding: '4px 10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <PenTool size={11} style={{ display: 'inline', marginRight: 4 }} /> Propose an edit
+                  </button>
+                )}
+                {proposingClause === c.id && (
+                  <div style={{ marginTop: '8px' }}>
+                    <textarea rows={4} value={proposalBody} onChange={(e) => setProposalBody(e.target.value)} data-testid={`clause-propose-body-${c.id}`}
+                      style={{ width: '100%', padding: '8px 10px', background: 'rgba(11,15,30,0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9', fontSize: '12px', borderRadius: '3px', fontFamily: 'inherit' }} />
+                    <input type="text" placeholder="Note (optional)" value={proposalNote} onChange={(e) => setProposalNote(e.target.value)} data-testid={`clause-propose-note-${c.id}`}
+                      style={{ width: '100%', padding: '8px 10px', marginTop: '6px', background: 'rgba(11,15,30,0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9', fontSize: '12px', borderRadius: '3px' }} />
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                      <button type="button" onClick={submitProposal} disabled={busy} data-testid={`clause-propose-submit-${c.id}`}
+                        style={{ padding: '5px 10px', background: 'var(--cyan)', color: '#0b0f1e', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: busy ? 'wait' : 'pointer' }}>Send proposal</button>
+                      <button type="button" onClick={() => setProposingClause(null)} style={{ padding: '5px 10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </section>
+        </div>
+
+        <footer style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+          <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+            {contract.owner_signed_at && isOwner && 'You signed \u2713'}
+            {!contract.owner_signed_at && isOwner && 'Sign when you\u2019re happy with the clauses'}
+          </div>
+          {contract.status !== 'signed' && contract.status !== 'cancelled' && (
+            <button type="button" onClick={sign} disabled={busy} data-testid="contract-sign"
+              style={{ padding: '10px 20px', background: '#10b981', color: '#0b0f1e', border: 'none', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: busy ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
+              Sign contract
+            </button>
+          )}
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 
 // ================= App Marketplace (Phase 3) =================
 // Two tabs:
@@ -7440,7 +7796,7 @@ function App() {
     sessionStorage.removeItem('tunemavens_session');
   };
 
-  // Cross-portal session recognition (DOCUMENTATION.md §9.1).
+  // Recognises your Intermaven session when you land on the TuneMavens app.
   // On mount, ask the backend if there's a valid session — covers users
   // arriving from intermaven.io with a shared HttpOnly cookie, or returning
   // users whose Bearer token is still in sessionStorage.
