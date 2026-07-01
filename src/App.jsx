@@ -4650,7 +4650,13 @@ function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wizardAnswe
   if (sessionUser?.role === 'consumer' || sessionUser?.role === 'admin') return null;
 
   const profileDone = !!(sessionUser?.name && sessionUser?.brand_name && sessionUser?.country);
-  const wizardDone = !!(wizardAnswers && wizardAnswers.primary_goal);
+  const wizardDone = !!(
+    wizardAnswers && (
+      (Array.isArray(wizardAnswers.primary_goal) && wizardAnswers.primary_goal.length > 0) ||
+      (typeof wizardAnswers.primary_goal === 'string' && wizardAnswers.primary_goal) ||
+      (wizardAnswers.primary_goal_other && wizardAnswers.primary_goal_other.trim())
+    )
+  );
   const publishingDone = pubDeals.length > 0;
   const distributionDone = distDeals.length > 0;
   const appActivated = (sessionUser?.apps || []).length > 0;
@@ -4752,13 +4758,18 @@ function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wizardAnswe
 }
 
 // ================= Onboarding Wizard Modal (Phase 3, §9.8) =================
-// A short 6-question wizard that captures the user's stated goals. Everything
-// posts to /api/users/me/onboarding — the Recommendation Agent reads it to
-// personalise the App Marketplace picks.
+// A short 6-question wizard that captures the user's stated goals. Questions
+// flagged `multi: true` allow multiple picks. Every question also exposes an
+// "Other" option with an inline free-text input so the AI Recommendation
+// Agent can search for the closest best solution when none of the preset
+// answers fit.
 const WIZARD_QUESTIONS = [
   {
     key: 'primary_goal',
     label: 'What\u2019s your primary goal right now?',
+    helper: 'Pick every goal that applies \u2014 the agent optimises across all of them.',
+    multi: true,
+    allowOther: true,
     options: [
       { value: 'release_music', label: 'Release my own music' },
       { value: 'manage_roster', label: 'Manage a roster / label' },
@@ -4771,6 +4782,8 @@ const WIZARD_QUESTIONS = [
   {
     key: 'release_cadence',
     label: 'How often do you (or your roster) release new music?',
+    multi: false,
+    allowOther: true,
     options: [
       { value: '0', label: 'Not yet releasing' },
       { value: '1-3', label: '1\u20133 tracks a year' },
@@ -4781,6 +4794,8 @@ const WIZARD_QUESTIONS = [
   {
     key: 'distribution_setup',
     label: 'What\u2019s your current distribution setup?',
+    multi: false,
+    allowOther: true,
     options: [
       { value: 'none', label: 'None yet' },
       { value: 'diy_aggregator', label: 'DIY aggregator (DistroKid, TuneCore, etc.)' },
@@ -4791,6 +4806,9 @@ const WIZARD_QUESTIONS = [
   {
     key: 'revenue_focus',
     label: 'Where do you make (or want to make) most of your revenue?',
+    helper: 'Pick every stream that matters \u2014 the agent balances the mix.',
+    multi: true,
+    allowOther: true,
     options: [
       { value: 'streaming', label: 'Streaming royalties' },
       { value: 'live', label: 'Live shows / physical sales' },
@@ -4801,6 +4819,8 @@ const WIZARD_QUESTIONS = [
   {
     key: 'team_size',
     label: 'How big is your team?',
+    multi: false,
+    allowOther: true,
     options: [
       { value: 'solo', label: 'Just me' },
       { value: '2-5', label: '2\u20135 people' },
@@ -4813,12 +4833,17 @@ const WIZARD_QUESTIONS = [
 function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(() => ({
-    primary_goal: initial?.primary_goal || '',
+    primary_goal: Array.isArray(initial?.primary_goal) ? initial.primary_goal : [],
     release_cadence: initial?.release_cadence || '',
     distribution_setup: initial?.distribution_setup || '',
-    revenue_focus: initial?.revenue_focus || '',
+    revenue_focus: Array.isArray(initial?.revenue_focus) ? initial.revenue_focus : [],
     team_size: initial?.team_size || '',
     country: initial?.country || '',
+    primary_goal_other: initial?.primary_goal_other || '',
+    release_cadence_other: initial?.release_cadence_other || '',
+    distribution_setup_other: initial?.distribution_setup_other || '',
+    revenue_focus_other: initial?.revenue_focus_other || '',
+    team_size_other: initial?.team_size_other || '',
     freeform_notes: initial?.freeform_notes || '',
   }));
   const [saving, setSaving] = useState(false);
@@ -4836,14 +4861,38 @@ function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
   const totalSteps = WIZARD_QUESTIONS.length + 1;
   const isLast = step === totalSteps - 1;
   const current = step < WIZARD_QUESTIONS.length ? WIZARD_QUESTIONS[step] : null;
-  const canProceed = current ? !!answers[current.key] : true;
+  const otherKey = current ? `${current.key}_other` : null;
+  // A step is answered if the user picked at least one option OR filled the
+  // "Other" input.
+  const currentValue = current ? answers[current.key] : null;
+  const currentOther = current ? (answers[otherKey] || '').trim() : '';
+  const hasSelection = current
+    ? (current.multi ? Array.isArray(currentValue) && currentValue.length > 0 : !!currentValue)
+    : true;
+  const canProceed = current ? (hasSelection || !!currentOther) : true;
+
+  const toggleOption = (key, value, multi) => {
+    setAnswers((a) => {
+      if (multi) {
+        const arr = Array.isArray(a[key]) ? a[key] : [];
+        const next = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+        return { ...a, [key]: next };
+      }
+      return { ...a, [key]: a[key] === value ? '' : value };
+    });
+  };
+
+  const isSelected = (key, value, multi) => {
+    const v = answers[key];
+    return multi ? (Array.isArray(v) && v.includes(value)) : v === value;
+  };
 
   const save = async () => {
     setSaving(true);
     setError('');
     try {
-      await usersApi.saveOnboarding(answers);
-      if (onSaved) onSaved(answers);
+      const saved = await usersApi.saveOnboarding(answers);
+      if (onSaved) onSaved(saved || answers);
       onClose();
     } catch (e) {
       setError(e.data?.detail || e.message || 'Could not save your responses');
@@ -4860,7 +4909,7 @@ function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: 'linear-gradient(180deg, rgba(11,15,30,0.98), rgba(11,15,30,0.94))', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', padding: '32px 32px 28px', maxWidth: '560px', width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
+        style={{ background: 'linear-gradient(180deg, rgba(11,15,30,0.98), rgba(11,15,30,0.94))', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', padding: '32px 32px 28px', maxWidth: '560px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
@@ -4880,19 +4929,45 @@ function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
 
         {current && (
           <>
-            <p style={{ fontSize: '15px', color: '#e2e8f0', marginBottom: '18px', fontWeight: 600 }} data-testid={`wizard-question-${current.key}`}>{current.label}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+            <p style={{ fontSize: '15px', color: '#e2e8f0', marginBottom: current.helper ? '6px' : '18px', fontWeight: 600 }} data-testid={`wizard-question-${current.key}`}>{current.label}</p>
+            {current.helper && (
+              <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: 0, marginBottom: '14px' }} data-testid={`wizard-helper-${current.key}`}>{current.helper}</p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
               {current.options.map((opt) => {
-                const isSelected = answers[current.key] === opt.value;
+                const selected = isSelected(current.key, opt.value, current.multi);
                 return (
-                  <button key={opt.value} type="button" onClick={() => setAnswers((a) => ({ ...a, [current.key]: opt.value }))} data-testid={`wizard-option-${current.key}-${opt.value}`}
-                    style={{ padding: '12px 14px', textAlign: 'left', background: isSelected ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.03)', border: isSelected ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: isSelected ? '#f1f5f9' : '#cbd5e1', fontSize: '13px', fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'border-color 0.15s ease, background 0.15s ease' }}
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => toggleOption(current.key, opt.value, current.multi)}
+                    data-testid={`wizard-option-${current.key}-${opt.value}`}
+                    aria-pressed={selected}
+                    style={{ padding: '12px 14px', textAlign: 'left', background: selected ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.03)', border: selected ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: selected ? '#f1f5f9' : '#cbd5e1', fontSize: '13px', fontWeight: selected ? 700 : 500, cursor: 'pointer', transition: 'border-color 0.15s ease, background 0.15s ease', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
+                    <span style={{ width: current.multi ? '14px' : '10px', height: current.multi ? '14px' : '10px', borderRadius: current.multi ? '2px' : '50%', border: `1px solid ${selected ? 'var(--cyan)' : 'rgba(255,255,255,0.25)'}`, background: selected ? 'var(--cyan)' : 'transparent', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {selected && current.multi && <Check size={10} color="#0b0f1e" strokeWidth={4} />}
+                    </span>
                     {opt.label}
                   </button>
                 );
               })}
             </div>
+            {current.allowOther && (
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1.2px', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px', display: 'block' }}>
+                  Other {current.multi ? '(add your own \u2014 optional)' : '(describe if none of the above fit)'}
+                </label>
+                <input
+                  type="text"
+                  value={answers[otherKey] || ''}
+                  onChange={(e) => setAnswers((a) => ({ ...a, [otherKey]: e.target.value }))}
+                  data-testid={`wizard-other-${current.key}`}
+                  placeholder="Type here \u2014 the AI will find the closest matching apps"
+                  style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#f1f5f9', fontSize: '13px' }}
+                />
+              </div>
+            )}
           </>
         )}
 
@@ -5621,7 +5696,13 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, onOpenWi
         <div data-testid="app-marketplace-your-path">
           <RecommendationHero
             activatedSlugs={activated}
-            hasAnswers={!!(wizardAnswers && wizardAnswers.primary_goal)}
+            hasAnswers={!!(
+              wizardAnswers && (
+                (Array.isArray(wizardAnswers.primary_goal) && wizardAnswers.primary_goal.length > 0) ||
+                (typeof wizardAnswers.primary_goal === 'string' && wizardAnswers.primary_goal) ||
+                (wizardAnswers.primary_goal_other && wizardAnswers.primary_goal_other.trim())
+              )
+            )}
             onOpenWizard={() => onOpenWizard && onOpenWizard()}
             onActivate={activate}
             onOpen={(app) => {
@@ -5635,7 +5716,11 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, onOpenWi
             }}
             refreshKey={activated.length}
           />
-          {!wizardAnswers?.primary_goal && (
+          {!(wizardAnswers && (
+            (Array.isArray(wizardAnswers.primary_goal) && wizardAnswers.primary_goal.length > 0) ||
+            (typeof wizardAnswers.primary_goal === 'string' && wizardAnswers.primary_goal) ||
+            (wizardAnswers.primary_goal_other && wizardAnswers.primary_goal_other.trim())
+          )) && (
             <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: 0, marginBottom: 0, lineHeight: '1.55' }}>
               You can still browse the full catalogue from the other tabs, but the wizard makes the recommendations far more accurate. It takes about 30 seconds.
             </p>

@@ -126,7 +126,7 @@ def rules_recommend(
         # No onboarding yet — role-based ranking is the best we can do.
         return _finalize(scores, active_set, limit, source="rules", freeform=None)
 
-    # ---- Primary goal ----
+    # ---- Primary goal (multi-select — accumulate boosts across every pick) ----
     goal_boost = {
         "release_music": {"distribution-election": 4, "publishing-election": 4, "catalog-porting": 3, "split-cascade": 3, "intermaven-creator-companion": 2},
         "manage_roster": {"intermaven-smart-crm": 5, "catalog-porting": 4, "split-cascade": 3, "intermaven-contracts": 2},
@@ -135,8 +135,13 @@ def rules_recommend(
         "sell_at_shows": {"intermaven-mpesa-pos": 5, "mpesa-pos-inventory": 4, "mpesa-pos-settlement": 3, "intermaven-invoicing-payments": 2, "intermaven-pos-system": 3},
         "consume": {"tunemavens-library": 5, "tunemavens-tips": 3, "intermaven-tunemavens": 4},
     }
-    for slug, boost in goal_boost.get(o.primary_goal or "", {}).items():
-        scores[slug] += boost
+    for goal in (o.primary_goal or []):
+        for slug, boost in goal_boost.get(goal, {}).items():
+            scores[slug] += boost
+    if o.primary_goal_other:
+        # A generic explorer signal — nudges the most versatile picks.
+        scores["intermaven-smart-crm"] += 1
+        scores["intermaven-brandkit-ai"] += 1
 
     # ---- Distribution setup ----
     if o.distribution_setup == "none":
@@ -152,15 +157,18 @@ def rules_recommend(
         scores["catalog-porting"] += 3
         scores["split-cascade"] += 2
 
-    # ---- Revenue focus ----
+    # ---- Revenue focus (multi-select) ----
     rev_boost = {
         "streaming": {"distribution-election": 3, "split-cascade": 3, "publishing-election": 2},
         "live": {"intermaven-mpesa-pos": 4, "mpesa-pos-inventory": 3, "mpesa-pos-settlement": 2},
         "sync": {"sync-marketplace": 4, "escrow-contracts": 2, "intermaven-pitch-deck-ai": 2},
         "tips_merch": {"tunemavens-tips": 4, "intermaven-tunemavens": 2, "intermaven-mpesa-pos": 2},
     }
-    for slug, boost in rev_boost.get(o.revenue_focus or "", {}).items():
-        scores[slug] += boost
+    for rev in (o.revenue_focus or []):
+        for slug, boost in rev_boost.get(rev, {}).items():
+            scores[slug] += boost
+    if o.revenue_focus_other:
+        scores["intermaven-invoicing-payments"] += 1
 
     # ---- Release cadence ----
     if o.release_cadence in ("4-10", "10+"):

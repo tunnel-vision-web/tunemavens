@@ -69,21 +69,37 @@ allow-list is rejected with a `422`.
 
 ```
 {
-  primary_goal: 'release_music' | 'manage_roster' | 'grow_fans'
-              | 'sync_licensing' | 'sell_at_shows' | 'consume',
+  // Multi-select — users can pick more than one value
+  primary_goal: ('release_music' | 'manage_roster' | 'grow_fans'
+              | 'sync_licensing' | 'sell_at_shows' | 'consume')[],
+  revenue_focus: ('streaming' | 'live' | 'sync' | 'tips_merch')[],
+
+  // Single-select (mutually exclusive by nature)
   release_cadence: '0' | '1-3' | '4-10' | '10+',
   distribution_setup: 'none' | 'diy_aggregator' | 'label_deal' | 'self_distributed',
-  revenue_focus: 'streaming' | 'live' | 'sync' | 'tips_merch',
   team_size: 'solo' | '2-5' | '6-20' | '20+',
   country: string?,                       // ISO 3166-1 alpha-2
-  freeform_notes: string?,                // free-form context for the LLM
+
+  // "Other" per-question free-text — the LLM reads these to find the
+  // closest matching apps when none of the preset answers fit.
+  primary_goal_other: string?,
+  revenue_focus_other: string?,
+  release_cadence_other: string?,
+  distribution_setup_other: string?,
+  team_size_other: string?,
+
+  freeform_notes: string?,                // catch-all free-form context
   updated_at: datetime
 }
 ```
 
 Rendered as a 6-step modal wizard triggered from the OnboardingStripe's
 `Tell us about your goals` step, from the App Marketplace's "Get my picks"
-hero CTA, or from the "Retake wizard" button on an existing hero.
+hero CTA, or from the "Retake wizard" button on an existing hero. **Multi-
+select** questions render checkbox-style pills that toggle independently.
+Every question also exposes an inline **Other** text input so the user
+can describe their situation in their own words \u2014 the AI reads that
+text when it can't match the preset options.
 
 ### 9.8.3 Activity signals
 

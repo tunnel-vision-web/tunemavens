@@ -210,17 +210,28 @@ class DomainMappingCreate(BaseModel):
 class OnboardingResponse(BaseModel):
     """Free-form yet structured questionnaire captured on first-run.
 
-    Every field is optional so users can skip and revise. The
-    Recommendation Agent (see backend/services/recommendation_engine.py)
-    reads this + the user's activity log to produce ranked app picks.
+    Every field is optional so users can skip and revise. Users can pick
+    MULTIPLE values for goal-type questions and add a free-form "other"
+    per question so the AI Recommendation Agent can search for the
+    closest best solution.
     """
-    primary_goal: Optional[str] = None          # release_music | manage_roster | grow_fans | sync_licensing | sell_at_shows | consume
+    # Multi-select fields (user can pick more than one)
+    primary_goal: List[str] = Field(default_factory=list)
+    revenue_focus: List[str] = Field(default_factory=list)
+    # Single-select fields (mutually exclusive by nature)
     release_cadence: Optional[str] = None       # 0 | 1-3 | 4-10 | 10+
     distribution_setup: Optional[str] = None    # none | diy_aggregator | label_deal | self_distributed
-    revenue_focus: Optional[str] = None         # streaming | live | sync | tips_merch
     team_size: Optional[str] = None             # solo | 2-5 | 6-20 | 20+
     country: Optional[str] = None               # ISO 3166-1 alpha-2
-    freeform_notes: Optional[str] = None        # anything else the user wants the agent to know
+    # Per-question "Other" free-text — the LLM reads these to find the
+    # closest best solution even when the user didn't pick a preset option.
+    primary_goal_other: Optional[str] = None
+    revenue_focus_other: Optional[str] = None
+    release_cadence_other: Optional[str] = None
+    distribution_setup_other: Optional[str] = None
+    team_size_other: Optional[str] = None
+    # Overall free-form note
+    freeform_notes: Optional[str] = None
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
