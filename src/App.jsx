@@ -75,6 +75,7 @@ import { useRegion } from './RegionContext.jsx'
 import { authApi, tokenStore, adminApi, dealsApi, usersApi } from './lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
+import { lookupApp } from './lib/appCatalog.js'
 
 import './App.css'
 
@@ -4353,6 +4354,23 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
   const [userCredits, setUserCredits] = useState(sessionUser?.credits || 600);
   const [payoutBalance, setPayoutBalance] = useState(4235.80);
   const [collapsed, setCollapsed] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardAnswers, setWizardAnswers] = useState(null);
+
+  // Fetch onboarding on mount so the OnboardingStripe knows whether the wizard
+  // has been completed.
+  useEffect(() => {
+    if (!sessionUser) return;
+    usersApi.getOnboarding()
+      .then((o) => setWizardAnswers(o))
+      .catch(() => setWizardAnswers(null));
+  }, [sessionUser?.id]);
+
+  // Log tab-visit activity signals — the recommendation engine uses them.
+  useEffect(() => {
+    if (!sessionUser || !activeTab) return;
+    usersApi.logActivity({ kind: 'tab_visit', ref: activeTab });
+  }, [activeTab, sessionUser?.id]);
 
   useEffect(() => {
     if (!sessionUser) {
@@ -4420,7 +4438,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
       case 'distribution-election':
         return <DistributionElectionPanel sessionUser={sessionUser} />;
       case 'app-marketplace':
-        return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} />;
+        return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} />;
       default:
         return <div>Tab not found</div>;
     }
@@ -4584,7 +4602,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
           setActiveTab={setActiveTab}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
-          <OnboardingStripe sessionUser={sessionUser} setActiveTab={setActiveTab} />
+          <OnboardingStripe sessionUser={sessionUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} />
           {renderActivePanel()}
         </div>
         {/* Task 4: thin copyright strip pinned at bottom of admin */}
@@ -4594,6 +4612,12 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
           <span>Operating on the shared Intermaven network.</span>
         </div>
       </main>
+      <OnboardingWizardModal
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        initial={wizardAnswers}
+        onSaved={(answers) => setWizardAnswers(answers)}
+      />
     </div>
   );
 }
@@ -4602,7 +4626,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
 // Shows the user what's still missing in their setup. Status derives live from
 // what's actually in Mongo (publishing_deals, distribution_deals, users.apps),
 // so the stripe shrinks naturally as the user completes each step.
-function OnboardingStripe({ sessionUser, setActiveTab }) {
+function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wizardAnswers }) {
   const [pubDeals, setPubDeals] = useState([]);
   const [distDeals, setDistDeals] = useState([]);
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('onboarding_dismissed') === 'true');
@@ -4626,6 +4650,7 @@ function OnboardingStripe({ sessionUser, setActiveTab }) {
   if (sessionUser?.role === 'consumer' || sessionUser?.role === 'admin') return null;
 
   const profileDone = !!(sessionUser?.name && sessionUser?.brand_name && sessionUser?.country);
+  const wizardDone = !!(wizardAnswers && wizardAnswers.primary_goal);
   const publishingDone = pubDeals.length > 0;
   const distributionDone = distDeals.length > 0;
   const appActivated = (sessionUser?.apps || []).length > 0;
@@ -4633,6 +4658,7 @@ function OnboardingStripe({ sessionUser, setActiveTab }) {
 
   const steps = [
     { id: 'profile', label: 'Complete your profile', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+    { id: 'wizard', label: 'Tell us about your goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
     { id: 'publishing', label: 'Elect your publishing tier', done: publishingDone, tab: 'publishing-election', cta: 'Choose Tier' },
     { id: 'distribution', label: 'Elect your distribution path', done: distributionDone, tab: 'distribution-election', cta: 'Choose Path' },
     { id: 'apps', label: 'Activate a Dashboard App', done: appActivated, tab: 'app-marketplace', cta: 'Browse Apps' },
@@ -4708,7 +4734,8 @@ function OnboardingStripe({ sessionUser, setActiveTab }) {
                   type="button"
                   className="onboarding-step-cta"
                   onClick={() => {
-                    if (s.external) window.location.hash = s.external;
+                    if (s.onClick) s.onClick();
+                    else if (s.external) window.location.hash = s.external;
                     else if (setActiveTab) setActiveTab(s.tab);
                   }}
                   data-testid={`onboarding-cta-${s.id}`}
@@ -4723,6 +4750,293 @@ function OnboardingStripe({ sessionUser, setActiveTab }) {
     </div>
   );
 }
+
+// ================= Onboarding Wizard Modal (Phase 3, §9.8) =================
+// A short 6-question wizard that captures the user's stated goals. Everything
+// posts to /api/users/me/onboarding — the Recommendation Agent reads it to
+// personalise the App Marketplace picks.
+const WIZARD_QUESTIONS = [
+  {
+    key: 'primary_goal',
+    label: 'What\u2019s your primary goal right now?',
+    options: [
+      { value: 'release_music', label: 'Release my own music' },
+      { value: 'manage_roster', label: 'Manage a roster / label' },
+      { value: 'grow_fans', label: 'Grow my fanbase' },
+      { value: 'sync_licensing', label: 'License my music for sync' },
+      { value: 'sell_at_shows', label: 'Sell at shows & merch' },
+      { value: 'consume', label: 'Just listen & discover' },
+    ],
+  },
+  {
+    key: 'release_cadence',
+    label: 'How often do you (or your roster) release new music?',
+    options: [
+      { value: '0', label: 'Not yet releasing' },
+      { value: '1-3', label: '1\u20133 tracks a year' },
+      { value: '4-10', label: '4\u201310 tracks a year' },
+      { value: '10+', label: '10+ tracks a year' },
+    ],
+  },
+  {
+    key: 'distribution_setup',
+    label: 'What\u2019s your current distribution setup?',
+    options: [
+      { value: 'none', label: 'None yet' },
+      { value: 'diy_aggregator', label: 'DIY aggregator (DistroKid, TuneCore, etc.)' },
+      { value: 'label_deal', label: 'Signed to a label' },
+      { value: 'self_distributed', label: 'Self-distributed via my own imprint' },
+    ],
+  },
+  {
+    key: 'revenue_focus',
+    label: 'Where do you make (or want to make) most of your revenue?',
+    options: [
+      { value: 'streaming', label: 'Streaming royalties' },
+      { value: 'live', label: 'Live shows / physical sales' },
+      { value: 'sync', label: 'Sync placements' },
+      { value: 'tips_merch', label: 'Tips & merch from fans' },
+    ],
+  },
+  {
+    key: 'team_size',
+    label: 'How big is your team?',
+    options: [
+      { value: 'solo', label: 'Just me' },
+      { value: '2-5', label: '2\u20135 people' },
+      { value: '6-20', label: '6\u201320 people' },
+      { value: '20+', label: '20+ people' },
+    ],
+  },
+];
+
+function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState(() => ({
+    primary_goal: initial?.primary_goal || '',
+    release_cadence: initial?.release_cadence || '',
+    distribution_setup: initial?.distribution_setup || '',
+    revenue_focus: initial?.revenue_focus || '',
+    team_size: initial?.team_size || '',
+    country: initial?.country || '',
+    freeform_notes: initial?.freeform_notes || '',
+  }));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setStep(0);
+      setError('');
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const totalSteps = WIZARD_QUESTIONS.length + 1;
+  const isLast = step === totalSteps - 1;
+  const current = step < WIZARD_QUESTIONS.length ? WIZARD_QUESTIONS[step] : null;
+  const canProceed = current ? !!answers[current.key] : true;
+
+  const save = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      await usersApi.saveOnboarding(answers);
+      if (onSaved) onSaved(answers);
+      onClose();
+    } catch (e) {
+      setError(e.data?.detail || e.message || 'Could not save your responses');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      data-testid="onboarding-wizard-modal"
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(3, 7, 18, 0.78)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: 'linear-gradient(180deg, rgba(11,15,30,0.98), rgba(11,15,30,0.94))', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', padding: '32px 32px 28px', maxWidth: '560px', width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '6px' }}>
+              Step {step + 1} of {totalSteps}
+            </div>
+            <h3 style={{ fontSize: '20px', color: '#f1f5f9', margin: 0, fontWeight: 800, letterSpacing: '-0.3px' }}>Tell us about you</h3>
+          </div>
+          <button type="button" onClick={onClose} data-testid="wizard-close" style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', marginBottom: '24px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${Math.round(((step + 1) / totalSteps) * 100)}%`, background: 'linear-gradient(90deg, var(--cyan), var(--purple))', transition: 'width 0.3s ease' }} />
+        </div>
+
+        {current && (
+          <>
+            <p style={{ fontSize: '15px', color: '#e2e8f0', marginBottom: '18px', fontWeight: 600 }} data-testid={`wizard-question-${current.key}`}>{current.label}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+              {current.options.map((opt) => {
+                const isSelected = answers[current.key] === opt.value;
+                return (
+                  <button key={opt.value} type="button" onClick={() => setAnswers((a) => ({ ...a, [current.key]: opt.value }))} data-testid={`wizard-option-${current.key}-${opt.value}`}
+                    style={{ padding: '12px 14px', textAlign: 'left', background: isSelected ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.03)', border: isSelected ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: isSelected ? '#f1f5f9' : '#cbd5e1', fontSize: '13px', fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'border-color 0.15s ease, background 0.15s ease' }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {step === WIZARD_QUESTIONS.length && (
+          <>
+            <p style={{ fontSize: '15px', color: '#e2e8f0', marginBottom: '10px', fontWeight: 600 }} data-testid="wizard-question-freeform">Anything else the recommendation agent should know?</p>
+            <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '12px' }}>Optional. Free-form context \u2014 sound, market, goals, constraints. The AI reads this too.</p>
+            <textarea value={answers.freeform_notes} onChange={(e) => setAnswers((a) => ({ ...a, freeform_notes: e.target.value }))} rows={5} data-testid="wizard-freeform" placeholder="e.g. Afrobeats artist based in Nairobi, mostly live income right now, want to break into sync in the next 12 months."
+              style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#f1f5f9', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', marginBottom: '24px' }}
+            />
+          </>
+        )}
+
+        {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '12px' }} data-testid="wizard-error">{error}</p>}
+
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button type="button" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0} data-testid="wizard-back"
+            style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: step === 0 ? '#475569' : '#cbd5e1', borderRadius: '3px', fontWeight: 700, fontSize: '12px', cursor: step === 0 ? 'not-allowed' : 'pointer' }}>
+            <ArrowLeft size={12} style={{ display: 'inline', marginRight: 4 }} /> Back
+          </button>
+          {isLast ? (
+            <button type="button" onClick={save} disabled={saving} data-testid="wizard-submit"
+              style={{ padding: '10px 20px', background: 'linear-gradient(90deg, var(--cyan), var(--purple))', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: saving ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
+              {saving ? 'Saving\u2026' : 'Get my picks'} <ArrowRight size={12} style={{ display: 'inline', marginLeft: 4 }} />
+            </button>
+          ) : (
+            <button type="button" onClick={() => setStep((s) => s + 1)} disabled={!canProceed} data-testid="wizard-next"
+              style={{ padding: '10px 20px', background: canProceed ? 'var(--cyan)' : 'rgba(255,255,255,0.08)', border: 'none', color: canProceed ? '#0b0f1e' : '#64748b', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: canProceed ? 'pointer' : 'not-allowed', letterSpacing: '0.3px' }}>
+              Next <ArrowRight size={12} style={{ display: 'inline', marginLeft: 4 }} />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================= Recommendation Hero (Phase 3, §9.8) =================
+// Displayed at the top of the App Marketplace. When no onboarding responses
+// exist we show a CTA to run the wizard; once responses exist we show the
+// ranked picks from /api/users/me/recommendations (LLM-first, rules fallback).
+function RecommendationHero({ activatedSlugs, onActivate, onOpen, onOpenWizard, hasAnswers, refreshKey }) {
+  const [recs, setRecs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState('rules');
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!hasAnswers) {
+      setRecs([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    usersApi.getRecommendations(4)
+      .then((list) => {
+        if (cancelled) return;
+        const arr = Array.isArray(list) ? list : [];
+        setRecs(arr);
+        if (arr[0]) setSource(arr[0].source || 'rules');
+      })
+      .catch(() => setRecs([]))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [hasAnswers, activatedSlugs.join(','), refreshKey]);
+
+  if (!hasAnswers) {
+    return (
+      <div data-testid="recommendation-hero-cta"
+        style={{ padding: '18px 22px', background: 'linear-gradient(90deg, rgba(34,211,238,0.10), rgba(139,92,246,0.08)), rgba(11,15,30,0.65)', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: '220px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>Not sure where to start?</div>
+          <div style={{ fontSize: '14px', color: '#f1f5f9', fontWeight: 700 }}>Answer 5 quick questions and the AI Recommendation Agent will pick the best combination of apps for you.</div>
+        </div>
+        <button type="button" onClick={onOpenWizard} data-testid="recommendation-hero-open-wizard"
+          style={{ padding: '10px 18px', background: 'linear-gradient(90deg, var(--cyan), var(--purple))', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '12px', cursor: 'pointer', letterSpacing: '0.3px' }}>
+          Get my picks <ArrowRight size={12} style={{ display: 'inline', marginLeft: 4 }} />
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div data-testid="recommendation-hero-loading" style={{ padding: '18px', border: '1px solid rgba(34,211,238,0.15)', borderRadius: '3px', marginBottom: '24px', color: '#94a3b8', fontSize: '12px' }}>
+        Consulting the recommendation agent&hellip;
+      </div>
+    );
+  }
+
+  if (!recs.length) return null;
+
+  return (
+    <div data-testid="recommendation-hero"
+      style={{ padding: '18px 22px', background: 'linear-gradient(90deg, rgba(34,211,238,0.08), rgba(139,92,246,0.06)), rgba(11,15,30,0.5)', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+        <div>
+          <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '2px' }}>
+            {`Recommended for you \u00b7 ${source === 'llm' ? 'AI-generated' : 'Rule-based'}`}
+          </div>
+          <div style={{ fontSize: '14px', color: '#f1f5f9', fontWeight: 700 }}>Your best-fit combination</div>
+        </div>
+        <button type="button" onClick={onOpenWizard} data-testid="recommendation-hero-retake"
+          style={{ padding: '6px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Retake wizard
+        </button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+        {recs.map((r) => {
+          const app = lookupApp(r.slug);
+          if (!app) return null;
+          const Icon = app.icon;
+          const isActive = activatedSlugs.includes(r.slug);
+          return (
+            <div key={r.slug} data-testid={`recommendation-card-${r.slug}`}
+              style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: isActive ? `1px solid ${app.accent}` : '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '3px', background: `${app.accent}1f`, color: app.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon size={16} />
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#f1f5f9', flex: 1, minWidth: 0 }}>{app.name}</div>
+                <div style={{ fontSize: '9px', color: 'var(--cyan)', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 800 }}>#{r.priority}</div>
+              </div>
+              <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5', margin: 0, flex: 1 }}>{r.rationale}</p>
+              {isActive ? (
+                <button type="button" onClick={() => onOpen(app)} data-testid={`recommendation-open-${r.slug}`}
+                  style={{ padding: '6px 10px', background: app.accent, color: '#0b0f1e', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', letterSpacing: '0.3px' }}>
+                  {app.launchUrl ? 'Launch \u2197' : app.landingPath ? 'View App' : 'Open'}
+                </button>
+              ) : (
+                <button type="button" onClick={() => onActivate(r.slug)} data-testid={`recommendation-activate-${r.slug}`}
+                  style={{ padding: '6px 10px', background: app.accent, color: '#0b0f1e', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', letterSpacing: '0.3px' }}>
+                  Activate
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+
 
 // ================= Publishing Election Panel (Phase 3) =================
 // Lets a creator pick one of the 3 tiers from §9.3.1 and persist to publishing_deals.
@@ -5081,12 +5395,11 @@ function DistributionElectionPanel({ sessionUser }) {
 //      Intermaven catalogue (NativeAppsView source-of-truth in nativeApps.js).
 // Activation persists to `users.apps[]` via POST /api/users/me/apps and ticks
 // off the "Activate a Dashboard App" step in the OnboardingStripe.
-function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
+function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, onOpenWizard, wizardAnswers }) {
   const [activated, setActivated] = useState(sessionUser?.apps || []);
   const [busySlug, setBusySlug] = useState(null);
   const [error, setError] = useState('');
-  // 'tunemavens' | 'native' | 'intermaven'
-  const [activeMarketTab, setActiveMarketTab] = useState('tunemavens');
+  const [activeMarketTab, setActiveMarketTab] = useState('recommended');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -5254,7 +5567,7 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
     <div className="dashboard-card" data-testid="app-marketplace-panel">
       <PanelHeader
         title="App Marketplace"
-        desc={"Activate dashboard apps, flagship native apps, and Intermaven Platform tools \u2014 all from one console."}
+        desc={"Start with 'Your Path' \u2014 the AI Recommendation Agent picks the best combination of apps for your goals. Or browse the full catalogue in the other tabs."}
       />
 
       {/* Top-level tab switcher */}
@@ -5269,6 +5582,7 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
         }}
       >
         {[
+          { key: 'recommended', label: 'Your Path', testid: 'app-marketplace-tab-recommended' },
           { key: 'tunemavens', label: 'TuneMavens Apps', testid: 'app-marketplace-tab-tunemavens' },
           { key: 'native', label: 'Native Apps', testid: 'app-marketplace-tab-native' },
           { key: 'intermaven', label: 'Intermaven Platform', testid: 'app-marketplace-tab-intermaven' },
@@ -5303,12 +5617,38 @@ function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab }) {
 
       {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="app-marketplace-error">{error}</p>}
 
+      {activeMarketTab === 'recommended' && (
+        <div data-testid="app-marketplace-your-path">
+          <RecommendationHero
+            activatedSlugs={activated}
+            hasAnswers={!!(wizardAnswers && wizardAnswers.primary_goal)}
+            onOpenWizard={() => onOpenWizard && onOpenWizard()}
+            onActivate={activate}
+            onOpen={(app) => {
+              if (app.launchUrl) {
+                window.open(app.launchUrl, '_blank', 'noopener,noreferrer');
+              } else if (app.landingPath) {
+                navigate(app.landingPath);
+              } else if (setActiveTab && app.tab) {
+                setActiveTab(app.tab);
+              }
+            }}
+            refreshKey={activated.length}
+          />
+          {!wizardAnswers?.primary_goal && (
+            <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: 0, marginBottom: 0, lineHeight: '1.55' }}>
+              You can still browse the full catalogue from the other tabs, but the wizard makes the recommendations far more accurate. It takes about 30 seconds.
+            </p>
+          )}
+        </div>
+      )}
+
       {activeMarketTab === 'tunemavens' && (
         <>
           {recommended.length > 0 && (
             <div style={{ marginBottom: '24px' }} data-testid="app-marketplace-recommended">
               <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '10px' }}>
-                Recommended for {role}s
+                Popular for {role}s
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
                 {recommended.map(renderCard)}

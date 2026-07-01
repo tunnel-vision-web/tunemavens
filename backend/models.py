@@ -201,3 +201,40 @@ class DomainMappingCreate(BaseModel):
     path: str
     subdomain: str
     enabled: bool = True
+
+
+
+# ======================================================================
+# §9.8 — Onboarding responses & the AI Recommendation Agent
+# ======================================================================
+class OnboardingResponse(BaseModel):
+    """Free-form yet structured questionnaire captured on first-run.
+
+    Every field is optional so users can skip and revise. The
+    Recommendation Agent (see backend/services/recommendation_engine.py)
+    reads this + the user's activity log to produce ranked app picks.
+    """
+    primary_goal: Optional[str] = None          # release_music | manage_roster | grow_fans | sync_licensing | sell_at_shows | consume
+    release_cadence: Optional[str] = None       # 0 | 1-3 | 4-10 | 10+
+    distribution_setup: Optional[str] = None    # none | diy_aggregator | label_deal | self_distributed
+    revenue_focus: Optional[str] = None         # streaming | live | sync | tips_merch
+    team_size: Optional[str] = None             # solo | 2-5 | 6-20 | 20+
+    country: Optional[str] = None               # ISO 3166-1 alpha-2
+    freeform_notes: Optional[str] = None        # anything else the user wants the agent to know
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ActivityEvent(BaseModel):
+    """A single behaviour signal — tab visits, deal creations, activations."""
+    kind: str                                   # tab_visit | deal_created | app_activated | app_deactivated | stripe_progress
+    ref: Optional[str] = None                   # tab id / deal type / slug etc.
+    meta: Optional[dict] = None
+    at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Recommendation(BaseModel):
+    """A single ranked app pick returned by the Recommendation Agent."""
+    slug: str
+    rationale: str
+    priority: int                               # 1 = strongest pick
+    source: str = "rules"                       # rules | llm

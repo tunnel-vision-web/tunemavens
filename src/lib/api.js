@@ -83,11 +83,15 @@ export const dealsApi = {
   },
 };
 
-// --- Users (self-service: app activation, etc.) ---
+// --- Users (self-service: app activation, onboarding, recommendations) ---
 export const usersApi = {
   listMyApps: () => request('/api/users/me/apps'),
   activateApp: (slug) => request('/api/users/me/apps', { method: 'POST', body: { slug } }),
   deactivateApp: (slug) => request(`/api/users/me/apps/${encodeURIComponent(slug)}`, { method: 'DELETE' }),
+  getOnboarding: () => request('/api/users/me/onboarding'),
+  saveOnboarding: (payload) => request('/api/users/me/onboarding', { method: 'POST', body: payload }),
+  logActivity: (event) => request('/api/users/me/activity', { method: 'POST', body: event }).catch(() => null),
+  getRecommendations: (limit = 6) => request(`/api/users/me/recommendations?limit=${limit}`),
 };
 
 // --- Admin (admin role only) ---
