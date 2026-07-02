@@ -1,0 +1,99 @@
+name: Deploy to Hostinger VPS
+
+# Triggers automatically on every push to main.
+# Manual runs are also supported via the Actions tab.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Only one deploy at a time — if a new push arrives mid-deploy, the
+  # in-flight run is cancelled so the newest commit is what ships.
+  group: deploy-vps
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Sanity-build the frontend inside CI so we fail early on broken code
+      # rather than half-deploying and then rolling back on the VPS.
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install & build frontend (dry-run)
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Add VPS host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      # Bootstrap runs idempotently — safe to run every deploy. It only
+      # installs anything if that thing is missing; otherwise it's a no-op.
+      - name: Bootstrap VPS (idempotent)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+        run: |
+          scp deploy/bootstrap.sh "$VPS_USER@$VPS_HOST":/tmp/tm_bootstrap.sh
+          ssh "$VPS_USER@$VPS_HOST" \
+            "APP_DOMAIN='$APP_DOMAIN' bash /tmp/tm_bootstrap.sh"
+
+      - name: Deploy latest commit
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          EMERGENT_LLM_KEY: ${{ secrets.EMERGENT_LLM_KEY }}
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          scp deploy/deploy.sh "$VPS_USER@$VPS_HOST":/tmp/tm_deploy.sh
+          ssh "$VPS_USER@$VPS_HOST" \
+            "APP_DOMAIN='$APP_DOMAIN' \
+             MONGO_URL='$MONGO_URL' \
+             DB_NAME='$DB_NAME' \
+             JWT_SECRET='$JWT_SECRET' \
+             EMERGENT_LLM_KEY='$EMERGENT_LLM_KEY' \
+             GIT_SHA='$GIT_SHA' \
+             bash /tmp/tm_deploy.sh"
+
+      - name: Post-deploy health check
+        env:
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+        run: |
+          set -e
+          # Retry for up to 30s — systemd sometimes takes a moment.
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -sk -o /dev/null -w "%{http_code}" "https://$APP_DOMAIN/api/") || true
+            if [ "$code" = "200" ]; then
+              echo "Backend healthy (HTTP $code)"
+              exit 0
+            fi
+            echo "Attempt $i: got $code, retrying in 5s..."
+            sleep 5
+          done
+          echo "Backend never returned 200 — see systemd logs on VPS."
+          exit 1
