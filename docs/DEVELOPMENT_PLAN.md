@@ -1,66 +1,181 @@
 # DEVELOPMENT_PLAN.md — TuneMavens
 
-## Phase 1 · Foundation & Subdomains ✅ SHIPPED
-FastAPI backend, Vite React frontend, shared JWT auth, Mongo persistence,
-admin console with role-gated tabs, domain-mapping registry.
-
-## Phase 2 · Consumer Audio System 🔵 P1 Backlog
-`/stream` player, library persistence, tip flow, offline cache metadata.
-
-## Phase 3 · Creator Pipeline ✅ SHIPPED
-- Publishing Election (3 tiers, audit-trail)
-- Distribution Election (3 paths, audit-trail)
-- OnboardingStripe (top-of-dashboard progress bar)
-- App Marketplace with three tabs — TuneMavens Apps / Native Apps / Intermaven Platform
-- **§9.8 AI Recommendation Agent** (NEW)
-  - 6-step onboarding wizard modal
-  - Activity signal capture (tab_visits, deal creations, app activations)
-  - Two-layer recommendation engine (LLM primary, rules fallback)
-  - "Your Path" tab as the default landing surface of the App Marketplace, with the "Recommended for you" hero
-
-**Deliverables shipped in §9.8:**
-| Artifact | File |
-|---|---|
-| Onboarding + activity + recommendation models | `backend/models.py` |
-| Rules + LLM recommendation engine | `backend/services/recommendation_engine.py` |
-| Users router (apps, onboarding, activity, recs) | `backend/routes/users_router.py` |
-| Unified app lookup | `src/lib/appCatalog.js` |
-| Wizard modal + hero + Your Path tab | `src/App.jsx` |
-
-**Immediate follow-ups (P1) inside Phase 3:**
-- Split `App.jsx` (>7500 lines) into `/src/components/{dashboard, landing, marketplace}` modules — quality/velocity win before Phase 4.
-- Improve LLM budget: current Emergent key hits `$0.001` cap after a couple of calls, so the app runs on the rules layer in practice. Increase budget or swap to `gpt-5.4-mini` for cheaper recs.
-
-## Phase 4 · Record Label Console 🔵 P1
-Roster CSV upload, distribution Path C negotiation wizard, catalogue
-acquisition ledger.
-
-## Phase 5 · DJ Pool Engine 🟡 P2
-## Phase 6 · Sync Marketplace 🟡 P2
-## Phase 7 · Split Cascade Engine 🟡 P2 — Compensation math from `COMPENSATION_AND_CONTRACTS.md`
-## Phase 8 · Escrow & Contract Module 🟡 P2 — Contract creation from `COMPENSATION_AND_CONTRACTS.md`
-## Phase 9 · Ad Injection Platform 🟡 P2
-## Phase 10 · Media House Routing 🟡 P2
+TuneMavens is a **music-business community + marketplace**. Marketplace
+phases (1–10) handle transactions; interleaved community phases (2.5,
+4.5, 5.5, 6.5) handle the social layer that makes the marketplace
+self-reinforcing.
 
 ---
 
-## Recommendation Agent — design principles (Phase 3 §9.8)
+## Marketplace phases (1–10)
 
-1. **Never block the user.** The endpoint has a 15s LLM budget and falls
-   back to the rules layer on any failure. Users always see picks.
+### Phase 1 · Foundation & Subdomains ✅ SHIPPED
+FastAPI backend, Vite React frontend, shared JWT auth, Mongo persistence,
+admin console with role-gated tabs, domain-mapping registry.
 
-2. **Same output shape regardless of layer.** The frontend can't tell
-   whether the picks came from Claude or the deterministic scorer, aside
-   from a `source: 'llm' | 'rules'` label in the eyebrow.
+### Phase 2 · Consumer Audio System 🔵 P1 Backlog
+`/stream` player, library persistence, tip flow, offline cache metadata.
 
-3. **Signals grow over time.** Onboarding is the seed, but every tab
-   visit, every deal created, every activation refines the picks.
+### Phase 3 · Creator Pipeline ✅ SHIPPED
+- Publishing Election, Distribution Election, OnboardingStripe
+- App Marketplace (Your Path / TuneMavens / Native / Intermaven)
+- §9.8 AI Recommendation Agent (LLM primary + rules fallback)
+- Contract Negotiation subsystem (locked vs negotiable clauses, invite,
+  edit proposals, e-sign)
 
-4. **Full-network vision.** The agent recommends across the entire
-   Intermaven ecosystem, not just TuneMavens dashboard panels — a
-   creator might get Social AI + Brand Kit AI + Distribution Election
-   as a single starter pack.
+**Immediate follow-ups (P1) inside Phase 3:**
+- Split `App.jsx` (~6,447 lines) into `/src/components/{dashboard, landing}`
+  modules — marketplace already extracted to `phase3.jsx`.
+- Raise the Emergent LLM key budget or swap to `gpt-5.4-mini` so the LLM
+  layer actually serves traffic (currently rules layer answers 100%).
 
-5. **Easy to retake.** The wizard is idempotent (upsert on user_id) and
-   the hero always shows a "Retake wizard" button. Users are encouraged
-   to revisit as their business evolves.
+### Phase 4 · Record Label Console 🔵 P1
+Roster CSV upload, distribution Path C negotiation wizard, catalogue
+acquisition ledger.
+
+### Phase 5 · DJ Pool Engine 🟡 P2
+### Phase 6 · Sync Marketplace 🟡 P2
+### Phase 7 · Split Cascade Engine 🟡 P2 — compensation math from `COMPENSATION_AND_CONTRACTS.md`
+### Phase 8 · Escrow & Contract Module 🟡 P2 — expands the Phase 3 contract subsystem with escrow + funds movement
+### Phase 9 · Ad Injection Platform 🟡 P2
+### Phase 10 · Media House Routing 🟡 P2
+
+---
+
+## Community phases (NEW — cross-cutting)
+
+### Phase 2.5 · Identity & Roles 🟠 P1
+Ships alongside Phase 2. Turns the current single-role `users.role` field
+into a first-class identity layer.
+
+**Deliverables**
+- Role picker on signup — full list (creator, supervisor, label, booking
+  agent, manager, exec, DJ, studio, consumer)
+- Role-specific landing pages (each role's public marketing surface)
+- Verified pro badge system (admin-verified toggle on the user record)
+- Role-based nav / feature gating in the dashboard
+- Backend: extend `users` model with `roles: string[]` (multi-role allowed)
+  and `pro_verified: bool`
+
+### Phase 4.5 · Social Graph Foundation 🟠 P1
+Ships alongside Phase 4. The connectivity substrate everything else
+plugs into.
+
+**Deliverables**
+- `follows` collection (`follower_id`, `followee_id`, `created_at`)
+- `likes` / `subscribes` for creator/exec pages
+- Activity event fanout: **listens, downloads, tips, deals** feed into
+  each connection's home feed (respecting privacy)
+- **2nd-degree discovery**: "You're 2 hops from Rick Rubin via Sarah"
+- **Privacy Center** — per-signal toggles (listens, downloads, deals,
+  follows, 2nd-degree visibility). Default: all public.
+- Feed API + home-feed UI
+
+### Phase 5.5 · Community & Wall of Fame 🟠 P1
+Ships alongside Phase 5.
+
+**Deliverables**
+- `/community` route with a curated grid of featured figures
+- Each tile: profile thumbnail, short bio, social links, **auto-fetched
+  featured YouTube video** (thumbnail via YouTube oEmbed, video pulled
+  via YouTube Data API v3 `search.list` sorted by viewCount)
+- Admin composer: enter subject's name + channel handle → system fetches
+  metadata → admin approves → invite sent
+- **Unclaimed = hidden.** Tile becomes public only after the subject
+  clicks the invite, completes the interests modal, and creates a free
+  account
+- `featured_profiles` collection with state machine:
+  `pending → invited → claimed | declined | expired`
+
+### Phase 6.5 · CRM & Growth Engine 🟠 P1
+Ships alongside Phase 6. The outbound growth loop.
+
+**Deliverables**
+- Admin composer UI (segment picker + editable template + CTA URL picker
+  that defaults to the segment's role-landing page)
+- **Channels (swappable adapters)**
+  - `email` → Resend (only third party; env-configured)
+  - `in_app` → native inbox (`messages` collection + WebSocket/polling)
+  - `social_dm` → copy-to-clipboard template + "Mark as sent" tracking
+    (admin manually posts to Instagram/X)
+  - `sms` → deferred (adapter interface reserved, no implementation)
+- Campaign object: `campaigns` collection with `segment`, `channels[]`,
+  `template`, `cta_url`, `stats`
+- Send tracking: `campaign_sends` (per-recipient state machine)
+- **In-app inbox** — user-facing `/inbox` route with read/unread state,
+  reply-to-admin, threading
+
+---
+
+## Roadmap dependency map
+
+```
+Phase 1  ──►  Phase 2  ──►  Phase 4  ──►  Phase 5..10
+                │              │
+                ▼              ▼
+             Phase 2.5    Phase 4.5 (social graph)
+             (roles)         │
+                             ▼
+                          Phase 5.5 (Wall of Fame)
+                             │
+                             ▼
+                          Phase 6.5 (CRM + inbox)
+```
+
+Community phases can technically ship in parallel with their host
+marketplace phase — they only depend on Phase 2.5 (roles) being in place.
+
+---
+
+## Design principles
+
+### Recommendation Agent (Phase 3 §9.8)
+
+1. **Never block the user.** 15s LLM timeout, silent fallback to rules.
+2. **Same output shape regardless of layer** (`source: 'llm' | 'rules'`).
+3. **Signals grow over time.** Onboarding seeds, activity refines.
+4. **Full-network vision.** Recommends across TuneMavens + Intermaven.
+5. **Easy to retake.** Wizard is idempotent; hero shows "Retake wizard."
+
+### Social graph (Phase 4.5)
+
+1. **Public by default, private by choice.** Growth-first, but Privacy
+   Center is one click from every profile.
+2. **Activity is a first-class citizen.** Listens, downloads, tips, deals
+   all fanout to connections' feeds (respecting privacy).
+3. **2nd-degree is the moat.** The killer feature isn't "I follow Sarah,"
+   it's "Sarah introduced me to the 3 deal-makers I need."
+4. **Symmetric by design.** A supervisor and a fan see the same public
+   profile. Pro badge signals authority without gating access.
+
+### Wall of Fame (Phase 5.5)
+
+1. **Curation over algorithm.** Admin elects; no ML ranking.
+2. **Consent-gated visibility.** Tiles hidden until claimed.
+3. **Zero-friction claim.** Invite click → interests modal → free account.
+   The Wall of Fame is a *funnel*, not a Wikipedia.
+4. **Real presence, not scraped.** YouTube integration surfaces the
+   subject's actual current content, not a stale bio.
+
+### CRM & Growth Engine (Phase 6.5)
+
+1. **Composer once, channels many.** All channels share the same segment
+   + template + CTA logic; only the delivery adapter differs.
+2. **One third party.** Only email (Resend) touches an external API.
+   Everything else is self-hosted or manual.
+3. **CTAs route anywhere.** Default is the segment's role landing page,
+   but any URL on the platform is a valid target.
+4. **Editable everything.** Templates are drafts, not scripts. Admin can
+   rewrite before sending.
+
+---
+
+## Third-party integration checklist
+
+| Service | Purpose | Phase | Status |
+|---|---|---|---|
+| Claude Sonnet 4.6 (Emergent) | Recommendation engine | 3 | ✅ Integrated |
+| YouTube Data API v3 | Wall of Fame video fetch | 5.5 | ⏳ Pending (needs Google Cloud API key) |
+| Resend | Email delivery for CRM invites | 6.5 | ⏳ Pending (needs Resend API key + verified sending domain) |
+| ~~Twilio~~ | ~~SMS~~ | — | ❌ Deferred (out of scope for launch) |
+| ~~Instagram/X API~~ | ~~Social DM~~ | — | ❌ Never (copy-to-clipboard replaces API integration) |
