@@ -3602,56 +3602,64 @@
    Perfect For sidebar (persistent left rail on landing routes)
    ============================================================ */
 
-/* --- Layout: 1/4 fixed rail + 3/4 main content shift ------------- */
+/* --- Layout: Sidebar renders below hero, in-flow layout --- */
 .pf-sidebar {
-  position: fixed;
+  position: relative;
   left: 0;
-  top: 72px;                         /* clears the navbar */
-  width: 25vw;
-  max-width: 320px;
-  min-width: 240px;
-  height: calc(100vh - 72px);
-  z-index: 40;
+  top: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 100%;
+  height: auto;
+  z-index: 30;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.008) 100%),
     rgba(11, 15, 30, 0.72);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.15) transparent;
+  overflow-y: visible;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
 }
-.pf-sidebar::-webkit-scrollbar { width: 6px; }
+.pf-sidebar::-webkit-scrollbar { width: 0px; }
 .pf-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.14);
+  background: transparent;
   border-radius: 3px;
 }
 
 .pf-sidebar-inner {
-  padding: 28px 20px 40px;
+  padding: 28px 24px 40px;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  justify-content: center;
 }
 
 .pf-sidebar-header {
-  font-family: 'Space Grotesk', 'Outfit', sans-serif;
-  font-size: 11px;
+  font-family: 'Sansation', sans-serif;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #94a3b8;
+  letter-spacing: 0px;
+  text-transform: none;
+  color: #f1f5f9;
   padding: 0 4px 12px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   margin: 0;
+  width: 100%;
+  text-align: center;
 }
 
 .pf-sidebar-grid {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
 }
 
 /* --- Tile: square, 3px radius, flat colour, staggered slide-in --- */
@@ -3664,8 +3672,8 @@
   justify-content: center;
   gap: 8px;
   padding: 18px 12px;
-  aspect-ratio: 1 / 1;         /* square */
-  max-width: 100%;
+  width: 160px;
+  height: 160px;
   border-radius: 3px;          /* per PRD */
   background: #131a2e;
   border: 1px solid rgba(255,255,255,0.08);
@@ -3694,7 +3702,14 @@
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
   color: var(--pf-accent);
-  transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease;
+  transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease, transform 220ms ease;
+}
+
+.pf-tile:hover .pf-tile-logo {
+  background: rgba(0, 0, 0, 0.18);
+  border-color: rgba(0, 0, 0, 0.28);
+  color: #0b0f1e;
+  transform: scale(1.08);
 }
 
 .pf-tile-label {
@@ -3707,7 +3722,7 @@
 }
 
 .pf-tile-sub {
-  font-size: 10px;
+  font-size: 12.5px;
   line-height: 1.35;
   color: #94a3b8;
   letter-spacing: 0.1px;
@@ -3725,6 +3740,7 @@
   background: rgba(0, 0, 0, 0.18);
   border-color: rgba(0, 0, 0, 0.28);
   color: #0b0f1e;
+  transform: scale(1.08);
 }
 .pf-tile:hover .pf-tile-label,
 .pf-tile:hover .pf-tile-sub {
@@ -3756,6 +3772,11 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes pfTileContinuousScroll {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-100vh); }
+}
+
 /* --- Main content shifts right to make room for the rail --------- */
 .app-landing-wrapper > .landing-hero,
 .app-landing-wrapper > section.landing-section,
@@ -3765,22 +3786,21 @@
    children of the routed views too. */
 .app-landing-wrapper section.landing-section,
 .app-landing-wrapper .landing-hero {
-  /* No-op selector kept for future targeting; actual shift happens
-     via the body class below. */
+  /* No-op selector kept for future targeting; sidebar no longer shifts
+     content horizontally — it renders below the hero on all pages. */
 }
 
-/* When the sidebar is rendered, main content shifts. We do this via a
-   body-level media-query-aware rule so it also applies to the footer
-   and hero (which is full-bleed but should still visually align). */
+/* When the sidebar is rendered, it no longer shifts the main content
+   (sidebar now renders in-flow below the hero, not fixed to the left). */
 @media (min-width: 961px) {
   body:has(.pf-sidebar) .app-landing-wrapper {
-    padding-left: min(25vw, 320px);
+    padding-left: 0;
   }
   /* :has() fallback — a plain descendant rule keeps mobile browsers
      that don't support :has() from breaking; they get the sidebar
      hidden anyway (see mobile block below). */
   .app-landing-wrapper:has(.pf-sidebar) {
-    padding-left: min(25vw, 320px);
+    padding-left: 0;
   }
 }
 
