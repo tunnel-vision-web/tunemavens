@@ -9,6 +9,101 @@ plus §9.9–§9.12 (Identity, Social Graph, Community, CRM — IN PLAN).
 
 ---
 
+## §9.5 — Landing Page Map & "Perfect For" Sidebar  ✅ SHIPPED (sidebar) / 🟠 P1 (role pages)
+
+### 9.5.1 Landing page inventory
+
+All public marketing surfaces. Every route in this table shares the
+persistent **"Perfect for" sidebar** (§9.5.2) on desktop.
+
+| Route | Purpose | Audience | Status |
+|---|---|---|---|
+| `/` | Root marketing (Music Operations & AI Suite) | General / Intermaven brand | ✅ Shipped |
+| `/native-apps/tunemavens` | **TuneMavens listeners app landing — THE main consumer landing** | Consumers / fans | ✅ Shipped |
+| `/native-apps/creator-companion` | Creator Companion native app | Creators (mobile promo) | ✅ Shipped |
+| `/native-apps/mpesa-pos` | M-Pesa POS native app | Merchants | ✅ Shipped |
+| `/native-apps` | Gallery of all native apps | All | ✅ Shipped |
+| `/tools` | AI Tools catalogue | All | ✅ Shipped |
+| `/apps` | Dashboard apps catalogue | All | ✅ Shipped |
+| `/pricing`, `/about`, `/help` | Supporting pages | All | ✅ Shipped |
+| `/for/creator` | Role landing — Creators (Artists / Podcasters / DJs) | Creators | 🟠 Stub (Phase 2.5 = full page) |
+| `/for/exec` | Role landing — Execs (Label / A&R / Industry) | Execs | 🟠 Stub |
+| `/for/supervisor` | Role landing — Music Supervisors (sync) | Supervisors | 🟠 Stub |
+| `/for/consumer` | Redirects to `/native-apps/tunemavens` | Consumers | 🟠 Planned redirect |
+| `/for/booking-agent` | Role landing — Booking Agents | Agents | 🟠 Stub |
+| `/for/manager` | Role landing — Managers | Managers | 🟠 Stub |
+
+**Rule of thumb:** every `/for/{role}` route eventually gets a hand-crafted
+marketing page in **Phase 2.5 · Identity & Roles**. Until then, the
+`RoleLandingView` component in `App.jsx` renders a minimal role-tuned
+hero so links from the sidebar and CRM invites don't 404.
+
+### 9.5.2 "Perfect for" sidebar — persistent left rail
+
+**Component:** `src/components/PerfectForSidebar.jsx`
+**Rendered by:** `App.jsx` (top level, right after `<Navbar/>`; self-guards
+via route allow-list)
+**Route allow-list:** `/`, `/pricing`, `/about`, `/help`, `/tools`, `/apps`,
+`/native-apps`, `/native-apps/*`, `/for/*`. Never renders on the dashboard,
+login, or register routes.
+
+**Layout**
+- Desktop (≥961px): fixed left rail, **1/4 viewport width** (min 240px,
+  max 320px), full remaining viewport height. Main content shifts right
+  via `padding-left` on `.app-landing-wrapper` (uses CSS `:has()`).
+- Mobile (<961px): hidden. A horizontal picker will replace it in a
+  later pass (deliberately out of scope for v1).
+
+**Header** — "PERFECT FOR" (uppercase, 11px, letter-spaced, muted grey).
+
+**Tiles** — one per role, in this order:
+
+| Order | Role | Route | Accent |
+|---|---|---|---|
+| 1 | Creators (Artists · Podcasters · DJs) | `/for/creator` | `--cyan` `#22d3ee` |
+| 2 | Execs (Label · A&R · Industry) | `/for/exec` | `--purple` `#8b5cf6` |
+| 3 | Music Supervisors (Sync for film & TV) | `/for/supervisor` | `--am` `#f59e0b` |
+| 4 | Consumers (Everyday listeners) | `/native-apps/tunemavens` | `--gr` `#10b981` |
+| 5 | Booking Agents (Book & represent live acts) | `/for/booking-agent` | `--blue` `#2563eb` |
+| 6 | Managers (Day-to-day artist teams) | `/for/manager` | `#ef4444` |
+
+**Tile spec**
+- Square (`aspect-ratio: 1/1`), **3px border-radius**.
+- Flat background (`#131a2e`) with subtle border. No gradients.
+- Contents (vertically stacked, horizontally centred):
+  1. Logo (currently a `lucide-react` icon placeholder; real logos plug
+     into `PERFECT_FOR_ROLES[i].Icon` later)
+  2. Label (13px, bold Outfit)
+  3. Short description (10px, muted)
+- Hover: background swaps to `--pf-accent` (flat, no gradient), label +
+  sub swap to dark ink for contrast, subtle `translateY(-2px)` lift +
+  accent shadow.
+- Active (current route): same as hover but persistent — signals "you
+  are here."
+- Keyboard focus: 2px outlined ring in the tile's accent colour.
+
+**Entrance animation**
+- Each tile enters with `pfTileSlideIn` (620ms cubic-bezier easing):
+  slides down from `translateY(-28px)`, fades in 0 → 1.
+- Staggered by 80ms per tile after a 120ms opening beat — cascades
+  top-to-bottom.
+- Honours `prefers-reduced-motion: reduce` (falls back to static).
+
+**Data-testids**
+- `perfect-for-sidebar` — root `<aside>`
+- `perfect-for-header` — the "Perfect for" `<h3>`
+- `perfect-for-tile-{key}` — each tile (`creator`, `exec`, `supervisor`,
+  `consumer`, `booking-agent`, `manager`)
+- `role-landing-{role}` — role landing wrap
+- `role-landing-not-found` — 404 fallback when the URL role is unknown
+
+**CRM CTA default**
+Any campaign in the CRM composer (§9.12) that targets a role segment
+defaults its CTA URL to that segment's landing page from the table
+above. Admins can override to any URL on the platform.
+
+---
+
 ## §9.6 — User Model
 
 `users` collection:

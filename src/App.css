@@ -3596,3 +3596,205 @@
 .election-card { transition: transform 0.15s ease, border-color 0.15s ease; }
 .election-card:not([disabled]):hover { transform: translateY(-2px); }
 
+
+
+/* ============================================================
+   Perfect For sidebar (persistent left rail on landing routes)
+   ============================================================ */
+
+/* --- Layout: 1/4 fixed rail + 3/4 main content shift ------------- */
+.pf-sidebar {
+  position: fixed;
+  left: 0;
+  top: 72px;                         /* clears the navbar */
+  width: 25vw;
+  max-width: 320px;
+  min-width: 240px;
+  height: calc(100vh - 72px);
+  z-index: 40;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.008) 100%),
+    rgba(11, 15, 30, 0.72);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+.pf-sidebar::-webkit-scrollbar { width: 6px; }
+.pf-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 3px;
+}
+
+.pf-sidebar-inner {
+  padding: 28px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pf-sidebar-header {
+  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin: 0;
+}
+
+.pf-sidebar-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* --- Tile: square, 3px radius, flat colour, staggered slide-in --- */
+.pf-tile {
+  --pf-accent: var(--cyan);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;         /* horizontally centred to sidebar */
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 12px;
+  aspect-ratio: 1 / 1;         /* square */
+  max-width: 100%;
+  border-radius: 3px;          /* per PRD */
+  background: #131a2e;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f1f5f9;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transform: translateY(-28px);
+  opacity: 0;
+  animation: pfTileSlideIn 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.pf-tile-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--pf-accent);
+  transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease;
+}
+
+.pf-tile-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 1.15;
+  color: #f1f5f9;
+}
+
+.pf-tile-sub {
+  font-size: 10px;
+  line-height: 1.35;
+  color: #94a3b8;
+  letter-spacing: 0.1px;
+  max-width: 100%;
+}
+
+/* Hover — flat accent swap, no gradient. */
+.pf-tile:hover {
+  background: var(--pf-accent);
+  border-color: var(--pf-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -14px var(--pf-accent);
+}
+.pf-tile:hover .pf-tile-logo {
+  background: rgba(0, 0, 0, 0.18);
+  border-color: rgba(0, 0, 0, 0.28);
+  color: #0b0f1e;
+}
+.pf-tile:hover .pf-tile-label,
+.pf-tile:hover .pf-tile-sub {
+  color: #0b0f1e;
+}
+
+/* Active (current route) tile — persistent accent state. */
+.pf-tile-active {
+  background: var(--pf-accent);
+  border-color: var(--pf-accent);
+}
+.pf-tile-active .pf-tile-label,
+.pf-tile-active .pf-tile-sub { color: #0b0f1e; }
+.pf-tile-active .pf-tile-logo {
+  background: rgba(0, 0, 0, 0.18);
+  border-color: rgba(0, 0, 0, 0.28);
+  color: #0b0f1e;
+}
+
+/* Keyboard focus. */
+.pf-tile:focus-visible {
+  outline: 2px solid var(--pf-accent);
+  outline-offset: 3px;
+}
+
+@keyframes pfTileSlideIn {
+  0%   { opacity: 0; transform: translateY(-28px); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Main content shifts right to make room for the rail --------- */
+.app-landing-wrapper > .landing-hero,
+.app-landing-wrapper > section.landing-section,
+.app-landing-wrapper > footer.landing-footer,
+.app-landing-wrapper > .role-landing-wrap,
+/* HomeView / native landing wrap their own sections; catch the direct
+   children of the routed views too. */
+.app-landing-wrapper section.landing-section,
+.app-landing-wrapper .landing-hero {
+  /* No-op selector kept for future targeting; actual shift happens
+     via the body class below. */
+}
+
+/* When the sidebar is rendered, main content shifts. We do this via a
+   body-level media-query-aware rule so it also applies to the footer
+   and hero (which is full-bleed but should still visually align). */
+@media (min-width: 961px) {
+  body:has(.pf-sidebar) .app-landing-wrapper {
+    padding-left: min(25vw, 320px);
+  }
+  /* :has() fallback — a plain descendant rule keeps mobile browsers
+     that don't support :has() from breaking; they get the sidebar
+     hidden anyway (see mobile block below). */
+  .app-landing-wrapper:has(.pf-sidebar) {
+    padding-left: min(25vw, 320px);
+  }
+}
+
+/* --- Mobile: hide the sidebar (a horizontal picker replaces it
+   later; PRD accepts this as v1 scope). ---------------------------- */
+@media (max-width: 960px) {
+  .pf-sidebar { display: none; }
+}
+
+/* --- Respect reduced motion --------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .pf-tile {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

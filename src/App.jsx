@@ -2465,6 +2465,76 @@ function PricingView() {
   )
 }
 
+
+// ================= Role landing (/for/:role) — placeholder =================
+// Phase 2.5 (Identity & Roles) will replace this with hand-crafted marketing
+// pages per role. For now, we resolve the role from the URL against the
+// Perfect For catalogue and render a minimal hero so the sidebar links
+// don't 404 and the routing/graph is testable end-to-end.
+function RoleLandingView() {
+  const { role } = useParams();
+  const meta = PERFECT_FOR_ROLES.find(r => r.key === role);
+
+  if (!meta) {
+    return (
+      <div className="landing-section landing-section-alt" data-testid="role-landing-not-found">
+        <div className="container" style={{ textAlign: 'center', padding: '80px 0' }}>
+          <span className="landing-section-eyebrow">Not found</span>
+          <h1 className="landing-section-title" style={{ marginTop: 12 }}>
+            We don't have a landing page for "{role}" yet.
+          </h1>
+          <p className="landing-lede" style={{ margin: '16px auto 24px', maxWidth: 560 }}>
+            Pick a role from the "Perfect for" sidebar to see what TuneMavens
+            looks like from that seat.
+          </p>
+          <Link to="/" className="btn btn-primary" data-testid="role-landing-home-link">
+            Back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const { Icon, label, sub, accent } = meta;
+
+  return (
+    <div className="role-landing-wrap" data-testid={`role-landing-${role}`}>
+      <section className="landing-section landing-glance-section">
+        <div className="container landing-glance">
+          <div className="landing-glance-logo" aria-hidden="true">
+            <div className="landing-app-tile" style={{ '--app-accent': accent }}>
+              <div className="landing-app-tile-icon" style={{ color: accent }}>
+                <Icon size={48} />
+              </div>
+              <div className="landing-app-tile-label">{label}</div>
+              <div className="landing-app-tile-pill">Perfect for</div>
+            </div>
+          </div>
+          <div className="landing-glance-text">
+            <span className="landing-section-eyebrow" style={{ color: accent }}>For {label.toLowerCase()}</span>
+            <h1 className="landing-section-title" style={{ marginTop: 12, marginBottom: 20 }}>
+              TuneMavens for {label}
+            </h1>
+            <p className="landing-lede" style={{ marginBottom: 24, maxWidth: 'none' }}>
+              {sub}. Full landing page coming in Phase 2.5 — meanwhile the
+              product is fully accessible from the dashboard.
+            </p>
+            <div className="landing-cross-links">
+              <Link to="/register" className="btn btn-primary" data-testid="role-landing-signup">
+                Create free account
+              </Link>
+              <Link to="/apps" className="landing-cross-link" data-testid="role-landing-apps">
+                Browse the app catalogue →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+
 // ================= About & Contact View =================
 function AboutView() {
   const [email, setEmail] = useState('');
@@ -4633,6 +4703,9 @@ import {
   AppMarketplacePanel, PanelHeader,
 } from './components/phase3.jsx'
 
+// "Perfect for" sidebar — rendered on all landing/marketing routes.
+import { PerfectForSidebar, PERFECT_FOR_ROLES } from './components/PerfectForSidebar.jsx'
+
 
 
 // ================= SUB-PANEL: Domain Mappings (admin-only) =================
@@ -6325,13 +6398,15 @@ function App() {
     <Router>
       <div className={`app-landing-wrapper ${scrolled ? 'scrolled' : ''}`}>
         <Navbar sessionUser={sessionUser} />
-        
+        <PerfectForSidebar />
+
         <Routes>
           <Route path="/" element={<HomeView sessionUser={sessionUser} />} />
           <Route path="/tools" element={<ToolsView sessionUser={sessionUser} />} />
           <Route path="/apps" element={<AppsView sessionUser={sessionUser} />} />
           <Route path="/native-apps" element={<NativeAppsView />} />
           <Route path="/native-apps/:slug" element={<NativeAppLandingView />} />
+          <Route path="/for/:role" element={<RoleLandingView />} />
           <Route path="/pricing" element={<PricingView />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView />} />
