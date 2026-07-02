@@ -1051,6 +1051,9 @@ function HomeView({ sessionUser }) {
         </div>
       </div>
 
+      {/* Perfect For Sidebar - appears below hero on landing page */}
+      <PerfectForSidebar />
+
       <div className="container">
         {/* Flagship App Previews */}
         <section className="section-wrapper">
@@ -1176,6 +1179,7 @@ function HomeView({ sessionUser }) {
           </div>
         </section>
       </div>
+
     </>
   )
 }
@@ -6398,7 +6402,6 @@ function App() {
     <Router>
       <div className={`app-landing-wrapper ${scrolled ? 'scrolled' : ''}`}>
         <Navbar sessionUser={sessionUser} />
-        <PerfectForSidebar />
 
         <Routes>
           <Route path="/" element={<HomeView sessionUser={sessionUser} />} />
