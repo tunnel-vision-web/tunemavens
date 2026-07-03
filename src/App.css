@@ -1,1 +1,128 @@
-/* Added styles for PerfectFor scrolling sidebar in content area: continuous upward scroll, hover pause, top/bottom fade gradients, slow speed. */
+/* ============================================================ 
+   Perfect For Sidebar - Continuous Upward Scroll Styles
+   ============================================================ */
+
+.pf-sidebar {
+  background: linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.008) 100%),
+              rgba(11, 15, 30, 0.72);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(14px);
+}
+
+.pf-sidebar-header {
+  font-family: 'Sansation', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+  padding: 0 4px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.pf-scroll-container {
+  height: 520px;
+  overflow: hidden;
+  position: relative;
+  border-radius: 3px;
+}
+
+/* Top and bottom gradients for fade effect */
+.pf-scroll-container::before,
+.pf-scroll-container::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pf-scroll-container::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(11,15,30,0.95), transparent);
+}
+
+.pf-scroll-container::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(11,15,30,0.95), transparent);
+}
+
+.pf-scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: pfContinuousScroll 45s linear infinite;
+}
+
+.pf-scroll-container:hover .pf-scroll-content {
+  animation-play-state: paused;
+}
+
+@keyframes pfContinuousScroll {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+.pf-tile {
+  --pf-accent: var(--cyan);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 12px;
+  width: 100%;
+  border-radius: 3px;
+  background: #131a2e;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f1f5f9;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.pf-tile:hover {
+  background: var(--pf-accent);
+  border-color: var(--pf-accent);
+  transform: translateY(-2px);
+}
+
+.pf-tile:hover .pf-tile-label,
+.pf-tile:hover .pf-tile-sub {
+  color: #0b0f1e;
+}
+
+.pf-tile-active {
+  background: var(--pf-accent);
+  border-color: var(--pf-accent);
+}
+
+.pf-tile-active .pf-tile-label,
+.pf-tile-active .pf-tile-sub {
+  color: #0b0f1e;
+}
+
+.pf-tile-logo {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--pf-accent);
+}
+
+.pf-tile-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.pf-tile-sub {
+  font-size: 12px;
+  color: #94a3b8;
+}
