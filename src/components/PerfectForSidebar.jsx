@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Headphones, Mic2, Briefcase, Film, Users, UserCheck } from 'lucide-react';
 
@@ -23,11 +24,17 @@ export function PerfectForSidebar() {
   const { pathname } = useLocation();
   if (!shouldRenderOnPath(pathname)) return null;
 
+  const [isPaused, setIsPaused] = useState(false);
+
   return (
     <aside className="pf-sidebar" aria-label="Perfect for">
       <div className="pf-sidebar-header">Perfect for</div>
-      <div className="pf-scroll-container">
-        <div className="pf-scroll-content">
+      <div 
+        className="pf-scroll-container"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        <div className={`pf-scroll-content ${isPaused ? 'paused' : ''}`}>
           {PERFECT_FOR_ROLES.map((role) => {
             const active = pathname === role.href;
             return (
