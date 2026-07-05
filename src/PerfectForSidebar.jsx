@@ -31,10 +31,6 @@ import {
   UserCheck,    // Managers
 } from 'lucide-react';
 
-/**
- * Order the primary audience (Creators) first, then rotates through
- * the roles as they were requested in the PRD.
- */
 export const PERFECT_FOR_ROLES = [
   {
     key: 'creator',
@@ -87,10 +83,6 @@ export const PERFECT_FOR_ROLES = [
   },
 ];
 
-/**
- * Routes where the sidebar should render. Kept explicit so we don't
- * leak the rail into the dashboard, login pages, etc.
- */
 const LANDING_ROUTE_PREFIXES = [
   { exact: '/' },
   { exact: '/pricing' },
@@ -111,16 +103,6 @@ function shouldRenderOnPath(pathname) {
   });
 }
 
-/**
- * Single card. Content stacks vertically: logo on top, the role name
- * on the next line, and the expanded definition (who it covers) on
- * the last line — e.g. "Creators" / "Artists, DJs, Podcasters".
- *
- * `duplicate` marks the second (visual-only) copy used to make the
- * scroll loop seamless — it's hidden from assistive tech and removed
- * from tab order so keyboard/screen-reader users only ever encounter
- * each role once.
- */
 function PfTile({ role, active, duplicate }) {
   const { key, label, sub, href, Icon, accent } = role;
   return (
@@ -153,22 +135,78 @@ export function PerfectForSidebar() {
           Perfect for
         </h3>
 
-        {/* Viewport clips the track and hosts the top/bottom fade
-            masks. The track itself is twice the role list, animated
-            upward by exactly 50% of its own height so the loop reads
-            as one continuous, seamless scroll. */}
         <div className="pf-sidebar-viewport">
-          <div className="pf-sidebar-track">
-            {PERFECT_FOR_ROLES.map((role) => (
-              <PfTile key={role.key} role={role} active={pathname === role.href} />
-            ))}
-            {PERFECT_FOR_ROLES.map((role) => (
-              <PfTile key={`${role.key}-dup`} role={role} active={pathname === role.href} duplicate />
-            ))}
-          </div>
+          <PerfectForTrack roles={PERFECT_FOR_ROLES} pathname={pathname} />
         </div>
       </div>
     </aside>
+  );
+}
+
+function PerfectForTrack({ roles, pathname }) {
+  const trackRef = React.useRef(null);
+  const [isPaused, setIsPaused] = React.useState(false);
+  const positionRef = React.useRef(0);
+  const animationRef = React.useRef(null);
+  const lastTimeRef = React.useRef(0);
+
+  const scrollSpeed = 28; // px per second — tune as needed (slower = higher number)
+
+  React.useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const totalHeight = track.scrollHeight / 2; // since duplicated
+
+    const animate = (timestamp) => {
+      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
+      const delta = timestamp - lastTimeRef.current;
+      lastTimeRef.current = timestamp;
+
+      if (!isPaused) {
+        positionRef.current += (scrollSpeed * delta) / 1000;
+
+        // Seamless loop
+        if (positionRef.current >= totalHeight) {
+          positionRef.current = 0;
+        }
+
+        track.style.transform = `translateY(-${positionRef.current}px)`;
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPaused]);
+
+  const handleMouseEnter = () => setIsPaused(true);
+  const handleMouseLeave = () => {
+    setIsPaused(false);
+    lastTimeRef.current = 0; // smooth resume
+  };
+
+  return (
+    <div
+      className="pf-sidebar-track"
+      ref={trackRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={{ willChange: 'transform' }}
+    >
+      {roles.map((role) => (
+        <PfTile key={role.key} role={role} active={pathname === role.href} />
+      ))}
+      {roles.map((role) => (
+        <PfTile key={`${role.key}-dup`} role={role} active={pathname === role.href} duplicate />
+      ))}
+    </div>
   );
 }
 
