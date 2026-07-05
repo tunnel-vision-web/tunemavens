@@ -382,7 +382,7 @@ function MasteringDemo() {
         >
           {loading ? 'Measuring LUFS...' : 'Analyze Audio'}
         </button>
-      </form>
+      </div>
 
       {result && (
         <div className="demo-result" style={{ marginTop: '12px', fontSize: '12px', borderLeft: '2px solid var(--purple)', paddingLeft: '12px', textAlign: 'left', animation: 'fadeIn 0.3s ease' }}>
@@ -986,8 +986,8 @@ function HomeView({ sessionUser }) {
           <div 
             className="hcont"
             key={currentSlide} /* Force complete unmount/remount on cycle to trigger entry animations */
-            onMouseEnter={() => setTitleHovered(false)}
-            onMouseLeave={() => setTitleHovered(true)}
+            onMouseEnter={() => setTitleHovered(true)}
+            onMouseLeave={() => setTitleHovered(false)}
             style={{ cursor: 'pointer' }}
           >
             <div className={`he hbadge ${slideState}`}>
@@ -1051,7 +1051,12 @@ function HomeView({ sessionUser }) {
         </div>
       </div>
 
-      <div className="container">
+      {/* Content area below hero: 1/4 sidebar + 3/4 main content.
+          Hero, header, and footer are all outside this split. */}
+      <div className="landing-content-split">
+        <PerfectForSidebar />
+
+        <div className="landing-content-main container">
         {/* Flagship App Previews */}
         <section className="section-wrapper">
           <div className="flagship-previews">
@@ -1175,7 +1180,9 @@ function HomeView({ sessionUser }) {
             </div>
           </div>
         </section>
+        </div>
       </div>
+
     </>
   )
 }
@@ -1498,10 +1505,12 @@ function MpesaPosTerminal({ goBack }) {
                   <>
                     <option value="FLW-9021-NG">FLW-9021-NG (Lagos Office)</option>
                     <option value="FLW-Merchant">Flutterwave Till FLW-Merchant</option>
+                  </>
                 ) : (
                   <>
                     <option value="Stripe-POS-Live">Stripe Reader (Live Account)</option>
                     <option value="Stripe-POS-Backup">Stripe Reader (Backup Terminal)</option>
+                  </>
                 )}
               </select>
             </div>
@@ -1869,7 +1878,7 @@ function FaqItem({ q, a, defaultOpen = false }) {
         <span>{q}</span>
         <ChevronDown size={16} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
       </button>
-      {open && <p className="landing-faq-a">{a}</p>
+      {open && <p className="landing-faq-a">{a}</p>}
     </div>
   );
 }
@@ -2300,7 +2309,7 @@ function NativeAppsView() {
 
                 <div className="native-app-meta">
                   <span className="native-app-meta-pill">
-                    <Smartphone size={11} /> Capacitor-wrapped · iOS & Android
+                    <Smartphone size={11} /> Capacitor-wrapped · iOS &amp; Android
                   </span>
                 </div>
               </article>
@@ -2355,6 +2364,7 @@ function AppsView({ sessionUser }) {
         <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
           <SplitCascadeLedgerApp goBack={() => setActiveApp(null)} />
         </div>
+      </>
     );
   }
 
@@ -2835,7 +2845,7 @@ function LoginView({ onLogin }) {
             data-testid="login-submit-button"
           >
             {submitting ? 'Logging in…' : 'Log In'}
-            </button>
+          </button>
         </form>
         <p style={{ fontSize: '12px', color: 'var(--mu)', marginTop: '16px', textAlign: 'center', margin: '16px 0 0' }}>
           Don't have an account? <Link to="/register" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
@@ -3584,7 +3594,8 @@ function RegisterView({ onLogin }) {
               <button 
                 onClick={submitRegister} 
                 className="btn-primary" 
-                style={{ width: '100%', padding: '12px', marginTop: '16px', fontSize: '13px', fontWeight: '700', borderRadius: '4px', cursor: 'pointer' }}>
+                style={{ width: '100%', padding: '12px', marginTop: '16px', fontSize: '13px', fontWeight: '700', borderRadius: '4px', cursor: 'pointer' }}
+              >
                 Complete Registration
               </button>
             )}
@@ -3662,6 +3673,7 @@ function RegisterView({ onLogin }) {
                         }}
                       >
                         ×
+                      </span>
                     </span>
                   ))}
                 </div>
@@ -4331,7 +4343,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab }) {
               </div>
               <ul className="topbar-notif-list">
                 {notifications.length === 0 && (
-                  <li className="topbar-notif-empty">You're all caught up.</li>
+                  <li className="topbar-notif-empty">You&apos;re all caught up.</li>
                 )}
                 {notifications.map(n => (
                   <li key={n.id} className={`topbar-notif-item ${n.read ? 'read' : 'unread'}`}>
@@ -4849,7 +4861,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
         </button>
       </div>
 
-      {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="mapping-error">{error}</p>
+      {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }} data-testid="mapping-error">{error}</p>}
 
       {showAdd && (
         <div className="dashboard-card" style={{ marginBottom: '14px', padding: '14px', background: 'rgba(34, 211, 238, 0.04)', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
@@ -4898,7 +4910,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
                       onChange={(e) => stage(m.id, 'label', e.target.value)}
                       style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#f1f5f9', fontSize: '12px', padding: '6px 10px', width: '100%' }}
                       data-testid={`mapping-label-${m.key}`}
-                    ></input>
+                    />
                   </td>
                   <td style={{ padding: '8px', color: '#94a3b8', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', fontWeight: 700 }}>{m.category}</td>
                   <td style={{ padding: '8px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '11px' }}>{m.path}</td>
@@ -4909,7 +4921,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
                       onChange={(e) => stage(m.id, 'subdomain', e.target.value)}
                       style={{ background: 'transparent', border: '1px solid rgba(34, 211, 238, 0.2)', color: 'var(--cyan)', fontSize: '12px', padding: '6px 10px', width: '100%', fontWeight: 700 }}
                       data-testid={`mapping-subdomain-${m.key}`}
-                    ></input>
+                    />
                   </td>
                   <td style={{ padding: '8px', color: '#94a3b8', fontFamily: 'monospace', fontSize: '11px' }}>
                     <span style={{ color: 'var(--cyan)' }}>{stagedSubdomain}</span>.{ROOT_DOMAIN}
@@ -5210,7 +5222,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
 
   return (
     <div className="dashboard-card" style={{ maxWidth: '600px', margin: '0 auto' }}>
-      <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>Profile & Account Settings</h3>
+      <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>Profile &amp; Account Settings</h3>
       <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '20px' }}>Update your creator identity and public brand metadata.</p>
       
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -5592,7 +5604,7 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
             <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
               <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>SYNC MARKETPLACE</div>
               <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginTop: '4px' }}>AI Mood Tagging</div>
-              <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0' }}>Scene tags & 30s previews verified.</p>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0' }}>Scene tags &amp; 30s previews verified.</p>
             </div>
             <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
               <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>ESCROW MODULE</div>
@@ -5840,8 +5852,7 @@ function SplitCascadePanel({ payoutBalance, setPayoutBalance }) {
               onChange={(e) => setGrossInput(e.target.value)}
               className="form-control"
               style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '13px', padding: '8px' }}
-            >
-            </input>
+            />
           </div>
 
           <div style={{ marginBottom: '20px' }}>
@@ -5856,8 +5867,7 @@ function SplitCascadePanel({ payoutBalance, setPayoutBalance }) {
               value={sliderVal} 
               onChange={(e) => setSliderVal(parseInt(e.target.value))}
               style={{ width: '100%', accentColor: 'var(--cyan)' }}
-            >
-            </input>
+            />
           </div>
 
           {/* Breakdown bars */}
@@ -5992,7 +6002,7 @@ function DjPoolPanel() {
   return (
     <div>
       <div className="dashboard-panel-header">
-        <h2>DJ Pool & IP Clearance Drops</h2>
+        <h2>DJ Pool &amp; IP Clearance Drops</h2>
         <p>Download intro/outro DJ edits and log remix drops clearances in compliance with IP regulations.</p>
       </div>
 
@@ -6103,7 +6113,7 @@ function DjPoolPanel() {
               <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Target Venue / Festival</label>
               <input 
                 type="text" 
-                placeholder="e.g. Blankets & Wine Festival" 
+                placeholder="e.g. Blankets &amp; Wine Festival" 
                 value={reqVenue} 
                 onChange={(e) => setReqVenue(e.target.value)}
                 className="form-control"
@@ -6126,7 +6136,7 @@ function DjPoolPanel() {
               className="btn-primary" 
               style={{ width: '100%', padding: '10px', fontSize: '12px', borderRadius: '4px', cursor: 'pointer', marginTop: '6px' }}
             >
-              Verify IP & Grant Drop License
+              Verify IP &amp; Grant Drop License
             </button>
           </form>
         </div>
@@ -6154,7 +6164,7 @@ function SyncLicensingPanel() {
   return (
     <div>
       <div className="dashboard-panel-header">
-        <h2>Sync Licensing & Scene-tag Hub</h2>
+        <h2>Sync Licensing &amp; Scene-tag Hub</h2>
         <p>Pitch tracks for films, games, and commercials using AI scene tagging and 30-second watermarked streams.</p>
       </div>
 
@@ -6262,7 +6272,7 @@ function EscrowContractsPanel({ payoutBalance, setPayoutBalance }) {
   return (
     <div>
       <div className="dashboard-panel-header">
-        <h2>Appearance Escrow & Gig Contracts</h2>
+        <h2>Appearance Escrow &amp; Gig Contracts</h2>
         <p>Secure gig booking payments in escrow. Deposits are automatically released once attendance milestones are verified.</p>
       </div>
 
@@ -6395,7 +6405,6 @@ function App() {
     <Router>
       <div className={`app-landing-wrapper ${scrolled ? 'scrolled' : ''}`}>
         <Navbar sessionUser={sessionUser} />
-        <PerfectForSidebar />
 
         <Routes>
           <Route path="/" element={<HomeView sessionUser={sessionUser} />} />
@@ -6448,7 +6457,7 @@ function App() {
                     <Link to="/apps" className="footer-link">Dashboard Apps</Link>
                     <Link to="/native-apps" className="footer-link">Native Apps</Link>
                     <Link to="/pricing" className="footer-link">Credit Packages</Link>
-                    <a href="#dev" className="footer-link" onClick={() => alert('API developers portal coming in Phase 3.')}>API & Developers</a>
+                    <a href="#dev" className="footer-link" onClick={() => alert('API developers portal coming in Phase 3.')}>API &amp; Developers</a>
                   </div>
                 </div>
               </div>
