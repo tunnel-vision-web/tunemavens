@@ -3639,9 +3639,9 @@
   flex: 0 0 25%;
   width: 25%;
   max-width: 25%;
-  height: calc(100vh - 144px);
-  min-height: 440px;
-  max-height: 680px;
+  height: 640px;                  /* explicit — avoids relying on a
+                                      calc()/flex chain to size the
+                                      scroll viewport below */
   z-index: 5;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.008) 100%),
@@ -3660,7 +3660,6 @@
   flex-direction: column;
   height: 100%;
   padding: 20px 16px 4px;
-  min-height: 0;                  /* allow the viewport child to shrink/scroll */
 }
 
 .pf-sidebar-header {
@@ -3674,14 +3673,19 @@
   border-bottom: 1px solid rgba(255,255,255,0.06);
   margin: 0 0 2px;
   text-align: left;
-  flex: 0 0 auto;
+  height: 44px;                   /* explicit — pairs with the
+                                      viewport's explicit height below
+                                      so the two always sum correctly */
 }
 
-/* --- Viewport: clips the track, hosts the top/bottom fade masks -- */
+/* --- Viewport: clips the track, hosts the top/bottom fade masks --
+   Explicit height (sidebar height minus header height) rather than
+   flex-grow, so there's no ambiguity about how tall the clipping box
+   is — that ambiguity is what silently kills the scroll if any
+   ancestor's height resolution comes up auto. */
 .pf-sidebar-viewport {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
+  height: 596px;
   overflow: hidden;
 }
 
@@ -3724,14 +3728,16 @@
   100% { transform: translateY(-50%); }
 }
 
-/* --- Card: full-width row tile, flat colour, accent on hover ----- */
+/* --- Card: logo on top, role name, then expanded definition ------ */
 .pf-tile {
   --pf-accent: var(--cyan);
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 14px 14px;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 14px;
   width: 100%;
   flex: 0 0 auto;
   border-radius: 3px;             /* per PRD */
@@ -3739,7 +3745,7 @@
   border: 1px solid rgba(255,255,255,0.08);
   color: #f1f5f9;
   text-decoration: none;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   transition:
     background-color 220ms ease,
@@ -3753,8 +3759,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 3px;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
@@ -3762,16 +3768,9 @@
   transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease, transform 220ms ease;
 }
 
-.pf-tile-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
 .pf-tile-label {
   font-family: 'Outfit', sans-serif;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.1px;
   line-height: 1.2;
@@ -3785,18 +3784,20 @@
   letter-spacing: 0.1px;
 }
 
-/* Hover — flat accent swap, no gradient. */
+/* Hover — flat accent swap plus a slight lift, no gradient. Hovering
+   any card also pauses the whole track (see .pf-sidebar-viewport:hover
+   above), so the lift and the pause read as one combined response. */
 .pf-tile:hover {
   background: var(--pf-accent);
   border-color: var(--pf-accent);
-  transform: translateX(2px);
-  box-shadow: 0 10px 24px -14px var(--pf-accent);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 14px 28px -16px var(--pf-accent);
 }
 .pf-tile:hover .pf-tile-logo {
   background: rgba(0, 0, 0, 0.18);
   border-color: rgba(0, 0, 0, 0.28);
   color: #0b0f1e;
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 .pf-tile:hover .pf-tile-label,
 .pf-tile:hover .pf-tile-sub {

@@ -39,7 +39,7 @@ export const PERFECT_FOR_ROLES = [
   {
     key: 'creator',
     label: 'Creators',
-    sub: 'Artists · Podcasters · DJs',
+    sub: 'Artists, DJs, Podcasters',
     href: '/for/creator',
     Icon: Mic2,
     accent: 'var(--cyan)',
@@ -47,7 +47,7 @@ export const PERFECT_FOR_ROLES = [
   {
     key: 'exec',
     label: 'Execs',
-    sub: 'Label · A&R · Industry',
+    sub: 'Label, A&R, Industry',
     href: '/for/exec',
     Icon: Briefcase,
     accent: 'var(--purple)',
@@ -112,10 +112,14 @@ function shouldRenderOnPath(pathname) {
 }
 
 /**
- * Single card. `duplicate` marks the second (visual-only) copy used
- * to make the scroll loop seamless — it's hidden from assistive tech
- * and removed from tab order so keyboard/screen-reader users only
- * ever encounter each role once.
+ * Single card. Content stacks vertically: logo on top, the role name
+ * on the next line, and the expanded definition (who it covers) on
+ * the last line — e.g. "Creators" / "Artists, DJs, Podcasters".
+ *
+ * `duplicate` marks the second (visual-only) copy used to make the
+ * scroll loop seamless — it's hidden from assistive tech and removed
+ * from tab order so keyboard/screen-reader users only ever encounter
+ * each role once.
  */
 function PfTile({ role, active, duplicate }) {
   const { key, label, sub, href, Icon, accent } = role;
@@ -130,12 +134,10 @@ function PfTile({ role, active, duplicate }) {
     >
       <span className="pf-tile-logo" aria-hidden="true">
         {/* Placeholder — swap for real logo later. */}
-        <Icon size={20} strokeWidth={1.8} />
+        <Icon size={22} strokeWidth={1.8} />
       </span>
-      <span className="pf-tile-copy">
-        <span className="pf-tile-label">{label}</span>
-        <span className="pf-tile-sub">{sub}</span>
-      </span>
+      <span className="pf-tile-label">{label}</span>
+      <span className="pf-tile-sub">{sub}</span>
     </Link>
   );
 }
