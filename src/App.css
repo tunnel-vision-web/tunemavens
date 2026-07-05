@@ -3790,3 +3790,17 @@
 @media (prefers-reduced-motion: reduce) {
   .pf-sidebar-track { animation: none !important; }
 }
+
+.pf-sidebar-track {
+  animation: pfContinuousScroll 35s linear infinite !important;
+  gap: 20px !important; /* Increase spacing to make loop more obvious */
+}
+
+.pf-sidebar-viewport:hover .pf-sidebar-track {
+  animation-play-state: paused !important;
+}
+
+@keyframes pfContinuousScroll {
+  0% { transform: translateY(0) !important; }
+  100% { transform: translateY(-50%) !important; }
+}
