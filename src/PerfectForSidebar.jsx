@@ -21,6 +21,7 @@
  * prop on each entry is where they'll plug in.
  */
 
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Headphones,   // Consumers (listeners)
@@ -150,13 +151,13 @@ function PerfectForTrack({ roles, pathname }) {
   const animationRef = React.useRef(null);
   const lastTimeRef = React.useRef(0);
 
-  const scrollSpeed = 28; // px per second — tune as needed (slower = higher number)
+  const scrollSpeed = 28; // px per second — tune as needed
 
   React.useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
 
-    const totalHeight = track.scrollHeight / 2; // since duplicated
+    const totalHeight = track.scrollHeight / 2;
 
     const animate = (timestamp) => {
       if (!lastTimeRef.current) lastTimeRef.current = timestamp;
@@ -165,12 +166,9 @@ function PerfectForTrack({ roles, pathname }) {
 
       if (!isPaused) {
         positionRef.current += (scrollSpeed * delta) / 1000;
-
-        // Seamless loop
         if (positionRef.current >= totalHeight) {
           positionRef.current = 0;
         }
-
         track.style.transform = `translateY(-${positionRef.current}px)`;
       }
 
@@ -180,17 +178,12 @@ function PerfectForTrack({ roles, pathname }) {
     animationRef.current = requestAnimationFrame(animate);
 
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, [isPaused]);
 
   const handleMouseEnter = () => setIsPaused(true);
-  const handleMouseLeave = () => {
-    setIsPaused(false);
-    lastTimeRef.current = 0; // smooth resume
-  };
+  const handleMouseLeave = () => setIsPaused(false);
 
   return (
     <div
@@ -198,7 +191,7 @@ function PerfectForTrack({ roles, pathname }) {
       ref={trackRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      style={{ willChange: 'transform' }}
+      style={{ willChange: 'transform', transition: 'none' }}
     >
       {roles.map((role) => (
         <PfTile key={role.key} role={role} active={pathname === role.href} />
