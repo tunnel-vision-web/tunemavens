@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Headphones, Mic2, Briefcase, Film, Users, UserCheck } from 'lucide-react';
+
+import "./PerfectForSidebar.css";
+
+// Import custom logos
+import createLogo from '../assets/logos/tunecreators-logo.png';
+import listenLogo from '../assets/logos/tunestream-logo.png';
+import distributeLogo from '../assets/logos/tuneexecs-logo.png';
+import syncLogo from '../assets/logos/sync-master-logo.png';
+import bookingLogo from '../assets/logos/tunebooking-logo.png';
+import managementLogo from '../assets/logos/tunemanagement-logo.png';
+
+const ROLE_LOGOS = {
+  creator: createLogo,
+  exec: distributeLogo,
+  supervisor: syncLogo,
+  consumer: listenLogo,
+  'booking-agent': bookingLogo,
+  manager: managementLogo,
+};
 
 export const PERFECT_FOR_ROLES = [
-  { key: 'creator', label: 'Creators', sub: 'Artists · Podcasters · DJs', href: '/for/creator', Icon: Mic2, accent: 'var(--cyan)' },
-  { key: 'exec', label: 'Execs', sub: 'Label · A&R · Industry', href: '/for/exec', Icon: Briefcase, accent: 'var(--purple)' },
-  { key: 'supervisor', label: 'Music Supervisors', sub: 'Sync licensing for film & TV', href: '/for/supervisor', Icon: Film, accent: 'var(--am)' },
-  { key: 'consumer', label: 'Consumers', sub: 'Everyday listeners', href: '/native-apps/tunemavens', Icon: Headphones, accent: 'var(--gr)' },
-  { key: 'booking-agent', label: 'Booking Agents', sub: 'Book & represent live acts', href: '/for/booking-agent', Icon: Users, accent: 'var(--blue)' },
-  { key: 'manager', label: 'Managers', sub: 'Day-to-day artist teams', href: '/for/manager', Icon: UserCheck, accent: '#ef4444' },
+  { key: 'creator', label: 'Creators', sub: 'Artists · Podcasters · DJs', href: '/for/creator', accent: 'var(--cyan)' },
+  { key: 'exec', label: 'Execs', sub: 'Label · A&R · Industry', href: '/for/exec', accent: 'var(--purple)' },
+  { key: 'supervisor', label: 'Music Supervisors', sub: 'Sync licensing for film & TV', href: '/for/supervisor', accent: 'var(--am)' },
+  { key: 'consumer', label: 'Consumers', sub: 'Everyday listeners', href: '/native-apps/tunemavens', accent: 'var(--gr)' },
+  { key: 'booking-agent', label: 'Booking Agents', sub: 'Book & represent live acts', href: '/for/booking-agent', accent: 'var(--blue)' },
+  { key: 'manager', label: 'Managers', sub: 'Day-to-day artist teams', href: '/for/manager', accent: '#ef4444' },
 ];
 
 const LANDING_ROUTE_PREFIXES = [
@@ -27,8 +45,8 @@ export function PerfectForSidebar() {
   const [isPaused, setIsPaused] = useState(false);
 
   return (
-    <aside className="pf-sidebar" aria-label="Perfect for">
-      <div className="pf-sidebar-header">Perfect for</div>
+    <aside className="pf-sidebar" aria-label="Perfect for" data-testid="perfect-for-sidebar">
+      <h3 className="pf-sidebar-header" data-testid="perfect-for-header">Perfect for</h3>
       <div 
         className="pf-scroll-container"
         onMouseEnter={() => setIsPaused(true)}
@@ -38,8 +56,16 @@ export function PerfectForSidebar() {
           {PERFECT_FOR_ROLES.map((role) => {
             const active = pathname === role.href;
             return (
-              <Link key={role.key} to={role.href} className={`pf-tile ${active ? 'pf-tile-active' : ''}`} style={{ '--pf-accent': role.accent }}>
-                <span className="pf-tile-logo"><role.Icon size={22} strokeWidth={1.8} /></span>
+              <Link 
+                key={role.key} 
+                to={role.href} 
+                className={`pf-tile ${active ? 'pf-tile-active' : ''}`} 
+                style={{ '--pf-accent': role.accent }}
+                data-testid={`perfect-for-tile-${role.key}`}
+              >
+                <span className="pf-tile-logo">
+                  <img src={ROLE_LOGOS[role.key]} alt={role.label} />
+                </span>
                 <span className="pf-tile-label">{role.label}</span>
                 <span className="pf-tile-sub">{role.sub}</span>
               </Link>
@@ -49,8 +75,16 @@ export function PerfectForSidebar() {
           {PERFECT_FOR_ROLES.map((role) => {
             const active = pathname === role.href;
             return (
-              <Link key={`${role.key}-dup`} to={role.href} className={`pf-tile ${active ? 'pf-tile-active' : ''}`} style={{ '--pf-accent': role.accent }}>
-                <span className="pf-tile-logo"><role.Icon size={22} strokeWidth={1.8} /></span>
+              <Link 
+                key={`${role.key}-dup`} 
+                to={role.href} 
+                className={`pf-tile ${active ? 'pf-tile-active' : ''}`} 
+                style={{ '--pf-accent': role.accent }}
+                data-testid={`perfect-for-tile-${role.key}-dup`}
+              >
+                <span className="pf-tile-logo">
+                  <img src={ROLE_LOGOS[role.key]} alt={role.label} />
+                </span>
                 <span className="pf-tile-label">{role.label}</span>
                 <span className="pf-tile-sub">{role.sub}</span>
               </Link>

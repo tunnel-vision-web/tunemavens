@@ -1,0 +1,122 @@
+/* PerfectForSidebar.css */
+
+/* Remove the background, border, shadow, and backdrop-filter of the sidebar box */
+.pf-sidebar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Center and style the sidebar header to match titles in the content area */
+.pf-sidebar-header {
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  text-transform: none !important; /* mixed case matching flagship-title */
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: auto !important; /* auto-adjust for larger font */
+  padding: 0 0 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  margin-bottom: 12px !important;
+}
+
+/* Container for the scrolling sidebar content - add gradient mask for mist fade effect */
+.pf-scroll-container {
+  height: 540px !important; /* fits within the 640px sidebar height */
+  overflow: hidden;
+  position: relative;
+  padding: 0 12px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+}
+
+/* Scrolling content wrapper */
+.pf-scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: pf-scroll-up 20s linear infinite;
+  /* smooth animation */
+  will-change: transform;
+  transition: transform 0.3s ease;
+}
+
+/* Pause animation on hover */
+.pf-scroll-content.paused {
+  animation-play-state: paused;
+  transform: scale(1.02); /* subtle transform when paused */
+}
+
+/* Keyframes for continuous upward scroll */
+@keyframes pf-scroll-up {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    /* Move up by 50% of the content height (original + duplicate) */
+    transform: translateY(-50%);
+  }
+}
+
+/* Individual tile styling – center contents horizontally */
+.pf-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center horizontally */
+  justify-content: center;
+  padding: 16px 12px;
+  border-radius: var(--r);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.3s ease, transform 0.3s ease;
+  text-align: center; /* Center text labels */
+}
+
+.pf-tile:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-4px) scale(1.02);
+}
+
+.pf-tile-active {
+  background: var(--pf-accent);
+  color: #060813;
+}
+
+/* Transparent logo box - remove gray background rectangles */
+.pf-tile-logo,
+.pf-tile:hover .pf-tile-logo,
+.pf-tile-active .pf-tile-logo {
+  background: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  padding: 0 !important;
+}
+
+/* Correct horizontal image display without distortion */
+.pf-tile-logo img {
+  display: block;
+  height: 20px; /* standard height */
+  width: auto;  /* proportional width */
+  max-width: 100%;
+  background: transparent !important;
+}
+
+.pf-tile-label {
+  font-weight: 600;
+  margin-top: 6px;
+  color: var(--tx);
+}
+
+.pf-tile-sub {
+  font-size: 12px;
+  color: var(--mu);
+}
