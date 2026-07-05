@@ -3835,3 +3835,17 @@
     animation: none;
   }
 }
+
+.pf-sidebar-track {
+  animation: pfContinuousScroll 40s linear infinite !important;
+  will-change: transform !important;
+}
+
+.pf-sidebar-viewport:hover .pf-sidebar-track {
+  animation-play-state: paused !important;
+}
+
+@keyframes pfContinuousScroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
