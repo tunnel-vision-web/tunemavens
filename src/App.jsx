@@ -88,10 +88,8 @@ function Navbar({ sessionUser }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [appsDropdownOpen, setAppsDropdownOpen] = useState(false);
-  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const appsDropdownRef = useRef(null);
-  const aboutDropdownRef = useRef(null);
   const [scrolled, setScrolled] = useState(false);
 
   const getRoleLogoForPath = (pathname) => {
@@ -132,9 +130,6 @@ function Navbar({ sessionUser }) {
       }
       if (appsDropdownRef.current && !appsDropdownRef.current.contains(e.target)) {
         setAppsDropdownOpen(false);
-      }
-      if (aboutDropdownRef.current && !aboutDropdownRef.current.contains(e.target)) {
-        setAboutDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
@@ -222,26 +217,14 @@ function Navbar({ sessionUser }) {
               Pricing
             </Link>
           </li>
-          <li className="dropdown-container" ref={aboutDropdownRef}>
-            <button 
-              className={`nav-link dropdown-trigger ${isActive('/about') || isActive('/for') ? 'active' : ''}`} 
-              onClick={() => setAboutDropdownOpen(!aboutDropdownOpen)}
+          <li>
+            <Link 
+              to="/for" 
+              className={`nav-link ${isActive('/for') ? 'active' : ''}`}
+              onClick={() => setMobileOpen(false)}
             >
-              About
-              <ChevronDown size={14} />
-            </button>
-            <ul className={`dropdown-menu ${aboutDropdownOpen ? 'open' : ''}`}>
-              <li>
-                <Link to="/about" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/for" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
-                  Perfect For
-                </Link>
-              </li>
-            </ul>
+              Perfect For
+            </Link>
           </li>
           {/* Dropdown Menu */}
           <li className="dropdown-container" ref={dropdownRef}>
@@ -1729,19 +1712,19 @@ const NATIVE_APP_LANDING_DATA = {
         bgKey: 'distributeHero',
       },
     ],
-    lede: 'A consumer music app built around the African catalogue \u2014 offline HQ audio, region-aware editorial playlists, and a tip jar that pays the creator directly through the shared tunestream / Intermaven split ledger.',
+    lede: 'A consumer music app built around the African catalogue  -  offline HQ audio, region-aware editorial playlists, and a tip jar that pays the creator directly through the shared tunestream / Intermaven split ledger.',
     webEquivalent: { label: 'Use the web player', to: '/stream' },
     adminLink: { label: 'Manage your library', to: '/dashboard' },
     features: [
       { title: 'HQ offline cache', desc: 'Up to 8GB of FLAC / 320 kbps audio stored locally for low-bandwidth listening.' },
-      { title: 'One-tap creator tipping', desc: 'Send a tip mid-track \u2014 it flows through the Compensation Engine and lands in the creator\u2019s wallet within 24h.' },
+      { title: 'One-tap creator tipping', desc: 'Send a tip mid-track  -  it flows through the Compensation Engine and lands in the creator\u2019s wallet within 24h.' },
       { title: 'Region-aware playlists', desc: 'Editorial picks tailored to your detected market: Naija, EA, SA, US/UK and beyond.' },
       { title: 'Smart discovery', desc: 'AI surfaces tracks that pair with what you already love, weighted by your follow list.' },
-      { title: 'Shared credits vault', desc: 'Your tunestream credits work on intermaven.io tools too \u2014 one account, one balance.' },
+      { title: 'Shared credits vault', desc: 'Your tunestream credits work on intermaven.io tools too  -  one account, one balance.' },
       { title: 'Live event drops', desc: 'Get notified when an artist you follow lists tickets or merch on the tunepay network.' },
     ],
     howItWorks: [
-      { step: '01', title: 'Sign in once', body: 'Use your existing tunestream / Intermaven account \u2014 no separate native-app credentials.' },
+      { step: '01', title: 'Sign in once', body: 'Use your existing tunestream / Intermaven account  -  no separate native-app credentials.' },
       { step: '02', title: 'Pick three creators', body: 'During onboarding you follow 3 creators; your home feed seeds from their catalogue and collaborators.' },
       { step: '03', title: 'Stream or download', body: 'Tap to stream, long-press to cache offline. Toggle data-saver in regions where bandwidth is metered.' },
       { step: '04', title: 'Support directly', body: 'Tip, buy, or pre-save. Every interaction is logged in the creator\u2019s ledger you can verify in their EPK.' },
@@ -1751,11 +1734,11 @@ const NATIVE_APP_LANDING_DATA = {
       { quote: 'Offline mode survived my whole 6-hour matatu ride. Bandwidth-aware caching actually works.', author: 'Brian, Nairobi', role: 'Daily commuter' },
     ],
     faq: [
-      { q: 'Is tunestream free to use?', a: 'Yes \u2014 listening and tipping are free. The free tier includes 150 signup credits used across the wider Intermaven network.' },
+      { q: 'Is tunestream free to use?', a: 'Yes  -  listening and tipping are free. The free tier includes 150 signup credits used across the wider Intermaven network.' },
       { q: 'How are creators paid when I tip?', a: 'Tips enter the Compensation Engine cascade (Commission \u2192 Label \u2192 Artist \u2192 Manager \u2192 Investor). The split is governed by the creator\u2019s signed contract on file.' },
-      { q: 'Can I switch between web and native?', a: 'Yes \u2014 the web player lives at /stream and shares the same session, library, and tip history.' },
+      { q: 'Can I switch between web and native?', a: 'Yes  -  the web player lives at /stream and shares the same session, library, and tip history.' },
       { q: 'Which devices are supported?', a: 'iOS 15+ and Android 9+. The native shells are Capacitor-wrapped, so the same engine runs on both platforms.' },
-      { q: 'Does it work without reliable internet?', a: 'Yes \u2014 cache up to 8GB locally. Tips queue offline and settle when you reconnect.' },
+      { q: 'Does it work without reliable internet?', a: 'Yes  -  cache up to 8GB locally. Tips queue offline and settle when you reconnect.' },
     ],
     pricingLine: 'Free tier · 150 credits at signup · unlimited streaming',
   },
@@ -1786,7 +1769,7 @@ const NATIVE_APP_LANDING_DATA = {
         hLine1: 'Close placements',
         hLine2: 'before soundcheck.',
         hLine2Color: '#22d3ee',
-        s: 'Push notifications the moment a film, ad, or playlist brief matches your catalogue. Approve, counter, or pitch \u2014 in two taps.',
+        s: 'Push notifications the moment a film, ad, or playlist brief matches your catalogue. Approve, counter, or pitch  -  in two taps.',
         b1: 'Get on Google Play',
         b1action: 'googleplay',
         b2: 'See Sync Marketplace',
@@ -1799,7 +1782,7 @@ const NATIVE_APP_LANDING_DATA = {
         hLine1: 'Every artist you rep.',
         hLine2: 'One switcher.',
         hLine2Color: '#f59e0b',
-        s: 'Toggle between every artist on your roster \u2014 no separate logins. Approve cascade settlements while they\u2019re on stage.',
+        s: 'Toggle between every artist on your roster  -  no separate logins. Approve cascade settlements while they\u2019re on stage.',
         b1: 'Start 14-Day Trial',
         b1link: '/register',
         b2: 'View Pricing',
@@ -1815,23 +1798,23 @@ const NATIVE_APP_LANDING_DATA = {
       { title: 'Payout balance ticker', desc: 'Net to wallet, recoupment runoff and pending escrow, refreshed every minute.' },
       { title: 'Sync brief alerts', desc: 'Push notification the moment a film or ad-house brief matches your catalogue.' },
       { title: 'AI release playbook', desc: 'Drafts a 6-week rollout: pre-save windows, pitch targets, sync openings, content calendar.' },
-      { title: 'Catalogue overview', desc: 'ISRC status, DSP ingestion checks, and per-track stream counts \u2014 all on one screen.' },
-      { title: 'Manager mode', desc: 'Managers see every artist they represent in a single switcher \u2014 no separate logins.' },
+      { title: 'Catalogue overview', desc: 'ISRC status, DSP ingestion checks, and per-track stream counts  -  all on one screen.' },
+      { title: 'Manager mode', desc: 'Managers see every artist they represent in a single switcher  -  no separate logins.' },
     ],
     howItWorks: [
       { step: '01', title: 'Sign in', body: 'Same JWT as your TuneMavens.com profile. No separate native credentials.' },
-      { step: '02', title: 'Pin your dashboard', body: 'Re-order panels \u2014 payout, splits, sync alerts, contacts \u2014 to match how you actually work.' },
+      { step: '02', title: 'Pin your dashboard', body: 'Re-order panels  -  payout, splits, sync alerts, contacts  -  to match how you actually work.' },
       { step: '03', title: 'Act on alerts', body: 'Accept a sync brief, approve a split, or e-sign a contract amendment in two taps.' },
-      { step: '04', title: 'Settle in the field', body: 'Approve M-Pesa POS settlements from the same app \u2014 no laptop required.' },
+      { step: '04', title: 'Settle in the field', body: 'Approve M-Pesa POS settlements from the same app  -  no laptop required.' },
     ],
     testimonials: [
       { quote: 'I approved a sync brief from a green room ten minutes before stage time. Closed a placement that would have died in email.', author: 'Caleb, Lagos', role: 'Producer' },
       { quote: 'My manager and I watch the same split cascade resolve, on two phones, at the same time. No more spreadsheets.', author: 'Aisha Okoro', role: 'Artist · Okoro Sounds' },
     ],
     faq: [
-      { q: 'Is Creator Companion separate from the web dashboard?', a: 'No \u2014 it\u2019s the same admin, sized for mobile. Every action you take in either surface mirrors instantly.' },
+      { q: 'Is Creator Companion separate from the web dashboard?', a: 'No  -  it\u2019s the same admin, sized for mobile. Every action you take in either surface mirrors instantly.' },
       { q: 'Can I sign contracts on mobile?', a: 'Yes. E-signature works on any phone, tap-optimised, and every party gets their own signed copy.' },
-      { q: 'Does it support multi-artist managers?', a: 'Yes \u2014 see "Manager mode" above. One switcher, every artist you represent.' },
+      { q: 'Does it support multi-artist managers?', a: 'Yes  -  see "Manager mode" above. One switcher, every artist you represent.' },
       { q: 'How are notifications delivered?', a: 'Pick a primary channel (push, email, WhatsApp, SMS). If it fails, we\u2019ll try the next one automatically so you never miss anything.' },
       { q: 'Will my data sync if I switch phones?', a: 'Your data lives in the cloud, not on the device. Sign in on a new phone and everything is right where you left it.' },
     ],
@@ -1851,7 +1834,7 @@ const NATIVE_APP_LANDING_DATA = {
         hLine1: 'Sell at the show.',
         hLine2: 'Settle by morning.',
         hLine2Color: '#10b981',
-        s: 'tunepay STK Push closes in under 10 seconds. Settlement runs the Compensation Engine cascade overnight \u2014 artist payouts hit by 7am.',
+        s: 'tunepay STK Push closes in under 10 seconds. Settlement runs the Compensation Engine cascade overnight  -  artist payouts hit by 7am.',
         b1: 'Provision POS App',
         b1action: 'appstore',
         b2: 'Open the Web POS',
@@ -1864,7 +1847,7 @@ const NATIVE_APP_LANDING_DATA = {
         hLine1: 'Tap, scan, or text.',
         hLine2: 'Every payment rail.',
         hLine2Color: '#22d3ee',
-        s: 'Stripe Terminal in US/UK. Flutterwave in Nigeria. tunepay in Kenya. The app picks the rail by detected country \u2014 zero config.',
+        s: 'Stripe Terminal in US/UK. Flutterwave in Nigeria. tunepay in Kenya. The app picks the rail by detected country  -  zero config.',
         b1: 'Get on Google Play',
         b1action: 'googleplay',
         b2: 'See Bulk Label Pricing',
@@ -1885,16 +1868,16 @@ const NATIVE_APP_LANDING_DATA = {
         bgKey: 'heroMusic2',
       },
     ],
-    lede: 'A portable point-of-sale for live events: merch, ticket scans, CD/vinyl. tunepay STK Push, card-present, and digital-wallet acceptance \u2014 all geo-routed to the right settlement rail per region.',
+    lede: 'A portable point-of-sale for live events: merch, ticket scans, CD/vinyl. tunepay STK Push, card-present, and digital-wallet acceptance  -  all geo-routed to the right settlement rail per region.',
     webEquivalent: { label: 'Open the web POS', to: '/apps' },
     adminLink: { label: 'Manage inventory & settlements', to: '/dashboard' },
     features: [
-      { title: 'tunepay STK Push', desc: 'Live Daraja integration. Customers enter PIN on their phone \u2014 checkout completes in under 10 seconds.' },
+      { title: 'tunepay STK Push', desc: 'Live Daraja integration. Customers enter PIN on their phone  -  checkout completes in under 10 seconds.' },
       { title: 'Card present + wallet', desc: 'Tap-to-pay via Stripe Terminal for Western markets; Flutterwave for Nigeria; mobile money for EA.' },
       { title: 'Merch & ticket modes', desc: 'Switch between SKU-based merch sales and barcode/QR ticket validation per event session.' },
       { title: 'Per-event settlement', desc: 'Daily settlement reports broken down by SKU, payment method, and per-artist commission cascade.' },
       { title: 'Offline queue', desc: 'Lose signal mid-show? Sales queue locally and settle the instant connectivity returns.' },
-      { title: 'Geo-gated routing', desc: 'The app picks the right settlement rail by detected country \u2014 no manual configuration.' },
+      { title: 'Geo-gated routing', desc: 'The app picks the right settlement rail by detected country  -  no manual configuration.' },
     ],
     howItWorks: [
       { step: '01', title: 'Provision a device', body: 'Issue a POS profile per device from the admin console. Lost devices can be remote-wiped.' },
@@ -1907,10 +1890,10 @@ const NATIVE_APP_LANDING_DATA = {
       { quote: 'Switched from a clunky Square terminal. The tunepay flow alone closed the gap on every cash-only segment of our crowd.', author: 'Lagos label ops', role: 'Independent label' },
     ],
     faq: [
-      { q: 'Do I need special hardware?', a: 'No \u2014 runs on any iOS 15+ or Android 9+ device. Optional thermal printer, barcode scanner, and Stripe BBPOS reader if you want them.' },
+      { q: 'Do I need special hardware?', a: 'No  -  runs on any iOS 15+ or Android 9+ device. Optional thermal printer, barcode scanner, and Stripe BBPOS reader if you want them.' },
       { q: 'Which countries are supported today?', a: 'Kenya (tunepay Daraja), Nigeria (Flutterwave), and US/UK (Stripe Terminal) at launch. ZA / UG / TZ ship in the next sprint.' },
       { q: 'How does the artist get paid?', a: 'Every sale fires the Compensation Engine cascade. Artist + manager + label shares are settled per the signed contracts on file.' },
-      { q: 'Can I manage POS devices from the web?', a: 'Yes \u2014 the admin console has a dedicated POS Devices panel for provisioning, monitoring, and remote-wipe.' },
+      { q: 'Can I manage POS devices from the web?', a: 'Yes  -  the admin console has a dedicated POS Devices panel for provisioning, monitoring, and remote-wipe.' },
       { q: 'What happens if the device goes offline?', a: 'Payments queue locally with cryptographic receipts. They settle the instant the device reconnects.' },
     ],
     pricingLine: 'Included in Label Bulk Package · 10,000 credits · $149.99 one-time',
@@ -1939,7 +1922,7 @@ function NativeAppLandingView() {
   const { slug } = useParams();
   const data = NATIVE_APP_LANDING_DATA[slug];
 
-  // Icon lookup table — kept simple to avoid dynamic import gymnastics.
+  // Icon lookup table  -  kept simple to avoid dynamic import gymnastics.
   const ICONS = { Headphones, TrendingUp, CreditCard };
   // bgKey -> image asset (re-uses HomeView's hero imagery for visual cohesion)
   const HERO_IMAGE_MAP = {
@@ -2050,7 +2033,7 @@ function NativeAppLandingView() {
       style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow }}
       data-testid={`native-app-landing-${data.slug}`}
     >
-      {/* HERO CAROUSEL — same pattern as HomeView */}
+      {/* HERO CAROUSEL  -  same pattern as HomeView */}
       <div className="hw">
         <div className="bgs">
           {slides.map((s, idx) => (
@@ -2147,7 +2130,7 @@ function NativeAppLandingView() {
         </div>
       </div>
 
-      {/* APP AT A GLANCE — 1/4 logo column + 3/4 content column */}
+      {/* APP AT A GLANCE  -  1/4 logo column + 3/4 content column */}
       <section className="landing-section landing-glance-section">
         <div className="container landing-glance">
           <div className="landing-glance-logo" aria-hidden="true">
@@ -2314,7 +2297,7 @@ function NativeAppsView() {
           Three flagship native experiences. One shared TuneMavens / Intermaven account.
         </p>
         <p style={{ textAlign: 'center', color: 'var(--mu)', fontSize: '12px', marginBottom: '56px', maxWidth: '640px', margin: '0 auto 56px' }}>
-          Sign in once on the web and every native app picks up your same session, credits, and split ledger \u2014 no separate accounts to juggle.
+          Sign in once on the web and every native app picks up your same session, credits, and split ledger  -  no separate accounts to juggle.
         </p>
 
         <div className="native-apps-grid" data-testid="native-apps-grid">
@@ -2525,7 +2508,7 @@ function PricingView() {
 }
 
 
-// ================= Role landing (/for/:role) — placeholder =================
+// ================= Role landing (/for/:role)  -  placeholder =================
 // Phase 2.5 (Identity & Roles) will replace this with hand-crafted marketing
 // pages per role. For now, we resolve the role from the URL against the
 // Perfect For catalogue and render a minimal hero so the sidebar links
@@ -2629,7 +2612,7 @@ function PerfectForPageView() {
       href: '/for/creator',
       logo: ROLE_LOGOS['creator'],
       accent: 'var(--cyan)',
-      desc: 'Designed for artists, DJs, and podcasters. Effortlessly calculate split sheets, manage your music library, and pitch your tracks to filmmakers and sync agents—all from one single console.',
+      desc: 'Designed for artists, DJs, and podcasters. Effortlessly calculate split sheets, manage your music library, and pitch your tracks to filmmakers and sync agents - all from one single console.',
       preview: creatorDashboardImg
     },
     {
@@ -2747,103 +2730,7 @@ function PerfectForPageView() {
 }
 
 
-// ================= About & Contact View =================
-function AboutView() {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
 
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-      setEmail('');
-    }
-  };
-
-  return (
-    <>
-      <PageHeader title="Bridging Music & High Tech" bgImage={headerAboutImg} bgImageWestern={headerAboutWesternImg} breadcrumb="About Us" />
-      <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
-        <p className="section-desc" style={{ textAlign: 'center', marginBottom: '40px', maxWidth: '700px', margin: '0 auto 40px' }}>
-          TuneMavens was founded to build modern technology infrastructure for independent global artists, record labels, and publishers.
-        </p>
-
-      <div className="arch-card glass-panel" style={{ marginBottom: '80px' }}>
-        <div>
-          <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '16px' }}>Consolidating Creative Workflows</h3>
-          <p style={{ fontSize: '14px', color: 'var(--mu)', lineHeight: '1.6', marginBottom: '24px' }}>
-            All operations are designed to be seamless. In partnership with Intermaven.io, TuneMavens connects your payment records, custom domains, and AI tasks to a single, secure central profile database, avoiding the hassle of managing disjointed web tools.
-          </p>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Shared M-Pesa & Stripe checkout integrations</li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Automatic EPK sync to public DNS records</li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Instant cross-subdomain authentication</li>
-          </ul>
-        </div>
-        <div className="arch-visual">
-          <div className="arch-node active">
-            <div className="arch-node-icon"><Lock size={18} /></div>
-            <div className="arch-node-info">
-              <h4 className="arch-node-title">Secure Subdomain Auth</h4>
-              <p className="arch-node-desc">Unified JWT session tokens shared across all portal environments.</p>
-            </div>
-          </div>
-          <div className="arch-node">
-            <div className="arch-node-icon"><Database size={18} /></div>
-            <div className="arch-node-info">
-              <h4 className="arch-node-title">Consolidated Database</h4>
-              <p className="arch-node-desc">Profiles and notification registries remain synchronized in real-time.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Form */}
-      <div className="section-header" style={{ marginBottom: '40px' }}>
-        <span className="section-label">Contact Us</span>
-        <h2 className="section-title">Send a Message</h2>
-      </div>
-
-      <div className="contact-card glass-panel">
-        {submitted ? (
-          <div className="text-center" style={{ padding: '20px 0' }}>
-            <Check size={48} color="var(--cyan)" style={{ margin: '0 auto 16px' }} />
-            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Thank you!</h3>
-            <p style={{ fontSize: '14px', color: 'var(--mu)' }}>We have received your message and will respond shortly.</p>
-          </div>
-        ) : (
-          <form onSubmit={handleContactSubmit}>
-            <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email" 
-                className="form-control" 
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Message</label>
-              <textarea 
-                rows="4" 
-                placeholder="Enter your message details..." 
-                className="form-control" 
-                style={{ resize: 'none' }}
-                required
-              ></textarea>
-            </div>
-            <button type="submit" className="btn-primary" style={{ width: '100%', padding: '12px' }}>
-              Send Message
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
-  </>
-)
-}
 
 // ================= Help Center & FAQ View =================
 function HelpView() {
@@ -3099,12 +2986,12 @@ function StreamView() {
           Welcome to the next-generation consumer music app. Stream ad-free, download high-quality files, and support creators directly using your shared credits vault.
         </p>
 
-        {/* Web ⇄ native parity banner — link to the TuneMavens landing page for app store CTAs */}
+        {/* Web ⇄ native parity banner  -  link to the TuneMavens landing page for app store CTAs */}
         <div className="stream-app-banner" data-testid="stream-app-banner">
           <div className="stream-app-banner-text">
             <span className="stream-app-banner-eyebrow">Prefer mobile?</span>
             <span className="stream-app-banner-title">This is the web build of the TuneMavens listener app.</span>
-            <span className="stream-app-banner-sub">Same library, same tips, same account — just sized for your pocket.</span>
+            <span className="stream-app-banner-sub">Same library, same tips, same account  -  just sized for your pocket.</span>
           </div>
           <Link to="/native-apps/tunemavens" className="stream-app-banner-cta" data-testid="stream-app-banner-cta">
             <Smartphone size={14} /> Get the native app
@@ -4483,7 +4370,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab }) {
   const notifRef = useRef(null);
   const accountRef = useRef(null);
 
-  // Placeholder notification feed — real live updates are on the roadmap.
+  // Placeholder notification feed  -  real live updates are on the roadmap.
   const [notifications, setNotifications] = useState([
     { id: 1, title: 'Welcome to TuneMavens', body: 'You\u2019re signed in across the whole network. Credits: 600.', read: false, at: '2m ago' },
     { id: 2, title: 'Your workspace is ready', body: 'Publishing, distribution and split panels are wired up and waiting.', read: false, at: '12m ago' },
@@ -4648,7 +4535,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
       .catch(() => setWizardAnswers(null));
   }, [sessionUser?.id]);
 
-  // Log tab-visit activity signals — the recommendation engine uses them.
+  // Log tab-visit activity signals  -  the recommendation engine uses them.
   useEffect(() => {
     if (!sessionUser || !activeTab) return;
     usersApi.logActivity({ kind: 'tab_visit', ref: activeTab });
@@ -4904,7 +4791,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
   );
 }
 
-// ================= Onboarding Stripe — top-of-dashboard checklist =================
+// ================= Onboarding Stripe  -  top-of-dashboard checklist =================
 // Shows the user what's still missing in their setup. Status derives live from
 // what's actually in Mongo (publishing_deals, distribution_deals, users.apps),
 // so the stripe shrinks naturally as the user completes each step.
@@ -4915,7 +4802,7 @@ import {
   AppMarketplacePanel, PanelHeader,
 } from './components/phase3.jsx'
 
-// "Perfect for" sidebar — rendered on all landing/marketing routes.
+// "Perfect for" sidebar  -  rendered on all landing/marketing routes.
 import { PerfectForSidebar, PERFECT_FOR_ROLES, ROLE_LOGOS } from './components/PerfectForSidebar.jsx'
 
 
@@ -5009,7 +4896,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
   if (sessionUser?.role !== 'admin') {
     return (
       <div className="dashboard-card">
-        <PanelHeader title="Domain Mappings" desc="Admin-only — your account does not have access." />
+        <PanelHeader title="Domain Mappings" desc="Admin-only  -  your account does not have access." />
         <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', fontSize: '13px' }}>
           <Lock size={28} style={{ color: '#475569', marginBottom: '10px' }} />
           <p>You need the <strong style={{ color: '#f1f5f9' }}>admin</strong> role to manage domain mappings.</p>
@@ -5170,7 +5057,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
       )}
 
       <p style={{ fontSize: '11px', color: '#64748b', marginTop: '14px', lineHeight: '1.6' }}>
-        Note: Updating a mapping rewrites the published DNS contract. The reverse-proxy (per <code>backend/README.md</code>) reads these mappings live — changes propagate within ~30 seconds. Until Phase 1.1 ships the DNS automation, the strings stored here are picked up at next deploy.
+        Note: Updating a mapping rewrites the published DNS contract. The reverse-proxy (per <code>backend/README.md</code>) reads these mappings live  -  changes propagate within ~30 seconds. Until Phase 1.1 ships the DNS automation, the strings stored here are picked up at next deploy.
       </p>
     </div>
   );
@@ -5347,7 +5234,7 @@ function PosSettlementPanel() {
   ];
   return (
     <div className="dashboard-card">
-      <PanelHeader title="POS Settlement Reports" desc="Per-event settlements fire the Compensation Engine cascade — artist + manager + label shares settle within 24h." />
+      <PanelHeader title="POS Settlement Reports" desc="Per-event settlements fire the Compensation Engine cascade  -  artist + manager + label shares settle within 24h." />
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {reports.map(r => (
           <li key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', borderLeft: '3px solid var(--cyan)', marginBottom: '8px', background: 'rgba(255,255,255,0.02)' }} data-testid={`pos-report-${r.id}`}>
@@ -5394,7 +5281,7 @@ function PosDevicesPanel() {
           </li>
         ))}
       </ul>
-      <button className="btn-primary" style={{ marginTop: '14px', padding: '10px 16px', fontSize: '12px', fontWeight: 700 }} onClick={() => alert('Device provisioning flow opens in a modal — Phase 2 deliverable.')} data-testid="pos-device-add">+ Provision new device</button>
+      <button className="btn-primary" style={{ marginTop: '14px', padding: '10px 16px', fontSize: '12px', fontWeight: 700 }} onClick={() => alert('Device provisioning flow opens in a modal  -  Phase 2 deliverable.')} data-testid="pos-device-add">+ Provision new device</button>
     </div>
   );
 }
@@ -6560,7 +6447,7 @@ function App() {
     try {
       await authApi.logout();
     } catch {
-      // ignore — clear local state regardless so the user is logged out client-side
+      // ignore  -  clear local state regardless so the user is logged out client-side
     }
     tokenStore.clear();
     setSessionUser(null);
@@ -6568,7 +6455,7 @@ function App() {
   };
 
   // Recognises your Intermaven session when you land on the TuneMavens app.
-  // On mount, ask the backend if there's a valid session — covers users
+  // On mount, ask the backend if there's a valid session  -  covers users
   // arriving from intermaven.io with a shared HttpOnly cookie, or returning
   // users whose Bearer token is still in sessionStorage.
   useEffect(() => {
@@ -6580,7 +6467,7 @@ function App() {
       setSessionUser(merged);
       sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
     }).catch(() => {
-      // No valid session — leave sessionUser as-is (might be null, might be a
+      // No valid session  -  leave sessionUser as-is (might be null, might be a
       // local-only stub from the legacy Google-SSO stub flow).
     });
     return () => { cancelled = true; };
@@ -6619,8 +6506,7 @@ function App() {
           <Route path="/native-apps/:slug" element={<NativeAppLandingView />} />
            <Route path="/for" element={<PerfectForPageView />} />
           <Route path="/for/:role" element={<RoleLandingView />} />
-          <Route path="/pricing" element={<PricingView />} />
-          <Route path="/about" element={<AboutView />} />
+           <Route path="/pricing" element={<PricingView />} />
           <Route path="/help" element={<HelpView />} />
           <Route path="/stream" element={<StreamView />} />
           <Route path="/login" element={<LoginView onLogin={handleLogin} />} />
@@ -6673,10 +6559,9 @@ function App() {
                 <div style={{ display: 'inline-block', textAlign: 'left' }}>
                   <h4>Company</h4>
                   <div className="footer-links">
-                    <Link to="/about" className="footer-link">About Us</Link>
+                    <Link to="/for" className="footer-link">Perfect For</Link>
                     <a href="#blog" className="footer-link" onClick={() => alert('Blog coming soon')}>Blog</a>
                     <a href="#careers" className="footer-link" onClick={() => alert('Careers coming soon')}>Careers</a>
-                    <Link to="/about" className="footer-link">Contact</Link>
                   </div>
                 </div>
               </div>

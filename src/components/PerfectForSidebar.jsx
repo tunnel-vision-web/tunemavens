@@ -35,7 +35,7 @@ export const PERFECT_FOR_ROLES = [
 ];
 
 const LANDING_ROUTE_PREFIXES = [
-  { exact: '/' }, { exact: '/pricing' }, { exact: '/about' }, { exact: '/help' }, { exact: '/tools' }, { exact: '/apps' }, { exact: '/native-apps' },
+  { exact: '/' }, { exact: '/pricing' }, { exact: '/help' }, { exact: '/tools' }, { exact: '/apps' }, { exact: '/native-apps' },
   { prefix: '/native-apps/' }, { prefix: '/for/' },
 ];
 

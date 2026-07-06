@@ -2,7 +2,7 @@
 // Extracted from App.jsx to keep that file under control.
 // Contains: OnboardingStripe, OnboardingWizardModal, RecommendationHero,
 // PublishingElectionPanel, DistributionElectionPanel, ContractDrawer,
-// AppMarketplacePanel — plus the PanelHeader helper they share.
+// AppMarketplacePanel  -  plus the PanelHeader helper they share.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -16,7 +16,7 @@ import { INTERMAVEN_NATIVE_APPS } from '../lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'
 import { lookupApp } from '../lib/appCatalog.js'
 
-// Small shared helper — a plain title + description block used by every
+// Small shared helper  -  a plain title + description block used by every
 // Phase 3 panel. Kept next to the panels that use it.
 export function PanelHeader({ title, desc }) {
   return (
@@ -178,7 +178,7 @@ const WIZARD_QUESTIONS = [
   {
     key: 'primary_goal',
     label: 'What\u2019s your primary goal right now?',
-    helper: 'Pick every goal that applies \u2014 the agent optimises across all of them.',
+    helper: 'Pick every goal that applies  -  the agent optimises across all of them.',
     multi: true,
     allowOther: true,
     options: [
@@ -217,7 +217,7 @@ const WIZARD_QUESTIONS = [
   {
     key: 'revenue_focus',
     label: 'Where do you make (or want to make) most of your revenue?',
-    helper: 'Pick every stream that matters \u2014 the agent balances the mix.',
+    helper: 'Pick every stream that matters  -  the agent balances the mix.',
     multi: true,
     allowOther: true,
     options: [
@@ -367,14 +367,14 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
             {current.allowOther && (
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ fontSize: '10px', color: '#94a3b8', letterSpacing: '1.2px', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px', display: 'block' }}>
-                  Other {current.multi ? '(add your own \u2014 optional)' : '(describe if none of the above fit)'}
+                  Other {current.multi ? '(add your own  -  optional)' : '(describe if none of the above fit)'}
                 </label>
                 <input
                   type="text"
                   value={answers[otherKey] || ''}
                   onChange={(e) => setAnswers((a) => ({ ...a, [otherKey]: e.target.value }))}
                   data-testid={`wizard-other-${current.key}`}
-                  placeholder={"Type here \u2014 the AI will find the closest matching apps"}
+                  placeholder={"Type here  -  the AI will find the closest matching apps"}
                   style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#f1f5f9', fontSize: '13px' }}
                 />
               </div>
@@ -385,7 +385,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
         {step === WIZARD_QUESTIONS.length && (
           <>
             <p style={{ fontSize: '15px', color: '#e2e8f0', marginBottom: '10px', fontWeight: 600 }} data-testid="wizard-question-freeform">Anything else the recommendation agent should know?</p>
-            <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '12px' }}>Optional. Free-form context \u2014 sound, market, goals, constraints. The AI reads this too.</p>
+            <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '12px' }}>Optional. Free-form context  -  sound, market, goals, constraints. The AI reads this too.</p>
             <textarea value={answers.freeform_notes} onChange={(e) => setAnswers((a) => ({ ...a, freeform_notes: e.target.value }))} rows={5} data-testid="wizard-freeform" placeholder="e.g. Afrobeats artist based in Nairobi, mostly live income right now, want to break into sync in the next 12 months."
               style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#f1f5f9', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical', marginBottom: '24px' }}
             />
@@ -561,7 +561,7 @@ export function PublishingElectionPanel({ sessionUser }) {
       key: 'standard_admin',
       title: 'Standard Administration',
       headline: '50/50 publisher\u2019s share',
-      desc: 'We register your works with PROs, collect publishing royalties, and pay you out. No pitching service \u2014 admin only.',
+      desc: 'We register your works with PROs, collect publishing royalties, and pay you out. No pitching service  -  admin only.',
       badge: 'Self-publisher friendly',
     },
     {
@@ -639,7 +639,7 @@ export function PublishingElectionPanel({ sessionUser }) {
     <div className="dashboard-card" data-testid="publishing-election-panel">
       <PanelHeader
         title="Publishing Election"
-        desc="Choose how TuneMavens administers your publishing rights. Three configurations \u2014 you sign a contract afterwards to lock the terms."
+        desc="Choose how TuneMavens administers your publishing rights. Three configurations  -  you sign a contract afterwards to lock the terms."
       />
 
       {current && (
@@ -838,7 +838,7 @@ export function DistributionElectionPanel({ sessionUser }) {
       fee_structure: 'rev_share',
       title: 'TuneMavens Native',
       headline: '45 / 55 revenue share',
-      desc: 'Distribute through tunemavens.com\u2019s native network. We take 45%, you keep 55% \u2014 admin-editable per release.',
+      desc: 'Distribute through tunemavens.com\u2019s native network. We take 45%, you keep 55%  -  admin-editable per release.',
       badge: 'Best for our network',
     },
     {
@@ -1222,8 +1222,8 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
 
 // ================= App Marketplace (Phase 3) =================
 // Two tabs:
-//   1. "TuneMavens Apps" — dashboard panels native to this console (Phase 1+)
-//   2. "Intermaven Network" — the 3 flagship native apps from the shared
+//   1. "TuneMavens Apps"  -  dashboard panels native to this console (Phase 1+)
+//   2. "Intermaven Network"  -  the 3 flagship native apps from the shared
 //      Intermaven catalogue (NativeAppsView source-of-truth in nativeApps.js).
 // Activation persists to `users.apps[]` via POST /api/users/me/apps and ticks
 // off the "Activate a Dashboard App" step in the OnboardingStripe.
@@ -1246,12 +1246,12 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
   const catalogue = [
     { slug: 'catalog-porting', name: 'Catalog Porting', desc: 'Bring your back-catalogue in via CSV or DDEX, validate metadata, and stage releases.', icon: Database, accent: 'var(--cyan)', tab: 'catalog', roles: ['creator', 'label', 'admin'] },
     { slug: 'split-cascade', name: 'Split Cascade', desc: 'See exactly how every dollar flows through writer / producer / publisher splits.', icon: Coins, accent: 'var(--purple)', tab: 'splits', roles: ['creator', 'label', 'admin'] },
-    { slug: 'publishing-election', name: 'Publishing Election', desc: 'Lock in your publishing tier — standard admin or full-service co-pub.', icon: BookOpen, accent: 'var(--cyan)', tab: 'publishing-election', roles: ['creator', 'label', 'admin'] },
+    { slug: 'publishing-election', name: 'Publishing Election', desc: 'Lock in your publishing tier  -  standard admin or full-service co-pub.', icon: BookOpen, accent: 'var(--cyan)', tab: 'publishing-election', roles: ['creator', 'label', 'admin'] },
     { slug: 'distribution-election', name: 'Distribution Election', desc: 'Choose how your music reaches DSPs and how revenue splits.', icon: Globe, accent: 'var(--purple)', tab: 'distribution-election', roles: ['creator', 'label', 'admin'] },
     { slug: 'djpool', name: 'DJ Pool MVP', desc: 'Distribute promo cuts to vetted DJs, gate by region, track plays.', icon: Radio, accent: '#10b981', tab: 'djpool', roles: ['creator', 'dj', 'admin'] },
     { slug: 'sync-marketplace', name: 'Sync Marketplace', desc: 'Pitch and license tracks for film, TV, ads, and game placements.', icon: Globe, accent: 'var(--cyan)', tab: 'sync', roles: ['creator', 'label', 'studio', 'supervisor', 'admin'] },
     { slug: 'escrow-contracts', name: 'Escrow Contracts', desc: 'Hold funds in escrow until contractual milestones clear.', icon: Shield, accent: 'var(--purple)', tab: 'escrow', roles: ['creator', 'studio', 'supervisor', 'admin'] },
-    { slug: 'tunemavens-library', name: 'My Library', desc: 'Personal media library — playlists, downloads, and offline cache.', icon: Music, accent: 'var(--cyan)', tab: 'library', roles: ['creator', 'consumer', 'dj', 'admin'] },
+    { slug: 'tunemavens-library', name: 'My Library', desc: 'Personal media library  -  playlists, downloads, and offline cache.', icon: Music, accent: 'var(--cyan)', tab: 'library', roles: ['creator', 'consumer', 'dj', 'admin'] },
     { slug: 'tunemavens-tips', name: 'Tips & Purchases', desc: 'See incoming tips and your TuneMavens app purchases.', icon: Coins, accent: '#10b981', tab: 'tips', roles: ['creator', 'consumer', 'dj', 'admin'] },
     { slug: 'tunepay-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: Database, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'admin'] },
     { slug: 'tunepay-settlement', name: 'POS Settlement', desc: 'Reconcile tunepay settlement runs against your ledger.', icon: Coins, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
@@ -1399,7 +1399,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
     <div className="dashboard-card" data-testid="app-marketplace-panel">
       <PanelHeader
         title="App Marketplace"
-        desc={"Start with 'Your Path' \u2014 the AI Recommendation Agent picks the best combination of apps for your goals. Or browse the full catalogue in the other tabs."}
+        desc={"Start with 'Your Path'  -  the AI Recommendation Agent picks the best combination of apps for your goals. Or browse the full catalogue in the other tabs."}
       />
 
       {/* Top-level tab switcher */}
