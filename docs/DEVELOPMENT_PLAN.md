@@ -30,8 +30,12 @@ admin console with role-gated tabs, domain-mapping registry.
   layer actually serves traffic (currently rules layer answers 100%).
 
 ### Phase 4 · Record Label Console 🔵 P1
-Roster CSV upload, distribution Path C negotiation wizard, catalogue
-acquisition ledger.
+- Roster CSV upload & Multi-file drag and drop audio file ingestion. ✅ SHIPPED
+- Manual single-track catalogue uploader UI with validation checks. ✅ SHIPPED
+- Catalogue list display showing splits, ISRCs, artist, and action shortcuts linking directly to Splits cascade, Sync licensing, and Domain hosting. ✅ SHIPPED
+- Dashboard-wide utility panels search filtering and pagination navigation controls. ✅ SHIPPED
+- Sub-brand Landing Pages: Customized dark-theme background colors, custom navigation menus, subdomain mapping alerts, Tidal-inspired sections for TuneStream, and admin configurator panel for promoted acts. ✅ SHIPPED
+- Distribution Path C negotiation wizard, catalogue acquisition ledger.
 
 ### Phase 5 · DJ Pool Engine 🟡 P2
 ### Phase 6 · Sync Marketplace 🟡 P2

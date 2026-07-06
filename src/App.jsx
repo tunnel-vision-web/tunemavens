@@ -117,6 +117,14 @@ function Navbar({ sessionUser }) {
 
   const isActive = (path) => currentPath === path;
 
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+    setMobileOpen(false);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -140,6 +148,181 @@ function Navbar({ sessionUser }) {
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
+
+  // Conditional Menu rendering
+  const renderNavLinks = () => {
+    if (currentPath === '/native-apps/tunemavens') {
+      return (
+        <>
+          <li>
+            <a href="#features" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }}>
+              Features
+            </a>
+          </li>
+          <li>
+            <a href="#promoted-acts" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('promoted-acts'); }}>
+              Rising Talents
+            </a>
+          </li>
+          <li>
+            <Link to="/stream" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Web Player
+            </Link>
+          </li>
+          <li>
+            <a href="#tipping-guide" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('tipping-guide'); }}>
+              Direct Support
+            </a>
+          </li>
+          <li>
+            <a href="#download-cta" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('download-cta'); }}>
+              Download App
+            </a>
+          </li>
+          <li>
+            <Link to="/" className="nav-link" style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '4px', color: '#10b981' }} onClick={() => setMobileOpen(false)}>
+              Return to TuneMavens
+            </Link>
+          </li>
+        </>
+      );
+    }
+    
+    if (currentPath === '/native-apps/creator-companion') {
+      return (
+        <>
+          <li>
+            <a href="#companion-features" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('companion-features'); }}>
+              Capabilities
+            </a>
+          </li>
+          <li>
+            <a href="#live-splits" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('live-splits'); }}>
+              Live Splits
+            </a>
+          </li>
+          <li>
+            <Link to="/dashboard" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Web Console
+            </Link>
+          </li>
+          <li>
+            <Link to="/register" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Sign Up
+            </Link>
+          </li>
+          <li>
+            <Link to="/" className="nav-link" style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '4px', color: '#a78bfa' }} onClick={() => setMobileOpen(false)}>
+              Return to TuneMavens
+            </Link>
+          </li>
+        </>
+      );
+    }
+
+    // Default corporate links
+    return (
+      <>
+        <li>
+          <Link 
+            to="/tools" 
+            className={`nav-link ${isActive('/tools') ? 'active' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            AI Tools
+          </Link>
+        </li>
+        <li className="dropdown-container" ref={appsDropdownRef}>
+          <button
+            className={`nav-link dropdown-trigger ${isActive('/apps') || isActive('/native-apps') ? 'active' : ''}`}
+            onClick={() => setAppsDropdownOpen(!appsDropdownOpen)}
+            data-testid="nav-apps-dropdown-trigger"
+          >
+            Apps
+            <ChevronDown size={14} />
+          </button>
+          <ul className={`dropdown-menu ${appsDropdownOpen ? 'open' : ''}`}>
+            <li>
+              <Link
+                to="/apps"
+                className="dropdown-link"
+                onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}
+                data-testid="nav-apps-dashboard-link"
+              >
+                <Layers size={16} /> Dashboard Apps
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/native-apps"
+                className="dropdown-link"
+                onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}
+                data-testid="nav-apps-native-link"
+              >
+                <Smartphone size={16} /> Native Apps
+              </Link>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <Link 
+            to="/pricing" 
+            className={`nav-link ${isActive('/pricing') ? 'active' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            Pricing
+          </Link>
+        </li>
+        <li className="dropdown-container" ref={aboutDropdownRef}>
+          <button 
+            className={`nav-link dropdown-trigger ${isActive('/about') || isActive('/for') ? 'active' : ''}`} 
+            onClick={() => { setDropdownOpen(false); setAppsDropdownOpen(false); setAboutDropdownOpen(!aboutDropdownOpen); }}
+          >
+            About
+            <ChevronDown size={14} />
+          </button>
+          <ul className={`dropdown-menu ${aboutDropdownOpen ? 'open' : ''}`}>
+            <li>
+              <Link to="/about" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link to="/for" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
+                Perfect For
+              </Link>
+            </li>
+          </ul>
+        </li>
+        <li className="dropdown-container" ref={dropdownRef}>
+          <button 
+            className="nav-link dropdown-trigger" 
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+          >
+            Support & Community
+            <ChevronDown size={14} />
+          </button>
+          <ul className={`dropdown-menu ${dropdownOpen ? 'open' : ''}`}>
+            <li>
+              <Link to="/help" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
+                <HelpCircle size={16} /> Help Center
+              </Link>
+            </li>
+            <li>
+              <a href="#forum" className="dropdown-link" onClick={() => { alert('TuneMavens Community Forum shares the Intermaven account profile and will launch in Phase 2.'); setDropdownOpen(false); setMobileOpen(false); }}>
+                <MessageSquare size={16} /> Creator Forum
+              </a>
+            </li>
+            <li>
+              <a href="#blog" className="dropdown-link" onClick={() => { alert('Creator stories and news blog coming soon.'); setDropdownOpen(false); setMobileOpen(false); }}>
+                <BookOpen size={16} /> Blog & Articles
+              </a>
+            </li>
+          </ul>
+        </li>
+      </>
+    );
+  };
 
   return (
     <nav className="navbar">
@@ -186,104 +369,8 @@ function Navbar({ sessionUser }) {
 
         {/* Links */}
         <ul className={`nav-links ${mobileOpen ? 'mobile-open' : ''}`}>
-          <li>
-            <Link 
-              to="/tools" 
-              className={`nav-link ${isActive('/tools') ? 'active' : ''}`}
-              onClick={() => setMobileOpen(false)}
-            >
-              AI Tools
-            </Link>
-          </li>
-          <li className="dropdown-container" ref={appsDropdownRef}>
-            <button
-              className={`nav-link dropdown-trigger ${isActive('/apps') || isActive('/native-apps') ? 'active' : ''}`}
-              onClick={() => setAppsDropdownOpen(!appsDropdownOpen)}
-              data-testid="nav-apps-dropdown-trigger"
-            >
-              Apps
-              <ChevronDown size={14} />
-            </button>
-            <ul className={`dropdown-menu ${appsDropdownOpen ? 'open' : ''}`}>
-              <li>
-                <Link
-                  to="/apps"
-                  className="dropdown-link"
-                  onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}
-                  data-testid="nav-apps-dashboard-link"
-                >
-                  <Layers size={16} /> Dashboard Apps
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/native-apps"
-                  className="dropdown-link"
-                  onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}
-                  data-testid="nav-apps-native-link"
-                >
-                  <Smartphone size={16} /> Native Apps
-                </Link>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <Link 
-              to="/pricing" 
-              className={`nav-link ${isActive('/pricing') ? 'active' : ''}`}
-              onClick={() => setMobileOpen(false)}
-            >
-              Pricing
-            </Link>
-          </li>
-          <li className="dropdown-container" ref={aboutDropdownRef}>
-            <button 
-              className={`nav-link dropdown-trigger ${isActive('/about') || isActive('/for') ? 'active' : ''}`} 
-              onClick={() => { setDropdownOpen(false); setAppsDropdownOpen(false); setAboutDropdownOpen(!aboutDropdownOpen); }}
-            >
-              About
-              <ChevronDown size={14} />
-            </button>
-            <ul className={`dropdown-menu ${aboutDropdownOpen ? 'open' : ''}`}>
-              <li>
-                <Link to="/about" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/for" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
-                  Perfect For
-                </Link>
-              </li>
-            </ul>
-          </li>
-          {/* Dropdown Menu */}
-          <li className="dropdown-container" ref={dropdownRef}>
-            <button 
-              className="nav-link dropdown-trigger" 
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              Support & Community
-              <ChevronDown size={14} />
-            </button>
-            <ul className={`dropdown-menu ${dropdownOpen ? 'open' : ''}`}>
-              <li>
-                <Link to="/help" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
-                  <HelpCircle size={16} /> Help Center
-                </Link>
-              </li>
-              <li>
-                <a href="#forum" className="dropdown-link" onClick={() => { alert('TuneMavens Community Forum shares the Intermaven account profile and will launch in Phase 2.'); setDropdownOpen(false); setMobileOpen(false); }}>
-                  <MessageSquare size={16} /> Creator Forum
-                </a>
-              </li>
-              <li>
-                <a href="#blog" className="dropdown-link" onClick={() => { alert('Creator stories and news blog coming soon.'); setDropdownOpen(false); setMobileOpen(false); }}>
-                  <BookOpen size={16} /> Blog & Articles
-                </a>
-              </li>
-            </ul>
-          </li>
+          {renderNavLinks()}
+          
           {/* Mobile Region Switcher & CTAs inside scroll flow */}
           {mobileOpen && (
             <li style={{ padding: '8px 0', width: '100%' }}>
@@ -1953,6 +2040,23 @@ function NativeAppLandingView() {
   const { slug } = useParams();
   const data = NATIVE_APP_LANDING_DATA[slug];
 
+  const [promotedActs, setPromotedActs] = useState(() => getPromotedActs());
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setPromotedActs(getPromotedActs());
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   // Icon lookup table  -  kept simple to avoid dynamic import gymnastics.
   const ICONS = { Headphones, TrendingUp, CreditCard };
   // bgKey -> image asset (re-uses HomeView's hero imagery for visual cohesion)
@@ -2058,10 +2162,252 @@ function NativeAppLandingView() {
     );
   };
 
+  if (slug === 'tunemavens') {
+    const activeAct = promotedActs[currentSlide % promotedActs.length] || null;
+    return (
+      <div 
+        className="native-app-landing tunestream-landing" 
+        style={{ background: getLandingBackground('tunemavens'), color: '#f1f5f9' }}
+      >
+        {/* HERO CAROUSEL featuring Promoted Acts */}
+        <div className="hw" id="hero">
+          <div className="bgs">
+            {promotedActs.map((act, idx) => (
+              <div
+                key={idx}
+                className={`bg ${currentSlide % promotedActs.length === idx ? 'on' : ''}`}
+                style={{
+                  backgroundImage: `url(${HERO_IMAGE_MAP[act.imageKey] || listenHeroImg})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  filter: currentSlide % promotedActs.length === idx
+                    ? (titleHovered ? 'brightness(1.05) blur(0px)' : 'brightness(0.7) blur(1.5px)')
+                    : 'none',
+                  transform: currentSlide % promotedActs.length === idx && titleHovered ? 'scale(1.04)' : 'scale(1)',
+                  transition: 'filter 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)',
+                }}
+              />
+            ))}
+            <div className="bgo" style={{ opacity: titleHovered ? 0.3 : 0.8, transition: 'opacity 0.8s ease' }} />
+          </div>
+
+          <div className="hs">
+            <div 
+              className="hcont"
+              onMouseEnter={() => setTitleHovered(true)}
+              onMouseLeave={() => setTitleHovered(false)}
+            >
+              <div className="he hbadge" style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', padding: '6px 12px', borderRadius: '20px' }}>
+                <span className="bdot" style={{ background: '#10b981', animation: 'pulseGlow 2s infinite' }} />
+                <span>streams.tunemavens.com · Subdomain Active</span>
+              </div>
+
+              {activeAct && (
+                <>
+                  <h1 className="ht htitle" style={{ marginTop: '16px' }}>
+                    <span className="ht-line ht-line-1">{activeAct.title}</span>
+                    <span className="ht-line ht-line-2" style={{ color: 'var(--cyan)' }}>by {activeAct.name}</span>
+                  </h1>
+                  <p className="hp hsub" style={{ fontSize: '15px', color: '#cbd5e1', maxWidth: '600px', lineHeight: '1.6' }}>
+                    Featured track: <strong style={{ color: '#fff' }}>{activeAct.featuredTrack}</strong>. Experience high-fidelity FLAC audio and direct creator tipping on Africa's premier music catalog.
+                  </p>
+                </>
+              )}
+
+              <div className="hb hbtns" style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                <Link to="/stream" className="hbp" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <Play size={16} fill="currentColor" /> Stream Web Player
+                </Link>
+                <a href="#download-cta" className="hbg" onClick={(e) => { e.preventDefault(); scrollToSection('download-cta'); }}>
+                  Get Native App
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="sui-arrows">
+            <button type="button" className="slide-nav prev" onClick={() => goToSlide((currentSlide - 1 + promotedActs.length) % promotedActs.length)}>‹</button>
+            <button type="button" className="slide-nav next" onClick={() => goToSlide((currentSlide + 1) % promotedActs.length)}>›</button>
+          </div>
+        </div>
+
+        {/* Subdomain Mapping Notification Banner */}
+        <div style={{ background: 'rgba(34, 211, 238, 0.08)', borderBottom: '1px solid rgba(34, 211, 238, 0.15)', padding: '12px 24px', textAlign: 'center', fontSize: '13px', color: '#cbd5e1' }}>
+          🌐 TuneStream platform resolves natively to: <strong style={{ color: '#fff' }}>streams.tunemavens.com</strong>. Map containers securely in the <Link to="/dashboard" onClick={() => { setActiveTab('domain-mappings'); }} style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Domain Mappings Admin Console</Link>.
+        </div>
+
+        {/* Tidal-Style Content Section 1: Rising Talents & Dummy Tracks Player */}
+        <section className="landing-section" id="promoted-acts" style={{ padding: '80px 0' }}>
+          <div className="container">
+            <span className="landing-section-eyebrow" style={{ color: 'var(--cyan)' }}>Rising Talents</span>
+            <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '28px', fontWeight: '800' }}>Tidal Curated Selection</h2>
+            <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '32px', maxWidth: '600px' }}>
+              Listen to lossless FLAC mastering, offline playlists, and direct-to-creator payouts from Africa's most prominent rising stars.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
+              {promotedActs.map((act) => (
+                <div 
+                  key={act.id} 
+                  className="landing-feature-card" 
+                  style={{ 
+                    background: 'rgba(255,255,255,0.02)', 
+                    border: '1px solid rgba(255,255,255,0.06)', 
+                    padding: '20px', 
+                    borderRadius: '8px', 
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+                  }}
+                  onClick={() => {
+                    alert(`Now playing mock stream: ${act.name} - ${act.featuredTrack}`);
+                  }}
+                >
+                  <div style={{ height: '140px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', position: 'relative' }}>
+                    <Play size={32} color="var(--cyan)" style={{ zIndex: 2 }} />
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '9px', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '10px', color: '#fff' }}>FLAC</div>
+                  </div>
+                  <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px 0', fontWeight: '700' }}>{act.title}</h3>
+                  <p style={{ fontSize: '13px', color: '#cbd5e1', margin: '0 0 12px 0' }}>{act.name}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--mu)' }}>
+                    <span>{act.genre}</span>
+                    <span style={{ color: 'var(--cyan)' }}>▶ Stream</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Tidal-Style Content Section 2: Direct-to-Artist Split Cascade Illustration */}
+        <section className="landing-section landing-section-alt" id="tipping-guide" style={{ padding: '80px 0', background: 'rgba(255,255,255,0.02)' }}>
+          <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
+            <div>
+              <span className="landing-section-eyebrow" style={{ color: 'var(--green)' }}>Direct Support</span>
+              <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '28px', fontWeight: '800' }}>The Direct Creator Value Cascade</h2>
+              <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}>
+                When you tip an artist on TuneStream, your money bypasses traditional streaming middlemen. The funds flow instantly through the shared Intermaven split ledger straight into the creator's wallet.
+              </p>
+              
+              <div style={{ marginTop: '24px' }}>
+                <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Revenue Split Distribution ($1.00 Tip Example)</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span>Artist Share (50%):</span>
+                    <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>+$0.50</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span>Label Share (30%):</span>
+                    <span style={{ color: '#cbd5e1' }}>+$0.30</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span>Manager Fee (10%):</span>
+                    <span style={{ color: '#cbd5e1' }}>+$0.10</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span>Platform Commission (10%):</span>
+                    <span style={{ color: '#ef4444' }}>+$0.10</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="dashboard-card" style={{ padding: '32px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <h3 style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold', marginBottom: '16px' }}>Related Creator Utilities</h3>
+              <p style={{ fontSize: '13px', color: 'var(--mu)', marginBottom: '24px' }}>
+                TuneStream is directly connected to the Creator Companion dashboard apps. Calculate splits, configure cascades, and check statements instantly.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link to="/native-apps/creator-companion" className="btn-primary" style={{ textAlign: 'center', padding: '10px' }}>
+                  Explore Creator Companion
+                </Link>
+                <Link to="/stream" className="plan-btn outline" style={{ textAlign: 'center', padding: '10px' }}>
+                  Open Web Stream Player
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Content Section 3: High Fidelity Audio & Offline Freedom */}
+        <section className="landing-section" id="features" style={{ padding: '80px 0' }}>
+          <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>HQ Lossless FLAC</h4>
+                <p style={{ color: 'var(--mu)', fontSize: '12px', lineHeight: '1.5' }}>High-fidelity audio streaming matching studio resolution.</p>
+              </div>
+              <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Offline Cache</h4>
+                <p style={{ color: 'var(--mu)', fontSize: '12px', lineHeight: '1.5' }}>Save up to 8GB of music directly to your phone for off-grid playback.</p>
+              </div>
+              <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Region Playlists</h4>
+                <p style={{ color: 'var(--mu)', fontSize: '12px', lineHeight: '1.5' }}>Playlists customized dynamically based on your localized market.</p>
+              </div>
+              <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Smart Discovery</h4>
+                <p style={{ color: 'var(--mu)', fontSize: '12px', lineHeight: '1.5' }}>AI-driven recommendations based on your follows and collaborations.</p>
+              </div>
+            </div>
+
+            <div>
+              <span className="landing-section-eyebrow" style={{ color: 'var(--cyan)' }}>High-Fidelity Audio</span>
+              <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '28px', fontWeight: '800' }}>Lossless Offline Listening</h2>
+              <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+                Enjoy complete data-savings with offline caching. Sync catalog tracks are encoded cellular-aware to scale dynamically in low-bandwidth regions.
+              </p>
+              <Link to="/help" className="landing-cross-link" style={{ color: 'var(--cyan)' }}>
+                Explore Sync Licensing Matching →
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Download Native App */}
+        <section className="landing-section landing-cta-section" id="download-cta" style={{ padding: '80px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="container" style={{ textAlign: 'center' }}>
+            <span className="landing-section-eyebrow" style={{ color: 'var(--green)' }}>Get the App</span>
+            <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '32px', fontWeight: '800', margin: '0 auto 12px' }}>Start Listening Lossless</h2>
+            <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '32px' }}>Free tier · 150 network credits at signup · unlimited audio streaming</p>
+            
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button 
+                type="button" 
+                className="store-cta landing-cta"
+                onClick={() => alert('App Store downloads coming in Phase 5+')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Apple size={22} />
+                <div style={{ textAlign: 'left', marginLeft: '10px' }}>
+                  <div style={{ fontSize: '9px', opacity: 0.6 }}>Download on the</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>App Store</div>
+                </div>
+              </button>
+              <button 
+                type="button" 
+                className="store-cta landing-cta"
+                onClick={() => alert('Google Play downloads coming in Phase 5+')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Download size={22} />
+                <div style={{ textAlign: 'left', marginLeft: '10px' }}>
+                  <div style={{ fontSize: '9px', opacity: 0.6 }}>Get it on</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>Google Play</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // Fallback to default rendering for other native apps
   return (
     <div
       className="native-app-landing"
-      style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow }}
+      style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow, background: getLandingBackground(slug) }}
       data-testid={`native-app-landing-${data.slug}`}
     >
       {/* HERO CAROUSEL  -  same pattern as HomeView */}
@@ -2579,7 +2925,7 @@ function RoleLandingView() {
   const bgImage = BACKGROUNDS[role] || listenHeroImg;
 
   return (
-    <div className="role-landing-wrap hw" data-testid={`role-landing-${role}`} style={{ position: 'relative', overflow: 'hidden' }}>
+    <div className="role-landing-wrap hw" data-testid={`role-landing-${role}`} style={{ position: 'relative', overflow: 'hidden', background: getRoleLandingBackground(role) }}>
       <div className="bgs">
         <div 
           className="bg on"
@@ -4722,7 +5068,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
           />
         );
       case 'catalog':
-        return <CatalogPortingPanel />;
+        return <CatalogPortingPanel setActiveTab={setActiveTab} />;
       case 'splits':
         return (
           <SplitCascadePanel 
@@ -4762,6 +5108,8 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
         return <PosDevicesPanel />;
       case 'domain-mappings':
         return <DomainMappingsPanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} />;
+      case 'promoted-acts':
+        return <PromotedActsAdminPanel />;
       case 'publishing-election':
         return <PublishingElectionPanel sessionUser={sessionUser} />;
       case 'distribution-election':
@@ -4795,12 +5143,13 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
       'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: Globe, category: 'Royalty Ledgers' },
       'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: Zap, category: 'Apps & Marketplace' },
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: Globe, category: 'Admin' },
+      'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: Star, category: 'Admin' },
     };
 
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'promoted-acts', 'profile'];
         break;
       case 'label':
         visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
@@ -4965,6 +5314,156 @@ import {
 // "Perfect for" sidebar  -  rendered on all landing/marketing routes.
 import { PerfectForSidebar, PERFECT_FOR_ROLES, ROLE_LOGOS } from './components/PerfectForSidebar.jsx'
 
+// Landing page customized background gradients (dark theme)
+function getLandingBackground(slug) {
+  switch (slug) {
+    case 'tunemavens':
+      return 'linear-gradient(180deg, #020710 0%, #061120 40%, #020710 100%)';
+    case 'creator-companion':
+      return 'linear-gradient(180deg, #070311 0%, #100620 40%, #070311 100%)';
+    case 'tunepay':
+      return 'linear-gradient(180deg, #010a07 0%, #041810 40%, #010a07 100%)';
+    case 'sync-master':
+      return 'linear-gradient(180deg, #030310 0%, #080720 40%, #030310 100%)';
+    default:
+      return 'linear-gradient(180deg, #060813 0%, #0B0E20 40%, #060813 100%)';
+  }
+}
+
+function getRoleLandingBackground(role) {
+  switch (role) {
+    case 'creator':
+      return 'linear-gradient(180deg, #0a0410 0%, #1b0c2a 40%, #0a0410 100%)';
+    case 'supervisor':
+      return 'linear-gradient(180deg, #020b12 0%, #061d30 40%, #020b12 100%)';
+    case 'label':
+      return 'linear-gradient(180deg, #0c0802 0%, #201505 40%, #0c0802 100%)';
+    case 'booking':
+      return 'linear-gradient(180deg, #080a02 0%, #171b05 40%, #080a02 100%)';
+    case 'manager':
+      return 'linear-gradient(180deg, #0a0208 0%, #1f0518 40%, #0a0208 100%)';
+    case 'exec':
+      return 'linear-gradient(180deg, #02080a 0%, #051a1f 40%, #02080a 100%)';
+    case 'dj':
+      return 'linear-gradient(180deg, #090209 0%, #1d051d 40%, #090209 100%)';
+    default:
+      return 'linear-gradient(180deg, #060813 0%, #0B0E20 40%, #060813 100%)';
+  }
+}
+
+const getPromotedActs = () => {
+  const stored = localStorage.getItem('tunemavens_promoted_acts');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  return [
+    { 
+      id: 1, 
+      name: 'Aisha Okoro', 
+      title: 'Nairobi Sunset', 
+      genre: 'Amapiano / House', 
+      imageKey: 'heroMusic1',
+      featuredTrack: 'Nairobi Sunset (Extended Mix)'
+    },
+    { 
+      id: 2, 
+      name: 'Caleb', 
+      title: 'Lagos Lights', 
+      genre: 'Afrobeats / Afro-Fusion', 
+      imageKey: 'heroMusic2',
+      featuredTrack: 'Lagos Lights (Intro Edit)'
+    },
+    { 
+      id: 3, 
+      name: 'Lerato', 
+      title: 'Midnight Grooves', 
+      genre: 'Deep-House / Kwaito', 
+      imageKey: 'heroMusic3',
+      featuredTrack: 'Midnight Grooves (Extended Mix)'
+    }
+  ];
+};
+
+// Shared Dashboard UI utilities: Search and Pagination
+function DashboardSearchBar({ value, onChange, placeholder = "Search..." }) {
+  return (
+    <div style={{ position: 'relative', width: '100%', maxWidth: '300px', marginBottom: '14px' }}>
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="form-control"
+        style={{
+          width: '100%',
+          padding: '8px 12px 8px 32px',
+          fontSize: '13px',
+          background: '#0a0f1d',
+          border: '1px solid rgba(255,255,255,0.08)',
+          color: '#fff',
+          borderRadius: '4px'
+        }}
+      />
+      <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4, fontSize: '13px', pointerEvents: 'none' }}>
+        🔍
+      </span>
+    </div>
+  );
+}
+
+function DashboardPagination({ currentPage, totalItems, pageSize, onPageChange }) {
+  const totalPages = Math.ceil(totalItems / pageSize);
+  if (totalPages <= 1) return null;
+
+  const startIdx = (currentPage - 1) * pageSize + 1;
+  const endIdx = Math.min(currentPage * pageSize, totalItems);
+
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push(i);
+  }
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', flexWrap: 'wrap', gap: '10px' }}>
+      <div style={{ fontSize: '12px', color: '#64748b' }}>
+        Showing {startIdx} to {endIdx} of {totalItems} entries
+      </div>
+      <div style={{ display: 'flex', gap: '4px' }}>
+        <button
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
+          className="plan-btn outline"
+          style={{ padding: '4px 8px', fontSize: '11px', height: '26px', borderRadius: '4px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.4 : 1 }}
+        >
+          Prev
+        </button>
+        {pages.map(p => (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={p === currentPage ? 'btn-primary' : 'plan-btn outline'}
+            style={{ padding: '4px 8px', fontSize: '11px', height: '26px', minWidth: '26px', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+          className="plan-btn outline"
+          style={{ padding: '4px 8px', fontSize: '11px', height: '26px', borderRadius: '4px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.4 : 1 }}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
 
 
 // ================= SUB-PANEL: Domain Mappings (admin-only) =================
@@ -4979,6 +5478,11 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
   const [edits, setEdits] = useState({});      // id → { subdomain, label }
   const [showAdd, setShowAdd] = useState(false);
   const [newMap, setNewMap] = useState({ key: '', label: '', category: 'dashboard-app', path: '', subdomain: '' });
+
+  // Search and Pagination States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   const ROOT_DOMAIN = 'tunemavens.com';
 
@@ -4997,7 +5501,15 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
   useEffect(() => { load(); }, []);
 
   const categories = ['all', 'native-app', 'dashboard-app', 'ai-tool', 'subdomain-portal'];
-  const filtered = filter === 'all' ? mappings : mappings.filter(m => m.category === filter);
+  const filtered = (filter === 'all' ? mappings : mappings.filter(m => m.category === filter))
+    .filter(m => 
+      m.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.subdomain.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.key.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  const paginatedMappings = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const stage = (id, field, value) => setEdits(e => ({ ...e, [id]: { ...e[id], [field]: value } }));
 
@@ -5048,6 +5560,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
       setMappings(ms => [...ms, created]);
       setNewMap({ key: '', label: '', category: 'dashboard-app', path: '', subdomain: '' });
       setShowAdd(false);
+      setCurrentPage(1);
     } catch (e) {
       setError(e.data?.detail || e.message || 'Create failed');
     }
@@ -5094,7 +5607,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
         {categories.map(c => (
           <button
             key={c}
-            onClick={() => setFilter(c)}
+            onClick={() => { setFilter(c); setCurrentPage(1); }}
             className={filter === c ? 'btn-primary' : 'plan-btn outline'}
             style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase' }}
             data-testid={`mapping-filter-${c}`}
@@ -5103,9 +5616,10 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
           </button>
         ))}
         <span style={{ marginLeft: 'auto' }} />
+        <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search mappings..." />
         <button
           className="btn-primary"
-          style={{ padding: '6px 14px', fontSize: '11px', fontWeight: 700 }}
+          style={{ padding: '6px 14px', fontSize: '11px', fontWeight: 700, marginLeft: '10px' }}
           onClick={() => setShowAdd(s => !s)}
           data-testid="mapping-add-toggle"
         >
@@ -5136,89 +5650,260 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
       {loading ? (
         <p style={{ color: '#94a3b8', textAlign: 'center', padding: '24px' }}>Loading mappings…</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
-          <thead>
-            <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <th style={{ padding: '10px 8px' }}>Label</th>
-              <th style={{ padding: '10px 8px' }}>Category</th>
-              <th style={{ padding: '10px 8px' }}>Path</th>
-              <th style={{ padding: '10px 8px' }}>Subdomain</th>
-              <th style={{ padding: '10px 8px' }}>Resolves to</th>
-              <th style={{ padding: '10px 8px' }}>Enabled</th>
-              <th style={{ padding: '10px 8px' }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(m => {
-              const stagedSubdomain = edits[m.id]?.subdomain ?? m.subdomain;
-              const stagedLabel = edits[m.id]?.label ?? m.label;
-              const dirty = edits[m.id] && Object.keys(edits[m.id]).length > 0;
-              return (
-                <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: m.enabled ? 1 : 0.55 }} data-testid={`mapping-row-${m.key}`}>
-                  <td style={{ padding: '8px' }}>
-                    <input
-                      className="form-control"
-                      value={stagedLabel}
-                      onChange={(e) => stage(m.id, 'label', e.target.value)}
-                      style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#f1f5f9', fontSize: '12px', padding: '6px 10px', width: '100%' }}
-                      data-testid={`mapping-label-${m.key}`}
-                    />
-                  </td>
-                  <td style={{ padding: '8px', color: '#94a3b8', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', fontWeight: 700 }}>{m.category}</td>
-                  <td style={{ padding: '8px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '11px' }}>{m.path}</td>
-                  <td style={{ padding: '8px' }}>
-                    <input
-                      className="form-control"
-                      value={stagedSubdomain}
-                      onChange={(e) => stage(m.id, 'subdomain', e.target.value)}
-                      style={{ background: 'transparent', border: '1px solid rgba(34, 211, 238, 0.2)', color: 'var(--cyan)', fontSize: '12px', padding: '6px 10px', width: '100%', fontWeight: 700 }}
-                      data-testid={`mapping-subdomain-${m.key}`}
-                    />
-                  </td>
-                  <td style={{ padding: '8px', color: '#94a3b8', fontFamily: 'monospace', fontSize: '11px' }}>
-                    <span style={{ color: 'var(--cyan)' }}>{stagedSubdomain}</span>.{ROOT_DOMAIN}
-                  </td>
-                  <td style={{ padding: '8px' }}>
-                    <button
-                      onClick={() => toggleEnabled(m)}
-                      disabled={savingId === m.id}
-                      className={m.enabled ? 'btn-primary' : 'plan-btn outline'}
-                      style={{ padding: '5px 10px', fontSize: '10px', fontWeight: 700 }}
-                      data-testid={`mapping-toggle-${m.key}`}
-                    >
-                      {m.enabled ? 'ON' : 'OFF'}
-                    </button>
-                  </td>
-                  <td style={{ padding: '8px', display: 'flex', gap: '6px' }}>
-                    {dirty && (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <th style={{ padding: '10px 8px' }}>Label</th>
+                <th style={{ padding: '10px 8px' }}>Category</th>
+                <th style={{ padding: '10px 8px' }}>Path</th>
+                <th style={{ padding: '10px 8px' }}>Subdomain</th>
+                <th style={{ padding: '10px 8px' }}>Resolves to</th>
+                <th style={{ padding: '10px 8px' }}>Enabled</th>
+                <th style={{ padding: '10px 8px' }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedMappings.map(m => {
+                const stagedSubdomain = edits[m.id]?.subdomain ?? m.subdomain;
+                const stagedLabel = edits[m.id]?.label ?? m.label;
+                const dirty = edits[m.id] && Object.keys(edits[m.id]).length > 0;
+                return (
+                  <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: m.enabled ? 1 : 0.55 }} data-testid={`mapping-row-${m.key}`}>
+                    <td style={{ padding: '8px' }}>
+                      <input
+                        className="form-control"
+                        value={stagedLabel}
+                        onChange={(e) => stage(m.id, 'label', e.target.value)}
+                        style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#f1f5f9', fontSize: '12px', padding: '6px 10px', width: '100%' }}
+                        data-testid={`mapping-label-${m.key}`}
+                      />
+                    </td>
+                    <td style={{ padding: '8px', color: '#94a3b8', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', fontWeight: 700 }}>{m.category}</td>
+                    <td style={{ padding: '8px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '11px' }}>{m.path}</td>
+                    <td style={{ padding: '8px' }}>
+                      <input
+                        className="form-control"
+                        value={stagedSubdomain}
+                        onChange={(e) => stage(m.id, 'subdomain', e.target.value)}
+                        style={{ background: 'transparent', border: '1px solid rgba(34, 211, 238, 0.2)', color: 'var(--cyan)', fontSize: '12px', padding: '6px 10px', width: '100%', fontWeight: 700 }}
+                        data-testid={`mapping-subdomain-${m.key}`}
+                      />
+                    </td>
+                    <td style={{ padding: '8px', color: '#94a3b8', fontFamily: 'monospace', fontSize: '11px' }}>
+                      <span style={{ color: 'var(--cyan)' }}>{stagedSubdomain}</span>.{ROOT_DOMAIN}
+                    </td>
+                    <td style={{ padding: '8px' }}>
                       <button
-                        onClick={() => saveRow(m)}
+                        onClick={() => toggleEnabled(m)}
                         disabled={savingId === m.id}
-                        className="btn-primary"
+                        className={m.enabled ? 'btn-primary' : 'plan-btn outline'}
                         style={{ padding: '5px 10px', fontSize: '10px', fontWeight: 700 }}
-                        data-testid={`mapping-save-${m.key}`}
+                        data-testid={`mapping-toggle-${m.key}`}
                       >
-                        {savingId === m.id ? '…' : 'Save'}
+                        {m.enabled ? 'ON' : 'OFF'}
                       </button>
-                    )}
-                    <button
-                      onClick={() => deleteRow(m)}
-                      style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '11px' }}
-                      data-testid={`mapping-delete-${m.key}`}
-                    >
-                      ✕
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td style={{ padding: '8px', display: 'flex', gap: '6px' }}>
+                      {dirty && (
+                        <button
+                          onClick={() => saveRow(m)}
+                          disabled={savingId === m.id}
+                          className="btn-primary"
+                          style={{ padding: '5px 10px', fontSize: '10px', fontWeight: 700 }}
+                          data-testid={`mapping-save-${m.key}`}
+                        >
+                          {savingId === m.id ? '…' : 'Save'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => deleteRow(m)}
+                        style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '11px' }}
+                        data-testid={`mapping-delete-${m.key}`}
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <DashboardPagination 
+            currentPage={currentPage} 
+            totalItems={filtered.length} 
+            pageSize={pageSize} 
+            onPageChange={(page) => setCurrentPage(page)} 
+          />
+        </div>
       )}
 
       <p style={{ fontSize: '11px', color: '#64748b', marginTop: '14px', lineHeight: '1.6' }}>
         Note: Updating a mapping rewrites the published DNS contract. The reverse-proxy (per <code>backend/README.md</code>) reads these mappings live  -  changes propagate within ~30 seconds. Until Phase 1.1 ships the DNS automation, the strings stored here are picked up at next deploy.
       </p>
+    </div>
+  );
+}
+
+function PromotedActsAdminPanel() {
+  const [acts, setActs] = useState(() => getPromotedActs());
+  const [name, setName] = useState('');
+  const [title, setTitle] = useState('');
+  const [genre, setGenre] = useState('');
+  const [imageKey, setImageKey] = useState('heroMusic1');
+  const [featuredTrack, setFeaturedTrack] = useState('');
+  const [editingId, setEditingId] = useState(null);
+
+  const saveActs = (updated) => {
+    setActs(updated);
+    localStorage.setItem('tunemavens_promoted_acts', JSON.stringify(updated));
+  };
+
+  const handleAddOrUpdate = (e) => {
+    e.preventDefault();
+    if (!name || !title || !genre || !featuredTrack) {
+      alert('All fields are required.');
+      return;
+    }
+
+    if (editingId) {
+      const updated = acts.map(a => a.id === editingId ? { ...a, name, title, genre, imageKey, featuredTrack } : a);
+      saveActs(updated);
+      setEditingId(null);
+      alert('Promoted act updated successfully!');
+    } else {
+      const newAct = {
+        id: Date.now(),
+        name,
+        title,
+        genre,
+        imageKey,
+        featuredTrack
+      };
+      saveActs([...acts, newAct]);
+      alert('Promoted act added successfully!');
+    }
+
+    // Reset fields
+    setName('');
+    setTitle('');
+    setGenre('');
+    setImageKey('heroMusic1');
+    setFeaturedTrack('');
+  };
+
+  const handleEdit = (act) => {
+    setEditingId(act.id);
+    setName(act.name);
+    setTitle(act.title);
+    setGenre(act.genre);
+    setImageKey(act.imageKey);
+    setFeaturedTrack(act.featuredTrack);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this promoted act?')) {
+      saveActs(acts.filter(a => a.id !== id));
+    }
+  };
+
+  return (
+    <div className="dashboard-card" data-testid="promoted-acts-panel">
+      <PanelHeader
+        title="Promoted Acts Configurator"
+        desc="Manage the featured acts promoted at first glance on the TuneStream consumer landing page."
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', alignItems: 'start' }}>
+        {/* Editor Form */}
+        <div className="dashboard-card" style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <h4 style={{ fontSize: '13px', color: '#fff', marginBottom: '14px', fontWeight: 'bold' }}>
+            {editingId ? 'Edit Promoted Act' : 'Add New Promoted Act'}
+          </h4>
+          <form onSubmit={handleAddOrUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--mu)', display: 'block', marginBottom: '4px' }}>Artist Name</label>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--mu)', display: 'block', marginBottom: '4px' }}>Release Title (Album/EP/Single)</label>
+              <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--mu)', display: 'block', marginBottom: '4px' }}>Genre Tag</label>
+              <input type="text" value={genre} onChange={e => setGenre(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} placeholder="e.g. Amapiano, Afrobeat" required />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--mu)', display: 'block', marginBottom: '4px' }}>Hero Image Vibe</label>
+              <select value={imageKey} onChange={e => setImageKey(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }}>
+                <option value="heroMusic1">Vibe 1: Excitement Atlanta Beltline (Green)</option>
+                <option value="heroMusic2">Vibe 2: Studio Production (Purple)</option>
+                <option value="heroMusic3">Vibe 3: Live Performance (Teal)</option>
+                <option value="heroMusic4">Vibe 4: Intimate Listening (Gold)</option>
+                <option value="listenHero">Vibe 5: Consumer Audio Toggles (Teal)</option>
+                <option value="distributeHero">Vibe 6: Distribution Vault (Blue)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--mu)', display: 'block', marginBottom: '4px' }}>Featured Track Title</label>
+              <input type="text" value={featuredTrack} onChange={e => setFeaturedTrack(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+              <button type="submit" className="btn-primary" style={{ flex: 1, padding: '8px', fontSize: '12px' }}>
+                {editingId ? 'Update Promotion' : 'Promote Act'}
+              </button>
+              {editingId && (
+                <button type="button" className="plan-btn outline" style={{ padding: '8px', fontSize: '12px' }} onClick={() => {
+                  setEditingId(null);
+                  setName('');
+                  setTitle('');
+                  setGenre('');
+                  setImageKey('heroMusic1');
+                  setFeaturedTrack('');
+                }}>Cancel</button>
+              )}
+            </div>
+          </form>
+        </div>
+
+        {/* Acts Table List */}
+        <div className="dashboard-card" style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <h4 style={{ fontSize: '13px', color: '#fff', marginBottom: '14px', fontWeight: 'bold' }}>Current Live Promotions</h4>
+          {acts.length === 0 ? (
+            <p style={{ color: 'var(--mu)', fontSize: '12px', padding: '20px 0', textAlign: 'center' }}>No acts promoted yet.</p>
+          ) : (
+            <table className="dashboard-table" style={{ fontSize: '12px' }}>
+              <thead>
+                <tr>
+                  <th>Artist</th>
+                  <th>Release / Track</th>
+                  <th>Genre</th>
+                  <th>Vibe / BG</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {acts.map(act => (
+                  <tr key={act.id}>
+                    <td style={{ fontWeight: 'bold', color: '#fff' }}>{act.name}</td>
+                    <td>
+                      <div>{act.title}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--mu)' }}>fs: {act.featuredTrack}</div>
+                    </td>
+                    <td>{act.genre}</td>
+                    <td style={{ fontFamily: 'monospace', fontSize: '10px', color: 'var(--cyan)' }}>{act.imageKey}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button className="plan-btn outline" style={{ padding: '2px 6px', fontSize: '10px', marginRight: '4px' }} onClick={() => handleEdit(act)}>Edit</button>
+                      <button className="plan-btn outline" style={{ padding: '2px 6px', fontSize: '10px', color: '#f87171', borderColor: 'rgba(239,68,68,0.2)' }} onClick={() => handleDelete(act.id)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -5352,63 +6037,127 @@ function PosInventoryPanel() {
     { id: 1, sku: 'TSH-BLK-M', name: 'Tour T-shirt (Black, M)', price: 24.99, stock: 42 },
     { id: 2, sku: 'VNL-NS-01', name: 'Nairobi Sunset Vinyl', price: 39.99, stock: 8 },
     { id: 3, sku: 'TKT-VIP', name: 'VIP Ticket', price: 89.99, stock: 16 },
+    { id: 4, sku: 'TSH-WHT-L', name: 'Tour T-shirt (White, L)', price: 24.99, stock: 15 },
+    { id: 5, sku: 'VNL-LL-02', name: 'Lagos Lights Vinyl', price: 34.99, stock: 3 },
+    { id: 6, sku: 'TKT-GEN', name: 'General Admission Ticket', price: 29.99, stock: 150 },
+    { id: 7, sku: 'CAP-BLK-OS', name: 'TuneMavens Black Cap', price: 19.99, stock: 25 }
   ]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
   const adjustStock = (id, delta) => setItems(its => its.map(i => i.id === id ? { ...i, stock: Math.max(0, i.stock + delta) } : i));
+
+  const filtered = items.filter(i => 
+    i.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    i.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const paginatedItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="dashboard-card">
-      <PanelHeader title="POS Inventory" desc="Manage SKUs, prices, and live stock counts for the M-Pesa POS app. Updates sync to every paired device." />
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <th style={{ padding: '10px 8px' }}>SKU</th>
-            <th style={{ padding: '10px 8px' }}>Item</th>
-            <th style={{ padding: '10px 8px' }}>Price</th>
-            <th style={{ padding: '10px 8px' }}>Stock</th>
-            <th style={{ padding: '10px 8px' }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map(i => (
-            <tr key={i.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }} data-testid={`pos-item-row-${i.id}`}>
-              <td style={{ padding: '10px 8px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{i.sku}</td>
-              <td style={{ padding: '10px 8px', color: '#f1f5f9' }}>{i.name}</td>
-              <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>${i.price.toFixed(2)}</td>
-              <td style={{ padding: '10px 8px', color: i.stock < 10 ? '#f59e0b' : '#10b981', fontWeight: 700 }}>{i.stock}</td>
-              <td style={{ padding: '10px 8px', display: 'flex', gap: '6px' }}>
-                <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, -1)} data-testid={`pos-stock-dec-${i.id}`}>−</button>
-                <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, +1)} data-testid={`pos-stock-inc-${i.id}`}>+</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+        <PanelHeader title="POS Inventory" desc="Manage SKUs, prices, and live stock counts for the M-Pesa POS app. Updates sync to every paired device." />
+        <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search inventory..." />
+      </div>
+      
+      {filtered.length === 0 ? (
+        <p style={{ color: '#cbd5e1', textAlign: 'center', padding: '24px' }}>No inventory items matched your search query.</p>
+      ) : (
+        <>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <th style={{ padding: '10px 8px' }}>SKU</th>
+                <th style={{ padding: '10px 8px' }}>Item</th>
+                <th style={{ padding: '10px 8px' }}>Price</th>
+                <th style={{ padding: '10px 8px' }}>Stock</th>
+                <th style={{ padding: '10px 8px' }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedItems.map(i => (
+                <tr key={i.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }} data-testid={`pos-item-row-${i.id}`}>
+                  <td style={{ padding: '10px 8px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{i.sku}</td>
+                  <td style={{ padding: '10px 8px', color: '#f1f5f9' }}>{i.name}</td>
+                  <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>${i.price.toFixed(2)}</td>
+                  <td style={{ padding: '10px 8px', color: i.stock < 10 ? '#f59e0b' : '#10b981', fontWeight: 700 }}>{i.stock}</td>
+                  <td style={{ padding: '10px 8px', display: 'flex', gap: '6px' }}>
+                    <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, -1)} data-testid={`pos-stock-dec-${i.id}`}>−</button>
+                    <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, +1)} data-testid={`pos-stock-inc-${i.id}`}>+</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <DashboardPagination 
+            currentPage={currentPage} 
+            totalItems={filtered.length} 
+            pageSize={pageSize} 
+            onPageChange={(page) => setCurrentPage(page)} 
+          />
+        </>
+      )}
     </div>
   );
 }
 
 function PosSettlementPanel() {
-  const reports = [
+  const [reports, setReports] = useState([
     { id: 1, event: 'Nairobi Live · Carnivore', date: '2026-06-28', gross: 12450, net: 11205, method: 'M-Pesa STK' },
     { id: 2, event: 'Lagos Underground · Hard Rock', date: '2026-06-15', gross: 8910, net: 8019, method: 'Flutterwave' },
     { id: 3, event: 'Joburg Showcase · Carfax', date: '2026-06-08', gross: 5630, net: 5067, method: 'Stripe Terminal' },
-  ];
+    { id: 4, event: 'Kampala Groove · Wave Lounge', date: '2026-05-24', gross: 4200, net: 3780, method: 'M-Pesa STK' },
+    { id: 5, event: 'Accra Session · Alliance Francaise', date: '2026-05-18', gross: 6150, net: 5535, method: 'Stripe Terminal' },
+    { id: 6, event: 'London Showcase · O2 Academy', date: '2026-04-30', gross: 15400, net: 13860, method: 'Stripe Terminal' }
+  ]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
+  const filtered = reports.filter(r => 
+    r.event.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.method.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const paginatedReports = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="dashboard-card">
-      <PanelHeader title="POS Settlement Reports" desc="Per-event settlements fire the Compensation Engine cascade  -  artist + manager + label shares settle within 24h." />
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-        {reports.map(r => (
-          <li key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', borderLeft: '3px solid var(--cyan)', marginBottom: '8px', background: 'rgba(255,255,255,0.02)' }} data-testid={`pos-report-${r.id}`}>
-            <div>
-              <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '13px' }}>{r.event}</div>
-              <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>{r.date} · {r.method}</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '15px' }}>${r.net.toLocaleString()}</div>
-              <div style={{ color: '#94a3b8', fontSize: '11px' }}>gross ${r.gross.toLocaleString()}</div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+        <PanelHeader title="POS Settlement Reports" desc="Per-event settlements fire the Compensation Engine cascade  -  artist + manager + label shares settle within 24h." />
+        <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search reports..." />
+      </div>
+
+      {filtered.length === 0 ? (
+        <p style={{ color: '#cbd5e1', textAlign: 'center', padding: '24px' }}>No settlement reports match your search query.</p>
+      ) : (
+        <>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {paginatedReports.map(r => (
+              <li key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', borderLeft: '3px solid var(--cyan)', marginBottom: '8px', background: 'rgba(255,255,255,0.02)' }} data-testid={`pos-report-${r.id}`}>
+                <div>
+                  <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '13px' }}>{r.event}</div>
+                  <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>{r.date} · {r.method}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: '#10b981', fontWeight: 800, fontSize: '15px' }}>${r.net.toLocaleString()}</div>
+                  <div style={{ color: '#94a3b8', fontSize: '11px' }}>gross ${r.gross.toLocaleString()}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <DashboardPagination 
+            currentPage={currentPage} 
+            totalItems={filtered.length} 
+            pageSize={pageSize} 
+            onPageChange={(page) => setCurrentPage(page)} 
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -5418,29 +6167,63 @@ function PosDevicesPanel() {
     { id: 1, name: 'Tour Phone 01', country: 'KE', rail: 'M-Pesa STK', online: true, lastTx: '4 min ago' },
     { id: 2, name: 'Tour Phone 02', country: 'KE', rail: 'M-Pesa STK', online: true, lastTx: '12 min ago' },
     { id: 3, name: 'Lagos Tablet', country: 'NG', rail: 'Flutterwave', online: false, lastTx: '2 days ago' },
+    { id: 4, name: 'Backup Phone 03', country: 'ZA', rail: 'Stripe Terminal', online: false, lastTx: '3 days ago' },
+    { id: 5, name: 'Atlanta Register', country: 'US', rail: 'Stripe Terminal', online: true, lastTx: '1 hour ago' },
+    { id: 6, name: 'London Tablet 02', country: 'GB', rail: 'Stripe Terminal', online: false, lastTx: '1 week ago' }
   ]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
   const wipe = (id) => {
     if (window.confirm('Remote-wipe this device? It will be signed out and all cached data cleared.')) {
       setDevices(ds => ds.filter(d => d.id !== id));
+      setCurrentPage(1);
     }
   };
+
+  const filtered = devices.filter(d => 
+    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    d.rail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    d.country.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const paginatedDevices = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="dashboard-card">
-      <PanelHeader title="POS Devices" desc="Provision new POS devices, monitor liveness, and remote-wipe lost units." />
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-        {devices.map(d => (
-          <li key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', marginBottom: '6px', background: 'rgba(255,255,255,0.02)' }} data-testid={`pos-device-${d.id}`}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: d.online ? '#10b981' : '#475569', boxShadow: d.online ? '0 0 8px rgba(16,185,129,0.6)' : 'none' }} />
-              <div>
-                <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '13px' }}>{d.name}</div>
-                <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>{d.country} · {d.rail} · last tx {d.lastTx}</div>
-              </div>
-            </div>
-            <button onClick={() => wipe(d.id)} className="plan-btn outline" style={{ padding: '6px 12px', fontSize: '11px', color: '#f87171', borderColor: 'rgba(239,68,68,0.3)' }} data-testid={`pos-device-wipe-${d.id}`}>Remote wipe</button>
-          </li>
-        ))}
-      </ul>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+        <PanelHeader title="POS Devices" desc="Provision new POS devices, monitor liveness, and remote-wipe lost units." />
+        <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search devices..." />
+      </div>
+
+      {filtered.length === 0 ? (
+        <p style={{ color: '#cbd5e1', textAlign: 'center', padding: '24px' }}>No paired devices match your search query.</p>
+      ) : (
+        <>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {paginatedDevices.map(d => (
+              <li key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', marginBottom: '6px', background: 'rgba(255,255,255,0.02)' }} data-testid={`pos-device-${d.id}`}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: d.online ? '#10b981' : '#475569', boxShadow: d.online ? '0 0 8px rgba(16,185,129,0.6)' : 'none' }} />
+                  <div>
+                    <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '13px' }}>{d.name}</div>
+                    <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>{d.country} · {d.rail} · last tx {d.lastTx}</div>
+                  </div>
+                </div>
+                <button onClick={() => wipe(d.id)} className="plan-btn outline" style={{ padding: '6px 12px', fontSize: '11px', color: '#f87171', borderColor: 'rgba(239,68,68,0.3)' }} data-testid={`pos-device-wipe-${d.id}`}>Remote wipe</button>
+              </li>
+            ))}
+          </ul>
+          <DashboardPagination 
+            currentPage={currentPage} 
+            totalItems={filtered.length} 
+            pageSize={pageSize} 
+            onPageChange={(page) => setCurrentPage(page)} 
+          />
+        </>
+      )}
       <button className="btn-primary" style={{ marginTop: '14px', padding: '10px 16px', fontSize: '12px', fontWeight: 700 }} onClick={() => alert('Device provisioning flow opens in a modal  -  Phase 2 deliverable.')} data-testid="pos-device-add">+ Provision new device</button>
     </div>
   );
@@ -5904,29 +6687,117 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
 }
 
 // ================= SUB-PANEL: Catalog & Porting (Phase 4) =================
-function CatalogPortingPanel() {
+function CatalogPortingPanel({ setActiveTab }) {
   const [selectedPreset, setSelectedPreset] = useState('standard');
   const [loading, setLoading] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const [errors, setErrors] = useState([]);
-  const [tracks, setTracks] = useState([]);
+  
+  // Catalog tracks state with realistic seed data
+  const [tracks, setTracks] = useState([
+    { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid' },
+    { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid' },
+    { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid' },
+    { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid' }
+  ]);
+
+  // Search and Pagination States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
+  // Single Track Uploader Form States
+  const [newTitle, setNewTitle] = useState('');
+  const [newArtist, setNewArtist] = useState('');
+  const [newGenre, setNewGenre] = useState('Afro-House');
+  const [newIsrc, setNewIsrc] = useState('');
+  const [newArtistSplit, setNewArtistSplit] = useState(50);
+  const [newProducerSplit, setNewProducerSplit] = useState(30);
+  const [newLabelSplit, setNewLabelSplit] = useState(20);
+
+  // File drag & drop states
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const fileInputRef = useRef(null);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      processFiles(files);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      processFiles(files);
+    }
+  };
+
+  const processFiles = (files) => {
+    setLoading(true);
+    setValidationResult(null);
+    setErrors([]);
+    
+    // Simulate parsing metadata files
+    setTimeout(() => {
+      setLoading(false);
+      setValidationResult('pass');
+      const newTracksList = files.map((file, index) => {
+        const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+        const words = cleanName.split(" ");
+        const title = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        const isrcNum = 45682 + index + tracks.length;
+        return {
+          isrc: `US-123-${isrcNum}`,
+          title: title || 'Ingested Audio Track',
+          artist: 'Aisha Okoro',
+          split: 'Artist (60%) / Producer (40%)',
+          genre: 'Amapiano',
+          status: 'valid'
+        };
+      });
+      
+      setTracks(prev => [...newTracksList, ...prev]);
+      setUploadedFiles(prev => [...files.map(f => f.name), ...prev]);
+      setCurrentPage(1);
+      alert(`Successfully ingested ${files.length} audio file(s) into your catalog!`);
+    }, 1200);
+  };
 
   const handleValidate = () => {
     setLoading(true);
     setValidationResult(null);
     setErrors([]);
-    setTracks([]);
 
     setTimeout(() => {
       setLoading(false);
       if (selectedPreset === 'standard') {
         setValidationResult('pass');
-        setTracks([
-          { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: '50% / 50%', genre: 'Afro-House', status: 'valid' },
-          { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: '50% / 50%', genre: 'Deep-House', status: 'valid' },
-          { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: '40% / 60%', genre: 'Amapiano', status: 'valid' },
-          { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: '50% / 50%', genre: 'Afrobeats', status: 'valid' }
-        ]);
+        const standardTracks = [
+          { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid' },
+          { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid' },
+          { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid' },
+          { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid' }
+        ];
+        // Merge without duplicate ISRCs
+        setTracks(prev => {
+          const existingIsrcs = prev.map(t => t.isrc);
+          const filteredNew = standardTracks.filter(t => !existingIsrcs.includes(t.isrc));
+          return [...filteredNew, ...prev];
+        });
+        setCurrentPage(1);
       } else {
         setValidationResult('fail');
         setErrors([
@@ -5934,107 +6805,272 @@ function CatalogPortingPanel() {
           "Row 2: Primary artist field cannot be blank for 'Neon Shadows'.",
           "Row 4: Split configuration total must sum to 100%. Currently sums to 80%."
         ]);
-        setTracks([
-          { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: '50% / 50%', genre: 'Afro-House', status: 'valid' },
-          { isrc: 'US-INVALID', title: 'Neon Shadows', artist: '', split: '50% / 50%', genre: 'Deep-House', status: 'invalid' },
-          { isrc: 'US-sunset-80', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: '40% / 60%', genre: 'Amapiano', status: 'invalid' }
-        ]);
       }
-    }, 1500);
+    }, 1200);
   };
+
+  const handleAddTrack = (e) => {
+    e.preventDefault();
+    if (!newTitle || !newArtist || !newIsrc) {
+      alert('Title, Artist, and ISRC are required.');
+      return;
+    }
+    
+    const sum = Number(newArtistSplit) + Number(newProducerSplit) + Number(newLabelSplit);
+    if (sum !== 100) {
+      alert(`Split configuration total must sum to 100%. Currently sums to ${sum}%.`);
+      return;
+    }
+
+    const newTrack = {
+      isrc: newIsrc,
+      title: newTitle,
+      artist: newArtist,
+      split: `Artist (${newArtistSplit}%) / Producer (${newProducerSplit}%) / Label (${newLabelSplit}%)`,
+      genre: newGenre,
+      status: 'valid'
+    };
+
+    setTracks(prev => [newTrack, ...prev]);
+    setNewTitle('');
+    setNewArtist('');
+    setNewIsrc('');
+    setCurrentPage(1);
+    alert('Track manually added to catalog successfully!');
+  };
+
+  // Search filter
+  const filteredTracks = tracks.filter(t => 
+    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.isrc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.genre.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination slice
+  const paginatedTracks = filteredTracks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div>
       <div className="dashboard-panel-header">
-        <h2>Bulk Catalog Porting Center</h2>
-        <p>Ingest bulk release metadata via CSV sheets. Schema compliance checks run automatically.</p>
+        <h2>Catalogue & Ingestion Center</h2>
+        <p>Upload audio files, import CSV release sheets, or manually catalog tracks with split ownership definitions.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
-        <div className="dashboard-card" style={{ height: 'fit-content' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>CSV Validator</h3>
-          
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>Select Preset Metadata CSV</label>
-            <select 
-              value={selectedPreset} 
-              onChange={(e) => setSelectedPreset(e.target.value)}
-              className="form-control"
-              style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '13px', padding: '8px' }}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', alignItems: 'start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* CSV Bulk Ingest */}
+          <div className="dashboard-card">
+            <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff' }}>CSV Metadata Ingestion</h3>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>Select Preset Metadata CSV</label>
+              <select 
+                value={selectedPreset} 
+                onChange={(e) => setSelectedPreset(e.target.value)}
+                className="form-control"
+                style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '12px', padding: '6px' }}
+              >
+                <option value="standard">Release_Metadata_Standard.csv (Correct)</option>
+                <option value="corrupted">Release_Metadata_Invalid.csv (Has Errors)</option>
+              </select>
+            </div>
+
+            <button 
+              onClick={handleValidate} 
+              disabled={loading}
+              className="btn-primary" 
+              style={{ width: '100%', padding: '8px', fontSize: '12px', borderRadius: '4px', cursor: 'pointer' }}
             >
-              <option value="standard">Release_Metadata_Standard.csv (Correct)</option>
-              <option value="corrupted">Release_Metadata_Invalid.csv (Has Errors)</option>
-            </select>
+              {loading ? 'Running Schema Checks...' : 'Validate and Ingest CSV'}
+            </button>
+
+            {validationResult && (
+              <div style={{ marginTop: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 'bold' }}>Schema Status:</span>
+                  <span className={`badge-status ${validationResult === 'pass' ? 'success' : 'error'}`}>
+                    {validationResult === 'pass' ? 'SCHEMA PASSED' : 'SCHEMA FAILED'}
+                  </span>
+                </div>
+                {errors.length > 0 && (
+                  <div style={{ marginTop: '10px', padding: '8px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', borderRadius: '4px' }}>
+                    <h5 style={{ fontSize: '10px', color: '#ef4444', margin: '0 0 4px 0', fontWeight: 'bold' }}>Errors:</h5>
+                    <ul style={{ paddingLeft: '12px', margin: 0 }}>
+                      {errors.map((err, i) => (
+                        <li key={i} style={{ fontSize: '10px', color: '#cbd5e1', marginBottom: '2px' }}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          <button 
-            onClick={handleValidate} 
-            disabled={loading}
-            className="btn-primary" 
-            style={{ width: '100%', padding: '10px', fontSize: '13px', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            {loading ? 'Running Schema Checks...' : 'Validate and Ingest CSV'}
-          </button>
-
-          {validationResult && (
-            <div style={{ marginTop: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Schema Status:</span>
-                <span className={`badge-status ${validationResult === 'pass' ? 'success' : 'error'}`}>
-                  {validationResult === 'pass' ? 'SCHEMA PASSED' : 'SCHEMA FAILED'}
-                </span>
-              </div>
-              {errors.length > 0 && (
-                <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', borderRadius: '4px' }}>
-                  <h5 style={{ fontSize: '11px', color: '#ef4444', margin: '0 0 6px 0', fontWeight: 'bold' }}>Validation Errors Found:</h5>
-                  <ul style={{ paddingLeft: '12px', margin: 0 }}>
-                    {errors.map((err, i) => (
-                      <li key={i} style={{ fontSize: '10px', color: '#cbd5e1', marginBottom: '4px' }}>{err}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+          {/* Multiple File Drag & Drop */}
+          <div className="dashboard-card">
+            <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '12px', color: '#fff' }}>Audio Ingestion (Multi-file)</h3>
+            <div 
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              style={{ 
+                border: isDragOver ? '2px dashed var(--green)' : '1px dashed rgba(255,255,255,0.15)',
+                padding: '24px 14px', 
+                borderRadius: '6px', 
+                textAlign: 'center', 
+                background: isDragOver ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.01)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <input 
+                type="file" 
+                multiple 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                style={{ display: 'none' }} 
+              />
+              <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px' }}>📁</span>
+              <span style={{ fontSize: '12px', color: '#fff', fontWeight: '600' }}>Drag & Drop Audio Files Here</span>
+              <span style={{ fontSize: '10px', color: 'var(--mu)', display: 'block', marginTop: '4px' }}>Or click to select multiple WAV, MP3, or FLAC files</span>
             </div>
-          )}
+
+            {uploadedFiles.length > 0 && (
+              <div style={{ marginTop: '12px', maxHeight: '100px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '4px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--mu)', fontWeight: 'bold' }}>Uploaded Ingests:</span>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '4px 0 0 0', fontSize: '10px', color: '#cbd5e1' }}>
+                  {uploadedFiles.map((fn, idx) => (
+                    <li key={idx} style={{ marginBottom: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>✓ {fn}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Manual Single Track Ingest */}
+          <div className="dashboard-card">
+            <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff' }}>Add Track Manually</h3>
+            <form onSubmit={handleAddTrack} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <input type="text" placeholder="Track Title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
+              <input type="text" placeholder="Artist" value={newArtist} onChange={(e) => setNewArtist(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
+              <input type="text" placeholder="ISRC (e.g. US-123-45688)" value={newIsrc} onChange={(e) => setNewIsrc(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
+              <select value={newGenre} onChange={(e) => setNewGenre(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }}>
+                <option value="Afro-House">Afro-House</option>
+                <option value="Deep-House">Deep-House</option>
+                <option value="Amapiano">Amapiano</option>
+                <option value="Afrobeats">Afrobeats</option>
+              </select>
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', marginTop: '4px' }}>
+                <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Revenue Split Allocations (%)</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                  <div>
+                    <label style={{ fontSize: '9px', color: 'var(--mu)' }}>Artist</label>
+                    <input type="number" min="0" max="100" value={newArtistSplit} onChange={(e) => setNewArtistSplit(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '9px', color: 'var(--mu)' }}>Producer</label>
+                    <input type="number" min="0" max="100" value={newProducerSplit} onChange={(e) => setNewProducerSplit(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '9px', color: 'var(--mu)' }}>Label</label>
+                    <input type="number" min="0" max="100" value={newLabelSplit} onChange={(e) => setNewLabelSplit(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '4px' }} />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" className="btn-primary" style={{ padding: '8px', fontSize: '12px', marginTop: '6px' }}>Catalog Track</button>
+            </form>
+          </div>
         </div>
 
-        <div className="dashboard-card">
-          <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Ingested Tracks Preview</h3>
-          {tracks.length === 0 ? (
-            <div style={{ padding: '60px 0', textAlign: 'center', color: '#64748b' }}>
-              <Database size={32} style={{ marginBottom: '12px', opacity: 0.5 }} />
-              <p style={{ margin: 0, fontSize: '13px' }}>No tracks validated yet. Run the validator on the left.</p>
+        {/* Catalog previews */}
+        <div className="dashboard-card" style={{ minHeight: '400px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0 }}>Roster Catalogue Overview</h3>
+            <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search catalogue tracks..." />
+          </div>
+
+          {filteredTracks.length === 0 ? (
+            <div style={{ padding: '80px 0', textAlign: 'center', color: '#64748b' }}>
+              <Database size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
+              <p style={{ margin: 0, fontSize: '13px' }}>No matching tracks found in your catalogue.</p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table className="dashboard-table">
+              <table className="dashboard-table" style={{ fontSize: '12.5px' }}>
                 <thead>
                   <tr>
                     <th>ISRC</th>
-                    <th>Track Title</th>
+                    <th>Title</th>
                     <th>Artist</th>
-                    <th>Royalty Split</th>
                     <th>Genre</th>
-                    <th>Validation</th>
+                    <th>Split Structures</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tracks.map((tr, idx) => (
+                  {paginatedTracks.map((tr, idx) => (
                     <tr key={idx}>
-                      <td style={{ fontFamily: 'monospace' }}>{tr.isrc}</td>
-                      <td>{tr.title}</td>
-                      <td>{tr.artist || <em style={{ color: '#ef4444' }}>Missing</em>}</td>
-                      <td>{tr.split}</td>
-                      <td>{tr.genre}</td>
+                      <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
+                      <td style={{ fontWeight: '700', color: '#fff' }}>{tr.title}</td>
+                      <td>{tr.artist}</td>
                       <td>
-                        <span className={`badge-status ${tr.status === 'valid' ? 'success' : 'error'}`}>
-                          {tr.status.toUpperCase()}
+                        <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                          {tr.genre}
                         </span>
+                      </td>
+                      <td style={{ fontSize: '11px', color: '#cbd5e1' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          <div>{tr.split}</div>
+                          {/* Visual split bar illustration */}
+                          <div style={{ width: '100px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', display: 'flex', overflow: 'hidden' }}>
+                            <div style={{ width: '50%', background: 'var(--green)' }} />
+                            <div style={{ width: '30%', background: 'var(--cyan)' }} />
+                            <div style={{ width: '20%', background: 'var(--purple)' }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                          <button 
+                            className="plan-btn outline" 
+                            style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
+                            onClick={() => setActiveTab('splits')}
+                            title="Go to Royalty splits ledger"
+                          >
+                            💸 Splits
+                          </button>
+                          <button 
+                            className="plan-btn outline" 
+                            style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
+                            onClick={() => setActiveTab('sync')}
+                            title="Go to Sync brief matching"
+                          >
+                            🎬 Sync
+                          </button>
+                          <button 
+                            className="plan-btn outline" 
+                            style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
+                            onClick={() => setActiveTab('domain-mappings')}
+                            title="Go to Domain hosting mapping"
+                          >
+                            🌐 DNS
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+              <DashboardPagination 
+                currentPage={currentPage} 
+                totalItems={totalItems} 
+                pageSize={pageSize} 
+                onPageChange={(page) => setCurrentPage(page)} 
+              />
             </div>
           )}
         </div>
@@ -6048,9 +7084,19 @@ function SplitCascadePanel({ payoutBalance, setPayoutBalance }) {
   const [grossInput, setGrossInput] = useState(1500);
   const [sliderVal, setSliderVal] = useState(50); // Artist Split Slider
   const [ledgerRows, setLedgerRows] = useState([
-    { id: 'tx_821', title: 'Midnight Grooves', gross: 2500.00, comm: 250.00, label: 675.00, artist: 787.50, manager: 157.50, net: 630.00, status: 'processed' }
+    { id: 'tx_821', title: 'Midnight Grooves', gross: 2500.00, comm: 250.00, label: 675.00, artist: 787.50, manager: 157.50, net: 630.00, status: 'processed' },
+    { id: 'tx_822', title: 'Neon Shadows', gross: 1800.00, comm: 180.00, label: 486.00, artist: 567.00, manager: 113.40, net: 453.60, status: 'processed' },
+    { id: 'tx_823', title: 'Nairobi Sunset Sync', gross: 5000.00, comm: 500.00, label: 1350.00, artist: 1575.00, manager: 315.00, net: 1260.00, status: 'processed' },
+    { id: 'tx_824', title: 'Kilimanjaro Vibe', gross: 1200.00, comm: 120.00, label: 324.00, artist: 378.00, manager: 75.60, net: 302.40, status: 'processed' },
+    { id: 'tx_825', title: 'Sauti Live', gross: 3000.00, comm: 300.00, label: 810.00, artist: 945.00, manager: 189.00, net: 756.00, status: 'processed' },
+    { id: 'tx_826', title: 'Amapiano Wave', gross: 4000.00, comm: 400.00, label: 1080.00, artist: 1260.00, manager: 252.00, net: 1008.00, status: 'processed' }
   ]);
   const [calculating, setCalculating] = useState(false);
+
+  // Search and Pagination States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   const platformCommPercent = 10;
   const labelSharePercent = 30;
@@ -6081,9 +7127,17 @@ function SplitCascadePanel({ payoutBalance, setPayoutBalance }) {
       };
       setLedgerRows(prev => [newRow, ...prev]);
       setPayoutBalance(prev => prev + currentArtist);
+      setCurrentPage(1);
       alert(`Split cascade run successfully! $${currentArtist.toFixed(2)} added to your payout balance.`);
     }, 1000);
   };
+
+  const filtered = ledgerRows.filter(r => 
+    r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const paginatedRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div>
@@ -6157,41 +7211,55 @@ function SplitCascadePanel({ payoutBalance, setPayoutBalance }) {
         </div>
 
         <div className="dashboard-card">
-          <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Processed Royalty Ledgers</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>TxID</th>
-                  <th>Release</th>
-                  <th>Gross</th>
-                  <th>Comm (10%)</th>
-                  <th>Label (30%)</th>
-                  <th>Artist Split</th>
-                  <th>Manager (10%)</th>
-                  <th>Net Profit</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ledgerRows.map(row => (
-                  <tr key={row.id}>
-                    <td style={{ fontFamily: 'monospace' }}>{row.id}</td>
-                    <td style={{ fontWeight: 'bold' }}>{row.title}</td>
-                    <td>${row.gross.toFixed(2)}</td>
-                    <td style={{ color: '#ef4444' }}>-${row.comm.toFixed(2)}</td>
-                    <td style={{ color: '#ef4444' }}>-${row.label.toFixed(2)}</td>
-                    <td style={{ color: '#10b981', fontWeight: 'bold' }}>+${row.artist.toFixed(2)}</td>
-                    <td style={{ color: '#ef4444' }}>-${row.manager.toFixed(2)}</td>
-                    <td style={{ color: 'var(--cyan)' }}>+${row.net.toFixed(2)}</td>
-                    <td>
-                      <span className="badge-status success">{row.status.toUpperCase()}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0 }}>Processed Royalty Ledgers</h3>
+            <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search transactions..." />
           </div>
+
+          {filtered.length === 0 ? (
+            <p style={{ color: '#cbd5e1', textAlign: 'center', padding: '24px' }}>No transaction ledger rows match your search query.</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>TxID</th>
+                    <th>Release</th>
+                    <th>Gross</th>
+                    <th>Comm (10%)</th>
+                    <th>Label (30%)</th>
+                    <th>Artist Split</th>
+                    <th>Manager (10%)</th>
+                    <th>Net Profit</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedRows.map(row => (
+                    <tr key={row.id}>
+                      <td style={{ fontFamily: 'monospace' }}>{row.id}</td>
+                      <td style={{ fontWeight: 'bold', color: '#fff' }}>{row.title}</td>
+                      <td>${row.gross.toFixed(2)}</td>
+                      <td style={{ color: '#ef4444' }}>-${row.comm.toFixed(2)}</td>
+                      <td style={{ color: '#ef4444' }}>-${row.label.toFixed(2)}</td>
+                      <td style={{ color: '#10b981', fontWeight: 'bold' }}>+${row.artist.toFixed(2)}</td>
+                      <td style={{ color: '#ef4444' }}>-${row.manager.toFixed(2)}</td>
+                      <td style={{ color: 'var(--cyan)' }}>+${row.net.toFixed(2)}</td>
+                      <td>
+                        <span className="badge-status success">{row.status.toUpperCase()}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <DashboardPagination 
+                currentPage={currentPage} 
+                totalItems={filtered.length} 
+                pageSize={pageSize} 
+                onPageChange={(page) => setCurrentPage(page)} 
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
