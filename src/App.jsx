@@ -164,7 +164,7 @@ function Navbar({ sessionUser }) {
                   window.history.back();
                 }
               }} 
-              style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center', marginTop: '-5px' }}
+              style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center', marginTop: '-12px' }}
             >
               &lt;&lt; a tunemavens utility
             </Link>
