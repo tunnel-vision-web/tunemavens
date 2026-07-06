@@ -145,11 +145,11 @@ function Navbar({ sessionUser }) {
     <nav className="navbar">
       <div className="nav-inner-container">
         {activeRoleLogo ? (
-          <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px', padding: '6px 0' }}>
+          <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '6px 0' }}>
             <img 
               src={activeRoleLogo.logo} 
               alt={`${activeRoleLogo.roleKey} Logo`} 
-              className="logo-image-role"
+              className="logo-image-role logo-image"
               style={{ display: 'block' }}
             />
             <Link 
@@ -164,7 +164,7 @@ function Navbar({ sessionUser }) {
                   window.history.back();
                 }
               }} 
-              style={{ fontSize: '11px', color: 'var(--mu)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+              style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center' }}
             >
               &lt;&lt; a tunemavens utility
             </Link>
@@ -641,13 +641,13 @@ function SplitCascadeCarousel({ step, setStep }) {
       icon: "📋",
       visual: (
         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', margin: '8px 0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '11px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
             <span>Artist Share</span> <span style={{ color: 'var(--green)', fontWeight: '700' }}>50%</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '11px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
             <span>Producer Share</span> <span style={{ color: 'var(--cyan)', fontWeight: '700' }}>30%</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
             <span>Label Share</span> <span style={{ color: 'var(--purple)', fontWeight: '700' }}>20%</span>
           </div>
         </div>
@@ -660,8 +660,8 @@ function SplitCascadeCarousel({ step, setStep }) {
       visual: (
         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', margin: '8px 0', textAlign: 'center' }}>
           <div style={{ fontSize: '20px', marginBottom: '4px' }}>📄</div>
-          <div style={{ fontSize: '11px', color: 'var(--mu)' }}>raw_sales_report.csv</div>
-          <div style={{ fontSize: '10px', color: 'var(--green)', marginTop: '4px', fontWeight: '500' }}>✓ 15,240 rows parsed successfully</div>
+          <div style={{ fontSize: '13px', color: 'var(--mu)' }}>raw_sales_report.csv</div>
+          <div style={{ fontSize: '12px', color: 'var(--green)', marginTop: '4px', fontWeight: '500' }}>✓ 15,240 rows parsed successfully</div>
         </div>
       )
     },
@@ -677,13 +677,13 @@ function SplitCascadeCarousel({ step, setStep }) {
       icon: "💸",
       visual: (
         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', margin: '8px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', marginBottom: '6px' }}>
             <span style={{ color: 'var(--green)' }}>🟢</span> <strong>Artist Share:</strong> <span style={{ marginLeft: 'auto', color: '#fff' }}>+$500.00 (M-Pesa)</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', marginBottom: '6px' }}>
             <span style={{ color: 'var(--green)' }}>🟢</span> <strong>Producer Share:</strong> <span style={{ marginLeft: 'auto', color: '#fff' }}>+$300.00 (Paypal)</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
             <span style={{ color: 'var(--green)' }}>🟢</span> <strong>Label Share:</strong> <span style={{ marginLeft: 'auto', color: '#fff' }}>+$200.00 (Wire)</span>
           </div>
         </div>
@@ -697,10 +697,10 @@ function SplitCascadeCarousel({ step, setStep }) {
     <div className="split-cascade-carousel-widget glass-panel" style={{ padding: '20px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 'var(--r)', width: '100%', marginTop: '16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
         <span style={{ fontSize: '20px' }}>{current.icon}</span>
-        <h4 style={{ margin: 0, fontSize: '14px', color: '#fff', fontWeight: '700' }}>{current.title}</h4>
+        <h4 style={{ margin: 0, fontSize: '17px', color: '#fff', fontWeight: '700' }}>{current.title}</h4>
       </div>
       
-      <p style={{ fontSize: '12px', color: 'var(--mu)', lineHeight: '1.45', margin: '0 0 12px' }}>{current.desc}</p>
+      <p style={{ fontSize: '14.5px', color: 'var(--mu)', lineHeight: '1.45', margin: '0 0 12px' }}>{current.desc}</p>
       
       <div className="step-visualization" style={{ minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         {current.visual}
@@ -1195,7 +1195,7 @@ function HomeView({ sessionUser }) {
               <div className="flagship-info">
                 <div className="flagship-badge">Accounting & Revenue</div>
                 <h3 className="flagship-title">Split Cascade Ledger</h3>
-                <p className="flagship-text">
+                <p className="flagship-text" style={{ fontSize: '17px', lineHeight: '1.6' }}>
                   <strong>Ideal for Indie Label Managers & Music Collectives.</strong> Stop fighting with Excel sheets and manual payouts. Set clean percentages for authors, producers, and labels once. Load your distributor's statement CSV, and let the cascade engine calculate everyone's share in seconds.
                 </p>
                 <SplitCascadeCarousel step={ledgerStep} setStep={setLedgerStep} />
@@ -2093,10 +2093,6 @@ function NativeAppLandingView() {
         </div>
 
         <div className="hs">
-          {/* Sticky back-to-gallery anchor */}
-          <Link to="/native-apps" className="landing-back-link landing-back-overlay" data-testid="landing-back-to-gallery">
-            <ArrowLeft size={14} /> All native apps
-          </Link>
 
           <div
             className="hcont"
@@ -6594,7 +6590,18 @@ function AppContent({ sessionUser, handleLogin, handleLogout, getFooterLocation 
   const [scrolled, setScrolled] = useState(false);
   const { country } = useRegion();
   const location = useLocation();
+  const navigate = useNavigate();
   const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
+
+  const handleBackdropClose = (e) => {
+    if (e.target === e.currentTarget) {
+      if (window.history.state && window.history.state.idx > 0) {
+        navigate(-1);
+      } else {
+        navigate('/');
+      }
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -6745,7 +6752,7 @@ function AppContent({ sessionUser, handleLogin, handleLogout, getFooterLocation 
 
       {/* Render modals on top, outside the wrapper so they aren't affected by its opacity */}
       {isAuthModalActive && (
-        <div className="auth-modal-overlay-wrapper">
+        <div className="auth-modal-overlay-wrapper" onClick={handleBackdropClose}>
           <Routes>
             <Route path="/login" element={<LoginView onLogin={handleLogin} />} />
             <Route path="/register" element={<RegisterView onLogin={handleLogin} />} />

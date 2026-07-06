@@ -142,13 +142,12 @@
 /* Swapped logo container in navbar */
 .nav-logo-container-role {
   display: flex !important;
+  flex-direction: column !important;
   align-items: center !important;
-  gap: 16px !important;
+  gap: 4px !important;
 }
 
 .logo-image-role {
-  height: 35px !important; /* Prominent size */
-  width: auto !important;
   display: block !important;
 }
 
