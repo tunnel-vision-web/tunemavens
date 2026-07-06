@@ -939,7 +939,7 @@ function HomeView({ sessionUser }) {
     }
   ];
 
-  const SLIDE_DURATION = 18000; // Increased duration for easier reading
+  const SLIDE_DURATION = 36000; // Slowed down by half for easier reading
   const slideCount = slides.length;
   const currentSlideData = slides[currentSlide];
 
@@ -1959,7 +1959,7 @@ function NativeAppLandingView() {
   const progressRef = useRef(null);
   const timerRef = useRef(null);
   // Slower than HomeView so the dense product copy has time to land.
-  const SLIDE_DURATION = 24000;
+  const SLIDE_DURATION = 48000; // Slowed down by half
   const TRANSITION_OUT_MS = 700;
 
   const slides = data?.heroSlides || [];
