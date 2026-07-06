@@ -111,7 +111,7 @@
 /* Correct horizontal image display without distortion */
 .pf-tile-logo img {
   display: block !important;
-  height: 20px !important; /* standard height */
+  height: 30px !important; /* 50% larger than original 20px */
   width: auto !important;  /* proportional width */
   max-width: 100% !important;
   background: transparent !important;
