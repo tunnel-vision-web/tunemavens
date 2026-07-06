@@ -3718,7 +3718,7 @@
   flex-direction: column !important;
   gap: 14px !important;
   padding: 14px 2px 18px !important;
-  animation: pfContinuousScroll 40s linear infinite !important;
+  animation: pfContinuousScroll 80s linear infinite !important;
   will-change: transform !important;
 }
 
@@ -3794,7 +3794,7 @@
 }
 
 .pf-sidebar-track {
-  animation: pfContinuousScroll 35s linear infinite !important;
+  animation: pfContinuousScroll 70s linear infinite !important;
   gap: 20px !important; /* Increase spacing to make loop more obvious */
 }
 

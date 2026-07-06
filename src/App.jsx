@@ -41,6 +41,7 @@ import appsMasteringImg from './assets/images/apps_mastering.png'
 import appsLedgerImg from './assets/images/apps_ledger.png'
 import distributeHeroImg from './assets/images/distribute_hero.png'
 import listenHeroImg from './assets/images/listen_hero.png'
+import tunestreamHeaderImg from './assets/images/tunestream_header.png'
 
 import headerToolsImg from './assets/images/header_tools.png'
 import headerAppsImg from './assets/images/header_apps.png'
@@ -89,9 +90,11 @@ function Navbar({ sessionUser }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [appsDropdownOpen, setAppsDropdownOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const appsDropdownRef = useRef(null);
   const aboutDropdownRef = useRef(null);
+  const libraryDropdownRef = useRef(null);
   const [scrolled, setScrolled] = useState(false);
 
   const getRoleLogoForPath = (pathname) => {
@@ -104,7 +107,7 @@ function Navbar({ sessionUser }) {
     if (pathname === '/native-apps/creator-companion') {
       return { logo: ROLE_LOGOS['companion'], roleKey: 'companion' };
     }
-    if (pathname === '/native-apps/tunestreams') {
+    if (pathname === '/native-apps/tunestreams' || pathname === '/native-apps/tunestream') {
       return { logo: ROLE_LOGOS['consumer'], roleKey: 'consumer' };
     }
     if (pathname === '/native-apps/tunepay') {
@@ -144,6 +147,9 @@ function Navbar({ sessionUser }) {
       if (aboutDropdownRef.current && !aboutDropdownRef.current.contains(e.target)) {
         setAboutDropdownOpen(false);
       }
+      if (libraryDropdownRef.current && !libraryDropdownRef.current.contains(e.target)) {
+        setLibraryDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
@@ -151,37 +157,63 @@ function Navbar({ sessionUser }) {
 
   // Conditional Menu rendering
   const renderNavLinks = () => {
-    if (currentPath === '/native-apps/tunestreams') {
+    if (currentPath === '/native-apps/tunestreams' || currentPath === '/native-apps/tunestream') {
       return (
         <>
           <li>
-            <a href="#features" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }}>
-              Features
-            </a>
-          </li>
-          <li>
-            <a href="#promoted-acts" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('promoted-acts'); }}>
-              Rising Talents
-            </a>
-          </li>
-          <li>
-            <Link to="/stream" className="nav-link" onClick={() => setMobileOpen(false)}>
-              Web Player
+            <Link to="/native-apps/tunestreams?view=listen" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Listen
             </Link>
           </li>
           <li>
-            <a href="#tipping-guide" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('tipping-guide'); }}>
-              Direct Support
-            </a>
+            <Link to="/native-apps/tunestreams?view=explore" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Explore
+            </Link>
+          </li>
+          <li className="dropdown-container" ref={libraryDropdownRef}>
+            <button
+              className="nav-link dropdown-trigger"
+              onClick={() => {
+                setAppsDropdownOpen(false);
+                setAboutDropdownOpen(false);
+                setDropdownOpen(false);
+                setLibraryDropdownOpen(!libraryDropdownOpen);
+              }}
+            >
+              My Library
+              <ChevronDown size={14} />
+            </button>
+            <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`}>
+              <li>
+                <Link to="/native-apps/tunestreams?view=playlists" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  Playlists
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestreams?view=create-playlist" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  Create Playlist
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestreams?view=browse-podcasts" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  Browse Podcasts
+                </Link>
+              </li>
+            </ul>
           </li>
           <li>
-            <a href="#download-cta" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('download-cta'); }}>
-              Download App
-            </a>
+            <Link to="/native-apps/tunestreams?view=apps" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Apps
+            </Link>
+          </li>
+          <li>
+            <Link to="/help" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Support & Community
+            </Link>
           </li>
           <li>
             <Link to="/" className="nav-link" style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '4px', color: '#10b981' }} onClick={() => setMobileOpen(false)}>
-              Return to TuneStreams
+              Return to TuneMavens
             </Link>
           </li>
         </>
@@ -349,7 +381,7 @@ function Navbar({ sessionUser }) {
               }} 
               style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center', marginTop: '-12px' }}
             >
-              {currentPath.includes('/native-apps/tunestreams') ? '<< a tunestreams utility' : '<< a tunemavens utility'}
+              {"<< a tunemavens utility"}
             </Link>
           </div>
         ) : (
@@ -2038,7 +2070,35 @@ function FaqItem({ q, a, defaultOpen = false }) {
 
 function NativeAppLandingView() {
   const { slug } = useParams();
-  const data = NATIVE_APP_LANDING_DATA[slug];
+  const normalizedSlug = (slug === 'tunestream' || slug === 'tunemavens') ? 'tunestreams' : slug;
+  const data = NATIVE_APP_LANDING_DATA[normalizedSlug];
+  const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const view = searchParams.get('view') || 'listen';
+
+  const [playlists, setPlaylists] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tunestream_playlists');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [
+      { id: 1, name: 'Afrobeat Essentials', desc: 'The hottest tracks from Lagos and Accra.', tracks: 12, bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+      { id: 2, name: 'Acoustic Chill Africa', desc: 'Unplugged guitar and soul vibes.', tracks: 8, bg: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' },
+      { id: 3, name: 'Amapiano Heat', desc: 'Pretoria and Johannesburg club starters.', tracks: 15, bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+    ];
+  });
+
+  const savePlaylists = (newList) => {
+    setPlaylists(newList);
+    try {
+      localStorage.setItem('tunestream_playlists', JSON.stringify(newList));
+    } catch (e) {}
+  };
+
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [newPlaylistDesc, setNewPlaylistDesc] = useState('');
+  const [newPlaylistBg, setNewPlaylistBg] = useState('linear-gradient(135deg, #10b981 0%, #059669 100%)');
 
   const [promotedActs, setPromotedActs] = useState(() => getPromotedActs());
 
@@ -2142,7 +2202,7 @@ function NativeAppLandingView() {
     const link = which === 'b1' ? slide.b1link : slide.b2link;
     const action = which === 'b1' ? slide.b1action : slide.b2action;
     const cls = which === 'b1' ? 'hbp' : 'hbg';
-    const testId = `landing-hero-${which}-${slug}`;
+    const testId = `landing-hero-${which}-${normalizedSlug}`;
     if (action === 'appstore' || action === 'googleplay') {
       const storeName = action === 'appstore' ? 'App Store' : 'Google Play';
       return (
@@ -2162,243 +2222,621 @@ function NativeAppLandingView() {
     );
   };
 
-  if (slug === 'tunestreams' || slug === 'tunemavens') {
+  if (normalizedSlug === 'tunestreams') {
     const activeAct = promotedActs[currentSlide % promotedActs.length] || null;
-    return (
-      <div 
-        className="native-app-landing tunestream-landing" 
-        style={{ background: getLandingBackground('tunestreams'), color: '#f1f5f9' }}
-      >
-        {/* HERO CAROUSEL featuring Promoted Acts */}
-        <div className="hw" id="hero">
-          <div className="bgs">
-            {promotedActs.map((act, idx) => (
-              <div
-                key={idx}
-                className={`bg ${currentSlide % promotedActs.length === idx ? 'on' : ''}`}
-                style={{
-                  backgroundImage: `url(${HERO_IMAGE_MAP[act.imageKey] || listenHeroImg})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  filter: currentSlide % promotedActs.length === idx
-                    ? (titleHovered ? 'brightness(1.05) blur(0px)' : 'brightness(0.7) blur(1.5px)')
-                    : 'none',
-                  transform: currentSlide % promotedActs.length === idx && titleHovered ? 'scale(1.04)' : 'scale(1)',
-                  transition: 'filter 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)',
-                }}
-              />
-            ))}
-            <div className="bgo" style={{ opacity: titleHovered ? 0.3 : 0.8, transition: 'opacity 0.8s ease' }} />
-          </div>
 
-          <div className="hs">
-            <div 
-              className="hcont"
-              onMouseEnter={() => setTitleHovered(true)}
-              onMouseLeave={() => setTitleHovered(false)}
-            >
-              <div className="he hbadge" style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', padding: '6px 12px', borderRadius: '20px' }}>
+    const renderListen = () => {
+      return (
+        <>
+          {/* HEADER IMAGE with human elements, multicultural, clean */}
+          <div 
+            className="tunestream-app-header" 
+            style={{ 
+              position: 'relative', 
+              padding: '80px 24px', 
+              backgroundImage: `url(${tunestreamHeaderImg})`, 
+              backgroundSize: 'cover', 
+              backgroundPosition: 'center', 
+              borderRadius: '8px', 
+              overflow: 'hidden', 
+              marginBottom: '40px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              minHeight: '380px'
+            }}
+          >
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(7, 14, 27, 0.95) 0%, rgba(7, 14, 27, 0.7) 50%, rgba(7, 14, 27, 0.2) 100%)', zIndex: 1 }} />
+            
+            <div style={{ position: 'relative', zIndex: 2, maxWidth: '550px', textAlign: 'left' }}>
+              <div className="he hbadge" style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', padding: '6px 12px', borderRadius: '20px', marginBottom: '20px' }}>
                 <span className="bdot" style={{ background: '#10b981', animation: 'pulseGlow 2s infinite' }} />
                 <span>streams.tunemavens.com · Subdomain Active</span>
               </div>
-
-              {activeAct && (
-                <>
-                  <h1 className="ht htitle" style={{ marginTop: '16px' }}>
-                    <span className="ht-line ht-line-1">{activeAct.title}</span>
-                    <span className="ht-line ht-line-2" style={{ color: 'var(--cyan)' }}>by {activeAct.name}</span>
-                  </h1>
-                  <p className="hp hsub" style={{ fontSize: '15px', color: '#cbd5e1', maxWidth: '600px', lineHeight: '1.6' }}>
-                    Featured track: <strong style={{ color: '#fff' }}>{activeAct.featuredTrack}</strong>. Experience high-fidelity FLAC audio and direct creator tipping on Africa's premier music catalog.
-                  </p>
-                </>
-              )}
-
-              <div className="hb hbtns" style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                <Link to="/stream" className="hbp" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <h1 className="ht htitle" style={{ fontSize: '38px', fontWeight: '800', color: '#fff', lineHeight: '1.2', marginBottom: '16px' }}>
+                Carry the catalogue.<br />
+                <span style={{ color: '#10b981' }}>Even off-grid.</span>
+              </h1>
+              <p className="hp hsub" style={{ fontSize: '15px', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '24px' }}>
+                High-fidelity FLAC audio and direct creator support. Stream cellular-aware, tip mid-track, and share your credits vault across all devices.
+              </p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Link to="/stream" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                   <Play size={16} fill="currentColor" /> Stream Web Player
                 </Link>
-                <a href="#download-cta" className="hbg" onClick={(e) => { e.preventDefault(); scrollToSection('download-cta'); }}>
-                  Get Native App
+                <a href="#plans-section" className="plan-btn outline" onClick={(e) => { e.preventDefault(); scrollToSection('plans-section'); }} style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', padding: '12px 24px', borderRadius: '4px', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', transition: 'all 0.3s ease' }}>
+                  View Plans
                 </a>
               </div>
             </div>
           </div>
 
-          <div className="sui-arrows">
-            <button type="button" className="slide-nav prev" onClick={() => goToSlide((currentSlide - 1 + promotedActs.length) % promotedActs.length)}>‹</button>
-            <button type="button" className="slide-nav next" onClick={() => goToSlide((currentSlide + 1) % promotedActs.length)}>›</button>
+          {/* Subdomain Mapping Notification Banner */}
+          <div style={{ background: 'rgba(34, 211, 238, 0.08)', borderBottom: '1px solid rgba(34, 211, 238, 0.15)', padding: '12px 24px', borderRadius: '8px', textAlign: 'center', fontSize: '13px', color: '#cbd5e1', marginBottom: '40px' }}>
+            🌐 TuneStream platform resolves natively to: <strong style={{ color: '#fff' }}>streams.tunemavens.com</strong>. Map containers securely in the <Link to="/dashboard" onClick={() => { setActiveTab('domain-mappings'); }} style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Domain Mappings Admin Console</Link>.
+          </div>
+
+          {/* Spotify-like Content Grid (3px border radius) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '50px' }}>
+            
+            {/* Trending Songs */}
+            <section>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Trending Songs</h2>
+                <Link to="/native-apps/tunestreams?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all</Link>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
+                {[
+                  { id: 't1', title: 'Midnight Cruise', artist: 'Alex Rivera', streams: '1.2M streams', bg: 'linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%)' },
+                  { id: 't2', title: 'Lagos Vibe', artist: 'Tunde & Friends', streams: '890K streams', bg: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)' },
+                  { id: 't3', title: 'Sunset in Nairobi', artist: 'Mercy Wangari', streams: '620K streams', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+                  { id: 't4', title: 'Desert Wind', artist: 'Youssef Bilal', streams: '450K streams', bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+                  { id: 't5', title: 'Table Mountain Sunrise', artist: 'Zola K.', streams: '310K streams', bg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' },
+                ].map(song => (
+                  <div key={song.id} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Playing: ${song.title} by ${song.artist}`)}>
+                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: song.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', fontSize: '32px' }}>🎵</div>
+                    <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</h3>
+                    <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{song.artist}</p>
+                    <span style={{ fontSize: '11px', color: 'var(--cyan)' }}>{song.streams}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Popular Artists */}
+            <section>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Popular Artists</h2>
+                <Link to="/native-apps/tunestreams?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all</Link>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
+                {[
+                  { name: 'Alex Rivera', listeners: '1.5M listeners', avatar: '🎙️', bg: '#8b5cf6' },
+                  { name: 'Tunde & Friends', listeners: '1.1M listeners', avatar: '🥁', bg: '#ec4899' },
+                  { name: 'Mercy Wangari', listeners: '900K listeners', avatar: '🎤', bg: '#10b981' },
+                  { name: 'Youssef Bilal', listeners: '800K listeners', avatar: '🎸', bg: '#f59e0b' },
+                  { name: 'Zola K.', listeners: '500K listeners', avatar: '🎷', bg: '#3b82f6' },
+                ].map((artist, idx) => (
+                  <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Opening ${artist.name}'s Profile`)}>
+                    <div style={{ width: '100px', height: '100px', borderRadius: '3px', background: artist.bg, margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>{artist.avatar}</div>
+                    <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold' }}>{artist.name}</h3>
+                    <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{artist.listeners}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Popular Singles */}
+            <section>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Popular Singles</h2>
+                <Link to="/native-apps/tunestreams?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all</Link>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
+                {[
+                  { title: 'City Lights', artist: 'Alex Rivera', dls: '400K downloads', bg: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)' },
+                  { title: 'Amapiano Bounce', artist: 'Zola K.', dls: '320K downloads', bg: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)' },
+                  { title: 'Zilizopendwa Remix', artist: 'Mercy Wangari', dls: '280K downloads', bg: 'linear-gradient(135deg, #6d28d9 0%, #10b981 100%)' },
+                  { title: 'Highlife High', artist: 'Tunde & Friends', dls: '210K downloads', bg: 'linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%)' },
+                  { title: 'Bongo Flava Anthem', artist: 'Zola K.', dls: '190K downloads', bg: 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)' },
+                ].map((single, idx) => (
+                  <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Playing: ${single.title}`)}>
+                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: single.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', fontSize: '32px' }}>💿</div>
+                    <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold' }}>{single.title}</h3>
+                    <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{single.artist}</p>
+                    <span style={{ fontSize: '11px', color: 'var(--cyan)' }}>{single.dls}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Popular Albums */}
+            <section>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Popular Albums</h2>
+                <Link to="/native-apps/tunestreams?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all</Link>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
+                {[
+                  { title: 'Afro-Futurism Vol. 1', artist: 'Alex Rivera', year: '2026', bg: 'linear-gradient(135deg, #2563eb 0%, #ec4899 100%)' },
+                  { title: 'Nairobi Nights', artist: 'Mercy Wangari', year: '2025', bg: 'linear-gradient(135deg, #059669 0%, #d97706 100%)' },
+                  { title: 'Lagos to London', artist: 'Tunde & Friends', year: '2026', bg: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)' },
+                  { title: 'Sahara Groove', artist: 'Youssef Bilal', year: '2024', bg: 'linear-gradient(135deg, #b91c1c 0%, #d97706 100%)' },
+                  { title: 'Cape Town Chill', artist: 'Zola K.', year: '2026', bg: 'linear-gradient(135deg, #0891b2 0%, #4f46e5 100%)' },
+                ].map((album, idx) => (
+                  <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Opening Album: ${album.title}`)}>
+                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: album.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', fontSize: '32px' }}>🎚️</div>
+                    <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold' }}>{album.title}</h3>
+                    <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{album.artist}</p>
+                    <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{album.year} · Album</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Featured Charts */}
+            <section>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Featured Charts</h2>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
+                {[
+                  { name: 'Top 50 Global', desc: 'The most streamed tracks globally on TuneStream.', bg: 'linear-gradient(135deg, #f43f5e 0%, #10b981 100%)' },
+                  { name: 'Naija Hot 20', desc: 'The biggest tracks out of Nigeria this week.', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+                  { name: 'East Africa Hits', desc: 'Top charting tracks from Kenya, Uganda, Tanzania.', bg: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' },
+                  { name: 'Amapiano Kings', desc: 'Curated mix of the hottest South African sounds.', bg: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)' },
+                  { name: 'Alternative Africa', desc: 'Discover the best indie and electronic talent.', bg: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' },
+                ].map((chart, idx) => (
+                  <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Opening Chart: ${chart.name}`)}>
+                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: chart.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', padding: '12px', boxSizing: 'border-box' }}>
+                      <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', textAlign: 'center', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{chart.name}</span>
+                    </div>
+                    <p style={{ fontSize: '11px', color: 'var(--mu)', margin: 0 }}>{chart.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+          </div>
+
+          {/* PLANS SECTION (CTA with plans) */}
+          <section id="plans-section" style={{ padding: '80px 0', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '60px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+              <span className="landing-section-eyebrow" style={{ color: 'var(--green)' }}>Choose Your Vibe</span>
+              <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '32px', fontWeight: '800' }}>TuneStream Listening Plans</h2>
+              <p style={{ color: 'var(--mu)', fontSize: '14px', maxWidth: '600px', margin: '0 auto' }}>Flexible plans built around the shared Intermaven Network ecosystem.</p>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px', maxWidth: '800px', margin: '0 auto' }}>
+              
+              {/* Free Plan Card */}
+              <div className="glass-panel" style={{ padding: '32px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)' }}>
+                <div>
+                  <span style={{ color: 'var(--green)', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.05em' }}>Free Tier</span>
+                  <h3 style={{ fontSize: '24px', color: '#fff', margin: '8px 0 16px', fontWeight: '800' }}>TuneStream Free</h3>
+                  <p style={{ fontSize: '14px', color: 'var(--mu)', marginBottom: '24px' }}>Ad-supported music streaming. No commitment, completely free, no credit card required.</p>
+                  
+                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0' }} />
+                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', fontSize: '13px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+                    <li>✓ 150 shared Intermaven credits at signup</li>
+                    <li>✓ Unlimited music streaming (web and mobile)</li>
+                    <li>✓ Basic quality audio</li>
+                    <li>✓ Ad-supported</li>
+                  </ul>
+                </div>
+                
+                <Link to="/native-apps/tunestreams?view=free" className="btn-primary" style={{ textAlign: 'center', width: '100%', padding: '12px' }}>
+                  Learn More
+                </Link>
+              </div>
+
+              {/* Premium Plan Card */}
+              <div className="glass-panel" style={{ padding: '32px', border: '1px solid var(--green)', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'rgba(16,185,129,0.02)', boxShadow: '0 8px 30px rgba(16,185,129,0.08)' }}>
+                <div>
+                  <span style={{ color: 'var(--cyan)', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.05em' }}>Premium Tier</span>
+                  <h3 style={{ fontSize: '24px', color: '#fff', margin: '8px 0 16px', fontWeight: '800' }}>TuneStream Premium</h3>
+                  <p style={{ fontSize: '14px', color: 'var(--mu)', marginBottom: '24px' }}>Ad-free listening. High-fidelity lossless audio and offline caching. Paid via credits.</p>
+                  
+                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0' }} />
+                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', fontSize: '13px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+                    <li>✓ Zero Ads for uninterrupted listening</li>
+                    <li>✓ Lossless FLAC audio (24-bit / 96kHz)</li>
+                    <li>✓ Offline downloads up to 8GB cache</li>
+                    <li>✓ One-tap tipping to independent artists</li>
+                    <li>✓ Deducts credits automatically per listen</li>
+                  </ul>
+                </div>
+                
+                <Link to="/native-apps/tunestreams?view=premium" className="btn-primary" style={{ textAlign: 'center', width: '100%', padding: '12px', background: 'var(--green)', border: 'none' }}>
+                  Go Premium
+                </Link>
+              </div>
+
+            </div>
+          </section>
+
+        </>
+      );
+    };
+
+    const renderExplore = () => {
+      const creators = [
+        { name: 'Alex Rivera', genre: 'Afrobeats', location: 'Lagos, Nigeria', streams: '1.2M', avatar: '🎙️', bg: '#8b5cf6' },
+        { name: 'Tunde & Friends', genre: 'Highlife', location: 'Accra, Ghana', streams: '890K', avatar: '🥁', bg: '#ec4899' },
+        { name: 'Mercy Wangari', genre: 'Afrosoul', location: 'Nairobi, Kenya', streams: '620K', avatar: '🎤', bg: '#10b981' },
+        { name: 'Youssef Bilal', genre: 'Desert Blues', location: 'Marrakech, Morocco', streams: '450K', avatar: '🎸', bg: '#f59e0b' },
+        { name: 'Zola K.', genre: 'Amapiano', location: 'Soweto, South Africa', streams: '310K', avatar: '🎷', bg: '#3b82f6' },
+        { name: 'Fatoumata D.', genre: 'Wassoulou', location: 'Bamako, Mali', streams: '280K', avatar: '🎻', bg: '#06b6d4' },
+        { name: 'Sauti Band', genre: 'Afropop', location: 'Dar es Salaam', streams: '190K', avatar: '🎺', bg: '#f43f5e' },
+        { name: 'Kidest G.', genre: 'Ethio-Jazz', location: 'Addis Ababa', streams: '150K', avatar: '🎹', bg: '#10b981' },
+      ];
+
+      return (
+        <div style={{ textAlign: 'left' }}>
+          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Explore Creators</h2>
+          <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px' }}>Discover new talent and verify their splits on the Intermaven shared ledger.</p>
+          
+          <div style={{ marginBottom: '30px', position: 'relative', maxWidth: '400px' }}>
+            <input 
+              type="text" 
+              placeholder="Search creators, genres, or locations..." 
+              style={{ width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
+              onChange={(e) => console.log('Searching:', e.target.value)}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+            {creators.map((c, idx) => (
+              <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Opening EPK dashboard for ${c.name}`)}>
+                <div style={{ width: '100%', height: '140px', borderRadius: '3px', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px', marginBottom: '16px' }}>{c.avatar}</div>
+                <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{c.name}</h3>
+                <p style={{ fontSize: '13px', color: 'var(--mu)', margin: '0 0 8px' }}>{c.genre} · {c.location}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                  <span style={{ color: 'var(--mu)' }}>{c.streams} streams</span>
+                  <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>View EPK →</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      );
+    };
 
-        {/* Subdomain Mapping Notification Banner */}
-        <div style={{ background: 'rgba(34, 211, 238, 0.08)', borderBottom: '1px solid rgba(34, 211, 238, 0.15)', padding: '12px 24px', textAlign: 'center', fontSize: '13px', color: '#cbd5e1' }}>
-          🌐 TuneStream platform resolves natively to: <strong style={{ color: '#fff' }}>streams.tunemavens.com</strong>. Map containers securely in the <Link to="/dashboard" onClick={() => { setActiveTab('domain-mappings'); }} style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Domain Mappings Admin Console</Link>.
-        </div>
+    const renderPlaylists = () => {
+      return (
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div>
+              <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', marginBottom: '4px' }}>My Playlists</h2>
+              <p style={{ color: 'var(--mu)', fontSize: '14px' }}>Access your personalized streams and custom crates.</p>
+            </div>
+            <Link to="/native-apps/tunestreams?view=create-playlist" className="btn-primary" style={{ padding: '10px 16px', textDecoration: 'none' }}>
+              + Create Playlist
+            </Link>
+          </div>
 
-        {/* Tidal-Style Content Section 1: Rising Talents & Dummy Tracks Player */}
-        <section className="landing-section" id="promoted-acts" style={{ padding: '80px 0' }}>
-          <div className="container">
-            <span className="landing-section-eyebrow" style={{ color: 'var(--cyan)' }}>Rising Talents</span>
-            <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '28px', fontWeight: '800' }}>Tidal Curated Selection</h2>
-            <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '32px', maxWidth: '600px' }}>
-              Listen to lossless FLAC mastering, offline playlists, and direct-to-creator payouts from Africa's most prominent rising stars.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
-              {promotedActs.map((act) => (
-                <div 
-                  key={act.id} 
-                  className="landing-feature-card" 
-                  style={{ 
-                    background: 'rgba(255,255,255,0.02)', 
-                    border: '1px solid rgba(255,255,255,0.06)', 
-                    padding: '20px', 
-                    borderRadius: '8px', 
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                  }}
-                  onClick={() => {
-                    alert(`Now playing mock stream: ${act.name} - ${act.featuredTrack}`);
-                  }}
-                >
-                  <div style={{ height: '140px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', position: 'relative' }}>
-                    <Play size={32} color="var(--cyan)" style={{ zIndex: 2 }} />
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '9px', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '10px', color: '#fff' }}>FLAC</div>
-                  </div>
-                  <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px 0', fontWeight: '700' }}>{act.title}</h3>
-                  <p style={{ fontSize: '13px', color: '#cbd5e1', margin: '0 0 12px 0' }}>{act.name}</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--mu)' }}>
-                    <span>{act.genre}</span>
-                    <span style={{ color: 'var(--cyan)' }}>▶ Stream</span>
+          {playlists.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.01)', borderRadius: '3px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📭</span>
+              <h3 style={{ color: '#fff', fontSize: '18px', marginBottom: '8px' }}>No playlists yet</h3>
+              <p style={{ color: 'var(--mu)', fontSize: '13px', marginBottom: '20px' }}>Create your first custom listening collection.</p>
+              <Link to="/native-apps/tunestreams?view=create-playlist" className="btn-primary">Create Now</Link>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+              {playlists.map(p => (
+                <div key={p.id} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Streaming playlist: ${p.name}`)}>
+                  <div style={{ width: '100%', height: '140px', borderRadius: '3px', background: p.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px', marginBottom: '16px', color: '#fff', fontWeight: 'bold' }}>🎧</div>
+                  <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{p.name}</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--mu)', margin: '0 0 12px', minHeight: '36px', overflow: 'hidden', display: '-webkit-box', WebkitLineBreak: 'after-white-space', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.desc}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                    <span style={{ color: 'var(--mu)' }}>{p.tracks} tracks</span>
+                    <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>▶ Play</span>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+          )}
+        </div>
+      );
+    };
 
-        {/* Tidal-Style Content Section 2: Direct-to-Artist Split Cascade Illustration */}
-        <section className="landing-section landing-section-alt" id="tipping-guide" style={{ padding: '80px 0', background: 'rgba(255,255,255,0.02)' }}>
-          <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
+    const renderCreatePlaylist = () => {
+      const handleCreate = (e) => {
+        e.preventDefault();
+        if (!newPlaylistName.trim()) {
+          alert('Please enter a playlist name.');
+          return;
+        }
+        const newPlaylist = {
+          id: Date.now(),
+          name: newPlaylistName,
+          desc: newPlaylistDesc || 'Custom listening collection.',
+          tracks: 0,
+          bg: newPlaylistBg,
+        };
+        const newList = [...playlists, newPlaylist];
+        savePlaylists(newList);
+        
+        // Reset fields
+        setNewPlaylistName('');
+        setNewPlaylistDesc('');
+        
+        alert('Playlist created successfully!');
+        navigate('/native-apps/tunestreams?view=playlists');
+      };
+
+      const bgOptions = [
+        { label: 'Teal/Green', val: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+        { label: 'Purple/Indigo', val: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' },
+        { label: 'Amber/Orange', val: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+        { label: 'Cyan/Blue', val: 'linear-gradient(135deg, #22d3ee 0%, #1d4ed8 100%)' },
+        { label: 'Pink/Rose', val: 'linear-gradient(135deg, #ec4899 0%, #e11d48 100%)' },
+      ];
+
+      return (
+        <div style={{ textAlign: 'left', maxWidth: '500px', margin: '0 auto' }} className="glass-panel">
+          <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>Create Playlist</h2>
+          <p style={{ color: 'var(--mu)', fontSize: '13px', marginBottom: '24px' }}>Set up a new mix to organize your favorite lossless studio tracks.</p>
+          
+          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
-              <span className="landing-section-eyebrow" style={{ color: 'var(--green)' }}>Direct Support</span>
-              <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '28px', fontWeight: '800' }}>The Direct Creator Value Cascade</h2>
-              <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}>
-                When you tip an artist on TuneStream, your money bypasses traditional streaming middlemen. The funds flow instantly through the shared Intermaven split ledger straight into the creator's wallet.
-              </p>
-              
-              <div style={{ marginTop: '24px' }}>
-                <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Revenue Split Distribution ($1.00 Tip Example)</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span>Artist Share (50%):</span>
-                    <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>+$0.50</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span>Label Share (30%):</span>
-                    <span style={{ color: '#cbd5e1' }}>+$0.30</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span>Manager Fee (10%):</span>
-                    <span style={{ color: '#cbd5e1' }}>+$0.10</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span>Platform Commission (10%):</span>
-                    <span style={{ color: '#ef4444' }}>+$0.10</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="dashboard-card" style={{ padding: '32px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <h3 style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold', marginBottom: '16px' }}>Related Creator Utilities</h3>
-              <p style={{ fontSize: '13px', color: 'var(--mu)', marginBottom: '24px' }}>
-                TuneStream is directly connected to the Creator Companion dashboard apps. Calculate splits, configure cascades, and check statements instantly.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <Link to="/native-apps/creator-companion" className="btn-primary" style={{ textAlign: 'center', padding: '10px' }}>
-                  Explore Creator Companion
-                </Link>
-                <Link to="/stream" className="plan-btn outline" style={{ textAlign: 'center', padding: '10px' }}>
-                  Open Web Stream Player
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Content Section 3: High Fidelity Audio & Offline Freedom */}
-        <section className="landing-section" id="features" style={{ padding: '80px 0' }}>
-          <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>HQ Lossless FLAC</h4>
-                <p style={{ color: 'var(--mu)', fontSize: '12px', lineHeight: '1.5' }}>High-fidelity audio streaming matching studio resolution.</p>
-              </div>
-              <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Offline Cache</h4>
-                <p style={{ color: 'var(--mu)', fontSize: '12px', lineHeight: '1.5' }}>Save up to 8GB of music directly to your phone for off-grid playback.</p>
-              </div>
-              <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Region Playlists</h4>
-                <p style={{ color: 'var(--mu)', fontSize: '12px', lineHeight: '1.5' }}>Playlists customized dynamically based on your localized market.</p>
-              </div>
-              <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Smart Discovery</h4>
-                <p style={{ color: 'var(--mu)', fontSize: '12px', lineHeight: '1.5' }}>AI-driven recommendations based on your follows and collaborations.</p>
-              </div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>Playlist Name *</label>
+              <input 
+                type="text" 
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+                placeholder="e.g. Acoustic Chill, Roadtrip Vibes" 
+                style={{ width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', outline: 'none' }}
+                required
+              />
             </div>
 
             <div>
-              <span className="landing-section-eyebrow" style={{ color: 'var(--cyan)' }}>High-Fidelity Audio</span>
-              <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '28px', fontWeight: '800' }}>Lossless Offline Listening</h2>
-              <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
-                Enjoy complete data-savings with offline caching. Sync catalog tracks are encoded cellular-aware to scale dynamically in low-bandwidth regions.
-              </p>
-              <Link to="/help" className="landing-cross-link" style={{ color: 'var(--cyan)' }}>
-                Explore Sync Licensing Matching →
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>Description</label>
+              <textarea 
+                value={newPlaylistDesc}
+                onChange={(e) => setNewPlaylistDesc(e.target.value)}
+                placeholder="Describe your playlist..." 
+                rows="3"
+                style={{ width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', outline: 'none', resize: 'vertical' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>Select Theme Art Color</label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {bgOptions.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setNewPlaylistBg(opt.val)}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '3px',
+                      background: opt.val,
+                      border: newPlaylistBg === opt.val ? '2px solid #fff' : '2px solid transparent',
+                      cursor: 'pointer',
+                      boxShadow: newPlaylistBg === opt.val ? '0 0 10px rgba(255,255,255,0.5)' : 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                    title={opt.label}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+              <button type="submit" className="btn-primary" style={{ flex: 1, padding: '12px', border: 'none', cursor: 'pointer' }}>
+                Create Playlist
+              </button>
+              <Link to="/native-apps/tunestreams?view=playlists" className="plan-btn outline" style={{ flex: 1, padding: '12px', textAlign: 'center', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff' }}>
+                Cancel
               </Link>
             </div>
-          </div>
-        </section>
+          </form>
+        </div>
+      );
+    };
 
-        {/* CTA Download Native App */}
-        <section className="landing-section landing-cta-section" id="download-cta" style={{ padding: '80px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="container" style={{ textAlign: 'center' }}>
-            <span className="landing-section-eyebrow" style={{ color: 'var(--green)' }}>Get the App</span>
-            <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '32px', fontWeight: '800', margin: '0 auto 12px' }}>Start Listening Lossless</h2>
-            <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '32px' }}>Free tier · 150 network credits at signup · unlimited audio streaming</p>
-            
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button 
-                type="button" 
-                className="store-cta landing-cta"
-                onClick={() => alert('App Store downloads coming in Phase 5+')}
-                style={{ cursor: 'pointer' }}
-              >
-                <Apple size={22} />
-                <div style={{ textAlign: 'left', marginLeft: '10px' }}>
-                  <div style={{ fontSize: '9px', opacity: 0.6 }}>Download on the</div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>App Store</div>
-                </div>
-              </button>
-              <button 
-                type="button" 
-                className="store-cta landing-cta"
-                onClick={() => alert('Google Play downloads coming in Phase 5+')}
-                style={{ cursor: 'pointer' }}
-              >
-                <Download size={22} />
-                <div style={{ textAlign: 'left', marginLeft: '10px' }}>
-                  <div style={{ fontSize: '9px', opacity: 0.6 }}>Get it on</div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>Google Play</div>
-                </div>
-              </button>
-            </div>
+    const renderBrowsePodcasts = () => {
+      const podcasts = [
+        { title: 'The Independent Artist Podcast', host: 'Intermaven Audio', desc: 'Survival tips, split cascade tutorials, and industry insights for creators.', bg: 'linear-gradient(135deg, #10b981 0%, #1e1b4b 100%)', emoji: '🎙️' },
+        { title: 'Intermaven Tech & Music', host: 'Intermaven Engineering', desc: 'Deep dives into decentralized compensation models and audio compression standards.', bg: 'linear-gradient(135deg, #8b5cf6 0%, #1e1b4b 100%)', emoji: '💻' },
+        { title: 'African Soundscapes', host: 'Mercy Wangari', desc: 'High-fidelity field recordings and interviews with traditional instrument masters.', bg: 'linear-gradient(135deg, #f59e0b 0%, #1e1b4b 100%)', emoji: '🌍' },
+        { title: 'Backstage Pass', host: 'Label Ops Network', desc: 'merch POS provisioning, live tickets setups, and regional settlement guides.', bg: 'linear-gradient(135deg, #3b82f6 0%, #1e1b4b 100%)', emoji: '🎟️' },
+      ];
+
+      return (
+        <div style={{ textAlign: 'left' }}>
+          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Browse Podcasts</h2>
+          <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px' }}>Listen to tech talks, artist masterclasses, and field recordings from around the network.</p>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
+            {podcasts.map((pod, idx) => (
+              <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '24px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Streaming podcast episode: ${pod.title}`)}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '3px', background: pod.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', marginBottom: '16px' }}>{pod.emoji}</div>
+                <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700', lineHeight: '1.3' }}>{pod.title}</h3>
+                <span style={{ fontSize: '12px', color: 'var(--cyan)', display: 'block', marginBottom: '12px' }}>By {pod.host}</span>
+                <p style={{ fontSize: '12px', color: 'var(--mu)', margin: 0, lineHeight: '1.5' }}>{pod.desc}</p>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
+      );
+    };
+
+    const renderApps = () => {
+      const appListing = [
+        { title: 'TuneStream Mobile', desc: 'The consumer streaming client with high-fidelity FLAC audio and 8GB offline caching.', platforms: 'iOS & Android (Capacitor)', actionText: 'Get listings', link: '#download' },
+        { title: 'Creator Companion', desc: 'Real-time metrics, split cascade ledger tracking, and instant payout status.', platforms: 'iOS, Android & Web', actionText: 'View info', link: '/native-apps/creator-companion' },
+        { title: 'TunePay POS', desc: 'Live event ticketing, point-of-sale merch tools, and geo-gated settlement rails.', platforms: 'iOS & Android tablet', actionText: 'View info', link: '/native-apps/tunepay' },
+      ];
+
+      return (
+        <div style={{ textAlign: 'left' }}>
+          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>TuneStreams App Catalog</h2>
+          <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '32px' }}>Download the companion native platforms for listener and creator operations.</p>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+            {appListing.map((ap, idx) => (
+              <div key={idx} className="glass-panel" style={{ padding: '28px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)' }}>
+                <div>
+                  <span style={{ color: 'var(--cyan)', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.05em' }}>{ap.platforms}</span>
+                  <h3 style={{ fontSize: '20px', color: '#fff', margin: '8px 0 12px', fontWeight: '800' }}>{ap.title}</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--mu)', marginBottom: '20px', lineHeight: '1.5' }}>{ap.desc}</p>
+                </div>
+                {ap.link.startsWith('#') ? (
+                  <button className="btn-primary" style={{ padding: '10px', textAlign: 'center', border: 'none', cursor: 'pointer', borderRadius: '3px' }} onClick={() => alert('Download links coming in Phase 5+')}>
+                    Download App
+                  </button>
+                ) : (
+                  <Link to={ap.link} className="btn-primary" style={{ padding: '10px', textAlign: 'center', textDecoration: 'none', borderRadius: '3px' }}>
+                    {ap.actionText}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const renderFreePlan = () => {
+      const handleRegisterFree = () => {
+        alert('Free registration initiated! Please complete your sign up on the next screen.');
+        navigate('/register');
+      };
+
+      return (
+        <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(7, 14, 27, 0.5) 100%)', border: '1px solid rgba(16, 185, 129, 0.1)', borderRadius: '8px', marginBottom: '40px' }}>
+            <span style={{ color: 'var(--green)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.1em' }}>TuneStream Free</span>
+            <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: '900', margin: '12px 0' }}>Music for everyone.</h2>
+            <p style={{ color: '#cbd5e1', fontSize: '16px', marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>Play your favorite songs, create playlists, and explore independent African creators. Completely free, no credit card required.</p>
+            <button onClick={handleRegisterFree} className="btn-primary" style={{ padding: '12px 32px', fontSize: '15px', border: 'none', cursor: 'pointer' }}>
+              GET TUNESTREAM FREE
+            </button>
+          </div>
+
+          <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', marginBottom: '24px', textAlign: 'center' }}>Why go with TuneStream Free?</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '50px' }}>
+            {[
+              { title: 'Play your way', desc: 'Listen to any song, album, or playlist on demand. Find new tracks tailored to your taste.', icon: '🎵' },
+              { title: 'Shared credit bonus', desc: 'Receive 150 shared Intermaven Network credits upon register, usable on any platform tools.', icon: '🪙' },
+              { title: 'Create collections', desc: 'Build and share playlists of independent acts. Sync your crates across web and mobile.', icon: '🎧' },
+              { title: 'Support independent creators', desc: 'Free streams still log plays in creator splits, backed by shared sponsorship pools.', icon: '🤝' },
+            ].map((item, idx) => (
+              <div key={idx} className="glass-panel" style={{ padding: '20px', borderRadius: '3px', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '24px', display: 'block', marginBottom: '12px' }}>{item.icon}</span>
+                <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px' }}>{item.title}</h4>
+                <p style={{ color: 'var(--mu)', fontSize: '12px', margin: 0, lineHeight: '1.5' }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '24px', borderRadius: '3px' }}>
+            <p style={{ color: 'var(--mu)', fontSize: '12px', margin: 0 }}>
+              Ad-supported listening. Data rates apply when streaming on mobile networks. Shared credits vault requires a verified email register. See <Link to="/help" style={{ color: 'var(--cyan)' }}>Help Center</Link> for credit policy details.
+            </p>
+          </div>
+        </div>
+      );
+    };
+
+    const renderPremiumPlan = () => {
+      const handleGetPremium = () => {
+        alert('Premium package selected! Proceeding to register / credits activation.');
+        navigate('/register');
+      };
+
+      return (
+        <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.05) 0%, rgba(7, 14, 27, 0.5) 100%)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '8px', marginBottom: '40px' }}>
+            <span style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.1em' }}>TuneStream Premium</span>
+            <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: '900', margin: '12px 0' }}>Go Premium. Stream without limits.</h2>
+            <p style={{ color: '#cbd5e1', fontSize: '16px', marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>Ad-free listening, lossless FLAC quality, offline caching, and direct creator support. Pay-as-you-go using our credit system.</p>
+            <button onClick={handleGetPremium} className="btn-primary" style={{ padding: '12px 32px', fontSize: '15px', background: 'var(--green)', border: 'none', cursor: 'pointer' }}>
+              GET PREMIUM
+            </button>
+          </div>
+
+          <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', marginBottom: '24px', textAlign: 'center' }}>Experience premium features</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '50px' }}>
+            {[
+              { title: 'Zero Ads', desc: 'Stream your music without any audio or visual advertisements. Total focus on the tunes.', icon: '🚫' },
+              { title: 'Lossless Studio Audio', desc: 'Enjoy high-fidelity 24-bit / 96kHz FLAC audio, preserving every detail from the mix studio.', icon: '🎚️' },
+              { title: 'Offline Caching', desc: 'Save up to 8GB of music files directly to your mobile storage. Perfect for flights or remote zones.', icon: '📥' },
+              { title: 'Direct Tipping', desc: 'Unlock mid-listen tipping. Your support enters the cascade split directly to creator wallets.', icon: '🪙' },
+            ].map((item, idx) => (
+              <div key={idx} className="glass-panel" style={{ padding: '20px', borderRadius: '3px', background: 'rgba(16,185,129,0.01)', border: '1px solid rgba(16,185,129,0.06)' }}>
+                <span style={{ fontSize: '24px', display: 'block', marginBottom: '12px' }}>{item.icon}</span>
+                <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px' }}>{item.title}</h4>
+                <p style={{ color: 'var(--mu)', fontSize: '12px', margin: 0, lineHeight: '1.5' }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', marginBottom: '24px', textAlign: 'center' }}>Choose your Premium option</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '50px' }}>
+            {[
+              { name: 'Individual', price: 'Deducts 1 credit / stream', desc: 'For single listeners. 1 active device offline caching. Lossless streaming.', buttonText: 'Get Individual' },
+              { name: 'Duo', price: 'Deducts 1.8 credits / stream', desc: '2 Premium accounts. Shared playlist mix. 2 devices offline caching.', buttonText: 'Get Duo' },
+              { name: 'Family', price: 'Deducts 2.5 credits / stream', desc: 'Up to 6 Premium accounts. Kids player portal. Family mix playlist.', buttonText: 'Get Family' },
+            ].map((plan, idx) => (
+              <div key={idx} className="glass-panel" style={{ padding: '28px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px' }}>{plan.name}</h4>
+                  <span style={{ color: 'var(--cyan)', fontSize: '13px', fontWeight: 'bold', display: 'block', marginBottom: '16px' }}>{plan.price}</span>
+                  <p style={{ color: 'var(--mu)', fontSize: '12px', margin: '0 0 20px', lineHeight: '1.5' }}>{plan.desc}</p>
+                </div>
+                <button onClick={handleGetPremium} className="btn-primary" style={{ padding: '10px', width: '100%', fontSize: '13px', background: 'transparent', border: '1px solid var(--green)', color: '#fff', cursor: 'pointer' }}>
+                  {plan.buttonText}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '24px', borderRadius: '3px' }}>
+            <p style={{ color: 'var(--mu)', fontSize: '12px', margin: 0 }}>
+              Premium consumption is billed directly to your shared Intermaven Network Credit balance. Credits are non-expiring. You can purchase credit top-up packages starting from $4.99 at any time in the <Link to="/pricing" style={{ color: 'var(--cyan)' }}>Pricing Panel</Link>.
+            </p>
+          </div>
+        </div>
+      );
+    };
+
+    const renderContent = () => {
+      switch (view) {
+        case 'explore':
+          return renderExplore();
+        case 'playlists':
+          return renderPlaylists();
+        case 'create-playlist':
+          return renderCreatePlaylist();
+        case 'browse-podcasts':
+          return renderBrowsePodcasts();
+        case 'apps':
+          return renderApps();
+        case 'free':
+          return renderFreePlan();
+        case 'premium':
+          return renderPremiumPlan();
+        case 'listen':
+        default:
+          return renderListen();
+      }
+    };
+
+    return (
+      <div 
+        className="native-app-landing tunestream-landing" 
+        style={{ background: getLandingBackground('tunestreams'), color: '#f1f5f9', minHeight: '100vh', padding: '60px 0 100px' }}
+      >
+        <div className="container">
+          {renderContent()}
+        </div>
       </div>
     );
   }
@@ -2407,7 +2845,7 @@ function NativeAppLandingView() {
   return (
     <div
       className="native-app-landing"
-      style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow, background: getLandingBackground(slug) }}
+      style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow, background: getLandingBackground(normalizedSlug) }}
       data-testid={`native-app-landing-${data.slug}`}
     >
       {/* HERO CAROUSEL  -  same pattern as HomeView */}
@@ -3722,7 +4160,7 @@ function RegisterView({ onLogin }) {
       if (path.includes('/for/supervisor')) return ['studio'];
       if (path.includes('/for/booking-agent')) return ['label'];
       if (path.includes('/for/manager')) return ['creator', 'label'];
-      if (path.includes('/native-apps/tunestreams') || path.includes('/native-apps/tunemavens')) return ['consumer'];
+      if (path.includes('/native-apps/tunestreams') || path.includes('/native-apps/tunestream') || path.includes('/native-apps/tunemavens')) return ['consumer'];
       if (path.includes('/native-apps/creator-companion')) return ['creator'];
       if (path.includes('/native-apps/tunepay')) return ['label'];
       return [];
