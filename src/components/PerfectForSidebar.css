@@ -83,9 +83,13 @@
 }
 
 .pf-tile:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--pf-accent) !important;
   transform: translateY(-4px) scale(1.02) !important;
-  gap: 2px !important; /* pull items closer together vertically on hover */
+  gap: 2px !important;
+}
+.pf-tile:hover .pf-tile-label {
+  color: var(--pf-accent) !important;
 }
 
 .pf-tile-active {

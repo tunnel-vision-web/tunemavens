@@ -88,8 +88,10 @@ function Navbar({ sessionUser }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [appsDropdownOpen, setAppsDropdownOpen] = useState(false);
+  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const appsDropdownRef = useRef(null);
+  const aboutDropdownRef = useRef(null);
   const [scrolled, setScrolled] = useState(false);
 
   const getRoleLogoForPath = (pathname) => {
@@ -131,6 +133,9 @@ function Navbar({ sessionUser }) {
       if (appsDropdownRef.current && !appsDropdownRef.current.contains(e.target)) {
         setAppsDropdownOpen(false);
       }
+      if (aboutDropdownRef.current && !aboutDropdownRef.current.contains(e.target)) {
+        setAboutDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
@@ -140,14 +145,28 @@ function Navbar({ sessionUser }) {
     <nav className="navbar">
       <div className="nav-inner-container">
         {activeRoleLogo ? (
-          <div className="nav-logo-container-role">
+          <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px', padding: '6px 0' }}>
             <img 
               src={activeRoleLogo.logo} 
               alt={`${activeRoleLogo.roleKey} Logo`} 
               className="logo-image-role"
+              style={{ display: 'block' }}
             />
-            <Link to="/" className="back-to-main" onClick={() => setMobileOpen(false)}>
-              ← Back to TuneMavens
+            <Link 
+              to="/" 
+              onClick={(e) => {
+                setMobileOpen(false);
+                if (document.referrer && document.referrer.includes(window.location.host)) {
+                  e.preventDefault();
+                  window.history.back();
+                } else if (window.history.state && window.history.state.idx > 0) {
+                  e.preventDefault();
+                  window.history.back();
+                }
+              }} 
+              style={{ fontSize: '11px', color: 'var(--mu)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+            >
+              &lt;&lt; a tunemavens utility
             </Link>
           </div>
         ) : (
@@ -217,14 +236,26 @@ function Navbar({ sessionUser }) {
               Pricing
             </Link>
           </li>
-          <li>
-            <Link 
-              to="/for" 
-              className={`nav-link ${isActive('/for') ? 'active' : ''}`}
-              onClick={() => setMobileOpen(false)}
+          <li className="dropdown-container" ref={aboutDropdownRef}>
+            <button 
+              className={`nav-link dropdown-trigger ${isActive('/about') || isActive('/for') ? 'active' : ''}`} 
+              onClick={() => { setDropdownOpen(false); setAppsDropdownOpen(false); setAboutDropdownOpen(!aboutDropdownOpen); }}
             >
-              Perfect For
-            </Link>
+              About
+              <ChevronDown size={14} />
+            </button>
+            <ul className={`dropdown-menu ${aboutDropdownOpen ? 'open' : ''}`}>
+              <li>
+                <Link to="/about" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/for" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
+                  Perfect For
+                </Link>
+              </li>
+            </ul>
           </li>
           {/* Dropdown Menu */}
           <li className="dropdown-container" ref={dropdownRef}>
@@ -2732,6 +2763,104 @@ function PerfectForPageView() {
 
 
 
+// ================= About & Contact View =================
+function AboutView() {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    if (email) {
+      setSubmitted(true);
+      setEmail('');
+    }
+  };
+
+  return (
+    <>
+      <PageHeader title="Bridging Music & High Tech" bgImage={headerAboutImg} bgImageWestern={headerAboutWesternImg} breadcrumb="About Us" />
+      <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
+        <p className="section-desc" style={{ textAlign: 'center', marginBottom: '40px', maxWidth: '700px', margin: '0 auto 40px' }}>
+          TuneMavens was founded to build modern technology infrastructure for independent global artists, record labels, and publishers.
+        </p>
+
+      <div className="arch-card glass-panel" style={{ marginBottom: '80px' }}>
+        <div>
+          <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '16px' }}>Consolidating Creative Workflows</h3>
+          <p style={{ fontSize: '14px', color: 'var(--mu)', lineHeight: '1.6', marginBottom: '24px' }}>
+            All operations are designed to be seamless. In partnership with Intermaven.io, TuneMavens connects your payment records, custom domains, and AI tasks to a single, secure central profile database, avoiding the hassle of managing disjointed web tools.
+          </p>
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Shared M-Pesa & Stripe checkout integrations</li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Automatic EPK sync to public DNS records</li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Instant cross-subdomain authentication</li>
+          </ul>
+        </div>
+        <div className="arch-visual">
+          <div className="arch-node active">
+            <div className="arch-node-icon"><Lock size={18} /></div>
+            <div className="arch-node-info">
+              <h4 className="arch-node-title">Secure Subdomain Auth</h4>
+              <p className="arch-node-desc">Unified JWT session tokens shared across all portal environments.</p>
+            </div>
+          </div>
+          <div className="arch-node">
+            <div className="arch-node-icon"><Database size={18} /></div>
+            <div className="arch-node-info">
+              <h4 className="arch-node-title">Consolidated Database</h4>
+              <p className="arch-node-desc">Profiles and notification registries remain synchronized in real-time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Form */}
+      <div className="section-header" style={{ marginBottom: '40px' }}>
+        <span className="section-label">Contact Us</span>
+        <h2 className="section-title">Send a Message</h2>
+      </div>
+
+      <div className="contact-card glass-panel">
+        {submitted ? (
+          <div className="text-center" style={{ padding: '20px 0' }}>
+            <Check size={48} color="var(--cyan)" style={{ margin: '0 auto 16px' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Thank you!</h3>
+            <p style={{ fontSize: '14px', color: 'var(--mu)' }}>We have received your message and will respond shortly.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleContactSubmit}>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email" 
+                className="form-control" 
+                required 
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Message</label>
+              <textarea 
+                rows="4" 
+                placeholder="Enter your message details..." 
+                className="form-control" 
+                style={{ resize: 'none' }}
+                required
+              ></textarea>
+            </div>
+            <button type="submit" className="btn-primary" style={{ width: '100%', padding: '12px' }}>
+              Send Message
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  </>
+);
+}
+
 // ================= Help Center & FAQ View =================
 function HelpView() {
   const faqs = [
@@ -3132,13 +3261,14 @@ function StreamView() {
 
 function RegisterView({ onLogin }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const roleLabels = {
     consumer: 'Consumer',
     creator: 'Creator',
     label: 'Record Label',
     dj: 'DJ',
-    studio: 'Film Studio',
+    studio: 'Music Supervisor',
     corporate: 'Corporate',
     media: 'Media House',
   };
@@ -3242,12 +3372,46 @@ function RegisterView({ onLogin }) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const roleParam = params.get('role');
+    
+    const getPreselectedRolesForPath = (path) => {
+      if (!path) return [];
+      if (path.includes('/for/creator')) return ['creator'];
+      if (path.includes('/for/exec')) return ['label'];
+      if (path.includes('/for/supervisor')) return ['studio'];
+      if (path.includes('/for/booking-agent')) return ['label'];
+      if (path.includes('/for/manager')) return ['creator', 'label'];
+      if (path.includes('/native-apps/tunemavens')) return ['consumer'];
+      if (path.includes('/native-apps/creator-companion')) return ['creator'];
+      if (path.includes('/native-apps/tunepay')) return ['label'];
+      return [];
+    };
+
+    let preselected = [];
     if (roleParam && ['consumer', 'creator', 'label', 'dj', 'studio', 'corporate', 'media'].includes(roleParam)) {
-      setRoles(prev => prev.includes(roleParam) ? prev : [...prev, roleParam]);
-      // Skip selection step if at beginning
+      preselected = [roleParam];
+    } else {
+      const fromPath = location.state?.from || '';
+      preselected = getPreselectedRolesForPath(fromPath);
+      
+      if (preselected.length === 0 && document.referrer) {
+        try {
+          const refUrl = new URL(document.referrer);
+          preselected = getPreselectedRolesForPath(refUrl.pathname);
+        } catch (e) {}
+      }
+    }
+
+    if (preselected.length > 0) {
+      setRoles(prev => {
+        const merged = [...prev];
+        preselected.forEach(r => {
+          if (!merged.includes(r)) merged.push(r);
+        });
+        return merged;
+      });
       setStep(prev => prev === 0 ? 1 : prev);
     }
-  }, []);
+  }, [location]);
 
   // Sync states to sessionStorage on changes
   useEffect(() => { sessionStorage.setItem('signup_roles', JSON.stringify(roles)); }, [roles]);
@@ -3297,7 +3461,7 @@ function RegisterView({ onLogin }) {
     creator: ['Creative Style', 'Bio & Gallery', 'Discography Ingest', 'Compensation & E-Sign'],
     label: ['Company Info', 'Roster Ingest', 'Default Splits'],
     dj: ['DJ Profile', 'HQ Music Pool', 'IP Clearance Engine'],
-    studio: ['Studio Details', 'Sync Brief AI Search'],
+    studio: ['Supervisor Details', 'Sync Brief AI Search'],
     corporate: ['Brand Campaign', 'Budget Options'],
     media: ['Broadcaster Info', 'Playlist Compliance'],
   };
@@ -3366,8 +3530,8 @@ function RegisterView({ onLogin }) {
       alert('Please specify your primary DJ mixing style.');
       return;
     }
-    if (currentStepName === 'Studio Details' && !name) {
-      alert('Please specify your production company name.');
+    if (currentStepName === 'Supervisor Details' && !name) {
+      alert('Please specify your production or company name.');
       return;
     }
     if (currentStepName === 'Brand Campaign' && !corpBrand) {
@@ -3579,6 +3743,19 @@ function RegisterView({ onLogin }) {
       onClick={handleBackdropClick}
     >
       <div className="auth-modal-card" style={{ cursor: 'default' }}>
+        <button 
+          onClick={handleResetRegistration}
+          className="auth-reset-btn"
+        >
+          Reset
+        </button>
+        <button 
+          onClick={toggleAiMode}
+          className={`ai-toggle-btn ${isAiMode ? 'active' : ''}`}
+          style={{ border: '1px solid rgba(139, 92, 246, 0.4)' }}
+        >
+          ✨ {isAiMode ? 'Standard Mode' : 'AI Onboarding'}
+        </button>
         
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
           <img src="/favicon.png" alt="TuneMavens Icon" style={{ width: '42px', height: '42px', display: 'block' }} />
@@ -3592,19 +3769,6 @@ function RegisterView({ onLogin }) {
           <p style={{ fontSize: '12px', color: 'var(--mu)', textAlign: 'left', margin: 0 }}>
             {isAiMode ? 'Talk with Ayo to onboard' : `Step ${step + 1} of ${steps.length}: ${steps[step] || ''}`}
           </p>
-          <button 
-            onClick={handleResetRegistration}
-            className="auth-reset-btn"
-          >
-            Reset
-          </button>
-          <button 
-            onClick={toggleAiMode}
-            className={`ai-toggle-btn ${isAiMode ? 'active' : ''}`}
-            style={{ border: '1px solid rgba(139, 92, 246, 0.4)' }}
-          >
-            ✨ {isAiMode ? 'Standard Mode' : 'AI Onboarding'}
-          </button>
         </div>
 
         {/* Wizard Steps Indicators (Standard Mode) */}
@@ -3721,7 +3885,7 @@ function RegisterView({ onLogin }) {
                         { id: 'creator', emoji: '🎸', title: 'Creator', desc: 'Artist, producer, sync & splits' },
                         { id: 'label', emoji: '🏢', title: 'Record Label', desc: 'Roster & bulk catalogue splits' },
                         { id: 'dj', emoji: '🎚️', title: 'DJ', desc: 'HQ lossless pools & stem clearances' },
-                        { id: 'studio', emoji: '🎬', title: 'Film Studio', desc: 'Browse syncs & AI music briefs' },
+                        { id: 'studio', emoji: '🎬', title: 'Music Supervisor', desc: 'Browse syncs & AI music briefs' },
                         { id: 'corporate', emoji: '📈', title: 'Corporate', desc: 'Audio ads, sponsorships & partnerships' },
                         { id: 'media', emoji: '📺', title: 'Media House', desc: 'Broadcast licensing & compliance' }
                       ].map(opt => {
@@ -4071,12 +4235,12 @@ function RegisterView({ onLogin }) {
               </div>
             )}
 
-            {/* Studio: Studio Details */}
-            {currentStepName === 'Studio Details' && (
+            {/* Studio: Supervisor Details */}
+            {currentStepName === 'Supervisor Details' && (
               <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'left' }}>
-                <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '14px' }}>Film studio / production details:</p>
+                <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '14px' }}>Music supervisor / production details:</p>
                 <div className="form-group" style={{ marginBottom: '12px' }}>
-                  <label className="form-label" style={{ fontSize: '11px', marginBottom: '4px', display: 'block', color: 'var(--mu)' }}>Production Company Name</label>
+                  <label className="form-label" style={{ fontSize: '11px', marginBottom: '4px', display: 'block', color: 'var(--mu)' }}>Company or Organization Name</label>
                   <input type="text" placeholder="e.g. Apex Cinema Group" value={name} onChange={(e) => setName(e.target.value)} className="form-control" style={{ fontSize: '13px', padding: '8px 12px' }} required />
                 </div>
               </div>
@@ -6425,65 +6589,12 @@ function EscrowContractsPanel({ payoutBalance, setPayoutBalance }) {
   );
 }
 
-// ================= Main App Component =================
-function App() {
+// ================= Main App Content Component =================
+function AppContent({ sessionUser, handleLogin, handleLogout, getFooterLocation }) {
   const [scrolled, setScrolled] = useState(false);
   const { country } = useRegion();
-  const [sessionUser, setSessionUser] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem('tunemavens_session');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const handleLogin = (user) => {
-    setSessionUser(user);
-    sessionStorage.setItem('tunemavens_session', JSON.stringify(user));
-  };
-
-  const handleLogout = async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // ignore  -  clear local state regardless so the user is logged out client-side
-    }
-    tokenStore.clear();
-    setSessionUser(null);
-    sessionStorage.removeItem('tunemavens_session');
-  };
-
-  // Recognises your Intermaven session when you land on the TuneMavens app.
-  // On mount, ask the backend if there's a valid session  -  covers users
-  // arriving from intermaven.io with a shared HttpOnly cookie, or returning
-  // users whose Bearer token is still in sessionStorage.
-  useEffect(() => {
-    let cancelled = false;
-    const token = tokenStore.get();
-    authApi.me(token).then((user) => {
-      if (cancelled) return;
-      const merged = { ...user };
-      setSessionUser(merged);
-      sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
-    }).catch(() => {
-      // No valid session  -  leave sessionUser as-is (might be null, might be a
-      // local-only stub from the legacy Google-SSO stub flow).
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  const getFooterLocation = (code) => {
-    switch(code) {
-      case 'US': return 'Atlanta, USA';
-      case 'GB': return 'London, UK';
-      case 'NG': return 'Lagos, Nigeria';
-      case 'ZA': return 'Johannesburg, South Africa';
-      case 'UG': return 'Kampala, Uganda';
-      case 'TZ': return 'Dar es Salaam, Tanzania';
-      default: return 'Nairobi, Kenya';
-    }
-  };
+  const location = useLocation();
+  const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -6493,24 +6604,41 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (location.pathname !== '/login' && location.pathname !== '/register') {
+      setLastNonAuthPath(location.pathname);
+    }
+  }, [location.pathname]);
+
+  const isAuthModalActive = location.pathname === '/login' || location.pathname === '/register';
+  const backgroundLocation = isAuthModalActive ? { pathname: lastNonAuthPath } : location;
+
   return (
-    <Router>
-      <div className={`app-landing-wrapper ${scrolled ? 'scrolled' : ''}`}>
+    <div style={{ position: 'relative', width: '100%', minHeight: '100vh' }}>
+      <div 
+        className={`app-landing-wrapper ${scrolled ? 'scrolled' : ''}`}
+        style={{ 
+          opacity: isAuthModalActive ? 0.8 : 1, 
+          transition: 'opacity 0.3s ease',
+          pointerEvents: isAuthModalActive ? 'none' : 'auto'
+        }}
+      >
         <Navbar sessionUser={sessionUser} />
 
-        <Routes>
+        <Routes location={backgroundLocation}>
           <Route path="/" element={<HomeView sessionUser={sessionUser} />} />
           <Route path="/tools" element={<ToolsView sessionUser={sessionUser} />} />
           <Route path="/apps" element={<AppsView sessionUser={sessionUser} />} />
           <Route path="/native-apps" element={<NativeAppsView />} />
           <Route path="/native-apps/:slug" element={<NativeAppLandingView />} />
-           <Route path="/for" element={<PerfectForPageView />} />
+          <Route path="/for" element={<PerfectForPageView />} />
           <Route path="/for/:role" element={<RoleLandingView />} />
-           <Route path="/pricing" element={<PricingView />} />
+          <Route path="/pricing" element={<PricingView />} />
+          <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView />} />
           <Route path="/stream" element={<StreamView />} />
-          <Route path="/login" element={<LoginView onLogin={handleLogin} />} />
-          <Route path="/register" element={<RegisterView onLogin={handleLogin} />} />
+          <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
+          <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/dashboard/*" element={<DashboardView sessionUser={sessionUser} onLogout={handleLogout} onUpdateUser={handleLogin} />} />
         </Routes>
 
@@ -6559,9 +6687,11 @@ function App() {
                 <div style={{ display: 'inline-block', textAlign: 'left' }}>
                   <h4>Company</h4>
                   <div className="footer-links">
+                    <Link to="/about" className="footer-link">About Us</Link>
                     <Link to="/for" className="footer-link">Perfect For</Link>
                     <a href="#blog" className="footer-link" onClick={() => alert('Blog coming soon')}>Blog</a>
                     <a href="#careers" className="footer-link" onClick={() => alert('Careers coming soon')}>Careers</a>
+                    <Link to="/about" className="footer-link">Contact</Link>
                   </div>
                 </div>
               </div>
@@ -6612,8 +6742,82 @@ function App() {
           </div>
         </footer>
       </div>
-    </Router>
-  )
+
+      {/* Render modals on top, outside the wrapper so they aren't affected by its opacity */}
+      {isAuthModalActive && (
+        <div className="auth-modal-overlay-wrapper">
+          <Routes>
+            <Route path="/login" element={<LoginView onLogin={handleLogin} />} />
+            <Route path="/register" element={<RegisterView onLogin={handleLogin} />} />
+          </Routes>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+// ================= Main App Component =================
+function App() {
+  const [sessionUser, setSessionUser] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('tunemavens_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogin = (user) => {
+    setSessionUser(user);
+    sessionStorage.setItem('tunemavens_session', JSON.stringify(user));
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore  -  clear local state regardless so the user is logged out client-side
+    }
+    tokenStore.clear();
+    setSessionUser(null);
+    sessionStorage.removeItem('tunemavens_session');
+  };
+
+  // Recognises your Intermaven session when you land on the TuneMavens app.
+  useEffect(() => {
+    let cancelled = false;
+    const token = tokenStore.get();
+    authApi.me(token).then((user) => {
+      if (cancelled) return;
+      const merged = { ...user };
+      setSessionUser(merged);
+      sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const getFooterLocation = (code) => {
+    switch(code) {
+      case 'US': return 'Atlanta, USA';
+      case 'GB': return 'London, UK';
+      case 'NG': return 'Lagos, Nigeria';
+      case 'ZA': return 'Johannesburg, South Africa';
+      case 'UG': return 'Kampala, Uganda';
+      case 'TZ': return 'Dar es Salaam, Tanzania';
+      default: return 'Nairobi, Kenya';
+    }
+  };
+
+  return (
+    <Router>
+      <AppContent 
+        sessionUser={sessionUser}
+        handleLogin={handleLogin}
+        handleLogout={handleLogout}
+        getFooterLocation={getFooterLocation}
+      />
+    </Router>
+  );
+}
+
+export default App;

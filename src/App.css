@@ -1709,8 +1709,8 @@
 
 .ai-toggle-btn {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: 12px;
+  right: 12px;
   background: rgba(139, 92, 246, 0.15);
   border: 1px solid rgba(139, 92, 246, 0.4);
   color: #fff;
@@ -1733,8 +1733,8 @@
 
 .auth-reset-btn {
   position: absolute;
-  top: -8px;
-  right: 125px; /* Placed exactly to the left of the AI toggle button */
+  top: 12px;
+  left: 12px;
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.35);
   color: #fff;
@@ -3753,22 +3753,24 @@
 }
 
 .pf-tile:hover {
-  background: var(--pf-accent);
+  background: #131a2e;
   border-color: var(--pf-accent);
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 14px 28px -16px var(--pf-accent);
+  box-shadow: none;
 }
 
 .pf-tile:hover .pf-tile-logo {
-  background: rgba(0, 0, 0, 0.18);
-  border-color: rgba(0, 0, 0, 0.28);
-  color: #0b0f1e;
+  background: transparent;
+  border-color: transparent;
+  color: inherit;
   transform: scale(1.08);
 }
 
-.pf-tile:hover .pf-tile-label,
+.pf-tile:hover .pf-tile-label {
+  color: var(--pf-accent);
+}
 .pf-tile:hover .pf-tile-sub {
-  color: #0b0f1e;
+  color: #94a3b8;
 }
 
 .pf-tile-active {
@@ -3803,4 +3805,22 @@
 @keyframes pfContinuousScroll {
   0% { transform: translateY(0) !important; }
   100% { transform: translateY(-50%) !important; }
+}
+
+.auth-modal-overlay-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(6, 8, 19, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.auth-modal-overlay-wrapper .container {
+  transform: translateY(-20px);
 }
