@@ -52,6 +52,7 @@ import headerAppsWesternImg from './assets/images/header_apps_western.png'
 import headerPricingWesternImg from './assets/images/header_pricing_western.png'
 import headerAboutWesternImg from './assets/images/header_about_western.png'
 import headerHelpWesternImg from './assets/images/header_help_western.png'
+import perfectForHeaderImg from './assets/images/perfect_for_header.png'
 
 import userSongwriterImg from './assets/images/user_songwriter.png'
 import userProducerImg from './assets/images/user_producer.png'
@@ -2615,6 +2616,8 @@ function RoleLandingView() {
 }
 // ================= Perfect For Page View =================
 function PerfectForPageView() {
+  const [previewImage, setPreviewImage] = useState(null);
+
   const metaRoles = [
     {
       key: 'creator',
@@ -2623,7 +2626,8 @@ function PerfectForPageView() {
       href: '/for/creator',
       logo: ROLE_LOGOS['creator'],
       accent: 'var(--cyan)',
-      desc: 'Designed for artists, DJs, and podcasters. Effortlessly calculate split sheets, manage your music library, and pitch your tracks to filmmakers and sync agents—all from one single console.'
+      desc: 'Designed for artists, DJs, and podcasters. Effortlessly calculate split sheets, manage your music library, and pitch your tracks to filmmakers and sync agents—all from one single console.',
+      preview: creatorDashboardImg
     },
     {
       key: 'exec',
@@ -2632,7 +2636,8 @@ function PerfectForPageView() {
       href: '/for/exec',
       logo: ROLE_LOGOS['exec'],
       accent: 'var(--purple)',
-      desc: 'For record labels, A&R managers, and industry leaders. Manage your entire artist catalog, track royalty splits, ingest statement CSV files, and automate payouts to artists and managers.'
+      desc: 'For record labels, A&R managers, and industry leaders. Manage your entire artist catalog, track royalty splits, ingest statement CSV files, and automate payouts to artists and managers.',
+      preview: distributeHeroImg
     },
     {
       key: 'supervisor',
@@ -2641,7 +2646,8 @@ function PerfectForPageView() {
       href: '/for/supervisor',
       logo: ROLE_LOGOS['supervisor'],
       accent: 'var(--am)',
-      desc: 'Sync licensing and AI scene-tagging made simple. Search our curated catalog of watermarked tracks, find the perfect vibe for your film or TV project, and secure sync rights instantly.'
+      desc: 'Sync licensing and AI scene-tagging made simple. Search our curated catalog of watermarked tracks, find the perfect vibe for your film or TV project, and secure sync rights instantly.',
+      preview: appsSyncImg
     },
     {
       key: 'consumer',
@@ -2650,7 +2656,8 @@ function PerfectForPageView() {
       href: '/native-apps/tunemavens',
       logo: ROLE_LOGOS['consumer'],
       accent: 'var(--gr)',
-      desc: 'Our consumer streaming app. Listen to your favorite tracks, support creators directly with direct-tipping, and sync your music collection offline across all your mobile devices.'
+      desc: 'Our consumer streaming app. Listen to your favorite tracks, support creators directly with direct-tipping, and sync your music collection offline across all your mobile devices.',
+      preview: consumerAppImg
     },
     {
       key: 'booking-agent',
@@ -2659,7 +2666,8 @@ function PerfectForPageView() {
       href: '/for/booking-agent',
       logo: ROLE_LOGOS['booking-agent'],
       accent: 'var(--blue)',
-      desc: 'Represent and book your live acts. Route gig contracts, coordinate agent commission payouts, and view tour routing maps all integrated with local payment rails.'
+      desc: 'Represent and book your live acts. Route gig contracts, coordinate agent commission payouts, and view tour routing maps all integrated with local payment rails.',
+      preview: appsLedgerImg
     },
     {
       key: 'manager',
@@ -2668,7 +2676,8 @@ function PerfectForPageView() {
       href: '/for/manager',
       logo: ROLE_LOGOS['manager'],
       accent: '#ef4444',
-      desc: 'Manage the day-to-day operations of your artist roster. Real-time split visibility, contract drafting tools, and automated payouts to keep your management business running smoothly.'
+      desc: 'Manage the day-to-day operations of your artist roster. Real-time split visibility, contract drafting tools, and automated payouts to keep your management business running smoothly.',
+      preview: userManagerImg
     },
     {
       key: 'companion',
@@ -2677,7 +2686,8 @@ function PerfectForPageView() {
       href: '/native-apps/creator-companion',
       logo: ROLE_LOGOS['companion'],
       accent: 'var(--purple)',
-      desc: 'The essential mobile companion app for artists and managers. Monitor splits on the fly, track live earnings, and receive real-time sync brief alerts right on your phone.'
+      desc: 'The essential mobile companion app for artists and managers. Monitor splits on the fly, track live earnings, and receive real-time sync brief alerts right on your phone.',
+      preview: appsSyncImg
     }
   ];
 
@@ -2685,8 +2695,8 @@ function PerfectForPageView() {
     <>
       <PageHeader 
         title="Perfect For Every Seat in the Industry" 
-        bgImage={headerAboutImg} 
-        bgImageWestern={headerAboutWesternImg} 
+        bgImage={perfectForHeaderImg} 
+        bgImageWestern={perfectForHeaderImg} 
         breadcrumb="Perfect For" 
       />
       <div className="container" style={{ padding: '60px 20px 80px' }}>
@@ -2703,13 +2713,32 @@ function PerfectForPageView() {
               <h3 className="pf-card-title">{role.label}</h3>
               <span className="pf-card-eyebrow" style={{ color: role.accent }}>{role.sub}</span>
               <p className="pf-card-desc">{role.desc}</p>
-              <Link to={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
-                Explore Seat →
-              </Link>
+              
+              <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link to={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
+                  Explore Seat
+                </Link>
+                <button 
+                  onClick={() => setPreviewImage(role.preview)} 
+                  className="btn pf-card-cta outline"
+                  style={{ '--pf-accent': role.accent, cursor: 'pointer', background: 'transparent' }}
+                >
+                  Dash Preview
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
+
+      {previewImage && (
+        <div className="pf-modal-overlay" onClick={() => setPreviewImage(null)}>
+          <div className="pf-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="pf-modal-close" onClick={() => setPreviewImage(null)}>×</button>
+            <img src={previewImage} alt="Dashboard Preview" className="pf-modal-img" />
+          </div>
+        </div>
+      )}
     </>
   );
 }
