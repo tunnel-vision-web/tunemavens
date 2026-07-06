@@ -104,7 +104,7 @@ function Navbar({ sessionUser }) {
     if (pathname === '/native-apps/creator-companion') {
       return { logo: ROLE_LOGOS['companion'], roleKey: 'companion' };
     }
-    if (pathname === '/native-apps/tunemavens') {
+    if (pathname === '/native-apps/tunestreams') {
       return { logo: ROLE_LOGOS['consumer'], roleKey: 'consumer' };
     }
     if (pathname === '/native-apps/tunepay') {
@@ -151,7 +151,7 @@ function Navbar({ sessionUser }) {
 
   // Conditional Menu rendering
   const renderNavLinks = () => {
-    if (currentPath === '/native-apps/tunemavens') {
+    if (currentPath === '/native-apps/tunestreams') {
       return (
         <>
           <li>
@@ -181,7 +181,7 @@ function Navbar({ sessionUser }) {
           </li>
           <li>
             <Link to="/" className="nav-link" style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '4px', color: '#10b981' }} onClick={() => setMobileOpen(false)}>
-              Return to TuneMavens
+              Return to TuneStreams
             </Link>
           </li>
         </>
@@ -349,7 +349,7 @@ function Navbar({ sessionUser }) {
               }} 
               style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center', marginTop: '-12px' }}
             >
-              &lt;&lt; a tunemavens utility
+              {currentPath.includes('/native-apps/tunestreams') ? '<< a tunestreams utility' : '<< a tunemavens utility'}
             </Link>
           </div>
         ) : (
@@ -1782,11 +1782,11 @@ function MpesaPosTerminal({ goBack }) {
 // targeting + CTAs specific to that app's user. `bgKey` resolves to one of
 // the image imports at the top of this file via the HERO_IMAGE_MAP below.
 const NATIVE_APP_LANDING_DATA = {
-  tunemavens: {
-    slug: 'tunemavens',
+  tunestreams: {
+    slug: 'tunestreams',
     name: 'tunestream',
     target: 'For listeners',
-    accent: 'var(--gr)',
+    accent: '#10b981',
     accentGlow: 'rgba(16, 185, 129, 0.18)',
     icon: 'Headphones',
     heroSlides: [
@@ -2162,12 +2162,12 @@ function NativeAppLandingView() {
     );
   };
 
-  if (slug === 'tunemavens') {
+  if (slug === 'tunestreams' || slug === 'tunemavens') {
     const activeAct = promotedActs[currentSlide % promotedActs.length] || null;
     return (
       <div 
         className="native-app-landing tunestream-landing" 
-        style={{ background: getLandingBackground('tunemavens'), color: '#f1f5f9' }}
+        style={{ background: getLandingBackground('tunestreams'), color: '#f1f5f9' }}
       >
         {/* HERO CAROUSEL featuring Promoted Acts */}
         <div className="hw" id="hero">
@@ -3010,11 +3010,11 @@ function PerfectForPageView() {
     },
     {
       key: 'consumer',
-      label: 'tunestream',
+      label: 'tunestreams',
       sub: 'Everyday listeners',
-      href: '/native-apps/tunemavens',
+      href: '/native-apps/tunestreams',
       logo: ROLE_LOGOS['consumer'],
-      accent: 'var(--gr)',
+      accent: '#10b981',
       desc: 'Our consumer streaming app. Listen to your favorite tracks, support creators directly with direct-tipping, and sync your music collection offline across all your mobile devices.',
       preview: consumerAppImg
     },
@@ -3461,10 +3461,10 @@ function StreamView() {
         <div className="stream-app-banner" data-testid="stream-app-banner">
           <div className="stream-app-banner-text">
             <span className="stream-app-banner-eyebrow">Prefer mobile?</span>
-            <span className="stream-app-banner-title">This is the web build of the TuneMavens listener app.</span>
+            <span className="stream-app-banner-title">This is the web build of the TuneStreams listener app.</span>
             <span className="stream-app-banner-sub">Same library, same tips, same account  -  just sized for your pocket.</span>
           </div>
-          <Link to="/native-apps/tunemavens" className="stream-app-banner-cta" data-testid="stream-app-banner-cta">
+          <Link to="/native-apps/tunestreams" className="stream-app-banner-cta" data-testid="stream-app-banner-cta">
             <Smartphone size={14} /> Get the native app
           </Link>
         </div>
@@ -3722,7 +3722,7 @@ function RegisterView({ onLogin }) {
       if (path.includes('/for/supervisor')) return ['studio'];
       if (path.includes('/for/booking-agent')) return ['label'];
       if (path.includes('/for/manager')) return ['creator', 'label'];
-      if (path.includes('/native-apps/tunemavens')) return ['consumer'];
+      if (path.includes('/native-apps/tunestreams') || path.includes('/native-apps/tunemavens')) return ['consumer'];
       if (path.includes('/native-apps/creator-companion')) return ['creator'];
       if (path.includes('/native-apps/tunepay')) return ['label'];
       return [];
@@ -5314,40 +5314,41 @@ import {
 // "Perfect for" sidebar  -  rendered on all landing/marketing routes.
 import { PerfectForSidebar, PERFECT_FOR_ROLES, ROLE_LOGOS } from './components/PerfectForSidebar.jsx'
 
-// Landing page customized background gradients (dark theme)
+// Landing page customized solid background colors (dark theme)
 function getLandingBackground(slug) {
   switch (slug) {
+    case 'tunestreams':
     case 'tunemavens':
-      return 'linear-gradient(180deg, #020710 0%, #061120 40%, #020710 100%)';
+      return '#070e1b'; // dark midnight teal/blue
     case 'creator-companion':
-      return 'linear-gradient(180deg, #070311 0%, #100620 40%, #070311 100%)';
+      return '#0e071a'; // dark amethyst/purple
     case 'tunepay':
-      return 'linear-gradient(180deg, #010a07 0%, #041810 40%, #010a07 100%)';
+      return '#05120e'; // dark forest green
     case 'sync-master':
-      return 'linear-gradient(180deg, #030310 0%, #080720 40%, #030310 100%)';
+      return '#080816'; // dark navy
     default:
-      return 'linear-gradient(180deg, #060813 0%, #0B0E20 40%, #060813 100%)';
+      return '#0b0f20';
   }
 }
 
 function getRoleLandingBackground(role) {
   switch (role) {
     case 'creator':
-      return 'linear-gradient(180deg, #0a0410 0%, #1b0c2a 40%, #0a0410 100%)';
+      return '#10051a';
     case 'supervisor':
-      return 'linear-gradient(180deg, #020b12 0%, #061d30 40%, #020b12 100%)';
+      return '#05101a';
     case 'label':
-      return 'linear-gradient(180deg, #0c0802 0%, #201505 40%, #0c0802 100%)';
+      return '#140d04';
     case 'booking':
-      return 'linear-gradient(180deg, #080a02 0%, #171b05 40%, #080a02 100%)';
+      return '#0b1404';
     case 'manager':
-      return 'linear-gradient(180deg, #0a0208 0%, #1f0518 40%, #0a0208 100%)';
+      return '#140410';
     case 'exec':
-      return 'linear-gradient(180deg, #02080a 0%, #051a1f 40%, #02080a 100%)';
+      return '#040e14';
     case 'dj':
-      return 'linear-gradient(180deg, #090209 0%, #1d051d 40%, #090209 100%)';
+      return '#120412';
     default:
-      return 'linear-gradient(180deg, #060813 0%, #0B0E20 40%, #060813 100%)';
+      return '#060813';
   }
 }
 

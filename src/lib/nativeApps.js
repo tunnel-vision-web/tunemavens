@@ -9,11 +9,11 @@ export const INTERMAVEN_NATIVE_APPS = [
   {
     id: 'consumer',
     slug: 'intermaven-tunemavens',
-    landingPath: '/native-apps/tunemavens',
+    landingPath: '/native-apps/tunestreams',
     name: 'tunestream',
     tagline: 'Stream. Tip. Carry the catalogue.',
     icon: Headphones,
-    accent: 'var(--gr)',
+    accent: '#10b981',
     accentGlow: 'rgba(16, 185, 129, 0.18)',
     desc: 'The consumer-facing wrapper: offline-cached HQ audio, region-aware playlists, and one-tap tipping that lands directly in the creator\u2019s payout split.',
     features: ['Offline-cached HQ audio', 'One-tap tipping to creators', 'Region-aware editorial playlists', 'Shared credits vault with intermaven.io'],
