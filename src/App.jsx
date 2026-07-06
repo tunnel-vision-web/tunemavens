@@ -207,13 +207,8 @@ function Navbar({ sessionUser }) {
             </Link>
           </li>
           <li>
-            <Link to="/help" className="nav-link" onClick={() => setMobileOpen(false)}>
+            <Link to="/native-apps/tunestreams?view=help" className="nav-link" onClick={() => setMobileOpen(false)}>
               Support & Community
-            </Link>
-          </li>
-          <li>
-            <Link to="/" className="nav-link" style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '4px', color: '#10b981' }} onClick={() => setMobileOpen(false)}>
-              Return to TuneMavens
             </Link>
           </li>
         </>
@@ -2223,7 +2218,38 @@ function NativeAppLandingView() {
   };
 
   if (normalizedSlug === 'tunestreams') {
-    const activeAct = promotedActs[currentSlide % promotedActs.length] || null;
+
+    const renderHeader = (title, breadcrumb) => {
+      return (
+        <div 
+          className="page-header-banner" 
+          style={{ 
+            backgroundImage: `url(${tunestreamHeaderImg})`, 
+            backgroundSize: 'cover', 
+            backgroundPosition: 'center', 
+            borderRadius: '3px',
+            overflow: 'hidden', 
+            marginBottom: '40px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            position: 'relative',
+            minHeight: '200px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <div className="page-header-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(7, 14, 27, 0.8)', zIndex: 1 }} />
+          <div className="page-header-content" style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '40px 24px' }}>
+            <h1 className="page-header-title" style={{ fontSize: '32px', fontWeight: '800', color: '#fff', margin: 0 }}>{title}</h1>
+            <div className="page-header-breadcrumb" style={{ marginTop: '12px', fontSize: '13px', color: 'var(--mu)', display: 'flex', justifyContent: 'center', gap: '6px', alignItems: 'center' }}>
+              <Link to="/native-apps/tunestreams?view=listen" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>TuneStreams</Link>
+              <span>/</span>
+              <span style={{ color: '#fff' }}>{breadcrumb}</span>
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     const renderListen = () => {
       return (
@@ -2237,19 +2263,21 @@ function NativeAppLandingView() {
               backgroundImage: `url(${tunestreamHeaderImg})`, 
               backgroundSize: 'cover', 
               backgroundPosition: 'center', 
-              borderRadius: '8px', 
+              borderRadius: '3px', 
               overflow: 'hidden', 
               marginBottom: '40px',
               boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
               display: 'flex',
               alignItems: 'center',
-              minHeight: '380px'
+              justifyContent: 'center',
+              minHeight: '380px',
+              textAlign: 'center'
             }}
           >
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(7, 14, 27, 0.95) 0%, rgba(7, 14, 27, 0.7) 50%, rgba(7, 14, 27, 0.2) 100%)', zIndex: 1 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle, rgba(7, 14, 27, 0.7) 0%, rgba(7, 14, 27, 0.95) 100%)', zIndex: 1 }} />
             
-            <div style={{ position: 'relative', zIndex: 2, maxWidth: '550px', textAlign: 'left' }}>
-              <div className="he hbadge" style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', padding: '6px 12px', borderRadius: '20px', marginBottom: '20px' }}>
+            <div style={{ position: 'relative', zIndex: 2, maxWidth: '650px', margin: '0 auto' }}>
+              <div className="he hbadge" style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', padding: '6px 12px', borderRadius: '20px', marginBottom: '20px', justifyContent: 'center' }}>
                 <span className="bdot" style={{ background: '#10b981', animation: 'pulseGlow 2s infinite' }} />
                 <span>streams.tunemavens.com · Subdomain Active</span>
               </div>
@@ -2260,7 +2288,7 @@ function NativeAppLandingView() {
               <p className="hp hsub" style={{ fontSize: '15px', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '24px' }}>
                 High-fidelity FLAC audio and direct creator support. Stream cellular-aware, tip mid-track, and share your credits vault across all devices.
               </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                 <Link to="/stream" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                   <Play size={16} fill="currentColor" /> Stream Web Player
                 </Link>
@@ -2473,7 +2501,7 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left' }}>
-          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Explore Creators</h2>
+          {renderHeader('Explore Creators', 'Explore')}
           <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px' }}>Discover new talent and verify their splits on the Intermaven shared ledger.</p>
           
           <div style={{ marginBottom: '30px', position: 'relative', maxWidth: '400px' }}>
@@ -2505,11 +2533,9 @@ function NativeAppLandingView() {
     const renderPlaylists = () => {
       return (
         <div style={{ textAlign: 'left' }}>
+          {renderHeader('My Playlists', 'Library / Playlists')}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div>
-              <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', marginBottom: '4px' }}>My Playlists</h2>
-              <p style={{ color: 'var(--mu)', fontSize: '14px' }}>Access your personalized streams and custom crates.</p>
-            </div>
+            <p style={{ color: 'var(--mu)', fontSize: '14px', margin: 0 }}>Access your personalized streams and custom crates.</p>
             <Link to="/native-apps/tunestreams?view=create-playlist" className="btn-primary" style={{ padding: '10px 16px', textDecoration: 'none' }}>
               + Create Playlist
             </Link>
@@ -2575,67 +2601,69 @@ function NativeAppLandingView() {
       ];
 
       return (
-        <div style={{ textAlign: 'left', maxWidth: '500px', margin: '0 auto' }} className="glass-panel">
-          <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>Create Playlist</h2>
-          <p style={{ color: 'var(--mu)', fontSize: '13px', marginBottom: '24px' }}>Set up a new mix to organize your favorite lossless studio tracks.</p>
-          
-          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>Playlist Name *</label>
-              <input 
-                type="text" 
-                value={newPlaylistName}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-                placeholder="e.g. Acoustic Chill, Roadtrip Vibes" 
-                style={{ width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', outline: 'none' }}
-                required
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>Description</label>
-              <textarea 
-                value={newPlaylistDesc}
-                onChange={(e) => setNewPlaylistDesc(e.target.value)}
-                placeholder="Describe your playlist..." 
-                rows="3"
-                style={{ width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', outline: 'none', resize: 'vertical' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>Select Theme Art Color</label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                {bgOptions.map((opt, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setNewPlaylistBg(opt.val)}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '3px',
-                      background: opt.val,
-                      border: newPlaylistBg === opt.val ? '2px solid #fff' : '2px solid transparent',
-                      cursor: 'pointer',
-                      boxShadow: newPlaylistBg === opt.val ? '0 0 10px rgba(255,255,255,0.5)' : 'none',
-                      transition: 'all 0.2s ease',
-                    }}
-                    title={opt.label}
-                  />
-                ))}
+        <div style={{ textAlign: 'left' }}>
+          {renderHeader('Create Playlist', 'Library / Create')}
+          <div style={{ maxWidth: '500px', margin: '0 auto' }} className="glass-panel">
+            <p style={{ color: 'var(--mu)', fontSize: '13px', marginBottom: '24px' }}>Set up a new mix to organize your favorite lossless studio tracks.</p>
+            
+            <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>Playlist Name *</label>
+                <input 
+                  type="text" 
+                  value={newPlaylistName}
+                  onChange={(e) => setNewPlaylistName(e.target.value)}
+                  placeholder="e.g. Acoustic Chill, Roadtrip Vibes" 
+                  style={{ width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', outline: 'none' }}
+                  required
+                />
               </div>
-            </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-              <button type="submit" className="btn-primary" style={{ flex: 1, padding: '12px', border: 'none', cursor: 'pointer' }}>
-                Create Playlist
-              </button>
-              <Link to="/native-apps/tunestreams?view=playlists" className="plan-btn outline" style={{ flex: 1, padding: '12px', textAlign: 'center', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff' }}>
-                Cancel
-              </Link>
-            </div>
-          </form>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>Description</label>
+                <textarea 
+                  value={newPlaylistDesc}
+                  onChange={(e) => setNewPlaylistDesc(e.target.value)}
+                  placeholder="Describe your playlist..." 
+                  rows="3"
+                  style={{ width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', outline: 'none', resize: 'vertical' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>Select Theme Art Color</label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  {bgOptions.map((opt, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setNewPlaylistBg(opt.val)}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '3px',
+                        background: opt.val,
+                        border: newPlaylistBg === opt.val ? '2px solid #fff' : '2px solid transparent',
+                        cursor: 'pointer',
+                        boxShadow: newPlaylistBg === opt.val ? '0 0 10px rgba(255,255,255,0.5)' : 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      title={opt.label}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '12px', border: 'none', cursor: 'pointer' }}>
+                  Create Playlist
+                </button>
+                <Link to="/native-apps/tunestreams?view=playlists" className="plan-btn outline" style={{ flex: 1, padding: '12px', textAlign: 'center', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff' }}>
+                  Cancel
+                </Link>
+              </div>
+            </form>
+          </div>
         </div>
       );
     };
@@ -2650,7 +2678,7 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left' }}>
-          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Browse Podcasts</h2>
+          {renderHeader('Browse Podcasts', 'Library / Podcasts')}
           <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px' }}>Listen to tech talks, artist masterclasses, and field recordings from around the network.</p>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
@@ -2669,35 +2697,66 @@ function NativeAppLandingView() {
 
     const renderApps = () => {
       const appListing = [
-        { title: 'TuneStream Mobile', desc: 'The consumer streaming client with high-fidelity FLAC audio and 8GB offline caching.', platforms: 'iOS & Android (Capacitor)', actionText: 'Get listings', link: '#download' },
-        { title: 'Creator Companion', desc: 'Real-time metrics, split cascade ledger tracking, and instant payout status.', platforms: 'iOS, Android & Web', actionText: 'View info', link: '/native-apps/creator-companion' },
-        { title: 'TunePay POS', desc: 'Live event ticketing, point-of-sale merch tools, and geo-gated settlement rails.', platforms: 'iOS & Android tablet', actionText: 'View info', link: '/native-apps/tunepay' },
+        { title: 'TuneStream Mobile', desc: 'The consumer streaming client with high-fidelity FLAC audio and 8GB offline caching.', platforms: 'iOS & Android (Capacitor)', icon: Headphones, accent: '#10b981' },
+        { title: 'Creator Companion', desc: 'Real-time metrics, split cascade ledger tracking, and instant payout status.', platforms: 'iOS & Android', icon: TrendingUp, accent: '#8b5cf6' },
+        { title: 'TunePay POS', desc: 'Live event ticketing, point-of-sale merch tools, and geo-gated settlement rails.', platforms: 'iOS & Android tablet', icon: CreditCard, accent: '#0ea5e9' },
       ];
 
       return (
         <div style={{ textAlign: 'left' }}>
-          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>TuneStreams App Catalog</h2>
-          <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '32px' }}>Download the companion native platforms for listener and creator operations.</p>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
-            {appListing.map((ap, idx) => (
-              <div key={idx} className="glass-panel" style={{ padding: '28px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)' }}>
-                <div>
-                  <span style={{ color: 'var(--cyan)', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.05em' }}>{ap.platforms}</span>
-                  <h3 style={{ fontSize: '20px', color: '#fff', margin: '8px 0 12px', fontWeight: '800' }}>{ap.title}</h3>
-                  <p style={{ fontSize: '13px', color: 'var(--mu)', marginBottom: '20px', lineHeight: '1.5' }}>{ap.desc}</p>
+          {renderHeader('TuneStreams Apps', 'Apps')}
+
+          {/* Description Content Box */}
+          <div className="glass-panel" style={{ padding: '24px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '18px', color: '#fff', fontWeight: 'bold', marginBottom: '8px' }}>Ecosystem App Distribution</h3>
+            <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
+              TuneStreams distributes native experiences across the shared Intermaven Network. Whether you are a listener caching music offline, an artist tracking split cascades, or a label managing merch sales, our apps keep your session and credits synchronized.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+            {appListing.map((ap, idx) => {
+              const Icon = ap.icon;
+              return (
+                <div key={idx} className="glass-panel" style={{ padding: '28px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)' }}>
+                  <div>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '3px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ap.accent, marginBottom: '16px' }}>
+                      <Icon size={24} />
+                    </div>
+                    <span style={{ color: 'var(--mu)', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.05em' }}>{ap.platforms}</span>
+                    <h3 style={{ fontSize: '20px', color: '#fff', margin: '8px 0 12px', fontWeight: '800' }}>{ap.title}</h3>
+                    <p style={{ fontSize: '13px', color: '#cbd5e1', marginBottom: '24px', lineHeight: '1.5' }}>{ap.desc}</p>
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <button 
+                      type="button" 
+                      className="store-cta" 
+                      onClick={() => alert(`App Store listing for ${ap.title} coming in Phase 5+.`)}
+                      style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '3px', color: '#fff', textAlign: 'left', width: '100%', outline: 'none' }}
+                    >
+                      <Apple size={20} />
+                      <div>
+                        <div style={{ fontSize: '8px', opacity: 0.6 }}>Download on the</div>
+                        <div style={{ fontSize: '11px', fontWeight: 'bold' }}>App Store</div>
+                      </div>
+                    </button>
+                    <button 
+                      type="button" 
+                      className="store-cta" 
+                      onClick={() => alert(`Google Play listing for ${ap.title} coming in Phase 5+.`)}
+                      style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '3px', color: '#fff', textAlign: 'left', width: '100%', outline: 'none' }}
+                    >
+                      <Download size={20} />
+                      <div>
+                        <div style={{ fontSize: '8px', opacity: 0.6 }}>Get it on</div>
+                        <div style={{ fontSize: '11px', fontWeight: 'bold' }}>Google Play</div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
-                {ap.link.startsWith('#') ? (
-                  <button className="btn-primary" style={{ padding: '10px', textAlign: 'center', border: 'none', cursor: 'pointer', borderRadius: '3px' }} onClick={() => alert('Download links coming in Phase 5+')}>
-                    Download App
-                  </button>
-                ) : (
-                  <Link to={ap.link} className="btn-primary" style={{ padding: '10px', textAlign: 'center', textDecoration: 'none', borderRadius: '3px' }}>
-                    {ap.actionText}
-                  </Link>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );
@@ -2711,6 +2770,7 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
+          {renderHeader('TuneStream Free', 'Plans / Free')}
           <div style={{ textAlign: 'center', padding: '60px 20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(7, 14, 27, 0.5) 100%)', border: '1px solid rgba(16, 185, 129, 0.1)', borderRadius: '8px', marginBottom: '40px' }}>
             <span style={{ color: 'var(--green)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.1em' }}>TuneStream Free</span>
             <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: '900', margin: '12px 0' }}>Music for everyone.</h2>
@@ -2753,6 +2813,7 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
+          {renderHeader('TuneStream Premium', 'Plans / Premium')}
           <div style={{ textAlign: 'center', padding: '60px 20px', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.05) 0%, rgba(7, 14, 27, 0.5) 100%)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '8px', marginBottom: '40px' }}>
             <span style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.1em' }}>TuneStream Premium</span>
             <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: '900', margin: '12px 0' }}>Go Premium. Stream without limits.</h2>
@@ -2807,6 +2868,76 @@ function NativeAppLandingView() {
       );
     };
 
+    const renderHelp = () => {
+      const musicFaqs = [
+        { q: "How are my TuneStream credits deducted?", a: "Credits are shared across the Intermaven network. For Premium accounts, standard listening deducts 1 credit per stream in Western regions and 0.1 credits in other regions. Tipping creators deducts credits equivalent to the tip amount." },
+        { q: "How do I download music for offline listening?", a: "Long-press any album or playlist, then tap 'Download'. You can configure your local cache limit (up to 8GB) in the Player & Devices settings menu." },
+        { q: "Does tipping really go directly to the artist?", a: "Yes. Mid-listen tips bypass traditional streaming distributors. They enter the Compensation Engine split cascade instantly, and funds are settled directly to creator wallets within 24 hours." },
+        { q: "Can I use my account on multiple devices?", a: "Yes. Your shared credits vault, library, and settings sync automatically across web players and our native iOS/Android applications." }
+      ];
+
+      const forumTopics = [
+        { title: "Audio Quality: FLAC vs. AAC on cellular data", replies: "24 replies", category: "General Discussion" },
+        { title: "Tip jar suggestions for independent labels", replies: "15 replies", category: "Creator Support" },
+        { title: "Off-grid performance in remote regions", replies: "38 replies", category: "Technical Help" }
+      ];
+
+      return (
+        <div style={{ textAlign: 'left' }}>
+          {renderHeader('Support & Community', 'Support')}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginBottom: '50px' }}>
+            {/* Help FAQs */}
+            <div>
+              <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: '800', marginBottom: '20px' }}>Frequently Asked Questions</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {musicFaqs.map((faq, idx) => (
+                  <div key={idx} className="faq-item glass-panel" style={{ padding: '20px', borderRadius: '3px' }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>{faq.q}</h4>
+                    <p style={{ fontSize: '12px', color: 'var(--mu)', lineHeight: '1.5', margin: 0 }}>{faq.a}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Forum & Blog */}
+            <div>
+              <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: '800', marginBottom: '20px' }}>Community Forum Discussions</h3>
+              <div className="glass-panel" style={{ padding: '24px', borderRadius: '3px', marginBottom: '30px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {forumTopics.map((topic, idx) => (
+                    <div key={idx} style={{ borderBottom: idx < forumTopics.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none', paddingBottom: idx < forumTopics.length - 1 ? '12px' : 0 }}>
+                      <span style={{ fontSize: '10px', color: 'var(--cyan)', textTransform: 'uppercase', fontWeight: 'bold' }}>{topic.category}</span>
+                      <h4 style={{ fontSize: '13px', color: '#fff', margin: '4px 0', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => alert(`Opening topic: ${topic.title}`)}>{topic.title}</h4>
+                      <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{topic.replies}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Submit a ticket */}
+              <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: '800', marginBottom: '20px' }}>Submit a Support Ticket</h3>
+              <div className="glass-panel" style={{ padding: '24px', borderRadius: '3px' }}>
+                <form onSubmit={(e) => { e.preventDefault(); alert('TuneStream support ticket submitted successfully!'); }}>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label" style={{ fontSize: '12px', color: '#fff', display: 'block', marginBottom: '4px' }}>Subject</label>
+                    <input type="text" placeholder="E.g. Offline download issue" className="form-control" style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff' }} required />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label" style={{ fontSize: '12px', color: '#fff', display: 'block', marginBottom: '4px' }}>Description</label>
+                    <textarea rows="3" placeholder="Explain the problem..." className="form-control" style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', resize: 'none' }} required></textarea>
+                  </div>
+                  <button type="submit" className="btn-primary" style={{ width: '100%', padding: '10px', border: 'none', cursor: 'pointer', background: 'var(--green)' }}>
+                    Submit Ticket
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     const renderContent = () => {
       switch (view) {
         case 'explore':
@@ -2823,6 +2954,8 @@ function NativeAppLandingView() {
           return renderFreePlan();
         case 'premium':
           return renderPremiumPlan();
+        case 'help':
+          return renderHelp();
         case 'listen':
         default:
           return renderListen();
