@@ -19,9 +19,9 @@ persistent **"Perfect for" sidebar** (§9.5.2) on desktop.
 | Route | Purpose | Audience | Status |
 |---|---|---|---|
 | `/` | Root marketing (Music Operations & AI Suite) | General / Intermaven brand | ✅ Shipped |
-| `/native-apps/tunemavens` | **TuneMavens listeners app landing — THE main consumer landing** | Consumers / fans | ✅ Shipped |
-| `/native-apps/creator-companion` | Creator Companion native app | Creators (mobile promo) | ✅ Shipped |
-| `/native-apps/mpesa-pos` | M-Pesa POS native app | Merchants | ✅ Shipped |
+| `/native-apps/tunemavens` | **tunestream listeners app landing — THE main consumer landing** | Consumers / fans | ✅ Shipped |
+| `/native-apps/creator-companion` | tunecompanion native app | Creators (mobile promo) | ✅ Shipped |
+| `/native-apps/tunepay` | tunepay native app | Merchants | ✅ Shipped |
 | `/native-apps` | Gallery of all native apps | All | ✅ Shipped |
 | `/tools` | AI Tools catalogue | All | ✅ Shipped |
 | `/apps` | Dashboard apps catalogue | All | ✅ Shipped |

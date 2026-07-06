@@ -18,9 +18,9 @@ const TUNEMAVENS_APPS = [
   { slug: 'escrow-contracts', name: 'Escrow Contracts', icon: Shield, accent: '#a78bfa', tab: 'escrow' },
   { slug: 'tunemavens-library', name: 'My Library', icon: Music, accent: '#22d3ee', tab: 'library' },
   { slug: 'tunemavens-tips', name: 'Tips & Purchases', icon: Coins, accent: '#10b981', tab: 'tips' },
-  { slug: 'mpesa-pos-inventory', name: 'POS Inventory', icon: Database, accent: '#10b981', tab: 'pos-inventory' },
-  { slug: 'mpesa-pos-settlement', name: 'POS Settlement', icon: Coins, accent: '#10b981', tab: 'pos-settlement' },
-  { slug: 'mpesa-pos-devices', name: 'POS Devices', icon: Smartphone, accent: '#10b981', tab: 'pos-devices' },
+  { slug: 'tunepay-inventory', name: 'POS Inventory', icon: Database, accent: '#10b981', tab: 'pos-inventory' },
+  { slug: 'tunepay-settlement', name: 'POS Settlement', icon: Coins, accent: '#10b981', tab: 'pos-settlement' },
+  { slug: 'tunepay-devices', name: 'POS Devices', icon: Smartphone, accent: '#10b981', tab: 'pos-devices' },
 ];
 
 const NATIVE_LOOKUP = INTERMAVEN_NATIVE_APPS.map((a) => ({

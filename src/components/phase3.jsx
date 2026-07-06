@@ -1253,14 +1253,14 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
     { slug: 'escrow-contracts', name: 'Escrow Contracts', desc: 'Hold funds in escrow until contractual milestones clear.', icon: Shield, accent: 'var(--purple)', tab: 'escrow', roles: ['creator', 'studio', 'supervisor', 'admin'] },
     { slug: 'tunemavens-library', name: 'My Library', desc: 'Personal media library — playlists, downloads, and offline cache.', icon: Music, accent: 'var(--cyan)', tab: 'library', roles: ['creator', 'consumer', 'dj', 'admin'] },
     { slug: 'tunemavens-tips', name: 'Tips & Purchases', desc: 'See incoming tips and your TuneMavens app purchases.', icon: Coins, accent: '#10b981', tab: 'tips', roles: ['creator', 'consumer', 'dj', 'admin'] },
-    { slug: 'mpesa-pos-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: Database, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'admin'] },
-    { slug: 'mpesa-pos-settlement', name: 'POS Settlement', desc: 'Reconcile M-Pesa POS settlement runs against your ledger.', icon: Coins, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
-    { slug: 'mpesa-pos-devices', name: 'POS Devices', desc: 'Pair and manage M-Pesa POS hardware tied to your account.', icon: Smartphone, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'admin'] },
+    { slug: 'tunepay-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: Database, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'admin'] },
+    { slug: 'tunepay-settlement', name: 'POS Settlement', desc: 'Reconcile tunepay settlement runs against your ledger.', icon: Coins, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
+    { slug: 'tunepay-devices', name: 'POS Devices', desc: 'Pair and manage tunepay hardware tied to your account.', icon: Smartphone, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'admin'] },
   ];
 
   const visible = catalogue.filter((a) => a.roles.includes(role));
   const recommendedSlugs = role === 'label'
-    ? ['catalog-porting', 'distribution-election', 'mpesa-pos-inventory']
+    ? ['catalog-porting', 'distribution-election', 'tunepay-inventory']
     : role === 'dj'
       ? ['djpool', 'tunemavens-library']
       : role === 'studio' || role === 'supervisor'

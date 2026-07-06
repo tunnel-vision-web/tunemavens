@@ -107,6 +107,9 @@ function Navbar({ sessionUser }) {
     if (pathname === '/native-apps/tunemavens') {
       return { logo: ROLE_LOGOS['consumer'], roleKey: 'consumer' };
     }
+    if (pathname === '/native-apps/tunepay') {
+      return { logo: ROLE_LOGOS['tunepay'], roleKey: 'tunepay' };
+    }
     return null;
   };
 
@@ -1479,7 +1482,7 @@ function MpesaPosTerminal({ goBack }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '24px' }}>📱</span>
           <div style={{ textAlign: 'left' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 }}>{typeName} POS Terminal</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 }}>tunepay POS Terminal</h2>
             <p style={{ fontSize: '11px', color: 'var(--mu)', margin: 0 }}>Collect client payments directly to your local wallet</p>
           </div>
         </div>
@@ -1680,18 +1683,18 @@ function MpesaPosTerminal({ goBack }) {
 const NATIVE_APP_LANDING_DATA = {
   tunemavens: {
     slug: 'tunemavens',
-    name: 'TuneMavens',
+    name: 'tunestream',
     target: 'For listeners',
-    accent: 'var(--cyan)',
-    accentGlow: 'rgba(34, 211, 238, 0.18)',
+    accent: 'var(--gr)',
+    accentGlow: 'rgba(16, 185, 129, 0.18)',
     icon: 'Headphones',
     heroSlides: [
       {
-        dot: '#22d3ee',
+        dot: '#10b981',
         badge: 'Streaming & Library · iOS / Android',
         hLine1: 'Carry the catalogue.',
         hLine2: 'Even off-grid.',
-        hLine2Color: '#22d3ee',
+        hLine2Color: '#10b981',
         s: 'Cache 8GB of HQ FLAC locally. Stream cellular-aware. Your library follows you between Wi-Fi, 4G, and no-signal subways.',
         b1: 'Download on App Store',
         b1action: 'appstore',
@@ -1726,7 +1729,7 @@ const NATIVE_APP_LANDING_DATA = {
         bgKey: 'distributeHero',
       },
     ],
-    lede: 'A consumer music app built around the African catalogue \u2014 offline HQ audio, region-aware editorial playlists, and a tip jar that pays the creator directly through the shared TuneMavens / Intermaven split ledger.',
+    lede: 'A consumer music app built around the African catalogue \u2014 offline HQ audio, region-aware editorial playlists, and a tip jar that pays the creator directly through the shared tunestream / Intermaven split ledger.',
     webEquivalent: { label: 'Use the web player', to: '/stream' },
     adminLink: { label: 'Manage your library', to: '/dashboard' },
     features: [
@@ -1734,11 +1737,11 @@ const NATIVE_APP_LANDING_DATA = {
       { title: 'One-tap creator tipping', desc: 'Send a tip mid-track \u2014 it flows through the Compensation Engine and lands in the creator\u2019s wallet within 24h.' },
       { title: 'Region-aware playlists', desc: 'Editorial picks tailored to your detected market: Naija, EA, SA, US/UK and beyond.' },
       { title: 'Smart discovery', desc: 'AI surfaces tracks that pair with what you already love, weighted by your follow list.' },
-      { title: 'Shared credits vault', desc: 'Your TuneMavens credits work on intermaven.io tools too \u2014 one account, one balance.' },
-      { title: 'Live event drops', desc: 'Get notified when an artist you follow lists tickets or merch on the M-Pesa POS network.' },
+      { title: 'Shared credits vault', desc: 'Your tunestream credits work on intermaven.io tools too \u2014 one account, one balance.' },
+      { title: 'Live event drops', desc: 'Get notified when an artist you follow lists tickets or merch on the tunepay network.' },
     ],
     howItWorks: [
-      { step: '01', title: 'Sign in once', body: 'Use your existing TuneMavens / Intermaven account \u2014 no separate native-app credentials.' },
+      { step: '01', title: 'Sign in once', body: 'Use your existing tunestream / Intermaven account \u2014 no separate native-app credentials.' },
       { step: '02', title: 'Pick three creators', body: 'During onboarding you follow 3 creators; your home feed seeds from their catalogue and collaborators.' },
       { step: '03', title: 'Stream or download', body: 'Tap to stream, long-press to cache offline. Toggle data-saver in regions where bandwidth is metered.' },
       { step: '04', title: 'Support directly', body: 'Tip, buy, or pre-save. Every interaction is logged in the creator\u2019s ledger you can verify in their EPK.' },
@@ -1748,7 +1751,7 @@ const NATIVE_APP_LANDING_DATA = {
       { quote: 'Offline mode survived my whole 6-hour matatu ride. Bandwidth-aware caching actually works.', author: 'Brian, Nairobi', role: 'Daily commuter' },
     ],
     faq: [
-      { q: 'Is TuneMavens free to use?', a: 'Yes \u2014 listening and tipping are free. The free tier includes 150 signup credits used across the wider Intermaven network.' },
+      { q: 'Is tunestream free to use?', a: 'Yes \u2014 listening and tipping are free. The free tier includes 150 signup credits used across the wider Intermaven network.' },
       { q: 'How are creators paid when I tip?', a: 'Tips enter the Compensation Engine cascade (Commission \u2192 Label \u2192 Artist \u2192 Manager \u2192 Investor). The split is governed by the creator\u2019s signed contract on file.' },
       { q: 'Can I switch between web and native?', a: 'Yes \u2014 the web player lives at /stream and shares the same session, library, and tip history.' },
       { q: 'Which devices are supported?', a: 'iOS 15+ and Android 9+. The native shells are Capacitor-wrapped, so the same engine runs on both platforms.' },
@@ -1758,7 +1761,7 @@ const NATIVE_APP_LANDING_DATA = {
   },
   'creator-companion': {
     slug: 'creator-companion',
-    name: 'Creator Companion',
+    name: 'tunecompanion',
     target: 'For artists & managers',
     accent: 'var(--purple)',
     accentGlow: 'rgba(139, 92, 246, 0.18)',
@@ -1834,9 +1837,9 @@ const NATIVE_APP_LANDING_DATA = {
     ],
     pricingLine: 'Bundled with Creator Package · 1,200 credits · $29.99 one-time',
   },
-  'mpesa-pos': {
-    slug: 'mpesa-pos',
-    name: 'M-Pesa POS',
+  tunepay: {
+    slug: 'tunepay',
+    name: 'tunepay',
     target: 'For labels & venues',
     accent: '#10b981',
     accentGlow: 'rgba(16, 185, 129, 0.18)',
@@ -1844,11 +1847,11 @@ const NATIVE_APP_LANDING_DATA = {
     heroSlides: [
       {
         dot: '#10b981',
-        badge: 'M-Pesa STK · Daraja',
+        badge: 'tunepay STK · Daraja',
         hLine1: 'Sell at the show.',
         hLine2: 'Settle by morning.',
         hLine2Color: '#10b981',
-        s: 'M-Pesa STK Push closes in under 10 seconds. Settlement runs the Compensation Engine cascade overnight \u2014 artist payouts hit by 7am.',
+        s: 'tunepay STK Push closes in under 10 seconds. Settlement runs the Compensation Engine cascade overnight \u2014 artist payouts hit by 7am.',
         b1: 'Provision POS App',
         b1action: 'appstore',
         b2: 'Open the Web POS',
@@ -1861,7 +1864,7 @@ const NATIVE_APP_LANDING_DATA = {
         hLine1: 'Tap, scan, or text.',
         hLine2: 'Every payment rail.',
         hLine2Color: '#22d3ee',
-        s: 'Stripe Terminal in US/UK. Flutterwave in Nigeria. M-Pesa in Kenya. The app picks the rail by detected country \u2014 zero config.',
+        s: 'Stripe Terminal in US/UK. Flutterwave in Nigeria. tunepay in Kenya. The app picks the rail by detected country \u2014 zero config.',
         b1: 'Get on Google Play',
         b1action: 'googleplay',
         b2: 'See Bulk Label Pricing',
@@ -1882,11 +1885,11 @@ const NATIVE_APP_LANDING_DATA = {
         bgKey: 'heroMusic2',
       },
     ],
-    lede: 'A portable point-of-sale for live events: merch, ticket scans, CD/vinyl. M-Pesa STK Push, card-present, and digital-wallet acceptance \u2014 all geo-routed to the right settlement rail per region.',
+    lede: 'A portable point-of-sale for live events: merch, ticket scans, CD/vinyl. tunepay STK Push, card-present, and digital-wallet acceptance \u2014 all geo-routed to the right settlement rail per region.',
     webEquivalent: { label: 'Open the web POS', to: '/apps' },
     adminLink: { label: 'Manage inventory & settlements', to: '/dashboard' },
     features: [
-      { title: 'M-Pesa STK Push', desc: 'Live Daraja integration. Customers enter PIN on their phone \u2014 checkout completes in under 10 seconds.' },
+      { title: 'tunepay STK Push', desc: 'Live Daraja integration. Customers enter PIN on their phone \u2014 checkout completes in under 10 seconds.' },
       { title: 'Card present + wallet', desc: 'Tap-to-pay via Stripe Terminal for Western markets; Flutterwave for Nigeria; mobile money for EA.' },
       { title: 'Merch & ticket modes', desc: 'Switch between SKU-based merch sales and barcode/QR ticket validation per event session.' },
       { title: 'Per-event settlement', desc: 'Daily settlement reports broken down by SKU, payment method, and per-artist commission cascade.' },
@@ -1901,11 +1904,11 @@ const NATIVE_APP_LANDING_DATA = {
     ],
     testimonials: [
       { quote: 'We sold 240 t-shirts and 60 vinyls in one night with two phones. The settlement report was in my inbox by 7am.', author: 'DJ Afro\u2019s tour ops', role: 'Live event · Nairobi' },
-      { quote: 'Switched from a clunky Square terminal. The M-Pesa flow alone closed the gap on every cash-only segment of our crowd.', author: 'Lagos label ops', role: 'Independent label' },
+      { quote: 'Switched from a clunky Square terminal. The tunepay flow alone closed the gap on every cash-only segment of our crowd.', author: 'Lagos label ops', role: 'Independent label' },
     ],
     faq: [
       { q: 'Do I need special hardware?', a: 'No \u2014 runs on any iOS 15+ or Android 9+ device. Optional thermal printer, barcode scanner, and Stripe BBPOS reader if you want them.' },
-      { q: 'Which countries are supported today?', a: 'Kenya (M-Pesa Daraja), Nigeria (Flutterwave), and US/UK (Stripe Terminal) at launch. ZA / UG / TZ ship in the next sprint.' },
+      { q: 'Which countries are supported today?', a: 'Kenya (tunepay Daraja), Nigeria (Flutterwave), and US/UK (Stripe Terminal) at launch. ZA / UG / TZ ship in the next sprint.' },
       { q: 'How does the artist get paid?', a: 'Every sale fires the Compensation Engine cascade. Artist + manager + label shares are settled per the signed contracts on file.' },
       { q: 'Can I manage POS devices from the web?', a: 'Yes \u2014 the admin console has a dedicated POS Devices panel for provisioning, monitoring, and remote-wipe.' },
       { q: 'What happens if the device goes offline?', a: 'Payments queue locally with cryptographic receipts. They settle the instant the device reconnects.' },
@@ -2681,7 +2684,7 @@ function PerfectForPageView() {
     },
     {
       key: 'companion',
-      label: 'tune companion',
+      label: 'tunecompanion',
       sub: 'Artists & Managers',
       href: '/native-apps/creator-companion',
       logo: ROLE_LOGOS['companion'],
@@ -4735,12 +4738,12 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
       escrow: { id: 'escrow', label: 'Escrow Contracts', icon: Shield, category: 'Royalty Ledgers' },
       profile: { id: 'profile', label: 'Profile Settings', icon: Settings, category: 'Account' },
       // Native-app user controls (full editing parity with the apps)
-      library: { id: 'library', label: 'My Library', icon: Music, category: 'TuneMavens App' },
-      tips: { id: 'tips', label: 'Tips & Purchases', icon: Coins, category: 'TuneMavens App' },
-      'stream-controls': { id: 'stream-controls', label: 'Player & Devices', icon: Headphones, category: 'TuneMavens App' },
-      'pos-inventory': { id: 'pos-inventory', label: 'POS Inventory', icon: Database, category: 'M-Pesa POS App' },
-      'pos-settlement': { id: 'pos-settlement', label: 'POS Settlement', icon: Coins, category: 'M-Pesa POS App' },
-      'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: Smartphone, category: 'M-Pesa POS App' },
+      library: { id: 'library', label: 'My Library', icon: Music, category: 'tunestream' },
+      tips: { id: 'tips', label: 'Tips & Purchases', icon: Coins, category: 'tunestream' },
+      'stream-controls': { id: 'stream-controls', label: 'Player & Devices', icon: Headphones, category: 'tunestream' },
+      'pos-inventory': { id: 'pos-inventory', label: 'POS Inventory', icon: Database, category: 'tunepay' },
+      'pos-settlement': { id: 'pos-settlement', label: 'POS Settlement', icon: Coins, category: 'tunepay' },
+      'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: Smartphone, category: 'tunepay' },
       'publishing-election': { id: 'publishing-election', label: 'Publishing Election', icon: BookOpen, category: 'Royalty Ledgers' },
       'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: Globe, category: 'Royalty Ledgers' },
       'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: Zap, category: 'Apps & Marketplace' },

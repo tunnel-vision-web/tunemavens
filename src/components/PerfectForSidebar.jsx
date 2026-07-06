@@ -11,6 +11,7 @@ import syncLogo from '../assets/logos/sync-master-logo.png';
 import bookingLogo from '../assets/logos/tunebooking-logo.png';
 import managementLogo from '../assets/logos/tunemanagement-logo.png';
 import companionLogo from '../assets/logos/tunecompanion-logo.png';
+import tunepayLogo from '../assets/logos/tunepay-logo.png';
 
 export const ROLE_LOGOS = {
   creator: createLogo,
@@ -20,6 +21,7 @@ export const ROLE_LOGOS = {
   'booking-agent': bookingLogo,
   manager: managementLogo,
   companion: companionLogo,
+  tunepay: tunepayLogo,
 };
 
 export const PERFECT_FOR_ROLES = [
@@ -29,7 +31,7 @@ export const PERFECT_FOR_ROLES = [
   { key: 'consumer', label: 'tunestream', sub: 'Everyday listeners', href: '/native-apps/tunemavens', accent: 'var(--gr)' },
   { key: 'booking-agent', label: 'Booking Agents', sub: 'Book & represent live acts', href: '/for/booking-agent', accent: 'var(--blue)' },
   { key: 'manager', label: 'Managers', sub: 'Day-to-day artist teams', href: '/for/manager', accent: '#ef4444' },
-  { key: 'companion', label: 'tune companion', sub: 'Artists & Managers', href: '/native-apps/creator-companion', accent: 'var(--purple)' },
+  { key: 'companion', label: 'tunecompanion', sub: 'Artists & Managers', href: '/native-apps/creator-companion', accent: 'var(--purple)' },
 ];
 
 const LANDING_ROUTE_PREFIXES = [

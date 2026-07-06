@@ -46,7 +46,7 @@ export const INTERMAVEN_PLATFORM_APPS = [
   {
     slug: 'intermaven-pos-system',
     name: 'POS System',
-    desc: 'Web companion to the M-Pesa POS native app — inventory, settlement, and staff terminals.',
+    desc: 'Web companion to the tunepay native app — inventory, settlement, and staff terminals.',
     icon: ShoppingCart,
     accent: '#10b981',
     launchUrl: 'https://intermaven.io/pos',
@@ -55,7 +55,7 @@ export const INTERMAVEN_PLATFORM_APPS = [
   {
     slug: 'intermaven-invoicing-payments',
     name: 'Invoicing & Payments',
-    desc: 'Send M-Pesa invoices, accept cards, automate billing and reminders.',
+    desc: 'Send tunepay invoices, accept cards, automate billing and reminders.',
     icon: Receipt,
     accent: '#22d3ee',
     launchUrl: 'https://intermaven.io/invoicing',
