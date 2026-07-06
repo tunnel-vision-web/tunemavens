@@ -12,7 +12,7 @@ import bookingLogo from '../assets/logos/tunebooking-logo.png';
 import managementLogo from '../assets/logos/tunemanagement-logo.png';
 import companionLogo from '../assets/logos/tunecompanion-logo.png';
 
-const ROLE_LOGOS = {
+export const ROLE_LOGOS = {
   creator: createLogo,
   exec: syncLogo,
   supervisor: distributeLogo,

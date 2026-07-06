@@ -134,3 +134,125 @@
   font-size: 12px !important;
   color: var(--mu) !important;
 }
+
+/* Swapped logo container in navbar */
+.nav-logo-container-role {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.logo-image-role {
+  height: 35px !important; /* Prominent size */
+  width: auto !important;
+  display: block !important;
+}
+
+/* Back to TuneMavens button */
+.back-to-main {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: var(--tx) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  text-decoration: none !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  padding: 6px 14px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.2s ease !important;
+}
+
+.back-to-main:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateX(-2px) !important;
+}
+
+/* Perfect For Page grid & cards */
+.pf-grid-page {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+  gap: 24px !important;
+  margin-top: 40px !important;
+}
+
+.pf-card-page {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  padding: 32px 24px !important;
+  border-radius: 16px !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  position: relative !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.pf-card-page:hover {
+  transform: translateY(-6px) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--pf-accent) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.05) !important;
+}
+
+.pf-card-logo-container {
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 20px !important;
+}
+
+.pf-card-logo-img {
+  height: 36px !important; /* Prominent size on card */
+  width: auto !important;
+  display: block !important;
+}
+
+.pf-card-title {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  margin: 0 0 4px 0 !important;
+}
+
+.pf-card-eyebrow {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 16px !important;
+}
+
+.pf-card-desc {
+  font-size: 13px !important;
+  color: var(--mu) !important;
+  line-height: 1.6 !important;
+  margin-bottom: 24px !important;
+  flex-grow: 1 !important;
+}
+
+.pf-card-cta {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 20px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.pf-card-cta:hover {
+  background: var(--pf-accent) !important;
+  border-color: var(--pf-accent) !important;
+  color: #060813 !important;
+  box-shadow: 0 0 15px var(--pf-accent) !important;
+}

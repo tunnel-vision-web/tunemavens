@@ -87,9 +87,29 @@ function Navbar({ sessionUser }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [appsDropdownOpen, setAppsDropdownOpen] = useState(false);
+  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const appsDropdownRef = useRef(null);
+  const aboutDropdownRef = useRef(null);
   const [scrolled, setScrolled] = useState(false);
+
+  const getRoleLogoForPath = (pathname) => {
+    const roleMatch = pathname.match(/^\/for\/([^/]+)/);
+    if (roleMatch) {
+      const roleKey = roleMatch[1];
+      const logo = ROLE_LOGOS[roleKey];
+      if (logo) return { logo, roleKey };
+    }
+    if (pathname === '/native-apps/creator-companion') {
+      return { logo: ROLE_LOGOS['companion'], roleKey: 'companion' };
+    }
+    if (pathname === '/native-apps/tunemavens') {
+      return { logo: ROLE_LOGOS['consumer'], roleKey: 'consumer' };
+    }
+    return null;
+  };
+
+  const activeRoleLogo = getRoleLogoForPath(currentPath);
 
   const isActive = (path) => currentPath === path;
 
@@ -109,6 +129,9 @@ function Navbar({ sessionUser }) {
       if (appsDropdownRef.current && !appsDropdownRef.current.contains(e.target)) {
         setAppsDropdownOpen(false);
       }
+      if (aboutDropdownRef.current && !aboutDropdownRef.current.contains(e.target)) {
+        setAboutDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
@@ -117,13 +140,26 @@ function Navbar({ sessionUser }) {
   return (
     <nav className="navbar">
       <div className="nav-inner-container">
-        <Link to="/" className="nav-logo-container" onClick={() => setMobileOpen(false)}>
-          <img 
-            src={scrolled ? "/tunemavens-logo-teal.png" : "/tunemavens-logo-white.png"} 
-            alt="TuneMavens Logo" 
-            className="logo-image" 
-          />
-        </Link>
+        {activeRoleLogo ? (
+          <div className="nav-logo-container-role">
+            <img 
+              src={activeRoleLogo.logo} 
+              alt={`${activeRoleLogo.roleKey} Logo`} 
+              className="logo-image-role"
+            />
+            <Link to="/" className="back-to-main" onClick={() => setMobileOpen(false)}>
+              ← Back to TuneMavens
+            </Link>
+          </div>
+        ) : (
+          <Link to="/" className="nav-logo-container" onClick={() => setMobileOpen(false)}>
+            <img 
+              src={scrolled ? "/tunemavens-logo-teal.png" : "/tunemavens-logo-white.png"} 
+              alt="TuneMavens Logo" 
+              className="logo-image" 
+            />
+          </Link>
+        )}
 
         {/* Mobile Menu Button */}
         <button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -182,14 +218,26 @@ function Navbar({ sessionUser }) {
               Pricing
             </Link>
           </li>
-          <li>
-            <Link 
-              to="/about" 
-              className={`nav-link ${isActive('/about') ? 'active' : ''}`}
-              onClick={() => setMobileOpen(false)}
+          <li className="dropdown-container" ref={aboutDropdownRef}>
+            <button 
+              className={`nav-link dropdown-trigger ${isActive('/about') || isActive('/for') ? 'active' : ''}`} 
+              onClick={() => setAboutDropdownOpen(!aboutDropdownOpen)}
             >
               About
-            </Link>
+              <ChevronDown size={14} />
+            </button>
+            <ul className={`dropdown-menu ${aboutDropdownOpen ? 'open' : ''}`}>
+              <li>
+                <Link to="/about" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/for" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
+                  Perfect For
+                </Link>
+              </li>
+            </ul>
           </li>
           {/* Dropdown Menu */}
           <li className="dropdown-container" ref={dropdownRef}>
@@ -2502,42 +2550,167 @@ function RoleLandingView() {
     );
   }
 
-  const { Icon, label, sub, accent } = meta;
+  const { label, sub, accent } = meta;
+
+  const BACKGROUNDS = {
+    creator: creatorDashboardImg,
+    exec: distributeHeroImg,
+    supervisor: userSupervisorImg,
+    consumer: consumerAppImg,
+    'booking-agent': appsLedgerImg,
+    manager: userManagerImg,
+    companion: appsSyncImg,
+  };
+
+  const bgImage = BACKGROUNDS[role] || listenHeroImg;
 
   return (
-    <div className="role-landing-wrap" data-testid={`role-landing-${role}`}>
-      <section className="landing-section landing-glance-section">
-        <div className="container landing-glance">
-          <div className="landing-glance-logo" aria-hidden="true">
-            <div className="landing-app-tile" style={{ '--app-accent': accent }}>
-              <div className="landing-app-tile-icon" style={{ color: accent }}>
-                <Icon size={48} />
-              </div>
-              <div className="landing-app-tile-label">{label}</div>
-              <div className="landing-app-tile-pill">Perfect for</div>
-            </div>
+    <div className="role-landing-wrap hw" data-testid={`role-landing-${role}`} style={{ position: 'relative', overflow: 'hidden' }}>
+      <div className="bgs">
+        <div 
+          className="bg on"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'brightness(0.6) blur(1.5px)',
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }}
+        />
+        <div className="bgo" style={{ opacity: 0.6 }} />
+      </div>
+
+      <div className="hs">
+        <div className="hcont">
+          <div className="he hbadge" style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+            <span className="bdot" style={{ background: accent }} />
+            <span>Perfect for {label}</span>
           </div>
-          <div className="landing-glance-text">
-            <span className="landing-section-eyebrow" style={{ color: accent }}>For {label.toLowerCase()}</span>
-            <h1 className="landing-section-title" style={{ marginTop: 12, marginBottom: 20 }}>
-              TuneMavens for {label}
-            </h1>
-            <p className="landing-lede" style={{ marginBottom: 24, maxWidth: 'none' }}>
-              {sub}. Full landing page coming in Phase 2.5 — meanwhile the
-              product is fully accessible from the dashboard.
-            </p>
-            <div className="landing-cross-links">
-              <Link to="/register" className="btn btn-primary" data-testid="role-landing-signup">
-                Create free account
-              </Link>
-              <Link to="/apps" className="landing-cross-link" data-testid="role-landing-apps">
-                Browse the app catalogue →
-              </Link>
-            </div>
+
+          <h1 className="ht htitle">
+            <span className="ht-line ht-line-1">TuneMavens for</span>
+            <span className="ht-line ht-line-2" style={{ color: accent }}>{label}</span>
+          </h1>
+
+          <p className="hp hsub">
+            {sub}
+          </p>
+
+          <div className="hb hbtns">
+            <Link to="/register" className="hbp">
+              Create Free Account
+            </Link>
+            <Link to="/apps" className="hbg">
+              Browse App Catalogue →
+            </Link>
           </div>
         </div>
-      </section>
+      </div>
     </div>
+  );
+}
+// ================= Perfect For Page View =================
+function PerfectForPageView() {
+  const metaRoles = [
+    {
+      key: 'creator',
+      label: 'Creators',
+      sub: 'Artists · Podcasters · DJs',
+      href: '/for/creator',
+      logo: ROLE_LOGOS['creator'],
+      accent: 'var(--cyan)',
+      desc: 'Designed for artists, DJs, and podcasters. Effortlessly calculate split sheets, manage your music library, and pitch your tracks to filmmakers and sync agents—all from one single console.'
+    },
+    {
+      key: 'exec',
+      label: 'Execs',
+      sub: 'Label · A&R · Industry',
+      href: '/for/exec',
+      logo: ROLE_LOGOS['exec'],
+      accent: 'var(--purple)',
+      desc: 'For record labels, A&R managers, and industry leaders. Manage your entire artist catalog, track royalty splits, ingest statement CSV files, and automate payouts to artists and managers.'
+    },
+    {
+      key: 'supervisor',
+      label: 'Music Supervisors',
+      sub: 'Sync licensing for film & TV',
+      href: '/for/supervisor',
+      logo: ROLE_LOGOS['supervisor'],
+      accent: 'var(--am)',
+      desc: 'Sync licensing and AI scene-tagging made simple. Search our curated catalog of watermarked tracks, find the perfect vibe for your film or TV project, and secure sync rights instantly.'
+    },
+    {
+      key: 'consumer',
+      label: 'tunestream',
+      sub: 'Everyday listeners',
+      href: '/native-apps/tunemavens',
+      logo: ROLE_LOGOS['consumer'],
+      accent: 'var(--gr)',
+      desc: 'Our consumer streaming app. Listen to your favorite tracks, support creators directly with direct-tipping, and sync your music collection offline across all your mobile devices.'
+    },
+    {
+      key: 'booking-agent',
+      label: 'Booking Agents',
+      sub: 'Book & represent live acts',
+      href: '/for/booking-agent',
+      logo: ROLE_LOGOS['booking-agent'],
+      accent: 'var(--blue)',
+      desc: 'Represent and book your live acts. Route gig contracts, coordinate agent commission payouts, and view tour routing maps all integrated with local payment rails.'
+    },
+    {
+      key: 'manager',
+      label: 'Managers',
+      sub: 'Day-to-day artist teams',
+      href: '/for/manager',
+      logo: ROLE_LOGOS['manager'],
+      accent: '#ef4444',
+      desc: 'Manage the day-to-day operations of your artist roster. Real-time split visibility, contract drafting tools, and automated payouts to keep your management business running smoothly.'
+    },
+    {
+      key: 'companion',
+      label: 'tune companion',
+      sub: 'Artists & Managers',
+      href: '/native-apps/creator-companion',
+      logo: ROLE_LOGOS['companion'],
+      accent: 'var(--purple)',
+      desc: 'The essential mobile companion app for artists and managers. Monitor splits on the fly, track live earnings, and receive real-time sync brief alerts right on your phone.'
+    }
+  ];
+
+  return (
+    <>
+      <PageHeader 
+        title="Perfect For Every Seat in the Industry" 
+        bgImage={headerAboutImg} 
+        bgImageWestern={headerAboutWesternImg} 
+        breadcrumb="Perfect For" 
+      />
+      <div className="container" style={{ padding: '60px 20px 80px' }}>
+        <p className="section-desc" style={{ textAlign: 'center', marginBottom: '60px', maxWidth: '700px', margin: '0 auto 60px', fontSize: '16px', color: 'var(--mu)', lineHeight: 1.6 }}>
+          TuneMavens coordinates the entire music ecosystem. Choose your role below to explore the custom dashboard and tools we build for your seat.
+        </p>
+
+        <div className="pf-grid-page">
+          {metaRoles.map((role) => (
+            <div key={role.key} className="pf-card-page glass-panel" style={{ '--pf-accent': role.accent }}>
+              <div className="pf-card-logo-container">
+                <img src={role.logo} alt={role.label} className="pf-card-logo-img" />
+              </div>
+              <h3 className="pf-card-title">{role.label}</h3>
+              <span className="pf-card-eyebrow" style={{ color: role.accent }}>{role.sub}</span>
+              <p className="pf-card-desc">{role.desc}</p>
+              <Link to={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
+                Explore Seat →
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -4711,7 +4884,7 @@ import {
 } from './components/phase3.jsx'
 
 // "Perfect for" sidebar — rendered on all landing/marketing routes.
-import { PerfectForSidebar, PERFECT_FOR_ROLES } from './components/PerfectForSidebar.jsx'
+import { PerfectForSidebar, PERFECT_FOR_ROLES, ROLE_LOGOS } from './components/PerfectForSidebar.jsx'
 
 
 
@@ -6412,6 +6585,7 @@ function App() {
           <Route path="/apps" element={<AppsView sessionUser={sessionUser} />} />
           <Route path="/native-apps" element={<NativeAppsView />} />
           <Route path="/native-apps/:slug" element={<NativeAppLandingView />} />
+           <Route path="/for" element={<PerfectForPageView />} />
           <Route path="/for/:role" element={<RoleLandingView />} />
           <Route path="/pricing" element={<PricingView />} />
           <Route path="/about" element={<AboutView />} />
