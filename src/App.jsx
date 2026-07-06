@@ -2095,15 +2095,7 @@ function NativeAppLandingView() {
   const [newPlaylistDesc, setNewPlaylistDesc] = useState('');
   const [newPlaylistBg, setNewPlaylistBg] = useState('linear-gradient(135deg, #10b981 0%, #059669 100%)');
 
-  const [promotedActs, setPromotedActs] = useState(() => getPromotedActs());
 
-  useEffect(() => {
-    const handleStorage = () => {
-      setPromotedActs(getPromotedActs());
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
@@ -2219,62 +2211,29 @@ function NativeAppLandingView() {
 
   if (normalizedSlug === 'tunestreams') {
 
-    const renderHeader = (title, breadcrumb) => {
-      return (
-        <div 
-          className="page-header-banner" 
-          style={{ 
-            backgroundImage: `url(${tunestreamHeaderImg})`, 
-            backgroundSize: 'cover', 
-            backgroundPosition: 'center', 
-            borderRadius: '3px',
-            overflow: 'hidden', 
-            marginBottom: '40px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-            position: 'relative',
-            minHeight: '200px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <div className="page-header-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(7, 14, 27, 0.8)', zIndex: 1 }} />
-          <div className="page-header-content" style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '40px 24px' }}>
-            <h1 className="page-header-title" style={{ fontSize: '32px', fontWeight: '800', color: '#fff', margin: 0 }}>{title}</h1>
-            <div className="page-header-breadcrumb" style={{ marginTop: '12px', fontSize: '13px', color: 'var(--mu)', display: 'flex', justifyContent: 'center', gap: '6px', alignItems: 'center' }}>
-              <Link to="/native-apps/tunestreams?view=listen" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>TuneStreams</Link>
-              <span>/</span>
-              <span style={{ color: '#fff' }}>{breadcrumb}</span>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    const renderListen = () => {
-      return (
-        <>
-          {/* HEADER IMAGE with human elements, multicultural, clean */}
+    const renderTopHeader = () => {
+      if (view === 'listen') {
+        return (
           <div 
             className="tunestream-app-header" 
             style={{ 
               position: 'relative', 
-              padding: '80px 24px', 
+              padding: '120px 24px 80px', 
               backgroundImage: `url(${tunestreamHeaderImg})`, 
               backgroundSize: 'cover', 
               backgroundPosition: 'center', 
-              borderRadius: '3px', 
+              borderRadius: '0px', 
               overflow: 'hidden', 
-              marginBottom: '40px',
               boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              minHeight: '380px',
-              textAlign: 'center'
+              minHeight: '420px',
+              textAlign: 'center',
+              width: '100%'
             }}
           >
-            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle, rgba(7, 14, 27, 0.7) 0%, rgba(7, 14, 27, 0.95) 100%)', zIndex: 1 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle, rgba(7, 14, 27, 0.75) 0%, rgba(7, 14, 27, 0.95) 100%)', zIndex: 1 }} />
             
             <div style={{ position: 'relative', zIndex: 2, maxWidth: '650px', margin: '0 auto' }}>
               <div className="he hbadge" style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', padding: '6px 12px', borderRadius: '20px', marginBottom: '20px', justifyContent: 'center' }}>
@@ -2298,7 +2257,57 @@ function NativeAppLandingView() {
               </div>
             </div>
           </div>
+        );
+      }
 
+      const headerMeta = {
+        explore: { title: 'Explore Creators', breadcrumb: 'Explore' },
+        playlists: { title: 'My Playlists', breadcrumb: 'Library / Playlists' },
+        'create-playlist': { title: 'Create Playlist', breadcrumb: 'Library / Create' },
+        'browse-podcasts': { title: 'Browse Podcasts', breadcrumb: 'Library / Podcasts' },
+        apps: { title: 'TuneStreams Apps', breadcrumb: 'Apps' },
+        free: { title: 'TuneStream Free', breadcrumb: 'Plans / Free' },
+        premium: { title: 'TuneStream Premium', breadcrumb: 'Plans / Premium' },
+        help: { title: 'Support & Community', breadcrumb: 'Support' }
+      };
+
+      const meta = headerMeta[view] || { title: 'TuneStreams', breadcrumb: 'Portal' };
+
+      return (
+        <div 
+          className="page-header-banner" 
+          style={{ 
+            backgroundImage: `url(${tunestreamHeaderImg})`, 
+            backgroundSize: 'cover', 
+            backgroundPosition: 'center', 
+            borderRadius: '0px', 
+            overflow: 'hidden', 
+            marginBottom: '40px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            position: 'relative',
+            minHeight: '280px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%'
+          }}
+        >
+          <div className="page-header-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(7, 14, 27, 0.8)', zIndex: 1 }} />
+          <div className="page-header-content" style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '80px 24px 0' }}>
+            <h1 className="page-header-title" style={{ fontSize: '32px', fontWeight: '800', color: '#fff', margin: 0 }}>{meta.title}</h1>
+            <div className="page-header-breadcrumb" style={{ marginTop: '12px', fontSize: '13px', color: 'var(--mu)', display: 'flex', justifyContent: 'center', gap: '6px', alignItems: 'center' }}>
+              <Link to="/native-apps/tunestreams?view=listen" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>TuneStreams</Link>
+              <span>/</span>
+              <span style={{ color: '#fff' }}>{meta.breadcrumb}</span>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const renderListen = () => {
+      return (
+        <>
           {/* Subdomain Mapping Notification Banner */}
           <div style={{ background: 'rgba(34, 211, 238, 0.08)', borderBottom: '1px solid rgba(34, 211, 238, 0.15)', padding: '12px 24px', borderRadius: '8px', textAlign: 'center', fontSize: '13px', color: '#cbd5e1', marginBottom: '40px' }}>
             🌐 TuneStream platform resolves natively to: <strong style={{ color: '#fff' }}>streams.tunemavens.com</strong>. Map containers securely in the <Link to="/dashboard" onClick={() => { setActiveTab('domain-mappings'); }} style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Domain Mappings Admin Console</Link>.
@@ -2501,7 +2510,6 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left' }}>
-          {renderHeader('Explore Creators', 'Explore')}
           <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px' }}>Discover new talent and verify their splits on the Intermaven shared ledger.</p>
           
           <div style={{ marginBottom: '30px', position: 'relative', maxWidth: '400px' }}>
@@ -2533,7 +2541,6 @@ function NativeAppLandingView() {
     const renderPlaylists = () => {
       return (
         <div style={{ textAlign: 'left' }}>
-          {renderHeader('My Playlists', 'Library / Playlists')}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <p style={{ color: 'var(--mu)', fontSize: '14px', margin: 0 }}>Access your personalized streams and custom crates.</p>
             <Link to="/native-apps/tunestreams?view=create-playlist" className="btn-primary" style={{ padding: '10px 16px', textDecoration: 'none' }}>
@@ -2602,7 +2609,6 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left' }}>
-          {renderHeader('Create Playlist', 'Library / Create')}
           <div style={{ maxWidth: '500px', margin: '0 auto' }} className="glass-panel">
             <p style={{ color: 'var(--mu)', fontSize: '13px', marginBottom: '24px' }}>Set up a new mix to organize your favorite lossless studio tracks.</p>
             
@@ -2678,7 +2684,6 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left' }}>
-          {renderHeader('Browse Podcasts', 'Library / Podcasts')}
           <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px' }}>Listen to tech talks, artist masterclasses, and field recordings from around the network.</p>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
@@ -2704,8 +2709,6 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left' }}>
-          {renderHeader('TuneStreams Apps', 'Apps')}
-
           {/* Description Content Box */}
           <div className="glass-panel" style={{ padding: '24px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', marginBottom: '32px' }}>
             <h3 style={{ fontSize: '18px', color: '#fff', fontWeight: 'bold', marginBottom: '8px' }}>Ecosystem App Distribution</h3>
@@ -2770,7 +2773,6 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
-          {renderHeader('TuneStream Free', 'Plans / Free')}
           <div style={{ textAlign: 'center', padding: '60px 20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(7, 14, 27, 0.5) 100%)', border: '1px solid rgba(16, 185, 129, 0.1)', borderRadius: '8px', marginBottom: '40px' }}>
             <span style={{ color: 'var(--green)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.1em' }}>TuneStream Free</span>
             <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: '900', margin: '12px 0' }}>Music for everyone.</h2>
@@ -2813,7 +2815,6 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
-          {renderHeader('TuneStream Premium', 'Plans / Premium')}
           <div style={{ textAlign: 'center', padding: '60px 20px', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.05) 0%, rgba(7, 14, 27, 0.5) 100%)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '8px', marginBottom: '40px' }}>
             <span style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.1em' }}>TuneStream Premium</span>
             <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: '900', margin: '12px 0' }}>Go Premium. Stream without limits.</h2>
@@ -2884,8 +2885,6 @@ function NativeAppLandingView() {
 
       return (
         <div style={{ textAlign: 'left' }}>
-          {renderHeader('Support & Community', 'Support')}
-
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginBottom: '50px' }}>
             {/* Help FAQs */}
             <div>
@@ -2965,9 +2964,10 @@ function NativeAppLandingView() {
     return (
       <div 
         className="native-app-landing tunestream-landing" 
-        style={{ background: getLandingBackground('tunestreams'), color: '#f1f5f9', minHeight: '100vh', padding: '60px 0 100px' }}
+        style={{ background: getLandingBackground('tunestreams'), color: '#f1f5f9', minHeight: '100vh', padding: '0 0 100px' }}
       >
-        <div className="container">
+        {renderTopHeader()}
+        <div className="container" style={{ marginTop: view === 'listen' ? '40px' : '0' }}>
           {renderContent()}
         </div>
       </div>
