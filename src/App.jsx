@@ -145,7 +145,7 @@ function Navbar({ sessionUser }) {
     <nav className="navbar">
       <div className="nav-inner-container">
         {activeRoleLogo ? (
-          <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '6px 0' }}>
+          <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', padding: '6px 0' }}>
             <img 
               src={activeRoleLogo.logo} 
               alt={`${activeRoleLogo.roleKey} Logo`} 
@@ -164,7 +164,7 @@ function Navbar({ sessionUser }) {
                   window.history.back();
                 }
               }} 
-              style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center' }}
+              style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center', marginTop: '-5px' }}
             >
               &lt;&lt; a tunemavens utility
             </Link>
