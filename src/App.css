@@ -637,6 +637,8 @@
   padding: 28px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   height: 100%;
 }
 
@@ -1680,11 +1682,12 @@
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
   position: relative;
   overflow-y: auto; /* Enable vertical scrolling */
-  max-height: 85vh; /* Keep completely within the viewport */
+  max-height: 88vh; /* Keep completely within the viewport */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   font-size: 13px !important; /* Exactly 1px larger than original 12px */
+  margin: 20px;
 }
 
 /* Custom premium scrollbar for modal card */
@@ -2514,6 +2517,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   padding: 28px 26px 22px;
   border-radius: 3px;
   /* Flat color background — no gradients. Uses a slightly lightened slate
@@ -2541,8 +2546,10 @@
 
 .native-app-card-header {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
   margin-bottom: 18px;
 }
 .native-app-icon {
@@ -2598,6 +2605,7 @@
 .native-app-features li {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   font-size: 12px;
   color: #cbd5e1;
@@ -2718,9 +2726,16 @@
   background: rgba(17, 24, 39, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.page-header-banner {
+  transition: filter 0.3s ease;
+}
+
+.page-header-banner:hover {
+  filter: brightness(1.2);
 }
 
 .dashboard-card:hover {
@@ -3270,7 +3285,7 @@
   text-transform: uppercase;
   border-radius: 3px;
   transition: all 0.15s ease;
-  align-self: flex-start;
+  align-self: center;
 }
 .native-app-more-info:hover {
   background: var(--app-accent-glow);
@@ -3835,4 +3850,63 @@
 .tunestream-landing .landing-feature-card:hover {
   border-color: var(--cyan) !important;
   transform: translateY(-2px);
+}
+
+/* Slider and Scrollbar Helpers */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.slider-arrow-btn:hover {
+  background: var(--green) !important;
+  border-color: var(--green) !important;
+  transform: translateY(-50%) scale(1.1) !important;
+}
+
+/* Landing Slide Nav overrides to fix pointer-events issue */
+.landing-slide-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(6, 8, 19, 0.5);
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto !important;
+  font-size: 22px;
+  transition: all 0.2s ease, opacity 0.8s ease, transform 0.8s ease;
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+  opacity: 0;
+}
+.landing-slide-nav.prev {
+  left: 40px;
+  transform: translateY(-50%) translateX(100px);
+}
+.landing-slide-nav.next {
+  right: 40px;
+  transform: translateY(-50%) translateX(140px);
+}
+.landing-slide-nav.in {
+  opacity: 1;
+}
+.landing-slide-nav.prev.in {
+  transform: translateY(-50%) translateX(120px);
+}
+.landing-slide-nav.next.in {
+  transform: translateY(-50%) translateX(120px);
+}
+.landing-slide-nav:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+@media (max-width: 768px) {
+  .landing-slide-nav {
+    display: none !important;
+  }
 }

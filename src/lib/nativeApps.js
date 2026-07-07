@@ -9,7 +9,7 @@ export const INTERMAVEN_NATIVE_APPS = [
   {
     id: 'consumer',
     slug: 'intermaven-tunemavens',
-    landingPath: '/native-apps/tunestreams',
+    landingPath: '/native-apps/tunestream',
     name: 'tunestream',
     tagline: 'Stream. Tip. Carry the catalogue.',
     icon: Headphones,

@@ -1,0 +1,366 @@
+import React, { useState, useEffect, useRef } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { 
+  ChevronDown, Layers, Smartphone, HelpCircle, MessageSquare, BookOpen, X, Menu, Cpu 
+} from 'lucide-react'
+import { ROLE_LOGOS } from '../PerfectForSidebar.jsx'
+import RegionSwitcher from '../../RegionSwitcher.jsx'
+import { useRegion } from '../../RegionContext.jsx'
+
+export default function Navbar({ sessionUser }) {
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [appsDropdownOpen, setAppsDropdownOpen] = useState(false);
+  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const appsDropdownRef = useRef(null);
+  const aboutDropdownRef = useRef(null);
+  const libraryDropdownRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  const getRoleLogoForPath = (pathname) => {
+    const roleMatch = pathname.match(/^\/for\/([^/]+)/);
+    if (roleMatch) {
+      const roleKey = roleMatch[1];
+      const logo = ROLE_LOGOS[roleKey];
+      if (logo) return { logo, roleKey };
+    }
+    if (pathname === '/native-apps/creator-companion') {
+      return { logo: ROLE_LOGOS['companion'], roleKey: 'companion' };
+    }
+    if (pathname === '/native-apps/tunestream') {
+      return { logo: ROLE_LOGOS['consumer'], roleKey: 'consumer' };
+    }
+    if (pathname === '/native-apps/tunepay') {
+      return { logo: ROLE_LOGOS['tunepay'], roleKey: 'tunepay' };
+    }
+    return null;
+  };
+
+  const activeRoleLogo = getRoleLogoForPath(currentPath);
+
+  const isActive = (path) => currentPath === path;
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+    setMobileOpen(false);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+      if (appsDropdownRef.current && !appsDropdownRef.current.contains(e.target)) {
+        setAppsDropdownOpen(false);
+      }
+      if (aboutDropdownRef.current && !aboutDropdownRef.current.contains(e.target)) {
+        setAboutDropdownOpen(false);
+      }
+      if (libraryDropdownRef.current && !libraryDropdownRef.current.contains(e.target)) {
+        setLibraryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  // Conditional Menu rendering
+  const renderNavLinks = () => {
+    if (currentPath === '/native-apps/tunestream') {
+      return (
+        <>
+          <li>
+            <Link to="/native-apps/tunestream?view=listen" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Listen
+            </Link>
+          </li>
+          <li>
+            <Link to="/native-apps/tunestream?view=explore" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Explore
+            </Link>
+          </li>
+          <li className="dropdown-container" ref={libraryDropdownRef}>
+            <button
+              className="nav-link dropdown-trigger"
+              onClick={() => {
+                setAppsDropdownOpen(false);
+                setAboutDropdownOpen(false);
+                setDropdownOpen(false);
+                setLibraryDropdownOpen(!libraryDropdownOpen);
+              }}
+            >
+              My Library
+              <ChevronDown size={14} />
+            </button>
+            <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`}>
+              <li>
+                <Link to="/native-apps/tunestream?view=playlists" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  Playlists
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=create-playlist" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  Create Playlist
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=browse-podcasts" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  Browse Podcasts
+                </Link>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <Link to="/native-apps/tunestream?view=apps" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Apps
+            </Link>
+          </li>
+          <li>
+            <Link to="/native-apps/tunestream?view=help" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Support & Community
+            </Link>
+          </li>
+        </>
+      );
+    }
+    
+    if (currentPath === '/native-apps/creator-companion') {
+      return (
+        <>
+          <li>
+            <a href="#companion-features" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('companion-features'); }}>
+              Capabilities
+            </a>
+          </li>
+          <li>
+            <a href="#live-splits" className="nav-link" onClick={(e) => { e.preventDefault(); scrollToSection('live-splits'); }}>
+              Live Splits
+            </a>
+          </li>
+          <li>
+            <Link to="/dashboard" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Web Console
+            </Link>
+          </li>
+          <li>
+            <Link to="/register" className="nav-link" onClick={() => setMobileOpen(false)}>
+              Sign Up
+            </Link>
+          </li>
+          <li>
+            <Link to="/" className="nav-link" style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '4px', color: '#a78bfa' }} onClick={() => setMobileOpen(false)}>
+              Return to TuneMavens
+            </Link>
+          </li>
+        </>
+      );
+    }
+
+    // Default corporate links
+    return (
+      <>
+        <li>
+          <Link 
+            to="/tools" 
+            className={`nav-link ${isActive('/tools') ? 'active' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            AI Tools
+          </Link>
+        </li>
+        <li className="dropdown-container" ref={appsDropdownRef}>
+          <button
+            className={`nav-link dropdown-trigger ${isActive('/apps') || isActive('/native-apps') ? 'active' : ''}`}
+            onClick={() => setAppsDropdownOpen(!appsDropdownOpen)}
+            data-testid="nav-apps-dropdown-trigger"
+          >
+            Apps
+            <ChevronDown size={14} />
+          </button>
+          <ul className={`dropdown-menu ${appsDropdownOpen ? 'open' : ''}`}>
+            <li>
+              <Link
+                to="/apps"
+                className="dropdown-link"
+                onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}
+                data-testid="nav-apps-dashboard-link"
+              >
+                <Layers size={16} /> Dashboard Apps
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/native-apps"
+                className="dropdown-link"
+                onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}
+                data-testid="nav-apps-native-link"
+              >
+                <Smartphone size={16} /> Native Apps
+              </Link>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <Link 
+            to="/pricing" 
+            className={`nav-link ${isActive('/pricing') ? 'active' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            Pricing
+          </Link>
+        </li>
+        <li className="dropdown-container" ref={aboutDropdownRef}>
+          <button 
+            className={`nav-link dropdown-trigger ${isActive('/about') || isActive('/for') ? 'active' : ''}`} 
+            onClick={() => { setDropdownOpen(false); setAppsDropdownOpen(false); setAboutDropdownOpen(!aboutDropdownOpen); }}
+          >
+            About
+            <ChevronDown size={14} />
+          </button>
+          <ul className={`dropdown-menu ${aboutDropdownOpen ? 'open' : ''}`}>
+            <li>
+              <Link to="/about" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link to="/for" className="dropdown-link" onClick={() => { setAboutDropdownOpen(false); setMobileOpen(false); }}>
+                Perfect For
+              </Link>
+            </li>
+          </ul>
+        </li>
+        <li className="dropdown-container" ref={dropdownRef}>
+          <button 
+            className="nav-link dropdown-trigger" 
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+          >
+            Support & Community
+            <ChevronDown size={14} />
+          </button>
+          <ul className={`dropdown-menu ${dropdownOpen ? 'open' : ''}`}>
+            <li>
+              <Link to="/help" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
+                <HelpCircle size={16} /> Help Center
+              </Link>
+            </li>
+            <li>
+              <a href="#forum" className="dropdown-link" onClick={() => { alert('TuneMavens Community Forum shares the Intermaven account profile and will launch in Phase 2.'); setDropdownOpen(false); setMobileOpen(false); }}>
+                <MessageSquare size={16} /> Creator Forum
+              </a>
+            </li>
+            <li>
+              <a href="#blog" className="dropdown-link" onClick={() => { alert('Creator stories and news blog coming soon.'); setDropdownOpen(false); setMobileOpen(false); }}>
+                <BookOpen size={16} /> Blog & Articles
+              </a>
+            </li>
+          </ul>
+        </li>
+      </>
+    );
+  };
+
+  return (
+    <nav className="navbar">
+      <div className="nav-inner-container">
+        {activeRoleLogo ? (
+          <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', padding: '6px 0' }}>
+            <img 
+              src={activeRoleLogo.logo} 
+              alt={`${activeRoleLogo.roleKey} Logo`} 
+              className="logo-image-role logo-image"
+              style={{ display: 'block' }}
+            />
+            <Link 
+              to="/" 
+              onClick={(e) => {
+                setMobileOpen(false);
+                if (document.referrer && document.referrer.includes(window.location.host)) {
+                  e.preventDefault();
+                  window.history.back();
+                } else if (window.history.state && window.history.state.idx > 0) {
+                  e.preventDefault();
+                  window.history.back();
+                }
+              }} 
+              style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center', marginTop: '-12px' }}
+            >
+              {"<< a tunemavens utility"}
+            </Link>
+          </div>
+        ) : (
+          <Link to="/" className="nav-logo-container" onClick={() => setMobileOpen(false)}>
+            <img 
+              src={scrolled ? "/tunemavens-logo-teal.png" : "/tunemavens-logo-white.png"} 
+              alt="TuneMavens Logo" 
+              className="logo-image" 
+            />
+          </Link>
+        )}
+
+        {/* Mobile Menu Button */}
+        <button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Links */}
+        <ul className={`nav-links ${mobileOpen ? 'mobile-open' : ''}`}>
+          {renderNavLinks()}
+          
+          {/* Mobile Region Switcher & CTAs inside scroll flow */}
+          {mobileOpen && (
+            <li style={{ padding: '8px 0', width: '100%' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <RegionSwitcher />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+                {sessionUser ? (
+                  <Link to="/dashboard" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
+                ) : (
+                  <>
+                    <Link to="/login" className="btn-secondary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Log In</Link>
+                    <Link to="/register" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Start Free</Link>
+                  </>
+                )}
+              </div>
+            </li>
+          )}
+        </ul>
+
+        {/* Desktop Region Switcher & CTAs */}
+        <div className="nav-desktop-actions-box">
+          <div className="desktop-switcher">
+            <RegionSwitcher />
+          </div>
+          <div className="nav-ctas">
+            {sessionUser ? (
+              <Link to="/dashboard" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Cpu size={14} /> Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="btn-secondary">Log In</Link>
+                <Link to="/register" className="btn-primary">Start Free</Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}

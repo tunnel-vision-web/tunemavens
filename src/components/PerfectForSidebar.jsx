@@ -28,7 +28,7 @@ export const PERFECT_FOR_ROLES = [
   { key: 'creator', label: 'Creators', sub: 'Artists · Podcasters · DJs', href: '/for/creator', accent: 'var(--cyan)' },
   { key: 'exec', label: 'Execs', sub: 'Label · A&R · Industry', href: '/for/exec', accent: 'var(--purple)' },
   { key: 'supervisor', label: 'Music Supervisors', sub: 'Sync licensing for film & TV', href: '/for/supervisor', accent: 'var(--am)' },
-  { key: 'consumer', label: 'tunestream', sub: 'Everyday listeners', href: '/native-apps/tunemavens', accent: 'var(--gr)' },
+  { key: 'consumer', label: 'tunestream', sub: 'Everyday listeners', href: '/native-apps/tunestream', accent: 'var(--gr)' },
   { key: 'booking-agent', label: 'Booking Agents', sub: 'Book & represent live acts', href: '/for/booking-agent', accent: 'var(--blue)' },
   { key: 'manager', label: 'Managers', sub: 'Day-to-day artist teams', href: '/for/manager', accent: '#ef4444' },
   { key: 'companion', label: 'tunecompanion', sub: 'Artists & Managers', href: '/native-apps/creator-companion', accent: 'var(--purple)' },

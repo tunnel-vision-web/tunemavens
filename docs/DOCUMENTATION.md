@@ -488,3 +488,65 @@ YOUTUBE_API_KEY=...
 **Explicitly NOT integrated:**
 - SMS providers (Twilio, etc.) — deferred; interface reserved
 - Instagram/X APIs — never; social DM is admin copy-to-clipboard by design
+
+---
+
+## §9.13 — Platform UI & Layout Rules
+
+### 9.13.1 App Cards Horizontal Centering Rule
+To maintain visual consistency and clean design alignment across all marketing, native, and platform app surfaces:
+- **Horizontal Centering:** All content within any app cards (such as `.app-card`, `.native-app-card`, and custom app showcase cards) must be centered horizontally within its box.
+- **Card Flex Styling:** Cards should use flex layouts with `flex-direction: column`, `align-items: center`, and `text-align: center`.
+- **Inner elements:** Header groupings, target badges, icons/logos, paragraphs, bullet lists (`.native-app-features`), and CTA action store buttons must center align within the card boundaries.
+- **Exceptions:** General dashboard admin panel cards that display complex layout tables or form forms may align left where readability demands it, but native marketing cards must adhere strictly to centering.
+
+---
+
+## §9.14 — Codebase Structure & Directory Layout  ✅ SHIPPED (Landing/Auth/Consumer) / 🟠 P1 (Dashboard)
+
+To ensure high modularity and avoid side-effects from monolithic files, the codebase is structured as a component-and-view hierarchy:
+
+```
+src/
+├── components/
+│   ├── common/
+│   │   ├── PageHeader.jsx          # Shared title and background headers
+│   │   ├── Navbar.jsx              # Unified navigation header
+│   │   ├── Footer.jsx              # Global footer menus with region context
+│   │   └── FaqItem.jsx             # Self-contained accordion element
+│   └── demos/
+│       ├── SyncBriefDemo.jsx       # Interactive AI brief mockup generator
+│       ├── MasteringDemo.jsx       # Studio quality preview mastering testbed
+│       ├── SplitCalculatorDemo.jsx # Mockup splits generator
+│       ├── SyncBriefCarousel.jsx   # Horizontal sync showcase
+│       ├── SplitCascadeCarousel.jsx# Payout stages slideshow
+│       ├── UserPersonaCarousel.jsx # Target industry segment showcase
+│       ├── ComingSoonApp.jsx       # Generic dashboard app placeholder
+│       ├── SplitCascadeLedgerApp.jsx# Standalone ledger app mockup
+│       └── MpesaPosTerminal.jsx    # Standalone terminal pos flow mockup
+├── views/
+│   ├── landing/
+│   │   ├── HomeView.jsx            # Platform home / general landing page
+│   │   ├── ToolsView.jsx           # AI Tools catalog landing page
+│   │   ├── AppsView.jsx            # Standalone apps list page
+│   │   ├── NativeAppsView.jsx      # Standalone native apps catalog page
+│   │   ├── NativeAppLandingView.jsx# Rich Capacitor app landing pages
+│   │   ├── PerfectForPageView.jsx  # Landing directories of industry roles
+│   │   ├── RoleLandingView.jsx     # Minimal target hero route stubs
+│   │   ├── PricingView.jsx         # Pay-as-you-go packages pricing table
+│   │   ├── AboutView.jsx           # About page with contact submission
+│   │   ├── HelpView.jsx            # Help center FAQ and support tickets
+│   │   └── TuneStreamViews.jsx     # Consumer app marketing pages
+│   ├── auth/
+│   │   ├── LoginView.jsx           # Secure SSO + sandbox login form
+│   │   └── RegisterView.jsx        # Step-by-step onboarding signup wizard
+│   ├── consumer/
+│   │   ├── StreamView.jsx          # Lossless consumer player dashboard
+│   │   └── TuneStreamViews.jsx     # TuneStream specific info pages
+│   └── dashboard/                  # [Planned] Dashboard core & utility panels
+│       ├── DashboardView.jsx       # Primary Dashboard layout
+│       └── panels/                 # Dashboard feature utility modules
+```
+
+### 9.14.1 Root App Routing
+The main `src/App.jsx` handles core app state (Unified Auth context & regional context), global CSS initialization, and the client-side router configurations. The modular views are dynamically imported at the top of the file, keeping the central file lightweight, readable, and highly maintainable.
