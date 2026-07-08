@@ -338,7 +338,18 @@ export default function NativeAppLandingView() {
       headline2Color: '#f59e0b',
       sub: 'From Lagos to London, Nairobi to New York — stream the full depth of African music culture with built-in creator tipping and direct support.',
     },
+
   ];
+  const INTERIOR_HEADER_MAP = {
+  explore: tunestreamHeader2Img,
+  playlists: tunestreamHeader3Img,
+  'create-playlist': tunestreamHeader2Img,
+  'browse-podcasts': tunestreamHeader3Img,
+  apps: tunestreamHeaderImg,
+  free: tunestreamHeader2Img,
+  premium: tunestreamHeader3Img,
+  help: tunestreamHeaderImg,
+  };
   const [tsSlide, setTsSlide] = useState(0);
   const [tsTextVisible, setTsTextVisible] = useState(true);
   const [tsHovered, setTsHovered] = useState(false);
@@ -686,7 +697,7 @@ export default function NativeAppLandingView() {
         <div 
           className="page-header-banner" 
           style={{ 
-            backgroundImage: `url(${tunestreamHeaderImg})`, 
+            backgroundImage: `url(${INTERIOR_HEADER_MAP[view] || tunestreamHeaderImg})`, 
             backgroundSize: 'cover', 
             backgroundPosition: 'center', 
             borderRadius: '0px', 
@@ -714,101 +725,97 @@ export default function NativeAppLandingView() {
       );
     };
 
-    const HorizontalSlider = ({ items, renderItem }) => {
-      const scrollRef = useRef(null);
-      const scroll = (direction) => {
-        if (scrollRef.current) {
-          const { scrollLeft, clientWidth } = scrollRef.current;
-          const scrollAmount = direction === 'left' ? -clientWidth * 0.8 : clientWidth * 0.8;
-          scrollRef.current.scrollTo({
-            left: scrollLeft + scrollAmount,
-            behavior: 'smooth'
-          });
-        }
-      };
+ const HorizontalSlider = ({ items, renderItem }) => {
+  const scrollRef = useRef(null);
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollAmount = direction === 'left' ? -clientWidth * 0.85 : clientWidth * 0.85;
+      scrollRef.current.scrollTo({
+        left: scrollLeft + scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
-      return (
-        <div style={{ position: 'relative', width: '100%' }}>
-          <button 
-            type="button" 
-            onClick={() => scroll('left')}
-            style={{
-              position: 'absolute',
-              left: '-22px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              background: 'rgba(7, 14, 27, 0.9)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              color: '#fff',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
-              fontSize: '20px',
-              fontWeight: 'bold',
-              lineHeight: 1
-            }}
-            className="slider-arrow-btn"
-          >
-            ‹
-          </button>
+  return (
+    <div style={{ position: 'relative', width: '100%', overflow: 'visible', padding: '0 28px' }}>
+      <button 
+        type="button" 
+        onClick={() => scroll('left')}
+        style={{
+          position: 'absolute',
+          left: '0',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 20,
+          background: 'rgba(7, 14, 27, 0.95)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          color: '#fff',
+          width: '38px',
+          height: '38px',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
+          fontSize: '22px',
+          fontWeight: 'bold',
+          pointerEvents: 'auto'
+        }}
+        className="slider-arrow-btn"
+      >‹</button>
 
-          <div 
-            ref={scrollRef}
-            style={{
-              display: 'flex',
-              gap: '20px',
-              overflowX: 'auto',
-              scrollBehavior: 'smooth',
-              padding: '10px 4px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}
-            className="hide-scrollbar"
-          >
-            {items.map((item, idx) => (
-              <div key={idx} style={{ flex: '0 0 auto', width: '185px' }}>
-                {renderItem(item)}
-              </div>
-            ))}
+      <div 
+        ref={scrollRef}
+        style={{
+          display: 'flex',
+          gap: '20px',
+          overflowX: 'auto',
+          scrollBehavior: 'smooth',
+          padding: '10px 4px',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
+        className="hide-scrollbar"
+      >
+        {items.map((item, idx) => (
+          <div key={idx} style={{ flex: '0 0 auto', width: '185px' }}>
+            {renderItem(item)}
           </div>
+        ))}
+      </div>
 
-          <button 
-            type="button" 
-            onClick={() => scroll('right')}
-            style={{
-              position: 'absolute',
-              right: '-22px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              background: 'rgba(7, 14, 27, 0.9)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              color: '#fff',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
-              fontSize: '20px',
-              fontWeight: 'bold',
-              lineHeight: 1
-            }}
-            className="slider-arrow-btn"
-          >
-            ›
-          </button>
-        </div>
-      );
-    };
+      <button 
+        type="button" 
+        onClick={() => scroll('right')}
+        style={{
+          position: 'absolute',
+          right: '0',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 20,
+          background: 'rgba(7, 14, 27, 0.95)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          color: '#fff',
+          width: '38px',
+          height: '38px',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
+          fontSize: '22px',
+          fontWeight: 'bold',
+          pointerEvents: 'auto'
+        }}
+        className="slider-arrow-btn"
+      >›</button>
+    </div>
+  );
+};
 
     const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => {
       const totalPages = Math.ceil(totalItems / itemsPerPage);

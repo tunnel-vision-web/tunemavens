@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   ChevronDown, Layers, Smartphone, HelpCircle, MessageSquare, BookOpen, X, Menu, Cpu 
 } from 'lucide-react'
@@ -7,8 +7,22 @@ import { ROLE_LOGOS } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
 
+// Sub-app paths that should NOT be stored as a "last tunemavens page"
+const SUB_APP_PATHS = [
+  '/native-apps/tunestream',
+  '/native-apps/creator-companion',
+  '/native-apps/tunepay',
+  '/native-apps/sync-master',
+];
+const isSubAppPath = (path) =>
+  SUB_APP_PATHS.some((p) => path.startsWith(p)) ||
+  /^\/for\/[^/]+/.test(path);
+
+const LAST_TM_PAGE_KEY = 'tunemavens_last_page';
+
 export default function Navbar({ sessionUser }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -20,6 +34,20 @@ export default function Navbar({ sessionUser }) {
   const aboutDropdownRef = useRef(null);
   const libraryDropdownRef = useRef(null);
   const [scrolled, setScrolled] = useState(false);
+
+  // Track last visited TuneMavens page so sub-app utility links can navigate back
+  useEffect(() => {
+    if (!isSubAppPath(currentPath)) {
+      sessionStorage.setItem(LAST_TM_PAGE_KEY, currentPath + location.search);
+    }
+  }, [currentPath, location.search]);
+
+  const handleBackToTuneMavens = (e) => {
+    e.preventDefault();
+    setMobileOpen(false);
+    const saved = sessionStorage.getItem(LAST_TM_PAGE_KEY);
+    navigate(saved || '/');
+  };
 
   const getRoleLogoForPath = (pathname) => {
     const roleMatch = pathname.match(/^\/for\/([^/]+)/);
@@ -163,9 +191,14 @@ export default function Navbar({ sessionUser }) {
             </Link>
           </li>
           <li>
-            <Link to="/" className="nav-link" style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '4px', color: '#a78bfa' }} onClick={() => setMobileOpen(false)}>
+            <a
+              href="/"
+              className="nav-link"
+              style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '4px', color: '#a78bfa' }}
+              onClick={handleBackToTuneMavens}
+            >
               Return to TuneMavens
-            </Link>
+            </a>
           </li>
         </>
       );
@@ -286,22 +319,14 @@ export default function Navbar({ sessionUser }) {
               className="logo-image-role logo-image"
               style={{ display: 'block' }}
             />
-            <Link 
-              to="/" 
-              onClick={(e) => {
-                setMobileOpen(false);
-                if (document.referrer && document.referrer.includes(window.location.host)) {
-                  e.preventDefault();
-                  window.history.back();
-                } else if (window.history.state && window.history.state.idx > 0) {
-                  e.preventDefault();
-                  window.history.back();
-                }
-              }} 
+            <a
+              href="/"
+              onClick={handleBackToTuneMavens}
               style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center', marginTop: '-12px' }}
+              data-testid="navbar-back-to-tunemavens"
             >
               {"<< a tunemavens utility"}
-            </Link>
+            </a>
           </div>
         ) : (
           <Link to="/" className="nav-logo-container" onClick={() => setMobileOpen(false)}>

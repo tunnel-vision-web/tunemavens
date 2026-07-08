@@ -1,11 +1,31 @@
 import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ROLE_LOGOS } from '../PerfectForSidebar.jsx'
 import { useRegion } from '../../RegionContext.jsx'
 
+const SUB_APP_PATHS = [
+  '/native-apps/tunestream',
+  '/native-apps/creator-companion',
+  '/native-apps/tunepay',
+  '/native-apps/sync-master',
+];
+const isSubAppPath = (path) =>
+  SUB_APP_PATHS.some((p) => path.startsWith(p)) ||
+  /^\/for\/[^/]+/.test(path);
+
+const LAST_TM_PAGE_KEY = 'tunemavens_last_page';
+
+
 export default function Footer() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { country } = useRegion();
+
+  const handleBackToTuneMavens = (e) => {
+    e.preventDefault();
+    const saved = sessionStorage.getItem(LAST_TM_PAGE_KEY);
+    navigate(saved || '/');
+  };
 
   const getFooterLocation = (code) => {
     switch (code) {
@@ -92,7 +112,15 @@ export default function Footer() {
                   </a>
                 </div>
                 <div className="footer-copy">
-                  © 2026 TuneStream. A TuneMavens Utility.<br />{getFooterLocation(country)}
+                  © 2026 TuneStream.{' '}
+                  <a
+                    href="/"
+                    onClick={handleBackToTuneMavens}
+                    style={{ color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
+                    data-testid="footer-back-to-tunemavens"
+                  >
+                    A TuneMavens Utility.
+                  </a><br />{getFooterLocation(country)}
                 </div>
               </div>
             </div>

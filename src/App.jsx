@@ -3124,7 +3124,15 @@ function AppContent({ sessionUser, handleLogin, handleLogout, getFooterLocation 
                       </a>
                     </div>
                     <div className="footer-copy">
-                      © 2026 TuneStream. A TuneMavens Utility.<br />{getFooterLocation(country)}
+                      © 2026 TuneStream.{' '}
+                      <a
+                        href="/"
+                        onClick={(e) => { e.preventDefault(); navigate(sessionStorage.getItem('tunemavens_last_page') || '/'); }}
+                        style={{ color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
+                        data-testid="footer-back-to-tunemavens-inline"
+                      >
+                        A TuneMavens Utility.
+                      </a><br />{getFooterLocation(country)}
                     </div>
                   </div>
                 </div>
