@@ -1698,8 +1698,10 @@ export default function NativeAppLandingView() {
           </div>
         </div>
 
-        <button type="button" className="landing-slide-nav prev" onClick={goToPrevSlide} aria-label="Previous slide" data-testid="landing-hero-prev">‹</button>
-        <button type="button" className="landing-slide-nav next" onClick={goToNextSlide} aria-label="Next slide" data-testid="landing-hero-next">›</button>
+        <div className={`sui-arrows ${slideState}`}>
+          <button type="button" className="slide-nav prev" onClick={goToPrevSlide} aria-label="Previous slide" data-testid="landing-hero-prev">‹</button>
+          <button type="button" className="slide-nav next" onClick={goToNextSlide} aria-label="Next slide" data-testid="landing-hero-next">›</button>
+        </div>
 
         <div className={`sui-bottom ${slideState}`}>
           <div className="spr">
