@@ -279,6 +279,102 @@ function getLandingBackground(slug) {
   }
 }
 
+// ─── HorizontalSlider ────────────────────────────────────────────────────────
+// Must be defined at module level so React doesn't treat it as a new component
+// type on every render (which would destroy the scroll ref each time).
+function HorizontalSlider({ items, renderItem }) {
+  const scrollRef = useRef(null);
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollAmount = direction === 'left' ? -clientWidth * 0.85 : clientWidth * 0.85;
+      scrollRef.current.scrollTo({
+        left: scrollLeft + scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', width: '100%', overflow: 'visible', padding: '0 28px' }}>
+      <button
+        type="button"
+        onClick={() => scroll('left')}
+        style={{
+          position: 'absolute',
+          left: '0',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 20,
+          background: 'rgba(7, 14, 27, 0.95)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          color: '#fff',
+          width: '38px',
+          height: '38px',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
+          fontSize: '22px',
+          fontWeight: 'bold',
+          pointerEvents: 'auto'
+        }}
+        className="slider-arrow-btn"
+      >‹</button>
+
+      <div
+        ref={scrollRef}
+        style={{
+          display: 'flex',
+          gap: '20px',
+          overflowX: 'auto',
+          scrollBehavior: 'smooth',
+          padding: '10px 4px',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
+        className="hide-scrollbar"
+      >
+        {items.map((item, idx) => (
+          <div key={idx} style={{ flex: '0 0 auto', width: '185px' }}>
+            {renderItem(item)}
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => scroll('right')}
+        style={{
+          position: 'absolute',
+          right: '0',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 20,
+          background: 'rgba(7, 14, 27, 0.95)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          color: '#fff',
+          width: '38px',
+          height: '38px',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
+          fontSize: '22px',
+          fontWeight: 'bold',
+          pointerEvents: 'auto'
+        }}
+        className="slider-arrow-btn"
+      >›</button>
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function NativeAppLandingView() {
   const { slug } = useParams();
   const normalizedSlug = (slug === 'tunestream' || slug === 'tunemavens') ? 'tunestream' : slug;
@@ -725,97 +821,6 @@ export default function NativeAppLandingView() {
       );
     };
 
- const HorizontalSlider = ({ items, renderItem }) => {
-  const scrollRef = useRef(null);
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollAmount = direction === 'left' ? -clientWidth * 0.85 : clientWidth * 0.85;
-      scrollRef.current.scrollTo({
-        left: scrollLeft + scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  return (
-    <div style={{ position: 'relative', width: '100%', overflow: 'visible', padding: '0 28px' }}>
-      <button 
-        type="button" 
-        onClick={() => scroll('left')}
-        style={{
-          position: 'absolute',
-          left: '0',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 20,
-          background: 'rgba(7, 14, 27, 0.95)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: '#fff',
-          width: '38px',
-          height: '38px',
-          borderRadius: '50%',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
-          fontSize: '22px',
-          fontWeight: 'bold',
-          pointerEvents: 'auto'
-        }}
-        className="slider-arrow-btn"
-      >‹</button>
-
-      <div 
-        ref={scrollRef}
-        style={{
-          display: 'flex',
-          gap: '20px',
-          overflowX: 'auto',
-          scrollBehavior: 'smooth',
-          padding: '10px 4px',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }}
-        className="hide-scrollbar"
-      >
-        {items.map((item, idx) => (
-          <div key={idx} style={{ flex: '0 0 auto', width: '185px' }}>
-            {renderItem(item)}
-          </div>
-        ))}
-      </div>
-
-      <button 
-        type="button" 
-        onClick={() => scroll('right')}
-        style={{
-          position: 'absolute',
-          right: '0',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 20,
-          background: 'rgba(7, 14, 27, 0.95)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: '#fff',
-          width: '38px',
-          height: '38px',
-          borderRadius: '50%',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
-          fontSize: '22px',
-          fontWeight: 'bold',
-          pointerEvents: 'auto'
-        }}
-        className="slider-arrow-btn"
-      >›</button>
-    </div>
-  );
-};
 
     const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => {
       const totalPages = Math.ceil(totalItems / itemsPerPage);
