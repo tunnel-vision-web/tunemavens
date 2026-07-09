@@ -1138,7 +1138,30 @@ export default function NativeAppLandingView() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
             {currentCreators.map((c, idx) => (
               <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} onClick={() => alert(`Opening EPK dashboard for ${c.name}`)}>
-                <div style={{ width: '100%', height: '140px', borderRadius: '3px', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px', marginBottom: '16px' }}>{c.avatar}</div>
+                {/* Beautiful album/single sleeve art card replacement */}
+                <div style={{ 
+                  width: '100%', 
+                  height: '140px', 
+                  borderRadius: '3px', 
+                  background: c.bg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between', 
+                  padding: '12px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  marginBottom: '16px',
+                  boxShadow: '0 6px 12px rgba(0,0,0,0.3)',
+                  textAlign: 'left'
+                }}>
+                  {/* Vinyl Groove Rings Overlay */}
+                  <div style={{ position: 'absolute', top: '-15px', right: '-15px', width: '60px', height: '60px', borderRadius: '50%', border: '4px double rgba(255,255,255,0.04)', opacity: 0.8 }} />
+                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>SINGLE ART</span>
+                  <div style={{ zIndex: 2 }}>
+                    <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '900', color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{c.name}</h4>
+                    <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>{c.genre}</p>
+                  </div>
+                </div>
                 <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{c.name}</h3>
                 <p style={{ fontSize: '13px', color: 'var(--mu)', margin: '0 0 8px' }}>{c.genre} · {c.location}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>

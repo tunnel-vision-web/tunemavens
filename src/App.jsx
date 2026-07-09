@@ -2044,6 +2044,8 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
   const [newArtistSplit, setNewArtistSplit] = useState(50);
   const [newProducerSplit, setNewProducerSplit] = useState(30);
   const [newLabelSplit, setNewLabelSplit] = useState(20);
+  const [newCoverBg, setNewCoverBg] = useState('linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
+  const [newCoverText, setNewCoverText] = useState('New Release');
 
   // File drag & drop states
   const [isDragOver, setIsDragOver] = useState(false);
@@ -2056,6 +2058,8 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
   const [editArtist, setEditArtist] = useState('');
   const [editGenre, setEditGenre] = useState('');
   const [editSplit, setEditSplit] = useState('');
+  const [editCoverBg, setEditCoverBg] = useState('');
+  const [editCoverText, setEditCoverText] = useState('');
 
   const startEdit = (tr) => {
     setEditingIsrc(tr.isrc);
@@ -2063,6 +2067,8 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
     setEditArtist(tr.artist);
     setEditGenre(tr.genre);
     setEditSplit(tr.split);
+    setEditCoverBg(tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
+    setEditCoverText(tr.coverText || 'Art');
   };
 
   const saveEdit = (isrc) => {
@@ -2077,7 +2083,9 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
           title: editTitle,
           artist: editArtist,
           genre: editGenre,
-          split: editSplit
+          split: editSplit,
+          coverBg: editCoverBg,
+          coverText: editCoverText
         };
       }
       return t;
@@ -2128,13 +2136,24 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
         const words = cleanName.split(" ");
         const title = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
         const isrcNum = 45682 + index + tracks.length;
+        // Generate random gradients for new ingested files
+        const grads = [
+          'linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%)',
+          'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+          'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+          'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)'
+        ];
+        const coverBg = grads[Math.floor(Math.random() * grads.length)];
+        const coverText = title.split(' ')[0] || 'Single';
         return {
           isrc: `US-123-${isrcNum}`,
           title: title || 'Ingested Audio Track',
           artist: 'Aisha Okoro',
           split: 'Artist (60%) / Producer (40%)',
           genre: 'Amapiano',
-          status: 'valid'
+          status: 'valid',
+          coverBg,
+          coverText
         };
       });
       
@@ -2155,10 +2174,10 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
       if (selectedPreset === 'standard') {
         setValidationResult('pass');
         const standardTracks = [
-          { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid' },
-          { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid' },
-          { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid' },
-          { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid' }
+          { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid', coverBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', coverText: 'Midnight' },
+          { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid', coverBg: 'linear-gradient(135deg, #ec4899 0%, #3b82f6 100%)', coverText: 'Shadows' },
+          { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', coverText: 'Sunset' },
+          { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe' }
         ];
         // Merge without duplicate ISRCs
         setTracks(prev => {
@@ -2197,13 +2216,17 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
       artist: newArtist,
       split: `Artist (${newArtistSplit}%) / Producer (${newProducerSplit}%) / Label (${newLabelSplit}%)`,
       genre: newGenre,
-      status: 'valid'
+      status: 'valid',
+      coverBg: newCoverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+      coverText: newCoverText || 'Art'
     };
 
     setTracks(prev => [newTrack, ...prev]);
     setNewTitle('');
     setNewArtist('');
     setNewIsrc('');
+    setNewCoverBg('linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
+    setNewCoverText('New Release');
     setCurrentPage(1);
     alert('Track manually added to catalog successfully!');
   };
@@ -2325,6 +2348,12 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
               <input type="text" placeholder="Track Title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
               <input type="text" placeholder="Artist" value={newArtist} onChange={(e) => setNewArtist(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
               <input type="text" placeholder="ISRC (e.g. US-123-45688)" value={newIsrc} onChange={(e) => setNewIsrc(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                <input type="text" placeholder="Art Label (e.g. Midnight)" value={newCoverText} onChange={(e) => setNewCoverText(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '5px' }} />
+                <input type="text" placeholder="Art Background CSS" value={newCoverBg} onChange={(e) => setNewCoverBg(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '5px' }} />
+              </div>
+
               <select value={newGenre} onChange={(e) => setNewGenre(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }}>
                 <option value="Afro-House">Afro-House</option>
                 <option value="Deep-House">Deep-House</option>
@@ -2372,6 +2401,7 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
               <table className="dashboard-table" style={{ fontSize: '12.5px' }}>
                 <thead>
                   <tr>
+                    <th>Art</th>
                     <th>ISRC</th>
                     <th>Title</th>
                     <th>Artist</th>
@@ -2385,9 +2415,27 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
                     const isEditing = editingIsrc === tr.isrc;
                     return (
                       <tr key={idx}>
-                        <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
                         {isEditing ? (
                           <>
+                            <td>
+                              <input 
+                                type="text" 
+                                value={editCoverText} 
+                                onChange={(e) => setEditCoverText(e.target.value)} 
+                                className="form-control" 
+                                style={{ fontSize: '10px', padding: '2px', width: '56px', marginBottom: '2px' }} 
+                                placeholder="Text"
+                              />
+                              <input 
+                                type="text" 
+                                value={editCoverBg} 
+                                onChange={(e) => setEditCoverBg(e.target.value)} 
+                                className="form-control" 
+                                style={{ fontSize: '10px', padding: '2px', width: '56px' }} 
+                                placeholder="Bg CSS"
+                              />
+                            </td>
+                            <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
                             <td>
                               <input 
                                 type="text" 
@@ -2449,6 +2497,29 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
                           </>
                         ) : (
                           <>
+                            <td>
+                              <div style={{
+                                width: '38px',
+                                height: '38px',
+                                borderRadius: '4px',
+                                background: tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '8px',
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                overflow: 'hidden',
+                                textAlign: 'center',
+                                padding: '2px',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {tr.coverText || 'Art'}
+                              </div>
+                            </td>
+                            <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
                             <td style={{ fontWeight: '700', color: '#fff' }}>{tr.title}</td>
                             <td>{tr.artist}</td>
                             <td>
@@ -3388,10 +3459,10 @@ function App() {
   });
 
   const [catalogTracks, setCatalogTracks] = useState([
-    { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid' },
-    { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid' },
-    { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid' },
-    { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid' }
+    { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid', coverBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', coverText: 'Midnight' },
+    { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid', coverBg: 'linear-gradient(135deg, #ec4899 0%, #3b82f6 100%)', coverText: 'Shadows' },
+    { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', coverText: 'Sunset' },
+    { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe' }
   ]);
 
   const [ledgerRows, setLedgerRows] = useState([

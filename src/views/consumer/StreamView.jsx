@@ -160,12 +160,37 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
               <div className="arch-card glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
                 {/* Cover Art Visual */}
-                <div style={{ position: 'relative', width: '100%', paddingBottom: '100%', background: 'linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%)', borderRadius: 'var(--r)', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.4)' }}>
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', padding: '20px', textAlign: 'center' }}>
-                    <span style={{ fontSize: '64px', marginBottom: '12px', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }}>💿</span>
-                    <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 4px' }}>{selectedTrack.title}</h3>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', margin: 0 }}>{selectedTrack.artist}</p>
+                <div style={{ 
+                  position: 'relative', 
+                  width: '100%', 
+                  paddingBottom: '100%', 
+                  background: selectedTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', 
+                  borderRadius: 'var(--r)', 
+                  overflow: 'hidden', 
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
+                  transition: 'background 0.5s ease'
+                }}>
+                  {/* Vinyl Groove Rings Overlay */}
+                  <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '60%', height: '60%', borderRadius: '50%', border: '6px double rgba(255,255,255,0.05)', opacity: 0.8 }} />
+                  <div style={{ position: 'absolute', top: '15%', left: '15%', width: '70%', height: '70%', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.03)', pointerEvents: 'none' }} />
+
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: '9px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.12)', padding: '4px 8px', borderRadius: '3px', backdropFilter: 'blur(4px)' }}>
+                        Studio Master
+                      </span>
+                      <span style={{ fontSize: '20px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>💿</span>
+                    </div>
+
+                    <div style={{ textAlign: 'left' }}>
+                      <span style={{ fontSize: '48px', fontWeight: '900', display: 'block', lineHeight: '1', fontFamily: '"Outfit", sans-serif', letterSpacing: '-1px', opacity: 0.15, marginBottom: '-8px' }}>
+                        {selectedTrack.coverText || 'ALBUM'}
+                      </span>
+                      <h3 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px', letterSpacing: '-0.3px', lineHeight: '1.2' }}>{selectedTrack.title}</h3>
+                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, fontWeight: '500' }}>{selectedTrack.artist}</p>
+                    </div>
                   </div>
+
                   {isPlaying && (
                     <div style={{ position: 'absolute', bottom: '12px', left: '12px', display: 'flex', gap: '3px', alignItems: 'flex-end', height: '16px' }}>
                       {[1, 2, 3, 4, 5].map(bar => (
@@ -265,12 +290,36 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
                         border: selectedTrack?.isrc === tr.isrc ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.06)',
                         borderRadius: '4px',
                         cursor: 'pointer',
-                        textAlign: 'left',
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'center',
                         transition: 'all 0.2s ease'
                       }}
                     >
-                      <strong style={{ display: 'block', color: '#fff', fontSize: '12px' }}>{tr.title}</strong>
-                      <span style={{ fontSize: '10.5px', color: 'var(--mu)' }}>{tr.artist} • {tr.isrc}</span>
+                      <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '3px',
+                        background: tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '7px',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        flexShrink: 0,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                        overflow: 'hidden',
+                        padding: '2px',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {tr.coverText || 'Art'}
+                      </div>
+                      <div style={{ textAlign: 'left', flex: 1 }}>
+                        <strong style={{ display: 'block', color: '#fff', fontSize: '12px' }}>{tr.title}</strong>
+                        <span style={{ fontSize: '10.5px', color: 'var(--mu)' }}>{tr.artist} • {tr.isrc}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
