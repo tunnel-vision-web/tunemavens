@@ -373,7 +373,7 @@ export default function HomeView({ sessionUser }) {
                 <p className="flagship-text" style={{ fontSize: '17px', lineHeight: '1.6' }}>
                   <strong>Ideal for Indie Label Managers & Music Collectives.</strong> Stop fighting with Excel sheets and manual payouts. Set clean percentages for authors, producers, and labels once. Load your distributor's statement CSV, and let the cascade engine calculate everyone's share in seconds.
                 </p>
-                <SplitCascadeCarousel step={ledgerStep} setStep={setSyncStep} />
+                <SplitCascadeCarousel step={ledgerStep} setStep={setLedgerStep} />
                 <Link to="/apps" className="flagship-link" style={{ marginTop: '16px', display: 'inline-block' }}>Manage Roster Splits &rarr;</Link>
               </div>
             </div>

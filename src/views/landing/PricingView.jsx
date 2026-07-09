@@ -1,5 +1,6 @@
 import React from 'react'
 import { Check } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
@@ -8,6 +9,7 @@ import headerPricingWesternImg from '../../assets/images/header_pricing_western.
 
 export default function PricingView() {
   const { formatPrice } = useRegion();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -28,7 +30,7 @@ export default function PricingView() {
               <li className="plan-feature-item"><Check size={12} color="var(--mu2)" /> No custom domain setup</li>
               <li className="plan-feature-item"><Check size={12} color="var(--mu2)" /> Standard soundwave mastering</li>
             </ul>
-            <button className="plan-btn outline">Start Free</button>
+            <button className="plan-btn outline" onClick={() => navigate('/register')}>Start Free</button>
           </div>
 
           {/* Tier 2 */}
@@ -43,7 +45,7 @@ export default function PricingView() {
               <li className="plan-feature-item check"><Check size={12} color="var(--cyan)" /> High-speed AI mastering engine</li>
               <li className="plan-feature-item check"><Check size={12} color="var(--cyan)" /> Escrow contract protection</li>
             </ul>
-            <button className="plan-btn cyan">Buy Creator Package</button>
+            <button className="plan-btn cyan" onClick={() => navigate('/register')}>Buy Creator Package</button>
           </div>
 
           {/* Tier 3 */}
@@ -57,7 +59,7 @@ export default function PricingView() {
               <li className="plan-feature-item check"><Check size={12} color="var(--cyan)" /> Multi-app dashboard sharing</li>
               <li className="plan-feature-item check"><Check size={12} color="var(--cyan)" /> Priority catalog curation support</li>
             </ul>
-            <button className="plan-btn outline">Buy Label Package</button>
+            <button className="plan-btn outline" onClick={() => navigate('/register')}>Buy Label Package</button>
           </div>
         </div>
       </div>

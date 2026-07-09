@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { Check } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
 import headerHelpImg from '../../assets/images/header_help.png'
 import headerHelpWesternImg from '../../assets/images/header_help_western.png'
 
 export default function HelpView() {
+  const [ticketSubmitted, setTicketSubmitted] = useState(false);
   const faqs = [
     { q: "How do credit deductions work?", a: "Credits are shared. Buying a package grants credits that can be spent on TuneMavens tools (like mastering or sync briefing) and Intermaven apps." },
     { q: "Can I use my own custom domain name?", a: "Yes. Using the Hosting Manager app, you can search, register, and link custom domains to your EPK and artist websites." },
@@ -31,23 +33,31 @@ export default function HelpView() {
         </div>
 
         <div className="contact-card glass-panel">
-          <form onSubmit={(e) => { e.preventDefault(); alert('Support ticket logged successfully!'); }}>
-            <div className="form-group">
-              <label className="form-label">Subject</label>
-              <input type="text" placeholder="E.g. Domain mapping assistance" className="form-control" required />
+          {ticketSubmitted ? (
+            <div className="text-center" style={{ padding: '20px 0' }}>
+              <Check size={48} color="var(--cyan)" style={{ margin: '0 auto 16px' }} />
+              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Ticket Submitted!</h3>
+              <p style={{ fontSize: '14px', color: 'var(--mu)' }}>We've received your support request and will respond within 24 hours.</p>
             </div>
-            <div className="form-group">
-              <label className="form-label">Description</label>
-              <textarea rows="4" placeholder="Explain the problem in detail..." className="form-control" style={{ resize: 'none' }} required></textarea>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input type="email" placeholder="name@example.com" className="form-control" required />
-            </div>
-            <button type="submit" className="btn-primary" style={{ width: '100%', padding: '12px' }}>
-              Submit Ticket
-            </button>
-          </form>
+          ) : (
+            <form onSubmit={(e) => { e.preventDefault(); setTicketSubmitted(true); }}>
+              <div className="form-group">
+                <label className="form-label">Subject</label>
+                <input type="text" placeholder="E.g. Domain mapping assistance" className="form-control" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea rows="4" placeholder="Explain the problem in detail..." className="form-control" style={{ resize: 'none' }} required></textarea>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email Address</label>
+                <input type="email" placeholder="name@example.com" className="form-control" required />
+              </div>
+              <button type="submit" className="btn-primary" style={{ width: '100%', padding: '12px' }}>
+                Submit Ticket
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </>
