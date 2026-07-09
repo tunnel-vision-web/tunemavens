@@ -332,7 +332,9 @@ function DashboardView({
   catalogTracks,
   setCatalogTracks,
   ledgerRows,
-  setLedgerRows
+  setLedgerRows,
+  creatorEpk,
+  setCreatorEpk
 }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('home');
@@ -383,6 +385,14 @@ function DashboardView({
             setActiveTab={setActiveTab} 
             tracks={catalogTracks} 
             setTracks={setCatalogTracks} 
+          />
+        );
+      case 'epk-builder':
+        return (
+          <EPKBuilderPanel 
+            tracks={catalogTracks} 
+            epk={creatorEpk} 
+            setEpk={setCreatorEpk} 
           />
         );
       case 'splits':
@@ -445,6 +455,7 @@ function DashboardView({
     const allItems = {
       home: { id: 'home', label: 'Overview', icon: RiBarChartFill, category: 'Dashboard' },
       catalog: { id: 'catalog', label: 'Catalog Porting', icon: RiDatabase2Fill, category: 'Catalog & IP' },
+      'epk-builder': { id: 'epk-builder', label: 'EPK Builder', icon: RiDiscFill, category: 'Catalog & IP' },
       splits: { id: 'splits', label: 'Split Cascade', icon: RiCoinsFill, category: 'Royalty Ledgers' },
       djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
       sync: { id: 'sync', label: 'Sync Marketplace', icon: RiGlobalFill, category: 'Pools & Sync' },
@@ -467,10 +478,10 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'promoted-acts', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'promoted-acts', 'profile'];
         break;
       case 'label':
-        visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
         break;
       case 'dj':
         visibleKeys = ['home', 'app-marketplace', 'djpool', 'library', 'tips', 'profile'];
@@ -484,7 +495,7 @@ function DashboardView({
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'app-marketplace', 'catalog', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
         break;
     }
 
@@ -1671,6 +1682,306 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
           {saving ? 'Saving changes...' : 'Save Settings'}
         </button>
       </form>
+    </div>
+  );
+}
+
+// ================= SUB-PANEL: EPK Builder =================
+function EPKBuilderPanel({ tracks, epk, setEpk }) {
+  const [subdomain, setSubdomain] = useState(epk.subdomain || '');
+  const [headline, setHeadline] = useState(epk.headline || '');
+  const [themeBg, setThemeBg] = useState(epk.themeBg || '');
+  const [featuredTrackIsrc, setFeaturedTrackIsrc] = useState(epk.featuredTrackIsrc || '');
+  const [spotify, setSpotify] = useState(epk.spotify || '');
+  const [instagram, setInstagram] = useState(epk.instagram || '');
+  const [soundcloud, setSoundcloud] = useState(epk.soundcloud || '');
+  const [bookingEmail, setBookingEmail] = useState(epk.bookingEmail || '');
+  const [pressOutlet, setPressOutlet] = useState(epk.pressOutlet || '');
+  const [pressQuote, setPressQuote] = useState(epk.pressQuote || '');
+  const [bio, setBio] = useState(epk.bio || '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setTimeout(() => {
+      setSaving(false);
+      setEpk({
+        subdomain,
+        headline,
+        themeBg,
+        featuredTrackIsrc,
+        spotify,
+        instagram,
+        soundcloud,
+        bookingEmail,
+        pressOutlet,
+        pressQuote,
+        bio
+      });
+      alert('Intermaven Standard EPK published & synchronized successfully!');
+    }, 1200);
+  };
+
+  const selectedTrack = tracks.find(t => t.isrc === featuredTrackIsrc) || tracks[0];
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', textAlign: 'left' }}>
+      
+      {/* Form column */}
+      <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '12px' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>Intermaven Standard EPK Builder</h3>
+            <p style={{ fontSize: '11.5px', color: 'var(--mu)', margin: '4px 0 0' }}>Configure your Electronic Press Kit profile & subdomain portal.</p>
+          </div>
+          <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--cyan)', background: 'rgba(34,211,238,0.08)', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Core EPK v2.1
+          </span>
+        </div>
+
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* Subdomain */}
+          <div>
+            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>EPK Subdomain Mapping</label>
+            <div style={{ display: 'flex', alignItems: 'center', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
+              <span style={{ fontSize: '12px', color: 'var(--mu)', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRight: '1px solid rgba(255,255,255,0.06)' }}>https://</span>
+              <input 
+                type="text" 
+                value={subdomain} 
+                onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                className="form-control"
+                style={{ flex: 1, border: 'none', background: 'none', color: '#fff', padding: '8px 12px', fontSize: '13px' }}
+                placeholder="subdomain"
+                required
+              />
+              <span style={{ fontSize: '12px', color: 'var(--cyan)', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderLeft: '1px solid rgba(255,255,255,0.06)', fontWeight: 'bold' }}>.tunemavens.com</span>
+            </div>
+            <span style={{ fontSize: '10px', color: 'var(--mu)', marginTop: '4px', display: 'block' }}>
+              Also resolves to <strong>{subdomain || 'yoursubdomain'}.intermaven.io</strong> via shared network profile.
+            </span>
+          </div>
+
+          {/* Headline & Background */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Headline / Punchline</label>
+              <input 
+                type="text" 
+                value={headline} 
+                onChange={(e) => setHeadline(e.target.value)} 
+                className="form-control" 
+                style={{ width: '100%', fontSize: '12.5px', padding: '8px' }} 
+                required 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>EPK Cover Background CSS</label>
+              <input 
+                type="text" 
+                value={themeBg} 
+                onChange={(e) => setThemeBg(e.target.value)} 
+                className="form-control" 
+                style={{ width: '100%', fontSize: '12.5px', padding: '8px' }} 
+                required 
+              />
+            </div>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Biography</label>
+            <textarea 
+              value={bio} 
+              onChange={(e) => setBio(e.target.value)} 
+              className="form-control" 
+              style={{ width: '100%', fontSize: '12.5px', padding: '8px', height: '60px', resize: 'none' }}
+              required
+            />
+          </div>
+
+          {/* Featured Showcase Track selection */}
+          <div>
+            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Featured Showcase Track</label>
+            <select 
+              value={featuredTrackIsrc} 
+              onChange={(e) => setFeaturedTrackIsrc(e.target.value)}
+              className="form-control"
+              style={{ width: '100%', background: '#0a0f1d', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', fontSize: '12.5px', padding: '8px' }}
+            >
+              {tracks.map(t => (
+                <option key={t.isrc} value={t.isrc}>{t.title} ({t.artist})</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Press Review Quote */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Press Outlet</label>
+              <input 
+                type="text" 
+                value={pressOutlet} 
+                onChange={(e) => setPressOutlet(e.target.value)} 
+                className="form-control" 
+                style={{ width: '100%', fontSize: '12.5px', padding: '8px' }} 
+                placeholder="Pitchfork" 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Review / Press Quote</label>
+              <input 
+                type="text" 
+                value={pressQuote} 
+                onChange={(e) => setPressQuote(e.target.value)} 
+                className="form-control" 
+                style={{ width: '100%', fontSize: '12.5px', padding: '8px' }} 
+                placeholder="Outstanding track delivery..." 
+              />
+            </div>
+          </div>
+
+          {/* Social Links */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
+            <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Social Networks & Contact</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <input type="text" placeholder="Spotify URL" value={spotify} onChange={(e) => setSpotify(e.target.value)} className="form-control" style={{ fontSize: '11.5px', padding: '6px' }} />
+              <input type="text" placeholder="Soundcloud URL" value={soundcloud} onChange={(e) => setSoundcloud(e.target.value)} className="form-control" style={{ fontSize: '11.5px', padding: '6px' }} />
+              <input type="text" placeholder="Instagram URL" value={instagram} onChange={(e) => setInstagram(e.target.value)} className="form-control" style={{ fontSize: '11.5px', padding: '6px' }} />
+              <input type="email" placeholder="Booking Contact Email" value={bookingEmail} onChange={(e) => setBookingEmail(e.target.value)} className="form-control" style={{ fontSize: '11.5px', padding: '6px' }} />
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={saving}
+            className="btn-primary" 
+            style={{ width: '100%', padding: '10px', fontSize: '12.5px', marginTop: '6px', fontWeight: 'bold' }}
+          >
+            {saving ? 'Publishing EPK to DNS...' : 'Publish & Sync EPK'}
+          </button>
+        </form>
+      </div>
+
+      {/* Live Preview column */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <h4 style={{ margin: 0, fontSize: '12px', color: 'var(--mu)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Live EPK Resolving Preview
+        </h4>
+
+        {/* Replica EPK Portal */}
+        <div style={{
+          background: '#070a13',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          boxShadow: '0 15px 30px rgba(0,0,0,0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '420px',
+          color: '#fff'
+        }}>
+          {/* Header Banner */}
+          <div style={{ background: themeBg, padding: '24px 16px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+            <div style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '8px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.12)', padding: '2px 6px', borderRadius: '2px' }}>
+              {subdomain || 'aisha'}.tunemavens.com
+            </div>
+            
+            <div style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.1)',
+              border: '2px solid #fff',
+              margin: '0 auto 8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '28px',
+              fontWeight: '900',
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+            }}>
+              A
+            </div>
+            <h3 style={{ margin: '0 0 2px 0', fontSize: '16px', fontWeight: '900', textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>Aisha Okoro</h3>
+            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>{headline || 'Headline Statement'}</span>
+          </div>
+
+          {/* Bio block */}
+          <div style={{ padding: '16px', fontSize: '11.5px', color: 'var(--mu)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <p style={{ margin: 0, lineHeight: '1.4' }}>{bio || 'Biography content...'}</p>
+          </div>
+
+          {/* Featured Showcase Item */}
+          {selectedTrack && (
+            <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>
+                Featured Audio Master
+              </span>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '3px',
+                  background: selectedTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '7px',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  flexShrink: 0
+                }}>
+                  {selectedTrack.coverText || 'Art'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong style={{ display: 'block', fontSize: '11.5px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedTrack.title}</strong>
+                  <span style={{ fontSize: '9.5px', color: 'var(--mu)' }}>{selectedTrack.artist} • {selectedTrack.genre}</span>
+                </div>
+                <button 
+                  onClick={() => alert(`Play featured master track from EPK Showcase`)}
+                  style={{
+                    width: '26px',
+                    height: '26px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: 'var(--cyan)',
+                    color: '#000',
+                    cursor: 'pointer',
+                    fontSize: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Press Review Quote */}
+          {pressQuote && (
+            <div style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '11px', color: '#cbd5e1' }}>
+              <p style={{ margin: '0 0 4px', fontStyle: 'italic' }}>"{pressQuote}"</p>
+              <strong style={{ color: 'var(--cyan)', fontSize: '9.5px' }}>— {pressOutlet || 'Press Outlet'}</strong>
+            </div>
+          )}
+
+          {/* Footer & Social Badge */}
+          <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', background: 'rgba(0,0,0,0.2)', fontSize: '11px' }}>
+            <span style={{ color: 'var(--mu)', fontSize: '9.5px' }}>Booking: {bookingEmail || 'N/A'}</span>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {spotify && <span style={{ opacity: 0.6, fontSize: '12px' }}>🟢</span>}
+              {soundcloud && <span style={{ opacity: 0.6, fontSize: '12px' }}>🟠</span>}
+              {instagram && <span style={{ opacity: 0.6, fontSize: '12px' }}>📸</span>}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   );
 }
@@ -3719,7 +4030,12 @@ function AppContent({
           <Route path="/tunestream/features" element={<TuneStreamFeaturesView />} />
           <Route path="/tunestream/creators" element={<TuneStreamCreatorsView />} />
           <Route path="/tunestream/help" element={<TuneStreamHelpView />} />
-          <Route path="/native-apps/:slug" element={<NativeAppLandingView />} />
+          <Route path="/native-apps/:slug" element={
+            <NativeAppLandingView 
+              creatorEpk={creatorEpk} 
+              catalogTracks={catalogTracks} 
+            />
+          } />
           <Route path="/for" element={<PerfectForPageView />} />
           <Route path="/for/:role" element={<RoleLandingView />} />
           <Route path="/pricing" element={<PricingView />} />
@@ -3750,6 +4066,8 @@ function AppContent({
               setCatalogTracks={setCatalogTracks}
               ledgerRows={ledgerRows}
               setLedgerRows={setLedgerRows}
+              creatorEpk={creatorEpk}
+              setCreatorEpk={setCreatorEpk}
             />
           } />
         </Routes>
@@ -3983,6 +4301,20 @@ function App() {
     { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', coverText: 'Sunset', isFeatured: true },
     { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe', isFeatured: false }
   ]);
+
+  const [creatorEpk, setCreatorEpk] = useState({
+    subdomain: 'aisha',
+    headline: 'Nairobi Electronic Sunset Pioneer',
+    themeBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+    featuredTrackIsrc: 'US-123-45678',
+    spotify: 'https://spotify.com/artist/aisha',
+    instagram: 'https://instagram.com/aisha_okoro',
+    soundcloud: 'https://soundcloud.com/aisha',
+    bookingEmail: 'booking@aishaokoro.com',
+    pressOutlet: 'Pitchfork',
+    pressQuote: 'Okoro is redefining the contours of Afro-House on a global scale.',
+    bio: 'Independent creator on the TuneMavens and Intermaven network.'
+  });
 
   const [ledgerRows, setLedgerRows] = useState([
     { id: 'tx_821', title: 'Midnight Grooves', gross: 2500.00, comm: 250.00, label: 675.00, artist: 787.50, manager: 157.50, net: 630.00, status: 'processed' },

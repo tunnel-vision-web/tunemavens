@@ -371,7 +371,7 @@ function HorizontalSlider({ items, renderItem }) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function NativeAppLandingView() {
+export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = [] }) {
   const { slug } = useParams();
   const normalizedSlug = (slug === 'tunestream' || slug === 'tunemavens') ? 'tunestream' : slug;
   const data = NATIVE_APP_LANDING_DATA[normalizedSlug];
@@ -379,6 +379,8 @@ export default function NativeAppLandingView() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const view = searchParams.get('view') || 'listen';
+
+  const [selectedEpk, setSelectedEpk] = useState(null);
 
   const [playlists, setPlaylists] = useState(() => {
     try {
@@ -1104,6 +1106,7 @@ export default function NativeAppLandingView() {
 
     const renderExplore = () => {
       const creators = [
+        { name: 'Aisha Okoro', genre: 'Afro-House', location: 'Nairobi, Kenya', streams: '3.5M', bg: creatorEpk?.themeBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', isCustom: true },
         { name: 'Alex Rivera', genre: 'Afrobeats', location: 'Lagos, Nigeria', streams: '1.2M', avatar: '🎙️', bg: '#8b5cf6' },
         { name: 'Tunde & Friends', genre: 'Highlife', location: 'Accra, Ghana', streams: '890K', avatar: '🥁', bg: '#ec4899' },
         { name: 'Mercy Wangari', genre: 'Afrosoul', location: 'Nairobi, Kenya', streams: '620K', avatar: '🎤', bg: '#10b981' },
@@ -1123,6 +1126,40 @@ export default function NativeAppLandingView() {
       const indexOfFirst = indexOfLast - itemsPerPage;
       const currentCreators = creators.slice(indexOfFirst, indexOfLast);
 
+      const handleViewEpk = (c) => {
+        if (c.isCustom) {
+          setSelectedEpk({
+            name: 'Aisha Okoro',
+            subdomain: creatorEpk?.subdomain || 'aisha',
+            headline: creatorEpk?.headline || 'Nairobi Electronic Sunset Pioneer',
+            themeBg: creatorEpk?.themeBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+            bio: creatorEpk?.bio || 'Independent creator on the TuneMavens and Intermaven network.',
+            pressQuote: creatorEpk?.pressQuote || 'Okoro is redefining the contours of Afro-House on a global scale.',
+            pressOutlet: creatorEpk?.pressOutlet || 'Pitchfork',
+            spotify: creatorEpk?.spotify || 'https://spotify.com',
+            soundcloud: creatorEpk?.soundcloud || 'https://soundcloud.com',
+            instagram: creatorEpk?.instagram || 'https://instagram.com',
+            bookingEmail: creatorEpk?.bookingEmail || 'booking@aishaokoro.com',
+            featuredTrack: catalogTracks.find(t => t.isrc === creatorEpk?.featuredTrackIsrc) || catalogTracks[0]
+          });
+        } else {
+          setSelectedEpk({
+            name: c.name,
+            subdomain: c.name.toLowerCase().replace(/[^a-z]/g, ''),
+            headline: `Sensational ${c.genre} pioneer representing ${c.location}`,
+            themeBg: c.bg,
+            bio: `${c.name} is a key independent creator on the TuneMavens network, producing premium ${c.genre} releases with dynamic royalty cascade structures.`,
+            pressQuote: `One of the most promising ${c.genre} acts of the decade.`,
+            pressOutlet: 'The Guardian',
+            spotify: 'https://spotify.com',
+            soundcloud: 'https://soundcloud.com',
+            instagram: 'https://instagram.com',
+            bookingEmail: `${c.name.toLowerCase().replace(/[^a-z]/g, '')}@booking.com`,
+            featuredTrack: { title: `${c.genre} Anthem`, artist: c.name, coverBg: c.bg, coverText: c.name.split(' ')[0] }
+          });
+        }
+      };
+
       return (
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>Discover new talent and verify their splits on the Intermaven shared ledger.</p>
@@ -1137,7 +1174,7 @@ export default function NativeAppLandingView() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
             {currentCreators.map((c, idx) => (
-              <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} onClick={() => alert(`Opening EPK dashboard for ${c.name}`)}>
+              <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} onClick={() => handleViewEpk(c)}>
                 {/* Beautiful album/single sleeve art card replacement */}
                 <div style={{ 
                   width: '100%', 
@@ -1178,6 +1215,172 @@ export default function NativeAppLandingView() {
             itemsPerPage={itemsPerPage}
             onPageChange={(page) => { setExplorePage(page); }}
           />
+
+          {/* Dynamic overlay modal to resolve EPK public view */}
+          {selectedEpk && (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(10px)',
+              zIndex: 999999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }} onClick={() => setSelectedEpk(null)}>
+              <div 
+                style={{
+                  background: '#070a13',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '12px',
+                  width: '100%',
+                  maxWidth: '500px',
+                  boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  maxHeight: '90vh',
+                  color: '#fff',
+                  textAlign: 'left'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header Banner */}
+                <div style={{ background: selectedEpk.themeBg, padding: '32px 24px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+                  <button 
+                    onClick={() => setSelectedEpk(null)}
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      background: 'rgba(0,0,0,0.4)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '28px',
+                      height: '28px',
+                      color: '#fff',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      zIndex: 10
+                    }}
+                    title="Close Press Kit"
+                  >
+                    ✕
+                  </button>
+                  <div style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '9px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.15)', padding: '3px 8px', borderRadius: '3px', fontWeight: 'bold' }}>
+                    {selectedEpk.subdomain}.tunemavens.com
+                  </div>
+                  
+                  <div style={{
+                    width: '70px',
+                    height: '70px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '2px solid #fff',
+                    margin: '10px auto 10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '32px',
+                    fontWeight: '900',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.4)',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+                  }}>
+                    {selectedEpk.name.charAt(0)}
+                  </div>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: '900', textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>{selectedEpk.name}</h3>
+                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 3px rgba(0,0,0,0.4)', fontWeight: '500' }}>{selectedEpk.headline}</span>
+                </div>
+
+                {/* Body Content (Scrollable) */}
+                <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                  {/* Biography */}
+                  <div>
+                    <h4 style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>
+                      Artist Biography
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5' }}>{selectedEpk.bio}</p>
+                  </div>
+
+                  {/* Featured Track */}
+                  {selectedEpk.featuredTrack && (
+                    <div>
+                      <h4 style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>
+                        Featured Audio Showcase
+                      </h4>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '4px',
+                          background: selectedEpk.featuredTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '8px',
+                          color: '#fff',
+                          fontWeight: 'bold',
+                          flexShrink: 0,
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+                        }}>
+                          {selectedEpk.featuredTrack.coverText || 'Art'}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <strong style={{ display: 'block', fontSize: '12.5px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedEpk.featuredTrack.title}</strong>
+                          <span style={{ fontSize: '10px', color: 'var(--mu)' }}>{selectedEpk.featuredTrack.artist} • {selectedEpk.featuredTrack.genre || 'Amapiano'}</span>
+                        </div>
+                        <button 
+                          onClick={() => alert(`Play featured master track from EPK: ${selectedEpk.featuredTrack.title}`)}
+                          style={{
+                            width: '30px',
+                            height: '30px',
+                            borderRadius: '50%',
+                            border: 'none',
+                            background: 'var(--cyan)',
+                            color: '#000',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            boxShadow: '0 0 6px var(--cyan)'
+                          }}
+                        >
+                          ▶
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Press Review Quote */}
+                  {selectedEpk.pressQuote && (
+                    <div style={{ padding: '16px', background: 'rgba(255,255,255,0.01)', borderRadius: '6px', borderLeft: '3px solid var(--cyan)', fontSize: '12px', color: '#e2e8f0' }}>
+                      <p style={{ margin: '0 0 6px 0', fontStyle: 'italic', lineHeight: '1.4' }}>"{selectedEpk.pressQuote}"</p>
+                      <strong style={{ color: 'var(--cyan)', fontSize: '10px' }}>— {selectedEpk.pressOutlet}</strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer details */}
+                <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--mu)', fontSize: '10.5px' }}>Booking: {selectedEpk.bookingEmail || 'N/A'}</span>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    {selectedEpk.spotify && <span style={{ opacity: 0.8, fontSize: '14px', cursor: 'pointer' }} onClick={() => alert('Opening Spotify Link')}>🟢</span>}
+                    {selectedEpk.soundcloud && <span style={{ opacity: 0.8, fontSize: '14px', cursor: 'pointer' }} onClick={() => alert('Opening Soundcloud Link')}>🟠</span>}
+                    {selectedEpk.instagram && <span style={{ opacity: 0.8, fontSize: '14px', cursor: 'pointer' }} onClick={() => alert('Opening Instagram Link')}>📸</span>}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
         </div>
       );
     };
