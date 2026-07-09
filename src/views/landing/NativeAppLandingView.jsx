@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill } from 'react-icons/ri'
+import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill } from 'react-icons/ri'
 import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
 import FaqItem from '../../components/common/FaqItem.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -1707,7 +1707,22 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             <span style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.1em' }}>TuneStream Premium</span>
             <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: '900', margin: '12px 0' }}>Go Premium. Stream without limits.</h2>
             <p style={{ color: '#cbd5e1', fontSize: '16px', marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>Ad-free listening, lossless FLAC quality, offline caching, and direct creator support. Pay-as-you-go using our credit system.</p>
-            <button onClick={handleGetPremium} className="btn-primary" style={{ padding: '12px 32px', fontSize: '15px', background: 'var(--green)', border: 'none', cursor: 'pointer' }}>
+            <button 
+              onClick={handleGetPremium} 
+              className="btn-primary" 
+              style={{ 
+                padding: '12px 36px', 
+                fontSize: '15px', 
+                background: 'var(--cyan)', 
+                color: '#000', 
+                fontWeight: 'bold', 
+                border: 'none', 
+                borderRadius: '4px', 
+                cursor: 'pointer',
+                boxShadow: '0 0 15px rgba(34,211,238,0.25)',
+                transition: 'all 0.2s ease'
+              }}
+            >
               GET PREMIUM
             </button>
           </div>
@@ -1715,13 +1730,13 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
           <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', marginBottom: '24px', textAlign: 'center' }}>Experience premium features</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '50px' }}>
             {[
-              { title: 'Zero Ads', desc: 'Stream your music without any audio or visual advertisements. Total focus on the tunes.', icon: '🚫' },
-              { title: 'Lossless Studio Audio', desc: 'Enjoy high-fidelity 24-bit / 96kHz FLAC audio, preserving every detail from the mix studio.', icon: '🎚️' },
-              { title: 'Offline Caching', desc: 'Save up to 8GB of music files directly to your mobile storage. Perfect for flights or remote zones.', icon: '📥' },
-              { title: 'Direct Tipping', desc: 'Unlock mid-listen tipping. Your support enters the cascade split directly to creator wallets.', icon: '🪙' },
+              { title: 'Zero Ads', desc: 'Stream your music without any audio or visual advertisements. Total focus on the tunes.', icon: <RiVolumeMuteFill size={32} color="var(--cyan)" style={{ display: 'block', margin: '0 auto 12px' }} /> },
+              { title: 'Lossless Studio Audio', desc: 'Enjoy high-fidelity 24-bit / 96kHz FLAC audio, preserving every detail from the mix studio.', icon: <RiEqualizerFill size={32} color="var(--cyan)" style={{ display: 'block', margin: '0 auto 12px' }} /> },
+              { title: 'Offline Caching', desc: 'Save up to 8GB of music files directly to your mobile storage. Perfect for flights or remote zones.', icon: <RiDownloadFill size={32} color="var(--cyan)" style={{ display: 'block', margin: '0 auto 12px' }} /> },
+              { title: 'Direct Tipping', desc: 'Unlock mid-listen tipping. Your support enters the cascade split directly to creator wallets.', icon: <RiCoinsFill size={32} color="var(--cyan)" style={{ display: 'block', margin: '0 auto 12px' }} /> },
             ].map((item, idx) => (
-              <div key={idx} className="glass-panel" style={{ padding: '20px', borderRadius: '3px', background: 'rgba(16,185,129,0.01)', border: '1px solid rgba(16,185,129,0.06)' }}>
-                <span style={{ fontSize: '24px', display: 'block', marginBottom: '12px', textAlign: 'center' }}>{item.icon}</span>
+              <div key={idx} className="glass-panel" style={{ padding: '24px 20px', borderRadius: '6px', background: 'rgba(34, 211, 238, 0.01)', border: '1px solid rgba(34, 211, 238, 0.08)' }}>
+                {item.icon}
                 <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px', textAlign: 'center' }}>{item.title}</h4>
                 <p style={{ color: 'var(--mu)', fontSize: '12px', margin: 0, lineHeight: '1.5', textAlign: 'center' }}>{item.desc}</p>
               </div>
@@ -1735,13 +1750,40 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               { name: 'Duo', price: 'Deducts 1.8 credits / stream', desc: '2 Premium accounts. Shared playlist mix. 2 devices offline caching.', buttonText: 'Get Duo' },
               { name: 'Family', price: 'Deducts 2.5 credits / stream', desc: 'Up to 6 Premium accounts. Kids player portal. Family mix playlist.', buttonText: 'Get Family' },
             ].map((plan, idx) => (
-              <div key={idx} className="glass-panel" style={{ padding: '28px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
+              <div key={idx} className="glass-panel" style={{ padding: '28px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
                 <div>
                   <h4 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px' }}>{plan.name}</h4>
                   <span style={{ color: 'var(--cyan)', fontSize: '13px', fontWeight: 'bold', display: 'block', marginBottom: '16px' }}>{plan.price}</span>
                   <p style={{ color: 'var(--mu)', fontSize: '12px', margin: '0 0 20px', lineHeight: '1.5' }}>{plan.desc}</p>
                 </div>
-                <button onClick={handleGetPremium} className="btn-primary" style={{ padding: '10px', width: '100%', fontSize: '13px', background: 'transparent', border: '1px solid var(--green)', color: '#fff', cursor: 'pointer' }}>
+                <button 
+                  onClick={handleGetPremium} 
+                  className="plan-btn outline" 
+                  style={{ 
+                    padding: '10px 16px', 
+                    width: '100%', 
+                    fontSize: '13px', 
+                    fontWeight: 'bold', 
+                    background: 'rgba(255,255,255,0.03)', 
+                    border: '1px solid rgba(255,255,255,0.12)', 
+                    color: '#fff', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--cyan)';
+                    e.currentTarget.style.color = '#000';
+                    e.currentTarget.style.borderColor = 'var(--cyan)';
+                    e.currentTarget.style.boxShadow = '0 0 10px rgba(34,211,238,0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                    e.currentTarget.style.color = '#fff';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
                   {plan.buttonText}
                 </button>
               </div>
