@@ -3200,6 +3200,7 @@ function GlobalAudioPlayer({
 }) {
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isMinimized, setIsMinimized] = useState(false);
 
   // Dragging handlers
   const handleMouseDown = (e) => {
@@ -3263,6 +3264,126 @@ function GlobalAudioPlayer({
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  // Minimized state rendering
+  if (isMinimized) {
+    if (isUndocked) {
+      // Minimized Floating player
+      return (
+        <div 
+          className="drag-handle"
+          onMouseDown={handleMouseDown}
+          style={{
+            position: 'fixed',
+            left: `${playerPos.x}px`,
+            top: `${playerPos.y}px`,
+            width: '230px',
+            height: '46px',
+            background: 'rgba(10, 15, 30, 0.7)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: '23px',
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 8px 0 16px',
+            color: '#fff',
+            cursor: 'move',
+            userSelect: 'none'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+            <span style={{ fontSize: '12px', animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }}>💿</span>
+            <span style={{ fontSize: '11px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80px' }}>
+              {globalTrack.title}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setGlobalPlaying(!globalPlaying); }}
+              style={{ background: 'none', border: 'none', color: 'var(--cyan)', cursor: 'pointer', fontSize: '11px', padding: '4px' }}
+            >
+              {globalPlaying ? '⏸' : '▶'}
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsMinimized(false); }}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                borderRadius: '10px',
+                color: '#fff',
+                fontSize: '8px',
+                cursor: 'pointer',
+                padding: '2px 6px',
+                fontWeight: 'bold'
+              }}
+              title="Expand player"
+            >
+              Expand ▲
+            </button>
+          </div>
+        </div>
+      );
+    } else {
+      // Minimized Bottom player (centered pill overlay)
+      return (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: '16px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            height: '42px',
+            padding: '0 10px 0 16px',
+            background: 'rgba(7, 14, 27, 0.7)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: '21px',
+            border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.5)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            color: '#fff'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
+            <span style={{ animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }}>💿</span>
+            <strong style={{ color: '#fff' }}>{globalTrack.title}</strong>
+            <span style={{ color: 'var(--mu)' }}>•</span>
+            <span style={{ color: 'var(--mu)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button 
+              onClick={() => setGlobalPlaying(!globalPlaying)}
+              style={{ background: 'none', border: 'none', color: 'var(--cyan)', cursor: 'pointer', fontSize: '11px' }}
+            >
+              {globalPlaying ? '⏸' : '▶'}
+            </button>
+            <button 
+              onClick={() => setIsMinimized(false)}
+              style={{
+                background: 'var(--cyan)',
+                border: 'none',
+                borderRadius: '11px',
+                color: '#000',
+                fontSize: '8px',
+                cursor: 'pointer',
+                padding: '3px 8px',
+                fontWeight: 'bold'
+              }}
+              title="Expand player"
+            >
+              Expand ▲
+            </button>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // Expanded views
   if (isUndocked) {
     return (
       <div 
@@ -3302,21 +3423,38 @@ function GlobalAudioPlayer({
           }}
         >
           <span>🎵 TuneStream Mini Player</span>
-          <button 
-            onClick={() => setIsUndocked(false)}
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: 'none',
-              borderRadius: '3px',
-              color: '#fff',
-              fontSize: '10px',
-              cursor: 'pointer',
-              padding: '2px 6px'
-            }}
-            title="Dock to bottom"
-          >
-            ⬇ Dock
-          </button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button 
+              onClick={() => setIsMinimized(true)}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: 'none',
+                borderRadius: '3px',
+                color: '#fff',
+                fontSize: '10px',
+                cursor: 'pointer',
+                padding: '2px 6px'
+              }}
+              title="Minimize player"
+            >
+              ➖ Min
+            </button>
+            <button 
+              onClick={() => setIsUndocked(false)}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: 'none',
+                borderRadius: '3px',
+                color: '#fff',
+                fontSize: '10px',
+                cursor: 'pointer',
+                padding: '2px 6px'
+              }}
+              title="Dock to bottom"
+            >
+              ⬇ Dock
+            </button>
+          </div>
         </div>
 
         <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, justifyContent: 'space-between' }}>
@@ -3483,6 +3621,14 @@ function GlobalAudioPlayer({
             ★ Featured List ({featuredTracks.length})
           </span>
         )}
+        <button 
+          className="plan-btn outline"
+          onClick={() => setIsMinimized(true)}
+          style={{ padding: '4px 10px', fontSize: '11px', height: '28px', borderRadius: '4px', cursor: 'pointer' }}
+          title="Minimize player"
+        >
+          ➖ Minimize
+        </button>
         <button 
           className="plan-btn outline"
           onClick={() => setIsUndocked(true)}
