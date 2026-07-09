@@ -2060,6 +2060,7 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
   const [editSplit, setEditSplit] = useState('');
   const [editCoverBg, setEditCoverBg] = useState('');
   const [editCoverText, setEditCoverText] = useState('');
+  const [editFeatured, setEditFeatured] = useState(false);
 
   const startEdit = (tr) => {
     setEditingIsrc(tr.isrc);
@@ -2069,6 +2070,7 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
     setEditSplit(tr.split);
     setEditCoverBg(tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
     setEditCoverText(tr.coverText || 'Art');
+    setEditFeatured(tr.isFeatured || false);
   };
 
   const saveEdit = (isrc) => {
@@ -2085,7 +2087,8 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
           genre: editGenre,
           split: editSplit,
           coverBg: editCoverBg,
-          coverText: editCoverText
+          coverText: editCoverText,
+          isFeatured: editFeatured
         };
       }
       return t;
@@ -2402,6 +2405,7 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
                 <thead>
                   <tr>
                     <th>Art</th>
+                    <th>Featured</th>
                     <th>ISRC</th>
                     <th>Title</th>
                     <th>Artist</th>
@@ -2433,6 +2437,14 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
                                 className="form-control" 
                                 style={{ fontSize: '10px', padding: '2px', width: '56px' }} 
                                 placeholder="Bg CSS"
+                              />
+                            </td>
+                            <td>
+                              <input 
+                                type="checkbox" 
+                                checked={editFeatured} 
+                                onChange={(e) => setEditFeatured(e.target.checked)} 
+                                style={{ cursor: 'pointer' }}
                               />
                             </td>
                             <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
@@ -2518,6 +2530,25 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
                               }}>
                                 {tr.coverText || 'Art'}
                               </div>
+                            </td>
+                            <td>
+                              <button 
+                                onClick={() => {
+                                  setTracks(prev => prev.map(t => t.isrc === tr.isrc ? { ...t, isFeatured: !t.isFeatured } : t))
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  fontSize: '14px',
+                                  opacity: tr.isFeatured ? 1 : 0.25,
+                                  transition: 'opacity 0.2s ease',
+                                  outline: 'none'
+                                }}
+                                title={tr.isFeatured ? "Unmark as featured" : "Mark as featured"}
+                              >
+                                ⭐
+                              </button>
                             </td>
                             <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
                             <td style={{ fontWeight: '700', color: '#fff' }}>{tr.title}</td>
@@ -3153,6 +3184,318 @@ function EscrowContractsPanel({ payoutBalance, setPayoutBalance }) {
   );
 }
 
+// ================= Global Floating & Docked Audio Player =================
+function GlobalAudioPlayer({
+  globalTrack,
+  setGlobalTrack,
+  globalPlaying,
+  setGlobalPlaying,
+  globalProgress,
+  setGlobalProgress,
+  isUndocked,
+  setIsUndocked,
+  playerPos,
+  setPlayerPos,
+  catalogTracks
+}) {
+  const [dragging, setDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  if (!globalTrack) return null;
+
+  // Filter featured tracks
+  const featuredTracks = catalogTracks.filter(t => t.isFeatured);
+  const playPool = featuredTracks.length > 0 ? featuredTracks : catalogTracks;
+
+  const handleNext = () => {
+    if (playPool.length <= 1) return;
+    const currentIdx = playPool.findIndex(t => t.isrc === globalTrack.isrc);
+    const nextIdx = (currentIdx + 1) % playPool.length;
+    setGlobalTrack(playPool[nextIdx]);
+    setGlobalProgress(0);
+  };
+
+  const handlePrev = () => {
+    if (playPool.length <= 1) return;
+    const currentIdx = playPool.findIndex(t => t.isrc === globalTrack.isrc);
+    const prevIdx = (currentIdx - 1 + playPool.length) % playPool.length;
+    setGlobalTrack(playPool[prevIdx]);
+    setGlobalProgress(0);
+  };
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  // Dragging handlers
+  const handleMouseDown = (e) => {
+    if (e.target.closest('.drag-handle')) {
+      setDragging(true);
+      setDragOffset({
+        x: e.clientX - playerPos.x,
+        y: e.clientY - playerPos.y
+      });
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragging) return;
+      const x = Math.max(0, Math.min(e.clientX - dragOffset.x, window.innerWidth - 350));
+      const y = Math.max(0, Math.min(e.clientY - dragOffset.y, window.innerHeight - 300));
+      setPlayerPos({ x, y });
+    };
+
+    const handleMouseUp = () => {
+      setDragging(false);
+    };
+
+    if (dragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragging, dragOffset, setPlayerPos]);
+
+  if (isUndocked) {
+    return (
+      <div 
+        style={{
+          position: 'fixed',
+          left: `${playerPos.x}px`,
+          top: `${playerPos.y}px`,
+          width: '330px',
+          height: '280px',
+          background: 'rgba(10, 15, 30, 0.7)',
+          backdropFilter: 'blur(16px)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+          zIndex: 99999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          transition: dragging ? 'none' : 'box-shadow 0.2s ease',
+          color: '#fff'
+        }}
+      >
+        <div 
+          className="drag-handle"
+          onMouseDown={handleMouseDown}
+          style={{
+            padding: '8px 12px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            cursor: 'move',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            userSelect: 'none'
+          }}
+        >
+          <span>🎵 TuneStream Mini Player</span>
+          <button 
+            onClick={() => setIsUndocked(false)}
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: 'none',
+              borderRadius: '3px',
+              color: '#fff',
+              fontSize: '10px',
+              cursor: 'pointer',
+              padding: '2px 6px'
+            }}
+            title="Dock to bottom"
+          >
+            ⬇ Dock
+          </button>
+        </div>
+
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '4px',
+              background: globalTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '9px',
+              fontWeight: 'bold',
+              color: '#fff',
+              flexShrink: 0,
+              boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+              textAlign: 'center',
+              overflow: 'hidden',
+              padding: '4px'
+            }}>
+              {globalTrack.coverText || 'Art'}
+            </div>
+            <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+              <h4 style={{ margin: '0 0 2px 0', fontSize: '13.5px', fontWeight: 'bold', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.title}</h4>
+              <p style={{ margin: 0, fontSize: '11px', color: 'var(--mu)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</p>
+              <span style={{ fontSize: '9px', color: 'var(--cyan)', background: 'rgba(34,211,238,0.06)', padding: '2px 4px', borderRadius: '3px', display: 'inline-block', marginTop: '4px' }}>
+                {featuredTracks.length > 0 ? '★ Featured Playlist' : 'All Catalogue'}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', position: 'relative', cursor: 'pointer' }} onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const clickX = e.clientX - rect.left;
+              const percentage = clickX / rect.width;
+              setGlobalProgress(Math.floor(percentage * 180));
+            }}>
+              <div style={{ width: `${(globalProgress / 180) * 100}%`, height: '100%', background: 'var(--cyan)', borderRadius: '2px', boxShadow: '0 0 6px var(--cyan)' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--mu)', marginTop: '4px' }}>
+              <span>{formatTime(globalProgress)}</span>
+              <span>3:00</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginBottom: '4px' }}>
+            <button 
+              className="plan-btn outline"
+              onClick={handlePrev}
+              style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              ⏮
+            </button>
+            <button 
+              onClick={() => setGlobalPlaying(!globalPlaying)}
+              className="btn-primary"
+              style={{ width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', cursor: 'pointer', border: 'none' }}
+            >
+              {globalPlaying ? '⏸' : '▶'}
+            </button>
+            <button 
+              className="plan-btn outline"
+              onClick={handleNext}
+              style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              ⏭
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '76px',
+        background: 'rgba(7, 14, 27, 0.7)',
+        backdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        color: '#fff'
+      }}
+    >
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', width: '30%', minWidth: '180px' }}>
+        <div style={{
+          width: '42px',
+          height: '42px',
+          borderRadius: '4px',
+          background: globalTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '8px',
+          fontWeight: 'bold',
+          color: '#fff',
+          overflow: 'hidden',
+          padding: '2px',
+          textAlign: 'center',
+          boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {globalTrack.coverText || 'Art'}
+        </div>
+        <div style={{ textAlign: 'left', overflow: 'hidden' }}>
+          <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.title}</h4>
+          <p style={{ margin: 0, fontSize: '11px', color: 'var(--mu)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</p>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', width: '40%', maxWidth: '500px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button 
+            onClick={handlePrev}
+            style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: '15px' }}
+            title="Previous track"
+          >
+            ⏮
+          </button>
+          <button 
+            onClick={() => setGlobalPlaying(!globalPlaying)}
+            className="btn-primary"
+            style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', border: 'none', cursor: 'pointer' }}
+          >
+            {globalPlaying ? '⏸' : '▶'}
+          </button>
+          <button 
+            onClick={handleNext}
+            style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: '15px' }}
+            title="Next track"
+          >
+            ⏭
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+          <span style={{ fontSize: '9px', color: 'var(--mu)' }}>{formatTime(globalProgress)}</span>
+          <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', position: 'relative', cursor: 'pointer' }} onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            setGlobalProgress(Math.floor(percentage * 180));
+          }}>
+            <div style={{ width: `${(globalProgress / 180) * 100}%`, height: '100%', background: 'var(--cyan)', borderRadius: '2px' }} />
+          </div>
+          <span style={{ fontSize: '9px', color: 'var(--mu)' }}>3:00</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '30%', justifyContent: 'flex-end' }}>
+        {featuredTracks.length > 0 && (
+          <span style={{ fontSize: '9px', color: 'var(--green)', border: '1px solid rgba(16,185,129,0.3)', padding: '2px 6px', borderRadius: '10px', background: 'rgba(16,185,129,0.05)', fontWeight: 'bold' }}>
+            ★ Featured List ({featuredTracks.length})
+          </span>
+        )}
+        <button 
+          className="plan-btn outline"
+          onClick={() => setIsUndocked(true)}
+          style={{ padding: '4px 10px', fontSize: '11px', height: '28px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+          title="Undock into mini floating player"
+        >
+          ↗ Undock
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ================= Main App Content Component =================
 function AppContent({ 
   sessionUser, 
@@ -3432,6 +3775,20 @@ function AppContent({
             </div>
           </div>
         </footer>
+
+        <GlobalAudioPlayer 
+          globalTrack={globalTrack}
+          setGlobalTrack={setGlobalTrack}
+          globalPlaying={globalPlaying}
+          setGlobalPlaying={setGlobalPlaying}
+          globalProgress={globalProgress}
+          setGlobalProgress={setGlobalProgress}
+          isUndocked={isUndocked}
+          setIsUndocked={setIsUndocked}
+          playerPos={playerPos}
+          setPlayerPos={setPlayerPos}
+          catalogTracks={catalogTracks}
+        />
       </div>
 
       {/* Render modals on top, outside the wrapper so they aren't affected by its opacity */}
@@ -3459,10 +3816,10 @@ function App() {
   });
 
   const [catalogTracks, setCatalogTracks] = useState([
-    { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid', coverBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', coverText: 'Midnight' },
-    { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid', coverBg: 'linear-gradient(135deg, #ec4899 0%, #3b82f6 100%)', coverText: 'Shadows' },
-    { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', coverText: 'Sunset' },
-    { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe' }
+    { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid', coverBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', coverText: 'Midnight', isFeatured: true },
+    { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid', coverBg: 'linear-gradient(135deg, #ec4899 0%, #3b82f6 100%)', coverText: 'Shadows', isFeatured: false },
+    { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', coverText: 'Sunset', isFeatured: true },
+    { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe', isFeatured: false }
   ]);
 
   const [ledgerRows, setLedgerRows] = useState([
@@ -3487,6 +3844,28 @@ function App() {
   const addLedgerRow = (row) => {
     setLedgerRows(prev => [row, ...prev]);
   };
+
+  const [globalTrack, setGlobalTrack] = useState(null);
+  const [globalPlaying, setGlobalPlaying] = useState(false);
+  const [globalProgress, setGlobalProgress] = useState(12);
+  const [isUndocked, setIsUndocked] = useState(false);
+  const [playerPos, setPlayerPos] = useState({ x: window.innerWidth - 380, y: window.innerHeight - 380 });
+
+  useEffect(() => {
+    if (catalogTracks.length > 0 && !globalTrack) {
+      setGlobalTrack(catalogTracks[0]);
+    }
+  }, [catalogTracks, globalTrack]);
+
+  useEffect(() => {
+    let interval;
+    if (globalPlaying) {
+      interval = setInterval(() => {
+        setGlobalProgress(prev => (prev >= 180 ? 0 : prev + 1));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [globalPlaying]);
 
   const handleLogin = (user) => {
     setSessionUser(user);
@@ -3542,6 +3921,16 @@ function App() {
         setLedgerRows={setLedgerRows}
         deductCredits={deductCredits}
         addLedgerRow={addLedgerRow}
+        globalTrack={globalTrack}
+        setGlobalTrack={setGlobalTrack}
+        globalPlaying={globalPlaying}
+        setGlobalPlaying={setGlobalPlaying}
+        globalProgress={globalProgress}
+        setGlobalProgress={setGlobalProgress}
+        isUndocked={isUndocked}
+        setIsUndocked={setIsUndocked}
+        playerPos={playerPos}
+        setPlayerPos={setPlayerPos}
       />
     </Router>
   );

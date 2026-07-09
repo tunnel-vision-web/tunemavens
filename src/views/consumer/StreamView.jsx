@@ -7,35 +7,31 @@ import PageHeader from '../../components/common/PageHeader.jsx'
 import headerHelpImg from '../../assets/images/header_help.png'
 import headerHelpWesternImg from '../../assets/images/header_help_western.png'
 
-export default function StreamView({ catalogTracks = [], sessionUser, deductCredits, addLedgerRow }) {
+export default function StreamView({ 
+  catalogTracks = [], 
+  sessionUser, 
+  deductCredits, 
+  addLedgerRow,
+  globalTrack,
+  setGlobalTrack,
+  globalPlaying,
+  setGlobalPlaying,
+  globalProgress,
+  setGlobalProgress
+}) {
   const { country } = useRegion();
   const navigate = useNavigate();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playerProgress, setPlayerProgress] = useState(12);
-  const [selectedTrack, setSelectedTrack] = useState(catalogTracks[0] || null);
 
   // Tipping states
   const [tipVal, setTipVal] = useState(50);
   const [tipSuccess, setTipSuccess] = useState(null);
   const [tipError, setTipError] = useState('');
 
-  // Reset player when selected track changes
+  // Reset tipping status when active track changes
   useEffect(() => {
-    setIsPlaying(false);
-    setPlayerProgress(0);
     setTipSuccess(null);
     setTipError('');
-  }, [selectedTrack]);
-
-  useEffect(() => {
-    let interval;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setPlayerProgress(prev => (prev >= 180 ? 0 : prev + 1));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [globalTrack]);
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
@@ -53,7 +49,7 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
       return;
     }
 
-    if (!selectedTrack) {
+    if (!globalTrack) {
       setTipError('No track selected to tip.');
       return;
     }
@@ -77,11 +73,10 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
       return;
     }
 
-    // Parse splits percentages from selectedTrack.split string
-    // E.g. "Artist (50%) / Producer (30%) / Label (20%)" or "Artist (60%) / Producer (40%)"
-    const artistMatch = selectedTrack.split.match(/Artist\s*\((\d+)%\)/i);
-    const producerMatch = selectedTrack.split.match(/(?:Producer|Manager)\s*\((\d+)%\)/i);
-    const labelMatch = selectedTrack.split.match(/Label\s*\((\d+)%\)/i);
+    // Parse splits percentages from globalTrack.split string
+    const artistMatch = globalTrack.split.match(/Artist\s*\((\d+)%\)/i);
+    const producerMatch = globalTrack.split.match(/(?:Producer|Manager)\s*\((\d+)%\)/i);
+    const labelMatch = globalTrack.split.match(/Label\s*\((\d+)%\)/i);
 
     const artistPct = artistMatch ? Number(artistMatch[1]) : 50;
     const producerPct = producerMatch ? Number(producerMatch[1]) : 30;
@@ -99,7 +94,7 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
     // Call global ledger row builder
     addLedgerRow({
       id: `tx_tip_${Date.now().toString().slice(-4)}`,
-      title: `Tip: ${selectedTrack.title}`,
+      title: `Tip: ${globalTrack.title}`,
       gross: amount,
       comm: platformComm,
       label: labelAlloc,
@@ -118,7 +113,7 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
       artistPct,
       producerPct,
       labelPct,
-      creatorName: selectedTrack.artist
+      creatorName: globalTrack.artist
     });
   };
 
@@ -156,7 +151,7 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
           
           {/* Left Column: Player & Tipping */}
           <div>
-            {selectedTrack ? (
+            {globalTrack ? (
               <div className="arch-card glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
                 {/* Cover Art Visual */}
@@ -164,7 +159,7 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
                   position: 'relative', 
                   width: '100%', 
                   paddingBottom: '100%', 
-                  background: selectedTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', 
+                  background: globalTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', 
                   borderRadius: 'var(--r)', 
                   overflow: 'hidden', 
                   boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
@@ -184,14 +179,14 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
 
                     <div style={{ textAlign: 'left' }}>
                       <span style={{ fontSize: '48px', fontWeight: '900', display: 'block', lineHeight: '1', fontFamily: '"Outfit", sans-serif', letterSpacing: '-1px', opacity: 0.15, marginBottom: '-8px' }}>
-                        {selectedTrack.coverText || 'ALBUM'}
+                        {globalTrack.coverText || 'ALBUM'}
                       </span>
-                      <h3 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px', letterSpacing: '-0.3px', lineHeight: '1.2' }}>{selectedTrack.title}</h3>
-                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, fontWeight: '500' }}>{selectedTrack.artist}</p>
+                      <h3 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px', letterSpacing: '-0.3px', lineHeight: '1.2' }}>{globalTrack.title}</h3>
+                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, fontWeight: '500' }}>{globalTrack.artist}</p>
                     </div>
                   </div>
 
-                  {isPlaying && (
+                  {globalPlaying && (
                     <div style={{ position: 'absolute', bottom: '12px', left: '12px', display: 'flex', gap: '3px', alignItems: 'flex-end', height: '16px' }}>
                       {[1, 2, 3, 4, 5].map(bar => (
                         <div 
@@ -215,38 +210,38 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
                   <span className="app-tag" style={{ color: 'var(--cyan)', background: 'rgba(34,211,238,0.08)', padding: '4px 8px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Lossless FLAC • 24-bit / 96kHz
                   </span>
-                  <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', marginTop: '10px', marginBottom: '4px' }}>{selectedTrack.title}</h2>
-                  <p style={{ fontSize: '12px', color: 'var(--mu)', margin: 0 }}>{selectedTrack.artist} • {selectedTrack.genre}</p>
+                  <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', marginTop: '10px', marginBottom: '4px' }}>{globalTrack.title}</h2>
+                  <p style={{ fontSize: '12px', color: 'var(--mu)', margin: 0 }}>{globalTrack.artist} • {globalTrack.genre}</p>
                 </div>
 
                 {/* Slider Progress */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--mu)', marginBottom: '6px' }}>
-                    <span>{formatTime(playerProgress)}</span>
+                    <span>{formatTime(globalProgress)}</span>
                     <span>3:00</span>
                   </div>
                   <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', position: 'relative', cursor: 'pointer' }} onClick={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     const clickX = e.clientX - rect.left;
                     const percentage = clickX / rect.width;
-                    setPlayerProgress(Math.floor(percentage * 180));
+                    setGlobalProgress(Math.floor(percentage * 180));
                   }}>
-                    <div style={{ width: `${(playerProgress / 180) * 100}%`, height: '100%', background: 'var(--cyan)', borderRadius: '2px', boxShadow: '0 0 6px var(--cyan)' }} />
+                    <div style={{ width: `${(globalProgress / 180) * 100}%`, height: '100%', background: 'var(--cyan)', borderRadius: '2px', boxShadow: '0 0 6px var(--cyan)' }} />
                   </div>
                 </div>
 
                 {/* Play/Pause Button */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', textAlign: 'left' }}>
                   <button 
-                    onClick={() => setIsPlaying(!isPlaying)}
+                    onClick={() => setGlobalPlaying(!globalPlaying)}
                     className="btn-primary"
                     style={{ width: '46px', height: '46px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', cursor: 'pointer', outline: 'none', border: 'none' }}
                   >
-                    {isPlaying ? '⏸' : '▶'}
+                    {globalPlaying ? '⏸' : '▶'}
                   </button>
                   <div>
                     <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>
-                      {isPlaying ? 'Now Streaming Lossless' : 'Stream Preview'}
+                      {globalPlaying ? 'Now Streaming Lossless' : 'Stream Preview'}
                     </div>
                     <div style={{ fontSize: '10px', color: 'var(--mu)' }}>
                       {isWestern ? '1 credit per full listen' : '0.1 credits per listen'}
@@ -257,7 +252,7 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
                 {/* Splits breakdown notice */}
                 <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.04)', fontSize: '11px', textAlign: 'left' }}>
                   <span style={{ display: 'block', color: 'var(--mu)', marginBottom: '4px', fontWeight: 'bold' }}>Associated Split cascade structures:</span>
-                  <span style={{ color: '#fff', fontFamily: 'monospace' }}>{selectedTrack.split}</span>
+                  <span style={{ color: '#fff', fontFamily: 'monospace' }}>{globalTrack.split}</span>
                 </div>
 
               </div>
@@ -283,11 +278,11 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
                   {catalogTracks.map((tr) => (
                     <div 
                       key={tr.isrc}
-                      onClick={() => setSelectedTrack(tr)}
+                      onClick={() => setGlobalTrack(tr)}
                       style={{
                         padding: '10px 14px',
-                        background: selectedTrack?.isrc === tr.isrc ? 'rgba(34, 211, 238, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                        border: selectedTrack?.isrc === tr.isrc ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.06)',
+                        background: globalTrack?.isrc === tr.isrc ? 'rgba(34, 211, 238, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                        border: globalTrack?.isrc === tr.isrc ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.06)',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         display: 'flex',
@@ -327,7 +322,7 @@ export default function StreamView({ catalogTracks = [], sessionUser, deductCred
             </div>
 
             {/* Support Cascade tip uploader */}
-            {selectedTrack && (
+            {globalTrack && (
               <div className="dashboard-card" style={{ padding: '24px' }}>
                 <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff', textAlign: 'left' }}>⚡ Support Creator (Split Cascade Tip)</h3>
                 
