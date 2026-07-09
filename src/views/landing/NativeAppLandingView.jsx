@@ -1055,7 +1055,7 @@ export default function NativeAppLandingView() {
           <section id="plans-section" style={{ padding: '80px 0', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '60px', textAlign: 'center' }}>
             <div style={{ textAlign: 'center', marginBottom: '50px' }}>
               <span className="landing-section-eyebrow" style={{ color: 'var(--green)' }}>Choose Your Vibe</span>
-              <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '32px', fontWeight: '800' }}>TuneStream Listening Plans</h2>
+              <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '32px', fontWeight: '800', textAlign: 'center', margin: '0 auto 0' }}>TuneStream Listening Plans</h2>
               <p style={{ color: 'var(--mu)', fontSize: '14px', maxWidth: '600px', margin: '0 auto' }}>Flexible plans built around the shared Intermaven Network ecosystem.</p>
             </div>
             
