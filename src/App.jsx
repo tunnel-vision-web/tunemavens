@@ -3507,7 +3507,17 @@ function AppContent({
   ledgerRows,
   setLedgerRows,
   deductCredits,
-  addLedgerRow
+  addLedgerRow,
+  globalTrack,
+  setGlobalTrack,
+  globalPlaying,
+  setGlobalPlaying,
+  globalProgress,
+  setGlobalProgress,
+  isUndocked,
+  setIsUndocked,
+  playerPos,
+  setPlayerPos
 }) {
   const [scrolled, setScrolled] = useState(false);
   const { country } = useRegion();
@@ -3575,6 +3585,12 @@ function AppContent({
               sessionUser={sessionUser} 
               deductCredits={deductCredits} 
               addLedgerRow={addLedgerRow}
+              globalTrack={globalTrack}
+              setGlobalTrack={setGlobalTrack}
+              globalPlaying={globalPlaying}
+              setGlobalPlaying={setGlobalPlaying}
+              globalProgress={globalProgress}
+              setGlobalProgress={setGlobalProgress}
             />
           } />
           <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
