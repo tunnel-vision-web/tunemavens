@@ -1118,7 +1118,7 @@ export default function NativeAppLandingView() {
         { name: 'Moctar S.', genre: 'Tuareg Rock', location: 'Agadez', streams: '85K', avatar: '🎸', bg: '#f59e0b' }
       ];
 
-      const itemsPerPage = 4;
+      const itemsPerPage = 16;
       const indexOfLast = explorePage * itemsPerPage;
       const indexOfFirst = indexOfLast - itemsPerPage;
       const currentCreators = creators.slice(indexOfFirst, indexOfLast);
