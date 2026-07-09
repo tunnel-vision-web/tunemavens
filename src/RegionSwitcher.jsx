@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Globe, ChevronDown } from 'lucide-react';
+import { RiGlobalFill, RiArrowDownSFill } from 'react-icons/ri';
 import { useRegion } from './RegionContext';
 
 function RegionSwitcher() {
@@ -35,9 +35,9 @@ function RegionSwitcher() {
         onClick={() => setOpen((o) => !o)}
         aria-label="Region and currency Selection"
       >
-        <Globe size={15} />
+        <RiGlobalFill size={15} />
         <span>{currencyInfo?.symbol || '$'} {currency}</span>
-        <ChevronDown size={13} className={`region-chevron ${open ? 'open' : ''}`} />
+        <RiArrowDownSFill size={13} className={`region-chevron ${open ? 'open' : ''}`} />
       </button>
 
       {open && (

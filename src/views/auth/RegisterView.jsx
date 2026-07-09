@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { RefreshCw } from 'lucide-react'
+import { RiRefreshFill } from 'react-icons/ri'
 import { authApi, tokenStore } from '../../lib/api.js'
 import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
 
@@ -511,7 +511,7 @@ export default function RegisterView({ onLogin }) {
           >
             {googleLoading ? (
               <>
-                <RefreshCw size={14} className="spin-animation" />
+                <RiRefreshFill size={14} className="spin-animation" />
                 Connecting to Google...
               </>
             ) : (
@@ -781,7 +781,7 @@ export default function RegisterView({ onLogin }) {
               <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '14px' }}>Port releases and split metadata seamlessly:</p>
               {syncStatus === 'syncing' ? (
                 <div style={{ padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px' }}>
-                  <RefreshCw size={24} className="spin-animation" style={{ color: 'var(--purple)', marginBottom: '12px' }} />
+                  <RiRefreshFill size={24} className="spin-animation" style={{ color: 'var(--purple)', marginBottom: '12px' }} />
                   <div style={{ fontSize: '12px', color: '#fff', fontWeight: '600' }}>Fetching catalog from {syncPlatform}...</div>
                 </div>
               ) : syncStatus === 'success' ? (
@@ -846,7 +846,7 @@ export default function RegisterView({ onLogin }) {
               <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '14px' }}>Roster management & catalogue bulk upload:</p>
               <div style={{ border: '1px dashed rgba(255,255,255,0.08)', padding: '24px', borderRadius: '4px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', cursor: 'pointer', marginBottom: '12px' }} onClick={() => handleCatalogSync('Bulk Label CSV')}>
                 {syncStatus === 'syncing' ? (
-                  <RefreshCw size={20} className="spin-animation" style={{ color: 'var(--purple)' }} />
+                  <RiRefreshFill size={20} className="spin-animation" style={{ color: 'var(--purple)' }} />
                 ) : (
                   <>
                     <span style={{ fontSize: '12px', color: '#fff', display: 'block', marginBottom: '4px' }}>Drag & Drop Label Roster CSV file</span>

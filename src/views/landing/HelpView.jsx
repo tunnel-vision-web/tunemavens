@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Check } from 'lucide-react'
+import { RiCheckboxCircleFill } from 'react-icons/ri'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
 import headerHelpImg from '../../assets/images/header_help.png'
@@ -35,7 +35,7 @@ export default function HelpView() {
         <div className="contact-card glass-panel">
           {ticketSubmitted ? (
             <div className="text-center" style={{ padding: '20px 0' }}>
-              <Check size={48} color="var(--cyan)" style={{ margin: '0 auto 16px' }} />
+              <RiCheckboxCircleFill size={48} color="var(--cyan)" style={{ margin: '0 auto 16px' }} />
               <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Ticket Submitted!</h3>
               <p style={{ fontSize: '14px', color: 'var(--mu)' }}>We've received your support request and will respond within 24 hours.</p>
             </div>

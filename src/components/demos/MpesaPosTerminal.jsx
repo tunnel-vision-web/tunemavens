@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RiRefreshFill } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 
 export default function MpesaPosTerminal({ goBack }) {
@@ -246,7 +246,7 @@ export default function MpesaPosTerminal({ goBack }) {
             >
               {(status === 'initiating' || status === 'pending') ? (
                 <>
-                  <RefreshCw size={14} className="spin-animation" />
+                  <RiRefreshFill size={14} className="spin-animation" />
                   Initiating Push...
                 </>
               ) : `Push ${typeName} Prompt`}

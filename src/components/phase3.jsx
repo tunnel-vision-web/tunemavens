@@ -5,12 +5,7 @@
 // AppMarketplacePanel  -  plus the PanelHeader helper they share.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  X, Check, CheckCircle2, ChevronDown, ArrowLeft, ArrowRight, RotateCcw,
-  Send, PenTool, Link2, Mail, Lock, BookOpen, Globe, Radio, Shield,
-  Music, Smartphone, Database, Coins,
-  Users as UsersIcon,
-} from 'lucide-react'
+import { RiCloseFill, RiCheckboxCircleFill, RiCheckboxCircleFill, RiArrowDownSFill, RiArrowLeftFill, RiArrowRightFill, RiResetLeftFill, RiSendPlaneFill, RiPenBrushFill, RiLinksFill, RiMailFill, RiLockFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDatabase2Fill, RiCoinsFill, RiUsersFill as UsersIcon } from 'react-icons/ri'
 import { dealsApi, usersApi, contractsApi } from '../lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from '../lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'
@@ -104,7 +99,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
               onClick={onOpenWizard}
               data-testid="onboarding-reeval"
             >
-              <RotateCcw size={12} /> Re-evaluate goals
+              <RiResetLeftFill size={12} /> Re-evaluate goals
             </button>
           )}
           <button
@@ -114,7 +109,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
             data-testid="onboarding-collapse"
             aria-label={collapsed ? 'Expand' : 'Collapse'}
           >
-            <ChevronDown size={14} style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            <RiArrowDownSFill size={14} style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
           </button>
           <button
             type="button"
@@ -123,7 +118,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
             title="Hide until next session"
             data-testid="onboarding-dismiss"
           >
-            <X size={14} />
+            <RiCloseFill size={14} />
           </button>
         </div>
       </div>
@@ -141,7 +136,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
               data-testid={`onboarding-step-${s.id}`}
             >
               <div className="onboarding-step-status" aria-hidden="true">
-                {s.done ? <CheckCircle2 size={16} /> : <span className="onboarding-step-bullet" />}
+                {s.done ? <RiCheckboxCircleFill size={16} /> : <span className="onboarding-step-bullet" />}
               </div>
               <div className="onboarding-step-body">
                 <span className="onboarding-step-label">{s.label}</span>
@@ -157,7 +152,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
                   }}
                   data-testid={`onboarding-cta-${s.id}`}
                 >
-                  {s.cta} <ArrowRight size={12} />
+                  {s.cta} <RiArrowRightFill size={12} />
                 </button>
               )}
             </li>
@@ -330,7 +325,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
             <h3 style={{ fontSize: '20px', color: '#f1f5f9', margin: 0, fontWeight: 800, letterSpacing: '-0.3px' }}>Tell us about you</h3>
           </div>
           <button type="button" onClick={onClose} data-testid="wizard-close" style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
-            <X size={18} />
+            <RiCloseFill size={18} />
           </button>
         </div>
 
@@ -357,7 +352,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
                     style={{ padding: '12px 14px', textAlign: 'left', background: selected ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.03)', border: selected ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: selected ? '#f1f5f9' : '#cbd5e1', fontSize: '13px', fontWeight: selected ? 700 : 500, cursor: 'pointer', transition: 'border-color 0.15s ease, background 0.15s ease', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
                     <span style={{ width: current.multi ? '14px' : '10px', height: current.multi ? '14px' : '10px', borderRadius: current.multi ? '2px' : '50%', border: `1px solid ${selected ? 'var(--cyan)' : 'rgba(255,255,255,0.25)'}`, background: selected ? 'var(--cyan)' : 'transparent', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {selected && current.multi && <Check size={10} color="#0b0f1e" strokeWidth={4} />}
+                      {selected && current.multi && <RiCheckboxCircleFill size={10} color="#0b0f1e" strokeWidth={4} />}
                     </span>
                     {opt.label}
                   </button>
@@ -397,17 +392,17 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between', alignItems: 'center' }}>
           <button type="button" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0} data-testid="wizard-back"
             style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: step === 0 ? '#475569' : '#cbd5e1', borderRadius: '3px', fontWeight: 700, fontSize: '12px', cursor: step === 0 ? 'not-allowed' : 'pointer' }}>
-            <ArrowLeft size={12} style={{ display: 'inline', marginRight: 4 }} /> Back
+            <RiArrowLeftFill size={12} style={{ display: 'inline', marginRight: 4 }} /> Back
           </button>
           {isLast ? (
             <button type="button" onClick={save} disabled={saving} data-testid="wizard-submit"
               style={{ padding: '10px 20px', background: 'linear-gradient(90deg, var(--cyan), var(--purple))', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: saving ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
-              {saving ? 'Saving\u2026' : 'Get my picks'} <ArrowRight size={12} style={{ display: 'inline', marginLeft: 4 }} />
+              {saving ? 'Saving\u2026' : 'Get my picks'} <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
             </button>
           ) : (
             <button type="button" onClick={() => setStep((s) => s + 1)} disabled={!canProceed} data-testid="wizard-next"
               style={{ padding: '10px 20px', background: canProceed ? 'var(--cyan)' : 'rgba(255,255,255,0.08)', border: 'none', color: canProceed ? '#0b0f1e' : '#64748b', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: canProceed ? 'pointer' : 'not-allowed', letterSpacing: '0.3px' }}>
-              Next <ArrowRight size={12} style={{ display: 'inline', marginLeft: 4 }} />
+              Next <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
             </button>
           )}
         </div>
@@ -455,7 +450,7 @@ export function RecommendationHero({ activatedSlugs, onActivate, onOpen, onOpenW
         </div>
         <button type="button" onClick={onOpenWizard} data-testid="recommendation-hero-open-wizard"
           style={{ padding: '10px 18px', background: 'linear-gradient(90deg, var(--cyan), var(--purple))', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '12px', cursor: 'pointer', letterSpacing: '0.3px' }}>
-          Get my picks <ArrowRight size={12} style={{ display: 'inline', marginLeft: 4 }} />
+          Get my picks <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
         </button>
       </div>
     );
@@ -1091,7 +1086,7 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
             <h3 style={{ fontSize: '18px', color: '#f1f5f9', margin: 0, fontWeight: 800, letterSpacing: '-0.3px' }} data-testid="contract-title">{contract.title}</h3>
           </div>
           <button type="button" onClick={onClose} data-testid="contract-drawer-close" style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
-            <X size={18} />
+            <RiCloseFill size={18} />
           </button>
         </header>
 
@@ -1113,14 +1108,14 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
                 </select>
                 <button type="button" onClick={invite} disabled={busy || !inviteEmail.trim()} data-testid="contract-invite-submit"
                   style={{ padding: '10px 16px', background: 'var(--cyan)', color: '#0b0f1e', border: 'none', borderRadius: '3px', fontWeight: 800, fontSize: '12px', cursor: busy ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
-                  <Send size={12} style={{ display: 'inline', marginRight: 4 }} /> Invite
+                  <RiSendPlaneFill size={12} style={{ display: 'inline', marginRight: 4 }} /> Invite
                 </button>
               </div>
               {shareUrl && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                   <button type="button" onClick={copyShare} data-testid="contract-copy-share-link"
                     style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#cbd5e1', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
-                    <Link2 size={11} style={{ display: 'inline', marginRight: 4 }} /> Copy share link
+                    <RiLinksFill size={11} style={{ display: 'inline', marginRight: 4 }} /> Copy share link
                   </button>
                   {['email', 'whatsapp', 'sms'].map((ch) => (
                     <a key={ch} href={channelHref(ch, inviteEmail) || '#'} target="_blank" rel="noopener noreferrer" data-testid={`contract-share-${ch}`}
@@ -1134,7 +1129,7 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
                 <ul data-testid="contract-invitees-list" style={{ listStyle: 'none', padding: 0, margin: '12px 0 0' }}>
                   {contract.invitees.map((inv, i) => (
                     <li key={i} style={{ fontSize: '12px', color: '#cbd5e1', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                      <UsersIcon size={11} style={{ display: 'inline', marginRight: 6, color: '#64748b' }} />
+                      <RiUsersFill size={11} style={{ display: 'inline', marginRight: 6, color: '#64748b' }} />
                       <strong>{inv.email}</strong>
                       <span style={{ color: '#64748b' }}> \u00b7 {inv.role} \u00b7 via {inv.channel}</span>
                       {inv.signed_at && <span style={{ color: '#10b981', marginLeft: 6 }}>signed</span>}
@@ -1153,7 +1148,7 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
                   <strong style={{ color: '#f1f5f9', fontSize: '13px' }}>{c.title}</strong>
                   {!c.negotiable ? (
                     <span data-testid={`clause-locked-${c.id}`} style={{ fontSize: '9px', color: '#F4D35E', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 800, whiteSpace: 'nowrap' }}>
-                      <Lock size={10} style={{ display: 'inline', marginRight: 2, verticalAlign: '-1px' }} /> Locked
+                      <RiLockFill size={10} style={{ display: 'inline', marginRight: 2, verticalAlign: '-1px' }} /> Locked
                     </span>
                   ) : (
                     <span style={{ fontSize: '9px', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 800 }}>Negotiable</span>
@@ -1181,7 +1176,7 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
                 {c.negotiable && proposingClause !== c.id && (
                   <button type="button" onClick={() => { setProposingClause(c.id); setProposalBody(c.body); }} data-testid={`clause-propose-btn-${c.id}`}
                     style={{ marginTop: '6px', padding: '4px 10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    <PenTool size={11} style={{ display: 'inline', marginRight: 4 }} /> Propose an edit
+                    <RiPenBrushFill size={11} style={{ display: 'inline', marginRight: 4 }} /> Propose an edit
                   </button>
                 )}
                 {proposingClause === c.id && (
@@ -1244,18 +1239,18 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
   // is paired with the dashboard tab it unlocks so we can route directly.
   const role = sessionUser?.role || 'creator';
   const catalogue = [
-    { slug: 'catalog-porting', name: 'Catalog Porting', desc: 'Bring your back-catalogue in via CSV or DDEX, validate metadata, and stage releases.', icon: Database, accent: 'var(--cyan)', tab: 'catalog', roles: ['creator', 'label', 'admin'] },
-    { slug: 'split-cascade', name: 'Split Cascade', desc: 'See exactly how every dollar flows through writer / producer / publisher splits.', icon: Coins, accent: 'var(--purple)', tab: 'splits', roles: ['creator', 'label', 'admin'] },
-    { slug: 'publishing-election', name: 'Publishing Election', desc: 'Lock in your publishing tier  -  standard admin or full-service co-pub.', icon: BookOpen, accent: 'var(--cyan)', tab: 'publishing-election', roles: ['creator', 'label', 'admin'] },
-    { slug: 'distribution-election', name: 'Distribution Election', desc: 'Choose how your music reaches DSPs and how revenue splits.', icon: Globe, accent: 'var(--purple)', tab: 'distribution-election', roles: ['creator', 'label', 'admin'] },
-    { slug: 'djpool', name: 'DJ Pool MVP', desc: 'Distribute promo cuts to vetted DJs, gate by region, track plays.', icon: Radio, accent: '#10b981', tab: 'djpool', roles: ['creator', 'dj', 'admin'] },
-    { slug: 'sync-marketplace', name: 'Sync Marketplace', desc: 'Pitch and license tracks for film, TV, ads, and game placements.', icon: Globe, accent: 'var(--cyan)', tab: 'sync', roles: ['creator', 'label', 'studio', 'supervisor', 'admin'] },
-    { slug: 'escrow-contracts', name: 'Escrow Contracts', desc: 'Hold funds in escrow until contractual milestones clear.', icon: Shield, accent: 'var(--purple)', tab: 'escrow', roles: ['creator', 'studio', 'supervisor', 'admin'] },
-    { slug: 'tunemavens-library', name: 'My Library', desc: 'Personal media library  -  playlists, downloads, and offline cache.', icon: Music, accent: 'var(--cyan)', tab: 'library', roles: ['creator', 'consumer', 'dj', 'admin'] },
-    { slug: 'tunemavens-tips', name: 'Tips & Purchases', desc: 'See incoming tips and your TuneMavens app purchases.', icon: Coins, accent: '#10b981', tab: 'tips', roles: ['creator', 'consumer', 'dj', 'admin'] },
-    { slug: 'tunepay-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: Database, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'admin'] },
-    { slug: 'tunepay-settlement', name: 'POS Settlement', desc: 'Reconcile tunepay settlement runs against your ledger.', icon: Coins, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
-    { slug: 'tunepay-devices', name: 'POS Devices', desc: 'Pair and manage tunepay hardware tied to your account.', icon: Smartphone, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'admin'] },
+    { slug: 'catalog-porting', name: 'Catalog Porting', desc: 'Bring your back-catalogue in via CSV or DDEX, validate metadata, and stage releases.', icon: RiDatabase2Fill, accent: 'var(--cyan)', tab: 'catalog', roles: ['creator', 'label', 'admin'] },
+    { slug: 'split-cascade', name: 'Split Cascade', desc: 'See exactly how every dollar flows through writer / producer / publisher splits.', icon: RiCoinsFill, accent: 'var(--purple)', tab: 'splits', roles: ['creator', 'label', 'admin'] },
+    { slug: 'publishing-election', name: 'Publishing Election', desc: 'Lock in your publishing tier  -  standard admin or full-service co-pub.', icon: RiBookOpenFill, accent: 'var(--cyan)', tab: 'publishing-election', roles: ['creator', 'label', 'admin'] },
+    { slug: 'distribution-election', name: 'Distribution Election', desc: 'Choose how your music reaches DSPs and how revenue splits.', icon: RiGlobalFill, accent: 'var(--purple)', tab: 'distribution-election', roles: ['creator', 'label', 'admin'] },
+    { slug: 'djpool', name: 'DJ Pool MVP', desc: 'Distribute promo cuts to vetted DJs, gate by region, track plays.', icon: RiRadioFill, accent: '#10b981', tab: 'djpool', roles: ['creator', 'dj', 'admin'] },
+    { slug: 'sync-marketplace', name: 'Sync Marketplace', desc: 'Pitch and license tracks for film, TV, ads, and game placements.', icon: RiGlobalFill, accent: 'var(--cyan)', tab: 'sync', roles: ['creator', 'label', 'studio', 'supervisor', 'admin'] },
+    { slug: 'escrow-contracts', name: 'Escrow Contracts', desc: 'Hold funds in escrow until contractual milestones clear.', icon: RiShieldFill, accent: 'var(--purple)', tab: 'escrow', roles: ['creator', 'studio', 'supervisor', 'admin'] },
+    { slug: 'tunemavens-library', name: 'My Library', desc: 'Personal media library  -  playlists, downloads, and offline cache.', icon: RiMusicFill, accent: 'var(--cyan)', tab: 'library', roles: ['creator', 'consumer', 'dj', 'admin'] },
+    { slug: 'tunemavens-tips', name: 'Tips & Purchases', desc: 'See incoming tips and your TuneMavens app purchases.', icon: RiCoinsFill, accent: '#10b981', tab: 'tips', roles: ['creator', 'consumer', 'dj', 'admin'] },
+    { slug: 'tunepay-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: RiDatabase2Fill, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'admin'] },
+    { slug: 'tunepay-settlement', name: 'POS Settlement', desc: 'Reconcile tunepay settlement runs against your ledger.', icon: RiCoinsFill, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
+    { slug: 'tunepay-devices', name: 'POS Devices', desc: 'Pair and manage tunepay hardware tied to your account.', icon: RiSmartphoneFill, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'admin'] },
   ];
 
   const visible = catalogue.filter((a) => a.roles.includes(role));
@@ -1332,7 +1327,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
             <div style={{ fontSize: '14px', fontWeight: 800, color: '#f1f5f9' }}>{a.name}</div>
             {isActive && (
               <div style={{ fontSize: '9px', color: '#10b981', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginTop: '2px' }} data-testid={`app-marketplace-status-${a.slug}`}>
-                <CheckCircle2 size={10} style={{ display: 'inline', marginRight: '4px', verticalAlign: '-1px' }} /> Activated
+                <RiCheckboxCircleFill size={10} style={{ display: 'inline', marginRight: '4px', verticalAlign: '-1px' }} /> Activated
               </div>
             )}
           </div>

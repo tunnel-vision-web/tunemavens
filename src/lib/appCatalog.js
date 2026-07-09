@@ -1,7 +1,7 @@
 // Unified lookup for every slug the App Marketplace can recommend.
 // The recommendation engine returns slugs + rationale; this helper resolves
 // them to the visual fields (icon, accent, name, open target).
-import { Database, Coins, BookOpen, Globe, Radio, Shield, Music, Smartphone } from 'lucide-react';
+import { RiDatabase2Fill, RiCoinsFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill } from 'react-icons/ri';
 import { INTERMAVEN_NATIVE_APPS } from './nativeApps.js';
 import { INTERMAVEN_PLATFORM_APPS } from './intermavenPlatformApps.js';
 
@@ -9,18 +9,18 @@ import { INTERMAVEN_PLATFORM_APPS } from './intermavenPlatformApps.js';
 // AppMarketplacePanel. Kept short here; the marketplace itself owns the
 // long descriptions.
 const TUNEMAVENS_APPS = [
-  { slug: 'catalog-porting', name: 'Catalog Porting', icon: Database, accent: '#22d3ee', tab: 'catalog' },
-  { slug: 'split-cascade', name: 'Split Cascade', icon: Coins, accent: '#a78bfa', tab: 'splits' },
-  { slug: 'publishing-election', name: 'Publishing Election', icon: BookOpen, accent: '#22d3ee', tab: 'publishing-election' },
-  { slug: 'distribution-election', name: 'Distribution Election', icon: Globe, accent: '#a78bfa', tab: 'distribution-election' },
-  { slug: 'djpool', name: 'DJ Pool MVP', icon: Radio, accent: '#10b981', tab: 'djpool' },
-  { slug: 'sync-marketplace', name: 'Sync Marketplace', icon: Globe, accent: '#22d3ee', tab: 'sync' },
-  { slug: 'escrow-contracts', name: 'Escrow Contracts', icon: Shield, accent: '#a78bfa', tab: 'escrow' },
-  { slug: 'tunemavens-library', name: 'My Library', icon: Music, accent: '#22d3ee', tab: 'library' },
-  { slug: 'tunemavens-tips', name: 'Tips & Purchases', icon: Coins, accent: '#10b981', tab: 'tips' },
-  { slug: 'tunepay-inventory', name: 'POS Inventory', icon: Database, accent: '#10b981', tab: 'pos-inventory' },
-  { slug: 'tunepay-settlement', name: 'POS Settlement', icon: Coins, accent: '#10b981', tab: 'pos-settlement' },
-  { slug: 'tunepay-devices', name: 'POS Devices', icon: Smartphone, accent: '#10b981', tab: 'pos-devices' },
+  { slug: 'catalog-porting', name: 'Catalog Porting', icon: RiDatabase2Fill, accent: '#22d3ee', tab: 'catalog' },
+  { slug: 'split-cascade', name: 'Split Cascade', icon: RiCoinsFill, accent: '#a78bfa', tab: 'splits' },
+  { slug: 'publishing-election', name: 'Publishing Election', icon: RiBookOpenFill, accent: '#22d3ee', tab: 'publishing-election' },
+  { slug: 'distribution-election', name: 'Distribution Election', icon: RiGlobalFill, accent: '#a78bfa', tab: 'distribution-election' },
+  { slug: 'djpool', name: 'DJ Pool MVP', icon: RiRadioFill, accent: '#10b981', tab: 'djpool' },
+  { slug: 'sync-marketplace', name: 'Sync Marketplace', icon: RiGlobalFill, accent: '#22d3ee', tab: 'sync' },
+  { slug: 'escrow-contracts', name: 'Escrow Contracts', icon: RiShieldFill, accent: '#a78bfa', tab: 'escrow' },
+  { slug: 'tunemavens-library', name: 'My Library', icon: RiMusicFill, accent: '#22d3ee', tab: 'library' },
+  { slug: 'tunemavens-tips', name: 'Tips & Purchases', icon: RiCoinsFill, accent: '#10b981', tab: 'tips' },
+  { slug: 'tunepay-inventory', name: 'POS Inventory', icon: RiDatabase2Fill, accent: '#10b981', tab: 'pos-inventory' },
+  { slug: 'tunepay-settlement', name: 'POS Settlement', icon: RiCoinsFill, accent: '#10b981', tab: 'pos-settlement' },
+  { slug: 'tunepay-devices', name: 'POS Devices', icon: RiSmartphoneFill, accent: '#10b981', tab: 'pos-devices' },
 ];
 
 const NATIVE_LOOKUP = INTERMAVEN_NATIVE_APPS.map((a) => ({

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { 
-  ChevronDown, Layers, Smartphone, HelpCircle, MessageSquare, BookOpen, X, Menu, Cpu 
-} from 'lucide-react'
+import { RiArrowDownSFill, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill } from 'react-icons/ri'
 import { ROLE_LOGOS } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -133,7 +131,7 @@ export default function Navbar({ sessionUser }) {
               }}
             >
               My Library
-              <ChevronDown size={14} />
+              <RiArrowDownSFill size={14} />
             </button>
             <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`}>
               <li>
@@ -223,7 +221,7 @@ export default function Navbar({ sessionUser }) {
             data-testid="nav-apps-dropdown-trigger"
           >
             Apps
-            <ChevronDown size={14} />
+            <RiArrowDownSFill size={14} />
           </button>
           <ul className={`dropdown-menu ${appsDropdownOpen ? 'open' : ''}`}>
             <li>
@@ -233,7 +231,7 @@ export default function Navbar({ sessionUser }) {
                 onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}
                 data-testid="nav-apps-dashboard-link"
               >
-                <Layers size={16} /> Dashboard Apps
+                <RiStackFill size={16} /> Dashboard Apps
               </Link>
             </li>
             <li>
@@ -243,7 +241,7 @@ export default function Navbar({ sessionUser }) {
                 onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}
                 data-testid="nav-apps-native-link"
               >
-                <Smartphone size={16} /> Native Apps
+                <RiSmartphoneFill size={16} /> Native Apps
               </Link>
             </li>
           </ul>
@@ -263,7 +261,7 @@ export default function Navbar({ sessionUser }) {
             onClick={() => { setDropdownOpen(false); setAppsDropdownOpen(false); setAboutDropdownOpen(!aboutDropdownOpen); }}
           >
             About
-            <ChevronDown size={14} />
+            <RiArrowDownSFill size={14} />
           </button>
           <ul className={`dropdown-menu ${aboutDropdownOpen ? 'open' : ''}`}>
             <li>
@@ -284,22 +282,22 @@ export default function Navbar({ sessionUser }) {
             onClick={() => setDropdownOpen(!dropdownOpen)}
           >
             Support & Community
-            <ChevronDown size={14} />
+            <RiArrowDownSFill size={14} />
           </button>
           <ul className={`dropdown-menu ${dropdownOpen ? 'open' : ''}`}>
             <li>
               <Link to="/help" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
-                <HelpCircle size={16} /> Help Center
+                <RiQuestionFill size={16} /> Help Center
               </Link>
             </li>
             <li>
               <a href="#forum" className="dropdown-link" onClick={() => { alert('TuneMavens Community Forum shares the Intermaven account profile and will launch in Phase 2.'); setDropdownOpen(false); setMobileOpen(false); }}>
-                <MessageSquare size={16} /> Creator Forum
+                <RiMessage2Fill size={16} /> Creator Forum
               </a>
             </li>
             <li>
               <a href="#blog" className="dropdown-link" onClick={() => { alert('Creator stories and news blog coming soon.'); setDropdownOpen(false); setMobileOpen(false); }}>
-                <BookOpen size={16} /> Blog & Articles
+                <RiBookOpenFill size={16} /> Blog & Articles
               </a>
             </li>
           </ul>
@@ -340,7 +338,7 @@ export default function Navbar({ sessionUser }) {
 
         {/* Mobile Menu Button */}
         <button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileOpen ? <RiCloseFill size={24} /> : <RiMenuFill size={24} />}
         </button>
 
         {/* Links */}
@@ -375,7 +373,7 @@ export default function Navbar({ sessionUser }) {
           <div className="nav-ctas">
             {sessionUser ? (
               <Link to="/dashboard" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Cpu size={14} /> Dashboard
+                <RiCpuFill size={14} /> Dashboard
               </Link>
             ) : (
               <>

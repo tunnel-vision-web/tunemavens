@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Check, Lock, Database } from 'lucide-react'
+import { RiCheckboxCircleFill, RiLockFill, RiDatabase2Fill } from 'react-icons/ri'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
 import headerAboutImg from '../../assets/images/header_about.png'
@@ -32,21 +32,21 @@ export default function AboutView() {
               All operations are designed to be seamless. In partnership with Intermaven.io, TuneMavens connects your payment records, custom domains, and AI tasks to a single, secure central profile database, avoiding the hassle of managing disjointed web tools.
             </p>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Shared M-Pesa & Stripe checkout integrations</li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Automatic EPK sync to public DNS records</li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} color="var(--cyan)" /> Instant cross-subdomain authentication</li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckboxCircleFill size={14} color="var(--cyan)" /> Shared M-Pesa & Stripe checkout integrations</li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckboxCircleFill size={14} color="var(--cyan)" /> Automatic EPK sync to public DNS records</li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckboxCircleFill size={14} color="var(--cyan)" /> Instant cross-subdomain authentication</li>
             </ul>
           </div>
           <div className="arch-visual">
             <div className="arch-node active">
-              <div className="arch-node-icon"><Lock size={18} /></div>
+              <div className="arch-node-icon"><RiLockFill size={18} /></div>
               <div className="arch-node-info">
                 <h4 className="arch-node-title">Secure Subdomain Auth</h4>
                 <p className="arch-node-desc">Unified JWT session tokens shared across all portal environments.</p>
               </div>
             </div>
             <div className="arch-node">
-              <div className="arch-node-icon"><Database size={18} /></div>
+              <div className="arch-node-icon"><RiDatabase2Fill size={18} /></div>
               <div className="arch-node-info">
                 <h4 className="arch-node-title">Consolidated Database</h4>
                 <p className="arch-node-desc">Profiles and notification registries remain synchronized in real-time.</p>
@@ -64,7 +64,7 @@ export default function AboutView() {
         <div className="contact-card glass-panel">
           {submitted ? (
             <div className="text-center" style={{ padding: '20px 0' }}>
-              <Check size={48} color="var(--cyan)" style={{ margin: '0 auto 16px' }} />
+              <RiCheckboxCircleFill size={48} color="var(--cyan)" style={{ margin: '0 auto 16px' }} />
               <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Thank you!</h3>
               <p style={{ fontSize: '14px', color: 'var(--mu)' }}>We have received your message and will respond shortly.</p>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Activity, Globe, Layers, Zap } from 'lucide-react'
+import { RiBarChartFill, RiGlobalFill, RiStackFill, RiFlashlightFill } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
 import MpesaPosTerminal from '../../components/demos/MpesaPosTerminal.jsx'
@@ -23,10 +23,10 @@ export default function AppsView({ sessionUser }) {
     : 'Collect on-site merchant card, contactless, and digital wallet payments during venues and tours.';
 
   const apps = [
-    { id: 'tracker', name: 'Distribution Tracker', icon: Activity, desc: 'Monitor ingest status and scheduled releases across Spotify, Apple, and Amazon Music.', live: true },
-    { id: 'hosting', name: 'Hosting Manager', icon: Globe, desc: 'Register custom domain names, configure DNS zone settings, and deploy modular web containers.', live: true },
-    { id: 'ledger', name: 'Split Cascade Ledger', icon: Layers, desc: 'Configure collaborators splits, load bulk statement spreadsheets, and automate payout accounting.', live: true },
-    { id: 'pos', name: posName, icon: Zap, desc: posDesc, live: true },
+    { id: 'tracker', name: 'Distribution Tracker', icon: RiBarChartFill, desc: 'Monitor ingest status and scheduled releases across Spotify, Apple, and Amazon Music.', live: true },
+    { id: 'hosting', name: 'Hosting Manager', icon: RiGlobalFill, desc: 'Register custom domain names, configure DNS zone settings, and deploy modular web containers.', live: true },
+    { id: 'ledger', name: 'Split Cascade Ledger', icon: RiStackFill, desc: 'Configure collaborators splits, load bulk statement spreadsheets, and automate payout accounting.', live: true },
+    { id: 'pos', name: posName, icon: RiFlashlightFill, desc: posDesc, live: true },
   ];
 
   if (activeApp === 'pos') {

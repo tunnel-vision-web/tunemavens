@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Layers, Cpu, Globe } from 'lucide-react'
+import { RiStackFill, RiCpuFill, RiGlobalFill } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 
 // Local assets
@@ -389,17 +389,17 @@ export default function HomeView({ sessionUser }) {
           </div>
           <div className="pain-points-grid">
             <div className="pain-card glass-panel">
-              <div className="pain-icon"><Layers size={24} /></div>
+              <div className="pain-icon"><RiStackFill size={24} /></div>
               <h4>Spreadsheet Fatigue</h4>
               <p><strong>Ideal for DIY Managers.</strong> We replace complex spreadsheets with automated cascade splitting rules that map directly to payment terminals.</p>
             </div>
             <div className="pain-card glass-panel">
-              <div className="pain-icon"><Cpu size={24} /></div>
+              <div className="pain-icon"><RiCpuFill size={24} /></div>
               <h4>Engineering Costs</h4>
               <p><strong>Ideal for Touring Artists.</strong> Get mastering and compliance checks instantly without having to hire expensive studio engineers for simple reference adjustments.</p>
             </div>
             <div className="pain-card glass-panel">
-              <div className="pain-icon"><Globe size={24} /></div>
+              <div className="pain-icon"><RiGlobalFill size={24} /></div>
               <h4>Pitching Hurdles</h4>
               <p><strong>Ideal for Sync Catalog Owners.</strong> Translate your tracks into structured metadata briefs so television networks and game publishers can find your songs in catalogs.</p>
             </div>

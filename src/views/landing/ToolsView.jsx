@@ -1,5 +1,5 @@
 import React from 'react'
-import { Radio, Cpu, FileText, Key, Settings, Activity, Lock, Terminal, Globe } from 'lucide-react'
+import { RiRadioFill, RiCpuFill, RiFileTextFill, RiKey2Fill, RiSettings3Fill, RiBarChartFill, RiLockFill, RiTerminalFill, RiGlobalFill } from 'react-icons/ri'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
 import headerToolsImg from '../../assets/images/header_tools.png'
@@ -7,16 +7,16 @@ import headerToolsWesternImg from '../../assets/images/header_tools_western.png'
 
 export default function ToolsView() {
   const tools = [
-    { name: 'Sync Brief AI', icon: Radio, desc: 'Translates video descriptions and creative scripts into specific sync descriptors.', cost: '10 credits' },
-    { name: 'Mastering Brief AI', icon: Cpu, desc: 'Optimizes output loudness targets (LUFS) and peaks based on reference tracks.', cost: '15 credits' },
-    { name: 'Artist One-Sheet AI', icon: FileText, desc: 'Compiles your brand and catalog details into a clean PDF one-sheet pitch document.', cost: '5 credits' },
-    { name: 'Remix License Generator', icon: Key, desc: 'Generates stem clearance and royalty share contracts for collaborative remixes.', cost: 'Free' },
-    { name: 'Broadcast Report Formatter', icon: Settings, desc: 'Formats and compiles broadcast playlogs to fit compliance reporting sheets.', cost: 'Free' },
-    { name: 'Royalty Statement AI', icon: Activity, desc: 'Audits bulk royalty statement payouts and exports split ledgers.', cost: '20 credits' },
-    { name: 'Release Planner', icon: FileText, desc: 'Coordinates store distribution deadlines and media campaign dates.', cost: 'Free' },
-    { name: 'Music NFT Brief', icon: Lock, desc: 'Designs metadata token structures for web3 releases and catalog registration.', cost: '25 credits' },
-    { name: 'ISRC Generator', icon: Terminal, desc: 'Allocates and registers validated track tracking codes.', cost: 'Free' },
-    { name: 'Playlist Pitch AI', icon: Globe, desc: 'Automates curator pitching emails based on your genre tags and references.', cost: '10 credits' },
+    { name: 'Sync Brief AI', icon: RiRadioFill, desc: 'Translates video descriptions and creative scripts into specific sync descriptors.', cost: '10 credits' },
+    { name: 'Mastering Brief AI', icon: RiCpuFill, desc: 'Optimizes output loudness targets (LUFS) and peaks based on reference tracks.', cost: '15 credits' },
+    { name: 'Artist One-Sheet AI', icon: RiFileTextFill, desc: 'Compiles your brand and catalog details into a clean PDF one-sheet pitch document.', cost: '5 credits' },
+    { name: 'Remix License Generator', icon: RiKey2Fill, desc: 'Generates stem clearance and royalty share contracts for collaborative remixes.', cost: 'Free' },
+    { name: 'Broadcast Report Formatter', icon: RiSettings3Fill, desc: 'Formats and compiles broadcast playlogs to fit compliance reporting sheets.', cost: 'Free' },
+    { name: 'Royalty Statement AI', icon: RiBarChartFill, desc: 'Audits bulk royalty statement payouts and exports split ledgers.', cost: '20 credits' },
+    { name: 'Release Planner', icon: RiFileTextFill, desc: 'Coordinates store distribution deadlines and media campaign dates.', cost: 'Free' },
+    { name: 'Music NFT Brief', icon: RiLockFill, desc: 'Designs metadata token structures for web3 releases and catalog registration.', cost: '25 credits' },
+    { name: 'ISRC Generator', icon: RiTerminalFill, desc: 'Allocates and registers validated track tracking codes.', cost: 'Free' },
+    { name: 'Playlist Pitch AI', icon: RiGlobalFill, desc: 'Automates curator pitching emails based on your genre tags and references.', cost: '10 credits' },
   ];
 
   return (

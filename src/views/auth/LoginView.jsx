@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { RefreshCw } from 'lucide-react'
+import { RiRefreshFill } from 'react-icons/ri'
 import { authApi, tokenStore } from '../../lib/api.js'
 
 export default function LoginView({ onLogin }) {
@@ -83,7 +83,7 @@ export default function LoginView({ onLogin }) {
       >
         {googleLoading ? (
           <>
-            <RefreshCw size={14} className="spin-animation" />
+            <RiRefreshFill size={14} className="spin-animation" />
             Connecting to Google...
           </>
         ) : (

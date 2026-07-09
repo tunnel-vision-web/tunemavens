@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Smartphone } from 'lucide-react'
+import { RiSmartphoneFill } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
@@ -53,7 +53,7 @@ export default function StreamView() {
             <span className="stream-app-banner-sub">Same library, same tips, same account  -  just sized for your pocket.</span>
           </div>
           <Link to="/native-apps/tunestream" className="stream-app-banner-cta" data-testid="stream-app-banner-cta">
-            <Smartphone size={14} /> Get the native app
+            <RiSmartphoneFill size={14} /> Get the native app
           </Link>
         </div>
 

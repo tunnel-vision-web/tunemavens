@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { RiArrowDownSFill } from 'react-icons/ri'
 
 export default function FaqItem({ q, a, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -12,7 +12,7 @@ export default function FaqItem({ q, a, defaultOpen = false }) {
         data-testid="landing-faq-toggle"
       >
         <span>{q}</span>
-        <ChevronDown size={16} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+        <RiArrowDownSFill size={16} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
       </button>
       {open && <p className="landing-faq-a">{a}</p>}
     </div>

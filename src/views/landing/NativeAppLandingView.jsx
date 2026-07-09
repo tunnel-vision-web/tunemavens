@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { 
-  Headphones, TrendingUp, CreditCard, Apple, Download, ArrowRight, Smartphone, Play, Disc, 
-  Database, Mic, Cpu, Globe, Ticket, Sliders, Link2, Radio, Wifi, Music, RotateCcw, Pause, 
-  ChevronRight, ExternalLink, Settings, FolderPlus 
-} from 'lucide-react'
+import { RiHeadphoneFill, RiTrendingUpFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill } from 'react-icons/ri'
 import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
 import FaqItem from '../../components/common/FaqItem.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -485,7 +481,7 @@ export default function NativeAppLandingView() {
     }
   };
 
-  const ICONS = { Headphones, TrendingUp, CreditCard };
+  const ICONS = { Headphones: RiHeadphoneFill, TrendingUp: RiTrendingUpFill, CreditCard: RiBankCardFill };
   const HERO_IMAGE_MAP = {
     listenHero: listenHeroImg,
     heroMusic1: heroMusic1Img,
@@ -683,7 +679,7 @@ export default function NativeAppLandingView() {
                     className="btn-primary"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '15px', padding: '13px 26px' }}
                   >
-                    <Download size={16} /> Download Free
+                    <RiDownloadFill size={16} /> Download Free
                   </button>
                   <a
                     href="#plans-section"
@@ -710,7 +706,7 @@ export default function NativeAppLandingView() {
               boxSizing: 'border-box',
             }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '4px', background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Music size={18} style={{ color: '#fff' }} />
+                <RiMusicFill size={18} style={{ color: '#fff' }} />
               </div>
 
               <div style={{ flexShrink: 0, minWidth: 0 }}>
@@ -723,19 +719,19 @@ export default function NativeAppLandingView() {
                   onClick={() => setPlayerProgress(p => Math.max(0, p - 5))}
                   style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex' }}
                   title="Rewind"
-                ><RotateCcw size={15} /></button>
+                ><RiResetLeftFill size={15} /></button>
                 <button
                   onClick={() => setPlayerPlaying(p => !p)}
                   style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#10b981', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                   title={playerPlaying ? 'Pause' : 'Play'}
                 >
-                  {playerPlaying ? <Pause size={14} fill="#fff" stroke="none" /> : <Play size={14} fill="#fff" stroke="none" />}
+                  {playerPlaying ? <RiPauseFill size={14} fill="#fff" stroke="none" /> : <RiPlayFill size={14} fill="#fff" stroke="none" />}
                 </button>
                 <button
                   onClick={() => setPlayerProgress(0)}
                   style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex' }}
                   title="Skip"
-                ><ChevronRight size={15} /></button>
+                ><RiArrowRightSFill size={15} /></button>
               </div>
 
               <div style={{ flex: 1, height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', cursor: 'pointer', minWidth: '60px' }}
@@ -957,7 +953,7 @@ export default function NativeAppLandingView() {
                   <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} onClick={() => alert(`Playing: ${song.title} by ${song.artist}`)}>
                     <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: song.bg, position: 'relative', marginBottom: '12px' }}>
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Music size={32} style={{ color: '#fff', opacity: 0.85 }} />
+                        <RiMusicFill size={32} style={{ color: '#fff', opacity: 0.85 }} />
                       </div>
                     </div>
                     <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</h3>
@@ -996,7 +992,7 @@ export default function NativeAppLandingView() {
                   <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} onClick={() => alert(`Playing: ${single.title}`)}>
                     <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: single.bg, position: 'relative', marginBottom: '12px' }}>
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Disc size={32} style={{ color: '#fff', opacity: 0.85 }} />
+                        <RiDiscFill size={32} style={{ color: '#fff', opacity: 0.85 }} />
                       </div>
                     </div>
                     <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{single.title}</h3>
@@ -1018,7 +1014,7 @@ export default function NativeAppLandingView() {
                   <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} onClick={() => alert(`Opening Album: ${album.title}`)}>
                     <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: album.bg, position: 'relative', marginBottom: '12px' }}>
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Database size={32} style={{ color: '#fff', opacity: 0.85 }} />
+                        <RiDatabase2Fill size={32} style={{ color: '#fff', opacity: 0.85 }} />
                       </div>
                     </div>
                     <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.title}</h3>
@@ -1175,7 +1171,7 @@ export default function NativeAppLandingView() {
 
           {playlists.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.01)', borderRadius: '3px', border: '1px dashed rgba(255,255,255,0.1)', maxWidth: '500px', margin: '0 auto' }}>
-              <FolderPlus size={48} style={{ color: 'var(--mu)', margin: '0 auto 16px', display: 'block' }} />
+              <RiFolderAddFill size={48} style={{ color: 'var(--mu)', margin: '0 auto 16px', display: 'block' }} />
               <h3 style={{ color: '#fff', fontSize: '18px', marginBottom: '8px' }}>No playlists yet</h3>
               <p style={{ color: 'var(--mu)', fontSize: '13px', marginBottom: '20px' }}>Create your first custom listening collection.</p>
               <Link to="/native-apps/tunestream?view=create-playlist" className="btn-primary">Create Now</Link>
@@ -1185,13 +1181,13 @@ export default function NativeAppLandingView() {
               {playlists.map(p => (
                 <div key={p.id} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} onClick={() => alert(`Streaming playlist: ${p.name}`)}>
                   <div style={{ width: '100%', height: '140px', borderRadius: '3px', background: p.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', color: '#fff' }}>
-                    <Headphones size={42} style={{ opacity: 0.9 }} />
+                    <RiHeadphoneFill size={42} style={{ opacity: 0.9 }} />
                   </div>
                   <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{p.name}</h3>
                   <p style={{ fontSize: '13px', color: 'var(--mu)', margin: '0 0 12px', minHeight: '36px', overflow: 'hidden', display: '-webkit-box', WebkitLineBreak: 'after-white-space', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.desc}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
                     <span style={{ color: 'var(--mu)' }}>{p.tracks} tracks</span>
-                    <span style={{ color: 'var(--green)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}><Play size={10} fill="currentColor" /> Play</span>
+                    <span style={{ color: 'var(--green)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}><RiPlayFill size={10} fill="currentColor" /> Play</span>
                   </div>
                 </div>
               ))}
@@ -1302,14 +1298,14 @@ export default function NativeAppLandingView() {
 
     const renderBrowsePodcasts = () => {
       const podcasts = [
-        { title: 'The Independent Artist Podcast', host: 'Intermaven Audio', desc: 'Survival tips, split cascade tutorials, and industry insights for creators.', bg: 'linear-gradient(135deg, #10b981 0%, #1e1b4b 100%)', icon: Mic },
-        { title: 'Intermaven Tech & Music', host: 'Intermaven Engineering', desc: 'Deep dives into decentralized compensation models and audio compression standards.', bg: 'linear-gradient(135deg, #8b5cf6 0%, #1e1b4b 100%)', icon: Cpu },
-        { title: 'African Soundscapes', host: 'Mercy Wangari', desc: 'High-fidelity field recordings and interviews with traditional instrument masters.', bg: 'linear-gradient(135deg, #f59e0b 0%, #1e1b4b 100%)', icon: Globe },
-        { title: 'Backstage Pass', host: 'Label Ops Network', desc: 'merch POS provisioning, live tickets setups, and regional settlement guides.', bg: 'linear-gradient(135deg, #3b82f6 0%, #1e1b4b 100%)', icon: Ticket },
-        { title: 'The Producer Roundtable', host: 'Alex Rivera', desc: 'Discussion on studio workflows, mastering presets, and regional sample packs.', bg: 'linear-gradient(135deg, #f43f5e 0%, #1e1b4b 100%)', icon: Sliders },
-        { title: 'Decentralized Audio Weekly', host: 'Intermaven Audio', desc: 'Exploring smart contract applications in the global music supply chain.', bg: 'linear-gradient(135deg, #0ea5e9 0%, #1e1b4b 100%)', icon: Link2 },
-        { title: 'Amapiano Pioneer Stories', host: 'Zola K.', desc: 'Oral history of the Pretoria club movements and sub-genre development.', bg: 'linear-gradient(135deg, #a855f7 0%, #1e1b4b 100%)', icon: Radio },
-        { title: 'Off-Grid Streaming Insights', host: 'Intermaven Network', desc: 'How peer-to-peer storage models power local high-fidelity music streaming.', bg: 'linear-gradient(135deg, #10b981 0%, #1e1b4b 100%)', icon: Wifi }
+        { title: 'The Independent Artist Podcast', host: 'Intermaven Audio', desc: 'Survival tips, split cascade tutorials, and industry insights for creators.', bg: 'linear-gradient(135deg, #10b981 0%, #1e1b4b 100%)', icon: RiMicFill },
+        { title: 'Intermaven Tech & Music', host: 'Intermaven Engineering', desc: 'Deep dives into decentralized compensation models and audio compression standards.', bg: 'linear-gradient(135deg, #8b5cf6 0%, #1e1b4b 100%)', icon: RiCpuFill },
+        { title: 'African Soundscapes', host: 'Mercy Wangari', desc: 'High-fidelity field recordings and interviews with traditional instrument masters.', bg: 'linear-gradient(135deg, #f59e0b 0%, #1e1b4b 100%)', icon: RiGlobalFill },
+        { title: 'Backstage Pass', host: 'Label Ops Network', desc: 'merch POS provisioning, live tickets setups, and regional settlement guides.', bg: 'linear-gradient(135deg, #3b82f6 0%, #1e1b4b 100%)', icon: RiTicket2Fill },
+        { title: 'The Producer Roundtable', host: 'Alex Rivera', desc: 'Discussion on studio workflows, mastering presets, and regional sample packs.', bg: 'linear-gradient(135deg, #f43f5e 0%, #1e1b4b 100%)', icon: RiEqualizerFill },
+        { title: 'Decentralized Audio Weekly', host: 'Intermaven Audio', desc: 'Exploring smart contract applications in the global music supply chain.', bg: 'linear-gradient(135deg, #0ea5e9 0%, #1e1b4b 100%)', icon: RiLinksFill },
+        { title: 'Amapiano Pioneer Stories', host: 'Zola K.', desc: 'Oral history of the Pretoria club movements and sub-genre development.', bg: 'linear-gradient(135deg, #a855f7 0%, #1e1b4b 100%)', icon: RiRadioFill },
+        { title: 'Off-Grid Streaming Insights', host: 'Intermaven Network', desc: 'How peer-to-peer storage models power local high-fidelity music streaming.', bg: 'linear-gradient(135deg, #10b981 0%, #1e1b4b 100%)', icon: RiWifiFill }
       ];
 
       const itemsPerPage = 4;
@@ -1363,21 +1359,21 @@ export default function NativeAppLandingView() {
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
               <li style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center' }}>
-                <Headphones size={28} style={{ color: 'var(--cyan)' }} />
+                <RiHeadphoneFill size={28} style={{ color: 'var(--cyan)' }} />
                 <div>
                   <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '4px' }}>For Listeners</strong>
                   <span style={{ fontSize: '12px', color: 'var(--mu)', lineHeight: '1.4' }}>Stream music, cache high-quality files offline, and tip creators directly.</span>
                 </div>
               </li>
               <li style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center' }}>
-                <TrendingUp size={28} style={{ color: 'var(--purple)' }} />
+                <RiTrendingUpFill size={28} style={{ color: 'var(--purple)' }} />
                 <div>
                   <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '4px' }}>For Artists</strong>
                   <span style={{ fontSize: '12px', color: 'var(--mu)', lineHeight: '1.4' }}>Track splits, payout balances, sync cascades, and release analytics.</span>
                 </div>
               </li>
               <li style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center' }}>
-                <CreditCard size={28} style={{ color: 'var(--green)' }} />
+                <RiBankCardFill size={28} style={{ color: 'var(--green)' }} />
                 <div>
                   <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '4px' }}>For Labels & Venues</strong>
                   <span style={{ fontSize: '12px', color: 'var(--mu)', lineHeight: '1.4' }}>Process ticket scans, sell merch on-site, and manage event settlements.</span>
@@ -1404,7 +1400,7 @@ export default function NativeAppLandingView() {
                       onClick={() => alert(`App Store listing for ${ap.title} coming in Phase 5+.`)}
                       style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '3px', color: '#fff', textAlign: 'left', width: '100%', outline: 'none', justifyContent: 'center' }}
                     >
-                      <Apple size={20} />
+                      <RiAppleFill size={20} />
                       <div>
                         <div style={{ fontSize: '8px', opacity: 0.6 }}>Download on the</div>
                         <div style={{ fontSize: '11px', fontWeight: 'bold' }}>App Store</div>
@@ -1416,7 +1412,7 @@ export default function NativeAppLandingView() {
                       onClick={() => alert(`Google Play listing for ${ap.title} coming in Phase 5+.`)}
                       style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '3px', color: '#fff', textAlign: 'left', width: '100%', outline: 'none', justifyContent: 'center' }}
                     >
-                      <Download size={20} />
+                      <RiDownloadFill size={20} />
                       <div>
                         <div style={{ fontSize: '8px', opacity: 0.6 }}>Get it on</div>
                         <div style={{ fontSize: '11px', fontWeight: 'bold' }}>Google Play</div>
@@ -1749,10 +1745,10 @@ export default function NativeAppLandingView() {
             <p className="landing-lede" style={{ maxWidth: 'none', marginBottom: '24px' }}>{data.lede}</p>
             <div className="landing-cross-links">
               <Link to={data.webEquivalent.to} className="landing-cross-link" data-testid="landing-web-link">
-                <ExternalLink size={13} /> {data.webEquivalent.label}
+                <RiExternalLinkFill size={13} /> {data.webEquivalent.label}
               </Link>
               <Link to={data.adminLink.to} className="landing-cross-link" data-testid="landing-admin-link">
-                <Settings size={13} /> {data.adminLink.label}
+                <RiSettings3Fill size={13} /> {data.adminLink.label}
               </Link>
             </div>
           </div>
@@ -1833,7 +1829,7 @@ export default function NativeAppLandingView() {
               onClick={() => alert(`App Store listing for ${data.name} coming in Phase 5+`)}
               data-testid="landing-close-appstore"
             >
-              <div className="store-cta-icon"><Apple size={22} /></div>
+              <div className="store-cta-icon"><RiAppleFill size={22} /></div>
               <div className="store-cta-text">
                 <span className="store-cta-sub">Download on the</span>
                 <span className="store-cta-label">App Store</span>
@@ -1845,7 +1841,7 @@ export default function NativeAppLandingView() {
               onClick={() => alert(`Google Play listing for ${data.name} coming in Phase 5+`)}
               data-testid="landing-close-googleplay"
             >
-              <div className="store-cta-icon"><Download size={22} /></div>
+              <div className="store-cta-icon"><RiDownloadFill size={22} /></div>
               <div className="store-cta-text">
                 <span className="store-cta-sub">Get it on</span>
                 <span className="store-cta-label">Google Play</span>

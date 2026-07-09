@@ -19,15 +19,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { 
   HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams
 } from 'react-router-dom'
-import { 
-  Music, Globe, Activity, Check, Zap, Shield, ArrowRight, ArrowLeft, 
-  Lock, Database, Layers, Settings, Terminal, Radio, FileText, 
-  Key, RefreshCw, Cpu, HelpCircle, ChevronDown, ChevronLeft, ChevronRight, Menu, X, MessageSquare, BookOpen, Coins,
-  Bell, User, LogOut, ExternalLink, CheckCircle2,
-  Smartphone, Download, Home, Apple, CreditCard, Headphones, TrendingUp,
-  RotateCcw, Send, Users as UsersIcon, PenTool, Link2, Mail, Play,
-  Disc, Mic, Sliders, Wifi, FolderPlus, Ticket, Star, Pause
-} from 'lucide-react'
+import { RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiFlashlightFill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiCheckboxCircleFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiTrendingUpFill, RiResetLeftFill, RiSendPlaneFill, RiUsersFill as UsersIcon, RiPenBrushFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill } from 'react-icons/ri'
 
 // Local assets
 import logoImg from './assets/logo.png'
@@ -199,7 +191,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
           title="Back to public site"
           data-testid="topbar-back-to-site"
         >
-          <Home size={14} />
+          <RiHomeFill size={14} />
           <span>Back to Site</span>
         </Link>
 
@@ -211,7 +203,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
             title="Notifications"
             data-testid="topbar-notifications-button"
           >
-            <Bell size={18} />
+            <RiBellFill size={18} />
             {unread > 0 && <span className="topbar-badge" data-testid="topbar-notifications-badge">{unread}</span>}
           </button>
           {notifOpen && (
@@ -258,7 +250,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
           >
             <span className="topbar-avatar">{initial}</span>
             <span className="topbar-account-name">{sessionUser?.name || 'Account'}</span>
-            <ChevronDown size={14} />
+            <RiArrowDownSFill size={14} />
           </button>
           {accountOpen && (
             <div className="topbar-dropdown topbar-dropdown-account" data-testid="topbar-account-dropdown">
@@ -293,7 +285,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
                 }}
                 data-testid="topbar-menu-become-admin"
               >
-                <Shield size={14} />
+                <RiShieldFill size={14} />
                 <span>{sessionUser?.role === 'admin' ? 'Sandbox: Demote to Creator' : 'Sandbox: Elevate to Admin'}</span>
               </button>
               <button
@@ -301,7 +293,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
                 onClick={() => { setActiveTab('profile'); setAccountOpen(false); }}
                 data-testid="topbar-menu-account-settings"
               >
-                <Settings size={14} />
+                <RiSettings3Fill size={14} />
                 <span>Account Settings</span>
               </button>
               <Link
@@ -310,7 +302,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
                 onClick={() => setAccountOpen(false)}
                 data-testid="topbar-menu-visit-site"
               >
-                <ExternalLink size={14} />
+                <RiExternalLinkFill size={14} />
                 <span>Visit Public Site</span>
               </Link>
               <div className="topbar-dropdown-divider" />
@@ -319,7 +311,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
                 onClick={() => { setAccountOpen(false); onLogout(); }}
                 data-testid="topbar-menu-logout"
               >
-                <LogOut size={14} />
+                <RiLogoutBoxRFill size={14} />
                 <span>Log Out</span>
               </button>
             </div>
@@ -435,25 +427,25 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
     const role = sessionUser?.role || 'creator';
     
     const allItems = {
-      home: { id: 'home', label: 'Overview', icon: Activity, category: 'Dashboard' },
-      catalog: { id: 'catalog', label: 'Catalog Porting', icon: Database, category: 'Catalog & IP' },
-      splits: { id: 'splits', label: 'Split Cascade', icon: Coins, category: 'Royalty Ledgers' },
-      djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: Radio, category: 'Pools & Sync' },
-      sync: { id: 'sync', label: 'Sync Marketplace', icon: Globe, category: 'Pools & Sync' },
-      escrow: { id: 'escrow', label: 'Escrow Contracts', icon: Shield, category: 'Royalty Ledgers' },
-      profile: { id: 'profile', label: 'Profile Settings', icon: Settings, category: 'Account' },
+      home: { id: 'home', label: 'Overview', icon: RiBarChartFill, category: 'Dashboard' },
+      catalog: { id: 'catalog', label: 'Catalog Porting', icon: RiDatabase2Fill, category: 'Catalog & IP' },
+      splits: { id: 'splits', label: 'Split Cascade', icon: RiCoinsFill, category: 'Royalty Ledgers' },
+      djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
+      sync: { id: 'sync', label: 'Sync Marketplace', icon: RiGlobalFill, category: 'Pools & Sync' },
+      escrow: { id: 'escrow', label: 'Escrow Contracts', icon: RiShieldFill, category: 'Royalty Ledgers' },
+      profile: { id: 'profile', label: 'Profile Settings', icon: RiSettings3Fill, category: 'Account' },
       // Native-app user controls (full editing parity with the apps)
-      library: { id: 'library', label: 'My Library', icon: Music, category: 'tunestream' },
-      tips: { id: 'tips', label: 'Tips & Purchases', icon: Coins, category: 'tunestream' },
-      'stream-controls': { id: 'stream-controls', label: 'Player & Devices', icon: Headphones, category: 'tunestream' },
-      'pos-inventory': { id: 'pos-inventory', label: 'POS Inventory', icon: Database, category: 'tunepay' },
-      'pos-settlement': { id: 'pos-settlement', label: 'POS Settlement', icon: Coins, category: 'tunepay' },
-      'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: Smartphone, category: 'tunepay' },
-      'publishing-election': { id: 'publishing-election', label: 'Publishing Election', icon: BookOpen, category: 'Royalty Ledgers' },
-      'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: Globe, category: 'Royalty Ledgers' },
-      'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: Zap, category: 'Apps & Marketplace' },
-      'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: Globe, category: 'Admin' },
-      'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: Star, category: 'Admin' },
+      library: { id: 'library', label: 'My Library', icon: RiMusicFill, category: 'tunestream' },
+      tips: { id: 'tips', label: 'Tips & Purchases', icon: RiCoinsFill, category: 'tunestream' },
+      'stream-controls': { id: 'stream-controls', label: 'Player & Devices', icon: RiHeadphoneFill, category: 'tunestream' },
+      'pos-inventory': { id: 'pos-inventory', label: 'POS Inventory', icon: RiDatabase2Fill, category: 'tunepay' },
+      'pos-settlement': { id: 'pos-settlement', label: 'POS Settlement', icon: RiCoinsFill, category: 'tunepay' },
+      'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: RiSmartphoneFill, category: 'tunepay' },
+      'publishing-election': { id: 'publishing-election', label: 'Publishing Election', icon: RiBookOpenFill, category: 'Royalty Ledgers' },
+      'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: RiGlobalFill, category: 'Royalty Ledgers' },
+      'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: RiFlashlightFill, category: 'Apps & Marketplace' },
+      'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: RiGlobalFill, category: 'Admin' },
+      'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: RiStarFill, category: 'Admin' },
     };
 
     let visibleKeys = [];
@@ -513,7 +505,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
             style={{ border: 'none', background: 'transparent', padding: '6px', justifyContent: 'center', width: '100%', marginBottom: '16px', color: '#94a3b8' }}
             title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
           </button>
 
           {Object.entries(getCategorizedMenu()).map(([category, items]) => (
@@ -551,7 +543,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
                 style={{ textDecoration: 'none' }}
                 title="Back to Home Site"
               >
-                <ArrowLeft size={16} />
+                <RiArrowLeftFill size={16} />
                 {!collapsed && "Back to Home Site"}
               </Link>
             </li>
@@ -595,7 +587,7 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
             style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px' }}
             title="Log Out"
           >
-            <X size={14} />
+            <RiCloseFill size={14} />
             {!collapsed && "Log Out"}
           </button>
         </div>
@@ -901,7 +893,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
       <div className="dashboard-card">
         <PanelHeader title="Domain Mappings" desc="Admin-only  -  your account does not have access." />
         <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', fontSize: '13px' }}>
-          <Lock size={28} style={{ color: '#475569', marginBottom: '10px' }} />
+          <RiLockFill size={28} style={{ color: '#475569', marginBottom: '10px' }} />
           <p>You need the <strong style={{ color: '#f1f5f9' }}>admin</strong> role to manage domain mappings.</p>
           <button
             className="btn-primary"
@@ -2324,7 +2316,7 @@ function CatalogPortingPanel({ setActiveTab }) {
 
           {filteredTracks.length === 0 ? (
             <div style={{ padding: '80px 0', textAlign: 'center', color: '#64748b' }}>
-              <Database size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
+              <RiDatabase2Fill size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
               <p style={{ margin: 0, fontSize: '13px' }}>No matching tracks found in your catalogue.</p>
             </div>
           ) : (
@@ -2689,7 +2681,7 @@ function DjPoolPanel() {
                       >
                         {downloadingId === tr.id ? (
                           <>
-                            <RefreshCw size={10} className="spin-animation" style={{ marginRight: '4px' }} />
+                            <RiRefreshFill size={10} className="spin-animation" style={{ marginRight: '4px' }} />
                             Preparing WAV...
                           </>
                         ) : 'Download'}
@@ -2963,7 +2955,7 @@ function EscrowContractsPanel({ payoutBalance, setPayoutBalance }) {
                     >
                       {releasingId === cnt.id ? (
                         <>
-                          <RefreshCw size={10} className="spin-animation" style={{ marginRight: '4px' }} />
+                          <RiRefreshFill size={10} className="spin-animation" style={{ marginRight: '4px' }} />
                           Verifying GPS Check-In...
                         </>
                       ) : 'Release Escrow'}

@@ -3,7 +3,7 @@
 //   • NativeAppsView (marketing page at /native-apps)
 //   • AppMarketplacePanel "Intermaven Network" tab (in-dashboard activation)
 // Keeping a single definition prevents the two surfaces from drifting apart.
-import { Headphones, TrendingUp, CreditCard } from 'lucide-react';
+import { RiHeadphoneFill, RiTrendingUpFill, RiBankCardFill } from 'react-icons/ri';
 
 export const INTERMAVEN_NATIVE_APPS = [
   {
@@ -12,7 +12,7 @@ export const INTERMAVEN_NATIVE_APPS = [
     landingPath: '/native-apps/tunestream',
     name: 'tunestream',
     tagline: 'Stream. Tip. Carry the catalogue.',
-    icon: Headphones,
+    icon: RiHeadphoneFill,
     accent: '#10b981',
     accentGlow: 'rgba(16, 185, 129, 0.18)',
     desc: 'The consumer-facing wrapper: offline-cached HQ audio, region-aware playlists, and one-tap tipping that lands directly in the creator\u2019s payout split.',
@@ -25,7 +25,7 @@ export const INTERMAVEN_NATIVE_APPS = [
     landingPath: '/native-apps/creator-companion',
     name: 'tunecompanion',
     tagline: 'Your split ledger in your pocket.',
-    icon: TrendingUp,
+    icon: RiTrendingUpFill,
     accent: 'var(--purple)',
     accentGlow: 'rgba(139, 92, 246, 0.18)',
     desc: 'Mobile metrics dashboard for artists and managers: real-time split ledger, payout balance, sync alerts, and AI-drafted release strategy plays on the go.',
@@ -38,7 +38,7 @@ export const INTERMAVEN_NATIVE_APPS = [
     landingPath: '/native-apps/tunepay',
     name: 'tunepay',
     tagline: 'Sell at the show. Settle by morning.',
-    icon: CreditCard,
+    icon: RiBankCardFill,
     accent: '#10b981',
     accentGlow: 'rgba(16, 185, 129, 0.18)',
     desc: 'Portable point-of-sale for live events: merch, ticket scans, and CD/vinyl on a phone or tablet, with tunepay, card, and digital-wallet acceptance.',

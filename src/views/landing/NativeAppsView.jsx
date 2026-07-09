@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Apple, Download, Check, ArrowRight, Smartphone } from 'lucide-react'
+import { RiAppleFill, RiDownloadFill, RiCheckboxCircleFill, RiArrowRightFill, RiSmartphoneFill } from 'react-icons/ri'
 import { INTERMAVEN_NATIVE_APPS } from '../../lib/nativeApps.js'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
@@ -18,7 +18,7 @@ export default function NativeAppsView() {
       data-testid={`store-cta-${kind}`}
     >
       <div className="store-cta-icon">
-        {kind === 'ios' ? <Apple size={22} /> : <Download size={22} />}
+        {kind === 'ios' ? <RiAppleFill size={22} /> : <RiDownloadFill size={22} />}
       </div>
       <div className="store-cta-text">
         <span className="store-cta-sub">{sublabel}</span>
@@ -68,7 +68,7 @@ export default function NativeAppsView() {
 
                 <ul className="native-app-features">
                   {a.features.map((f, k) => (
-                    <li key={k}><Check size={13} /> {f}</li>
+                    <li key={k}><RiCheckboxCircleFill size={13} /> {f}</li>
                   ))}
                 </ul>
 
@@ -82,12 +82,12 @@ export default function NativeAppsView() {
                   className="native-app-more-info"
                   data-testid={`native-app-more-info-${a.id}`}
                 >
-                  More info <ArrowRight size={14} />
+                  More info <RiArrowRightFill size={14} />
                 </Link>
 
                 <div className="native-app-meta">
                   <span className="native-app-meta-pill">
-                    <Smartphone size={11} /> Capacitor-wrapped · iOS &amp; Android
+                    <RiSmartphoneFill size={11} /> Capacitor-wrapped · iOS &amp; Android
                   </span>
                 </div>
               </article>
