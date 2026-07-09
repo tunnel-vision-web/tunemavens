@@ -96,7 +96,7 @@ export default function LoginView({ onLogin }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
         <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-        <span style={{ fontSize: '11px', color: 'var(--mu)' }}>or login with email</span>
+        <span style={{ fontSize: '11px', color: 'var(--mu)' }}>or login with any email (auto-sandbox)</span>
         <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
       </div>
 

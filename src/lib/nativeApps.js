@@ -3,7 +3,7 @@
 //   • NativeAppsView (marketing page at /native-apps)
 //   • AppMarketplacePanel "Intermaven Network" tab (in-dashboard activation)
 // Keeping a single definition prevents the two surfaces from drifting apart.
-import { RiHeadphoneFill, RiTrendingUpFill, RiBankCardFill } from 'react-icons/ri';
+import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill } from 'react-icons/ri';
 
 export const INTERMAVEN_NATIVE_APPS = [
   {
@@ -25,7 +25,7 @@ export const INTERMAVEN_NATIVE_APPS = [
     landingPath: '/native-apps/creator-companion',
     name: 'tunecompanion',
     tagline: 'Your split ledger in your pocket.',
-    icon: RiTrendingUpFill,
+    icon: RiLineChartFill,
     accent: 'var(--purple)',
     accentGlow: 'rgba(139, 92, 246, 0.18)',
     desc: 'Mobile metrics dashboard for artists and managers: real-time split ledger, payout balance, sync alerts, and AI-drafted release strategy plays on the go.',

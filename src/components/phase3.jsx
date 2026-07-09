@@ -5,7 +5,7 @@
 // AppMarketplacePanel  -  plus the PanelHeader helper they share.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { RiCloseFill, RiCheckboxCircleFill, RiCheckboxCircleFill, RiArrowDownSFill, RiArrowLeftFill, RiArrowRightFill, RiResetLeftFill, RiSendPlaneFill, RiPenBrushFill, RiLinksFill, RiMailFill, RiLockFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDatabase2Fill, RiCoinsFill, RiUsersFill as UsersIcon } from 'react-icons/ri'
+import { RiCloseFill, RiCheckboxCircleFill, RiArrowDownSFill, RiArrowLeftFill, RiArrowRightFill, RiResetLeftFill, RiSendPlaneFill, RiPenBrushFill, RiLinksFill, RiMailFill, RiLockFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDatabase2Fill, RiCoinsFill, RiUsersFill as UsersIcon } from 'react-icons/ri'
 import { dealsApi, usersApi, contractsApi } from '../lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from '../lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'

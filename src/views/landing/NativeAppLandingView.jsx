@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { RiHeadphoneFill, RiTrendingUpFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill } from 'react-icons/ri'
+import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill } from 'react-icons/ri'
 import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
 import FaqItem from '../../components/common/FaqItem.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -481,7 +481,7 @@ export default function NativeAppLandingView() {
     }
   };
 
-  const ICONS = { Headphones: RiHeadphoneFill, TrendingUp: RiTrendingUpFill, CreditCard: RiBankCardFill };
+  const ICONS = { Headphones: RiHeadphoneFill, TrendingUp: RiLineChartFill, CreditCard: RiBankCardFill };
   const HERO_IMAGE_MAP = {
     listenHero: listenHeroImg,
     heroMusic1: heroMusic1Img,
@@ -1366,7 +1366,7 @@ export default function NativeAppLandingView() {
                 </div>
               </li>
               <li style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center' }}>
-                <RiTrendingUpFill size={28} style={{ color: 'var(--purple)' }} />
+                <RiLineChartFill size={28} style={{ color: 'var(--purple)' }} />
                 <div>
                   <strong style={{ color: '#fff', display: 'block', fontSize: '14px', marginBottom: '4px' }}>For Artists</strong>
                   <span style={{ fontSize: '12px', color: 'var(--mu)', lineHeight: '1.4' }}>Track splits, payout balances, sync cascades, and release analytics.</span>

@@ -292,6 +292,40 @@ export default function RegisterView({ onLogin }) {
     }, 1200);
   };
 
+  const handleBypassOnboarding = () => {
+    const bypassRoles = ['creator', 'label'];
+    setRoles(bypassRoles);
+    setName('Alex Rivera');
+    setEmail('alex.rivera@tunemavens.com');
+    setPassword('sandbox123456');
+    
+    authApi.register({
+      email: 'alex.rivera@tunemavens.com',
+      password: 'sandbox123456',
+      name: 'Alex Rivera',
+      role: 'creator',
+      brand_name: 'Alex Rivera Productions',
+      country: 'KE',
+    }).then(({ user, access_token }) => {
+      tokenStore.set(access_token);
+      onLogin(user);
+      clearSignupMemory();
+      navigate('/dashboard');
+    }).catch(() => {
+      onLogin({
+        email: 'alex.rivera@tunemavens.com',
+        name: 'Alex Rivera',
+        role: 'creator',
+        credits: 600,
+        plan: 'creator',
+        brand_name: 'Alex Rivera Productions',
+        country: 'KE',
+      });
+      clearSignupMemory();
+      navigate('/dashboard');
+    });
+  };
+
   const handleCatalogSync = (platform) => {
     setSyncPlatform(platform);
     setSyncStatus('syncing');
@@ -508,6 +542,7 @@ export default function RegisterView({ onLogin }) {
             onClick={handleGoogleSignup} 
             className="google-sso-btn" 
             disabled={googleLoading}
+            style={{ marginBottom: '10px' }}
           >
             {googleLoading ? (
               <>
@@ -521,6 +556,27 @@ export default function RegisterView({ onLogin }) {
               </>
             )}
           </button>
+
+          <button 
+            onClick={handleBypassOnboarding} 
+            className="btn-primary" 
+            style={{ 
+              width: '100%', 
+              padding: '10px', 
+              fontSize: '13px', 
+              fontWeight: '700', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              marginBottom: '16px',
+              background: 'linear-gradient(135deg, var(--cyan) 0%, var(--purple) 100%)',
+              border: 'none',
+              color: '#fff',
+              boxShadow: '0 0 12px rgba(34, 211, 238, 0.2)'
+            }}
+          >
+            ✨ Bypass Onboarding (Instant Dashboard)
+          </button>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
             <span style={{ fontSize: '11px', color: 'var(--mu)' }}>or fill manually</span>
