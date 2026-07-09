@@ -630,7 +630,9 @@ function DashboardView({
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
           <OnboardingStripe sessionUser={sessionUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} />
-          {renderActivePanel()}
+          <div className="admin-app-wrapper">
+            {renderActivePanel()}
+          </div>
         </div>
         {/* Task 4: thin copyright strip pinned at bottom of admin */}
         <div className="dashboard-copyright-strip" data-testid="dashboard-copyright-strip">
@@ -3983,6 +3985,7 @@ function AppContent({
   const location = useLocation();
   const navigate = useNavigate();
   const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
+  const isDashboard = location.pathname.startsWith('/dashboard');
 
   const handleBackdropClose = (e) => {
     if (e.target === e.currentTarget) {
@@ -4258,19 +4261,21 @@ function AppContent({
           </div>
         </footer>
 
-        <GlobalAudioPlayer 
-          globalTrack={globalTrack}
-          setGlobalTrack={setGlobalTrack}
-          globalPlaying={globalPlaying}
-          setGlobalPlaying={setGlobalPlaying}
-          globalProgress={globalProgress}
-          setGlobalProgress={setGlobalProgress}
-          isUndocked={isUndocked}
-          setIsUndocked={setIsUndocked}
-          playerPos={playerPos}
-          setPlayerPos={setPlayerPos}
-          catalogTracks={catalogTracks}
-        />
+        {!isDashboard && (
+          <GlobalAudioPlayer 
+            globalTrack={globalTrack}
+            setGlobalTrack={setGlobalTrack}
+            globalPlaying={globalPlaying}
+            setGlobalPlaying={setGlobalPlaying}
+            globalProgress={globalProgress}
+            setGlobalProgress={setGlobalProgress}
+            isUndocked={isUndocked}
+            setIsUndocked={setIsUndocked}
+            playerPos={playerPos}
+            setPlayerPos={setPlayerPos}
+            catalogTracks={catalogTracks}
+          />
+        )}
       </div>
 
       {/* Render modals on top, outside the wrapper so they aren't affected by its opacity */}
