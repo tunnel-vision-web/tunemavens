@@ -2042,6 +2042,45 @@ function CatalogPortingPanel({ setActiveTab }) {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const fileInputRef = useRef(null);
 
+  // Inline editing states
+  const [editingIsrc, setEditingIsrc] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editArtist, setEditArtist] = useState('');
+  const [editGenre, setEditGenre] = useState('');
+  const [editSplit, setEditSplit] = useState('');
+
+  const startEdit = (tr) => {
+    setEditingIsrc(tr.isrc);
+    setEditTitle(tr.title);
+    setEditArtist(tr.artist);
+    setEditGenre(tr.genre);
+    setEditSplit(tr.split);
+  };
+
+  const saveEdit = (isrc) => {
+    if (!editTitle.trim() || !editArtist.trim()) {
+      alert('Title and Artist fields cannot be empty.');
+      return;
+    }
+    setTracks(prev => prev.map(t => {
+      if (t.isrc === isrc) {
+        return {
+          ...t,
+          title: editTitle,
+          artist: editArtist,
+          genre: editGenre,
+          split: editSplit
+        };
+      }
+      return t;
+    }));
+    setEditingIsrc(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingIsrc(null);
+  };
+
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -2171,6 +2210,7 @@ function CatalogPortingPanel({ setActiveTab }) {
 
   // Pagination slice
   const paginatedTracks = filteredTracks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalItems = filteredTracks.length;
 
   return (
     <div>
@@ -2333,57 +2373,124 @@ function CatalogPortingPanel({ setActiveTab }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedTracks.map((tr, idx) => (
-                    <tr key={idx}>
-                      <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
-                      <td style={{ fontWeight: '700', color: '#fff' }}>{tr.title}</td>
-                      <td>{tr.artist}</td>
-                      <td>
-                        <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                          {tr.genre}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: '11px', color: '#cbd5e1' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                          <div>{tr.split}</div>
-                          {/* Visual split bar illustration */}
-                          <div style={{ width: '100px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', display: 'flex', overflow: 'hidden' }}>
-                            <div style={{ width: '50%', background: 'var(--green)' }} />
-                            <div style={{ width: '30%', background: 'var(--cyan)' }} />
-                            <div style={{ width: '20%', background: 'var(--purple)' }} />
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                          <button 
-                            className="plan-btn outline" 
-                            style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
-                            onClick={() => setActiveTab('splits')}
-                            title="Go to Royalty splits ledger"
-                          >
-                            💸 Splits
-                          </button>
-                          <button 
-                            className="plan-btn outline" 
-                            style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
-                            onClick={() => setActiveTab('sync')}
-                            title="Go to Sync brief matching"
-                          >
-                            🎬 Sync
-                          </button>
-                          <button 
-                            className="plan-btn outline" 
-                            style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
-                            onClick={() => setActiveTab('domain-mappings')}
-                            title="Go to Domain hosting mapping"
-                          >
-                            🌐 DNS
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {paginatedTracks.map((tr, idx) => {
+                    const isEditing = editingIsrc === tr.isrc;
+                    return (
+                      <tr key={idx}>
+                        <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
+                        {isEditing ? (
+                          <>
+                            <td>
+                              <input 
+                                type="text" 
+                                value={editTitle} 
+                                onChange={(e) => setEditTitle(e.target.value)} 
+                                className="form-control" 
+                                style={{ fontSize: '12px', padding: '4px', width: '100%' }} 
+                              />
+                            </td>
+                            <td>
+                              <input 
+                                type="text" 
+                                value={editArtist} 
+                                onChange={(e) => setEditArtist(e.target.value)} 
+                                className="form-control" 
+                                style={{ fontSize: '12px', padding: '4px', width: '100%' }} 
+                              />
+                            </td>
+                            <td>
+                              <select 
+                                value={editGenre} 
+                                onChange={(e) => setEditGenre(e.target.value)} 
+                                className="form-control" 
+                                style={{ fontSize: '11px', padding: '4px', width: '100%', background: '#0a0f1d', color: '#fff', border: '1px solid rgba(255,255,255,0.08)' }}
+                              >
+                                <option value="Afro-House">Afro-House</option>
+                                <option value="Deep-House">Deep-House</option>
+                                <option value="Amapiano">Amapiano</option>
+                                <option value="Afrobeats">Afrobeats</option>
+                              </select>
+                            </td>
+                            <td>
+                              <input 
+                                type="text" 
+                                value={editSplit} 
+                                onChange={(e) => setEditSplit(e.target.value)} 
+                                className="form-control" 
+                                style={{ fontSize: '12px', padding: '4px', width: '100%' }} 
+                              />
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                                <button 
+                                  className="plan-btn cyan" 
+                                  style={{ padding: '2px 8px', fontSize: '11px', height: '26px', borderRadius: '3px', cursor: 'pointer', border: 'none', background: 'var(--cyan)', color: '#000', fontWeight: 'bold' }}
+                                  onClick={() => saveEdit(tr.isrc)}
+                                >
+                                  Save
+                                </button>
+                                <button 
+                                  className="plan-btn outline" 
+                                  style={{ padding: '2px 8px', fontSize: '11px', height: '26px', borderRadius: '3px', cursor: 'pointer' }}
+                                  onClick={cancelEdit}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td style={{ fontWeight: '700', color: '#fff' }}>{tr.title}</td>
+                            <td>{tr.artist}</td>
+                            <td>
+                              <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                {tr.genre}
+                              </span>
+                            </td>
+                            <td style={{ fontSize: '11px', color: '#cbd5e1' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                <div>{tr.split}</div>
+                                <div style={{ width: '100px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', display: 'flex', overflow: 'hidden' }}>
+                                  <div style={{ width: '50%', background: 'var(--green)' }} />
+                                  <div style={{ width: '30%', background: 'var(--cyan)' }} />
+                                  <div style={{ width: '20%', background: 'var(--purple)' }} />
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                                <button 
+                                  className="plan-btn outline" 
+                                  style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer', color: 'var(--cyan)', borderColor: 'rgba(34, 211, 238, 0.3)' }}
+                                  onClick={() => startEdit(tr)}
+                                  title="Edit track metadata inline"
+                                >
+                                  ✏️ Edit
+                                </button>
+                                <button 
+                                  className="plan-btn outline" 
+                                  style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
+                                  onClick={() => setActiveTab('splits')}
+                                  title="Go to Royalty splits ledger"
+                                >
+                                  💸 Splits
+                                </button>
+                                <button 
+                                  className="plan-btn outline" 
+                                  style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
+                                  onClick={() => setActiveTab('sync')}
+                                  title="Go to Sync brief matching"
+                                >
+                                  🎬 Sync
+                                </button>
+                              </div>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 
