@@ -2026,7 +2026,7 @@ function CatalogPortingPanel({ setActiveTab }) {
   // Search and Pagination States
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 3;
 
   // Single Track Uploader Form States
   const [newTitle, setNewTitle] = useState('');
