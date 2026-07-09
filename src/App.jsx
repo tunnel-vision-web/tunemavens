@@ -325,7 +325,15 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
 
 
 // ================= Creator / Admin Dashboard View =================
-function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
+function DashboardView({ 
+  sessionUser, 
+  onLogout, 
+  onUpdateUser,
+  catalogTracks,
+  setCatalogTracks,
+  ledgerRows,
+  setLedgerRows
+}) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('home');
   const [userCredits, setUserCredits] = useState(sessionUser?.credits || 600);
@@ -370,12 +378,20 @@ function DashboardView({ sessionUser, onLogout, onUpdateUser }) {
           />
         );
       case 'catalog':
-        return <CatalogPortingPanel setActiveTab={setActiveTab} />;
+        return (
+          <CatalogPortingPanel 
+            setActiveTab={setActiveTab} 
+            tracks={catalogTracks} 
+            setTracks={setCatalogTracks} 
+          />
+        );
       case 'splits':
         return (
           <SplitCascadePanel 
             payoutBalance={payoutBalance} 
             setPayoutBalance={setPayoutBalance} 
+            ledgerRows={ledgerRows}
+            setLedgerRows={setLedgerRows}
           />
         );
       case 'djpool':
@@ -2009,24 +2025,16 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
 }
 
 // ================= SUB-PANEL: Catalog & Porting (Phase 4) =================
-function CatalogPortingPanel({ setActiveTab }) {
+function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
   const [selectedPreset, setSelectedPreset] = useState('standard');
   const [loading, setLoading] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const [errors, setErrors] = useState([]);
-  
-  // Catalog tracks state with realistic seed data
-  const [tracks, setTracks] = useState([
-    { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid' },
-    { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid' },
-    { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid' },
-    { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid' }
-  ]);
 
   // Search and Pagination States
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 3;
+  const pageSize = 8;
 
   // Single Track Uploader Form States
   const [newTitle, setNewTitle] = useState('');
@@ -2509,17 +2517,9 @@ function CatalogPortingPanel({ setActiveTab }) {
 }
 
 // ================= SUB-PANEL: Split Cascade Ledger (Phase 7) =================
-function SplitCascadePanel({ payoutBalance, setPayoutBalance }) {
+function SplitCascadePanel({ payoutBalance, setPayoutBalance, ledgerRows, setLedgerRows }) {
   const [grossInput, setGrossInput] = useState(1500);
   const [sliderVal, setSliderVal] = useState(50); // Artist Split Slider
-  const [ledgerRows, setLedgerRows] = useState([
-    { id: 'tx_821', title: 'Midnight Grooves', gross: 2500.00, comm: 250.00, label: 675.00, artist: 787.50, manager: 157.50, net: 630.00, status: 'processed' },
-    { id: 'tx_822', title: 'Neon Shadows', gross: 1800.00, comm: 180.00, label: 486.00, artist: 567.00, manager: 113.40, net: 453.60, status: 'processed' },
-    { id: 'tx_823', title: 'Nairobi Sunset Sync', gross: 5000.00, comm: 500.00, label: 1350.00, artist: 1575.00, manager: 315.00, net: 1260.00, status: 'processed' },
-    { id: 'tx_824', title: 'Kilimanjaro Vibe', gross: 1200.00, comm: 120.00, label: 324.00, artist: 378.00, manager: 75.60, net: 302.40, status: 'processed' },
-    { id: 'tx_825', title: 'Sauti Live', gross: 3000.00, comm: 300.00, label: 810.00, artist: 945.00, manager: 189.00, net: 756.00, status: 'processed' },
-    { id: 'tx_826', title: 'Amapiano Wave', gross: 4000.00, comm: 400.00, label: 1080.00, artist: 1260.00, manager: 252.00, net: 1008.00, status: 'processed' }
-  ]);
   const [calculating, setCalculating] = useState(false);
 
   // Search and Pagination States
@@ -3083,7 +3083,18 @@ function EscrowContractsPanel({ payoutBalance, setPayoutBalance }) {
 }
 
 // ================= Main App Content Component =================
-function AppContent({ sessionUser, handleLogin, handleLogout, getFooterLocation }) {
+function AppContent({ 
+  sessionUser, 
+  handleLogin, 
+  handleLogout, 
+  getFooterLocation,
+  catalogTracks,
+  setCatalogTracks,
+  ledgerRows,
+  setLedgerRows,
+  deductCredits,
+  addLedgerRow
+}) {
   const [scrolled, setScrolled] = useState(false);
   const { country } = useRegion();
   const location = useLocation();
@@ -3144,10 +3155,27 @@ function AppContent({ sessionUser, handleLogin, handleLogout, getFooterLocation 
           <Route path="/pricing" element={<PricingView />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView />} />
-          <Route path="/stream" element={<StreamView />} />
+          <Route path="/stream" element={
+            <StreamView 
+              catalogTracks={catalogTracks} 
+              sessionUser={sessionUser} 
+              deductCredits={deductCredits} 
+              addLedgerRow={addLedgerRow}
+            />
+          } />
           <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
-          <Route path="/dashboard/*" element={<DashboardView sessionUser={sessionUser} onLogout={handleLogout} onUpdateUser={handleLogin} />} />
+          <Route path="/dashboard/*" element={
+            <DashboardView 
+              sessionUser={sessionUser} 
+              onLogout={handleLogout} 
+              onUpdateUser={handleLogin} 
+              catalogTracks={catalogTracks}
+              setCatalogTracks={setCatalogTracks}
+              ledgerRows={ledgerRows}
+              setLedgerRows={setLedgerRows}
+            />
+          } />
         </Routes>
 
         {/* Detailed Footer similar to Intermaven - with second instance of Logo */}
@@ -3359,6 +3387,36 @@ function App() {
     }
   });
 
+  const [catalogTracks, setCatalogTracks] = useState([
+    { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid' },
+    { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid' },
+    { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid' },
+    { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid' }
+  ]);
+
+  const [ledgerRows, setLedgerRows] = useState([
+    { id: 'tx_821', title: 'Midnight Grooves', gross: 2500.00, comm: 250.00, label: 675.00, artist: 787.50, manager: 157.50, net: 630.00, status: 'processed' },
+    { id: 'tx_822', title: 'Neon Shadows', gross: 1800.00, comm: 180.00, label: 486.00, artist: 567.00, manager: 113.40, net: 453.60, status: 'processed' },
+    { id: 'tx_823', title: 'Nairobi Sunset Sync', gross: 5000.00, comm: 500.00, label: 1350.00, artist: 1575.00, manager: 315.00, net: 1260.00, status: 'processed' },
+    { id: 'tx_824', title: 'Kilimanjaro Vibe', gross: 1200.00, comm: 120.00, label: 324.00, artist: 378.00, manager: 75.60, net: 302.40, status: 'processed' },
+    { id: 'tx_825', title: 'Sauti Live', gross: 3000.00, comm: 300.00, label: 810.00, artist: 945.00, manager: 189.00, net: 756.00, status: 'processed' },
+    { id: 'tx_826', title: 'Amapiano Wave', gross: 4000.00, comm: 400.00, label: 1080.00, artist: 1260.00, manager: 252.00, net: 1008.00, status: 'processed' }
+  ]);
+
+  const deductCredits = (amount) => {
+    if (!sessionUser) return false;
+    const current = sessionUser.credits || 600;
+    if (current < amount) return false;
+    const updated = { ...sessionUser, credits: current - amount };
+    setSessionUser(updated);
+    sessionStorage.setItem('tunemavens_session', JSON.stringify(updated));
+    return true;
+  };
+
+  const addLedgerRow = (row) => {
+    setLedgerRows(prev => [row, ...prev]);
+  };
+
   const handleLogin = (user) => {
     setSessionUser(user);
     sessionStorage.setItem('tunemavens_session', JSON.stringify(user));
@@ -3407,6 +3465,12 @@ function App() {
         handleLogin={handleLogin}
         handleLogout={handleLogout}
         getFooterLocation={getFooterLocation}
+        catalogTracks={catalogTracks}
+        setCatalogTracks={setCatalogTracks}
+        ledgerRows={ledgerRows}
+        setLedgerRows={setLedgerRows}
+        deductCredits={deductCredits}
+        addLedgerRow={addLedgerRow}
       />
     </Router>
   );
