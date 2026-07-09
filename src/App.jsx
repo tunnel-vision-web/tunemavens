@@ -3201,34 +3201,6 @@ function GlobalAudioPlayer({
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  if (!globalTrack) return null;
-
-  // Filter featured tracks
-  const featuredTracks = catalogTracks.filter(t => t.isFeatured);
-  const playPool = featuredTracks.length > 0 ? featuredTracks : catalogTracks;
-
-  const handleNext = () => {
-    if (playPool.length <= 1) return;
-    const currentIdx = playPool.findIndex(t => t.isrc === globalTrack.isrc);
-    const nextIdx = (currentIdx + 1) % playPool.length;
-    setGlobalTrack(playPool[nextIdx]);
-    setGlobalProgress(0);
-  };
-
-  const handlePrev = () => {
-    if (playPool.length <= 1) return;
-    const currentIdx = playPool.findIndex(t => t.isrc === globalTrack.isrc);
-    const prevIdx = (currentIdx - 1 + playPool.length) % playPool.length;
-    setGlobalTrack(playPool[prevIdx]);
-    setGlobalProgress(0);
-  };
-
-  const formatTime = (secs) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
   // Dragging handlers
   const handleMouseDown = (e) => {
     if (e.target.closest('.drag-handle')) {
@@ -3262,6 +3234,34 @@ function GlobalAudioPlayer({
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [dragging, dragOffset, setPlayerPos]);
+
+  if (!globalTrack) return null;
+
+  // Filter featured tracks
+  const featuredTracks = catalogTracks.filter(t => t.isFeatured);
+  const playPool = featuredTracks.length > 0 ? featuredTracks : catalogTracks;
+
+  const handleNext = () => {
+    if (playPool.length <= 1) return;
+    const currentIdx = playPool.findIndex(t => t.isrc === globalTrack.isrc);
+    const nextIdx = (currentIdx + 1) % playPool.length;
+    setGlobalTrack(playPool[nextIdx]);
+    setGlobalProgress(0);
+  };
+
+  const handlePrev = () => {
+    if (playPool.length <= 1) return;
+    const currentIdx = playPool.findIndex(t => t.isrc === globalTrack.isrc);
+    const prevIdx = (currentIdx - 1 + playPool.length) % playPool.length;
+    setGlobalTrack(playPool[prevIdx]);
+    setGlobalProgress(0);
+  };
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
 
   if (isUndocked) {
     return (
