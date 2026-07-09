@@ -16,7 +16,7 @@ dnf -y install epel-release || true
 
 echo "==> Installing OS packages"
 dnf -y install git curl tar gcc make openssl-devel bzip2-devel libffi-devel \
-                nginx firewalld policycoreutils-python-utils >/dev/null
+                nginx firewalld policycoreutils-python-utils certbot python3-certbot-nginx >/dev/null
 
 echo "==> Python 3.11"
 if ! command -v python3.11 >/dev/null 2>&1; then
@@ -93,7 +93,9 @@ echo "==> nginx site config"
 # (Let's Encrypt on the box), also drop in the 443 block automatically —
 # certs at /etc/letsencrypt/live/$APP_DOMAIN/ trigger it.
 NGX_CONF="/etc/nginx/conf.d/tunemavens.conf"
-cat >"$NGX_CONF" <<NGX
+TEMP_NGX="/tmp/tunemavens_nginx.conf"
+
+cat >"$TEMP_NGX" <<NGX
 # ==============================================================================
 # 1. Main Portal & Dashboard ($APP_DOMAIN)
 # ==============================================================================
@@ -185,8 +187,22 @@ server {
 }
 NGX
 
+CONFIG_CHANGED=false
+if [ ! -f "$NGX_CONF" ] || ! diff -q "$TEMP_NGX" "$NGX_CONF" >/dev/null; then
+  echo "==> Nginx configuration changed. Updating..."
+  cp "$TEMP_NGX" "$NGX_CONF"
+  CONFIG_CHANGED=true
+else
+  echo "==> Nginx configuration is up to date. No changes."
+fi
+rm -f "$TEMP_NGX"
+
 nginx -t
 systemctl enable --now nginx
-systemctl reload nginx || systemctl restart nginx
+
+if [ "$CONFIG_CHANGED" = true ]; then
+  echo "==> Reloading nginx since configuration changed"
+  systemctl reload nginx || systemctl restart nginx
+fi
 
 echo "==> Bootstrap complete."

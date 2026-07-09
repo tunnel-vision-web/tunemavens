@@ -35,11 +35,30 @@ sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && npm install --silent"
 echo "==> Building frontend workspace bundles"
 sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && npm run build:portal && npm run build:tunestream && npm run build:syncmavens"
 
-echo "==> Deploying frontend static sites"
-sudo -u "$APP_USER" mkdir -p "$APP_DIR/dist/portal" "$APP_DIR/dist/tunestream" "$APP_DIR/dist/syncmavens"
-sudo -u "$APP_USER" cp -r "$REPO_DIR/apps/portal/dist/"* "$APP_DIR/dist/portal/"
-sudo -u "$APP_USER" cp -r "$REPO_DIR/apps/tunestream/dist/"* "$APP_DIR/dist/tunestream/"
-sudo -u "$APP_USER" cp -r "$REPO_DIR/apps/syncmavens/dist/"* "$APP_DIR/dist/syncmavens/"
+echo "==> Deploying frontend static sites atomically"
+
+deploy_app_atomically() {
+  local app_name=$1
+  local src_dist=$2
+  local target_dir="$APP_DIR/dist/$app_name"
+  local new_dir="${target_dir}_new"
+  local old_dir="${target_dir}_old"
+
+  echo "==> Atomic deploy for $app_name"
+  sudo -u "$APP_USER" rm -rf "$new_dir"
+  sudo -u "$APP_USER" mkdir -p "$new_dir"
+  sudo -u "$APP_USER" cp -r "$src_dist/"* "$new_dir/"
+  
+  if [ -d "$target_dir" ]; then
+    sudo -u "$APP_USER" mv "$target_dir" "$old_dir"
+  fi
+  sudo -u "$APP_USER" mv "$new_dir" "$target_dir"
+  sudo -u "$APP_USER" rm -rf "$old_dir"
+}
+
+deploy_app_atomically "portal" "$REPO_DIR/apps/portal/dist"
+deploy_app_atomically "tunestream" "$REPO_DIR/apps/tunestream/dist"
+deploy_app_atomically "syncmavens" "$REPO_DIR/apps/syncmavens/dist"
 
 # --------------------------------------------------------------------------
 # 3. Backend Python venv + dependencies
