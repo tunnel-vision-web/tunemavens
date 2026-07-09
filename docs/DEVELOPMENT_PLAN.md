@@ -13,8 +13,9 @@ self-reinforcing.
 FastAPI backend, Vite React frontend, shared JWT auth, Mongo persistence,
 admin console with role-gated tabs, domain-mapping registry.
 
-### Phase 2 · Consumer Audio System 🔵 P1 Backlog
-`/stream` player, library persistence, tip flow, offline cache metadata.
+### Phase 2 · Consumer Audio System (TuneStream) 🔵 P1 Backlog
+- `/stream` player, library persistence, tip flow, offline cache metadata.
+- Domain Routing: Automatic deployment pipeline to `tunestream.co` and `tunestream.tunemavens.com` from isolated build directory.
 
 ### Phase 3 · Creator Pipeline ✅ SHIPPED
 - Publishing Election, Distribution Election, OnboardingStripe
@@ -38,7 +39,9 @@ admin console with role-gated tabs, domain-mapping registry.
 - Distribution Path C negotiation wizard, catalogue acquisition ledger.
 
 ### Phase 5 · DJ Pool Engine 🟡 P2
-### Phase 6 · Sync Marketplace 🟡 P2
+### Phase 6 · Sync Marketplace (SyncMavens) 🟡 P2
+- Sync licensing marketplace (formerly SyncMaster), interactive brief matching, catalog integration.
+- Domain Routing: Automatic deployment pipeline to `syncmavens.com` from isolated build directory.
 ### Phase 7 · Split Cascade Engine 🟡 P2 — compensation math from `COMPENSATION_AND_CONTRACTS.md`
 ### Phase 8 · Escrow & Contract Module 🟡 P2 — expands the Phase 3 contract subsystem with escrow + funds movement
 ### Phase 9 · Ad Injection Platform 🟡 P2

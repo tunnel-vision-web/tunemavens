@@ -1,29 +1,19 @@
 {
-  "name": "tunemaven",
+  "name": "tunemaven-monorepo",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
-  "engines": {
-    "node": ">=20 <21"
-  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "oxlint",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "lucide-react": "^1.22.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-icons": "^5.7.0",
-    "react-router-dom": "^7.18.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.2",
-    "oxlint": "^1.69.0",
-    "vite": "^8.1.0"
+    "dev:portal": "npm run dev --workspace=portal",
+    "build:portal": "npm run build --workspace=portal",
+    "dev:tunestream": "npm run dev --workspace=tunestream",
+    "build:tunestream": "npm run build --workspace=tunestream",
+    "dev:syncmavens": "npm run dev --workspace=syncmavens",
+    "build:syncmavens": "npm run build --workspace=syncmavens",
+    "build:all": "npm run build --workspaces --if-present"
   }
 }

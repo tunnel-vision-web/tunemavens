@@ -27,13 +27,19 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# 2. Build the Vite frontend  →  dist/
+# 2. Build the Vite frontend workspaces
 # --------------------------------------------------------------------------
-echo "==> Installing frontend dependencies"
-sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && npm ci --silent"
+echo "==> Installing frontend workspace dependencies"
+sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && npm install --silent"
 
-echo "==> Building frontend bundle"
-sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && npm run build"
+echo "==> Building frontend workspace bundles"
+sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && npm run build:portal && npm run build:tunestream && npm run build:syncmavens"
+
+echo "==> Deploying frontend static sites"
+sudo -u "$APP_USER" mkdir -p "$APP_DIR/dist/portal" "$APP_DIR/dist/tunestream" "$APP_DIR/dist/syncmavens"
+sudo -u "$APP_USER" cp -r "$REPO_DIR/apps/portal/dist/"* "$APP_DIR/dist/portal/"
+sudo -u "$APP_USER" cp -r "$REPO_DIR/apps/tunestream/dist/"* "$APP_DIR/dist/tunestream/"
+sudo -u "$APP_USER" cp -r "$REPO_DIR/apps/syncmavens/dist/"* "$APP_DIR/dist/syncmavens/"
 
 # --------------------------------------------------------------------------
 # 3. Backend Python venv + dependencies

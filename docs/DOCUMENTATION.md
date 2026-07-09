@@ -550,3 +550,130 @@ src/
 
 ### 9.14.1 Root App Routing
 The main `src/App.jsx` handles core app state (Unified Auth context & regional context), global CSS initialization, and the client-side router configurations. The modular views are dynamically imported at the top of the file, keeping the central file lightweight, readable, and highly maintainable.
+
+---
+
+## §9.15 — Multi-Domain Architecture & Deployment Plan
+
+### 9.15.1 Architectural Recommendation: Monorepo with Multi-Build Targets
+Rather than splitting the TuneMavens ecosystem into entirely separate repositories (which introduces code duplication, auth sync overhead, and database mapping complexity), we recommend utilizing a **Monorepo structure with separate application build targets**.
+
+This layout allows:
+- **Shared Authentication & Session State:** Single shared FastAPI backend session, user collections, and common domain cookies (`COOKIE_DOMAIN=.tunemavens.com`).
+- **Shared Components & Libraries:** All UI elements (design tokens, layout grids, components) reside in a single repository and can be imported across utilities.
+- **Independent Servability:** Each domain serves its own isolated frontend code bundles.
+
+#### Directory Layout
+```
+tunemavens/
+├── apps/
+│   ├── portal/           # Main portal & dashboards (tunemavens.com)
+│   │   ├── index.html
+│   │   └── src/
+│   ├── tunestream/       # TuneStream Consumer App (tunestream.co / tunestream.tunemavens.com)
+│   │   ├── index.html
+│   │   └── src/
+│   └── syncmavens/       # SyncMavens Utility (syncmavens.com)
+│       ├── index.html
+│       └── src/
+├── packages/
+│   ├── shared-ui/        # Shared components, hooks, design system, styling
+│   └── shared-auth/      # Shared authentication state and helpers
+├── backend/              # Unified FastAPI backend
+└── deploy/               # Multi-domain VPS deployment configs
+```
+
+---
+
+### 9.15.2 DNS Mapping Strategy
+
+| Domain | DNS Target | Maps to |
+|---|---|---|
+| `tunemavens.com` | `A` record pointing to VPS IP | Main Portal & Dashboard |
+| `www.tunemavens.com` | `CNAME` pointing to `tunemavens.com` | Main Portal & Dashboard |
+| `tunestream.co` | `A` record pointing to VPS IP | TuneStream Utility |
+| `www.tunestream.co` | `CNAME` pointing to `tunestream.co` | TuneStream Utility |
+| `tunestream.tunemavens.com` | `CNAME` pointing to `tunestream.co` | TuneStream Utility |
+| `syncmavens.com` | `A` record pointing to VPS IP | SyncMavens Utility |
+| `www.syncmavens.com` | `CNAME` pointing to `syncmavens.com` | SyncMavens Utility |
+
+---
+
+### 9.15.3 Hostinger VPS Nginx Configuration
+On the Hostinger VPS, Nginx is updated to support independent server blocks pointing to the respective build directory targets.
+
+```nginx
+# 1. Main Portal (tunemavens.com)
+server {
+  listen 80;
+  server_name tunemavens.com www.tunemavens.com;
+
+  root /opt/tunemavens/dist/portal;
+  index index.html;
+
+  location /api/ {
+    proxy_pass http://127.0.0.1:8001;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+
+  location / {
+    try_files \$uri \$uri/ /index.html;
+  }
+}
+
+# 2. TuneStream (tunestream.co & tunestream.tunemavens.com)
+server {
+  listen 80;
+  server_name tunestream.co www.tunestream.co tunestream.tunemavens.com;
+
+  root /opt/tunemavens/dist/tunestream;
+  index index.html;
+
+  location /api/ {
+    proxy_pass http://127.0.0.1:8001;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+
+  location / {
+    try_files \$uri \$uri/ /index.html;
+  }
+}
+
+# 3. SyncMavens (syncmavens.com)
+server {
+  listen 80;
+  server_name syncmavens.com www.syncmavens.com;
+
+  root /opt/tunemavens/dist/syncmavens;
+  index index.html;
+
+  location /api/ {
+    proxy_pass http://127.0.0.1:8001;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+
+  location / {
+    try_files \$uri \$uri/ /index.html;
+  }
+}
+```
+
+---
+
+### 9.15.4 Deployment & CI/CD Pipeline (GitHub Actions)
+Upon every push to `main`, the deployment workflow builds each app target independently and uploads them to the corresponding directories:
+
+1. **Build Step:**
+   ```bash
+   npm run build --workspace=portal --dest=dist/portal
+   npm run build --workspace=tunestream --dest=dist/tunestream
+   npm run build --workspace=syncmavens --dest=dist/syncmavens
+   ```
+2. **Deploy Step:**
+   The `deploy.sh` script copies the respective `dist/` sub-directories to the VPS root:
+   - `/opt/tunemavens/dist/portal`
+   - `/opt/tunemavens/dist/tunestream`
+   - `/opt/tunemavens/dist/syncmavens`

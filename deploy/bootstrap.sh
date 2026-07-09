@@ -94,12 +94,16 @@ echo "==> nginx site config"
 # certs at /etc/letsencrypt/live/$APP_DOMAIN/ trigger it.
 NGX_CONF="/etc/nginx/conf.d/tunemavens.conf"
 cat >"$NGX_CONF" <<NGX
-# TuneMavens — served at $APP_DOMAIN
+# ==============================================================================
+# 1. Main Portal & Dashboard ($APP_DOMAIN)
+# ==============================================================================
 server {
   listen 80;
   server_name $APP_DOMAIN www.$APP_DOMAIN;
 
-  # API traffic goes to the FastAPI uvicorn process on localhost.
+  root $APP_DIR/dist/portal;
+  index index.html;
+
   location /api/ {
     proxy_pass http://127.0.0.1:8001;
     proxy_set_header Host \$host;
@@ -109,32 +113,26 @@ server {
     proxy_read_timeout 60s;
   }
 
-  # Static Vite bundle. SPA fallback -> /index.html so HashRouter routes
-  # keep working even on hard-refresh of a deep link.
-  root $APP_DIR/repo/dist;
-  index index.html;
-
   location / {
     try_files \$uri \$uri/ /index.html;
   }
 
-  # Long-cache static assets (Vite fingerprints them so this is safe).
   location ~* \\.(?:css|js|woff2?|ttf|svg|png|jpe?g|webp|ico)\$ {
     expires 30d;
     add_header Cache-Control "public, immutable";
     try_files \$uri =404;
   }
 }
-NGX
 
-if [ -d "/etc/letsencrypt/live/$APP_DOMAIN" ]; then
-  cat >>"$NGX_CONF" <<NGXSSL
-
+# ==============================================================================
+# 2. TuneStream Utility (tunestream.co & tunestream.tunemavens.com)
+# ==============================================================================
 server {
-  listen 443 ssl http2;
-  server_name $APP_DOMAIN www.$APP_DOMAIN;
-  ssl_certificate     /etc/letsencrypt/live/$APP_DOMAIN/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/$APP_DOMAIN/privkey.pem;
+  listen 80;
+  server_name tunestream.co www.tunestream.co tunestream.tunemavens.com;
+
+  root $APP_DIR/dist/tunestream;
+  index index.html;
 
   location /api/ {
     proxy_pass http://127.0.0.1:8001;
@@ -142,18 +140,50 @@ server {
     proxy_set_header X-Real-IP \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_read_timeout 60s;
   }
-  root $APP_DIR/repo/dist;
-  index index.html;
-  location / { try_files \$uri \$uri/ /index.html; }
+
+  location / {
+    try_files \$uri \$uri/ /index.html;
+  }
+
   location ~* \\.(?:css|js|woff2?|ttf|svg|png|jpe?g|webp|ico)\$ {
     expires 30d;
     add_header Cache-Control "public, immutable";
     try_files \$uri =404;
   }
 }
-NGXSSL
-fi
+
+# ==============================================================================
+# 3. SyncMavens Utility (syncmavens.com)
+# ==============================================================================
+server {
+  listen 80;
+  server_name syncmavens.com www.syncmavens.com;
+
+  root $APP_DIR/dist/syncmavens;
+  index index.html;
+
+  location /api/ {
+    proxy_pass http://127.0.0.1:8001;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_read_timeout 60s;
+  }
+
+  location / {
+    try_files \$uri \$uri/ /index.html;
+  }
+
+  location ~* \\.(?:css|js|woff2?|ttf|svg|png|jpe?g|webp|ico)\$ {
+    expires 30d;
+    add_header Cache-Control "public, immutable";
+    try_files \$uri =404;
+  }
+}
+NGX
 
 nginx -t
 systemctl enable --now nginx
