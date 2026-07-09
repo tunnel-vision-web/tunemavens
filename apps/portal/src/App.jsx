@@ -4261,7 +4261,7 @@ function AppContent({
           </div>
         </footer>
 
-        {!isDashboard && (
+        {!isDashboard && !location.pathname.startsWith('/native-apps') && (
           <GlobalAudioPlayer 
             globalTrack={globalTrack}
             setGlobalTrack={setGlobalTrack}
