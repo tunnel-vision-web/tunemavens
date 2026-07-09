@@ -3974,7 +3974,9 @@ function AppContent({
   isUndocked,
   setIsUndocked,
   playerPos,
-  setPlayerPos
+  setPlayerPos,
+  creatorEpk,
+  setCreatorEpk
 }) {
   const [scrolled, setScrolled] = useState(false);
   const { country } = useRegion();
@@ -4425,6 +4427,8 @@ function App() {
         setIsUndocked={setIsUndocked}
         playerPos={playerPos}
         setPlayerPos={setPlayerPos}
+        creatorEpk={creatorEpk}
+        setCreatorEpk={setCreatorEpk}
       />
     </Router>
   );
