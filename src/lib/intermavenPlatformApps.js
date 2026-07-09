@@ -4,14 +4,14 @@
 // quick-launch tile, and "Open" navigates to the canonical app URL on
 // intermaven.io (the user's shared Intermaven session is honoured there via
 // the cross-subdomain JWT cookie, per the §1.2 SSO design note).
-import { RiSparklesFill, RiPaletteFill, RiUsersFill, RiSlideshowFill, RiShoppingCartFill, RiReceiptFill, RiFileSignatureFill } from 'react-icons/ri';
+import { RiSparklingFill, RiPaletteFill, RiGroupFill, RiSlideshowFill, RiShoppingCartFill, RiReceiptFill, RiFileEditFill } from 'react-icons/ri';
 
 export const INTERMAVEN_PLATFORM_APPS = [
   {
     slug: 'intermaven-social-ai',
     name: 'Social AI',
     desc: 'Multi-account social management with AI-drafted captions, schedules, and analytics insights.',
-    icon: RiSparklesFill,
+    icon: RiSparklingFill,
     accent: '#22d3ee', // cyan
     launchUrl: 'https://intermaven.io/social',
     status: 'live',
@@ -29,7 +29,7 @@ export const INTERMAVEN_PLATFORM_APPS = [
     slug: 'intermaven-smart-crm',
     name: 'Smart CRM',
     desc: 'Manage bookings, contacts, and revenue across your roster in one dashboard.',
-    icon: RiUsersFill,
+    icon: RiGroupFill,
     accent: '#10b981', // emerald
     launchUrl: 'https://intermaven.io/smartcrm',
     status: 'live',
@@ -65,7 +65,7 @@ export const INTERMAVEN_PLATFORM_APPS = [
     slug: 'intermaven-contracts',
     name: 'Contract Templates',
     desc: 'Kenya-law-compliant contract templates for SMEs, with e-sign and version history.',
-    icon: RiFileSignatureFill,
+    icon: RiFileEditFill,
     accent: '#a78bfa',
     launchUrl: 'https://intermaven.io/contracts',
     status: 'soon',
