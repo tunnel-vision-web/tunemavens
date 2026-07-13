@@ -9,6 +9,10 @@ import {
   RiPlayFill, RiPauseFill, RiAlertLine, RiCheckLine, RiLoader4Line, RiMenuFill, RiCloseFill,
   RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiLogoutBoxRFill
 } from 'react-icons/ri';
+import { 
+  SiSpotify, SiApplemusic, SiYoutube, SiTiktok, SiTidal, SiDeezer 
+} from 'react-icons/si';
+import { FaAmazon } from 'react-icons/fa';
 import smLogo from './assets/syncmavens-logo.png';
 import './App.css';
 
@@ -390,7 +394,7 @@ function AppContent() {
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10b981' }}>
-            <RiFileLineChartLine size={24} />
+            <RiFileListLine size={24} />
             <h3 style={{ margin: 0, fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>License Agreement &amp; Clearance</h3>
           </div>
 
@@ -1866,42 +1870,42 @@ function AppContent() {
             {/* What's on the Table Section */}
             <section className="landing-stepper" id="on-the-table" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '80px', paddingTop: '40px' }}>
               <div className="table-features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-                <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '24px' }}>
+                <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
                   <div style={{ background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.15)', borderRadius: '3px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f2fe' }}>
                     <RiSparklingLine size={20} />
                   </div>
-                  <h4 style={{ margin: 0, fontSize: '15px', color: '#fff' }}>Keep 100% of Publishing share</h4>
-                  <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                  <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', fontWeight: 'bold' }}>Keep 100% of Publishing share</h4>
+                  <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>
                     Our publishing arm handles all tracking and administration. Typically, the artist retains their full writer and publisher shares, exactly like classic composers.
                   </p>
                 </div>
 
-                <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '24px' }}>
+                <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
                   <div style={{ background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.15)', borderRadius: '3px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b5cf6' }}>
                     <RiExchangeDollarLine size={20} />
                   </div>
-                  <h4 style={{ margin: 0, fontSize: '15px', color: '#fff' }}>No Predatory Advances</h4>
-                  <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                  <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', fontWeight: 'bold' }}>No Predatory Advances</h4>
+                  <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>
                     We do not offer catalog signing advances at this stage. This keeps our interests fully aligned with yours: we only make money when we secure placements for you.
                   </p>
                 </div>
 
-                <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '24px' }}>
+                <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
                   <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '3px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
                     <RiGlobalLine size={20} />
                   </div>
-                  <h4 style={{ margin: 0, fontSize: '15px', color: '#fff' }}>Agency Partner Network</h4>
-                  <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                  <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', fontWeight: 'bold' }}>Agency Partner Network</h4>
+                  <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>
                     We route pitches directly to global agency partners who hold guarantees and briefs from major networks, ensuring high placement success rates.
                   </p>
                 </div>
 
-                <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '24px' }}>
+                <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
                   <div style={{ background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.15)', borderRadius: '3px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f2fe' }}>
                     <RiCheckDoubleLine size={20} />
                   </div>
-                  <h4 style={{ margin: 0, fontSize: '15px', color: '#fff' }}>Automated Waterfall Splits</h4>
-                  <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                  <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', fontWeight: 'bold' }}>Automated Waterfall Splits</h4>
+                  <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>
                     Sync buyout fees cascade automatically to writers, producers, and publisher shares, deposited straight into linked payout accounts instantly.
                   </p>
                 </div>
@@ -2571,26 +2575,22 @@ function PublishingView({ standalone }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px', marginBottom: '56px' }}>
           {/* Card 1: PRO Registration */}
-          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-              <div style={{ background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.15)', borderRadius: '4px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f2fe' }}>
-                <RiGlobalLine size={24} />
-              </div>
-              <h3 style={{ margin: 0, fontSize: '18px', color: '#fff' }}>PRO Work Registration</h3>
+          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '40px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+            <div style={{ background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.15)', borderRadius: '4px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f2fe' }}>
+              <RiGlobalLine size={24} />
             </div>
+            <h3 style={{ margin: 0, fontSize: '18px', color: '#fff', fontWeight: 'bold' }}>PRO Work Registration</h3>
             <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '0' }}>
               We sync work metadata directly with major Performing Rights Organizations (PROs) including ASCAP, BMI, PRS, and GEMA. Your catalog is registered accurately with correct ISRC and ISWC identifiers across all global societies.
             </p>
           </div>
 
           {/* Card 2: Mechanical Royalties */}
-          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-              <div style={{ background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.15)', borderRadius: '4px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b5cf6' }}>
-                <RiFileListLine size={24} />
-              </div>
-              <h3 style={{ margin: 0, fontSize: '18px', color: '#fff' }}>Mechanical Collections</h3>
+          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '40px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+            <div style={{ background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.15)', borderRadius: '4px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b5cf6' }}>
+              <RiFileListLine size={24} />
             </div>
+            <h3 style={{ margin: 0, fontSize: '18px', color: '#fff', fontWeight: 'bold' }}>Mechanical Collections</h3>
             <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '0' }}>
               Every stream on Spotify, Apple Music, and Amazon Music generates mechanical royalties. Our publishing arm collects these from DSPs and mechanical licensing collectives globally, ensuring they cascade right to your account.
             </p>
@@ -2670,38 +2670,32 @@ function YoutubeIdView({ standalone }) {
 
         {/* Fingerprinting Flow */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', marginBottom: '56px' }}>
-          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.15)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f2fe' }}>
-                <RiUpload2Line size={20} />
-              </div>
-              <h4 style={{ margin: 0, fontSize: '15px', color: '#fff' }}>Audio Ingestion & Hashing</h4>
+          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+            <div style={{ background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.15)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f2fe' }}>
+              <RiUpload2Line size={20} />
             </div>
-            <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
+            <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', fontWeight: 'bold' }}>Audio Ingestion &amp; Hashing</h4>
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>
               Upload your clean stereo tracks. We generate specialized acoustic fingerprints that map the unique spectral properties of your musical compositions.
             </p>
           </div>
 
-          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.15)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b5cf6' }}>
-                <RiSearchLine size={20} />
-              </div>
-              <h4 style={{ margin: 0, fontSize: '15px', color: '#fff' }}>Platform Match Scanning</h4>
+          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+            <div style={{ background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.15)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b5cf6' }}>
+              <RiSearchLine size={20} />
             </div>
-            <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
+            <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', fontWeight: 'bold' }}>Platform Match Scanning</h4>
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>
               Reference fingerprints are sent directly to YouTube's Content ID database, Meta's Rights Manager, and TikTok's Sound Library to scan for matches.
             </p>
           </div>
 
-          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
-                <RiExchangeDollarLine size={20} />
-              </div>
-              <h4 style={{ margin: 0, fontSize: '15px', color: '#fff' }}>Ad Revenue Claims</h4>
+          <div className="step-card" style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+              <RiExchangeDollarLine size={20} />
             </div>
-            <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
+            <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', fontWeight: 'bold' }}>Ad Revenue Claims</h4>
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>
               Whenever a match is detected, ads are run on the user video. The accumulated advertising revenue is routed back to our ledger and deposited.
             </p>
           </div>
@@ -3529,15 +3523,15 @@ function DistributionView({ standalone }) {
 // ==========================================
 function GlobalDspView({ standalone }) {
   const dspStores = [
-    { name: "Spotify", desc: "Push releases to Spotify and gain instant access to Spotify for Artists verification & play pitching.", tag: "Verified Pitching", icon: "🟢" },
-    { name: "Apple Music", desc: "Deliver lossless master tracks and Dolby Atmos spatial mixes to Apple Music stream subscribers.", tag: "Spatial Lossless", icon: "" },
-    { name: "YouTube Music", desc: "Auto-generate official Art Tracks, sync with your Official Artist Channel, and claim content royalties.", tag: "UGC Claims Ready", icon: "🔴" },
-    { name: "Amazon Music", desc: "Submit tracks for curated Amazon editorial playlists and Alexa voice request optimization.", tag: "Alexa Voice Ready", icon: "🔵" },
-    { name: "TikTok & ByteDance", desc: "Inject tracks into the official TikTok sound library for creators to use in viral shorts worldwide.", tag: "Social Sync", icon: "🎵" },
-    { name: "Tidal", desc: "Distribute premium High-Fidelity streams to audiophiles, keeping higher direct payout waterfalls.", tag: "Hi-Res Masters", icon: "◼" },
-    { name: "Deezer", desc: "Deliver to Deezer's global catalog, covering Europe and Latin American streaming territories.", tag: "European Reach", icon: "🔶" },
-    { name: "Tencent & NetEase", desc: "Access major Asian markets including QQ Music, Kugou, Kuwo, and NetEase Cloud Music channels.", tag: "Asian Markets", icon: "🌐" },
-    { name: "Boomplay & Audiomack", desc: "Establish absolute presence in fast-growing African regions through Boomplay, Audiomack, and MTN music.", tag: "African Coverage", icon: "🔥" },
+    { name: "Spotify", desc: "Push releases to Spotify and gain instant access to Spotify for Artists verification & play pitching.", tag: "Verified Pitching", icon: <SiSpotify size={26} style={{ color: '#1DB954' }} /> },
+    { name: "Apple Music", desc: "Deliver lossless master tracks and Dolby Atmos spatial mixes to Apple Music stream subscribers.", tag: "Spatial Lossless", icon: <SiApplemusic size={26} style={{ color: '#FC3C44' }} /> },
+    { name: "YouTube Music", desc: "Auto-generate official Art Tracks, sync with your Official Artist Channel, and claim content royalties.", tag: "UGC Claims Ready", icon: <SiYoutube size={26} style={{ color: '#FF0000' }} /> },
+    { name: "Amazon Music", desc: "Submit tracks for curated Amazon editorial playlists and Alexa voice request optimization.", tag: "Alexa Voice Ready", icon: <FaAmazon size={26} style={{ color: '#00A8E1' }} /> },
+    { name: "TikTok & ByteDance", desc: "Inject tracks into the official TikTok sound library for creators to use in viral shorts worldwide.", tag: "Social Sync", icon: <SiTiktok size={24} style={{ color: '#fff' }} /> },
+    { name: "Tidal", desc: "Distribute premium High-Fidelity streams to audiophiles, keeping higher direct payout waterfalls.", tag: "Hi-Res Masters", icon: <SiTidal size={26} style={{ color: '#00F2FE' }} /> },
+    { name: "Deezer", desc: "Deliver to Deezer's global catalog, covering Europe and Latin American streaming territories.", tag: "European Reach", icon: <SiDeezer size={26} style={{ color: '#FF007F' }} /> },
+    { name: "Tencent & NetEase", desc: "Access major Asian markets including QQ Music, Kugou, Kuwo, and NetEase Cloud Music channels.", tag: "Asian Markets", icon: <RiGlobalLine size={26} style={{ color: '#00f2fe' }} /> },
+    { name: "Boomplay & Audiomack", desc: "Establish absolute presence in fast-growing African regions through Boomplay, Audiomack, and MTN music.", tag: "African Coverage", icon: <RiMusicFill size={26} style={{ color: '#eab308' }} /> },
   ];
 
   const features = [
@@ -3567,7 +3561,6 @@ function GlobalDspView({ standalone }) {
       
       <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '96px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '56px' }}>
-          <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>DSP DISTRIBUTION</span>
           <h2>Deliver Audio to 150+ Global Stores</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
             We push your catalog to Spotify, Apple Music, TikTok, Amazon Music, Tencent, and NetEase. Get absolute global reach and keep 100% of your earnings.
@@ -3575,30 +3568,31 @@ function GlobalDspView({ standalone }) {
         </div>
 
         {/* DSP Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '64px', textAlign: 'left' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '64px' }}>
           {dspStores.map((store, i) => (
             <div 
               key={i} 
               className="step-card" 
               style={{ 
                 background: 'var(--bg-panel)', 
-                padding: '24px', 
+                padding: '32px 24px', 
                 borderRadius: '4px', 
                 border: '1px solid rgba(255,255,255,0.05)', 
                 display: 'flex', 
                 flexDirection: 'column', 
-                gap: '12px',
-                textAlign: 'left'
+                alignItems: 'center',
+                textAlign: 'center',
+                gap: '12px'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '24px' }}>{store.icon}</span>
-                <span style={{ fontSize: '10px', background: 'rgba(0,242,254,0.08)', color: '#00f2fe', padding: '2px 6px', borderRadius: '2px', fontWeight: 'bold' }}>
-                  {store.tag}
-                </span>
+              <div style={{ marginBottom: '4px' }}>
+                {store.icon}
               </div>
               <h4 style={{ margin: 0, fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{store.name}</h4>
-              <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>{store.desc}</p>
+              <span style={{ fontSize: '10px', background: 'rgba(0,242,254,0.08)', color: '#00f2fe', padding: '2px 8px', borderRadius: '2px', fontWeight: 'bold', width: 'fit-content' }}>
+                {store.tag}
+              </span>
+              <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>{store.desc}</p>
             </div>
           ))}
         </div>

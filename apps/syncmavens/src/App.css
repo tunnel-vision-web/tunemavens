@@ -460,13 +460,12 @@ body {
   align-items: center;
   justify-content: center;
   padding-top: 80px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .page-header-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(6, 8, 19, 0.4), rgba(5, 4, 8, 0.96) 92%);
+  background: linear-gradient(180deg, rgba(6, 8, 19, 0.4), #050408 100%);
   z-index: 1;
 }
 
