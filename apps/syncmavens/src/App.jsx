@@ -100,9 +100,11 @@ function AppContent() {
   const [catalogForm, setCatalogForm] = useState({ title: '', artist: '', genre: 'Synthwave', duration: '3:30' });
   const [ingestSuccess, setIngestSuccess] = useState(false);
   const [pitchesReceived, setPitchesReceived] = useState([
-    { id: 201, date: "2026-07-12", briefTitle: "Summer Adventure Campaign", client: "Automotive TV Commercial", songTitle: "Midnight Sun", artist: "Hologram Club", rationale: "Upbeat drive and retro synth vibes will fit perfectly with the road trip scenes.", status: "Pending" },
-    { id: 202, date: "2026-07-13", briefTitle: "Untitled Cyberpunk Drama", client: "Netflix Series", songTitle: "Resonance", artist: "Aether Echo", rationale: "Melancholic classical elements build tension during the end credit sequences.", status: "Pending" }
+    { id: 201, date: "2026-07-12", briefTitle: "Summer Adventure Campaign", client: "Automotive TV Commercial", songTitle: "Midnight Sun", artist: "Hologram Club", rationale: "Upbeat drive and retro synth vibes will fit perfectly with the road trip scenes.", status: "Pending", disbursalStatus: "ESCROW HOLD" },
+    { id: 202, date: "2026-07-13", briefTitle: "Untitled Cyberpunk Drama", client: "Netflix Series", songTitle: "Resonance", artist: "Aether Echo", rationale: "Melancholic classical elements build tension during the end credit sequences.", status: "Pending", disbursalStatus: "ESCROW HOLD" }
   ]);
+  const [syncFeesInvoiced, setSyncFeesInvoiced] = useState(60000);
+  const [accruedRoyalties, setAccruedRoyalties] = useState(15800);
   const [briefForm, setBriefForm] = useState({ project: '', client: '', budget: '$10,000', genre: 'Synthwave', mood: 'Action', deadline: '5 days left', description: '' });
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -932,11 +934,11 @@ function AppContent() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
                   <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px' }}>
                     <span style={{ fontSize: '11px', color: '#64748b' }}>Sync Fees Invoiced</span>
-                    <h4 style={{ margin: '8px 0 0', color: '#00f2fe' }}>$60,000.00</h4>
+                    <h4 style={{ margin: '8px 0 0', color: '#00f2fe' }}>${syncFeesInvoiced.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h4>
                   </div>
                   <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px' }}>
                     <span style={{ fontSize: '11px', color: '#64748b' }}>Accrued Licensing Royalties</span>
-                    <h4 style={{ margin: '8px 0 0', color: '#00f2fe' }}>$15,800.00</h4>
+                    <h4 style={{ margin: '8px 0 0', color: '#00f2fe' }}>${accruedRoyalties.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h4>
                   </div>
                   <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px' }}>
                     <span style={{ fontSize: '11px', color: '#64748b' }}>Catalog Advance Payouts</span>
@@ -1104,12 +1106,27 @@ function AppContent() {
                     </div>
                   ) : (
                     pitchesReceived.filter(p => p.status === 'Approved').map(deal => {
-                      const dealBudget = 15000; 
-                      const agencyShare = dealBudget * 0.3;
+                      const matchingBrief = briefs.find(b => b.project === deal.briefTitle);
+                      const budgetStr = matchingBrief ? matchingBrief.budget.replace(/[^0-9]/g, '') : '15000';
+                      const dealBudget = parseInt(budgetStr, 10) || 15000;
+                      
+                      const agencyShare = Math.round(dealBudget * 0.3);
                       const remainder = dealBudget - agencyShare;
-                      const smShare = remainder * 0.25;
+                      const smShare = Math.round(remainder * 0.25);
                       const creatorShare = remainder - smShare;
                       
+                      const isSettled = deal.disbursalStatus === 'SETTLED';
+
+                      const handleRelease = () => {
+                        if (isSettled) return;
+                        
+                        setPitchesReceived(pitchesReceived.map(p => p.id === deal.id ? { ...p, disbursalStatus: 'SETTLED' } : p));
+                        setSyncFeesInvoiced(prev => prev + dealBudget);
+                        setAccruedRoyalties(prev => prev + creatorShare);
+                        
+                        alert(`Escrow funds disbursed successfully!\n\nBuyout: $${dealBudget.toLocaleString()}\n- Partner Network Agency (30%): $${agencyShare.toLocaleString()}\n- SyncMavens Platform Fee (25% of net): $${smShare.toLocaleString()}\n- Creator Split Waterfall (45% of gross): $${creatorShare.toLocaleString()} credited to Artist Ledger.\n\nStatus: SETTLED`);
+                      };
+
                       return (
                         <div key={deal.id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '20px', background: 'rgba(255,255,255,0.01)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '8px' }}>
@@ -1135,12 +1152,24 @@ function AppContent() {
                             </div>
                             <div>
                               <span style={{ color: '#64748b', display: 'block', fontSize: '10px' }}>Disbursal Status:</span>
-                              <strong style={{ color: '#eab308' }}>ESCROW HOLD</strong>
+                              <strong style={{ color: isSettled ? '#10b981' : '#eab308' }}>{deal.disbursalStatus || 'ESCROW HOLD'}</strong>
                             </div>
                           </div>
 
-                          <button onClick={() => alert("Releasing funds...\n$4,500.00 routed to Agency\n$2,625.00 routed to SyncMavens Admin\n$7,875.00 waterfalled to writer/producer splits.\nSTATUS: SETTLED")} className="btn-get-signed" style={{ padding: '8px 16px', background: '#10b981', color: '#000', border: 'none', borderRadius: '3px' }}>
-                            Release Escrow & Disburse Waterfall
+                          <button 
+                            onClick={handleRelease} 
+                            disabled={isSettled}
+                            className="btn-get-signed" 
+                            style={{ 
+                              padding: '8px 16px', 
+                              background: isSettled ? 'rgba(255,255,255,0.05)' : '#10b981', 
+                              color: isSettled ? '#64748b' : '#000', 
+                              border: 'none', 
+                              borderRadius: '3px',
+                              cursor: isSettled ? 'not-allowed' : 'pointer'
+                            }}
+                          >
+                            {isSettled ? 'Waterfall Settled' : 'Release Escrow & Disburse Waterfall'}
                           </button>
                         </div>
                       );
