@@ -186,3 +186,24 @@ marketplace phase — they only depend on Phase 2.5 (roles) being in place.
 | Resend | Email delivery for CRM invites | 6.5 | ⏳ Pending (needs Resend API key + verified sending domain) |
 | ~~Twilio~~ | ~~SMS~~ | — | ❌ Deferred (out of scope for launch) |
 | ~~Instagram/X API~~ | ~~Social DM~~ | — | ❌ Never (copy-to-clipboard replaces API integration) |
+
+---
+
+## Unified Layouts & SyncMavens Frontend (Phase 6 Additions)
+
+### Unified Backend Admin Layouts
+1. **Ecosystem Parity:** All sub-utilities (TuneStream, SyncMavens) must utilize the identical collapsible sidebar (`dashboard-sidebar`), topbar (`dashboard-topbar`), profile cards, and copyright footer layout structure as the main dashboard portal.
+2. **Contextual Branding:** Sidebar logos update automatically according to the active domain target (`TuneStream` logo for tunestream.co, `SyncMavens` logo for syncmavens.com, `TuneMavens` logo for main portal).
+3. **Role-Driven Controls:** Menus and tab panels update dynamically according to the active workspace role (e.g. Creator vs Listener in TuneStream).
+
+### SyncMavens Ditto-inspired Frontend & Backend Support
+1. **Ditto Music Role Model:** The public landing page at `syncmavens.com` is comprehensively modeled after Ditto Music's "Get Signed" layout to pitch sync licensing opportunities (Netflix, HBO, FIFA, A24) to independent artists. We act as an easily accessible, barrier-free alternative.
+2. **Compensation & Advance Model:**
+   *   **Pure Placement Waterfall:** We utilize a 90/10 split cascade model (90% to creators, 10% administration/facilitation fee) instead of standard label/aggregator split shares.
+   *   **No Catalog Advances:** To guarantee creators maintain 100% ownership control of their catalog publishing rights, **we do not offer upfront catalog sign advances at this stage**.
+3. **Interactive Utilities:**
+   *   **AI Sync Match Simulator:** A guest-accessible utility that simulates track metadata compatibility scores against active supervisor briefs and outputs a detailed match report.
+   *   **Waterfall Splits Calculator:** A dynamic slider-based tool visualizing the sync fee distribution waterfall (Sync fee inputs, Writer/Producer splits, and showing $0 advances).
+4. **Unified Sync Admin:** A prominent CTA button routes validated users into the unified sync dashboard containing operations (Briefs, Catalog) and transactions (Pitches, Ledger) views.
+5. **Unified Backend Support:** The backend FastAPI server utilizes unified Mongo collections (`briefs`, `pitches`, `catalogs`) to synchronize licensing statuses and splits across all subdomains.
+

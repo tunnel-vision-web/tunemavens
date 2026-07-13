@@ -500,6 +500,13 @@ To maintain visual consistency and clean design alignment across all marketing, 
 - **Inner elements:** Header groupings, target badges, icons/logos, paragraphs, bullet lists (`.native-app-features`), and CTA action store buttons must center align within the card boundaries.
 - **Exceptions:** General dashboard admin panel cards that display complex layout tables or form forms may align left where readability demands it, but native marketing cards must adhere strictly to centering.
 
+### 9.13.2 Unified Backend Admin Layout Rules
+To ensure all platform sub-applications appear as a unified product ecosystem:
+- **Structure Alignment:** The admin layouts for all utilities (TuneStream, SyncMavens) must mirror the main portal dashboard’s collapsible sidebar (`dashboard-sidebar`), topbar (`dashboard-topbar`), scrollable container (`dashboard-main-scroll`), and footer copyright strip (`dashboard-copyright-strip`).
+- **Branding Accents:** Sidebar headers must display the respective sub-utility logo relative to the active target domain (TuneStream logo, SyncMavens logo, etc.).
+- **Nav Collapsibility:** Sidebars must support collapsible state toggles that transition smoothly between standard (260px) and collapsed (80px) widths, modifying padding and text visibility accordingly.
+- **Sandbox Role Switches:** Sidebars or topbars must provide visible sandboxed role/view switcher controls (e.g. switching between Creator and Listener views in TuneStream) to simplify testing.
+
 ---
 
 ## §9.14 — Codebase Structure & Directory Layout  ✅ SHIPPED (Landing/Auth/Consumer) / 🟠 P1 (Dashboard)
@@ -677,3 +684,23 @@ Upon every push to `main`, the deployment workflow builds each app target indepe
    - `/opt/tunemavens/dist/portal`
    - `/opt/tunemavens/dist/tunestream`
    - `/opt/tunemavens/dist/syncmavens`
+
+---
+
+## §9.16 — SyncMavens Ditto-inspired Platform & Backend Support
+
+### 9.16.1 Ditto Music Marketing & Compensation Model
+- **Public Landing Page:** Located at the root of the `syncmavens.com` domain. It mimics Ditto Music’s "Get Signed" layout with high-impact pitching marketing, client list logos (Netflix, HBO, EA Sports), custom FAQs, and step-by-step sync signing walkthroughs.
+- **Easy Accessibility:** A barrier-free, open-access portal for independent creators to upload catalog stems directly to supervisor search indexes.
+- **Compensation & Waterfall Model:** Rather than traditional upfront catalog buyouts, SyncMavens works on a placement-led 90/10 split waterfall. Creators receive 90% of sync licensing fees, while SyncMavens retains a 10% administration/facilitation fee.
+- **No Catalog Advances:** **We do not offer catalog sign advances at this stage**, ensuring creators maintain 100% ownership control of their catalog publishing rights and mechanical copyrights.
+- **CTA Ingress:** Directs creators via a prominent "Access Sync Dashboard" button into the unified Sync Admin Dashboard.
+
+### 9.16.2 Interactive Landing Page Utilities
+- **AI Sync Match Simulator:** Form-based utility allowing creators to simulate track metadata match calculations against live briefs. Employs transition loadings ("Transcoding stems...", "Iterating budgets...") and outputs a detailed match score (%), compatible project, fee payout, and pitch claim actions.
+- **Splits Cascade Calculator:** Visual waterfall diagram that displays dynamic Writer/Producer payouts relative to a chosen sync buyout fee, reflecting the flat 10% SyncMavens administration fee and $0 catalog advance payouts.
+
+### 9.16.3 Backend Collection Support
+- **`briefs` Collection:** Stores incoming film, TV, and video game licensing sync briefs. Schema mirrors standard contract briefs: project name, client, budget, duration format, deadline, required genre style, and description details.
+- **`pitches` Collection:** Tracks pitched catalog tracks submitted by creators to active briefs.
+- **`catalogs` Collection:** Index of masters and metadata ingested for sync matching, linked with split cascade agreements.
