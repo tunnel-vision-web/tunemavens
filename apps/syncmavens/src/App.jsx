@@ -105,6 +105,8 @@ function AppContent() {
   ]);
   const [syncFeesInvoiced, setSyncFeesInvoiced] = useState(60000);
   const [accruedRoyalties, setAccruedRoyalties] = useState(15800);
+  const [activeContractPitch, setActiveContractPitch] = useState(null);
+  const [supervisorSignature, setSupervisorSignature] = useState('');
   const [briefForm, setBriefForm] = useState({ project: '', client: '', budget: '$10,000', genre: 'Synthwave', mood: 'Action', deadline: '5 days left', description: '' });
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -1076,9 +1078,9 @@ function AppContent() {
                           {pitch.status === 'Pending' ? (
                             <>
                               <button onClick={() => {
-                                setPitchesReceived(pitchesReceived.map(p => p.id === pitch.id ? { ...p, status: 'Approved' } : p));
-                                alert(`Pitch approved! Work "${pitch.songTitle}" registered in escrow splits ledger.`);
-                              }} className="btn-get-signed" style={{ padding: '4px 10px', fontSize: '11px', background: '#10b981', border: 'none', color: '#000', borderRadius: '3px' }}>Approve</button>
+                                setActiveContractPitch(pitch);
+                                setSupervisorSignature('');
+                              }} className="btn-get-signed" style={{ padding: '4px 10px', fontSize: '11px', background: '#10b981', border: 'none', color: '#000', borderRadius: '3px' }}>Approve & Sign</button>
                               <button onClick={() => {
                                 setPitchesReceived(pitchesReceived.map(p => p.id === pitch.id ? { ...p, status: 'Declined' } : p));
                               }} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px' }}>Decline</button>
@@ -1156,21 +1158,65 @@ function AppContent() {
                             </div>
                           </div>
 
-                          <button 
-                            onClick={handleRelease} 
-                            disabled={isSettled}
-                            className="btn-get-signed" 
-                            style={{ 
-                              padding: '8px 16px', 
-                              background: isSettled ? 'rgba(255,255,255,0.05)' : '#10b981', 
-                              color: isSettled ? '#64748b' : '#000', 
-                              border: 'none', 
-                              borderRadius: '3px',
-                              cursor: isSettled ? 'not-allowed' : 'pointer'
-                            }}
-                          >
-                            {isSettled ? 'Waterfall Settled' : 'Release Escrow & Disburse Waterfall'}
-                          </button>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button 
+                              onClick={handleRelease} 
+                              disabled={isSettled}
+                              className="btn-get-signed" 
+                              style={{ 
+                                flex: 1,
+                                padding: '8px 16px', 
+                                background: isSettled ? 'rgba(255,255,255,0.05)' : '#10b981', 
+                                color: isSettled ? '#64748b' : '#000', 
+                                border: 'none', 
+                                borderRadius: '3px',
+                                cursor: isSettled ? 'not-allowed' : 'pointer'
+                              }}
+                            >
+                              {isSettled ? 'Waterfall Settled' : 'Release Escrow & Disburse Waterfall'}
+                            </button>
+
+                            {isSettled && (
+                              <button 
+                                onClick={() => {
+                                  const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<CueSheet xmlns="http://www.ascap.com/cuesheet">
+  <Header>
+    <Title>${deal.briefTitle}</Title>
+    <Publisher>SyncMavens Publishing</Publisher>
+    <Status>SETTLED</Status>
+  </Header>
+  <Cues>
+    <Cue>
+      <Number>1</Number>
+      <Title>${deal.songTitle}</Title>
+      <Composer>${deal.artist}</Composer>
+      <Publisher>SyncMavens Publishing</Publisher>
+      <Duration>Full Sync</Duration>
+      <Usage>BI</Usage>
+      <Split ComposerShare="50%" PublisherShare="50%" />
+    </Cue>
+  </Cues>
+</CueSheet>`;
+
+                                  const blob = new Blob([xmlContent], { type: 'text/xml' });
+                                  const url = URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = `${deal.songTitle.replace(/\s+/g, '_')}_CueSheet.xml`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  URL.revokeObjectURL(url);
+                                  alert(`ASCAP/BMI Cue Sheet XML downloaded successfully for: "${deal.songTitle}"`);
+                                }}
+                                className="btn-secondary" 
+                                style={{ padding: '8px 16px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                              >
+                                📥 Cue Sheet XML
+                              </button>
+                            )}
+                          </div>
                         </div>
                       );
                     })
@@ -1452,6 +1498,106 @@ function AppContent() {
             <span>Operating on the shared Intermaven network.</span>
           </div>
         </main>
+
+        {/* ================= CONTRACT SIGNATURE MODAL ================= */}
+        {activeContractPitch && (() => {
+          const matchingBrief = briefs.find(b => b.project === activeContractPitch.briefTitle);
+          const budgetStr = matchingBrief ? matchingBrief.budget.replace(/[^0-9]/g, '') : '15000';
+          const dealBudget = parseInt(budgetStr, 10) || 15000;
+          
+          const agencyShare = Math.round(dealBudget * 0.3);
+          const remainder = dealBudget - agencyShare;
+          const smShare = Math.round(remainder * 0.25);
+          const creatorShare = remainder - smShare;
+
+          return (
+            <div 
+              onClick={() => setActiveContractPitch(null)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(5, 4, 8, 0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '20px' }}
+            >
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                className="dashboard-card" 
+                style={{ maxWidth: '640px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '32px', background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}
+              >
+                <button 
+                  onClick={() => setActiveContractPitch(null)} 
+                  style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                >
+                  <RiCloseFill size={20} />
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10b981' }}>
+                  <RiFileLineChartLine size={24} />
+                  <h3 style={{ margin: 0, fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>License Agreement &amp; Clearance</h3>
+                </div>
+
+                <div style={{ background: '#050409', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '4px', fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6', maxHeight: '240px', overflowY: 'auto', fontFamily: 'monospace' }}>
+                  <h4 style={{ textAlign: 'center', color: '#fff', marginBottom: '16px', fontSize: '13px' }}>MEMORANDUM OF AGREEMENT</h4>
+                  <p>This Synchronisation and Master Use License Agreement is entered into as of sandbox execution date, by and between:</p>
+                  <p><strong>LICENSOR:</strong> {activeContractPitch.artist}</p>
+                  <p><strong>LICENSEE:</strong> {activeContractPitch.client} ({activeContractPitch.briefTitle})</p>
+                  <p><strong>WORK TITLE:</strong> "{activeContractPitch.songTitle}"</p>
+                  <p><strong>WATERFALL CASCADE ALLOCATIONS:</strong></p>
+                  <ul>
+                    <li>Upfront License Buyout Fee: ${dealBudget.toLocaleString()}</li>
+                    <li>30% Partner Placement Fee: ${agencyShare.toLocaleString()}</li>
+                    <li>25% Platform Administration Fee: ${smShare.toLocaleString()}</li>
+                    <li>Creator split remainder (45% gross): ${creatorShare.toLocaleString()}</li>
+                  </ul>
+                  <p>1. Grant of Rights: The Licensor hereby grants to the Licensee the right, license, and privilege to synchronise the Master Work in timed relation with visual images in the television/film/commercial production.</p>
+                  <p>2. Disbursal: Payments shall be waterfalled immediately upon supervisor release in the escrow split ledger.</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Supervisor Electronic Signature</label>
+                      <input 
+                        type="text" 
+                        placeholder="Type supervisor name to sign..."
+                        value={supervisorSignature}
+                        onChange={e => setSupervisorSignature(e.target.value)}
+                        style={{ padding: '8px', background: '#121118', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold' }}>Creator Electronic Signature</label>
+                      <div style={{ padding: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#10b981', fontSize: '13px', fontWeight: 'bold', fontFamily: 'cursive' }}>
+                        ✓ Ayo AI Secure Sign
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                    <button 
+                      onClick={() => {
+                        if (!supervisorSignature.trim()) {
+                          alert("Please type your electronic signature to sign the contract.");
+                          return;
+                        }
+                        setPitchesReceived(pitchesReceived.map(p => p.id === activeContractPitch.id ? { ...p, status: 'Approved', disbursalStatus: 'ESCROW HOLD' } : p));
+                        setActiveContractPitch(null);
+                        alert(`Agreement executed successfully!\n\nPitch Approved: "${activeContractPitch.songTitle}" by ${activeContractPitch.artist}\nDisbursal Status: ESCROW HOLD`);
+                      }} 
+                      className="btn-primary" 
+                      style={{ flex: 1, padding: '10px', fontSize: '13px', background: '#10b981', color: '#000', border: 'none', fontWeight: 'bold' }}
+                    >
+                      Execute Agreement &amp; Approve Pitch
+                    </button>
+                    <button 
+                      onClick={() => setActiveContractPitch(null)} 
+                      className="btn-secondary" 
+                      style={{ padding: '10px 16px', fontSize: '13px' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
