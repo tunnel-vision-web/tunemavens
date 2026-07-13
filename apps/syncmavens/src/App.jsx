@@ -21,6 +21,14 @@ import syncPlacementHero from './assets/images/sync_placement_hero.png';
 import creatorCatalogHero from './assets/images/creator_catalog_hero.png';
 import splitsCascadeHero from './assets/images/splits_cascade_hero.png';
 
+const EXTENSIVE_GENRES = [
+  "Synthwave", "Neo-Classical", "Orchestral Cinematic", "Indie Rock", 
+  "Lofi Chillhop", "Electro House", "Afrobeats", "Trap / Hip-Hop", 
+  "Industrial Cyberpunk", "Progressive Trance", "Gqom", "Amapiano", 
+  "Shoegaze", "Dark Techno", "Phonk", "Pop", "Indie Folk", 
+  "Future Bass", "Dubstep", "Classic Soul", "Jazz Fusion", "Deep House"
+];
+
 const SLIDES = [
   { 
     dot: '#00f2fe', 
@@ -50,9 +58,9 @@ const SLIDES = [
     dot: '#10b981', 
     badge: 'Compensation Led Waterfall',
     hLine1: 'Pure placement splits.',
-    hLine2: 'Flat 10% admin.',
+    hLine2: '52.5% Gross to Creator.',
     hLine2Color: '#10b981',
-    s: 'We route 90% of sync fees directly to creators. Automated split cascades handle payouts instantly to writers, producers, and publishers.',
+    s: 'Our agency partners take 30% off the top, and we charge a 25% admin fee from the remainder. The final 52.5% cascades instantly to writers and producers.',
     b1: 'Calculate Splits',
     b1action: '/calculator',
     b2: 'Success Stories',
@@ -130,6 +138,8 @@ function AppContent() {
   const [simulating, setSimulating] = useState(false);
   const [simStep, setSimStep] = useState(0);
   const [simReport, setSimReport] = useState(null);
+  const [uploadedFileName, setUploadedFileName] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Splits Calculator states
   const [buyoutFee, setBuyoutFee] = useState(15000);
@@ -360,6 +370,65 @@ function AppContent() {
     setSimReport(null);
   };
 
+  const handleAudioUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadedFileName(file.name);
+    
+    let parsedTitle = file.name.replace(/\.[^/.]+$/, "");
+    let parsedArtist = "Unknown Artist";
+    
+    if (parsedTitle.includes(" - ")) {
+      const parts = parsedTitle.split(" - ");
+      parsedArtist = parts[0].trim();
+      parsedTitle = parts[1].trim();
+    } else if (parsedTitle.includes("-")) {
+      const parts = parsedTitle.split("-");
+      parsedArtist = parts[0].trim();
+      parsedTitle = parts[1].trim();
+    }
+
+    const testTitleLower = parsedTitle.toLowerCase();
+    let guessedGenre = "Pop";
+    let guessedMood = "Uplifting";
+    let guessedVocals = "Lyrical Vocals";
+
+    if (testTitleLower.includes("synth") || testTitleLower.includes("wave") || testTitleLower.includes("retro")) {
+      guessedGenre = "Synthwave";
+      guessedMood = "Action";
+    } else if (testTitleLower.includes("cyber") || testTitleLower.includes("dark") || testTitleLower.includes("tension")) {
+      guessedGenre = "Industrial Cyberpunk";
+      guessedMood = "Tension";
+    } else if (testTitleLower.includes("epic") || testTitleLower.includes("cinematic") || testTitleLower.includes("film")) {
+      guessedGenre = "Orchestral Cinematic";
+      guessedMood = "Epic";
+    } else if (testTitleLower.includes("acoustic") || testTitleLower.includes("indie") || testTitleLower.includes("guitar")) {
+      guessedGenre = "Indie Folk";
+      guessedMood = "Melancholy";
+    } else if (testTitleLower.includes("lofi") || testTitleLower.includes("chill") || testTitleLower.includes("jazz")) {
+      guessedGenre = "Lofi Chillhop";
+      guessedMood = "Melancholy";
+    } else {
+      const popularGenres = [
+        "Synthwave", "Neo-Classical", "Orchestral Cinematic", "Indie Rock", 
+        "Lofi Chillhop", "Electro House", "Afrobeats", "Trap / Hip-Hop", 
+        "Industrial Cyberpunk", "Progressive Trance", "Gqom", "Amapiano", 
+        "Shoegaze", "Dark Techno", "Phonk"
+      ];
+      guessedGenre = popularGenres[Math.floor(Math.random() * popularGenres.length)];
+    }
+
+    setSimulatorForm({
+      title: parsedTitle,
+      artist: parsedArtist,
+      genre: guessedGenre,
+      mood: guessedMood,
+      vocals: guessedVocals
+    });
+    
+    setShowConfirmModal(true);
+  };
+
   const toggleFaq = (idx) => {
     setOpenFaq(openFaq === idx ? null : idx);
   };
@@ -409,7 +478,7 @@ function AppContent() {
               <li>Upfront License Buyout Fee: ${dealBudget.toLocaleString()}</li>
               <li>30% Partner Placement Fee: ${agencyShare.toLocaleString()}</li>
               <li>25% Platform Administration Fee: ${smShare.toLocaleString()}</li>
-              <li>Creator split remainder (45% gross): ${creatorShare.toLocaleString()}</li>
+              <li>Creator split remainder (52.5% gross): ${creatorShare.toLocaleString()}</li>
             </ul>
             <p>1. Grant of Rights: The Licensor hereby grants to the Licensee the right, license, and privilege to synchronise the Master Work in timed relation with visual images in the television/film/commercial production.</p>
             <p>2. Disbursal: Payments shall be waterfalled immediately upon supervisor release in the escrow split ledger.</p>
@@ -1236,7 +1305,7 @@ function AppContent() {
                         setSyncFeesInvoiced(prev => prev + dealBudget);
                         setAccruedRoyalties(prev => prev + creatorShare);
                         
-                        alert(`Escrow funds disbursed successfully!\n\nBuyout: $${dealBudget.toLocaleString()}\n- Partner Network Agency (30%): $${agencyShare.toLocaleString()}\n- SyncMavens Platform Fee (25% of net): $${smShare.toLocaleString()}\n- Creator Split Waterfall (45% of gross): $${creatorShare.toLocaleString()} credited to Artist Ledger.\n\nStatus: SETTLED`);
+                        alert(`Escrow funds disbursed successfully!\n\nBuyout: $${dealBudget.toLocaleString()}\n- Partner Network Agency (30%): $${agencyShare.toLocaleString()}\n- SyncMavens Platform Fee (25% of net): $${smShare.toLocaleString()}\n- Creator Split Waterfall (52.5% of gross): $${creatorShare.toLocaleString()} credited to Artist Ledger.\n\nStatus: SETTLED`);
                       };
 
                       return (
@@ -1954,7 +2023,7 @@ function AppContent() {
 
             {/* In-page rendering of opportunities & widgets */}
             <OpportunitiesView briefs={briefs} />
-            <AnalyzerView briefs={briefs} simulatorForm={simulatorForm} setSimulatorForm={setSimulatorForm} runSimulation={runSimulation} simulating={simulating} simStep={simStep} simReport={simReport} loadSampleTrack={loadSampleTrack} navigate={navigate} />
+            <AnalyzerView briefs={briefs} simulatorForm={simulatorForm} setSimulatorForm={setSimulatorForm} runSimulation={runSimulation} simulating={simulating} simStep={simStep} simReport={simReport} loadSampleTrack={loadSampleTrack} navigate={navigate} uploadedFileName={uploadedFileName} setUploadedFileName={setUploadedFileName} showConfirmModal={showConfirmModal} setShowConfirmModal={setShowConfirmModal} handleAudioUpload={handleAudioUpload} />
 
             {/* Licensing Options Section */}
             <section className="landing-stepper" id="licensing-options" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '80px', paddingTop: '40px' }}>
@@ -2005,7 +2074,7 @@ function AppContent() {
         } />
         
         <Route path="/opportunities" element={<OpportunitiesView briefs={briefs} standalone={true} />} />
-        <Route path="/analyzer" element={<AnalyzerView briefs={briefs} simulatorForm={simulatorForm} setSimulatorForm={setSimulatorForm} runSimulation={runSimulation} simulating={simulating} simStep={simStep} simReport={simReport} loadSampleTrack={loadSampleTrack} navigate={navigate} standalone={true} />} />
+        <Route path="/analyzer" element={<AnalyzerView briefs={briefs} simulatorForm={simulatorForm} setSimulatorForm={setSimulatorForm} runSimulation={runSimulation} simulating={simulating} simStep={simStep} simReport={simReport} loadSampleTrack={loadSampleTrack} navigate={navigate} standalone={true} uploadedFileName={uploadedFileName} setUploadedFileName={setUploadedFileName} showConfirmModal={showConfirmModal} setShowConfirmModal={setShowConfirmModal} handleAudioUpload={handleAudioUpload} />} />
         <Route path="/calculator" element={<CalculatorView buyoutFee={buyoutFee} setBuyoutFee={setBuyoutFee} writerSplit={writerSplit} setWriterSplit={setWriterSplit} producerSplit={producerSplit} setProducerSplit={setProducerSplit} standalone={true} />} />
         <Route path="/success" element={<SuccessStoriesView standalone={true} />} />
         <Route path="/faq" element={<FaqView openFaq={openFaq} toggleFaq={toggleFaq} standalone={true} />} />
@@ -2196,7 +2265,7 @@ function OpportunitiesView({ briefs, standalone }) {
   );
 }
 
-function AnalyzerView({ briefs, simulatorForm, setSimulatorForm, runSimulation, simulating, simStep, simReport, loadSampleTrack, navigate, standalone }) {
+function AnalyzerView({ briefs, simulatorForm, setSimulatorForm, runSimulation, simulating, simStep, simReport, loadSampleTrack, navigate, standalone, uploadedFileName, setUploadedFileName, showConfirmModal, setShowConfirmModal, handleAudioUpload }) {
   return (
     <div className={standalone ? "standalone-page-wrapper" : ""}>
       {standalone && (
@@ -2221,13 +2290,41 @@ function AnalyzerView({ briefs, simulatorForm, setSimulatorForm, runSimulation, 
           )}
           <p style={{ fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>Input your track metadata or load a sample file to calculate your compatibility score against active supervisor projects.</p>
           
-          <div className="dashboard-card" style={{ width: '100%', maxWidth: '650px', margin: '0 auto', background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', textAlign: 'left' }}>
+          <div className="dashboard-card" style={{ width: '100%', maxWidth: '650px', margin: '0 auto', background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', textAlign: 'left', padding: '24px' }}>
+            
+            {/* Audio File Upload Box */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '16px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Simulate Match from Audio File</label>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <input 
+                  type="file" 
+                  accept="audio/*" 
+                  id="sim-audio-file"
+                  onChange={handleAudioUpload}
+                  style={{ display: 'none' }}
+                />
+                <button 
+                  type="button"
+                  onClick={() => document.getElementById('sim-audio-file').click()}
+                  className="btn-secondary" 
+                  style={{ padding: '8px 16px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                >
+                  <RiUpload2Line /> <span>Choose Audio File...</span>
+                </button>
+                {uploadedFileName && (
+                  <span style={{ fontSize: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    ✓ {uploadedFileName}
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '12px', color: '#64748b', alignSelf: 'center' }}>Load Demo:</span>
               <button type="button" onClick={() => loadSampleTrack('Midnight Sun', 'Hologram Club', 'Synthwave', 'Action', 'Instrumental')} style={{ padding: '4px 10px', fontSize: '11px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', borderRadius: '3px', cursor: 'pointer' }}>Midnight Sun (Action)</button>
               <button type="button" onClick={() => loadSampleTrack('Resonance', 'Aether Echo', 'Neo-Classical', 'Melancholy', 'Instrumental')} style={{ padding: '4px 10px', fontSize: '11px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', borderRadius: '3px', cursor: 'pointer' }}>Resonance (Melancholic)</button>
             </div>
-
+ 
             <form onSubmit={runSimulation} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -2239,11 +2336,13 @@ function AnalyzerView({ briefs, simulatorForm, setSimulatorForm, runSimulation, 
                   <input type="text" placeholder="Artist" value={simulatorForm.artist} onChange={e => setSimulatorForm({ ...simulatorForm, artist: e.target.value })} style={{ padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} required />
                 </div>
               </div>
-
+ 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Genre</label>
-                  <input type="text" placeholder="e.g. Pop, Phonk" value={simulatorForm.genre} onChange={e => setSimulatorForm({ ...simulatorForm, genre: e.target.value })} style={{ padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} required />
+                  <select value={simulatorForm.genre} onChange={e => setSimulatorForm({ ...simulatorForm, genre: e.target.value })} style={{ padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }}>
+                    {EXTENSIVE_GENRES.map((g, i) => <option key={i} value={g}>{g}</option>)}
+                  </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Vibe / Mood</label>
@@ -2264,8 +2363,8 @@ function AnalyzerView({ briefs, simulatorForm, setSimulatorForm, runSimulation, 
                   </select>
                 </div>
               </div>
-
-              <button type="submit" className="btn-get-signed" style={{ padding: '12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '6px', borderRadius: '3px' }} disabled={simulating}>
+ 
+              <button id="run-sim-btn" type="submit" className="btn-get-signed" style={{ padding: '12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '6px', borderRadius: '3px' }} disabled={simulating}>
                 {simulating ? (
                   <>
                     <RiLoader4Line size={16} className="animate-spin-slow" />
@@ -2276,7 +2375,7 @@ function AnalyzerView({ briefs, simulatorForm, setSimulatorForm, runSimulation, 
                 ) : "Analyze Sync Compatibility"}
               </button>
             </form>
-
+ 
             {simReport && (
               <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(0, 242, 254, 0.03)', border: '1px dashed rgba(0, 242, 254, 0.25)', borderRadius: '3px', display: 'flex', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.15)', borderRadius: '3px', width: '90px', height: '90px', flexShrink: 0 }}>
@@ -2289,7 +2388,7 @@ function AnalyzerView({ briefs, simulatorForm, setSimulatorForm, runSimulation, 
                   <p style={{ margin: '4px 0', color: '#94a3b8', lineHeight: '1.4' }}>{simReport.rationale}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ color: '#00f2fe', fontWeight: 'bold' }}>Payout: {simReport.fee} Upfront Fee</span>
-                    <button type="button" onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')} className="btn-get-signed" style={{ padding: '4px 12px', fontSize: '11px', borderRadius: '3px' }}>Claim & Pitch Track</button>
+                    <button type="button" onClick={() => navigate('/dashboard')} className="btn-get-signed" style={{ padding: '4px 12px', fontSize: '11px', borderRadius: '3px' }}>Claim &amp; Pitch Track</button>
                   </div>
                 </div>
               </div>
@@ -2298,6 +2397,59 @@ function AnalyzerView({ briefs, simulatorForm, setSimulatorForm, runSimulation, 
         </div>
         <SignUpCTA />
       </section>
+
+      {/* Confirmation Metadata Modal */}
+      {showConfirmModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(5, 4, 8, 0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4000, padding: '20px' }}>
+          <div className="dashboard-card" style={{ maxWidth: '480px', width: '100%', padding: '28px', background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>Confirm Track Metadata</h3>
+              <p style={{ color: '#94a3b8', fontSize: '12px', margin: 0, lineHeight: '1.5' }}>
+                We extracted the following track details from <strong>{uploadedFileName}</strong>. Please confirm or adjust them before running the AI Sync Match Simulator.
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>Track Title</label>
+                <input type="text" value={simulatorForm.title} onChange={e => setSimulatorForm({ ...simulatorForm, title: e.target.value })} style={{ padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>Artist Name</label>
+                <input type="text" value={simulatorForm.artist} onChange={e => setSimulatorForm({ ...simulatorForm, artist: e.target.value })} style={{ padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>Genre</label>
+                <select value={simulatorForm.genre} onChange={e => setSimulatorForm({ ...simulatorForm, genre: e.target.value })} style={{ padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px', outline: 'none' }}>
+                  {EXTENSIVE_GENRES.map((g, i) => <option key={i} value={g}>{g}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+              <button 
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setTimeout(() => {
+                    document.getElementById('run-sim-btn')?.click();
+                  }, 100);
+                }}
+                className="btn-primary"
+                style={{ flex: 1, padding: '10px', fontSize: '13px', background: '#10b981', color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                Confirm &amp; Run Analyzer
+              </button>
+              <button 
+                onClick={() => setShowConfirmModal(false)}
+                className="btn-secondary"
+                style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                Adjust Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2527,7 +2679,7 @@ function FaqView({ openFaq, toggleFaq, standalone }) {
         {!standalone && <h2>Sync Licensing FAQ</h2>}
         <div className="faq-list" style={{ marginTop: standalone ? '40px' : '0' }}>
           {[
-            { q: "How does the SyncMavens compensation model work?", a: "SyncMavens operates on a simple, transparent placement-led model. When we pitch and successfully license your track, we charge a flat 10% administration/facilitation fee on the sync buyout. The remaining 90% is routed directly through your specified split cascade percentages." },
+            { q: "How does the SyncMavens compensation model work?", a: "SyncMavens operates on a transparent, placement-led model. When we pitch and successfully license your track: 30% off the top goes to our agency partners who secure the deal, SyncMavens retains a 25% administration fee from the remainder, and the final 52.5% gross value cascades directly to creators (writers and producers) instantly." },
             { q: "Do you offer up-front catalog sign advances?", a: "No. Unlike traditional publishers who lock up your catalogue with advances and take ownership of your publishing rights, we do not offer catalog sign advances. You retain 100% of your copyright. Payouts are made purely upon placement deals, keeping you in full control of your IP." },
             { q: "Is SyncMavens accessible to independent artists?", a: "Yes. Traditional sync pitching is gated behind agents and labels. SyncMavens is built to be easily accessible to any independent creator. Once you upload your catalog, our AI system indexes your metadata against supervisor briefs immediately." },
             { q: "What audio assets do I need to prepare?", a: "Supervisors require professional masters (WAV or AIFF, 16/24-bit, 44.1/48kHz). Having instrumental versions (no vocals) and split stem tracks significantly increases your chances of getting placed." }
@@ -3523,15 +3675,16 @@ function DistributionView({ standalone }) {
 // ==========================================
 function GlobalDspView({ standalone }) {
   const dspStores = [
-    { name: "Spotify", desc: "Push releases to Spotify and gain instant access to Spotify for Artists verification & play pitching.", tag: "Verified Pitching", icon: <SiSpotify size={26} style={{ color: '#1DB954' }} /> },
-    { name: "Apple Music", desc: "Deliver lossless master tracks and Dolby Atmos spatial mixes to Apple Music stream subscribers.", tag: "Spatial Lossless", icon: <SiApplemusic size={26} style={{ color: '#FC3C44' }} /> },
-    { name: "YouTube Music", desc: "Auto-generate official Art Tracks, sync with your Official Artist Channel, and claim content royalties.", tag: "UGC Claims Ready", icon: <SiYoutube size={26} style={{ color: '#FF0000' }} /> },
-    { name: "Amazon Music", desc: "Submit tracks for curated Amazon editorial playlists and Alexa voice request optimization.", tag: "Alexa Voice Ready", icon: <FaAmazon size={26} style={{ color: '#00A8E1' }} /> },
+    { name: "Spotify", desc: "Push releases to Spotify and gain instant access to Spotify for Artists verification & play pitching.", tag: "Verified Pitching", icon: <SiSpotify size={26} style={{ color: '#fff' }} /> },
+    { name: "Apple Music", desc: "Deliver lossless master tracks and Dolby Atmos spatial mixes to Apple Music stream subscribers.", tag: "Spatial Lossless", icon: <SiApplemusic size={26} style={{ color: '#fff' }} /> },
+    { name: "YouTube Music", desc: "Auto-generate official Art Tracks, sync with your Official Artist Channel, and claim content royalties.", tag: "UGC Claims Ready", icon: <SiYoutube size={26} style={{ color: '#fff' }} /> },
+    { name: "Amazon Music", desc: "Submit tracks for curated Amazon editorial playlists and Alexa voice request optimization.", tag: "Alexa Voice Ready", icon: <FaAmazon size={26} style={{ color: '#fff' }} /> },
     { name: "TikTok & ByteDance", desc: "Inject tracks into the official TikTok sound library for creators to use in viral shorts worldwide.", tag: "Social Sync", icon: <SiTiktok size={24} style={{ color: '#fff' }} /> },
-    { name: "Tidal", desc: "Distribute premium High-Fidelity streams to audiophiles, keeping higher direct payout waterfalls.", tag: "Hi-Res Masters", icon: <SiTidal size={26} style={{ color: '#00F2FE' }} /> },
-    { name: "Deezer", desc: "Deliver to Deezer's global catalog, covering Europe and Latin American streaming territories.", tag: "European Reach", icon: <SiDeezer size={26} style={{ color: '#FF007F' }} /> },
-    { name: "Tencent & NetEase", desc: "Access major Asian markets including QQ Music, Kugou, Kuwo, and NetEase Cloud Music channels.", tag: "Asian Markets", icon: <RiGlobalLine size={26} style={{ color: '#00f2fe' }} /> },
-    { name: "Boomplay & Audiomack", desc: "Establish absolute presence in fast-growing African regions through Boomplay, Audiomack, and MTN music.", tag: "African Coverage", icon: <RiMusicFill size={26} style={{ color: '#eab308' }} /> },
+    { name: "TuneStream", desc: "Direct distribution to TuneStream catalog for licensing placement, immediate streaming availability, and high-fidelity lossless distribution.", tag: "Native Sync Integration", icon: <RiVolumeUpFill size={26} style={{ color: '#fff' }} /> },
+    { name: "Tidal", desc: "Distribute premium High-Fidelity streams to audiophiles, keeping higher direct payout waterfalls.", tag: "Hi-Res Masters", icon: <SiTidal size={26} style={{ color: '#fff' }} /> },
+    { name: "Deezer", desc: "Deliver to Deezer's global catalog, covering Europe and Latin American streaming territories.", tag: "European Reach", icon: <SiDeezer size={26} style={{ color: '#fff' }} /> },
+    { name: "Tencent & NetEase", desc: "Access major Asian markets including QQ Music, Kugou, Kuwo, and NetEase Cloud Music channels.", tag: "Asian Markets", icon: <RiGlobalLine size={26} style={{ color: '#fff' }} /> },
+    { name: "Boomplay & Audiomack", desc: "Establish absolute presence in fast-growing African regions through Boomplay, Audiomack, and MTN music.", tag: "African Coverage", icon: <RiMusicFill size={26} style={{ color: '#fff' }} /> },
   ];
 
   const features = [

@@ -95,7 +95,7 @@ body {
 }
 
 .back-to-tm-link {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   text-decoration: none;
   display: flex;
@@ -103,7 +103,7 @@ body {
   justify-content: center;
   gap: 4px;
   white-space: nowrap;
-  margin-top: 4px;
+  margin-top: 2px;
   margin-left: 0;
   transition: color 0.2s ease;
 }
