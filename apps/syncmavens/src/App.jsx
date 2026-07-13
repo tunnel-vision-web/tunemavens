@@ -3528,6 +3528,27 @@ function DistributionView({ standalone }) {
 // Global DSP Distribution View
 // ==========================================
 function GlobalDspView({ standalone }) {
+  const dspStores = [
+    { name: "Spotify", desc: "Push releases to Spotify and gain instant access to Spotify for Artists verification & play pitching.", tag: "Verified Pitching", icon: "🟢" },
+    { name: "Apple Music", desc: "Deliver lossless master tracks and Dolby Atmos spatial mixes to Apple Music stream subscribers.", tag: "Spatial Lossless", icon: "" },
+    { name: "YouTube Music", desc: "Auto-generate official Art Tracks, sync with your Official Artist Channel, and claim content royalties.", tag: "UGC Claims Ready", icon: "🔴" },
+    { name: "Amazon Music", desc: "Submit tracks for curated Amazon editorial playlists and Alexa voice request optimization.", tag: "Alexa Voice Ready", icon: "🔵" },
+    { name: "TikTok & ByteDance", desc: "Inject tracks into the official TikTok sound library for creators to use in viral shorts worldwide.", tag: "Social Sync", icon: "🎵" },
+    { name: "Tidal", desc: "Distribute premium High-Fidelity streams to audiophiles, keeping higher direct payout waterfalls.", tag: "Hi-Res Masters", icon: "◼" },
+    { name: "Deezer", desc: "Deliver to Deezer's global catalog, covering Europe and Latin American streaming territories.", tag: "European Reach", icon: "🔶" },
+    { name: "Tencent & NetEase", desc: "Access major Asian markets including QQ Music, Kugou, Kuwo, and NetEase Cloud Music channels.", tag: "Asian Markets", icon: "🌐" },
+    { name: "Boomplay & Audiomack", desc: "Establish absolute presence in fast-growing African regions through Boomplay, Audiomack, and MTN music.", tag: "African Coverage", icon: "🔥" },
+  ];
+
+  const features = [
+    "Keep 100% of your royalties",
+    "Unlimited releases to 150+ stores",
+    "Free SmartLinks & Pre-saves included",
+    "Daily streaming analytics & geographic map",
+    "Direct waterfall splits registration",
+    "24/7 dedicated support team"
+  ];
+
   return (
     <div className={standalone ? "standalone-page-wrapper" : ""}>
       {standalone && (
@@ -3544,8 +3565,8 @@ function GlobalDspView({ standalone }) {
         </div>
       )}
       
-      <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
+      <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '96px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '56px' }}>
           <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>DSP DISTRIBUTION</span>
           <h2>Deliver Audio to 150+ Global Stores</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
@@ -3553,18 +3574,45 @@ function GlobalDspView({ standalone }) {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', marginBottom: '56px' }}>
-          <div style={{ background: 'var(--bg-panel)', padding: '24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-            <h5 style={{ fontSize: '16px', color: '#fff', margin: '0 0 8px' }}>Spotify</h5>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Get verified artist status and manage Pitch tools directly.</p>
-          </div>
-          <div style={{ background: 'var(--bg-panel)', padding: '24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-            <h5 style={{ fontSize: '16px', color: '#fff', margin: '0 0 8px' }}>Apple Music</h5>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Deliver lossless spatial audio mixes to premium streams.</p>
-          </div>
-          <div style={{ background: 'var(--bg-panel)', padding: '24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-            <h5 style={{ fontSize: '16px', color: '#fff', margin: '0 0 8px' }}>Amazon Music</h5>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Push to curated acoustic playlist collections worldwide.</p>
+        {/* DSP Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '64px', textAlign: 'left' }}>
+          {dspStores.map((store, i) => (
+            <div 
+              key={i} 
+              className="step-card" 
+              style={{ 
+                background: 'var(--bg-panel)', 
+                padding: '24px', 
+                borderRadius: '4px', 
+                border: '1px solid rgba(255,255,255,0.05)', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '12px',
+                textAlign: 'left'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '24px' }}>{store.icon}</span>
+                <span style={{ fontSize: '10px', background: 'rgba(0,242,254,0.08)', color: '#00f2fe', padding: '2px 6px', borderRadius: '2px', fontWeight: 'bold' }}>
+                  {store.tag}
+                </span>
+              </div>
+              <h4 style={{ margin: 0, fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{store.name}</h4>
+              <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>{store.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Feature Highlights Checklist */}
+        <div style={{ background: '#0b0f1e', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '40px', maxWidth: '800px', margin: '0 auto 64px', textAlign: 'left' }}>
+          <h3 style={{ fontSize: '18px', color: '#fff', marginBottom: '24px', textAlign: 'center' }}>Why Distribute via TuneMavens Ecosystem?</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 32px' }}>
+            {features.map((f, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#cbd5e1' }}>
+                <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                <span>{f}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -3596,7 +3644,6 @@ function SmartLinksView({ standalone }) {
       
       <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
-          <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>PROMOTION UTILITIES</span>
           <h2>Create Dynamic Music Landing Pages</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
             Generate high-conversion smartlinks and pre-save campaigns for Spotify, Apple Music, and YouTube. Collect fan contacts, monitor click geography, and track marketing attribution data.
