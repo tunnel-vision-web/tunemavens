@@ -16,6 +16,6 @@
     "build:syncmavens": "npm run build --workspace=syncmavens",
     "dev:api": "npm run dev --workspace=api",
     "build:all": "npm run build --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present"
+    "build": "node scripts/build.js"
   }
 }
