@@ -23,6 +23,7 @@ import splitsCascadeHero from './assets/images/splits_cascade_hero.png';
 import headerApps from './assets/images/header_apps.png';
 import headerPricing from './assets/images/header_pricing.png';
 import headerPricingWestern from './assets/images/header_pricing_western.png';
+import interstellarHeader from './assets/images/interstellar_header.png';
 
 const EXTENSIVE_GENRES = [
   "Synthwave", "Neo-Classical", "Orchestral Cinematic", "Indie Rock", 
@@ -4003,7 +4004,7 @@ function DashboardAppsView({ standalone }) {
   return (
     <div className={standalone ? "standalone-page-wrapper" : ""}>
       {standalone && (
-        <div className="page-header-banner" style={{ backgroundImage: `url(${headerApps})` }}>
+        <div className="page-header-banner" style={{ backgroundImage: `url(${interstellarHeader})` }}>
           <div className="page-header-overlay" />
           <div className="page-header-content">
             <h1 className="page-header-title">Standalone Apps Pool</h1>
@@ -4574,7 +4575,7 @@ function PricingView({ standalone }) {
   return (
     <div className={standalone ? "standalone-page-wrapper" : ""}>
       {standalone && (
-        <div className="page-header-banner" style={{ backgroundImage: `url(${headerPricing})` }}>
+        <div className="page-header-banner" style={{ backgroundImage: `url(${interstellarHeader})` }}>
           <div className="page-header-overlay" />
           <div className="page-header-content">
             <h1 className="page-header-title">Ecosystem Credits & Pricing</h1>
