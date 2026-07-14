@@ -58,14 +58,42 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
   const appActivated = (sessionUser?.apps || []).length > 0;
   const catalogStarted = false; // wired in Phase 4
 
-  const steps = [
-    { id: 'profile', label: 'Complete your profile', done: profileDone, tab: 'profile', cta: 'Open Profile' },
-    { id: 'wizard', label: 'Tell us about your goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
-    { id: 'publishing', label: 'Elect your publishing tier', done: publishingDone, tab: 'publishing-election', cta: 'Choose Tier' },
-    { id: 'distribution', label: 'Elect your distribution path', done: distributionDone, tab: 'distribution-election', cta: 'Choose Path' },
-    { id: 'apps', label: 'Activate a Dashboard App', done: appActivated, tab: 'app-marketplace', cta: 'Browse Apps' },
-    { id: 'catalog', label: 'Port your first track', done: catalogStarted, tab: 'catalog', cta: 'Start Catalog' },
-  ];
+  let steps = [];
+  const userRole = sessionUser?.role || 'creator';
+
+  if (userRole === 'studio' || userRole === 'corporate' || userRole === 'media') {
+    steps = [
+      { id: 'profile', label: 'Complete supervisor profile', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      { id: 'wizard', label: 'Tell us about your licensing goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
+      { id: 'apps', label: 'Activate Sync Master App', done: sessionUser?.apps?.includes('sync-master') || appActivated, tab: 'app-marketplace', cta: 'Activate App' },
+      { id: 'search', label: 'Browse creator catalogs', done: false, tab: 'app-marketplace', cta: 'Search Music', onClick: () => setActiveTab('app-marketplace') },
+      { id: 'briefs', label: 'Submit a sync licensing brief', done: false, tab: 'app-marketplace', cta: 'Create Brief', onClick: () => setActiveTab('app-marketplace') },
+    ];
+  } else if (userRole === 'label') {
+    steps = [
+      { id: 'profile', label: 'Complete label credentials', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      { id: 'wizard', label: 'Tell us about your label goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
+      { id: 'apps', label: 'Activate TuneManagement App', done: sessionUser?.apps?.includes('tunemanagement') || appActivated, tab: 'app-marketplace', cta: 'Activate App' },
+      { id: 'publishing', label: 'Set up label publishing splits', done: publishingDone, tab: 'publishing-election', cta: 'Choose Tier' },
+      { id: 'catalog', label: 'Submit your label roster & catalog', done: catalogStarted, tab: 'catalog', cta: 'Import Catalog' },
+    ];
+  } else if (userRole === 'dj') {
+    steps = [
+      { id: 'profile', label: 'Complete DJ profile details', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      { id: 'wizard', label: 'Tell us about your mix goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
+      { id: 'apps', label: 'Activate TunePay App', done: sessionUser?.apps?.includes('tunepay') || appActivated, tab: 'app-marketplace', cta: 'Activate App' },
+      { id: 'catalog', label: 'Submit your first DJ mix set', done: catalogStarted, tab: 'catalog', cta: 'Upload Mix' },
+    ];
+  } else {
+    steps = [
+      { id: 'profile', label: 'Complete your profile', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      { id: 'wizard', label: 'Tell us about your goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
+      { id: 'publishing', label: 'Elect your publishing tier', done: publishingDone, tab: 'publishing-election', cta: 'Choose Tier' },
+      { id: 'distribution', label: 'Elect your distribution path', done: distributionDone, tab: 'distribution-election', cta: 'Choose Path' },
+      { id: 'apps', label: 'Activate a Dashboard App', done: appActivated, tab: 'app-marketplace', cta: 'Browse Apps' },
+      { id: 'catalog', label: 'Port your first track', done: catalogStarted, tab: 'catalog', cta: 'Start Catalog' },
+    ];
+  }
 
   const completed = steps.filter(s => s.done).length;
   const percent = Math.round((completed / steps.length) * 100);

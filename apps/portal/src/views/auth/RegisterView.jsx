@@ -28,6 +28,10 @@ export default function RegisterView({ onLogin }) {
   };
   
   const [roles, setRoles] = useState(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const paramRole = searchParams.get('role');
+    if (paramRole) return [paramRole];
+
     const saved = sessionStorage.getItem('signup_roles');
     if (saved) {
       const parsed = safeParseArray(saved, null);

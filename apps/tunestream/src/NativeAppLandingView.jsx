@@ -2175,7 +2175,7 @@ function LandingNavbar({ view, setView }) {
   }, []);
 
   return (
-    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} style={{ position: 'sticky', top: 0, zIndex: 1100, background: 'rgba(6, 8, 19, 0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} style={{ zIndex: 1100 }}>
       <div className="nav-inner-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto', padding: '12px 24px' }}>
         
         {/* Brand Logo & Utility Tagline */}
