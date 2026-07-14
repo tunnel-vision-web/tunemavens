@@ -3685,6 +3685,7 @@ function GlobalDspView({ standalone }) {
     { name: "Deezer", desc: "Deliver to Deezer's global catalog, covering Europe and Latin American streaming territories.", tag: "European Reach", icon: <SiDeezer size={26} style={{ color: '#fff' }} /> },
     { name: "Tencent & NetEase", desc: "Access major Asian markets including QQ Music, Kugou, Kuwo, and NetEase Cloud Music channels.", tag: "Asian Markets", icon: <RiGlobalLine size={26} style={{ color: '#fff' }} /> },
     { name: "Boomplay & Audiomack", desc: "Establish absolute presence in fast-growing African regions through Boomplay, Audiomack, and MTN music.", tag: "African Coverage", icon: <RiMusicFill size={26} style={{ color: '#fff' }} /> },
+    { name: "+140 More DSPs", desc: "Gain automatic delivery access to all other digital services, digital jukeboxes, audio lockers, and regional stores worldwide.", tag: "Global Coverage", icon: <RiGlobalLine size={26} style={{ color: '#fff' }} /> }
   ];
 
   const features = [
