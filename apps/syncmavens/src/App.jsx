@@ -1633,15 +1633,15 @@ function AppContent() {
                   <tbody>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                       <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>syncmavens.com</td>
-                      <td style={{ padding: '10px 4px', color: '#00f2fe' }}>intermaven.io/syncmavens</td>
+                      <td style={{ padding: '10px 4px', color: '#00f2fe' }}>syncmavens</td>
                       <td style={{ padding: '10px 4px', color: '#10b981' }}>✓ Verified CNAME</td>
                       <td style={{ padding: '10px 4px', color: '#10b981' }}>Live</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                       <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>tunestream.co</td>
-                      <td style={{ padding: '10px 4px', color: '#00f2fe' }}>intermaven.io/tunestream</td>
-                      <td style={{ padding: '10px 4px', color: '#10b981' }}>✓ Verified A Record</td>
-                      <td style={{ padding: '10px 4px', color: '#10b981' }}>Live</td>
+                      <td style={{ padding: '10px 4px', color: '#00f2fe' }}>tunestream</td>
+                      <td style={{ padding: '10px 4px', color: '#f4d35e' }}>Pending DNS Propagation</td>
+                      <td style={{ padding: '10px 4px', color: '#f4d35e' }}>Propagating</td>
                     </tr>
                   </tbody>
                 </table>
