@@ -6,8 +6,24 @@ try {
   console.log('Building monorepo workspaces...');
   execSync('npm run build --workspaces --if-present', { stdio: 'inherit' });
 
-  // Default build target is syncmavens, but can be overridden via BUILD_TARGET env var
-  const targetApp = process.env.BUILD_TARGET || 'syncmavens';
+  // Detect targetApp based on BUILD_TARGET, RENDER_SERVICE_NAME, or default to syncmavens
+  let targetApp = process.env.BUILD_TARGET;
+  
+  if (!targetApp && process.env.RENDER_SERVICE_NAME) {
+    const serviceName = process.env.RENDER_SERVICE_NAME.toLowerCase();
+    if (serviceName.includes('syncmavens')) {
+      targetApp = 'syncmavens';
+    } else if (serviceName.includes('tunestream')) {
+      targetApp = 'tunestream';
+    } else if (serviceName.includes('portal') || serviceName.includes('tunemavens')) {
+      targetApp = 'portal';
+    }
+  }
+  
+  if (!targetApp) {
+    targetApp = 'syncmavens'; // Fallback
+  }
+
   const srcDir = path.resolve('apps', targetApp, 'dist');
   const destDir = path.resolve('dist');
 
