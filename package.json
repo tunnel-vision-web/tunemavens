@@ -14,6 +14,7 @@
     "build:tunestream": "npm run build --workspace=tunestream",
     "dev:syncmavens": "npm run dev --workspace=syncmavens",
     "build:syncmavens": "npm run build --workspace=syncmavens",
+    "dev:api": "npm run dev --workspace=api",
     "build:all": "npm run build --workspaces --if-present"
   }
 }
