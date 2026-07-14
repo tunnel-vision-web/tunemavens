@@ -4444,6 +4444,7 @@ function PricingView({ standalone }) {
   const [checkoutStep, setCheckoutStep] = useState('form'); // 'form', 'processing', 'stk_waiting', 'stk_pin', 'success'
   const [billingEmail, setBillingEmail] = useState('');
   const [billingName, setBillingName] = useState('');
+  const [isTeamMode, setIsTeamMode] = useState(false);
   
   // Payment Method States
   const [cardNumber, setCardNumber] = useState('');
@@ -4476,8 +4477,17 @@ function PricingView({ standalone }) {
 
   const packages = [
     { id: 'starter', name: 'Free Starter Pack', price: 0, credits: 150, desc: 'Complimentary testing allocation for standard sound match and EPK drafts.' },
-    { id: 'creator', name: 'Creator Bundle', price: 29, credits: 1200, desc: 'Best for active songwriters. Pay-as-you-go, shared across the entire ecosystem.' },
-    { id: 'label', name: 'Label Bulk Pool', price: 149, credits: 10000, desc: 'High-volume credits pool designed for publishing supervisors and multi-artist catalogs.' }
+    { id: 'creator', name: 'Creator Bundle', price: 9.99, credits: 400, desc: 'Best for active songwriters. Pay-as-you-go, shared across the entire ecosystem.' },
+    { id: 'pro', name: 'Pro Bundle', price: 49.99, credits: 2200, desc: 'Standard package for professional artists, offering extra priority matching runs.' },
+    { 
+      id: 'label', 
+      name: isTeamMode ? 'Label Team Pool' : 'Label Bulk Pool', 
+      price: isTeamMode ? 159.99 : 129.99, 
+      credits: isTeamMode ? 7500 : 6000, 
+      desc: isTeamMode 
+        ? 'Shared multi-user pool. Allows up to 5 team members to collaborate on tasks, splits, and catalogs.' 
+        : 'High-volume credits pool designed for publishing supervisors and multi-artist catalogs.' 
+    }
   ];
 
   const handleStartPurchase = (pkg) => {
@@ -4630,11 +4640,44 @@ function PricingView({ standalone }) {
                   <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#00f2fe' }}>{pkg.credits.toLocaleString()} Credits</span>
                 </div>
                 <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '24px' }}>{pkg.desc}</p>
+                {pkg.id === 'label' && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '4px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ textAlign: 'left' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', display: 'block' }}>Enable Team Collaboration</span>
+                      <span style={{ fontSize: '10px', color: '#94a3b8' }}>+ $30.00 (Adds 1,500 extra credits)</span>
+                    </div>
+                    <label className="switch-toggle" style={{ position: 'relative', display: 'inline-block', width: '36px', height: '20px', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={isTeamMode} 
+                        onChange={(e) => setIsTeamMode(e.target.checked)} 
+                        style={{ opacity: 0, width: 0, height: 0 }} 
+                      />
+                      <span style={{ 
+                        position: 'absolute', 
+                        top: 0, left: 0, right: 0, bottom: 0, 
+                        background: isTeamMode ? '#10b981' : 'rgba(255,255,255,0.1)', 
+                        transition: '0.2s', 
+                        borderRadius: '10px' 
+                      }}>
+                        <span style={{ 
+                          position: 'absolute', 
+                          height: '14px', width: '14px', 
+                          left: isTeamMode ? '18px' : '3px', 
+                          bottom: '3px', 
+                          background: '#fff', 
+                          transition: '0.2s', 
+                          borderRadius: '50%' 
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+                )}
               </div>
 
               <button 
                 onClick={() => handleStartPurchase(pkg)} 
-                className={pkg.id === 'creator' ? "btn-primary" : "btn-secondary"} 
+                className={pkg.id === 'creator' ? "btn-primary" : pkg.id === 'pro' ? "btn-primary" : "btn-secondary"} 
                 style={{ width: '100%', padding: '12px', fontWeight: 'bold' }}
               >
                 {pkg.price === 0 ? 'Register Now' : 'Load Credits'}
@@ -4713,6 +4756,18 @@ function PricingView({ standalone }) {
                       style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
                     />
                   </div>
+
+                  {selectedPackage.id === 'label' && isTeamMode && (
+                    <div>
+                      <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Team / Agency Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Blue Light Music Group" 
+                        required 
+                        style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
+                      />
+                    </div>
+                  )}
 
                   {region === 'western' && (
                     <>
