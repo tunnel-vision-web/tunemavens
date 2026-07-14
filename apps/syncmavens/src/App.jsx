@@ -20,6 +20,7 @@ import './App.css';
 import syncPlacementHero from './assets/images/sync_placement_hero.png';
 import creatorCatalogHero from './assets/images/creator_catalog_hero.png';
 import splitsCascadeHero from './assets/images/splits_cascade_hero.png';
+import headerApps from './assets/images/header_apps.png';
 
 const EXTENSIVE_GENRES = [
   "Synthwave", "Neo-Classical", "Orchestral Cinematic", "Indie Rock", 
@@ -1795,7 +1796,7 @@ function AppContent() {
             <li className="nav-dropdown-wrapper">
               <span className="nav-link dropdown-trigger">Apps</span>
               <div className="nav-dropdown-menu">
-                <Link to="/dashboard-apps" className="dropdown-item">
+                <Link to="/apps" className="dropdown-item">
                   <strong>Dashboard Apps</strong>
                   <span>Consolidated web portals for distribution and marketing.</span>
                 </Link>
@@ -2086,7 +2087,7 @@ function AppContent() {
         <Route path="/smartlinks" element={<SmartLinksView standalone={true} />} />
         <Route path="/playlist-submissions" element={<PlaylistSubmissionsView standalone={true} />} />
         <Route path="/press-releases" element={<PressReleaseView standalone={true} />} />
-        <Route path="/dashboard-apps" element={<DashboardAppsView standalone={true} />} />
+        <Route path="/apps" element={<DashboardAppsView standalone={true} />} />
         <Route path="/native-apps" element={<NativeAppsView standalone={true} />} />
         <Route path="/creator-dashboard" element={<CreatorDashboardPageView standalone={true} />} />
         <Route path="/blog" element={<BlogView standalone={true} />} />
@@ -3994,7 +3995,7 @@ function DashboardAppsView({ standalone }) {
   return (
     <div className={standalone ? "standalone-page-wrapper" : ""}>
       {standalone && (
-        <div className="page-header-banner" style={{ backgroundImage: `url(${splitsCascadeHero})` }}>
+        <div className="page-header-banner" style={{ backgroundImage: `url(${headerApps})` }}>
           <div className="page-header-overlay" />
           <div className="page-header-content">
             <h1 className="page-header-title">Standalone Apps Pool</h1>
