@@ -69,10 +69,10 @@ export default function LoginView({ onLogin }) {
   return (
     <div className="auth-modal-card" style={{ cursor: 'default' }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <img src="/favicon.png" alt="TuneMavens Icon" style={{ width: '42px', height: '42px', display: 'block' }} />
+        <img src="/favicon.png" alt="TuneStream Icon" style={{ width: '42px', height: '42px', display: 'block' }} />
       </div>
       <div className="auth-header" style={{ marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '19px', fontWeight: '800', margin: '0 0 4px', color: '#fff', textAlign: 'center' }}>Log In to TuneMavens</h3>
+        <h3 style={{ fontSize: '19px', fontWeight: '800', margin: '0 0 4px', color: '#fff', textAlign: 'center' }}>Log In to TuneStream</h3>
         <p style={{ fontSize: '12px', color: 'var(--mu)', textAlign: 'center', margin: 0 }}>Access your unified creator profile</p>
       </div>
 

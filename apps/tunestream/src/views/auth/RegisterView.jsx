@@ -509,7 +509,7 @@ export default function RegisterView({ onLogin }) {
       </button>
       
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <img src="/favicon.png" alt="TuneMavens Icon" style={{ width: '42px', height: '42px', display: 'block' }} />
+        <img src="/favicon.png" alt="TuneStream Icon" style={{ width: '42px', height: '42px', display: 'block' }} />
       </div>
 
       <div className="auth-header" style={{ marginBottom: '16px' }}>
