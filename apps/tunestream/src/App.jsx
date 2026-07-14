@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import { 
   RiPlayFill, RiPauseFill, RiSkipForwardFill, RiSkipBackFill, 
   RiVolumeUpFill, RiHeadphoneLine, RiCompass3Line, RiHeart3Fill, 
@@ -20,8 +21,21 @@ const SAMPLE_TRACKS = [
   { id: 4, title: "Stardust", artist: "Solaris", album: "Nebula Core", duration: "5:01", plays: "2.3M", cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", splits: "100/0" },
 ];
 
+import NativeAppLandingView from './NativeAppLandingView';
+
 export default function App() {
-  const [showLanding, setShowLanding] = useState(true);
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<NativeAppLandingView />} />
+        <Route path="/stream" element={<PlayerDashboard />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
+}
+
+function PlayerDashboard() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(SAMPLE_TRACKS[0]);
   const [likes, setLikes] = useState([1, 3]);
@@ -122,127 +136,13 @@ export default function App() {
     }
   };
 
-  if (showLanding) {
-    return (
-      <div className="ts-landing-wrapper" style={{ background: '#050409', color: '#fff', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', overflowX: 'hidden' }}>
-        {/* Header */}
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(5, 4, 9, 0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src={tsLogo} alt="TuneStream Logo" style={{ height: '32px' }} />
-            <span style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', color: '#10b981' }}>tunestream</span>
-          </div>
-          <div style={{ display: 'flex', gap: '24px', fontSize: '14px', color: '#94a3b8' }}>
-            <a href="#features" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>Features</a>
-            <a href="#how-it-works" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>How It Works</a>
-            <a href="#faq" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }}>FAQs</a>
-          </div>
-          <button onClick={() => setShowLanding(false)} className="btn-play-hero" style={{ padding: '8px 20px', fontSize: '13px', background: '#10b981', color: '#000', border: 'none', borderRadius: '3px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-            Launch Web Player
-          </button>
-        </header>
-
-        {/* Hero Section */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', padding: '80px 40px', maxWidth: '1200px', margin: '0 auto', alignItems: 'center' }}>
-          <div>
-            <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '11px', fontWeight: 'bold', padding: '4px 12px', borderRadius: '20px', textTransform: 'uppercase', display: 'inline-block', marginBottom: '16px' }}>Streaming & Library · Web & Mobile</span>
-            <h1 style={{ fontSize: '48px', fontWeight: '900', lineHeight: '1.2', margin: '0 0 20px 0', letterSpacing: '-1px' }}>Carry the catalogue.<br /><span style={{ color: '#10b981' }}>Even off-grid.</span></h1>
-            <p style={{ fontSize: '16px', color: '#94a3b8', lineHeight: '1.6', margin: '0 0 32px 0' }}>
-              Cache up to 8GB of high-fidelity FLAC audio locally. Stream cellular-aware. Your library follows you between Wi-Fi, 4G, and no-signal subways. Governed by the shared Intermaven split ledger.
-            </p>
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <button onClick={() => setShowLanding(false)} style={{ padding: '14px 28px', fontSize: '14.5px', background: '#10b981', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
-                <RiPlayFill /> Launch Web Player
-              </button>
-              <button onClick={() => alert("Downloading native App companion...")} style={{ padding: '14px 28px', fontSize: '14.5px', background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
-                <RiDownloadLine /> Download App
-              </button>
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
-            <img src={listenHero} alt="TuneStream Player Preview" style={{ width: '100%', maxWidth: '440px', borderRadius: '8px', boxShadow: '0 20px 40px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)' }} />
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section id="features" style={{ padding: '80px 40px', maxWidth: '1200px', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <h2 style={{ fontSize: '28px', textAlign: 'center', marginBottom: '48px', fontWeight: '800' }}>Designed for Next-Gen Streaming</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', padding: '32px' }}>
-              <h3 style={{ fontSize: '18px', margin: '0 0 12px 0', color: '#10b981', fontWeight: 'bold' }}>HQ Offline Cache</h3>
-              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>Up to 8GB of FLAC / 320 kbps audio stored locally for low-bandwidth listening.</p>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', padding: '32px' }}>
-              <h3 style={{ fontSize: '18px', margin: '0 0 12px 0', color: '#10b981', fontWeight: 'bold' }}>One-Tap Tipping</h3>
-              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>Send a tip mid-track. It flows through the Compensation Engine and lands in the creator’s wallet within 24h.</p>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', padding: '32px' }}>
-              <h3 style={{ fontSize: '18px', margin: '0 0 12px 0', color: '#10b981', fontWeight: 'bold' }}>Region-Aware Playlists</h3>
-              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>Tailored picks matching detected markets: East Africa, Nigeria, South Africa, and Global.</p>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', padding: '32px' }}>
-              <h3 style={{ fontSize: '18px', margin: '0 0 12px 0', color: '#10b981', fontWeight: 'bold' }}>Shared Credits Vault</h3>
-              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>Your unified credits balance syncs instantly across TuneStream, SyncMavens, and the Intermaven network.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works */}
-        <section id="how-it-works" style={{ padding: '80px 40px', maxWidth: '1200px', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <h2 style={{ fontSize: '28px', textAlign: 'center', marginBottom: '48px', fontWeight: '800' }}>Direct-to-Artist Workflow</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
-            <div style={{ borderLeft: '3px solid #10b981', paddingLeft: '20px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981', marginBottom: '8px' }}>01</div>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>Sign in once</h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', lineHeight: '1.5' }}>Use your existing account. Your session, library, and tip history sync between web and native companions.</p>
-            </div>
-            <div style={{ borderLeft: '3px solid #10b981', paddingLeft: '20px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981', marginBottom: '8px' }}>02</div>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>Long-press to cache</h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', lineHeight: '1.5' }}>Download your favorite albums and playlists locally to enjoy seamless, bandwidth-safe playback anywhere.</p>
-            </div>
-            <div style={{ borderLeft: '3px solid #10b981', paddingLeft: '20px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981', marginBottom: '8px' }}>03</div>
-              <div style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>Support directly</div>
-              <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', lineHeight: '1.5' }}>Every tip instantly goes to the artist wallet in real-time, logged on the secure ledger.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQs */}
-        <section id="faq" style={{ padding: '80px 40px', maxWidth: '800px', margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <h2 style={{ fontSize: '28px', textAlign: 'center', marginBottom: '40px', fontWeight: '800' }}>Frequently Asked Questions</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', padding: '20px' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#fff' }}>Is TuneStream free to use?</h4>
-              <p style={{ margin: 0, fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.5' }}>Yes  -  listening and explore features are free. Tipping uses shared Intermaven network credits.</p>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', padding: '20px' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#fff' }}>How are creators paid when I tip?</h4>
-              <p style={{ margin: 0, fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.5' }}>Tips enter the Compensation Engine split cascade (Commission → Label → Artist → Manager → Investor) governed by signed contracts.</p>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', padding: '20px' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#fff' }}>Can I switch between web and native?</h4>
-              <p style={{ margin: 0, fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.5' }}>Yes. The native app shell utilizes Capacitor, meaning the same session and library sync instantly with this web interface.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
-          <div>© {new Date().getFullYear()} TuneStream.co / TuneMavens Ltd. All rights reserved.</div>
-          <div style={{ marginTop: '8px' }}>Operating on the shared Intermaven network ledger.</div>
-        </footer>
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard-container">
       {/* Sidebar Navigation */}
       <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="dashboard-sidebar-scroll">
           <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
-            <a href="#" onClick={(e) => { e.preventDefault(); setShowLanding(true); }} title="Back to landing page" style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', textDecoration: 'none' }}>
+            <Link to="/" title="Back to landing page" style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', textDecoration: 'none' }}>
               {collapsed ? (
                 <img src="/favicon.png" alt="TuneStream Icon" style={{ height: '32px', width: 'auto', display: 'block' }} />
               ) : (
@@ -251,7 +151,7 @@ export default function App() {
                   <span style={{ fontWeight: '800', letterSpacing: '1px', fontSize: '18px', color: '#00f2fe' }}>TUNE<span style={{ color: '#fff' }}>STREAM</span></span>
                 </div>
               )}
-            </a>
+            </Link>
           </div>
 
           <button 
