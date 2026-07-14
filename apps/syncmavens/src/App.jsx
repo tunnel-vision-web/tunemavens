@@ -13,7 +13,7 @@ import {
   SiSpotify, SiApplemusic, SiYoutube, SiTiktok, SiTidal, SiDeezer 
 } from 'react-icons/si';
 import { FaAmazon } from 'react-icons/fa';
-import smLogo from './assets/syncmavens-logo.png';
+import smLogo from './assets/syncmavens-logo.svg';
 import './App.css';
 
 // Import local hero backgrounds copied and generated for syncmavens
