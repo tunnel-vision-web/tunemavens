@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill } from 'react-icons/ri'
+import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill } from 'react-icons/ri'
 import tsLogo from './assets/tunestream-logo.png'
 import './Landing.css'
 
@@ -404,6 +404,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const view = searchParams.get('view') || 'listen';
+  let pageContent;
 
   const [selectedEpk, setSelectedEpk] = useState(null);
 
@@ -1913,7 +1914,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       }
     };
 
-    return (
+    pageContent = (
       <div 
         className="native-app-landing tunestream-landing" 
         style={{ background: getLandingBackground('tunestream'), color: '#f1f5f9', minHeight: '100vh', padding: '0 0 162px' }}
@@ -1924,14 +1925,13 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         </div>
       </div>
     );
-  }
-
-  return (
-    <div
-      className="native-app-landing"
-      style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow, background: getLandingBackground(normalizedSlug) }}
-      data-testid={`native-app-landing-${data.slug}`}
-    >
+  } else {
+    pageContent = (
+      <div
+        className="native-app-landing"
+        style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow, background: getLandingBackground(normalizedSlug) }}
+        data-testid={`native-app-landing-${data.slug}`}
+      >
       <div className="hw">
         <div className="bgs">
           {slides.map((s, idx) => (
@@ -2144,5 +2144,184 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         </div>
       </section>
     </div>
+  );
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', background: '#060813' }}>
+      <LandingNavbar view={view} setView={(v) => navigate(`?view=${v}`)} />
+      <div style={{ flex: 1 }}>
+        {pageContent}
+      </div>
+      <LandingFooter view={view} />
+    </div>
+  );
+}
+
+// ================= LANDING NAVBAR & FOOTER COMPONENTS =================
+
+function LandingNavbar({ view, setView }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} style={{ position: 'sticky', top: 0, zIndex: 1100, background: 'rgba(6, 8, 19, 0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+      <div className="nav-inner-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto', padding: '12px 24px' }}>
+        
+        {/* Brand Logo & Utility Tagline */}
+        <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <Link to="/" onClick={() => setView('listen')} className="nav-logo-link" style={{ display: 'block' }}>
+            <img 
+              src={tsLogo} 
+              alt="TuneStream Logo" 
+              className="logo-image-role logo-image"
+              style={{ height: '24px', display: 'block' }}
+            />
+          </Link>
+          <a
+            href="https://tunemavens.com"
+            style={{ fontSize: '11px', color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textTransform: 'lowercase', marginTop: '2px' }}
+          >
+            {"<< a tunemavens utility"}
+          </a>
+        </div>
+
+        {/* Hamburger Menu Toggler (Mobile) */}
+        <button 
+          onClick={() => setMobileOpen(!mobileOpen)} 
+          className="mobile-nav-toggle"
+          style={{ display: 'none', background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+        >
+          {mobileOpen ? <RiCloseFill size={24} /> : <RiMenuFill size={24} />}
+        </button>
+
+        {/* Nav Links */}
+        <ul className={`nav-links ${mobileOpen ? 'open' : ''}`} style={{ display: 'flex', gap: '24px', listStyle: 'none', margin: 0, padding: 0, alignItems: 'center' }}>
+          <li>
+            <Link to="?view=listen" className={`nav-link ${view === 'listen' ? 'active' : ''}`} style={{ color: view === 'listen' ? '#10b981' : '#cbd5e1', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+              Listen
+            </Link>
+          </li>
+          <li>
+            <Link to="?view=explore" className={`nav-link ${view === 'explore' ? 'active' : ''}`} style={{ color: view === 'explore' ? '#10b981' : '#cbd5e1', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+              Explore
+            </Link>
+          </li>
+          <li className="dropdown-container" style={{ position: 'relative' }}>
+            <button
+              className="nav-link dropdown-trigger"
+              onClick={() => setLibraryDropdownOpen(!libraryDropdownOpen)}
+              style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
+            >
+              My Library
+              <RiArrowDownSFill size={14} />
+            </button>
+            <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`} style={{ display: libraryDropdownOpen ? 'block' : 'none', position: 'absolute', top: '100%', left: 0, background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '8px 0', listStyle: 'none', minWidth: '160px', marginTop: '8px', zIndex: 1200 }}>
+              <li>
+                <Link to="?view=playlists" className="dropdown-link" onClick={() => setLibraryDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px' }}>
+                  Playlists
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=create-playlist" className="dropdown-link" onClick={() => setLibraryDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px' }}>
+                  Create Playlist
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=browse-podcasts" className="dropdown-link" onClick={() => setLibraryDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px' }}>
+                  Browse Podcasts
+                </Link>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <Link to="?view=apps" className={`nav-link ${view === 'apps' ? 'active' : ''}`} style={{ color: view === 'apps' ? '#10b981' : '#cbd5e1', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+              Apps
+            </Link>
+          </li>
+          <li>
+            <Link to="?view=help" className={`nav-link ${view === 'help' ? 'active' : ''}`} style={{ color: view === 'help' ? '#10b981' : '#cbd5e1', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+              Support & Community
+            </Link>
+          </li>
+        </ul>
+
+        {/* Right Actions */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <a href="https://tunemavens.com/#/dashboard" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', fontWeight: '600' }}>
+            Web Console
+          </a>
+          <a href="https://tunemavens.com/#/register" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#000', background: '#10b981', borderRadius: '3px', fontWeight: '700' }}>
+            Sign Up
+          </a>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function LandingFooter({ view }) {
+  return (
+    <footer className="landing-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '60px 40px 40px', background: '#060813', color: '#94a3b8' }}>
+      <div className="footer-inner-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px', marginBottom: '40px' }}>
+          
+          {/* Brand Column */}
+          <div className="footer-brand" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <img src={tsLogo} alt="TuneStream Logo" style={{ height: '28px', alignSelf: 'flex-start' }} />
+            <p style={{ fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
+              Next-generation music streaming built on the shared Intermaven network.
+            </p>
+            <div style={{ fontSize: '12px', color: '#10b981' }}>streams.tunemavens.com</div>
+          </div>
+
+          {/* Column 1 */}
+          <div className="footer-col" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h4 style={{ color: '#fff', fontSize: '14px', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>TuneStream</h4>
+            <div className="footer-links" style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+              <Link to="?view=listen" style={{ color: 'inherit', textDecoration: 'none' }}>Listen Now</Link>
+              <Link to="?view=premium" style={{ color: 'inherit', textDecoration: 'none' }}>Premium Plan</Link>
+              <Link to="?view=explore" style={{ color: 'inherit', textDecoration: 'none' }}>Discover Artists</Link>
+            </div>
+          </div>
+
+          {/* Column 2 */}
+          <div className="footer-col" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h4 style={{ color: '#fff', fontSize: '14px', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>Ecosystem</h4>
+            <div className="footer-links" style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+              <a href="https://tunemavens.com" style={{ color: 'inherit', textDecoration: 'none' }}>TuneMavens Portal</a>
+              <a href="https://syncmavens.com" style={{ color: 'inherit', textDecoration: 'none' }}>SyncMavens App</a>
+              <a href="https://tunemavens.com/#/pricing" style={{ color: 'inherit', textDecoration: 'none' }}>Ecosystem Pricing</a>
+            </div>
+          </div>
+
+          {/* Column 3 */}
+          <div className="footer-col" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h4 style={{ color: '#fff', fontSize: '14px', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>Legal</h4>
+            <div className="footer-links" style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+              <a href="https://tunemavens.com/#/help" style={{ color: 'inherit', textDecoration: 'none' }}>Support Center</a>
+              <span style={{ color: 'inherit' }}>Terms of Service</span>
+              <span style={{ color: 'inherit' }}>Privacy Policy</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Copyright strip */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', fontSize: '12px', color: '#64748b' }}>
+          <span>© {new Date().getFullYear()} TuneStream.co / TuneMavens Ltd. All rights reserved.</span>
+          <span>Operating on the shared Intermaven network ledger.</span>
+        </div>
+      </div>
+    </footer>
   );
 }
