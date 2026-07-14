@@ -2718,7 +2718,6 @@ function PublishingView({ standalone }) {
       
       <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
-          <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>GLOBAL ROYALTIES</span>
           <h2>Collect Every Royalty Cent Worldwide</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
             When your music is streamed, broadcast, or performed, you generate royalties. SyncMavens Publishing handles the complex administration so you can focus on creating.
@@ -2813,7 +2812,6 @@ function YoutubeIdView({ standalone }) {
       
       <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
-          <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>UGC MONETIZATION</span>
           <h2>Claim Your Audio Across the Web</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
             Millions of videos are uploaded daily containing copyrighted audio. Our fingerprint scanner monitors user-generated content (UGC) and monetizes views on your behalf automatically.
@@ -3641,7 +3639,6 @@ function DistributionView({ standalone }) {
       
       <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
-          <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>RELEASE INGESTION</span>
           <h2>Distribute Your Music Worldwide</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
             Our smart ingestion pipeline prepares your music for release across all major DSPs. Upload your lossless files, configure split sheets, and schedule release dates with ease.
@@ -3841,7 +3838,6 @@ function PlaylistSubmissionsView({ standalone }) {
       
       <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
-          <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>PITCHING PLATFORM</span>
           <h2>Direct Pitching to Active Curators</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
             Submit your music directly to validated Spotify playlist curators, independent music directors, and retail store radio stations. Zero middlemen, direct responses.
@@ -3887,7 +3883,6 @@ function PressReleaseView({ standalone }) {
       
       <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
-          <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>MEDIA OUTREACH</span>
           <h2>Automated PR Distribution</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
             Draft clean, media-rich electronic press kits (EPKs) and send announcements to music journalists, bloggers, and radio coordinators matching your genre tags.
@@ -4193,7 +4188,6 @@ function CreatorDashboardPageView({ standalone }) {
       
       <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
-          <span className="badge-promo" style={{ display: 'inline-block', marginBottom: '12px' }}>DASHBOARD OVERVIEW</span>
           <h2>Your Operations Center</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
             Monitor your catalog performance, check sync match compatibility, oversee royalty payouts, and track split sheets waterfalls in real-time.
