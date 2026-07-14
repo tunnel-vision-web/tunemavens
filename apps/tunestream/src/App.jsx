@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import LoginView from './views/auth/LoginView';
 import RegisterView from './views/auth/RegisterView';
+import { RegionProvider } from './RegionContext';
 import { 
   RiPlayFill, RiPauseFill, RiSkipForwardFill, RiSkipBackFill, 
   RiVolumeUpFill, RiHeadphoneLine, RiCompass3Line, RiHeart3Fill, 
@@ -27,9 +28,11 @@ import NativeAppLandingView from './NativeAppLandingView';
 
 export default function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <RegionProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </RegionProvider>
   );
 }
 

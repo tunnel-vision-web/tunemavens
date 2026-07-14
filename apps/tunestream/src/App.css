@@ -19,7 +19,6 @@ body {
   background-color: var(--bg-deep);
   color: var(--text-primary);
   font-family: var(--font-main);
-  overflow: hidden;
 }
 
 /* Domain Alert Banner */

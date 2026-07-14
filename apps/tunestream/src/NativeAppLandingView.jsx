@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill } from 'react-icons/ri'
 import tsLogo from './assets/tunestream-logo.png'
+import RegionSwitcher from './RegionSwitcher'
+import { useRegion } from './RegionContext'
 import './Landing.css'
 
 const ROLE_LOGOS = {
@@ -2162,119 +2164,141 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const libraryDropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (libraryDropdownRef.current && !libraryDropdownRef.current.contains(e.target)) {
+        setLibraryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
   return (
-    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} style={{ zIndex: 1100 }}>
-      <div className="nav-inner-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto', padding: '12px 24px' }}>
-        
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+      <div className="nav-inner-container">
         {/* Brand Logo & Utility Tagline */}
-        <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <Link to="/" onClick={() => setView('listen')} className="nav-logo-link" style={{ display: 'block' }}>
-            <img 
-              src={tsLogo} 
-              alt="TuneStream Logo" 
+        <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', padding: '6px 0' }}>
+          <Link to="/" onClick={() => { setView('listen'); setMobileOpen(false); }} className="nav-logo-link">
+            <img
+              src={tsLogo}
+              alt="TuneStream Logo"
               className="logo-image-role logo-image"
-              style={{ height: '24px', display: 'block' }}
             />
           </Link>
           <a
             href="https://tunemavens.com"
-            style={{ fontSize: '11px', color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textTransform: 'lowercase', marginTop: '2px' }}
+            style={{ fontSize: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textAlign: 'center', marginTop: '-12px' }}
           >
             {"<< a tunemavens utility"}
           </a>
         </div>
 
-        {/* Hamburger Menu Toggler (Mobile) */}
-        <button 
-          onClick={() => setMobileOpen(!mobileOpen)} 
-          className="mobile-nav-toggle"
-          style={{ display: 'none', background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
-        >
+        {/* Mobile Menu Button */}
+        <button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <RiCloseFill size={24} /> : <RiMenuFill size={24} />}
         </button>
 
         {/* Nav Links */}
-        <ul className={`nav-links ${mobileOpen ? 'open' : ''}`} style={{ display: 'flex', gap: '24px', listStyle: 'none', margin: 0, padding: 0, alignItems: 'center' }}>
+        <ul className={`nav-links ${mobileOpen ? 'mobile-open' : ''}`}>
           <li>
-            <Link to="?view=listen" className={`nav-link ${view === 'listen' ? 'active' : ''}`} style={{ color: view === 'listen' ? '#10b981' : '#cbd5e1', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+            <Link to="?view=listen" className={`nav-link ${view === 'listen' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
               Listen
             </Link>
           </li>
           <li>
-            <Link to="?view=explore" className={`nav-link ${view === 'explore' ? 'active' : ''}`} style={{ color: view === 'explore' ? '#10b981' : '#cbd5e1', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+            <Link to="?view=explore" className={`nav-link ${view === 'explore' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
               Explore
             </Link>
           </li>
-          <li className="dropdown-container" style={{ position: 'relative' }}>
+          <li className="dropdown-container" ref={libraryDropdownRef}>
             <button
               className="nav-link dropdown-trigger"
               onClick={() => setLibraryDropdownOpen(!libraryDropdownOpen)}
-              style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
             >
               My Library
               <RiArrowDownSFill size={14} />
             </button>
-            <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`} style={{ display: libraryDropdownOpen ? 'block' : 'none', position: 'absolute', top: '100%', left: 0, background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '8px 0', listStyle: 'none', minWidth: '160px', marginTop: '8px', zIndex: 1200 }}>
+            <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`}>
               <li>
-                <Link to="?view=playlists" className="dropdown-link" onClick={() => setLibraryDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px' }}>
+                <Link to="?view=playlists" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
                   Playlists
                 </Link>
               </li>
               <li>
-                <Link to="?view=create-playlist" className="dropdown-link" onClick={() => setLibraryDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px' }}>
+                <Link to="?view=create-playlist" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
                   Create Playlist
                 </Link>
               </li>
               <li>
-                <Link to="?view=browse-podcasts" className="dropdown-link" onClick={() => setLibraryDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px' }}>
+                <Link to="?view=browse-podcasts" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
                   Browse Podcasts
                 </Link>
               </li>
             </ul>
           </li>
           <li>
-            <Link to="?view=apps" className={`nav-link ${view === 'apps' ? 'active' : ''}`} style={{ color: view === 'apps' ? '#10b981' : '#cbd5e1', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+            <Link to="?view=apps" className={`nav-link ${view === 'apps' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
               Apps
             </Link>
           </li>
           <li>
-            <Link to="?view=help" className={`nav-link ${view === 'help' ? 'active' : ''}`} style={{ color: view === 'help' ? '#10b981' : '#cbd5e1', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
-              Support & Community
+            <Link to="?view=help" className={`nav-link ${view === 'help' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+              Support &amp; Community
             </Link>
           </li>
+
+          {/* Mobile: Region Switcher + CTAs */}
+          {mobileOpen && (
+            <li style={{ padding: '8px 0', width: '100%' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <RegionSwitcher />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+                {sessionUser ? (
+                  <Link to="/stream" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
+                ) : (
+                  <>
+                    <Link to="/login" className="btn-secondary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Log In</Link>
+                    <Link to="/register" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Start Free</Link>
+                  </>
+                )}
+              </div>
+            </li>
+          )}
         </ul>
 
-        {/* Right Actions */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {sessionUser ? (
-            <>
-              <Link to="/stream" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#000', background: '#10b981', borderRadius: '3px', fontWeight: '700' }}>
-                Dashboard
-              </Link>
-              <button onClick={onLogout} className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', background: 'none', fontWeight: '600', cursor: 'pointer' }}>
-                Log Out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', fontWeight: '600' }}>
-                Log In
-              </Link>
-              <Link to="/register" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#000', background: '#10b981', borderRadius: '3px', fontWeight: '700' }}>
-                Start Free
-              </Link>
-            </>
-          )}
+        {/* Desktop: Region Switcher + CTAs */}
+        <div className="nav-desktop-actions-box">
+          <div className="desktop-switcher">
+            <RegionSwitcher />
+          </div>
+          <div className="nav-ctas">
+            {sessionUser ? (
+              <>
+                <Link to="/stream" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  Dashboard
+                </Link>
+                <button onClick={onLogout} className="btn-secondary" style={{ cursor: 'pointer' }}>
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="btn-secondary">Log In</Link>
+                <Link to="/register" className="btn-primary">Start Free</Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>
