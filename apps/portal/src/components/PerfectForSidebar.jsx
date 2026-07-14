@@ -7,7 +7,7 @@ import "./PerfectForSidebar.css";
 import createLogo from '../assets/logos/tunecreators-logo.png';
 import listenLogo from '../assets/logos/tunestream-logo.png';
 import distributeLogo from '../assets/logos/tuneexecs-logo.png';
-import syncLogo from '../assets/logos/syncmavens-logo.svg';
+import syncLogo from '../assets/logos/syncmavens-logo.png';
 import bookingLogo from '../assets/logos/tunebooking-logo.png';
 import managementLogo from '../assets/logos/tunemanagement-logo.png';
 import companionLogo from '../assets/logos/tunecompanion-logo.png';
