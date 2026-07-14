@@ -21,6 +21,8 @@ import syncPlacementHero from './assets/images/sync_placement_hero.png';
 import creatorCatalogHero from './assets/images/creator_catalog_hero.png';
 import splitsCascadeHero from './assets/images/splits_cascade_hero.png';
 import headerApps from './assets/images/header_apps.png';
+import headerPricing from './assets/images/header_pricing.png';
+import headerPricingWestern from './assets/images/header_pricing_western.png';
 
 const EXTENSIVE_GENRES = [
   "Synthwave", "Neo-Classical", "Orchestral Cinematic", "Indie Rock", 
@@ -1778,6 +1780,10 @@ function AppContent() {
                   <strong>Waterfall Calculator</strong>
                   <span>Simulate agency payouts and split cascades.</span>
                 </Link>
+                <Link to="/pricing" className="dropdown-item">
+                  <strong>Ecosystem Pricing</strong>
+                  <span>View non-expiring credit packages and payment protocols.</span>
+                </Link>
                 <Link to="/success" className="dropdown-item">
                   <strong>Success Stories</strong>
                   <span>See independent creators who secured sync deals.</span>
@@ -2091,6 +2097,7 @@ function AppContent() {
         <Route path="/native-apps" element={<NativeAppsView standalone={true} />} />
         <Route path="/creator-dashboard" element={<CreatorDashboardPageView standalone={true} />} />
         <Route path="/blog" element={<BlogView standalone={true} />} />
+        <Route path="/pricing" element={<PricingView standalone={true} />} />
         <Route path="/login" element={<LoginView onLogin={(user) => {
           localStorage.setItem('syncmavens_logged_in', 'true');
           localStorage.setItem('syncmavens_user_role', user.role);
@@ -2174,6 +2181,7 @@ function AppContent() {
                   <a href="http://localhost:3000/" className="footer-link">TuneMavens Portal</a>
                   <a href="http://localhost:3001/" className="footer-link">TuneStream Player</a>
                   <Link to="/distribution" className="footer-link">Digital Release Ingestion</Link>
+                  <Link to="/pricing" className="footer-link">Ecosystem Pricing</Link>
                   <Link to="/calculator" className="footer-link">Escrow split ledgers</Link>
                 </div>
               </div>
@@ -4427,5 +4435,452 @@ function BlogView({ standalone }) {
   );
 }
 
+// ==========================================
+// Ecosystem Pricing & Credits Checkout View
+// ==========================================
+function PricingView({ standalone }) {
+  const [region, setRegion] = useState('western'); // 'western', 'east-africa', 'nigeria'
+  const [selectedPackage, setSelectedPackage] = useState(null); // null or package object
+  const [checkoutStep, setCheckoutStep] = useState('form'); // 'form', 'processing', 'stk_waiting', 'stk_pin', 'success'
+  const [billingEmail, setBillingEmail] = useState('');
+  const [billingName, setBillingName] = useState('');
+  
+  // Payment Method States
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [selectedBank, setSelectedBank] = useState('Guaranty Trust Bank');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [statusMessage, setStatusMessage] = useState('');
 
+  const formatPriceLabel = (priceUsd) => {
+    if (region === 'east-africa') {
+      const kesRate = 130;
+      return `KES ${(priceUsd * kesRate).toLocaleString()}`;
+    }
+    if (region === 'nigeria') {
+      const ngnRate = 1500;
+      return `NGN ${(priceUsd * ngnRate).toLocaleString()}`;
+    }
+    return `$${priceUsd.toLocaleString()} USD`;
+  };
 
+  const getRegionLabel = () => {
+    if (region === 'east-africa') return 'East Africa (M-Pesa STK / Mobile Money)';
+    if (region === 'nigeria') return 'Nigeria (Flutterwave Bank Transfer)';
+    return 'Western / Global (Stripe Credit Card)';
+  };
+
+  const packages = [
+    { id: 'starter', name: 'Free Starter Pack', price: 0, credits: 150, desc: 'Complimentary testing allocation for standard sound match and EPK drafts.' },
+    { id: 'creator', name: 'Creator Bundle', price: 29, credits: 1200, desc: 'Best for active songwriters. Pay-as-you-go, shared across the entire ecosystem.' },
+    { id: 'label', name: 'Label Bulk Pool', price: 149, credits: 10000, desc: 'High-volume credits pool designed for publishing supervisors and multi-artist catalogs.' }
+  ];
+
+  const handleStartPurchase = (pkg) => {
+    if (pkg.price === 0) {
+      alert("Free Starter credits are added automatically upon registration.");
+      return;
+    }
+    setSelectedPackage(pkg);
+    setCheckoutStep('form');
+    setProgressPercent(0);
+    setStatusMessage('');
+  };
+
+  const runPaymentSimulation = (e) => {
+    e.preventDefault();
+    if (!billingEmail) {
+      alert("Please provide your billing email address.");
+      return;
+    }
+
+    setCheckoutStep('processing');
+    setProgressPercent(10);
+    setStatusMessage('Contacting billing gateway endpoints...');
+
+    if (region === 'east-africa') {
+      // M-Pesa STK Push flow
+      setTimeout(() => {
+        setProgressPercent(35);
+        setStatusMessage('Initiating M-Pesa STK query push to phone ' + phoneNumber + '...');
+        setCheckoutStep('stk_waiting');
+      }, 1500);
+    } else if (region === 'nigeria') {
+      // Flutterwave Flow
+      setTimeout(() => {
+        setProgressPercent(45);
+        setStatusMessage('Generating transfer reference... Waiting for bank OTP...');
+        setCheckoutStep('stk_pin'); // reuse for OTP entry
+      }, 1500);
+    } else {
+      // Stripe flow
+      setTimeout(() => {
+        setProgressPercent(50);
+        setStatusMessage('Verifying credit card authentication headers...');
+      }, 1200);
+      setTimeout(() => {
+        setProgressPercent(80);
+        setStatusMessage('Clearing escrow ledger allocations...');
+      }, 2400);
+      setTimeout(() => {
+        setProgressPercent(100);
+        setCheckoutStep('success');
+      }, 3500);
+    }
+  };
+
+  const handleSimulateSTKApproval = () => {
+    setCheckoutStep('processing');
+    setProgressPercent(60);
+    setStatusMessage('PIN entered. Waiting for Safaricom gateway callback confirmation...');
+    setTimeout(() => {
+      setProgressPercent(90);
+      setStatusMessage('Payment cleared! Depositing credits into account profile...');
+    }, 1800);
+    setTimeout(() => {
+      setProgressPercent(100);
+      setCheckoutStep('success');
+    }, 3200);
+  };
+
+  const handleSimulateOtpSubmit = () => {
+    setCheckoutStep('processing');
+    setProgressPercent(75);
+    setStatusMessage('OTP submitted. Verifying Flutterwave payment callback...');
+    setTimeout(() => {
+      setProgressPercent(95);
+      setStatusMessage('Bank clearance approved. Processing credits deposit...');
+    }, 1500);
+    setTimeout(() => {
+      setProgressPercent(100);
+      setCheckoutStep('success');
+    }, 2800);
+  };
+
+  return (
+    <div className={standalone ? "standalone-page-wrapper" : ""}>
+      {standalone && (
+        <div className="page-header-banner" style={{ backgroundImage: `url(${headerPricing})` }}>
+          <div className="page-header-overlay" />
+          <div className="page-header-content">
+            <h1 className="page-header-title">Ecosystem Credits & Pricing</h1>
+            <div className="page-header-breadcrumb">
+              <Link to="/" className="breadcrumb-link">Home</Link>
+              <span className="breadcrumb-separator">/</span>
+              <span className="breadcrumb-active">Ecosystem Pricing</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="container" style={{ paddingBottom: '80px', marginTop: '60px', maxWidth: '1100px', margin: '60px auto 80px', padding: '0 20px' }}>
+        
+        {/* Core Pricing Explanation */}
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <h2>Pay-As-You-Go Unified Credits</h2>
+          <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', maxWidth: '700px', margin: '12px auto 0' }}>
+            No subscriptions. Load non-expiring credits as you need them. Unified credits are shared instantly across all our platform applications including SyncMavens, TuneStream, and the general catalog portal.
+          </p>
+        </div>
+
+        {/* Region / Currency Switcher */}
+        <div style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '4px', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap: '20px', flexWrap: 'wrap' }}>
+          <div>
+            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Selected Billing Region</span>
+            <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>{getRegionLabel()}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => setRegion('western')} className={`btn-secondary`} style={{ padding: '8px 12px', fontSize: '12px', background: region === 'western' ? 'rgba(255,255,255,0.06)' : '', borderColor: region === 'western' ? '#00f2fe' : '' }}>Global (Stripe)</button>
+            <button onClick={() => setRegion('east-africa')} className={`btn-secondary`} style={{ padding: '8px 12px', fontSize: '12px', background: region === 'east-africa' ? 'rgba(255,255,255,0.06)' : '', borderColor: region === 'east-africa' ? '#00f2fe' : '' }}>East Africa (M-Pesa)</button>
+            <button onClick={() => setRegion('nigeria')} className={`btn-secondary`} style={{ padding: '8px 12px', fontSize: '12px', background: region === 'nigeria' ? 'rgba(255,255,255,0.06)' : '', borderColor: region === 'nigeria' ? '#00f2fe' : '' }}>Nigeria (Flutterwave)</button>
+          </div>
+        </div>
+
+        {/* Packages Grid */}
+        <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginBottom: '64px' }}>
+          {packages.map((pkg) => (
+            <div 
+              key={pkg.id} 
+              className="pricing-card glass-panel" 
+              style={{ 
+                background: 'var(--bg-panel)', 
+                border: pkg.id === 'creator' ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.06)', 
+                borderRadius: '6px', 
+                padding: '40px 32px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'space-between',
+                position: 'relative'
+              }}
+            >
+              {pkg.id === 'creator' && (
+                <span style={{ position: 'absolute', top: '16px', right: '16px', background: '#8b5cf6', color: '#fff', fontSize: '9px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '10px', textTransform: 'uppercase' }}>Recommended</span>
+              )}
+              <div>
+                <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 16px 0' }}>{pkg.name}</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '32px', fontWeight: '900', color: '#fff' }}>{formatPriceLabel(pkg.price)}</span>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>/ one-time</span>
+                </div>
+                <div style={{ background: 'rgba(0, 242, 254, 0.05)', padding: '12px', borderRadius: '4px', textAlign: 'center', marginBottom: '24px', border: '1px solid rgba(0, 242, 254, 0.1)' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#00f2fe' }}>{pkg.credits.toLocaleString()} Credits</span>
+                </div>
+                <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '24px' }}>{pkg.desc}</p>
+              </div>
+
+              <button 
+                onClick={() => handleStartPurchase(pkg)} 
+                className={pkg.id === 'creator' ? "btn-primary" : "btn-secondary"} 
+                style={{ width: '100%', padding: '12px', fontWeight: 'bold' }}
+              >
+                {pkg.price === 0 ? 'Register Now' : 'Load Credits'}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Credit Consumption Protocols */}
+        <div style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '6px', padding: '40px' }}>
+          <h3 style={{ color: '#fff', fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}><RiBriefcaseLine style={{ color: '#8b5cf6' }} /> Credits Consumption Protocol</h3>
+          <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '32px' }}>
+            SyncMavens runs on a decentralized network utility protocol. Actions on the platform consume resources from your credits wallet as follows:
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.04)', paddingBottom: '10px' }}>
+              <span style={{ fontSize: '13px', color: '#cbd5e1' }}>AI Sync Match Scanner (per track compatibility check)</span>
+              <strong style={{ color: '#00f2fe', fontSize: '13px' }}>2 Credits</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.04)', paddingBottom: '10px' }}>
+              <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Digital Release Ingestion (per album/EP worldwide delivery)</span>
+              <strong style={{ color: '#00f2fe', fontSize: '13px' }}>15 Credits</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.04)', paddingBottom: '10px' }}>
+              <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Electronic Press Kit Generator (custom EPK hosting links)</span>
+              <strong style={{ color: '#00f2fe', fontSize: '13px' }}>8 Credits</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.04)', paddingBottom: '10px' }}>
+              <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Sync-Ready Catalog Registry (per active supervisor list)</span>
+              <strong style={{ color: '#00f2fe', fontSize: '13px' }}>5 Credits</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Checkout Simulator Modal */}
+      {selectedPackage && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(5, 4, 9, 0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '6px', maxWidth: '480px', width: '100%', padding: '32px', position: 'relative' }}>
+            <button 
+              onClick={() => setSelectedPackage(null)} 
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '20px' }}
+            >
+              ×
+            </button>
+
+            {checkoutStep === 'form' && (
+              <form onSubmit={runPaymentSimulation}>
+                <h3 style={{ color: '#fff', fontSize: '20px', marginBottom: '8px' }}>Ecosystem Checkout</h3>
+                <p style={{ fontSize: '12.5px', color: '#94a3b8', marginBottom: '24px' }}>
+                  Loading <strong>{selectedPackage.credits.toLocaleString()} Credits</strong> for <strong>{formatPriceLabel(selectedPackage.price)}</strong>.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Billing Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Aisha Okoro" 
+                      required 
+                      value={billingName} 
+                      onChange={(e) => setBillingName(e.target.value)} 
+                      style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Billing Email</label>
+                    <input 
+                      type="email" 
+                      placeholder="e.g. writer@tunemavens.com" 
+                      required 
+                      value={billingEmail} 
+                      onChange={(e) => setBillingEmail(e.target.value)} 
+                      style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
+                    />
+                  </div>
+
+                  {region === 'western' && (
+                    <>
+                      <div>
+                        <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Card Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="4242 4242 4242 4242" 
+                          required 
+                          value={cardNumber}
+                          onChange={(e) => setCardNumber(e.target.value)}
+                          style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Expiry (MM/YY)</label>
+                          <input 
+                            type="text" 
+                            placeholder="12/28" 
+                            required 
+                            value={cardExpiry}
+                            onChange={(e) => setCardExpiry(e.target.value)}
+                            style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>CVC</label>
+                          <input 
+                            type="password" 
+                            placeholder="•••" 
+                            maxLength={3} 
+                            required 
+                            value={cardCvc}
+                            onChange={(e) => setCardCvc(e.target.value)}
+                            style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {region === 'east-africa' && (
+                    <div>
+                      <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>M-Pesa Mobile Number</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. 0712345678" 
+                        required 
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
+                      />
+                      <span style={{ fontSize: '11px', color: '#64748b', marginTop: '6px', display: 'block' }}>We will trigger an instant STK push notification to this number.</span>
+                    </div>
+                  )}
+
+                  {region === 'nigeria' && (
+                    <>
+                      <div>
+                        <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Select Bank</label>
+                        <select 
+                          value={selectedBank} 
+                          onChange={(e) => setSelectedBank(e.target.value)}
+                          style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }}
+                        >
+                          <option>Guaranty Trust Bank</option>
+                          <option>Zenith Bank</option>
+                          <option>Access Bank</option>
+                          <option>United Bank for Africa</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>NUBAN Account Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. 0123456789" 
+                          maxLength={10} 
+                          required 
+                          value={accountNumber}
+                          onChange={(e) => setAccountNumber(e.target.value)}
+                          style={{ width: '100%', padding: '10px', background: '#050409', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '13px' }} 
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <button type="submit" className="btn-primary" style={{ width: '100%', padding: '12px', fontWeight: 'bold' }}>
+                  Authorize &amp; Pay {formatPriceLabel(selectedPackage.price)}
+                </button>
+              </form>
+            )}
+
+            {checkoutStep === 'processing' && (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <RiLoader4Line size={48} className="spin" style={{ color: '#00f2fe', marginBottom: '16px' }} />
+                <h4 style={{ color: '#fff', margin: '0 0 8px' }}>Processing Payment</h4>
+                <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '24px' }}>{statusMessage}</p>
+                <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ width: `${progressPercent}%`, height: '100%', background: '#00f2fe', transition: 'width 0.3s ease' }} />
+                </div>
+              </div>
+            )}
+
+            {checkoutStep === 'stk_waiting' && (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <RiTimerLine size={48} style={{ color: '#f4d35e', marginBottom: '16px' }} />
+                <h4 style={{ color: '#fff', margin: '0 0 8px' }}>STK Prompt Sent</h4>
+                <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', marginBottom: '24px' }}>
+                  We have triggered an M-Pesa STK push message to <strong>{phoneNumber}</strong>. Check your phone, enter your Safaricom PIN to authorize, then click below to complete the transaction:
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button onClick={handleSimulateSTKApproval} className="btn-primary" style={{ width: '100%', padding: '10px' }}>I Entered my M-Pesa PIN</button>
+                  <button onClick={() => setCheckoutStep('form')} className="btn-secondary" style={{ width: '100%', padding: '10px' }}>Cancel / Try Again</button>
+                </div>
+              </div>
+            )}
+
+            {checkoutStep === 'stk_pin' && (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <RiLockLine size={48} style={{ color: '#00f2fe', marginBottom: '16px' }} />
+                <h4 style={{ color: '#fff', margin: '0 0 8px' }}>Enter Bank Authentication OTP</h4>
+                <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '20px' }}>
+                  We have generated a mock authentication OTP code for your bank. Check your SMS inbox and type the code below:
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Enter 6-digit OTP code" 
+                    maxLength={6} 
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    style={{ width: '100%', padding: '12px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', textAlign: 'center', fontSize: '18px', letterSpacing: '4px' }} 
+                  />
+                  <button onClick={handleSimulateOtpSubmit} className="btn-primary" style={{ width: '100%', padding: '10px' }}>Verify &amp; Finalize Transfer</button>
+                  <button onClick={() => setCheckoutStep('form')} className="btn-secondary" style={{ width: '100%', padding: '10px' }}>Back</button>
+                </div>
+              </div>
+            )}
+
+            {checkoutStep === 'success' && (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#10b981', borderRadius: '50%', marginBottom: '20px' }}>
+                  <RiCheckLine size={32} />
+                </div>
+                <h4 style={{ color: '#fff', fontSize: '20px', margin: '0 0 8px' }}>Credits Loaded Successfully!</h4>
+                <p style={{ fontSize: '13.5px', color: '#cbd5e1', lineHeight: '1.5', marginBottom: '24px' }}>
+                  Payment of <strong>{formatPriceLabel(selectedPackage.price)}</strong> cleared! <strong>{selectedPackage.credits.toLocaleString()} Credits</strong> have been added to your profile.
+                </p>
+                <button 
+                  onClick={() => {
+                    setSelectedPackage(null);
+                    // Add mock credit balance update alert
+                    alert(`Wallet Refreshed! Current balance has been updated with +${selectedPackage.credits.toLocaleString()} credits.`);
+                  }} 
+                  className="btn-primary" 
+                  style={{ width: '100%', padding: '10px' }}
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
