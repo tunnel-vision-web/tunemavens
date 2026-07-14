@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
+import LoginView from './views/auth/LoginView';
+import RegisterView from './views/auth/RegisterView';
 import { 
   RiPlayFill, RiPauseFill, RiSkipForwardFill, RiSkipBackFill, 
   RiVolumeUpFill, RiHeadphoneLine, RiCompass3Line, RiHeart3Fill, 
@@ -26,12 +28,70 @@ import NativeAppLandingView from './NativeAppLandingView';
 export default function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<NativeAppLandingView />} />
-        <Route path="/stream" element={<PlayerDashboard />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AppContent />
     </Router>
+  );
+}
+
+function AppContent() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [sessionUser, setSessionUser] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('tunestream_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogin = (user) => {
+    setSessionUser(user);
+    sessionStorage.setItem('tunestream_session', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setSessionUser(null);
+    sessionStorage.removeItem('tunestream_session');
+  };
+
+  const isAuthModalActive = location.pathname === '/login' || location.pathname === '/register';
+  const backgroundLocation = isAuthModalActive ? { pathname: '/' } : location;
+
+  const handleBackdropClose = (e) => {
+    if (e.target.className === 'auth-modal-overlay-wrapper') {
+      navigate('/');
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', width: '100%', minHeight: '100vh' }}>
+      <div 
+        style={{ 
+          opacity: isAuthModalActive ? 0.8 : 1, 
+          transition: 'opacity 0.3s ease',
+          pointerEvents: isAuthModalActive ? 'none' : 'auto'
+        }}
+      >
+        <Routes location={backgroundLocation}>
+          <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/login" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/register" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/dashboard" element={<Navigate to="/stream" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+
+      {isAuthModalActive && (
+        <div className="auth-modal-overlay-wrapper" onClick={handleBackdropClose} style={{ position: 'fixed', inset: 0, background: 'rgba(3, 7, 18, 0.78)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <Routes>
+            <Route path="/login" element={<LoginView onLogin={handleLogin} />} />
+            <Route path="/register" element={<RegisterView onLogin={handleLogin} />} />
+          </Routes>
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -395,7 +395,7 @@ function HorizontalSlider({ items, renderItem }) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = [] }) {
+export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = [], sessionUser = null, onLogout = null }) {
   const { slug: paramSlug } = useParams();
   const slug = paramSlug || 'tunestream';
   const normalizedSlug = (slug === 'tunestream' || slug === 'tunemavens') ? 'tunestream' : slug;
@@ -2149,7 +2149,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', background: '#060813' }}>
-      <LandingNavbar view={view} setView={(v) => navigate(`?view=${v}`)} />
+      <LandingNavbar view={view} setView={(v) => navigate(`?view=${v}`)} sessionUser={sessionUser} onLogout={onLogout} />
       <div style={{ flex: 1 }}>
         {pageContent}
       </div>
@@ -2158,9 +2158,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   );
 }
 
-// ================= LANDING NAVBAR & FOOTER COMPONENTS =================
-
-function LandingNavbar({ view, setView }) {
+function LandingNavbar({ view, setView, sessionUser, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -2258,12 +2256,25 @@ function LandingNavbar({ view, setView }) {
 
         {/* Right Actions */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <a href="https://tunemavens.com/#/dashboard" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', fontWeight: '600' }}>
-            Web Console
-          </a>
-          <a href="https://tunemavens.com/#/register" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#000', background: '#10b981', borderRadius: '3px', fontWeight: '700' }}>
-            Sign Up
-          </a>
+          {sessionUser ? (
+            <>
+              <Link to="/stream" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#000', background: '#10b981', borderRadius: '3px', fontWeight: '700' }}>
+                Dashboard
+              </Link>
+              <button onClick={onLogout} className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', background: 'none', fontWeight: '600', cursor: 'pointer' }}>
+                Log Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', fontWeight: '600' }}>
+                Log In
+              </Link>
+              <Link to="/register" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', color: '#000', background: '#10b981', borderRadius: '3px', fontWeight: '700' }}>
+                Start Free
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -2272,54 +2283,95 @@ function LandingNavbar({ view, setView }) {
 
 function LandingFooter({ view }) {
   return (
-    <footer className="landing-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '60px 40px 40px', background: '#060813', color: '#94a3b8' }}>
-      <div className="footer-inner-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px', marginBottom: '40px' }}>
-          
+    <footer className="landing-footer">
+      <div className="footer-inner-container">
+        <div className="footer-grid">
           {/* Brand Column */}
-          <div className="footer-brand" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <img src={tsLogo} alt="TuneStream Logo" style={{ height: '28px', alignSelf: 'flex-start' }} />
-            <p style={{ fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
+          <div className="footer-brand">
+            <div className="footer-logo">
+              <img src={tsLogo} alt="TuneStream Footer Logo" className="footer-logo-image" style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} />
+            </div>
+            <div className="footer-desc">
               Next-generation music streaming built on the shared Intermaven network.
-            </p>
-            <div style={{ fontSize: '12px', color: '#10b981' }}>streams.tunemavens.com</div>
-          </div>
-
-          {/* Column 1 */}
-          <div className="footer-col" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h4 style={{ color: '#fff', fontSize: '14px', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>TuneStream</h4>
-            <div className="footer-links" style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <Link to="?view=listen" style={{ color: 'inherit', textDecoration: 'none' }}>Listen Now</Link>
-              <Link to="?view=premium" style={{ color: 'inherit', textDecoration: 'none' }}>Premium Plan</Link>
-              <Link to="?view=explore" style={{ color: 'inherit', textDecoration: 'none' }}>Discover Artists</Link>
+            </div>
+            <div className="footer-host-link" style={{ marginTop: '4px' }}>
+              streams.tunemavens.com
+            </div>
+            <div className="footer-host-link" style={{ marginTop: '0px' }}>
+              intermaven.io
             </div>
           </div>
 
-          {/* Column 2 */}
-          <div className="footer-col" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h4 style={{ color: '#fff', fontSize: '14px', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>Ecosystem</h4>
-            <div className="footer-links" style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <a href="https://tunemavens.com" style={{ color: 'inherit', textDecoration: 'none' }}>TuneMavens Portal</a>
-              <a href="https://syncmavens.com" style={{ color: 'inherit', textDecoration: 'none' }}>SyncMavens App</a>
-              <a href="https://tunemavens.com/#/pricing" style={{ color: 'inherit', textDecoration: 'none' }}>Ecosystem Pricing</a>
+          {/* Product links */}
+          <div className="footer-col">
+            <div style={{ display: 'inline-block', textAlign: 'left' }}>
+              <h4>TuneStream</h4>
+              <div className="footer-links">
+                <Link to="?view=listen" className="footer-link">Listen Now</Link>
+                <Link to="/stream" className="footer-link">Web Player</Link>
+                <a href="#features" className="footer-link" onClick={() => alert('Features details coming soon')}>Features</a>
+                <Link to="?view=premium" className="footer-link">Premium Plan</Link>
+                <a href="#about" className="footer-link" onClick={() => alert('About section coming soon')}>About</a>
+              </div>
             </div>
           </div>
 
-          {/* Column 3 */}
-          <div className="footer-col" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h4 style={{ color: '#fff', fontSize: '14px', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>Legal</h4>
-            <div className="footer-links" style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <a href="https://tunemavens.com/#/help" style={{ color: 'inherit', textDecoration: 'none' }}>Support Center</a>
-              <span style={{ color: 'inherit' }}>Terms of Service</span>
-              <span style={{ color: 'inherit' }}>Privacy Policy</span>
+          {/* Company links */}
+          <div className="footer-col">
+            <div style={{ display: 'inline-block', textAlign: 'left' }}>
+              <h4>Community</h4>
+              <div className="footer-links">
+                <a href="https://tunemavens.com" className="footer-link" target="_blank" rel="noreferrer">For Creators</a>
+                <Link to="?view=explore" className="footer-link">Discover Artists</Link>
+                <Link to="?view=playlists" className="footer-link">Playlists</Link>
+                <Link to="?view=help" className="footer-link">Support &amp; Help</Link>
+                <Link to="?view=help" className="footer-link">Contact</Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Follow Us links */}
+          <div className="footer-col">
+            <div style={{ display: 'inline-block', textAlign: 'left' }}>
+              <h4>Follow us</h4>
+              <div className="footer-social">
+                <a className="sico instagram" onClick={() => alert('Instagram handle coming soon!')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                </a>
+                <a className="sico x" onClick={() => alert('X handle coming soon!')}>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                </a>
+                <a className="sico linkedin" onClick={() => alert('LinkedIn handle coming soon!')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                </a>
+                <a className="sico tiktok" onClick={() => alert('TikTok handle coming soon!')}>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.2-.43-.43-.64-.67-.07 3.26-.03 6.52-.05 9.77-.04 1.83-.56 3.73-1.88 5.02-1.5 1.54-3.83 2.19-5.94 1.86-2.52-.39-4.71-2.45-5.14-4.96-.58-3.08 1.21-6.38 4.23-7.21.94-.27 1.95-.31 2.91-.18V12.18c-1.28-.21-2.65-.05-3.79.62-1.89 1.12-2.73 3.52-2.12 5.62.58 2.09 2.74 3.59 4.9 3.32 1.76-.2 3.27-1.53 3.65-3.26.17-.75.14-1.53.15-2.3V4.08C13.06 2.76 12.89 1.38 12.525.02z"></path></svg>
+                </a>
+              </div>
+              <div className="footer-copy">
+                © 2026 TuneStream. A TuneMavens Utility.<br />Atlanta, USA
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Copyright strip */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', fontSize: '12px', color: '#64748b' }}>
-          <span>© {new Date().getFullYear()} TuneStream.co / TuneMavens Ltd. All rights reserved.</span>
-          <span>Operating on the shared Intermaven network ledger.</span>
+        {/* Footer Bottom */}
+        <div className="footer-bottom">
+          <div className="footer-bottom-links">
+            <a href="#privacy" className="fbl" onClick={() => alert('Privacy policy is synchronized with Intermaven.')}>Privacy Policy</a>
+            <a href="#terms" className="fbl" onClick={() => alert('Terms of service are synchronized with Intermaven.')}>Terms of Service</a>
+            <a href="#cookies" className="fbl" onClick={() => alert('Cookie policy is synchronized.')}>Cookie Policy</a>
+            <a href="#refund" className="fbl" onClick={() => alert('Refund policy is synchronized.')}>Refund Policy</a>
+          </div>
+          <a 
+            href="https://intermaven.io" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="intermaven-badge"
+          >
+            powered by <span>intermaven</span>
+            <span className="badge-dot"></span>
+          </a>
         </div>
       </div>
     </footer>
