@@ -50,7 +50,7 @@
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 24px;
   list-style: none;
 }
 
