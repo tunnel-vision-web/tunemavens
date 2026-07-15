@@ -494,21 +494,21 @@ function DashboardView({
         visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'cms', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'promoted-acts', 'profile'];
         break;
       case 'label':
-        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
         break;
       case 'dj':
-        visibleKeys = ['home', 'app-marketplace', 'djpool', 'library', 'tips', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'djpool', 'library', 'tips', 'profile'];
         break;
       case 'studio':
       case 'supervisor':
-        visibleKeys = ['home', 'app-marketplace', 'sync', 'escrow', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'sync', 'escrow', 'profile'];
         break;
       case 'consumer':
         visibleKeys = ['home', 'library', 'tips', 'stream-controls', 'profile'];
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
         break;
     }
 
@@ -525,7 +525,9 @@ function DashboardView({
       'pos-inventory': 'tunepay-inventory',
       'pos-settlement': 'tunepay-settlement',
       'pos-devices': 'tunepay-devices',
-      'epk-builder': 'epk-builder'
+      'epk-builder': 'epk-builder',
+      'social-ai': 'intermaven-social-ai',
+      crm: 'intermaven-smart-crm'
     };
 
     const categories = {};
