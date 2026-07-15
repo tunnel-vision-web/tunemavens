@@ -159,24 +159,21 @@ export function RegionProvider({ children }) {
     }));
   }, []);
 
-  const formatPrice = useCallback((usdAmount) => {
+  const convertPrice = useCallback((usdAmount) => {
     const rate = EXCHANGE_RATES[currency] || 1;
     const rawValue = usdAmount * rate;
-    
-    let finalValue;
-    if (currency === 'USD' || currency === 'GBP') {
-      finalValue = Math.round(rawValue);
-    } else if (currency === 'ZAR') {
-      finalValue = Math.round(rawValue / 10) * 10;
-    } else {
-      finalValue = Math.round(rawValue / 100) * 100;
-    }
-    
+    if (currency === 'USD' || currency === 'GBP') return Math.round(rawValue * 100) / 100;
+    if (currency === 'ZAR') return Math.round(rawValue / 10) * 10;
+    return Math.round(rawValue / 100) * 100;
+  }, [currency]);
+
+  const formatPrice = useCallback((usdAmount) => {
+    const finalValue = convertPrice(usdAmount);
     const symbol = currencyInfo?.symbol || '$';
     // Free tier stays clean; everything paid gets the .99 charm-price suffix.
     const suffix = usdAmount > 0 ? '.99' : '';
     return `${symbol}${finalValue.toLocaleString()}${suffix}`;
-  }, [currency, currencyInfo]);
+  }, [convertPrice, currencyInfo]);
 
   return (
     <RegionContext.Provider value={{
@@ -194,7 +191,8 @@ export function RegionProvider({ children }) {
       changeCountry,
       changeCurrency,
       changeLanguage,
-      formatPrice
+      formatPrice,
+      convertPrice
     }}>
       {children}
     </RegionContext.Provider>

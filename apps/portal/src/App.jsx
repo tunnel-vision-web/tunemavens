@@ -4261,21 +4261,7 @@ function AppContent({
           </div>
         </footer>
 
-        {!isDashboard && !location.pathname.startsWith('/native-apps') && (
-          <GlobalAudioPlayer 
-            globalTrack={globalTrack}
-            setGlobalTrack={setGlobalTrack}
-            globalPlaying={globalPlaying}
-            setGlobalPlaying={setGlobalPlaying}
-            globalProgress={globalProgress}
-            setGlobalProgress={setGlobalProgress}
-            isUndocked={isUndocked}
-            setIsUndocked={setIsUndocked}
-            playerPos={playerPos}
-            setPlayerPos={setPlayerPos}
-            catalogTracks={catalogTracks}
-          />
-        )}
+        {/* Floating audio player removed — streaming handled by TuneStream app */}
       </div>
 
       {/* Render modals on top, outside the wrapper so they aren't affected by its opacity */}
