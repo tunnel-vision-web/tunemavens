@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { RiArrowDownSFill, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill } from 'react-icons/ri'
-import { ROLE_LOGOS } from '../PerfectForSidebar.jsx'
+import { RiArrowDownSFill, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill } from 'react-icons/ri'
+import { ROLE_LOGOS, getServiceUrl } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
 
@@ -26,10 +26,12 @@ export default function Navbar({ sessionUser }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [appsDropdownOpen, setAppsDropdownOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
   const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const appsDropdownRef = useRef(null);
   const aboutDropdownRef = useRef(null);
+  const servicesDropdownRef = useRef(null);
   const libraryDropdownRef = useRef(null);
   const [scrolled, setScrolled] = useState(false);
 
@@ -96,6 +98,9 @@ export default function Navbar({ sessionUser }) {
       }
       if (aboutDropdownRef.current && !aboutDropdownRef.current.contains(e.target)) {
         setAboutDropdownOpen(false);
+      }
+      if (servicesDropdownRef.current && !servicesDropdownRef.current.contains(e.target)) {
+        setServicesDropdownOpen(false);
       }
       if (libraryDropdownRef.current && !libraryDropdownRef.current.contains(e.target)) {
         setLibraryDropdownOpen(false);
@@ -217,7 +222,7 @@ export default function Navbar({ sessionUser }) {
         <li className="dropdown-container" ref={appsDropdownRef}>
           <button
             className={`nav-link dropdown-trigger ${isActive('/apps') || isActive('/native-apps') ? 'active' : ''}`}
-            onClick={() => setAppsDropdownOpen(!appsDropdownOpen)}
+            onClick={() => { setDropdownOpen(false); setAboutDropdownOpen(false); setServicesDropdownOpen(false); setAppsDropdownOpen(!appsDropdownOpen); }}
             data-testid="nav-apps-dropdown-trigger"
           >
             Apps
@@ -246,6 +251,54 @@ export default function Navbar({ sessionUser }) {
             </li>
           </ul>
         </li>
+        <li className="dropdown-container" ref={servicesDropdownRef}>
+          <button
+            className={`nav-link dropdown-trigger ${isActive('/publishing') || isActive('/tours') || isActive('/distribution') ? 'active' : ''}`}
+            onClick={() => { setDropdownOpen(false); setAboutDropdownOpen(false); setAppsDropdownOpen(false); setServicesDropdownOpen(!servicesDropdownOpen); }}
+            data-testid="nav-services-dropdown-trigger"
+          >
+            Services
+            <RiArrowDownSFill size={14} />
+          </button>
+          <ul className={`dropdown-menu ${servicesDropdownOpen ? 'open' : ''}`}>
+            <li>
+              <Link
+                to="/publishing"
+                className="dropdown-link"
+                onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}
+              >
+                <RiBookOpenFill size={16} /> Publishing
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/tours"
+                className="dropdown-link"
+                onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}
+              >
+                <RiCalendarEventFill size={16} /> Tours
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/distribution"
+                className="dropdown-link"
+                onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}
+              >
+                <RiVolumeUpFill size={16} /> Distribution
+              </Link>
+            </li>
+            <li>
+              <a
+                href={getServiceUrl('syncmavens')}
+                className="dropdown-link"
+                onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}
+              >
+                <RiVolumeUpFill size={16} /> Sync Placement
+              </a>
+            </li>
+          </ul>
+        </li>
         <li>
           <Link 
             to="/pricing" 
@@ -258,7 +311,7 @@ export default function Navbar({ sessionUser }) {
         <li className="dropdown-container" ref={aboutDropdownRef}>
           <button 
             className={`nav-link dropdown-trigger ${isActive('/about') || isActive('/for') ? 'active' : ''}`} 
-            onClick={() => { setDropdownOpen(false); setAppsDropdownOpen(false); setAboutDropdownOpen(!aboutDropdownOpen); }}
+            onClick={() => { setDropdownOpen(false); setAppsDropdownOpen(false); setServicesDropdownOpen(false); setAboutDropdownOpen(!aboutDropdownOpen); }}
           >
             About
             <RiArrowDownSFill size={14} />
@@ -279,7 +332,7 @@ export default function Navbar({ sessionUser }) {
         <li className="dropdown-container" ref={dropdownRef}>
           <button 
             className="nav-link dropdown-trigger" 
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            onClick={() => { setAppsDropdownOpen(false); setAboutDropdownOpen(false); setServicesDropdownOpen(false); setDropdownOpen(!dropdownOpen); }}
           >
             Support & Community
             <RiArrowDownSFill size={14} />
