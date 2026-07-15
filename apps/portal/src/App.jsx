@@ -4039,6 +4039,7 @@ function AppContent({
             <NativeAppLandingView 
               creatorEpk={creatorEpk} 
               catalogTracks={catalogTracks} 
+              sessionUser={sessionUser}
             />
           } />
           <Route path="/for" element={<PerfectForPageView />} />

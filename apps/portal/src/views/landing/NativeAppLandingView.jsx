@@ -371,7 +371,7 @@ function HorizontalSlider({ items, renderItem }) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = [] }) {
+export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = [], sessionUser }) {
   const { slug } = useParams();
   const normalizedSlug = (slug === 'tunestream' || slug === 'tunemavens') ? 'tunestream' : slug;
   const data = NATIVE_APP_LANDING_DATA[normalizedSlug];
@@ -379,6 +379,13 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const view = searchParams.get('view') || 'listen';
+
+  const resolveLink = (link) => {
+    if (link === '/dashboard') {
+      return sessionUser ? '/dashboard' : '/apps';
+    }
+    return link;
+  };
 
   const [selectedEpk, setSelectedEpk] = useState(null);
 
@@ -587,7 +594,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       );
     }
     return (
-      <Link to={link} className={cls} data-testid={testId}>{label}</Link>
+      <Link to={resolveLink(link)} className={cls} data-testid={testId}>{label}</Link>
     );
   };
 
@@ -940,7 +947,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       return (
         <>
           <div style={{ background: 'rgba(34, 211, 238, 0.08)', borderBottom: '1px solid rgba(34, 211, 238, 0.15)', padding: '12px 24px', borderRadius: '8px', textAlign: 'center', fontSize: '13px', color: '#cbd5e1', marginBottom: '40px' }}>
-            🌐 TuneStream platform resolves natively to: <strong style={{ color: '#fff' }}>streams.tunemavens.com</strong>. Map containers securely in the <Link to="/dashboard" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Domain Mappings Admin Console</Link>.
+            🌐 TuneStream platform resolves natively to: <strong style={{ color: '#fff' }}>streams.tunemavens.com</strong>. Map containers securely in the <Link to={resolveLink("/dashboard")} style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Domain Mappings Admin Console</Link>.
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '50px' }}>
@@ -2012,10 +2019,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             <h2 className="landing-section-title" style={{ marginBottom: '20px' }}>{data.name}</h2>
             <p className="landing-lede" style={{ maxWidth: 'none', marginBottom: '24px' }}>{data.lede}</p>
             <div className="landing-cross-links">
-              <Link to={data.webEquivalent.to} className="landing-cross-link" data-testid="landing-web-link">
+              <Link to={resolveLink(data.webEquivalent.to)} className="landing-cross-link" data-testid="landing-web-link">
                 <RiExternalLinkFill size={13} /> {data.webEquivalent.label}
               </Link>
-              <Link to={data.adminLink.to} className="landing-cross-link" data-testid="landing-admin-link">
+              <Link to={resolveLink(data.adminLink.to)} className="landing-cross-link" data-testid="landing-admin-link">
                 <RiSettings3Fill size={13} /> {data.adminLink.label}
               </Link>
             </div>

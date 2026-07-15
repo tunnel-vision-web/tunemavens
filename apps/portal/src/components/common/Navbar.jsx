@@ -179,7 +179,7 @@ export default function Navbar({ sessionUser }) {
             </a>
           </li>
           <li>
-            <Link to="/dashboard" className="nav-link" onClick={() => setMobileOpen(false)}>
+            <Link to={sessionUser ? "/dashboard" : "/apps"} className="nav-link" onClick={() => setMobileOpen(false)}>
               Web Console
             </Link>
           </li>

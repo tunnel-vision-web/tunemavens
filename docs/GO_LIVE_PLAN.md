@@ -53,10 +53,10 @@ To achieve the end of September target, we will structure the remaining work int
 
 | Track | Focus | Deliverables | Target Timeline |
 |---|---|---|---|
-| **Track A** | Core & Auth | SSO (OIDC/PKCE), 4-Tier / 7-Role Migration, S3/R2 Asset Storage, Resend Email | Weeks 1-3 |
+| **Track A** | Core & Auth | SSO (OIDC/PKCE), 4-Tier / 7-Role Migration, S3/R2 Asset Storage, Resend Email, Mother-CMS Grid & Localized Key Overlays | Weeks 1-3 |
 | **Track B** | Payments & Commerce | Stripe integration, Event Ticketing service (QR receipts), Merch/Digital Goods storefront | Weeks 1-6 |
 | **Track C** | Media Ecosystem | Distribution Tracker (ISRC generator, metadata verification), TuneStream player, SyncMavens matching simulator | Weeks 2-8 |
-| **Track D** | AI, CRM & CMS | Social AI (Gemini Nano Banana + Sora 2), CRM Campaigns engine, Mother-CMS Grid UI & Rollback | Weeks 3-9 |
+| **Track D** | AI, CRM & CMS | Social AI (Gemini Nano Banana + Sora 2), CRM Campaigns engine, Mother-CMS versioning & rollback | Weeks 3-9 |
 | **Track E** | Hardening & SEO | SEO module, Sentry/Uptime monitoring, CORS/SSL configuration, final regression testing | Weeks 10-11 |
 
 ---
@@ -68,6 +68,7 @@ To achieve the end of September target, we will structure the remaining work int
 - **Cross-portal Auth**: Update `auth.py` in `tunemaven` backend to validate tokens minted by the unified provider.
 - **R2/S3 Integration**: Create `s3_storage.py` utility in `intermaven` backend and replace base64 upload pipelines.
 - **DB Migration**: Write migration scripts to seed the new canonical roles and set up 4-tier entitlement properties in the user tables.
+- **Mother-CMS Grid & Localization**: Build the admin editor UI with localized key overlays (`portal[region] -> portal[default] -> region -> default`) to ensure localized language support is fully operational before payments and onboarding are initiated.
 
 ### Track B: Payments & Commerce Wave (Weeks 1–6)
 - **Stripe Engine**: Register and test Stripe checkout endpoints for the 4 pricing tiers. Soften payout descriptions to "fast, automated settlements".
@@ -82,7 +83,7 @@ To achieve the end of September target, we will structure the remaining work int
 ### Track D: AI, CRM & CMS Expansion (Weeks 3–9)
 - **Social AI**: Connect image generation (Gemini Nano Banana) and video clips (Sora 2) into the creative automation dashboard.
 - **CRM campaigns**: Support custom campaign builders targeting user roles, dispatching via Resend or in-app inbox.
-- **Mother-CMS Grid**: Build the admin editor UI with localized key overlays (`portal[region] -> portal[default] -> region -> default`).
+- **Mother-CMS Rollback**: Implement revision histories and rollback systems for the CMS content grid.
 
 ### Track E: Hardening, SEO & Launch Prep (Weeks 10–11)
 - **SEO Optimization**: Embed JSON-LD schemas per page, configure dynamic sitemap routing.
