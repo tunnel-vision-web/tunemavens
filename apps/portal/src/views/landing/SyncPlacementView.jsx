@@ -62,8 +62,8 @@ export default function SyncPlacementView({ sessionUser }) {
                 border: '1px solid rgba(255,255,255,0.05)', 
                 display: 'flex', 
                 flexDirection: 'column', 
-                alignItems: 'flex-start',
-                textAlign: 'left',
+                alignItems: 'center',
+                textAlign: 'center',
                 gap: '16px'
               }}
             >
@@ -100,6 +100,10 @@ export default function SyncPlacementView({ sessionUser }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#cbd5e1' }}>
               <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
               <span>Direct pitching queue for AAA games & Netflix briefs</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#cbd5e1' }}>
+              <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+              <span>Guaranteed placement opportunities for top-tier catalogs</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#cbd5e1' }}>
               <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>

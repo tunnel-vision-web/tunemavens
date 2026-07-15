@@ -71,8 +71,8 @@ export default function ToursView({ sessionUser }) {
             Designed for Live Concert Operations
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-            <div className="glass-panel" style={{ padding: '32px 24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ background: 'rgba(139, 92, 246, 0.08)', color: 'var(--purple)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifycontent: 'center', marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+            <div className="glass-panel" style={{ padding: '32px 24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <div style={{ background: 'rgba(139, 92, 246, 0.08)', color: 'var(--purple)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
                 <RiCalendarEventFill size={20} />
               </div>
               <h4 style={{ fontSize: '18px', color: '#fff', marginBottom: '12px' }}>Event Ticketing Integration</h4>
@@ -80,8 +80,8 @@ export default function ToursView({ sessionUser }) {
                 Generate QR-code tickets for your stops, monitor capacity caps, and scan arrivals at the door with our secure POS terminal system.
               </p>
             </div>
-            <div className="glass-panel" style={{ padding: '32px 24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ background: 'rgba(139, 92, 246, 0.08)', color: 'var(--purple)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifycontent: 'center', marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+            <div className="glass-panel" style={{ padding: '32px 24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <div style={{ background: 'rgba(139, 92, 246, 0.08)', color: 'var(--purple)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
                 <RiMapPinRangeLine size={20} />
               </div>
               <h4 style={{ fontSize: '18px', color: '#fff', marginBottom: '12px' }}>Route Optimization</h4>
@@ -89,8 +89,8 @@ export default function ToursView({ sessionUser }) {
                 Plot tour dates, manage promoter deposits, and coordinate venue capacities in a unified calendar.
               </p>
             </div>
-            <div className="glass-panel" style={{ padding: '32px 24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ background: 'rgba(139, 92, 246, 0.08)', color: 'var(--purple)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifycontent: 'center', marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+            <div className="glass-panel" style={{ padding: '32px 24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <div style={{ background: 'rgba(139, 92, 246, 0.08)', color: 'var(--purple)', borderRadius: '4px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
                 <RiMoneyDollarCircleLine size={20} />
               </div>
               <h4 style={{ fontSize: '18px', color: '#fff', marginBottom: '12px' }}>Instant disburse</h4>
