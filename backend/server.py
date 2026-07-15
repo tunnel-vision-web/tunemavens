@@ -12,12 +12,19 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 
 from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db
-from routes import admin_router, auth_router, contracts_router, dashboard_router, deals_router, users_router
+from routes import admin_router, auth_router, contracts_router, dashboard_router, deals_router, users_router, sso_router, payments_router, ticketing_router, storefront_router, distro_router, stream_router, match_router
 from routes.admin_router import seed_domain_mappings_if_empty
 
 app = FastAPI(title="TuneMavens API", version="0.1.0 (Phase 1)")
+
+# Mount static files folder for local upload fallbacks
+uploads_dir = os.environ.get("LOCAL_UPLOADS_DIR", "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,6 +35,13 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(sso_router)
+app.include_router(payments_router)
+app.include_router(ticketing_router)
+app.include_router(storefront_router)
+app.include_router(distro_router)
+app.include_router(stream_router)
+app.include_router(match_router)
 app.include_router(dashboard_router)
 app.include_router(deals_router)
 app.include_router(admin_router)

@@ -101,7 +101,7 @@ cat >"$TEMP_NGX" <<NGX
 # ==============================================================================
 server {
   listen 80;
-  server_name $APP_DOMAIN www.$APP_DOMAIN;
+  server_name $APP_DOMAIN www.$APP_DOMAIN djs.$APP_DOMAIN labels.$APP_DOMAIN producers.$APP_DOMAIN mediahouses.$APP_DOMAIN;
 
   root $APP_DIR/dist/portal;
   index index.html;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
+import { ROLE_LOGOS, getServiceUrl } from '../../components/PerfectForSidebar.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
 import creatorDashboardImg from '../../assets/images/creator_dashboard.png'
@@ -19,72 +19,73 @@ export default function PerfectForPageView() {
     {
       key: 'creator',
       label: 'Creators',
-      sub: 'Artists · Podcasters · DJs',
+      sub: 'Artists & Producers',
       href: '/for/creator',
       logo: ROLE_LOGOS['creator'],
       accent: 'var(--cyan)',
-      desc: 'Designed for artists, DJs, and podcasters. Effortlessly calculate split sheets, manage your music library, and pitch your tracks to filmmakers and sync agents - all from one single console.',
+      desc: 'Designed for artists and producers. Calculate split sheets, manage your music library, and pitch your tracks under a single console.',
       preview: creatorDashboardImg
     },
     {
-      key: 'exec',
-      label: 'Execs',
-      sub: 'Label · A&R · Industry',
-      href: '/for/exec',
-      logo: ROLE_LOGOS['exec'],
+      key: 'label',
+      label: 'Record Labels',
+      sub: 'Catalog Management',
+      href: '/for/label',
+      logo: ROLE_LOGOS['label'],
       accent: 'var(--purple)',
-      desc: 'For record labels, A&R managers, and industry leaders. Manage your entire artist catalog, track royalty splits, ingest statement CSV files, and automate payouts to artists and managers.',
+      desc: 'For record labels, A&R managers, and industry leaders. Manage your entire artist catalog, track splits, and coordinate roster-wide releases.',
       preview: distributeHeroImg
+    },
+    {
+      key: 'dj',
+      label: 'DJs',
+      sub: 'DJ Pool Engine',
+      href: '/for/dj',
+      logo: ROLE_LOGOS['dj'],
+      accent: 'var(--cyan)',
+      desc: 'The next-generation pool engine. Access lossless audio files, queue pools, and secure stem clearances for live sets.',
+      preview: appsLedgerImg
+    },
+    {
+      key: 'media_house',
+      label: 'Media Houses',
+      sub: 'Broadcast & Playlisting',
+      href: '/for/media-house',
+      logo: ROLE_LOGOS['media_house'],
+      accent: 'var(--blue)',
+      desc: 'Broadcasting and queue routing tools. Access authorized compliance directories and manage music scheduling for broadcast channels.',
+      preview: appsLedgerImg
     },
     {
       key: 'supervisor',
       label: 'Music Supervisors',
-      sub: 'Sync licensing for film & TV',
-      href: '/for/supervisor',
+      sub: 'SyncMavens Licensing',
+      href: getServiceUrl('syncmavens'),
+      isExternal: true,
       logo: ROLE_LOGOS['supervisor'],
       accent: 'var(--am)',
-      desc: 'Sync licensing and AI scene-tagging made simple. Search our curated catalog of watermarked tracks, find the perfect vibe for your film or TV project, and secure sync rights instantly.',
+      desc: 'Sync licensing and AI scene-tagging made simple. Search our curated catalog of watermarked tracks and find the perfect vibe for your film or TV project.',
       preview: appsSyncImg
     },
     {
       key: 'consumer',
       label: 'tunestream',
-      sub: 'Everyday listeners',
+      sub: 'Everyday Listeners',
       href: '/native-apps/tunestream',
       logo: ROLE_LOGOS['consumer'],
       accent: '#10b981',
-      desc: 'Our consumer streaming app. Listen to your favorite tracks, support creators directly with direct-tipping, and sync your music collection offline across all your mobile devices.',
+      desc: 'Our consumer streaming app. Listen to your favorite tracks, support creators directly with direct-tipping, and sync your music offline.',
       preview: consumerAppImg
     },
     {
-      key: 'booking-agent',
-      label: 'Booking Agents',
-      sub: 'Book & represent live acts',
-      href: '/for/booking-agent',
-      logo: ROLE_LOGOS['booking-agent'],
-      accent: 'var(--blue)',
-      desc: 'Represent and book your live acts. Route gig contracts, coordinate agent commission payouts, and view tour routing maps all integrated with local payment rails.',
-      preview: appsLedgerImg
-    },
-    {
-      key: 'manager',
-      label: 'Managers',
-      sub: 'Day-to-day artist teams',
-      href: '/for/manager',
-      logo: ROLE_LOGOS['manager'],
+      key: 'corporate',
+      label: 'Corporate',
+      sub: 'Sponsorships & Ads',
+      href: '/for/corporate',
+      logo: ROLE_LOGOS['corporate'],
       accent: '#ef4444',
-      desc: 'Manage the day-to-day operations of your artist roster. Real-time split visibility, contract drafting tools, and automated payouts to keep your management business running smoothly.',
+      desc: 'Connect brands with target audiences. Run campaigns, sponsor curators, and manage native audio ad placements.',
       preview: userManagerImg
-    },
-    {
-      key: 'companion',
-      label: 'tunecompanion',
-      sub: 'Artists & Managers',
-      href: '/native-apps/creator-companion',
-      logo: ROLE_LOGOS['companion'],
-      accent: 'var(--purple)',
-      desc: 'The essential mobile companion app for artists and managers. Monitor splits on the fly, track live earnings, and receive real-time sync brief alerts right on your phone.',
-      preview: appsSyncImg
     }
   ];
 
@@ -112,9 +113,15 @@ export default function PerfectForPageView() {
               <p className="pf-card-desc">{role.desc}</p>
               
               <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Link to={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
-                  Explore Seat
-                </Link>
+                {role.isExternal ? (
+                  <a href={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
+                    Explore Seat
+                  </a>
+                ) : (
+                  <Link to={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
+                    Explore Seat
+                  </Link>
+                )}
                 <button 
                   onClick={() => setPreviewImage(role.preview)} 
                   className="btn pf-card-cta outline"

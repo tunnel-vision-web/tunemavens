@@ -13,11 +13,34 @@ import managementLogo from '../assets/logos/tunemanagement-logo.png';
 import companionLogo from '../assets/logos/tunecompanion-logo.png';
 import tunepayLogo from '../assets/logos/tunepay-logo.png';
 
+export const getServiceUrl = (service, path = '/') => {
+  const { hostname, protocol } = window.location;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    const ports = {
+      portal: '3000',
+      tunestream: '3001',
+      syncmavens: '3002',
+    };
+    return `${protocol}//${hostname}:${ports[service]}${path}`;
+  }
+  const domains = {
+    portal: 'tunemavens.com',
+    tunestream: 'tunestream.co',
+    syncmavens: 'syncmavens.com',
+  };
+  return `${protocol}//${domains[service]}${path}`;
+};
+
 export const ROLE_LOGOS = {
   creator: createLogo,
-  exec: syncLogo,
-  supervisor: distributeLogo,
+  label: distributeLogo,
+  dj: bookingLogo,
+  media_house: managementLogo,
+  supervisor: syncLogo,
   consumer: listenLogo,
+  corporate: tunepayLogo,
+  // Legacy stubs for compatibility
+  exec: syncLogo,
   'booking-agent': bookingLogo,
   manager: managementLogo,
   companion: companionLogo,
@@ -25,13 +48,13 @@ export const ROLE_LOGOS = {
 };
 
 export const PERFECT_FOR_ROLES = [
-  { key: 'creator', label: 'Creators', sub: 'Artists · Podcasters · DJs', href: '/for/creator', accent: 'var(--cyan)' },
-  { key: 'exec', label: 'Execs', sub: 'Label · A&R · Industry', href: '/for/exec', accent: 'var(--purple)' },
-  { key: 'supervisor', label: 'Music Supervisors', sub: 'Sync licensing for film & TV', href: '/for/supervisor', accent: 'var(--am)' },
-  { key: 'consumer', label: 'tunestream', sub: 'Everyday listeners', href: '/native-apps/tunemavens', accent: 'var(--gr)' },
-  { key: 'booking-agent', label: 'Booking Agents', sub: 'Book & represent live acts', href: '/for/booking-agent', accent: 'var(--blue)' },
-  { key: 'manager', label: 'Managers', sub: 'Day-to-day artist teams', href: '/for/manager', accent: '#ef4444' },
-  { key: 'companion', label: 'tunecompanion', sub: 'Artists & Managers', href: '/native-apps/creator-companion', accent: 'var(--purple)' },
+  { key: 'creator', label: 'Creators', sub: 'Artists & Producers', href: '/for/creator', accent: 'var(--cyan)' },
+  { key: 'label', label: 'Record Labels', sub: 'Catalog Management', href: '/for/label', accent: 'var(--purple)' },
+  { key: 'dj', label: 'DJs', sub: 'DJ Pool Engine', href: '/for/dj', accent: 'var(--cyan)' },
+  { key: 'media_house', label: 'Media Houses', sub: 'Broadcast & Playlisting', href: '/for/media-house', accent: 'var(--blue)' },
+  { key: 'supervisor', label: 'Music Supervisors', sub: 'SyncMavens Licensing', href: getServiceUrl('syncmavens'), isExternal: true, accent: 'var(--am)' },
+  { key: 'consumer', label: 'tunestream', sub: 'Everyday Listeners', href: '/native-apps/tunestream', accent: 'var(--gr)' },
+  { key: 'corporate', label: 'Corporate', sub: 'Sponsorships & Ads', href: '/for/corporate', accent: '#ef4444' },
 ];
 
 const LANDING_ROUTE_PREFIXES = [
@@ -61,6 +84,30 @@ export function PerfectForSidebar() {
           <div className={`pf-carousel-track ${isPaused ? 'paused' : ''}`}>
             {PERFECT_FOR_ROLES.map((role) => {
               const active = pathname === role.href;
+              const content = (
+                <>
+                  <span className="pf-tile-logo">
+                    <img src={ROLE_LOGOS[role.key]} alt={role.label} />
+                  </span>
+                  <span className="pf-tile-label">{role.label}</span>
+                  <span className="pf-tile-sub">{role.sub}</span>
+                </>
+              );
+
+              if (role.isExternal) {
+                return (
+                  <a 
+                    key={role.key} 
+                    href={role.href} 
+                    className={`pf-carousel-tile ${active ? 'pf-tile-active' : ''}`} 
+                    style={{ '--pf-accent': role.accent }}
+                    data-testid={`perfect-for-tile-${role.key}`}
+                  >
+                    {content}
+                  </a>
+                );
+              }
+
               return (
                 <Link 
                   key={role.key} 
@@ -69,17 +116,37 @@ export function PerfectForSidebar() {
                   style={{ '--pf-accent': role.accent }}
                   data-testid={`perfect-for-tile-${role.key}`}
                 >
-                  <span className="pf-tile-logo">
-                    <img src={ROLE_LOGOS[role.key]} alt={role.label} />
-                  </span>
-                  <span className="pf-tile-label">{role.label}</span>
-                  <span className="pf-tile-sub">{role.sub}</span>
+                  {content}
                 </Link>
               );
             })}
             {/* Duplicate for seamless continuous horizontal scroll */}
             {PERFECT_FOR_ROLES.map((role) => {
               const active = pathname === role.href;
+              const content = (
+                <>
+                  <span className="pf-tile-logo">
+                    <img src={ROLE_LOGOS[role.key]} alt={role.label} />
+                  </span>
+                  <span className="pf-tile-label">{role.label}</span>
+                  <span className="pf-tile-sub">{role.sub}</span>
+                </>
+              );
+
+              if (role.isExternal) {
+                return (
+                  <a 
+                    key={`${role.key}-dup`} 
+                    href={role.href} 
+                    className={`pf-carousel-tile ${active ? 'pf-tile-active' : ''}`} 
+                    style={{ '--pf-accent': role.accent }}
+                    data-testid={`perfect-for-tile-${role.key}-dup`}
+                  >
+                    {content}
+                  </a>
+                );
+              }
+
               return (
                 <Link 
                   key={`${role.key}-dup`} 
@@ -88,11 +155,7 @@ export function PerfectForSidebar() {
                   style={{ '--pf-accent': role.accent }}
                   data-testid={`perfect-for-tile-${role.key}-dup`}
                 >
-                  <span className="pf-tile-logo">
-                    <img src={ROLE_LOGOS[role.key]} alt={role.label} />
-                  </span>
-                  <span className="pf-tile-label">{role.label}</span>
-                  <span className="pf-tile-sub">{role.sub}</span>
+                  {content}
                 </Link>
               );
             })}

@@ -7,6 +7,9 @@ Sections §9.8+ are TuneMavens-specific.
 Current focus: §9.8 (App Marketplace + Recommendation Agent — SHIPPED)
 plus §9.9–§9.12 (Identity, Social Graph, Community, CRM — IN PLAN).
 
+> [!NOTE]
+> **Design Standards & Guidelines:** For the canonical reference on styling tokens, typography, buttons, header/sidebar behaviors, card layouts, scrollbars, and animations used across the TuneMavens ecosystem, see [DESIGN_STANDARDS.md](file:///c:/Users/judit/workspace/tunemaven/docs/DESIGN_STANDARDS.md).
+
 ---
 
 ## §9.5 — Landing Page Map & "Perfect For" Sidebar  ✅ SHIPPED (sidebar) / 🟠 P1 (role pages)

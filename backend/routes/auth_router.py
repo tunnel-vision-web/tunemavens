@@ -29,7 +29,9 @@ def _to_public(user: dict) -> UserPublic:
         email=user["email"],
         name=user.get("name"),
         role=user.get("role", "creator"),
-        plan=user.get("plan", "creator"),
+        roles=user.get("roles", ["creator"]),
+        pro_verified=user.get("pro_verified", False),
+        plan=user.get("plan", "starter"),
         credits=user.get("credits", 0),
         brand_name=user.get("brand_name"),
         country=user.get("country"),
@@ -57,14 +59,47 @@ def register(payload: RegisterRequest, response: Response):
     if db.users.find_one({"email": payload.email}):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
+    # Mappings to 7 canonical roles
+    def normalize_role(r: str) -> str:
+        r_lower = r.lower().strip()
+        if r_lower in ("artist", "producer", "creator"):
+            return "creator"
+        if r_lower in ("record label", "label"):
+            return "label"
+        if r_lower == "dj":
+            return "dj"
+        if r_lower in ("media house", "media_house", "media"):
+            return "media_house"
+        if r_lower in ("manager", "publisher", "supervisor", "exec"):
+            return "exec"
+        if r_lower in ("fan", "consumer"):
+            return "consumer"
+        if r_lower in ("business", "organization", "corporate"):
+            return "corporate"
+        return r_lower
+
+    roles_list = []
+    if payload.roles:
+        roles_list = [normalize_role(r) for r in payload.roles]
+    elif payload.role:
+        roles_list = [normalize_role(payload.role)]
+    
+    if not roles_list:
+        roles_list = ["creator"]
+
+    primary_role = roles_list[0]
+
     user_doc = User(
         email=payload.email,
         password_hash=hash_password(payload.password),
         name=payload.name,
-        role=payload.role,
+        role=primary_role,
+        roles=roles_list,
+        pro_verified=False,
+        plan="starter",
         brand_name=payload.brand_name,
         country=payload.country,
-        credits=600,  # default sandbox credit grant — matches the frontend stub
+        credits=600,  # default sandbox credit grant
     ).to_mongo()
 
     result = db.users.insert_one(user_doc)

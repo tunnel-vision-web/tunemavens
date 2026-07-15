@@ -58,7 +58,9 @@ class User(BaseDocument):
     password_hash: Optional[str] = None
     name: Optional[str] = None
     role: str = "creator"  # creator | consumer | label | dj | studio | corporate | media_house | admin
-    plan: str = "creator"
+    roles: List[str] = Field(default_factory=lambda: ["creator"])
+    pro_verified: bool = False
+    plan: str = "starter"  # starter | professional | business | enterprise
     credits: int = 0
     brand_name: Optional[str] = None
     country: Optional[str] = None
@@ -75,7 +77,9 @@ class UserPublic(BaseModel):
     email: EmailStr
     name: Optional[str] = None
     role: str = "creator"
-    plan: str = "creator"
+    roles: List[str] = Field(default_factory=lambda: ["creator"])
+    pro_verified: bool = False
+    plan: str = "starter"
     credits: int = 0
     brand_name: Optional[str] = None
     country: Optional[str] = None
@@ -91,7 +95,8 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     name: Optional[str] = None
-    role: str = "creator"
+    role: Optional[str] = "creator"
+    roles: Optional[List[str]] = None
     brand_name: Optional[str] = None
     country: Optional[str] = None
 
@@ -302,4 +307,50 @@ class Contract(BaseDocument):
     share_token: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ======================================================================
+# Track B - Commerce Schemas (Events, Tickets, Storefront)
+# ======================================================================
+class Event(BaseDocument):
+    creator_id: PyObjectId
+    title: str
+    description: Optional[str] = None
+    price: float
+    date: datetime
+    location: str
+    capacity: int
+    tickets_sold: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Ticket(BaseDocument):
+    event_id: PyObjectId
+    user_id: PyObjectId
+    qr_token: str
+    scanned: bool = False
+    scanned_at: Optional[datetime] = None
+    purchased_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Product(BaseDocument):
+    creator_id: PyObjectId
+    title: str
+    description: Optional[str] = None
+    price: float
+    type: str  # 'physical' | 'digital'
+    stock: Optional[int] = None  # None for unlimited digital files
+    file_url: Optional[str] = None  # Download link if digital
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Order(BaseDocument):
+    product_id: PyObjectId
+    user_id: PyObjectId
+    quantity: int
+    total_amount: float
+    shipping_address: Optional[str] = None
+    status: str = "pending"  # 'pending' | 'completed' | 'shipped' | 'refunded'
+    download_token: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
