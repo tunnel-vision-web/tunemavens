@@ -48,6 +48,7 @@ ALLOWED_APP_SLUGS = {
     "intermaven-tunemavens",
     "intermaven-creator-companion",
     "intermaven-mpesa-pos",
+    "intermaven-tunepay",
     # Intermaven Platform — tools from intermaven.io. Slugs mirror
     # src/lib/intermavenPlatformApps.js. "Open" routes to the canonical
     # app on intermaven.io; the shared Intermaven JWT cookie carries the
