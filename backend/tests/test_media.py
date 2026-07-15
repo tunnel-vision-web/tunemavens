@@ -255,13 +255,24 @@ def test_sync_match_waterfall_split():
     assert match_res.status_code == 200
     assert match_res.json()["match_score"] > 80
 
-    # 2. Split Waterfall calculator
+    # 2. Split Waterfall calculator (Administrator Mode)
     waterfall_res = client.get(
         "/api/match/waterfall",
-        params={"sync_fee": 10000.0},
+        params={"sync_fee": 10000.0, "mode": "administrator"},
     )
     assert waterfall_res.status_code == 200
     data = waterfall_res.json()
     assert data["creator_payout"] == 9000.0
     assert data["platform_administration_fee"] == 1000.0
     assert data["advance_payout"] == 0.0
+
+    # 3. Split Waterfall calculator (Publishing House Mode)
+    waterfall_pub_res = client.get(
+        "/api/match/waterfall",
+        params={"sync_fee": 10000.0, "mode": "publishing_house"},
+    )
+    assert waterfall_pub_res.status_code == 200
+    pub_data = waterfall_pub_res.json()
+    assert pub_data["creator_payout"] == 5000.0
+    assert pub_data["platform_administration_fee"] == 5000.0
+    assert pub_data["advance_payout"] == 0.0

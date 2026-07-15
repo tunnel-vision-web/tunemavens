@@ -104,23 +104,37 @@ def simulate_matching(payload: MatchRequest):
 
 
 @router.get("/waterfall")
-def calculate_waterfall_split(sync_fee: float):
-    """Computes the 90/10 SyncMavens placement split waterfall.
+def calculate_waterfall_split(sync_fee: float, mode: str = "administrator"):
+    """Computes the placement split waterfall.
 
-    Guarantees no upfront catalog advances to preserve creator ownership.
+    Supported modes:
+    - 'administrator': charges a 10% administration fee of all money collected.
+    - 'publishing_house': retains the 50% publisher share per standard music publishing law.
     """
     if sync_fee < 0:
         raise HTTPException(status_code=400, detail="Sync fee cannot be negative")
 
-    creator_share = round(sync_fee * 0.90, 2)
-    platform_fee = round(sync_fee * 0.10, 2)
+    if mode == "publishing_house":
+        # Retains 50% publisher share as is law
+        creator_share = round(sync_fee * 0.50, 2)
+        platform_fee = round(sync_fee * 0.50, 2)
+        ratio = "50/50"
+        notes = "Publishing House Mode: TuneMavens retains 100% of the 50% Publisher Share per standard publishing law."
+    else:
+        # Administrator mode: charges a 10% fee of all money collected
+        creator_share = round(sync_fee * 0.90, 2)
+        platform_fee = round(sync_fee * 0.10, 2)
+        ratio = "90/10"
+        notes = "Administrator Mode: 10% admin fee charged on all money collected; 90% paid to creator."
+
     advance = 0.0  # $0 catalog advance policy
 
     return {
         "sync_fee": sync_fee,
-        "split_ratio": "90/10",
+        "mode": mode,
+        "split_ratio": ratio,
         "creator_payout": creator_share,
         "platform_administration_fee": platform_fee,
         "advance_payout": advance,
-        "notes": "No Catalog Advances: 100% creator ownership control maintained."
+        "notes": notes
     }

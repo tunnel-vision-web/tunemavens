@@ -79,24 +79,26 @@ export default function PublishingView({ sessionUser }) {
         >
           <div style={{ maxWidth: '750px', margin: '0 auto', textAlign: 'center' }}>
             <h3 style={{ fontSize: '24px', color: 'var(--cyan)', fontWeight: 800, marginBottom: '16px' }}>
-              Standard Publishing Split Structure
+              Standard Publishing Split Structure via ASCAP
             </h3>
             <p style={{ fontSize: '15px', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '32px' }}>
-              Unlike predatory publishers who demand 50% of your total copyright or lock you in with restrictive catalog advances, 
-              TuneMavens is built on transparent, composer-first splits. 
-              <strong> You retain 100% of your Composer copyright ownership.</strong>
+              TuneMavens administers publishing rights primarily through ASCAP, offering two standard options for administering your catalogue royalties:
             </p>
             
             <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '36px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px 30px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', minWidth: '220px' }}>
-                <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>Composer Share (50% of total)</span>
-                <strong style={{ fontSize: '24px', color: '#10b981', display: 'block' }}>100% Retained</strong>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>Always yours. Zero cuts.</span>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px 30px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', minWidth: '280px', textAlign: 'left' }}>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--cyan)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>Option A: Administrator Mode</span>
+                <strong style={{ fontSize: '24px', color: '#10b981', display: 'block', marginBottom: '4px' }}>10% Admin Fee</strong>
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+                  TuneMavens acts as administrator, charging a 10% fee on all royalties collected. You keep 90% of all gross revenues.
+                </p>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px 30px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', minWidth: '220px' }}>
-                <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>Publisher Share (50% of total)</span>
-                <strong style={{ fontSize: '24px', color: '#fff', display: 'block' }}>85% Yours / 15% Admin</strong>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>Industry-low 15% admin fee</span>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px 30px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', minWidth: '280px', textAlign: 'left' }}>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--purple)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>Option B: Publishing House Mode</span>
+                <strong style={{ fontSize: '24px', color: '#fff', display: 'block', marginBottom: '4px' }}>50/50 Total Split</strong>
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+                  TuneMavens acts as publishing house. We retain the 50% Publisher Share per standard music publishing law, and you receive the 50% Composer Share.
+                </p>
               </div>
             </div>
 
@@ -104,7 +106,7 @@ export default function PublishingView({ sessionUser }) {
               <RiContractLine style={{ color: 'var(--cyan)' }} size={24} />
               <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, textAlign: 'left' }}>
                 <strong>Need custom terms?</strong> Negotiation is built right into the platform. 
-                You can draft custom splits, request catalogue advances, or configure full-service co-publishing (including active pitching placements) through our interactive 
+                You can draft custom splits, request catalogue advances, or configure full-service co-publishing through our interactive 
                 <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}> Negotiating & Contracting Console</span>.
               </p>
             </div>

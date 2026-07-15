@@ -2782,18 +2782,18 @@ function PublishingView({ standalone }) {
 
         {/* compensation terms section */}
         <div className="dashboard-card" style={{ padding: '32px', background: 'radial-gradient(ellipse at top left, rgba(0, 242, 254, 0.05) 0%, transparent 60%)', border: '1px solid rgba(0, 242, 254, 0.2)', borderRadius: '6px', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '20px', color: '#00f2fe', marginBottom: '12px' }}>Composer-First Royalty Splits</h3>
-          <p style={{ maxWidth: '650px', margin: '0 auto 20px', fontSize: '14px', color: '#e2e8f0', lineHeight: '1.6' }}>
-            We believe in complete transparency. Typically, the creator retains <strong>100% of their Composer Share</strong> (which is 50% of the total publishing pie), and we manage the <strong>Publisher Share (50%)</strong> for a industry-low <strong>15% administration fee</strong>.
+          <h3 style={{ fontSize: '20px', color: '#00f2fe', marginBottom: '12px' }}>ASCAP Royalty Splits</h3>
+          <p style={{ maxWidth: '700px', margin: '0 auto 20px', fontSize: '14px', color: '#e2e8f0', lineHeight: '1.6' }}>
+            We administer all works primarily via ASCAP under two options: acting as the <strong>Publishing House</strong> (retaining the 50% Publisher Share per standard publishing law) or as the <strong>Administrator</strong> (charging a 10% fee on all royalties collected).
           </p>
           <div style={{ display: 'inline-flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
             <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px 24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Composer Share</span>
-              <strong style={{ fontSize: '20px', color: '#10b981' }}>100% Retained by You</strong>
+              <span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Administrator Mode</span>
+              <strong style={{ fontSize: '18px', color: '#10b981' }}>10% Admin Fee</strong>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px 24px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Publisher Share</span>
-              <strong style={{ fontSize: '20px', color: '#fff' }}>85% Yours / 15% Admin</strong>
+              <span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Publishing House Mode</span>
+              <strong style={{ fontSize: '18px', color: '#fff' }}>50/50 Publishing split</strong>
             </div>
           </div>
         </div>
