@@ -50,54 +50,56 @@ export function PerfectForSidebar() {
   const [isPaused, setIsPaused] = useState(false);
 
   return (
-    <aside className="pf-sidebar" aria-label="Perfect for" data-testid="perfect-for-sidebar">
-      <h3 className="pf-sidebar-header" data-testid="perfect-for-header">Perfect for</h3>
-      <div 
-        className="pf-scroll-container"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        <div className={`pf-scroll-content ${isPaused ? 'paused' : ''}`}>
-          {PERFECT_FOR_ROLES.map((role) => {
-            const active = pathname === role.href;
-            return (
-              <Link 
-                key={role.key} 
-                to={role.href} 
-                className={`pf-tile ${active ? 'pf-tile-active' : ''}`} 
-                style={{ '--pf-accent': role.accent }}
-                data-testid={`perfect-for-tile-${role.key}`}
-              >
-                <span className="pf-tile-logo">
-                  <img src={ROLE_LOGOS[role.key]} alt={role.label} />
-                </span>
-                <span className="pf-tile-label">{role.label}</span>
-                <span className="pf-tile-sub">{role.sub}</span>
-              </Link>
-            );
-          })}
-          {/* Duplicate for seamless continuous upward scroll */}
-          {PERFECT_FOR_ROLES.map((role) => {
-            const active = pathname === role.href;
-            return (
-              <Link 
-                key={`${role.key}-dup`} 
-                to={role.href} 
-                className={`pf-tile ${active ? 'pf-tile-active' : ''}`} 
-                style={{ '--pf-accent': role.accent }}
-                data-testid={`perfect-for-tile-${role.key}-dup`}
-              >
-                <span className="pf-tile-logo">
-                  <img src={ROLE_LOGOS[role.key]} alt={role.label} />
-                </span>
-                <span className="pf-tile-label">{role.label}</span>
-                <span className="pf-tile-sub">{role.sub}</span>
-              </Link>
-            );
-          })}
+    <section className="pf-carousel-section" aria-label="Perfect for" data-testid="perfect-for-sidebar">
+      <div className="container">
+        <h3 className="pf-carousel-header" data-testid="perfect-for-header">Perfect for</h3>
+        <div 
+          className="pf-carousel-container"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          <div className={`pf-carousel-track ${isPaused ? 'paused' : ''}`}>
+            {PERFECT_FOR_ROLES.map((role) => {
+              const active = pathname === role.href;
+              return (
+                <Link 
+                  key={role.key} 
+                  to={role.href} 
+                  className={`pf-carousel-tile ${active ? 'pf-tile-active' : ''}`} 
+                  style={{ '--pf-accent': role.accent }}
+                  data-testid={`perfect-for-tile-${role.key}`}
+                >
+                  <span className="pf-tile-logo">
+                    <img src={ROLE_LOGOS[role.key]} alt={role.label} />
+                  </span>
+                  <span className="pf-tile-label">{role.label}</span>
+                  <span className="pf-tile-sub">{role.sub}</span>
+                </Link>
+              );
+            })}
+            {/* Duplicate for seamless continuous horizontal scroll */}
+            {PERFECT_FOR_ROLES.map((role) => {
+              const active = pathname === role.href;
+              return (
+                <Link 
+                  key={`${role.key}-dup`} 
+                  to={role.href} 
+                  className={`pf-carousel-tile ${active ? 'pf-tile-active' : ''}`} 
+                  style={{ '--pf-accent': role.accent }}
+                  data-testid={`perfect-for-tile-${role.key}-dup`}
+                >
+                  <span className="pf-tile-logo">
+                    <img src={ROLE_LOGOS[role.key]} alt={role.label} />
+                  </span>
+                  <span className="pf-tile-label">{role.label}</span>
+                  <span className="pf-tile-sub">{role.sub}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </aside>
+    </section>
   );
 }
 export default PerfectForSidebar;

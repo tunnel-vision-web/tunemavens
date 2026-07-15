@@ -299,9 +299,9 @@ export default function HomeView({ sessionUser }) {
         </div>
       </div>
 
-      <div className="landing-content-split">
-        <PerfectForSidebar />
+      <PerfectForSidebar />
 
+      <div className="landing-content-split">
         <div className="landing-content-main container">
         <section className="section-wrapper">
           <div className="flagship-previews">
