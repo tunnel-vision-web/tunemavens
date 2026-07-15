@@ -105,7 +105,7 @@ export default function HomeView({ sessionUser }) {
         ? "Pitch to TV networks, distribute to 150+ stores, and collect mechanical royalties globally in USD/GBP."
         : "Pitch to TV networks, distribute globally, and collect mechanical royalties into local mobile accounts.",
       b1: 'Start Publishing Now',
-      b1link: '/register',
+      b1link: '/publishing',
       b2: 'Learn Split Ledgers',
       b2link: '/apps'
     },

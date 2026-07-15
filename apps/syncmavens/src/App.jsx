@@ -1366,7 +1366,7 @@ function AppContent() {
 <CueSheet xmlns="http://www.ascap.com/cuesheet">
   <Header>
     <Title>${deal.briefTitle}</Title>
-    <Publisher>SyncMavens Publishing</Publisher>
+    <Publisher>TuneMavens Publishing</Publisher>
     <Status>SETTLED</Status>
   </Header>
   <Cues>
@@ -1374,7 +1374,7 @@ function AppContent() {
       <Number>1</Number>
       <Title>${deal.songTitle}</Title>
       <Composer>${deal.artist}</Composer>
-      <Publisher>SyncMavens Publishing</Publisher>
+      <Publisher>TuneMavens Publishing</Publisher>
       <Duration>Full Sync</Duration>
       <Usage>BI</Usage>
       <Split ComposerShare="50%" PublisherShare="50%" />
@@ -2730,7 +2730,7 @@ function PublishingView({ standalone }) {
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '48px' }}>
           <h2>Collect Every Royalty Cent Worldwide</h2>
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
-            When your music is streamed, broadcast, or performed, you generate royalties. SyncMavens Publishing handles the complex administration so you can focus on creating.
+            When your music is streamed, broadcast, or performed, you generate royalties. TuneMavens Publishing handles the complex administration so you can focus on creating.
           </p>
         </div>
 

@@ -90,6 +90,7 @@ import RoleLandingView from './views/landing/RoleLandingView.jsx'
 import PricingView from './views/landing/PricingView.jsx'
 import AboutView from './views/landing/AboutView.jsx'
 import HelpView from './views/landing/HelpView.jsx'
+import PublishingView from './views/landing/PublishingView.jsx'
 import StreamView from './views/consumer/StreamView.jsx'
 import {
   TuneStreamAboutView,
@@ -4045,6 +4046,7 @@ function AppContent({
           <Route path="/for" element={<PerfectForPageView />} />
           <Route path="/for/:role" element={<RoleLandingView />} />
           <Route path="/pricing" element={<PricingView />} />
+          <Route path="/publishing" element={<PublishingView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView />} />
           <Route path="/stream" element={
