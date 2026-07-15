@@ -354,3 +354,28 @@ class Order(BaseDocument):
     download_token: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+class CrmCampaign(BaseDocument):
+    name: str
+    subject: str
+    body: str
+    target_roles: List[str]
+    status: str = "draft"  # 'draft' | 'dispatched'
+    dispatched_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CmsLayout(BaseDocument):
+    layout_id: str
+    data: dict
+    version: int = 1
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CmsLayoutHistory(BaseDocument):
+    layout_id: str
+    data: dict
+    version: int
+    updated_by: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+

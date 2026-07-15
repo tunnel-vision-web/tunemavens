@@ -126,7 +126,8 @@ def token_exchange(payload: TokenExchangeRequest):
     _auth_codes_store.pop(payload.code, None)
 
     # Validate user exists
-    user = db.users.find_one({"_id": code_data["user_id"]})
+    from bson import ObjectId
+    user = db.users.find_one({"_id": ObjectId(code_data["user_id"])})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

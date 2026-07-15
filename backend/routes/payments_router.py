@@ -228,6 +228,7 @@ def sandbox_checkout_bypass(
 
 
 def _process_successful_checkout(metadata: dict):
+    from bson import ObjectId
     user_id = metadata.get("user_id")
     item_type = metadata.get("item_type")
     item_id = metadata.get("item_id")
@@ -248,7 +249,7 @@ def _process_successful_checkout(metadata: dict):
         }
         credits = credit_grants.get(item_id, 600)
         db.users.update_one(
-            {"_id": user_id},
+            {"_id": ObjectId(user_id)},
             {
                 "$set": {
                     "plan": item_id,

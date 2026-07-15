@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db
-from routes import admin_router, auth_router, contracts_router, dashboard_router, deals_router, users_router, sso_router, payments_router, ticketing_router, storefront_router, distro_router, stream_router, match_router
+from routes import admin_router, auth_router, contracts_router, dashboard_router, deals_router, users_router, sso_router, payments_router, ticketing_router, storefront_router, distro_router, stream_router, match_router, social_ai_router, crm_router, cms_router
 from routes.admin_router import seed_domain_mappings_if_empty
 
 app = FastAPI(title="TuneMavens API", version="0.1.0 (Phase 1)")
@@ -42,6 +42,9 @@ app.include_router(storefront_router)
 app.include_router(distro_router)
 app.include_router(stream_router)
 app.include_router(match_router)
+app.include_router(social_ai_router)
+app.include_router(crm_router)
+app.include_router(cms_router)
 app.include_router(dashboard_router)
 app.include_router(deals_router)
 app.include_router(admin_router)

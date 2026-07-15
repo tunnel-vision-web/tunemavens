@@ -87,7 +87,12 @@ def get_distribution_sheet(
     current_user: dict = Depends(get_current_user),
 ):
     """Exports a standardized distributor metadata sheet."""
-    release = db.releases.find_one({"_id": release_id})
+    try:
+        from bson import ObjectId
+        query_id = ObjectId(release_id)
+    except Exception:
+        query_id = release_id
+    release = db.releases.find_one({"$or": [{"_id": query_id}, {"_id": release_id}]})
     if not release:
         raise HTTPException(status_code=404, detail="Release not found")
 

@@ -119,3 +119,26 @@ export const adminApi = {
       request(`/api/admin/domain-mappings/${id}`, { method: 'DELETE' }),
   },
 };
+
+// --- Social AI (creators & admins) ---
+export const socialAiApi = {
+  generateArt: (prompt, aspect_ratio = "1:1") =>
+    request('/api/social-ai/generate-art', { method: 'POST', body: { prompt, aspect_ratio } }),
+  generateVideo: (prompt, duration_seconds = 5) =>
+    request('/api/social-ai/generate-video', { method: 'POST', body: { prompt, duration_seconds } }),
+};
+
+// --- CRM (admins only) ---
+export const crmApi = {
+  createCampaign: (campaign) => request('/api/crm/campaigns', { method: 'POST', body: campaign }),
+  listCampaigns: () => request('/api/crm/campaigns'),
+  dispatchCampaign: (id) => request(`/api/crm/dispatch/${id}`, { method: 'POST' }),
+};
+
+// --- CMS Layouts & Rollbacks ---
+export const cmsApi = {
+  getLayout: (id) => request(`/api/cms/layouts/${id}`),
+  updateLayout: (id, data) => request('/api/cms/layouts', { method: 'POST', body: { layout_id: id, data } }),
+  getHistory: (id) => request(`/api/cms/layouts/${id}/history`),
+  rollback: (id, version) => request(`/api/cms/layouts/${id}/rollback/${version}`, { method: 'POST' }),
+};

@@ -11,6 +11,9 @@ from .storefront_router import router as storefront_router
 from .distro_router import router as distro_router
 from .stream_router import router as stream_router
 from .match_router import router as match_router
+from .social_ai_router import router as social_ai_router
+from .crm_router import router as crm_router
+from .cms_router import router as cms_router
 
 __all__ = [
     "admin_router",
@@ -26,4 +29,7 @@ __all__ = [
     "distro_router",
     "stream_router",
     "match_router",
+    "social_ai_router",
+    "crm_router",
+    "cms_router",
 ]

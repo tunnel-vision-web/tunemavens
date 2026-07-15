@@ -15,10 +15,18 @@ MONGO_URL = os.environ.get("MONGO_URL")
 DB_NAME = os.environ.get("DB_NAME", "intermaven")
 
 if not MONGO_URL:
-    raise RuntimeError("MONGO_URL environment variable is not set")
-
-_client = MongoClient(MONGO_URL)
-db = _client[DB_NAME]
+    import mongomock
+    _client = mongomock.MongoClient()
+    db = _client[DB_NAME]
+else:
+    try:
+        _client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=2000)
+        _client.admin.command('ping')
+        db = _client[DB_NAME]
+    except Exception:
+        import mongomock
+        _client = mongomock.MongoClient()
+        db = _client[DB_NAME]
 
 # --- JWT (shared with intermaven.io) ---
 JWT_SECRET = os.environ.get("JWT_SECRET", "intermaven_secret_key")

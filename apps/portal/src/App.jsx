@@ -71,7 +71,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
-import { authApi, tokenStore, adminApi, dealsApi, usersApi } from './lib/api.js'
+import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi } from './lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
 import { PerfectForSidebar, PERFECT_FOR_ROLES, ROLE_LOGOS } from './components/PerfectForSidebar.jsx'
@@ -446,6 +446,12 @@ function DashboardView({
         return <PublishingElectionPanel sessionUser={sessionUser} />;
       case 'distribution-election':
         return <DistributionElectionPanel sessionUser={sessionUser} />;
+      case 'social-ai':
+        return <SocialAiPanel />;
+      case 'crm':
+        return <CrmPanel />;
+      case 'cms':
+        return <CmsPanel />;
       case 'app-marketplace':
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} />;
       default:
@@ -475,6 +481,9 @@ function DashboardView({
       'publishing-election': { id: 'publishing-election', label: 'Publishing Election', icon: RiBookOpenFill, category: 'Royalty Ledgers' },
       'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: RiGlobalFill, category: 'Royalty Ledgers' },
       'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: RiFlashlightFill, category: 'Apps & Marketplace' },
+      'social-ai': { id: 'social-ai', label: 'Social AI Studio', icon: RiCpuFill, category: 'Creator Tools' },
+      crm: { id: 'crm', label: 'CRM Campaigns', icon: RiMessage2Fill, category: 'Admin' },
+      cms: { id: 'cms', label: 'CMS Layouts', icon: RiFileTextFill, category: 'Admin' },
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: RiGlobalFill, category: 'Admin' },
       'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: RiStarFill, category: 'Admin' },
     };
@@ -482,10 +491,10 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'app-marketplace', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'promoted-acts', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'cms', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'promoted-acts', 'profile'];
         break;
       case 'label':
-        visibleKeys = ['home', 'app-marketplace', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
         break;
       case 'dj':
         visibleKeys = ['home', 'app-marketplace', 'djpool', 'library', 'tips', 'profile'];
@@ -499,7 +508,7 @@ function DashboardView({
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'app-marketplace', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
+        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
         break;
     }
 
@@ -4431,6 +4440,562 @@ function App() {
         setCreatorEpk={setCreatorEpk}
       />
     </Router>
+  );
+}
+
+// ================= Track D: Social AI Panel =================
+function SocialAiPanel() {
+  const [prompt, setPrompt] = React.useState('');
+  const [mediaType, setMediaType] = React.useState('image'); // 'image' | 'video'
+  const [aspectRatio, setAspectRatio] = React.useState('1:1');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [result, setResult] = React.useState(null);
+
+  const handleGenerate = async (e) => {
+    e.preventDefault();
+    if (!prompt.trim()) {
+      setError('Please provide a prompt.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setResult(null);
+    try {
+      let res;
+      if (mediaType === 'image') {
+        res = await socialAiApi.generateArt(prompt, aspectRatio);
+      } else {
+        res = await socialAiApi.generateVideo(prompt, 5);
+      }
+      setResult(res);
+    } catch (err) {
+      setError(err.data?.detail || err.message || 'Generation failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="dashboard-card" style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <div className="dashboard-card-header">
+        <h3 className="dashboard-card-title">Social AI Creative Studio</h3>
+        <p className="dashboard-card-desc">Generate promotional artwork and short clip teasers using advanced AI engines.</p>
+      </div>
+
+      <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div>
+          <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Creative Prompt</label>
+          <textarea 
+            className="form-control" 
+            rows="3" 
+            placeholder="Describe what you want to generate (e.g. 'A retro vinyl spinning in a neon-lit cyber synthwave style')" 
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            style={{ width: '100%', resize: 'none', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '12px' }}
+          />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div>
+            <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Asset Type</label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                type="button" 
+                className={`btn-secondary ${mediaType === 'image' ? 'active' : ''}`}
+                onClick={() => setMediaType('image')}
+                style={{ flex: 1, background: mediaType === 'image' ? 'var(--cyan)' : 'transparent', color: mediaType === 'image' ? '#000' : '#fff', fontWeight: 'bold' }}
+              >
+                Cover Art
+              </button>
+              <button 
+                type="button" 
+                className={`btn-secondary ${mediaType === 'video' ? 'active' : ''}`}
+                onClick={() => setMediaType('video')}
+                style={{ flex: 1, background: mediaType === 'video' ? 'var(--cyan)' : 'transparent', color: mediaType === 'video' ? '#000' : '#fff', fontWeight: 'bold' }}
+              >
+                Teaser Video
+              </button>
+            </div>
+          </div>
+
+          {mediaType === 'image' && (
+            <div>
+              <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Aspect Ratio</label>
+              <select 
+                className="form-control"
+                value={aspectRatio}
+                onChange={(e) => setAspectRatio(e.target.value)}
+                style={{ width: '100%', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '10px' }}
+              >
+                <option value="1:1">Square (1:1)</option>
+                <option value="16:9">Widescreen (16:9)</option>
+                <option value="9:16">Vertical Short (9:16)</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {error && <div style={{ color: '#ef4444', fontSize: '13px' }}>{error}</div>}
+
+        <button 
+          type="submit" 
+          className="btn-primary" 
+          disabled={loading}
+          style={{ alignSelf: 'flex-start', padding: '12px 32px' }}
+        >
+          {loading ? 'Generating Creative Assets...' : 'Generate Assets'}
+        </button>
+      </form>
+
+      {result && (
+        <div className="glass-panel" style={{ marginTop: '32px', padding: '24px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
+          <h4 style={{ color: '#fff', marginBottom: '16px', fontWeight: 'bold' }}>Generation Output</h4>
+          {result.media_type === 'image' ? (
+            <img 
+              src={result.media_url} 
+              alt={result.prompt} 
+              style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '4px', boxShadow: '0 8px 30px rgba(0,0,0,0.5)', display: 'block', margin: '0 auto' }} 
+            />
+          ) : (
+            <video 
+              src={result.media_url} 
+              controls 
+              autoPlay 
+              loop
+              style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '4px', boxShadow: '0 8px 30px rgba(0,0,0,0.5)', display: 'block', margin: '0 auto' }} 
+            />
+          )}
+          <p style={{ color: '#94a3b8', fontSize: '13px', marginTop: '16px', fontStyle: 'italic' }}>
+            Prompt: "{result.prompt}"
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ================= Track D: CRM Campaigns Panel =================
+function CrmPanel() {
+  const [campaigns, setCampaigns] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+  const [dispatchStatus, setDispatchStatus] = React.useState({}); // campaignId -> status text
+
+  // Form States
+  const [showCreate, setShowCreate] = React.useState(false);
+  const [name, setName] = React.useState('');
+  const [subject, setSubject] = React.useState('');
+  const [body, setBody] = React.useState('');
+  const [targetRoles, setTargetRoles] = React.useState([]);
+
+  const ROLES = [
+    { value: 'creator', label: 'Creators' },
+    { value: 'label', label: 'Record Labels' },
+    { value: 'dj', label: 'DJs' },
+    { value: 'media_house', label: 'Media Houses' },
+    { value: 'supervisor', label: 'Execs/Supervisors' },
+    { value: 'consumer', label: 'Consumers' }
+  ];
+
+  const loadCampaigns = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const list = await crmApi.listCampaigns();
+      setCampaigns(list);
+    } catch (err) {
+      setError('Failed to fetch campaigns.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadCampaigns();
+  }, []);
+
+  const handleRoleToggle = (role) => {
+    if (targetRoles.includes(role)) {
+      setTargetRoles(targetRoles.filter(r => r !== role));
+    } else {
+      setTargetRoles([...targetRoles, role]);
+    }
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (targetRoles.length === 0) {
+      setError('Please select at least one target role.');
+      return;
+    }
+    setError('');
+    try {
+      await crmApi.createCampaign({ name, subject, body, target_roles: targetRoles });
+      setName('');
+      setSubject('');
+      setBody('');
+      setTargetRoles([]);
+      setShowCreate(false);
+      loadCampaigns();
+    } catch (err) {
+      setError(err.data?.detail || err.message || 'Failed to create campaign');
+    }
+  };
+
+  const handleDispatch = async (campaignId) => {
+    setDispatchStatus(prev => ({ ...prev, [campaignId]: 'dispatching' }));
+    try {
+      const res = await crmApi.dispatchCampaign(campaignId);
+      setDispatchStatus(prev => ({ 
+        ...prev, 
+        [campaignId]: `Dispatched to ${res.recipient_count} target recipients!` 
+      }));
+      loadCampaigns();
+    } catch (err) {
+      setDispatchStatus(prev => ({ ...prev, [campaignId]: 'Failed to dispatch' }));
+    }
+  };
+
+  return (
+    <div className="dashboard-card" style={{ maxWidth: '850px', margin: '0 auto' }}>
+      <div className="dashboard-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 className="dashboard-card-title">CRM Targeted Campaigns</h3>
+          <p className="dashboard-card-desc">Compose outreach announcements and target cohorts based on user platform roles.</p>
+        </div>
+        {!showCreate && (
+          <button onClick={() => setShowCreate(true)} className="btn-primary" style={{ padding: '10px 20px' }}>
+            New Campaign
+          </button>
+        )}
+      </div>
+
+      {showCreate && (
+        <form onSubmit={handleCreate} className="glass-panel" style={{ padding: '24px', marginBottom: '32px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+          <h4 style={{ color: '#fff', marginBottom: '16px', fontWeight: 'bold' }}>Create Outreach Campaign</h4>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label className="form-label" style={{ display: 'block', marginBottom: '6px' }}>Campaign Name</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                required 
+                style={{ width: '100%', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '10px' }}
+              />
+            </div>
+            
+            <div>
+              <label className="form-label" style={{ display: 'block', marginBottom: '6px' }}>Subject Line</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={subject} 
+                onChange={(e) => setSubject(e.target.value)} 
+                required 
+                style={{ width: '100%', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '10px' }}
+              />
+            </div>
+
+            <div>
+              <label className="form-label" style={{ display: 'block', marginBottom: '6px' }}>Email & Message Body</label>
+              <textarea 
+                className="form-control" 
+                rows="4" 
+                value={body} 
+                onChange={(e) => setBody(e.target.value)} 
+                required 
+                style={{ width: '100%', resize: 'none', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '10px' }}
+              />
+            </div>
+
+            <div>
+              <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Target Audience Cohorts</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                {ROLES.map((r) => (
+                  <label key={r.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#cbd5e1', cursor: 'pointer', fontSize: '13.5px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={targetRoles.includes(r.value)}
+                      onChange={() => handleRoleToggle(r.value)}
+                      style={{ accentColor: 'var(--cyan)' }}
+                    />
+                    {r.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {error && <div style={{ color: '#ef4444', fontSize: '13px' }}>{error}</div>}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button type="submit" className="btn-primary" style={{ padding: '10px 24px' }}>Save Campaign</button>
+              <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary" style={{ padding: '10px 24px' }}>Cancel</button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {loading ? (
+        <p style={{ color: '#94a3b8' }}>Loading outreach history...</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {campaigns.length === 0 ? (
+            <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No campaigns created yet.</p>
+          ) : (
+            campaigns.map((c) => (
+              <div key={c.id} className="glass-panel" style={{ padding: '20px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ margin: 0, color: '#fff', fontSize: '16px', fontWeight: 'bold' }}>{c.name}</h4>
+                  <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 8px 0' }}>Subject: "{c.subject}"</p>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {c.target_roles.map((r) => (
+                      <span key={r} style={{ fontSize: '10px', background: 'rgba(34, 211, 238, 0.08)', color: 'var(--cyan)', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
+                        {r}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right', minWidth: '180px' }}>
+                  {c.status === 'dispatched' ? (
+                    <div>
+                      <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '13px', display: 'block', marginBottom: '4px' }}>✓ Dispatched</span>
+                      <span style={{ color: '#94a3b8', fontSize: '11px' }}>
+                        {new Date(c.dispatched_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      {dispatchStatus[c.id] ? (
+                        <span style={{ color: 'var(--cyan)', fontSize: '13px', fontWeight: '500' }}>
+                          {dispatchStatus[c.id]}
+                        </span>
+                      ) : (
+                        <button onClick={() => handleDispatch(c.id)} className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
+                          Dispatch Now
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ================= Track D: CMS Layouts & Rollbacks Panel =================
+function CmsPanel() {
+  const [layoutId, setLayoutId] = React.useState('landing-hero');
+  const [heroTitle, setHeroTitle] = React.useState('');
+  const [heroSubtitle, setHeroSubtitle] = React.useState('');
+  const [accentColor, setAccentColor] = React.useState('var(--cyan)');
+  const [history, setHistory] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [successMsg, setSuccessMsg] = React.useState('');
+
+  const loadLayout = async () => {
+    setLoading(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const res = await cmsApi.getLayout(layoutId);
+      setHeroTitle(res.data.hero_title || '');
+      setHeroSubtitle(res.data.hero_subtitle || '');
+      setAccentColor(res.data.primary_accent || 'var(--cyan)');
+      
+      const hist = await cmsApi.getHistory(layoutId);
+      setHistory(hist);
+    } catch (err) {
+      setError('Failed to load layout configuration.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadLayout();
+  }, [layoutId]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const payload = {
+        hero_title: heroTitle,
+        hero_subtitle: heroSubtitle,
+        primary_accent: accentColor
+      };
+      await cmsApi.updateLayout(layoutId, payload);
+      setSuccessMsg('Layout updated and version saved to ledger successfully!');
+      
+      // Reload history
+      const hist = await cmsApi.getHistory(layoutId);
+      setHistory(hist);
+    } catch (err) {
+      setError(err.data?.detail || err.message || 'Failed to save layout');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRollback = async (version) => {
+    setLoading(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const res = await cmsApi.rollback(layoutId, version);
+      setHeroTitle(res.data.hero_title || '');
+      setHeroSubtitle(res.data.hero_subtitle || '');
+      setAccentColor(res.data.primary_accent || 'var(--cyan)');
+      setSuccessMsg(`Rolled back layout state to version ${version}!`);
+      
+      // Reload history
+      const hist = await cmsApi.getHistory(layoutId);
+      setHistory(hist);
+    } catch (err) {
+      setError(err.data?.detail || err.message || 'Rollback failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="dashboard-card" style={{ maxWidth: '850px', margin: '0 auto' }}>
+      <div className="dashboard-card-header">
+        <h3 className="dashboard-card-title">Mother-CMS Version Control</h3>
+        <p className="dashboard-card-desc">Edit page layout templates and audit historical configuration versions for instant rollbacks.</p>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Select Layout Template</label>
+        <select 
+          className="form-control"
+          value={layoutId}
+          onChange={(e) => setLayoutId(e.target.value)}
+          style={{ width: '100%', maxWidth: '300px', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '10px' }}
+        >
+          <option value="landing-hero">Landing Page Hero Layout</option>
+          <option value="dashboard-widgets">Dashboard Widgets Layout</option>
+        </select>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+        {/* Editor Form */}
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <h4 style={{ color: '#fff', margin: 0, fontWeight: 'bold' }}>Active Config</h4>
+          
+          <div>
+            <label className="form-label" style={{ display: 'block', marginBottom: '6px' }}>Hero Title</label>
+            <input 
+              type="text" 
+              className="form-control"
+              value={heroTitle}
+              onChange={(e) => setHeroTitle(e.target.value)}
+              required
+              style={{ width: '100%', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '10px' }}
+            />
+          </div>
+
+          <div>
+            <label className="form-label" style={{ display: 'block', marginBottom: '6px' }}>Hero Subtitle</label>
+            <input 
+              type="text" 
+              className="form-control"
+              value={heroSubtitle}
+              onChange={(e) => setHeroSubtitle(e.target.value)}
+              required
+              style={{ width: '100%', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '10px' }}
+            />
+          </div>
+
+          <div>
+            <label className="form-label" style={{ display: 'block', marginBottom: '6px' }}>Primary Accent Color</label>
+            <select 
+              className="form-control"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+              style={{ width: '100%', background: 'var(--bg2)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '10px' }}
+            >
+              <option value="var(--cyan)">Neon Cyan</option>
+              <option value="var(--purple)">Neon Purple</option>
+              <option value="var(--magenta)">Neon Magenta</option>
+            </select>
+          </div>
+
+          {error && <div style={{ color: '#ef4444', fontSize: '13px' }}>{error}</div>}
+          {successMsg && <div style={{ color: '#10b981', fontSize: '13px', fontWeight: 'bold' }}>{successMsg}</div>}
+
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            disabled={saving || loading}
+            style={{ alignSelf: 'flex-start', padding: '10px 24px' }}
+          >
+            {saving ? 'Saving...' : 'Save & Deploy Layout'}
+          </button>
+        </form>
+
+        {/* History Snapshot Log */}
+        <div>
+          <h4 style={{ color: '#fff', marginBottom: '16px', fontWeight: 'bold' }}>Revision History Ledger</h4>
+          {loading ? (
+            <p style={{ color: '#94a3b8' }}>Loading history logs...</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '420px', overflowY: 'auto', paddingRight: '8px' }}>
+              {history.length === 0 ? (
+                <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No revisions found. Active config is set to defaults.</p>
+              ) : (
+                history.map((h) => (
+                  <div 
+                    key={h.id} 
+                    className="glass-panel" 
+                    style={{ 
+                      padding: '16px', 
+                      borderRadius: '4px', 
+                      border: '1px solid rgba(255,255,255,0.05)', 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center' 
+                    }}
+                  >
+                    <div>
+                      <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px', display: 'block' }}>
+                        Version {h.version}
+                      </span>
+                      <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', marginTop: '2px' }}>
+                        by {h.updated_by || 'admin'}
+                      </span>
+                      <span style={{ color: '#64748b', fontSize: '10px' }}>
+                        {new Date(h.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => handleRollback(h.version)}
+                      className="btn-secondary"
+                      style={{ padding: '6px 12px', fontSize: '11px' }}
+                    >
+                      Rollback
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -108,7 +108,8 @@ class StorageManager:
         local_path.write_bytes(file_bytes)
         
         # Return local dev URL
-        return f"{LOCAL_UPLOADS_URL_PREFIX.rstrip('/')}/{unique_filename.replace('\\', '/')}"
+        safe_filename = unique_filename.replace('\\', '/')
+        return f"{LOCAL_UPLOADS_URL_PREFIX.rstrip('/')}/{safe_filename}"
 
 
 # Global single instance export

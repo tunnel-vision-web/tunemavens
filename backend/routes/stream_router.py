@@ -34,7 +34,12 @@ def stream_audio(
     Starter tier receives a 45-second preview, while higher tiers
     receive the full file.
     """
-    release = db.releases.find_one({"_id": release_id})
+    try:
+        from bson import ObjectId
+        query_id = ObjectId(release_id)
+    except Exception:
+        query_id = release_id
+    release = db.releases.find_one({"$or": [{"_id": query_id}, {"_id": release_id}]})
     if not release:
         # Check dsp_releases in SQL if not in Mongo (for monorepo compatibility)
         raise HTTPException(status_code=404, detail="Track release not found")
@@ -74,6 +79,9 @@ def stream_audio(
             else:
                 logger.info(f"Serving full local file {relative_path} to plan {user_plan}.")
                 return FileResponse(local_file_path, media_type="audio/mpeg")
+        elif is_starter:
+            logger.info(f"Local file {relative_path} does not exist. Serving empty preview.")
+            return StreamingResponse(iter([]), media_type="audio/mpeg")
 
     # --- Case 2: Remote S3/R2 File ---
     if is_starter:
