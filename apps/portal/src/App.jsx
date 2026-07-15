@@ -93,6 +93,7 @@ import HelpView from './views/landing/HelpView.jsx'
 import PublishingView from './views/landing/PublishingView.jsx'
 import DistributionView from './views/landing/DistributionView.jsx'
 import ToursView from './views/landing/ToursView.jsx'
+import SyncPlacementView from './views/landing/SyncPlacementView.jsx'
 import StreamView from './views/consumer/StreamView.jsx'
 import {
   TuneStreamAboutView,
@@ -4051,6 +4052,7 @@ function AppContent({
           <Route path="/publishing" element={<PublishingView sessionUser={sessionUser} />} />
           <Route path="/distribution" element={<DistributionView sessionUser={sessionUser} />} />
           <Route path="/tours" element={<ToursView sessionUser={sessionUser} />} />
+          <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView />} />
           <Route path="/stream" element={

@@ -253,7 +253,7 @@ export default function Navbar({ sessionUser }) {
         </li>
         <li className="dropdown-container" ref={servicesDropdownRef}>
           <button
-            className={`nav-link dropdown-trigger ${isActive('/publishing') || isActive('/tours') || isActive('/distribution') ? 'active' : ''}`}
+            className={`nav-link dropdown-trigger ${isActive('/publishing') || isActive('/tours') || isActive('/distribution') || isActive('/sync-placement') ? 'active' : ''}`}
             onClick={() => { setDropdownOpen(false); setAboutDropdownOpen(false); setAppsDropdownOpen(false); setServicesDropdownOpen(!servicesDropdownOpen); }}
             data-testid="nav-services-dropdown-trigger"
           >
@@ -289,13 +289,13 @@ export default function Navbar({ sessionUser }) {
               </Link>
             </li>
             <li>
-              <a
-                href={getServiceUrl('syncmavens')}
+              <Link
+                to="/sync-placement"
                 className="dropdown-link"
                 onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}
               >
                 <RiVolumeUpFill size={16} /> Sync Placement
-              </a>
+              </Link>
             </li>
           </ul>
         </li>
