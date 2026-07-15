@@ -38,6 +38,10 @@ ALLOWED_APP_SLUGS = {
     "mpesa-pos-inventory",
     "mpesa-pos-settlement",
     "mpesa-pos-devices",
+    "tunepay-inventory",
+    "tunepay-settlement",
+    "tunepay-devices",
+    "epk-builder",
     # Intermaven Network — the 3 flagship native apps. Slugs mirror
     # src/lib/nativeApps.js so the dashboard's "Native Apps" tab in the
     # App Marketplace persists activations cleanly.
