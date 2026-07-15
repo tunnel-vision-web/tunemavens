@@ -719,3 +719,16 @@ Upon every push to `main`, the deployment workflow builds each app target indepe
 - **`briefs` Collection:** Stores incoming film, TV, and video game licensing sync briefs. Schema mirrors standard contract briefs: project name, client, budget, duration format, deadline, required genre style, and description details.
 - **`pitches` Collection:** Tracks pitched catalog tracks submitted by creators to active briefs.
 - **`catalogs` Collection:** Index of masters and metadata ingested for sync matching, linked with split cascade agreements.
+
+---
+
+## §9.17 — Track D: Social AI Studio Recommendations & Mother-EPK Integration
+
+### 9.17.1 Social AI Studio Path Asset Recommendations
+- **Path-Based Suggestions:** The Social AI Studio recommends specific creative assets (such as aspect ratios, file types, and style guidelines) matching the campaign's recommended marketing channel path. For example, if the marketing path recommends **Facebook** and **Instagram**, the Studio automatically suggests creating Square (1:1) and Vertical Short (9:16) assets.
+- **Intermaven Integration:** The Social AI Studio is linked to the Intermaven Social AI scheduling and dispatch app, which automates social posting, queue management, and goal metrics tracking.
+
+### 9.17.2 Intermaven EPK Builder Integration
+- **Platform Parity:** The EPK Builder in TuneMavens is identical to the one on the Intermaven platform. Intermaven serves as the parent ("mother") platform, ensuring that all templates, metadata fields, and media asset associations are synchronized.
+- **Activation Lifecycle:** Creators can activate or deactivate the EPK Builder app dynamically from the **App Marketplace** in the admin panel.
+

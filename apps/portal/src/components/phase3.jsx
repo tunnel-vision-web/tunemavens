@@ -5,7 +5,7 @@
 // AppMarketplacePanel  -  plus the PanelHeader helper they share.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { RiCloseFill, RiCheckboxCircleFill, RiArrowDownSFill, RiArrowLeftFill, RiArrowRightFill, RiResetLeftFill, RiSendPlaneFill, RiPenNibFill, RiLinksFill, RiMailFill, RiLockFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDatabase2Fill, RiCoinsFill, RiGroupFill as UsersIcon } from 'react-icons/ri'
+import { RiCloseFill, RiCheckboxCircleFill, RiArrowDownSFill, RiArrowLeftFill, RiArrowRightFill, RiResetLeftFill, RiSendPlaneFill, RiPenNibFill, RiLinksFill, RiMailFill, RiLockFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDatabase2Fill, RiCoinsFill, RiGroupFill as UsersIcon, RiDiscFill } from 'react-icons/ri'
 import { dealsApi, usersApi, contractsApi } from '../lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from '../lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'
@@ -1279,6 +1279,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
     { slug: 'tunepay-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: RiDatabase2Fill, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'admin'] },
     { slug: 'tunepay-settlement', name: 'POS Settlement', desc: 'Reconcile tunepay settlement runs against your ledger.', icon: RiCoinsFill, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
     { slug: 'tunepay-devices', name: 'POS Devices', desc: 'Pair and manage tunepay hardware tied to your account.', icon: RiSmartphoneFill, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'admin'] },
+    { slug: 'epk-builder', name: 'EPK Builder', desc: 'Construct a stunning Electronic Press Kit (EPK) with your tracks, bio, and social links to pitch to supervisors.', icon: RiDiscFill, accent: 'var(--cyan)', tab: 'epk-builder', roles: ['creator', 'label', 'admin'] },
   ];
 
   const visible = catalogue.filter((a) => a.roles.includes(role));

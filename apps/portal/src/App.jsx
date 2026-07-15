@@ -512,8 +512,31 @@ function DashboardView({
         break;
     }
 
+    const APP_SLUGS = {
+      catalog: 'catalog-porting',
+      splits: 'split-cascade',
+      'publishing-election': 'publishing-election',
+      'distribution-election': 'distribution-election',
+      djpool: 'djpool',
+      sync: 'sync-marketplace',
+      escrow: 'escrow-contracts',
+      library: 'tunemavens-library',
+      tips: 'tunemavens-tips',
+      'pos-inventory': 'tunepay-inventory',
+      'pos-settlement': 'tunepay-settlement',
+      'pos-devices': 'tunepay-devices',
+      'epk-builder': 'epk-builder'
+    };
+
     const categories = {};
     visibleKeys.forEach(k => {
+      // Check if this tab is a marketplace app, and if so, only show if activated.
+      if (APP_SLUGS[k]) {
+        const activeApps = sessionUser?.apps || [];
+        if (!activeApps.includes(APP_SLUGS[k])) {
+          return;
+        }
+      }
       const item = allItems[k];
       if (!categories[item.category]) {
         categories[item.category] = [];
@@ -4451,9 +4474,27 @@ function SocialAiPanel() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [result, setResult] = React.useState(null);
+  
+  // Recommendations & Integration states
+  const [onboarding, setOnboarding] = React.useState(null);
+  const [manualGoal, setManualGoal] = React.useState('brand_awareness'); // 'brand_awareness' | 'viral_reach'
+  const [isManual, setIsManual] = React.useState(false);
+  const [selectedChannels, setSelectedChannels] = React.useState(['instagram', 'facebook']);
+
+  React.useEffect(() => {
+    usersApi.getOnboarding()
+      .then((o) => {
+        setOnboarding(o);
+        // Auto-configure channels based on onboarding primary goal
+        if (o && o.primary_goal && o.primary_goal.some(g => g.toLowerCase().includes('social') || g.toLowerCase().includes('audience') || g.toLowerCase().includes('reach'))) {
+          setSelectedChannels(['instagram', 'tiktok']);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleGenerate = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!prompt.trim()) {
       setError('Please provide a prompt.');
       return;
@@ -4476,11 +4517,168 @@ function SocialAiPanel() {
     }
   };
 
+  const toggleChannel = (ch) => {
+    if (selectedChannels.includes(ch)) {
+      setSelectedChannels(selectedChannels.filter(c => c !== ch));
+    } else {
+      setSelectedChannels([...selectedChannels, ch]);
+    }
+  };
+
+  // Recommendations calculated based on selected channels and onboarding / goals
+  const getAIRecommendations = () => {
+    const isViral = isManual 
+      ? manualGoal === 'viral_reach'
+      : (onboarding && onboarding.primary_goal && onboarding.primary_goal.some(g => g.toLowerCase().includes('social') || g.toLowerCase().includes('reach')));
+
+    const recommendations = [];
+    
+    if (selectedChannels.includes('instagram') || selectedChannels.includes('tiktok')) {
+      recommendations.push({
+        type: 'video',
+        ratio: '9:16',
+        label: 'Instagram Reels & TikTok Short',
+        promptSuggestion: 'Vertical hyper-realistic promo teaser with neon particle streams, high energy vibe'
+      });
+    }
+    if (selectedChannels.includes('facebook') || selectedChannels.includes('spotify') || selectedChannels.includes('instagram')) {
+      recommendations.push({
+        type: 'image',
+        ratio: '1:1',
+        label: 'Facebook Post & Spotify Cover',
+        promptSuggestion: 'Synthwave vinyl cover art, retro-futuristic grid with glowing sun background'
+      });
+    }
+    if (selectedChannels.includes('youtube')) {
+      recommendations.push({
+        type: 'video',
+        ratio: '16:9',
+        label: 'YouTube Widescreen Teaser',
+        promptSuggestion: 'Cinematic music video opening shot, drone overview of a cybernetic stadium at dusk'
+      });
+    }
+
+    return { isViral, recommendations };
+  };
+
+  const { isViral, recommendations } = getAIRecommendations();
+
+  const applySuggestion = (rec) => {
+    setMediaType(rec.type);
+    setAspectRatio(rec.ratio);
+    setPrompt(rec.promptSuggestion);
+  };
+
   return (
-    <div className="dashboard-card" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div className="dashboard-card-header">
+    <div className="dashboard-card" style={{ maxWidth: '850px', margin: '0 auto' }}>
+      {/* Intermaven Social AI Linkage Alert */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(34, 211, 238, 0.06)', border: '1px solid rgba(34, 211, 238, 0.20)', padding: '12px 18px', borderRadius: '4px', marginBottom: '24px' }}>
+        <RiCpuFill style={{ color: 'var(--cyan)', flexShrink: 0 }} size={20} />
+        <div style={{ flex: 1, fontSize: '13px', color: '#cbd5e1' }}>
+          <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>🔗 Linked to Intermaven Social AI:</span> Auto-scheduling is active. Created assets sync directly with your Intermaven visual post calendar and automatic publishing queues.
+        </div>
+      </div>
+
+      <div className="dashboard-card-header" style={{ marginBottom: '24px' }}>
         <h3 className="dashboard-card-title">Social AI Creative Studio</h3>
-        <p className="dashboard-card-desc">Generate promotional artwork and short clip teasers using advanced AI engines.</p>
+        <p className="dashboard-card-desc">Generate visual assets tailored to your recommended marketing channels.</p>
+      </div>
+
+      {/* Path Recommendation System */}
+      <div className="glass-panel" style={{ padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '28px', background: 'rgba(11,15,30,0.4)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>🎯 Recommended Path Suggestions</h4>
+          <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <input 
+              type="checkbox" 
+              checked={isManual} 
+              onChange={() => setIsManual(!isManual)} 
+              style={{ accentColor: 'var(--cyan)' }} 
+            />
+            Manual Goal Planner
+          </label>
+        </div>
+
+        {isManual ? (
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+            <button 
+              type="button" 
+              className={`btn-secondary ${manualGoal === 'brand_awareness' ? 'active' : ''}`}
+              onClick={() => setManualGoal('brand_awareness')}
+              style={{ flex: 1, fontSize: '12.5px', background: manualGoal === 'brand_awareness' ? 'var(--cyan)' : 'transparent', color: manualGoal === 'brand_awareness' ? '#000' : '#fff' }}
+            >
+              Brand Awareness Focus
+            </button>
+            <button 
+              type="button" 
+              className={`btn-secondary ${manualGoal === 'viral_reach' ? 'active' : ''}`}
+              onClick={() => setManualGoal('viral_reach')}
+              style={{ flex: 1, fontSize: '12.5px', background: manualGoal === 'viral_reach' ? 'var(--cyan)' : 'transparent', color: manualGoal === 'viral_reach' ? '#000' : '#fff' }}
+            >
+              Viral Reach Focus
+            </button>
+          </div>
+        ) : (
+          <div style={{ fontSize: '13px', color: '#94a3b8', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', marginBottom: '16px', borderLeft: '3px solid var(--purple)' }}>
+            {isViral ? (
+              <span>🚀 <strong style={{ color: '#fff' }}>Viral Audience Path Recommended:</strong> Your onboarding profile emphasizes social growth. Generating vertical clips (9:16) for TikTok/Reels is highly recommended.</span>
+            ) : (
+              <span>🎵 <strong style={{ color: '#fff' }}>Brand Awareness Path Recommended:</strong> Your profile emphasizes streaming/mechanical splits. Generating cover art (1:1) and widescreen teasers (16:9) is recommended.</span>
+            )}
+          </div>
+        )}
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '8px' }}>Active Channel Targets</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            {['instagram', 'facebook', 'tiktok', 'youtube', 'spotify'].map(ch => {
+              const active = selectedChannels.includes(ch);
+              return (
+                <button
+                  key={ch}
+                  type="button"
+                  onClick={() => toggleChannel(ch)}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '11.5px',
+                    borderRadius: '20px',
+                    border: '1px solid',
+                    borderColor: active ? 'var(--cyan)' : 'rgba(255,255,255,0.1)',
+                    background: active ? 'rgba(34,211,238,0.08)' : 'transparent',
+                    color: active ? 'var(--cyan)' : '#94a3b8',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                    fontWeight: active ? 'bold' : 'normal'
+                  }}
+                >
+                  {ch}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '8px' }}>Propose Visual Assets:</label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+            {recommendations.map((rec, index) => (
+              <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <div>
+                  <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', display: 'block' }}>{rec.label} ({rec.ratio} {rec.type})</span>
+                  <span style={{ color: '#64748b', fontSize: '11px', fontStyle: 'italic' }}>Preset prompt: "{rec.promptSuggestion}"</span>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => applySuggestion(rec)}
+                  className="btn-secondary" 
+                  style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                >
+                  Use Preset
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

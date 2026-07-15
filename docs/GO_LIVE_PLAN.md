@@ -81,9 +81,9 @@ To achieve the end of September target, we will structure the remaining work int
 - **Sync Match Simulator**: Port the Ditto-inspired matching engine (90/10 split waterfall, matching brief simulator) to the backend router.
 
 ### Track D: AI, CRM & CMS Expansion (Weeks 3–9)
-- **Social AI**: Connect image generation (Gemini Nano Banana) and video clips (Sora 2) into the creative automation dashboard.
+- **Social AI**: Connect image generation (Gemini Nano Banana) and video clips (Sora 2) into the creative automation dashboard. Link the app to Intermaven's Social AI scheduling app. Implement recommendation logic suggesting asset formats (aspect ratios, presets) based on the active marketing path (e.g., recommending visual formats for Facebook/Instagram based on automated path assessments or manual goals).
 - **CRM campaigns**: Support custom campaign builders targeting user roles, dispatching via Resend or in-app inbox.
-- **Mother-CMS Rollback**: Implement revision histories and rollback systems for the CMS content grid.
+- **EPK Builder & Mother-CMS Rollback**: Implement revision histories and rollback systems for the CMS content grid. Ensure the EPK Builder is identical to the Intermaven EPK builder (acting as the mother platform), activatable via the App Marketplace in the admin panel.
 
 ### Track E: Hardening, SEO & Launch Prep (Weeks 10–11)
 - **SEO Optimization**: Embed JSON-LD schemas per page, configure dynamic sitemap routing.
