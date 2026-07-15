@@ -592,17 +592,29 @@ tunemavens/
 
 ---
 
-### 9.15.2 DNS Mapping Strategy
+### 9.15.2 DNS Mapping & User-Specific Routing Strategy
 
-| Domain | DNS Target | Maps to |
-|---|---|---|
-| `tunemavens.com` | `A` record pointing to VPS IP | Main Portal & Dashboard |
-| `www.tunemavens.com` | `CNAME` pointing to `tunemavens.com` | Main Portal & Dashboard |
-| `tunestream.co` | `A` record pointing to VPS IP | TuneStream Utility |
-| `www.tunestream.co` | `CNAME` pointing to `tunestream.co` | TuneStream Utility |
-| `tunestream.tunemavens.com` | `CNAME` pointing to `tunestream.co` | TuneStream Utility |
-| `syncmavens.com` | `A` record pointing to VPS IP | SyncMavens Utility |
-| `www.syncmavens.com` | `CNAME` pointing to `syncmavens.com` | SyncMavens Utility |
+To ensure that each platform, page, action, and Call-to-Action (CTA) is specific to the authenticated user's role and portal context, we employ a multi-domain routing layout:
+1. **Primary Hub Domains**: Major standalone properties use dedicated domains.
+2. **Subdomain-based Routing**: Specialized role portals default to subdomains under the main `tunemavens.com` namespace.
+
+| Domain | DNS Target | Maps to | Role/Ecosystem Context |
+|---|---|---|---|
+| `tunemavens.com` | `A` record pointing to VPS IP | Main Portal & Dashboard | Core Hub, Creators & General Users |
+| `www.tunemavens.com` | `CNAME` pointing to `tunemavens.com` | Main Portal & Dashboard | Core Hub, Creators & General Users |
+| `tunestream.co` | `A` record pointing to VPS IP | TuneStream Utility | Audio Stream Listeners & Fans |
+| `www.tunestream.co` | `CNAME` pointing to `tunestream.co` | TuneStream Utility | Audio Stream Listeners & Fans |
+| `tunestream.tunemavens.com` | `CNAME` pointing to `tunestream.co` | TuneStream Utility | Fan Redirect/Alias |
+| `syncmavens.com` | `A` record pointing to VPS IP | SyncMavens Utility | Sync Licensing & Music Supervisors |
+| `www.syncmavens.com` | `CNAME` pointing to `syncmavens.com` | SyncMavens Utility | Sync Licensing & Music Supervisors |
+| `djs.tunemavens.com` | `CNAME` pointing to `tunemavens.com` | DJ Pool Portal | DJs |
+| `corporate.tunemavens.com` | `CNAME` pointing to `tunemavens.com` | Corporate Portal | Business & Organization accounts |
+| `media.tunemavens.com` | `CNAME` pointing to `tunemavens.com` | Media House Portal | Media House routing |
+
+Each interface dynamically parses the incoming request domain or host header (`Request.headers.get('host')` in FastAPI and `window.location.hostname` in React) to:
+- Render role-specific navigation menus and action steps.
+- Set platform-specific styling (branding colors and logos).
+- Scope payment packages, credits, and CTA behaviors to that specific user context.
 
 ---
 

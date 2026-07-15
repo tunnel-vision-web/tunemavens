@@ -28,7 +28,19 @@ Mother-CMS, the pricing configuration files, and portal entitlement gates will b
 Credit quotas (e.g. AI runs, CRM sends, uploads) and pricing rates will be matched identically across the Intermaven and TuneMavens databases.
 
 ### 3. Deployment & Domain Routing
-Portals will run online as independent, standalone applications (e.g. on Render/Vercel) sharing a single Mongo database cluster. Subdomains and domain routing will be mapped via DNS.
+Portals will run online as independent, standalone applications sharing a single MongoDB database cluster. Domain routing maps custom root domains and role-specific subdomains to ensure that each platform, page, action, and CTA is tailored exactly to the active user context:
+- **Custom Root Domains**:
+  - `intermaven.io` -> Main Creator Suite / AI business tools portal
+  - `tunemavens.com` -> Music marketplace and main hub
+  - `tunestream.co` -> Consumer audio streaming platform
+  - `syncmavens.com` -> Sync licensing marketplace
+- **Role-Specific Subdomains of `tunemavens.com`**:
+  - `djs.tunemavens.com` -> DJ pool engine
+  - `corporate.tunemavens.com` -> Corporate portal
+  - `media.tunemavens.com` -> Media house portals and routing
+  - *(other roles default to respective subdomains within the `tunemavens.com` namespace)*
+
+All platforms, actions, pages, and CTAs must be dynamically customized to the context of the user, based on the resolved domain header/roles.
 
 ### 4. Developer App Provisioning
 OAuth setup for Google, Meta, TikTok, X, and LinkedIn is initiated in parallel to unblock Track A (SSO) and Track D (Social AI).
