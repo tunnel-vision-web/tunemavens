@@ -11,7 +11,7 @@ from typing import Optional
 from bson import ObjectId
 from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 
 from config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -20,15 +20,21 @@ from config import (
     db,
 )
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    pw_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pw_bytes, salt)
+    return hashed.decode('utf-8')
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        plain_bytes = plain.encode('utf-8')
+        hashed_bytes = hashed.encode('utf-8')
+        return bcrypt.checkpw(plain_bytes, hashed_bytes)
+    except Exception:
+        return False
 
 
 def create_access_token(sub: str, expires_delta: Optional[timedelta] = None) -> str:
