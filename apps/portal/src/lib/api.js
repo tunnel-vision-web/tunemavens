@@ -37,7 +37,18 @@ async function request(path, { method = 'GET', body, token } = {}) {
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
   if (!res.ok) {
-    const err = new Error(data?.detail || res.statusText);
+    let msg = res.statusText;
+    if (data?.detail) {
+      if (Array.isArray(data.detail)) {
+        msg = data.detail.map(e => {
+          const locStr = e.loc ? e.loc.filter(x => x !== 'body').join('.') : '';
+          return (locStr ? `${locStr}: ` : '') + e.msg;
+        }).join('; ');
+      } else if (typeof data.detail === 'string') {
+        msg = data.detail;
+      }
+    }
+    const err = new Error(msg);
     err.status = res.status;
     err.data = data;
     throw err;
