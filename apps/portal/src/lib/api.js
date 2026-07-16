@@ -137,6 +137,12 @@ export const socialAiApi = {
     request('/api/social-ai/generate-art', { method: 'POST', body: { prompt, aspect_ratio } }),
   generateVideo: (prompt, duration_seconds = 5) =>
     request('/api/social-ai/generate-video', { method: 'POST', body: { prompt, duration_seconds } }),
+  listAssets: () =>
+    request('/api/social-ai/assets'),
+  updateAsset: (id, prompt) =>
+    request(`/api/social-ai/assets/${id}`, { method: 'PUT', body: { prompt } }),
+  deleteAsset: (id) =>
+    request(`/api/social-ai/assets/${id}`, { method: 'DELETE' }),
 };
 
 // --- CRM (admins only) ---

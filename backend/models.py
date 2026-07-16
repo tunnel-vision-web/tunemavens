@@ -119,6 +119,29 @@ class DashboardLayoutUpdate(BaseModel):
     dashboard_layout: dict
 
 
+class GeneratedAsset(BaseModel):
+    id: Optional[PyObjectId] = Field(default=None, alias="_id")
+    user_id: str
+    media_type: str  # 'image' | 'video'
+    media_url: str
+    prompt: str
+    aspect_ratio: Optional[str] = "1:1"
+    duration_seconds: Optional[int] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
+    def to_mongo(self) -> dict:
+        data = self.model_dump(by_alias=True, exclude_none=True)
+        if data.get("_id") is None:
+            data.pop("_id", None)
+        return data
+
+
+class AssetUpdateRequest(BaseModel):
+    prompt: str
+
+
 # ======================================================================
 # §9.7 — publishing_deals
 # ======================================================================

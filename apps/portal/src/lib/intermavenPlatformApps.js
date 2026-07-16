@@ -14,6 +14,7 @@ export const INTERMAVEN_PLATFORM_APPS = [
     icon: RiSparklingFill,
     accent: '#22d3ee', // cyan
     launchUrl: 'https://intermaven.io/social',
+    tab: 'social-ai',
     status: 'live',
   },
   {
@@ -32,6 +33,7 @@ export const INTERMAVEN_PLATFORM_APPS = [
     icon: RiGroupFill,
     accent: '#10b981', // emerald
     launchUrl: 'https://intermaven.io/smartcrm',
+    tab: 'crm',
     status: 'live',
   },
   {

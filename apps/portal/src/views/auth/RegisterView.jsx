@@ -488,7 +488,7 @@ export default function RegisterView({ onLogin }) {
       clearSignupMemory();
       navigate('/dashboard');
     } catch (err) {
-      alert(err.data?.detail || err.message || 'Registration failed');
+      alert(err.message || 'Registration failed');
     }
   };
 

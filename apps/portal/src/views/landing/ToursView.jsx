@@ -5,12 +5,29 @@ import PageHeader from '../../components/common/PageHeader.jsx'
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
 import tourDashboardMockup from '../../assets/images/tour_dashboard_mockup.png'
+import SEO from '../../components/common/SEO.jsx'
 
 export default function ToursView({ sessionUser }) {
   const ctaLink = sessionUser ? '/dashboard?tab=pos-settlement' : '/register';
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "TuneMavens Tours & Live Bookings",
+    "description": "Coordinate live concert gigs, manage merchandise inventory, and handle automated financial settlements for your tour roster.",
+    "provider": {
+      "@type": "Organization",
+      "name": "TuneMavens"
+    }
+  };
+
   return (
     <>
+      <SEO 
+        title="Tours & Live Bookings" 
+        description="Coordinate live concert gigs, manage merchandise inventory, and handle automated financial settlements for your tour roster."
+        schema={schema}
+      />
       <PageHeader 
         title="Tours & Live Bookings" 
         bgImage={headerAppsImg} 

@@ -16,8 +16,20 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db
-from routes import admin_router, auth_router, contracts_router, dashboard_router, deals_router, users_router, sso_router, payments_router, ticketing_router, storefront_router, distro_router, stream_router, match_router, social_ai_router, crm_router, cms_router
+from routes import admin_router, auth_router, contracts_router, dashboard_router, deals_router, users_router, sso_router, payments_router, ticketing_router, storefront_router, distro_router, stream_router, match_router, social_ai_router, crm_router, cms_router, seo_router
 from routes.admin_router import seed_domain_mappings_if_empty
+
+# Sentry initialization
+sentry_dsn = os.environ.get("SENTRY_DSN")
+if sentry_dsn:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            traces_sample_rate=1.0,
+        )
+    except ImportError:
+        pass
 
 app = FastAPI(title="TuneMavens API", version="0.1.0 (Phase 1)")
 
@@ -26,9 +38,19 @@ uploads_dir = os.environ.get("LOCAL_UPLOADS_DIR", "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
+ENV = os.environ.get("ENV", "development")
+cors_origins = CORS_ORIGINS
+if ENV == "production" and "*" in cors_origins:
+    cors_origins = [
+        "https://tunemavens.com",
+        "https://syncmavens.com",
+        "https://tunestream.co",
+        "https://intermaven.io"
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,6 +67,7 @@ app.include_router(match_router)
 app.include_router(social_ai_router)
 app.include_router(crm_router)
 app.include_router(cms_router)
+app.include_router(seo_router)
 app.include_router(dashboard_router)
 app.include_router(deals_router)
 app.include_router(admin_router)
@@ -52,6 +75,18 @@ app.include_router(users_router)
 app.include_router(contracts_router)
 
 # Seed default domain mappings on first boot (idempotent).
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    import logging
+    logging.getLogger("uvicorn").error(f"VALIDATION ERROR: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+    )
+
 seed_domain_mappings_if_empty()
 
 

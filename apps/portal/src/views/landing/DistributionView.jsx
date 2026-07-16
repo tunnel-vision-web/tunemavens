@@ -6,9 +6,21 @@ import { FaAmazon } from 'react-icons/fa'
 import PageHeader from '../../components/common/PageHeader.jsx'
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
+import SEO from '../../components/common/SEO.jsx'
 
 export default function DistributionView({ sessionUser }) {
   const ctaLink = sessionUser ? '/dashboard?tab=distribution-election' : '/register';
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "TuneMavens Global Music Distribution",
+    "description": "Distribute unlimited music releases to Spotify, Apple Music, TikTok, Amazon Music, and 140+ DSPs while keeping 100% of your royalties.",
+    "provider": {
+      "@type": "Organization",
+      "name": "TuneMavens"
+    }
+  };
 
   const dspStores = [
     { name: "Spotify", desc: "Push releases to Spotify and gain instant access to Spotify for Artists verification & play pitching.", tag: "Verified Pitching", icon: <SiSpotify size={26} style={{ color: '#1db954' }} /> },
@@ -35,6 +47,11 @@ export default function DistributionView({ sessionUser }) {
 
   return (
     <>
+      <SEO 
+        title="Global Music Distribution" 
+        description="Distribute unlimited music releases to Spotify, Apple Music, TikTok, Amazon Music, and 140+ DSPs while keeping 100% of your royalties."
+        schema={schema}
+      />
       <PageHeader 
         title="Global DSP Distribution" 
         bgImage={headerAppsImg} 

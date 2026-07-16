@@ -33,6 +33,7 @@ import SyncBriefCarousel from '../../components/demos/SyncBriefCarousel.jsx'
 import MasteringDemo from '../../components/demos/MasteringDemo.jsx'
 import SplitCascadeCarousel from '../../components/demos/SplitCascadeCarousel.jsx'
 import UserPersonaCarousel from '../../components/demos/UserPersonaCarousel.jsx'
+import SEO from '../../components/common/SEO.jsx'
 
 export default function HomeView({ sessionUser }) {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -203,8 +204,21 @@ export default function HomeView({ sessionUser }) {
     };
   }, [currentSlide, slideCount]);
 
+  const homeSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "TuneMavens",
+    "url": window.location.origin,
+    "description": "Coordinate splits, mastering, and sync licensing briefs under a single unified dashboard."
+  };
+
   return (
     <>
+      <SEO 
+        title="Music Operations & AI Suite" 
+        description="Coordinate splits, mastering, and sync licensing briefs under a single unified dashboard."
+        schema={homeSchema}
+      />
       <div className="hw">
         <div className="bgs">
           {backgrounds.map((bg, idx) => (

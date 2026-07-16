@@ -5,12 +5,29 @@ import PageHeader from '../../components/common/PageHeader.jsx'
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
 import publishingDashboardMockup from '../../assets/images/publishing_dashboard_mockup.png'
+import SEO from '../../components/common/SEO.jsx'
 
 export default function PublishingView({ sessionUser }) {
   const ctaLink = sessionUser ? '/dashboard?tab=publishing-election' : '/register';
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "TuneMavens Publishing Administration",
+    "description": "Lock in your publishing tier to collect global mechanical royalties, sync representation, and splits administration.",
+    "provider": {
+      "@type": "Organization",
+      "name": "TuneMavens"
+    }
+  };
+
   return (
     <>
+      <SEO 
+        title="Publishing Administration" 
+        description="Lock in your publishing tier to collect global mechanical royalties, sync representation, and splits administration."
+        schema={schema}
+      />
       <PageHeader 
         title="TuneMavens Publishing" 
         bgImage={headerAppsImg} 

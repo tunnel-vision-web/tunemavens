@@ -4,14 +4,14 @@ import { Link, useLocation } from 'react-router-dom';
 import "./PerfectForSidebar.css";
 
 // Import custom logos
-import createLogo from '../assets/logos/tunecreators-logo.png';
-import listenLogo from '../assets/logos/tunestream-logo.png';
-import distributeLogo from '../assets/logos/tuneexecs-logo.png';
-import syncLogo from '../assets/logos/syncmavens-logo.png';
-import bookingLogo from '../assets/logos/tunebooking-logo.png';
-import managementLogo from '../assets/logos/tunemanagement-logo.png';
-import companionLogo from '../assets/logos/tunecompanion-logo.png';
-import tunepayLogo from '../assets/logos/tunepay-logo.png';
+import createLogo from './assets/logos/tunecreators-logo.png';
+import listenLogo from './assets/logos/tunestream-logo.png';
+import distributeLogo from './assets/logos/tuneexecs-logo.png';
+import syncLogo from './assets/logos/syncmavens-logo.png';
+import bookingLogo from './assets/logos/tunebooking-logo.png';
+import managementLogo from './assets/logos/tunemanagement-logo.png';
+import companionLogo from './assets/logos/tunecompanion-logo.png';
+import tunepayLogo from './assets/logos/tunepay-logo.png';
 
 export const getServiceUrl = (service, path = '/') => {
   const { hostname, protocol } = window.location;
@@ -29,6 +29,36 @@ export const getServiceUrl = (service, path = '/') => {
     syncmavens: 'syncmavens.com',
   };
   return `${protocol}//${domains[service]}${path}`;
+};
+
+export const getIntermavenUrl = (appId, path = '') => {
+  const { hostname, protocol } = window.location;
+  const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('token') || localStorage.getItem('tunemavens_token') || sessionStorage.getItem('token') || '';
+  const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
+  
+  const appMapping = {
+    'social-ai': 'social',
+    'intermaven-social-ai': 'social',
+    'brandkit-ai': 'brandkit',
+    'intermaven-brandkit-ai': 'brandkit',
+    'smart-crm': 'crm',
+    'intermaven-smart-crm': 'crm',
+    'pitch-deck-ai': 'bizpitch',
+    'intermaven-pitch-deck-ai': 'bizpitch',
+    'pos-system': 'pos',
+    'intermaven-pos-system': 'pos',
+    'invoicing-payments': 'invoicing',
+    'intermaven-invoicing-payments': 'invoicing',
+    'contracts': 'contracts',
+    'intermaven-contracts': 'contracts'
+  };
+  
+  const mappedAppId = appMapping[appId] || appId;
+  
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `${protocol}//${hostname}:3004/embed/${mappedAppId}${tokenQuery}`;
+  }
+  return `https://intermaven.io/embed/${mappedAppId}${tokenQuery}`;
 };
 
 export const ROLE_LOGOS = {

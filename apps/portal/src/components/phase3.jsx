@@ -10,6 +10,7 @@ import { dealsApi, usersApi, contractsApi } from '../lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from '../lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'
 import { lookupApp } from '../lib/appCatalog.js'
+import { getIntermavenUrl } from '../PerfectForSidebar.jsx'
 
 // Small shared helper  -  a plain title + description block used by every
 // Phase 3 panel. Kept next to the panels that use it.
@@ -1250,7 +1251,7 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
 //      Intermaven catalogue (NativeAppsView source-of-truth in nativeApps.js).
 // Activation persists to `users.apps[]` via POST /api/users/me/apps and ticks
 // off the "Activate a Dashboard App" step in the OnboardingStripe.
-export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, onOpenWizard, wizardAnswers }) {
+export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, onOpenWizard, wizardAnswers, onOpenAppModal }) {
   const [activated, setActivated] = useState(sessionUser?.apps || []);
   const [busySlug, setBusySlug] = useState(null);
   const [error, setError] = useState('');
@@ -1368,18 +1369,28 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
               <button
                 type="button"
                 onClick={() => {
-                  if (a.launchUrl) {
-                    window.open(a.launchUrl, '_blank', 'noopener,noreferrer');
+                  if (a.slug && a.slug.startsWith('intermaven-')) {
+                    const targetUrl = getIntermavenUrl(a.slug);
+                    if (onOpenAppModal) {
+                      onOpenAppModal(targetUrl, a.name);
+                    } else {
+                      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                    }
+                  } else if (a.tab && setActiveTab) {
+                    setActiveTab(a.tab);
+                  } else if (a.launchUrl) {
+                    const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('token') || localStorage.getItem('tunemavens_token') || sessionStorage.getItem('token') || '';
+                    const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
+                    const targetUrl = a.launchUrl.includes('?') ? `${a.launchUrl}&token=${encodeURIComponent(token)}` : `${a.launchUrl}${tokenQuery}`;
+                    window.open(targetUrl, '_blank', 'noopener,noreferrer');
                   } else if (a.landingPath) {
                     navigate(a.landingPath);
-                  } else if (setActiveTab) {
-                    setActiveTab(a.tab);
                   }
                 }}
                 data-testid={`app-marketplace-open-${a.slug}`}
                 style={{ flex: 1, padding: '8px 12px', background: a.accent, color: '#0b0f1e', fontWeight: 800, fontSize: '12px', border: 'none', borderRadius: '3px', cursor: 'pointer', letterSpacing: '0.3px' }}
               >
-                {a.launchUrl ? 'Launch \u2197' : a.landingPath ? 'View App' : 'Open'}
+                {a.slug && a.slug.startsWith('intermaven-') ? 'Launch \u2197' : a.tab ? 'Open' : a.launchUrl ? 'Launch \u2197' : a.landingPath ? 'View App' : 'Open'}
               </button>
               <button
                 type="button"

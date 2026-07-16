@@ -40,8 +40,8 @@ def test_social_ai_endpoints():
     assert art_res.status_code == 200
     art_data = art_res.json()
     assert art_data["status"] == "success"
-    assert "media_url" in art_data
-    assert "seed/Retrosunsetsynth" in art_data["media_url"]
+    assert "media_url" in art_data["asset"]
+    assert "seed/Retrosunsetsynth" in art_data["asset"]["media_url"]
 
     # 2. Generate Art (Validation Error)
     art_fail = client.post(
@@ -60,8 +60,33 @@ def test_social_ai_endpoints():
     assert video_res.status_code == 200
     video_data = video_res.json()
     assert video_data["status"] == "success"
-    assert "media_url" in video_data
-    assert video_data["media_url"].endswith(".mp4")
+    assert "media_url" in video_data["asset"]
+    assert video_data["asset"]["media_url"].endswith(".mp4")
+
+    # 4. List Assets
+    list_res = client.get("/api/social-ai/assets", cookies=cookies)
+    assert list_res.status_code == 200
+    assets = list_res.json()
+    assert len(assets) == 2
+    art_asset = next(a for a in assets if a["media_type"] == "image")
+    asset_id = art_asset["id"]
+
+    # 5. Update Asset
+    up_res = client.put(
+        f"/api/social-ai/assets/{asset_id}",
+        json={"prompt": "Updated Art Prompt"},
+        cookies=cookies
+    )
+    assert up_res.status_code == 200
+    assert up_res.json()["prompt"] == "Updated Art Prompt"
+
+    # 6. Delete Asset
+    del_res = client.delete(f"/api/social-ai/assets/{asset_id}", cookies=cookies)
+    assert del_res.status_code == 200
+    
+    # 7. List Assets again (should be 1 remaining)
+    list_res2 = client.get("/api/social-ai/assets", cookies=cookies)
+    assert len(list_res2.json()) == 1
 
 
 def test_crm_campaign_targeting_and_dispatch():

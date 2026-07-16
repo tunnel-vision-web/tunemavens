@@ -4,9 +4,21 @@ import { RiSearchLine, RiShieldKeyholeLine, RiFlashlightLine, RiCheckboxCircleLi
 import PageHeader from '../../components/common/PageHeader.jsx'
 import syncHeaderImg from '../../assets/images/sync_header.png'
 import { getServiceUrl } from '../../components/PerfectForSidebar.jsx'
+import SEO from '../../components/common/SEO.jsx'
 
 export default function SyncPlacementView({ sessionUser }) {
   const syncMavensUrl = getServiceUrl('syncmavens');
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "TuneMavens Sync Licensing & Placement",
+    "description": "Pitch your music catalog for movies, television shows, ads, and AAA video game placements via SyncMavens.",
+    "provider": {
+      "@type": "Organization",
+      "name": "TuneMavens"
+    }
+  };
 
   const features = [
     {
@@ -28,6 +40,11 @@ export default function SyncPlacementView({ sessionUser }) {
 
   return (
     <>
+      <SEO 
+        title="Sync Licensing & Placement" 
+        description="Pitch your music catalog for movies, television shows, ads, and AAA video game placements via SyncMavens."
+        schema={schema}
+      />
       <PageHeader 
         title="Sync Licensing & Placement" 
         bgImage={syncHeaderImg} 

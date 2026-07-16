@@ -31,6 +31,36 @@ export const getServiceUrl = (service, path = '/') => {
   return `${protocol}//${domains[service]}${path}`;
 };
 
+export const getIntermavenUrl = (appId, path = '') => {
+  const { hostname, protocol } = window.location;
+  const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('token') || localStorage.getItem('tunemavens_token') || sessionStorage.getItem('token') || '';
+  const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
+  
+  const appMapping = {
+    'social-ai': 'social',
+    'intermaven-social-ai': 'social',
+    'brandkit-ai': 'brandkit',
+    'intermaven-brandkit-ai': 'brandkit',
+    'smart-crm': 'crm',
+    'intermaven-smart-crm': 'crm',
+    'pitch-deck-ai': 'bizpitch',
+    'intermaven-pitch-deck-ai': 'bizpitch',
+    'pos-system': 'pos',
+    'intermaven-pos-system': 'pos',
+    'invoicing-payments': 'invoicing',
+    'intermaven-invoicing-payments': 'invoicing',
+    'contracts': 'contracts',
+    'intermaven-contracts': 'contracts'
+  };
+  
+  const mappedAppId = appMapping[appId] || appId;
+  
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `${protocol}//${hostname}:3004/embed/${mappedAppId}${tokenQuery}`;
+  }
+  return `https://intermaven.io/embed/${mappedAppId}${tokenQuery}`;
+};
+
 export const ROLE_LOGOS = {
   creator: createLogo,
   label: distributeLogo,
