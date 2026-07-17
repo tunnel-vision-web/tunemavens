@@ -159,3 +159,14 @@ export const cmsApi = {
   getHistory: (id) => request(`/api/cms/layouts/${id}/history`),
   rollback: (id, version) => request(`/api/cms/layouts/${id}/rollback/${version}`, { method: 'POST' }),
 };
+
+// --- DJ Pool MVP & Clearance Hub ---
+export const djPoolApi = {
+  listTracks: () => request('/api/djpool/tracks'),
+  addTrack: (payload) => request('/api/djpool/tracks', { method: 'POST', body: payload }),
+  submitFeedback: (payload) => request('/api/djpool/feedback', { method: 'POST', body: payload }),
+  downloadTrack: (id) => request(`/api/djpool/download/${id}`, { method: 'POST' }),
+  submitClearance: (payload) => request('/api/djpool/clearance', { method: 'POST', body: payload }),
+  listClearances: () => request('/api/djpool/clearance'),
+  approveClearance: (requestId, status) => request(`/api/djpool/clearance/${requestId}/approve`, { method: 'POST', body: { status } }),
+};

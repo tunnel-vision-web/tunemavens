@@ -402,3 +402,34 @@ class CmsLayoutHistory(BaseDocument):
     updated_by: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+class DjPoolTrack(BaseDocument):
+    user_id: str
+    title: str
+    artist: str
+    bpm: int
+    key: str
+    genre: str
+    audio_url: str
+    allowed_regions: List[str] = Field(default_factory=list)
+    downloads_count: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class DjFeedback(BaseDocument):
+    dj_id: str
+    track_id: str
+    rating: int
+    dancefloor_response: str
+    review_text: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class DjClearanceRequest(BaseDocument):
+    track_id: str
+    title: str
+    dj_name: str
+    venue: str
+    status: str = "pending"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+

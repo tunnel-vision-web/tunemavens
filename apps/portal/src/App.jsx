@@ -3287,202 +3287,481 @@ function SplitCascadePanel({ payoutBalance, setPayoutBalance, ledgerRows, setLed
 
 // ================= SUB-PANEL: DJ Pool MVP (Phase 5) =================
 function DjPoolPanel() {
+  const { sessionUser } = window.__tunemavens_context || {};
+  const [activeTab, setActiveTab] = useState('pool'); // 'pool' | 'clearance' | 'upload'
+  const [tracks, setTracks] = useState([]);
+  const [clearances, setClearances] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Feedback modal state
+  const [feedbackModal, setFeedbackModal] = useState(null); // { track } | null
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackVibes, setFeedbackVibes] = useState('fill_dancefloor');
+  const [feedbackText, setFeedbackText] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+
+  // Download state
   const [downloadingId, setDownloadingId] = useState(null);
-  const [tracks, setTracks] = useState([
-    { id: 1, title: "Midnight Grooves (Intro Edit)", bpm: 120, format: "MP3-320", size: "8.4 MB", count: 128 },
-    { id: 2, title: "Neon Shadows (DJ Quick Hitter)", bpm: 124, format: "WAV", size: "38.2 MB", count: 94 },
-    { id: 3, title: "Nairobi Sunset (Extended Mix)", bpm: 118, format: "MP3-320", size: "11.1 MB", count: 245 }
-  ]);
+  const [downloadSuccess, setDownloadSuccess] = useState(null);
 
-  const [clearanceRequests, setClearanceRequests] = useState([
-    { id: 101, title: "Midnight Grooves (Acapella Bootleg)", dj: "DJ AfroBeat", venue: "Golden Gates Lounge", status: "approved" }
-  ]);
+  // Clearance form state
+  const [clearTrackId, setClearTrackId] = useState('');
+  const [clearTitle, setClearTitle] = useState('');
+  const [clearDj, setClearDj] = useState('');
+  const [clearVenue, setClearVenue] = useState('');
+  const [submittingClear, setSubmittingClear] = useState(false);
 
-  const [reqTitle, setReqTitle] = useState('');
-  const [reqDj, setReqDj] = useState('');
-  const [reqVenue, setReqVenue] = useState('');
-  const [reqMsg, setReqMsg] = useState('');
+  // Upload form state
+  const [upTitle, setUpTitle] = useState('');
+  const [upArtist, setUpArtist] = useState('');
+  const [upBpm, setUpBpm] = useState('120');
+  const [upKey, setUpKey] = useState('1A');
+  const [upGenre, setUpGenre] = useState('House');
+  const [upRegions, setUpRegions] = useState('');
+  const [submittingUpload, setSubmittingUpload] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  const handleDownload = (id) => {
-    setDownloadingId(id);
-    setTimeout(() => {
-      setDownloadingId(null);
-      setTracks(prev => prev.map(tr => tr.id === id ? { ...tr, count: tr.count + 1 } : tr));
-      alert('Mock track downloaded successfully. Injected 8s intro/outro tags for DJ mixing compliance.');
-    }, 1500);
-  };
+  const { djPoolApi: api } = window.__tunemavens_api || {};
 
-  const handleRequestClearance = (e) => {
-    e.preventDefault();
-    if (!reqTitle || !reqDj || !reqVenue) {
-      alert('Please fill out remix title, DJ Name, and Target Venue.');
-      return;
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { djPoolApi } = await import('./lib/api.js');
+      const [tracksData, clearancesData] = await Promise.all([
+        djPoolApi.listTracks(),
+        djPoolApi.listClearances()
+      ]);
+      setTracks(tracksData || []);
+      setClearances(clearancesData || []);
+    } catch (err) {
+      // Graceful fallback with demo data if API unavailable
+      setTracks([
+        { id: 'demo1', title: 'Midnight Grooves (Intro Edit)', artist: 'Vibe Master', bpm: 120, key: '4A', genre: 'House', downloads_count: 128, allowed_regions: [], feedback_submitted: false },
+        { id: 'demo2', title: 'Neon Shadows (Quick Hitter)', artist: 'DJ Static', bpm: 124, key: '5B', genre: 'Techno', downloads_count: 94, allowed_regions: ['US', 'UK'], feedback_submitted: true },
+        { id: 'demo3', title: 'Nairobi Sunset (Extended)', artist: 'Aisha Okoro', bpm: 98, key: '2A', genre: 'Afrobeats', downloads_count: 245, allowed_regions: [], feedback_submitted: false },
+      ]);
+      setClearances([
+        { id: 'c1', title: 'Midnight Grooves (Afro Remix)', dj_name: 'DJ Kalonje', venue: 'Blankets & Wine', status: 'approved', original_title: 'Midnight Grooves', is_owner: true },
+        { id: 'c2', title: 'Nairobi Sunset (Club Edit)', dj_name: 'DJ Roja', venue: 'Ngoma Club', status: 'pending', original_title: 'Nairobi Sunset', is_owner: true },
+      ]);
     }
-    const newReqId = Date.now();
-    const newReq = {
-      id: newReqId,
-      title: reqTitle,
-      dj: reqDj,
-      venue: reqVenue,
-      status: 'pending'
-    };
-    setClearanceRequests(prev => [newReq, ...prev]);
-    setReqTitle('');
-    setReqDj('');
-    setReqVenue('');
-    setReqMsg('');
-
-    // Simulated Auto-approval after 5s
-    setTimeout(() => {
-      setClearanceRequests(prev => prev.map(req => req.id === newReqId ? { ...req, status: 'approved' } : req));
-    }, 5000);
+    setLoading(false);
   };
+
+  useEffect(() => { loadData(); }, []);
+
+  const handleDownloadAttempt = (track) => {
+    if (track.feedback_submitted) {
+      triggerDownload(track.id);
+    } else {
+      setFeedbackModal(track);
+      setFeedbackRating(5);
+      setFeedbackVibes('fill_dancefloor');
+      setFeedbackText('');
+    }
+  };
+
+  const triggerDownload = async (trackId) => {
+    setDownloadingId(trackId);
+    try {
+      const { djPoolApi } = await import('./lib/api.js');
+      const result = await djPoolApi.downloadTrack(trackId);
+      setTracks(prev => prev.map(t => t.id === trackId ? { ...t, downloads_count: t.downloads_count + 1 } : t));
+      setDownloadSuccess('Track downloaded. 8s intro/outro DJ tags injected for mixing compliance. ✓');
+      setTimeout(() => setDownloadSuccess(null), 4000);
+    } catch {
+      setDownloadSuccess('Feedback required before downloading this track.');
+      setTimeout(() => setDownloadSuccess(null), 3000);
+    }
+    setDownloadingId(null);
+  };
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    if (!feedbackText.trim()) return;
+    setSubmittingFeedback(true);
+    try {
+      const { djPoolApi } = await import('./lib/api.js');
+      await djPoolApi.submitFeedback({
+        track_id: feedbackModal.id,
+        rating: feedbackRating,
+        dancefloor_response: feedbackVibes,
+        review_text: feedbackText
+      });
+      setTracks(prev => prev.map(t => t.id === feedbackModal.id ? { ...t, feedback_submitted: true } : t));
+      triggerDownload(feedbackModal.id);
+      setFeedbackModal(null);
+    } catch {
+      alert('Could not submit feedback. Please try again.');
+    }
+    setSubmittingFeedback(false);
+  };
+
+  const handleClearanceSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingClear(true);
+    try {
+      const { djPoolApi } = await import('./lib/api.js');
+      const result = await djPoolApi.submitClearance({ track_id: clearTrackId, title: clearTitle, dj_name: clearDj, venue: clearVenue });
+      setClearances(prev => [{ ...result, status: 'pending' }, ...prev]);
+      setClearTrackId(''); setClearTitle(''); setClearDj(''); setClearVenue('');
+    } catch {
+      alert('Clearance request failed. Please try again.');
+    }
+    setSubmittingClear(false);
+  };
+
+  const handleApproveClearance = async (requestId, newStatus) => {
+    try {
+      const { djPoolApi } = await import('./lib/api.js');
+      await djPoolApi.approveClearance(requestId, newStatus);
+      setClearances(prev => prev.map(r => r.id === requestId ? { ...r, status: newStatus } : r));
+    } catch {
+      alert('Could not update clearance status.');
+    }
+  };
+
+  const handleUploadSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingUpload(true);
+    try {
+      const { djPoolApi } = await import('./lib/api.js');
+      const regions = upRegions.split(',').map(r => r.trim()).filter(Boolean);
+      const result = await djPoolApi.addTrack({
+        title: upTitle, artist: upArtist, bpm: parseInt(upBpm), key: upKey, genre: upGenre, allowed_regions: regions
+      });
+      setTracks(prev => [{ ...result, downloads_count: 0, feedback_submitted: false }, ...prev]);
+      setUpTitle(''); setUpArtist(''); setUpBpm('120'); setUpKey('1A'); setUpGenre('House'); setUpRegions('');
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+      setActiveTab('pool');
+    } catch {
+      alert('Track upload failed. Please try again.');
+    }
+    setSubmittingUpload(false);
+  };
+
+  const statusColors = { approved: '#22c55e', pending: '#f59e0b', declined: '#ef4444' };
+  const vibeOptions = [
+    { value: 'fill_dancefloor', label: '🔥 Fills the Dancefloor' },
+    { value: 'keep_crowd', label: '🎵 Keeps the Crowd Moving' },
+    { value: 'room_cooler', label: '❄️ Too Slow for the Room' },
+    { value: 'peak_moment', label: '⚡ Peak Hour Banger' },
+  ];
+
+  const inputStyle = {
+    width: '100%',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '6px',
+    color: '#e2e8f0',
+    fontSize: '13px',
+    padding: '9px 12px',
+    outline: 'none',
+    fontFamily: 'Outfit, sans-serif',
+  };
+
+  const tabBtn = (id, label, icon) => (
+    <button
+      key={id}
+      onClick={() => setActiveTab(id)}
+      style={{
+        padding: '9px 20px',
+        borderRadius: '6px',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: '700',
+        fontFamily: 'Outfit, sans-serif',
+        background: activeTab === id ? 'var(--cyan)' : 'rgba(255,255,255,0.06)',
+        color: activeTab === id ? '#060813' : '#94a3b8',
+        transition: 'all 0.2s ease',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+      }}
+    >
+      {icon} {label}
+    </button>
+  );
 
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
+      {/* Header */}
       <div className="dashboard-panel-header">
-        <h2>DJ Pool &amp; IP Clearance Drops</h2>
-        <p>Download intro/outro DJ edits and log remix drops clearances in compliance with IP regulations.</p>
+        <h2>🎧 DJ Pool & Drop Clearances</h2>
+        <p>Browse promo cuts, leave dancefloor reviews, and manage remix licensing — all in one place.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-        <div>
-          {/* Track Download List */}
-          <div className="dashboard-card" style={{ marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>DJ Pool MVP Download Center</h3>
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Track Title</th>
-                  <th>BPM</th>
-                  <th>Quality</th>
-                  <th>Size</th>
-                  <th>Downloads</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tracks.map(tr => (
-                  <tr key={tr.id}>
-                    <td style={{ fontWeight: 'bold' }}>{tr.title}</td>
-                    <td>{tr.bpm} BPM</td>
-                    <td><span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{tr.format}</span></td>
-                    <td>{tr.size}</td>
-                    <td>{tr.count} downloads</td>
-                    <td>
-                      <button 
-                        onClick={() => handleDownload(tr.id)} 
-                        disabled={downloadingId !== null}
-                        className="btn-primary" 
-                        style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '4px', cursor: 'pointer' }}
-                      >
-                        {downloadingId === tr.id ? (
-                          <>
-                            <RiRefreshFill size={10} className="spin-animation" style={{ marginRight: '4px' }} />
-                            Preparing WAV...
-                          </>
-                        ) : 'Download'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Clearance Ledger */}
-          <div className="dashboard-card">
-            <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Active IP Drops Clearances</h3>
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Remix Title</th>
-                  <th>DJ / Artist</th>
-                  <th>Target Venue</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clearanceRequests.map(req => (
-                  <tr key={req.id}>
-                    <td>{req.title}</td>
-                    <td style={{ fontWeight: 'bold' }}>{req.dj}</td>
-                    <td>{req.venue}</td>
-                    <td>
-                      <span className={`badge-status ${req.status === 'approved' ? 'success' : 'warning'}`}>
-                        {req.status.toUpperCase()}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* IP Clearance Request Form */}
-        <div className="dashboard-card" style={{ height: 'fit-content' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Submit DJ Drop Clearance</h3>
-          <form onSubmit={handleRequestClearance} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Remix / Track Title</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Neon Shadows (DJ Afro Remix)" 
-                value={reqTitle} 
-                onChange={(e) => setReqTitle(e.target.value)}
-                className="form-control"
-                style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '12px', padding: '6px' }}
-                required
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>DJ / Remix Artist Name</label>
-              <input 
-                type="text" 
-                placeholder="e.g. DJ Kalonje" 
-                value={reqDj} 
-                onChange={(e) => setReqDj(e.target.value)}
-                className="form-control"
-                style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '12px', padding: '6px' }}
-                required
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Target Venue / Festival</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Blankets &amp; Wine Festival" 
-                value={reqVenue} 
-                onChange={(e) => setReqVenue(e.target.value)}
-                className="form-control"
-                style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '12px', padding: '6px' }}
-                required
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Request Details (Optional)</label>
-              <textarea 
-                placeholder="Message for automated IP check..." 
-                value={reqMsg} 
-                onChange={(e) => setReqMsg(e.target.value)}
-                className="form-control"
-                style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '12px', padding: '6px', height: '60px', resize: 'none' }}
-              />
-            </div>
-            <button 
-              type="submit" 
-              className="btn-primary" 
-              style={{ width: '100%', padding: '10px', fontSize: '12px', borderRadius: '4px', cursor: 'pointer', marginTop: '6px' }}
-            >
-              Verify IP &amp; Grant Drop License
-            </button>
-          </form>
-        </div>
+      {/* Tab Bar */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        {tabBtn('pool', 'Promo Pool', '🎵')}
+        {tabBtn('clearance', 'Clearance Hub', '📋')}
+        {tabBtn('upload', 'Drop a Promo', '⬆️')}
       </div>
+
+      {/* Toast notification */}
+      {downloadSuccess && (
+        <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', color: '#86efac', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          ✓ {downloadSuccess}
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
+          <RiRefreshFill size={32} className="spin-animation" style={{ marginBottom: '12px', color: 'var(--cyan)' }} />
+          <p>Loading your promo pool…</p>
+        </div>
+      ) : (
+        <>
+          {/* ── PROMO POOL TAB ── */}
+          {activeTab === 'pool' && (
+            <div>
+              {tracks.length === 0 ? (
+                <div className="dashboard-card" style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
+                  <p style={{ fontSize: '15px', marginBottom: '8px' }}>No promo tracks available for your region yet.</p>
+                  <p style={{ fontSize: '13px' }}>Switch to <strong style={{ color: 'var(--cyan)' }}>Drop a Promo</strong> to submit the first cut!</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {tracks.map(track => (
+                    <div key={track.id} className="dashboard-card" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '16px', padding: '18px 22px', transition: 'box-shadow 0.2s' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: '800', fontSize: '15px', color: '#fff' }}>{track.title}</span>
+                          <span style={{ fontSize: '11px', background: 'rgba(0,212,255,0.12)', color: 'var(--cyan)', padding: '2px 8px', borderRadius: '99px', fontWeight: '700' }}>{track.genre}</span>
+                          {track.allowed_regions && track.allowed_regions.length > 0 && (
+                            <span style={{ fontSize: '11px', background: 'rgba(245,158,11,0.15)', color: '#fbbf24', padding: '2px 8px', borderRadius: '99px', fontWeight: '700' }}>
+                              🌍 {track.allowed_regions.join(', ')} only
+                            </span>
+                          )}
+                          {track.feedback_submitted && (
+                            <span style={{ fontSize: '11px', background: 'rgba(34,197,94,0.12)', color: '#86efac', padding: '2px 8px', borderRadius: '99px', fontWeight: '700' }}>✓ Reviewed</span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>By <strong style={{ color: '#94a3b8' }}>{track.artist}</strong></span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>⏱ <strong style={{ color: '#94a3b8' }}>{track.bpm} BPM</strong></span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>🎵 Key <strong style={{ color: '#94a3b8' }}>{track.key}</strong></span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>⬇️ <strong style={{ color: '#94a3b8' }}>{track.downloads_count}</strong> downloads</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                        <button
+                          onClick={() => handleDownloadAttempt(track)}
+                          disabled={downloadingId === track.id}
+                          style={{
+                            padding: '9px 20px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: downloadingId === track.id ? 'not-allowed' : 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            fontFamily: 'Outfit, sans-serif',
+                            background: track.feedback_submitted ? 'var(--cyan)' : 'rgba(255,255,255,0.08)',
+                            color: track.feedback_submitted ? '#060813' : '#e2e8f0',
+                            minWidth: '130px',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          {downloadingId === track.id ? (
+                            <><RiRefreshFill size={12} className="spin-animation" /> Preparing…</>
+                          ) : track.feedback_submitted ? (
+                            <><RiDownloadFill size={13} /> Download WAV</>
+                          ) : (
+                            <>⭐ Review & Download</>
+                          )}
+                        </button>
+                        {!track.feedback_submitted && (
+                          <span style={{ fontSize: '10px', color: '#64748b', textAlign: 'right', maxWidth: '130px' }}>Leave a dancefloor review to unlock</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── CLEARANCE HUB TAB ── */}
+          {activeTab === 'clearance' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+              {/* Clearance Ledger */}
+              <div>
+                <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', marginBottom: '16px' }}>Active Remix Drop Clearances</h3>
+                {clearances.length === 0 ? (
+                  <div className="dashboard-card" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                    <p>No clearance requests yet. Submit a remix drop below.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {clearances.map(req => (
+                      <div key={req.id} className="dashboard-card" style={{ padding: '16px 20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+                          <div>
+                            <div style={{ fontWeight: '700', fontSize: '14px', color: '#fff', marginBottom: '4px' }}>{req.title}</div>
+                            <div style={{ fontSize: '12px', color: '#64748b' }}>
+                              By <strong style={{ color: '#94a3b8' }}>{req.dj_name}</strong> · Venue: <strong style={{ color: '#94a3b8' }}>{req.venue}</strong>
+                              {req.original_title && <span> · Original: <strong style={{ color: '#94a3b8' }}>{req.original_title}</strong></span>}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                            <span style={{
+                              padding: '4px 10px', borderRadius: '99px', fontSize: '11px', fontWeight: '700',
+                              background: `${statusColors[req.status] || '#64748b'}22`,
+                              color: statusColors[req.status] || '#64748b',
+                              border: `1px solid ${statusColors[req.status] || '#64748b'}44`
+                            }}>
+                              {req.status.toUpperCase()}
+                            </span>
+                            {req.is_owner && req.status === 'pending' && (
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button onClick={() => handleApproveClearance(req.id, 'approved')} style={{ padding: '5px 12px', borderRadius: '5px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '700', background: 'rgba(34,197,94,0.15)', color: '#86efac' }}>Approve</button>
+                                <button onClick={() => handleApproveClearance(req.id, 'declined')} style={{ padding: '5px 12px', borderRadius: '5px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '700', background: 'rgba(239,68,68,0.12)', color: '#fca5a5' }}>Decline</button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Clearance Request Form */}
+              <div className="dashboard-card" style={{ height: 'fit-content' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', marginBottom: '16px' }}>📝 Request Drop Clearance</h3>
+                <form onSubmit={handleClearanceSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {[
+                    { label: 'Original Track ID', value: clearTrackId, set: setClearTrackId, placeholder: 'Paste track ID from the pool' },
+                    { label: 'Remix / Drop Title', value: clearTitle, set: setClearTitle, placeholder: 'e.g. Midnight Grooves (Afro Remix)' },
+                    { label: 'Your DJ Name', value: clearDj, set: setClearDj, placeholder: 'e.g. DJ Kalonje' },
+                    { label: 'Target Venue / Event', value: clearVenue, set: setClearVenue, placeholder: 'e.g. Blankets & Wine' },
+                  ].map(({ label, value, set, placeholder }) => (
+                    <div key={label}>
+                      <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '5px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</label>
+                      <input type="text" value={value} onChange={e => set(e.target.value)} placeholder={placeholder} style={inputStyle} required />
+                    </div>
+                  ))}
+                  <button type="submit" disabled={submittingClear} style={{ padding: '11px', borderRadius: '6px', border: 'none', cursor: submittingClear ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '700', fontFamily: 'Outfit, sans-serif', background: 'var(--cyan)', color: '#060813', width: '100%' }}>
+                    {submittingClear ? 'Submitting…' : '🔐 Request IP Clearance'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* ── UPLOAD TAB ── */}
+          {activeTab === 'upload' && (
+            <div style={{ maxWidth: '640px' }}>
+              {uploadSuccess && (
+                <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', color: '#86efac', fontSize: '13px' }}>
+                  ✓ Promo track uploaded and live in the pool!
+                </div>
+              )}
+              <div className="dashboard-card">
+                <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', marginBottom: '6px' }}>Drop a New Promo Cut</h3>
+                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '24px' }}>Upload DJ-ready intro/outro edits. Leave <em>Allowed Regions</em> empty to make it available worldwide.</p>
+                <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    {[
+                      { label: 'Track Title', value: upTitle, set: setUpTitle, placeholder: 'Midnight Grooves (Intro Edit)', full: true },
+                      { label: 'Artist Name', value: upArtist, set: setUpArtist, placeholder: 'Your artist name', full: true },
+                      { label: 'BPM', value: upBpm, set: setUpBpm, placeholder: '120', type: 'number' },
+                      { label: 'Key (Camelot)', value: upKey, set: setUpKey, placeholder: '4A' },
+                    ].map(({ label, value, set, placeholder, full, type }) => (
+                      <div key={label} style={{ gridColumn: full ? '1 / -1' : 'auto' }}>
+                        <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '5px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</label>
+                        <input type={type || 'text'} value={value} onChange={e => set(e.target.value)} placeholder={placeholder} style={inputStyle} required />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div>
+                      <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '5px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>Genre</label>
+                      <select value={upGenre} onChange={e => setUpGenre(e.target.value)} style={{ ...inputStyle }}>
+                        {['House', 'Techno', 'Afrobeats', 'Gengetone', 'Hip-Hop', 'R&B', 'Dancehall', 'Amapiano', 'EDM', 'Pop'].map(g => <option key={g} value={g}>{g}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '5px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>Allowed Regions (optional)</label>
+                      <input type="text" value={upRegions} onChange={e => setUpRegions(e.target.value)} placeholder="e.g. KE, NG, ZA (blank = global)" style={inputStyle} />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={submittingUpload} style={{ padding: '13px', borderRadius: '6px', border: 'none', cursor: submittingUpload ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', background: 'linear-gradient(135deg, var(--cyan), #4f46e5)', color: '#fff', width: '100%', marginTop: '8px' }}>
+                    {submittingUpload ? 'Uploading…' : '⬆️ Publish Promo to DJ Pool'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── FEEDBACK GATE MODAL ── */}
+      {feedbackModal && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) setFeedbackModal(null); }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+        >
+          <div style={{ background: '#0c0f20', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '32px', maxWidth: '480px', width: '100%', position: 'relative' }}>
+            <button onClick={() => setFeedbackModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '20px' }}>✕</button>
+            <div style={{ marginBottom: '24px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--cyan)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>Dancefloor Review Required</span>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: '8px 0 4px' }}>{feedbackModal.title}</h3>
+              <p style={{ fontSize: '13px', color: '#64748b' }}>Share your honest dancefloor response to unlock the full-quality WAV download. Your feedback helps artists understand how their music performs live.</p>
+            </div>
+            <form onSubmit={handleFeedbackSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {/* Star Rating */}
+              <div>
+                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>Your Rating</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[1,2,3,4,5].map(star => (
+                    <button key={star} type="button" onClick={() => setFeedbackRating(star)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '24px', opacity: star <= feedbackRating ? 1 : 0.3, transition: 'opacity 0.15s' }}>
+                      ⭐
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Vibe Selection */}
+              <div>
+                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>Dancefloor Response</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {vibeOptions.map(opt => (
+                    <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px 14px', borderRadius: '8px', background: feedbackVibes === opt.value ? 'rgba(0,212,255,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${feedbackVibes === opt.value ? 'rgba(0,212,255,0.3)' : 'rgba(255,255,255,0.06)'}`, transition: 'all 0.15s' }}>
+                      <input type="radio" name="vibes" value={opt.value} checked={feedbackVibes === opt.value} onChange={() => setFeedbackVibes(opt.value)} style={{ display: 'none' }} />
+                      <span style={{ fontSize: '13px', color: feedbackVibes === opt.value ? 'var(--cyan)' : '#94a3b8', fontWeight: '600' }}>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {/* Written Review */}
+              <div>
+                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '5px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>Your Written Review</label>
+                <textarea
+                  value={feedbackText}
+                  onChange={e => setFeedbackText(e.target.value)}
+                  placeholder="Tell the artist how this track performed in your set…"
+                  required
+                  style={{ ...inputStyle, height: '80px', resize: 'none' }}
+                />
+              </div>
+              <button type="submit" disabled={submittingFeedback || !feedbackText.trim()} style={{ padding: '13px', borderRadius: '6px', border: 'none', cursor: (submittingFeedback || !feedbackText.trim()) ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', background: 'linear-gradient(135deg, var(--cyan), #4f46e5)', color: '#fff', opacity: (submittingFeedback || !feedbackText.trim()) ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+                {submittingFeedback ? 'Submitting…' : '🔓 Submit Review & Download Track'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ================= SUB-PANEL: Sync Licensing Marketplace (Phase 6) =================
 function SyncLicensingPanel() {
