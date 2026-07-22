@@ -9,20 +9,25 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 12mm;
+            margin: 0;
         }
         * {
             box-sizing: border-box;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
+        html, body {
+            background-color: #060911 !important;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+        }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #060911;
             color: #f1f5f9;
-            margin: 0;
-            padding: 20px;
-            font-size: 12px;
+            padding: 32px 36px;
+            font-size: 13px; /* 1px larger than previous 12px */
             line-height: 1.5;
         }
         h1, h2, h3, h4 {
@@ -32,7 +37,7 @@
         }
         .header {
             text-align: center;
-            padding: 16px 0 14px 0;
+            padding: 10px 0 14px 0;
             border-bottom: 1px solid #1e293b;
             margin-bottom: 20px;
         }
@@ -53,7 +58,7 @@
             height: auto;
         }
         .title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 800;
             background: linear-gradient(135deg, #a855f7, #38bdf8);
             -webkit-background-clip: text;
@@ -61,12 +66,12 @@
             margin-bottom: 4px;
         }
         .subtitle {
-            font-size: 12px;
+            font-size: 13px;
             color: #94a3b8;
         }
 
         .section-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 700;
             border-left: 4px solid #863bff;
             padding-left: 10px;
@@ -105,21 +110,21 @@
         .node-title {
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 14px;
             margin-bottom: 4px;
         }
         .title-im { color: #c084fc; }
         .title-tm { color: #38bdf8; }
         .title-ts { color: #34d399; }
         .title-sm { color: #93c5fd; }
-        .node-domain { font-family: monospace; font-size: 10px; color: #94a3b8; margin-bottom: 8px; }
-        .node-desc { font-size: 10px; color: #cbd5e1; text-align: left; padding: 0 4px; }
+        .node-domain { font-family: monospace; font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+        .node-desc { font-size: 11px; color: #cbd5e1; text-align: left; padding: 0 4px; line-height: 1.4; }
 
         .flow-arrow-down {
             text-align: center;
             font-size: 18px;
             color: #64748b;
-            margin: 10px 0;
+            margin: 12px 0;
         }
         .core-box {
             background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%);
@@ -131,7 +136,7 @@
         }
         .core-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             color: #e9d5ff;
             margin-bottom: 8px;
@@ -147,7 +152,7 @@
             border: 1px solid rgba(255,255,255,0.12);
             border-radius: 6px;
             padding: 8px 6px;
-            font-size: 10px;
+            font-size: 11px;
             color: #f3e8ff;
         }
 
@@ -162,7 +167,7 @@
         }
         .db-item {
             text-align: center;
-            font-size: 11px;
+            font-size: 12px;
             color: #a7f3d0;
             font-weight: 600;
         }
@@ -182,22 +187,22 @@
             font-family: 'Outfit', sans-serif;
             font-weight: 600;
             text-align: left;
-            padding: 8px 10px;
-            font-size: 11px;
+            padding: 10px 12px;
+            font-size: 12px;
         }
         td {
-            padding: 8px 10px;
+            padding: 9px 12px;
             border-bottom: 1px solid #1e293b;
-            font-size: 10px;
+            font-size: 11px;
             color: #cbd5e1;
         }
         
         .footer {
-            margin-top: 24px;
+            margin-top: 28px;
             padding-top: 12px;
             border-top: 1px solid #1e293b;
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
             color: #64748b;
         }
     </style>
@@ -266,7 +271,7 @@
         <!-- Unified Core Box -->
         <div class="core-box">
             <div class="core-title">UNIFIED FASTAPI BACKEND CORE SERVER</div>
-            <div style="font-size: 11px; color: #c084fc;">OIDC/PKCE Session Token Manager • Stripe Payments & Escrow Ledger</div>
+            <div style="font-size: 12px; color: #c084fc;">OIDC/PKCE Session Token Manager • Stripe Payments & Escrow Ledger</div>
             <div class="core-grid">
                 <div class="core-chip">Claude 4.6 Recommendation Engine</div>
                 <div class="core-chip">Stripe Connect & Escrow</div>
@@ -279,13 +284,13 @@
 
         <!-- Persistence Box -->
         <div class="db-box">
-            <div class="db-item">🍃 MongoDB Data Cluster<br/><span style="font-size: 9px; opacity: 0.8;">Shared Users, Catalogs, Briefs, Feeds</span></div>
-            <div class="db-item">📦 AWS S3 / Cloudflare R2<br/><span style="font-size: 9px; opacity: 0.8;">Audio Stems, Lossless Files, Watermarks</span></div>
+            <div class="db-item">🍃 MongoDB Data Cluster<br/><span style="font-size: 10px; opacity: 0.8;">Shared Users, Catalogs, Briefs, Feeds</span></div>
+            <div class="db-item">📦 AWS S3 / Cloudflare R2<br/><span style="font-size: 10px; opacity: 0.8;">Audio Stems, Lossless Files, Watermarks</span></div>
         </div>
     </div>
 
     <div class="section-title">2. End-to-End Data & Asset Lifecycle Sequence</div>
-    <div style="background: #0d1322; border: 1px solid #1e293b; border-radius: 8px; padding: 14px; margin-bottom: 20px; font-size: 11px; color: #cbd5e1;">
+    <div style="background: #0d1322; border: 1px solid #1e293b; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 12px; color: #cbd5e1;">
         <ol style="margin: 0; padding-left: 20px;">
             <li style="margin-bottom: 6px;"><strong>Catalog Ingestion:</strong> Creator uploads audio stems to <code>TuneMavens</code>. Stems store in AWS S3, metadata upserts to MongoDB <code>catalogs</code> with auto-generated ISRCs.</li>
             <li style="margin-bottom: 6px;"><strong>Split Cascade Lock:</strong> Creator defines split waterfall (90/10) in <code>publishing_deals</code> and signs contract via <code>contracts</code>.</li>

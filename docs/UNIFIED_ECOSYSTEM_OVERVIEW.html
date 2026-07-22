@@ -9,20 +9,25 @@
     <style>
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 0;
         }
         * {
             box-sizing: border-box;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
+        html, body {
+            background-color: #0b0f19 !important;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+        }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0b0f19;
             color: #f1f5f9;
-            margin: 0;
-            padding: 24px;
-            font-size: 13px;
+            padding: 36px 40px;
+            font-size: 14px; /* 1px larger than previous 13px */
             line-height: 1.6;
         }
         h1, h2, h3, h4 {
@@ -32,7 +37,7 @@
         }
         .header {
             text-align: center;
-            padding: 24px 0 20px 0;
+            padding: 10px 0 20px 0;
             border-bottom: 1px solid #1e293b;
             margin-bottom: 24px;
         }
@@ -42,7 +47,7 @@
             margin-bottom: 16px;
         }
         .title {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
             background: linear-gradient(135deg, #a855f7, #3b82f6);
             -webkit-background-clip: text;
@@ -51,7 +56,7 @@
             letter-spacing: -0.5px;
         }
         .subtitle {
-            font-size: 13px;
+            font-size: 14px;
             color: #94a3b8;
             font-weight: 500;
         }
@@ -59,7 +64,7 @@
             display: inline-block;
             padding: 4px 10px;
             border-radius: 9999px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -74,7 +79,7 @@
             page-break-inside: avoid;
         }
         .section-title {
-            font-size: 18px;
+            font-size: 19px;
             font-weight: 700;
             border-left: 4px solid #863bff;
             padding-left: 12px;
@@ -99,18 +104,19 @@
             margin-bottom: 10px;
         }
         .card-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             color: #ffffff;
             margin: 0;
         }
         .card-domain {
             font-family: monospace;
-            font-size: 11px;
+            font-size: 12px;
             color: #94a3b8;
+            margin-bottom: 6px;
         }
         .card-body {
-            font-size: 12px;
+            font-size: 13px;
             color: #cbd5e1;
         }
         
@@ -129,13 +135,13 @@
             font-family: 'Outfit', sans-serif;
             font-weight: 600;
             text-align: left;
-            padding: 10px 12px;
-            font-size: 12px;
+            padding: 12px 14px;
+            font-size: 13px;
         }
         td {
-            padding: 10px 12px;
+            padding: 11px 14px;
             border-bottom: 1px solid #1e293b;
-            font-size: 11px;
+            font-size: 12px;
             color: #cbd5e1;
         }
         tr:last-child td {
@@ -145,21 +151,21 @@
             background: linear-gradient(135deg, #131b2e 0%, #1a243d 100%);
             border: 1px solid #243252;
             border-radius: 8px;
-            padding: 14px;
-            margin-bottom: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
         }
         .feature-title {
             font-weight: 700;
             color: #38bdf8;
-            font-size: 13px;
+            font-size: 14px;
             margin-bottom: 4px;
         }
         .footer {
-            margin-top: 30px;
+            margin-top: 36px;
             padding-top: 16px;
             border-top: 1px solid #1e293b;
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
             color: #64748b;
         }
     </style>
@@ -285,27 +291,27 @@
         
         <div class="feature-card">
             <div class="feature-title">1. Closed-Loop Creator-to-Consumer Pipeline</div>
-            <div style="font-size: 11px; color: #cbd5e1;">Tracks ingested via <strong>TuneMavens</strong> flow instantly into <strong>SyncMavens</strong> for licensing pitches, <strong>TuneStream</strong> for consumer streaming, and <strong>Intermaven</strong> for AI social marketing—eliminating multi-platform friction and third-party aggregation delays.</div>
+            <div style="font-size: 12px; color: #cbd5e1;">Tracks ingested via <strong>TuneMavens</strong> flow instantly into <strong>SyncMavens</strong> for licensing pitches, <strong>TuneStream</strong> for consumer streaming, and <strong>Intermaven</strong> for AI social marketing—eliminating multi-platform friction and third-party aggregation delays.</div>
         </div>
 
         <div class="feature-card">
             <div class="feature-title">2. 90/10 Placement Split & $0 Catalog Advance Model</div>
-            <div style="font-size: 11px; color: #cbd5e1;">Unlike traditional sync publishers that demand ownership rights or charge heavy catalog sign-up fees, <strong>SyncMavens</strong> operates on a <strong>pure 90/10 waterfall model</strong> (90% to creators, 10% facilitation fee). Creators maintain 100% ownership control of their copyrights without predatory catalog buyouts.</div>
+            <div style="font-size: 12px; color: #cbd5e1;">Unlike traditional sync publishers that demand ownership rights or charge heavy catalog sign-up fees, <strong>SyncMavens</strong> operates on a <strong>pure 90/10 waterfall model</strong> (90% to creators, 10% facilitation fee). Creators maintain 100% ownership control of their copyrights without predatory catalog buyouts.</div>
         </div>
 
         <div class="feature-card">
             <div class="feature-title">3. Mother-CMS & Shared Token Architecture</div>
-            <div style="font-size: 11px; color: #cbd5e1;"><strong>Intermaven</strong> acts as the mother platform driving shared design tokens, multi-tenant UI grids, and localized key overlays across all sub-applications. Updates to the core design system flow seamlessly across all 4 platforms.</div>
+            <div style="font-size: 12px; color: #cbd5e1;"><strong>Intermaven</strong> acts as the mother platform driving shared design tokens, multi-tenant UI grids, and localized key overlays across all sub-applications. Updates to the core design system flow seamlessly across all 4 platforms.</div>
         </div>
 
         <div class="feature-card">
             <div class="feature-title">4. Native AI Business & Social Studio</div>
-            <div style="font-size: 11px; color: #cbd5e1;">Creators gain access to built-in AI tools (Claude Sonnet 4.6 Recommendation Agent, Gemini/Sora Social AI Studio) that generate platform-specific creative assets (1:1 square, 9:16 vertical video) tailored to recommended channel paths.</div>
+            <div style="font-size: 12px; color: #cbd5e1;">Creators gain access to built-in AI tools (Claude Sonnet 4.6 Recommendation Agent, Gemini/Sora Social AI Studio) that generate platform-specific creative assets (1:1 square, 9:16 vertical video) tailored to recommended channel paths.</div>
         </div>
 
         <div class="feature-card">
             <div class="feature-title">5. Shared Single Sign-On (SSO) & Unified Credit Bank</div>
-            <div style="font-size: 11px; color: #cbd5e1;">Users sign up once and navigate frictionlessly across all 4 platforms. Unified Network Credits can be earned from TuneStream listener tips or marketplace sales and spent on AI runs or CRM marketing campaigns across the entire network.</div>
+            <div style="font-size: 12px; color: #cbd5e1;">Users sign up once and navigate frictionlessly across all 4 platforms. Unified Network Credits can be earned from TuneStream listener tips or marketplace sales and spent on AI runs or CRM marketing campaigns across the entire network.</div>
         </div>
     </div>
 
