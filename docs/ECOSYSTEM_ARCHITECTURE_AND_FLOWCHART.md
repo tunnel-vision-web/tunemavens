@@ -33,8 +33,8 @@ The Intermaven Ecosystem is architected as a **Unified Monorepo with Multi-Targe
 |  (intermaven.io)      |               |  (tunemavens.com)     |               |   (tunestream.co)     |               |   (syncmavens.com)    |
 |                       |               |                       |               |                       |               |                       |
 | - Mother-CMS Grid     |               | - Music Marketplace   |               | - Lossless Player     |               | - Ditto Sync Portal   |
-| - Mother-EPK Builder  |               | - Record Label Hub    |               | - Fan Tipping Engine  |               | - AI Brief Matcher    |
-| - Social AI Studio    |               | - Contract Negotiation|               | - Offline Cache       |               | - 90/10 Split Cascade |
+| - Mother-EPK Builder  |               | - Record Label Hub    |               | - Fan Tipping Engine  |               | - Option 1: Agency Pl.|
+| - Social AI Studio    |               | - Contract Negotiation|               | - Offline Cache       |               | - Option 2: AI Gallery|
 +-----------------------+               +-----------------------+               +-----------------------+               +-----------------------+
            |                                       |           |                                   |
            +--------------------------+            |           |        +--------------------------+
@@ -86,7 +86,7 @@ flowchart TD
     Router -->|intermaven.io| IM["INTERMAVEN (Mother Platform)<br/>• Mother-CMS Grid<br/>• Mother-EPK Builder<br/>• Social AI Studio"]:::intermavenBrand
     Router -->|tunemavens.com| TM["TUNEMAVENS (Marketplace Hub)<br/>• Music Marketplace<br/>• Record Label Roster<br/>• Contract Negotiation"]:::tunemavensBrand
     Router -->|tunestream.co| TS["TUNESTREAM (Streaming App)<br/>• Lossless Audio Player<br/>• Fan Direct Tipping<br/>• Offline Metadata"]:::tunestreamBrand
-    Router -->|syncmavens.com| SM["SYNCMAVENS (Sync Portal)<br/>• Ditto Sync Marketplace<br/>• 90/10 Split Cascade<br/>• AI Brief Matcher"]:::syncmavensBrand
+    Router -->|syncmavens.com| SM["SYNCMAVENS (Sync Portal)<br/>• Option 1: Guaranteed Placements<br/>• Option 2: Sync Ready AI Gallery<br/>• 0 Dollar Catalog Advances"]:::syncmavensBrand
 
     %% Role Subdomain Ingress
     Router -->|djs.tunemavens.com| DJSub["DJ Pool Portal"]:::tunemavensBrand
@@ -147,18 +147,18 @@ sequenceDiagram
     TM->>DB: Upsert Track to 'catalogs' & Generate ISRC Code
     
     %% Step 2: Split Cascade Contract
-    Creator->>TM: Lock 90/10 Royalty Split Cascade
+    Creator->>TM: Define Royalty Split Cascade (Writer/Producer Shares)
     TM->>DB: Store Agreement in 'publishing_deals' & 'contracts'
 
-    %% Step 3: Sync Brief Matching & Pitching
+    %% Step 3: Sync Brief Matching & Licensing Options
     Supervisor->>SM: Post Sync Brief (Film/TV/Gaming)
     SM->>DB: Save Opportunity to 'briefs' Collection
     SM->>SM: Run AI Match Simulator against Catalog Stems
-    SM->>Creator: Present Placement Match Score (%)
+    SM->>Creator: Present Placement Match Score (%) & Framework (Option 1 vs Option 2)
     Creator->>SM: Submit Pitch Track
-    SM->>Supervisor: Deliver Pitch with Watermarked Preview
+    SM->>Supervisor: Deliver Pitch with 45s Watermarked Preview
     Supervisor->>SM: Accept Pitch & Sign Licensing Agreement
-    SM->>DB: Record Deal in 'pitches' & Cascade Payout (90% Creator, 10% Platform)
+    SM->>DB: Record Deal in 'pitches' & Disburse Waterfall (30% Agency / 25% Admin / 52.5% Creator Pool + 100% Publishing Retained)
 
     %% Step 4: Consumer Streaming & Direct Fan Monetization
     TM->>TS: Synchronize Track to Streaming Library

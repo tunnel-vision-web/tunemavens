@@ -15,7 +15,7 @@ The ecosystem comprises **4 primary interconnected platforms**:
 1. **[Intermaven](file:///C:/Users/judit/workspace/tunemaven/docs/DOCUMENTATION.md#917-track-d-social-ai-studio-recommendations--mother-epk-integration)** (`intermaven.io`): The parent ("Mother") platform housing the core AI Business Suite, Mother-CMS, Mother-EPK Builder, and Social AI Studio for automated campaign dispatching and asset generation.
 2. **[TuneMavens](file:///C:/Users/judit/workspace/tunemaven/docs/DEVELOPMENT_PLAN.md#marketplace-phases-110)** (`tunemavens.com`): The primary music business community & marketplace hub. Handles creator distribution elections, record label catalog management, contract negotiations, split cascade ledgers, community Wall of Fame, and CRM target marketing.
 3. **[TuneStream](file:///C:/Users/judit/workspace/tunemaven/docs/DEVELOPMENT_PLAN.md#phase-2-consumer-audio-system-tunestream-p1-backlog)** (`tunestream.co`): The direct-to-consumer lossless audio streaming and discovery platform. Enables fans to stream catalog tracks, tip artists, and build offline music libraries while feeding streaming metrics back into creator analytics.
-4. **[SyncMavens](file:///C:/Users/judit/workspace/tunemaven/docs/DEVELOPMENT_PLAN.md#phase-6-sync-marketplace-syncmavens-p2)** (`syncmavens.com`): The Ditto-inspired sync licensing marketplace connecting independent creators directly with film, TV, gaming, and commercial music supervisors through AI brief matching and a transparent 90/10 split waterfall.
+4. **[SyncMavens](file:///C:/Users/judit/workspace/tunemaven/docs/DEVELOPMENT_PLAN.md#phase-6-sync-marketplace-syncmavens-p2)** (`syncmavens.com`): The Ditto-inspired sync licensing marketplace connecting independent creators directly with film, TV, gaming, and commercial music supervisors through two transparent licensing options with zero upfront catalog lockups.
 
 ---
 
@@ -44,8 +44,13 @@ The **Intermaven Ecosystem** disrupts this model through **5 core competitive ad
 ### 1. Closed-Loop Creator-to-Consumer Pipeline
 Tracks ingested via **TuneMavens** flow instantly into **SyncMavens** for licensing pitches, **TuneStream** for consumer streaming, and **Intermaven** for AI social marketing—eliminating multi-platform friction and third-party aggregation delays.
 
-### 2. 90/10 Placement Split & $0 Catalog Advance Model
-Unlike traditional sync publishers that demand ownership rights or charge heavy catalog sign-up fees, **SyncMavens** operates on a **pure 90/10 waterfall model** (90% to creators, 10% facilitation fee). Creators maintain 100% ownership control of their copyrights without predatory catalog buyouts.
+### 2. Dual Sync Licensing Frameworks & $0 Catalog Advance Policy
+Unlike traditional sync publishers that lock up catalogs with advances and seize publishing rights, **SyncMavens** offers **two transparent, creator-friendly licensing models**:
+* **Option 1: Guaranteed Placements (Agency Partner Network)**  
+  Curated pitching backed by agency partners. 30% agency fee off the top, 25% SyncMavens administration fee from the remainder (leaving 52.5% net creator buyout pool), while artists retain **100% of their writer and composer publishing shares**.
+* **Option 2: Sync Brief AI & 'Sync Ready' Gallery**  
+  Direct AI metadata matching against active supervisor briefs, 45-second audio preview clips, and a secure stem vault accessible only by verified supervisors.  
+* **$0 Upfront Advances**: We do not offer catalog sign advances, keeping our incentives 100% aligned with creators—we only earn when creators get placed. Creators retain 100% ownership control of their copyrights.
 
 ### 3. Mother-CMS & Shared Token Architecture
 **Intermaven** acts as the mother platform driving shared design tokens, multi-tenant UI grids, and localized key overlays across all sub-applications. Updates to the core design system flow seamlessly across all 4 platforms.
@@ -73,8 +78,8 @@ Users sign up once and navigate frictionlessly across `intermaven.io`, `tunemave
 |  - AI Business Suite Catalog      |  - Split Cascade & Advance Ledgers            |
 +-----------------------------------+-----------------------------------------------+
 |  SYNCMAVENS (syncmavens.com)      |  TUNESTREAM (tunestream.co)                   |
-|  - Ditto-inspired Sync Portal     |  - Consumer Audio Streaming Platform          |
-|  - 90/10 Placement Split Engine   |  - High-Fidelity Audio Player                 |
-|  - AI Sync Match Simulator        |  - Direct Fan Tipping & Offline Library       |
+|  - Ditto Sync Portal & Brief AI   |  - Consumer Audio Streaming Platform          |
+|  - Option 1: Agency Placements    |  - High-Fidelity Audio Player                 |
+|  - Option 2: Sync Ready Gallery   |  - Direct Fan Tipping & Offline Library       |
 +-----------------------------------------------------------------------------------+
 ```

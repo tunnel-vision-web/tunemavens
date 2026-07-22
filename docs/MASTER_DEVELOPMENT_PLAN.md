@@ -38,7 +38,7 @@ The entire ecosystem is powered by a standardized, battle-tested modern technolo
 +------------------------+----------------------------------------------------------+
 |  OBJECT STORAGE        | AWS S3 / Cloudflare R2 for Lossless Stems & Audio Files  |
 +------------------------+----------------------------------------------------------+
-|  PAYMENTS & ESCROW     | Stripe Connect / Checkout Gateway, 90/10 Split Cascade,   |
+|  PAYMENTS & ESCROW     | Stripe Connect / Checkout Gateway, Option 1 & 2 Splits,  |
 |                        | Event Ticketing QR Scanner Router                        |
 +------------------------+----------------------------------------------------------+
 |  AI & AUTOMATION       | Claude Sonnet 4.6 (App Recommendations), Gemini Nano &   |
@@ -72,9 +72,10 @@ A comprehensive progress audit shows significant engineering milestones already 
 
 ### 4. SyncMavens Licensing Hub (`syncmavens.com`)
 - ✅ **Ditto-Inspired Public Portal:** Ditto Music-modeled "Get Signed" landing page pitching sync licensing to independent artists with client logos (Netflix, HBO, FIFA, A24).
+- ✅ **Two Licensing Framework Options:** Implemented Option 1 (Guaranteed Placements via agency partner network: 30% agency fee, 25% SyncMavens admin fee of remainder, 52.5% net creator pool + 100% writer/composer publishing retained) and Option 2 (Sync Brief AI & Sync Ready Gallery indexing).
 - ✅ **AI Sync Match Simulator:** Form-based utility scoring track metadata against active supervisor briefs with match score outputs.
-- ✅ **Waterfall Splits Calculator:** Interactive slider tool visualizing the 90/10 sync fee distribution waterfall and $0 catalog advance model.
-- ✅ **Backend Sync Router (`match_router.py`):** Verified score simulation and 90/10 waterfall payout backend calculations.
+- ✅ **Waterfall Splits Calculator & $0 Advance Model:** Interactive slider tool visualizing buyout fee cascades, showing $0 upfront catalog advances to ensure 100% copyright retention.
+- ✅ **Backend Sync Router (`match_router.py`):** Verified score simulation and waterfall payout backend calculations.
 
 ---
 
