@@ -34,7 +34,7 @@ The Intermaven Ecosystem is architected as a **Unified Monorepo with Multi-Targe
 |                       |               |                       |               |                       |               |                       |
 | - Mother-CMS Grid     |               | - Music Marketplace   |               | - Lossless Player     |               | - Ditto Sync Portal   |
 | - Mother-EPK Builder  |               | - Record Label Hub    |               | - Fan Tipping Engine  |               | - Option 1 (30/25/52)|
-| - Social AI Studio    |               | - Contract Negotiation|               | - Offline Cache       |               | - Option 2 (AI Vault) |
+| - Social AI Studio    |               | - Contract Negotiation|               | - Offline Cache       |               | - Option 2 (15% Agency)|
 +-----------------------+               +-----------------------+               +-----------------------+               +-----------------------+
            |                                       |           |                                   |
            +--------------------------+            |           |        +--------------------------+
@@ -86,7 +86,7 @@ flowchart TD
     Router -->|intermaven.io| IM["INTERMAVEN (Mother Platform)<br/>• Mother-CMS Grid<br/>• Mother-EPK Builder<br/>• Social AI Studio"]:::intermavenBrand
     Router -->|tunemavens.com| TM["TUNEMAVENS (Marketplace Hub)<br/>• Music Marketplace<br/>• Record Label Roster<br/>• Contract Negotiation"]:::tunemavensBrand
     Router -->|tunestream.co| TS["TUNESTREAM (Streaming App)<br/>• Lossless Audio Player<br/>• Fan Direct Tipping<br/>• Offline Metadata"]:::tunestreamBrand
-    Router -->|syncmavens.com| SM["SYNCMAVENS (Sync Portal)<br/>• Option 1: Agency (30/25/52.5)<br/>• Option 2: AI Sync Gallery<br/>• 0 Dollar Catalog Advances"]:::syncmavensBrand
+    Router -->|syncmavens.com| SM["SYNCMAVENS (Sync Portal)<br/>• Option 1: Agency (30/25/52.5)<br/>• Option 2: Direct (15% Agency Fee)<br/>• 0 Dollar Catalog Advances"]:::syncmavensBrand
 
     %% Role Subdomain Ingress
     Router -->|djs.tunemavens.com| DJSub["DJ Pool Portal"]:::tunemavensBrand
@@ -154,11 +154,11 @@ sequenceDiagram
     Supervisor->>SM: Post Sync Brief (Film/TV/Gaming)
     SM->>DB: Save Opportunity to 'briefs' Collection
     SM->>SM: Run AI Match Simulator against Catalog Stems
-    SM->>Creator: Present Placement Match Score (%) & Option (Option 1 vs Option 2)
+    SM->>Creator: Present Placement Match Score (%) & Option (Option 1 vs Option 2: 15% Agency Fee)
     Creator->>SM: Submit Pitch Track
     SM->>Supervisor: Deliver Pitch with 45s Watermarked Preview
     Supervisor->>SM: Accept Pitch & Sign Licensing Agreement
-    SM->>DB: Record Deal in 'pitches' & Disburse Waterfall (30% Agency / 25% Admin / 52.5% Net Creator Pool + 100% Publishing Retained)
+    SM->>DB: Record Deal in 'pitches' & Disburse Waterfall (Option 1: 30/25/52.5 vs Option 2: 15% SyncMavens Agency Fee / 85% Creator Pool)
 
     %% Step 4: Consumer Streaming & Direct Fan Monetization
     TM->>TS: Synchronize Track to Streaming Library
@@ -186,7 +186,7 @@ The entire ecosystem persists through unified MongoDB collections shared across 
 | `pitches` | `_id`, `brief_id`, `catalog_id`, `creator_id`, `match_score`, `pitch_status`, `waterfall_splits` | SyncMavens, TuneMavens | Pitch submissions and licensing deal ledgers |
 | `publishing_deals` | `_id`, `user_id`, `tier`, `splits_cascade`, `superseded_at`, `status` | TuneMavens | Publishing agreement records and split calculation rules |
 | `distribution_deals` | `_id`, `user_id`, `dsp_targets[]`, `isrc_range`, `status` | TuneMavens | Distribution tracking and DSP submission state |
-| `contracts` | `_id`, `contract_type`, `locked_clauses[]`, `negotiable_clauses[]`, `signatures[]` | TuneMavens, SyncMavens | E-signature and legal contract negotiation state machine |
+| `contracts` | `_id`, `contract_type`, `locked_clauses[]`, `signatures[]` | TuneMavens, SyncMavens | E-signature and legal contract negotiation state machine |
 | `campaigns` | `_id`, `name`, `segment`, `channels[]`, `template`, `stats` | Intermaven, TuneMavens | Multi-channel CRM growth marketing campaigns |
 | `messages` | `_id`, `thread_id`, `from_user_id`, `to_user_id`, `body_markdown`, `read_at` | All 4 Platforms | In-app user inbox and administrative notification threads |
 | `activity_events` | `_id`, `user_id`, `kind`, `visibility`, `metadata`, `created_at` | TuneMavens, TuneStream | Fanout stream powering the social graph and recommendation engine |
@@ -210,24 +210,23 @@ tunemaven/
 ├── backend/
 │   ├── server.py         # Primary FastAPI Application Entry
 │   ├── auth.py           # PyJWT Cross-Domain Token Validation
-│   ├── routes/           # Domain-Specific API Routers (sso, match, stream, crm, cms)
-│   ├── services/         # Contract Templates & S3/R2 Storage Wrappers
+│   ├── routes/           # Domain Routers (sso, match, stream, crm, cms)
 │   └── models.py         # Pydantic v2 Data Transfer Models
-└── deploy/               # Multi-Domain Hostinger VPS Nginx Configurations
+└── deploy/               # Multi-Domain Hostinger VPS Nginx Configs
 ```
 
 ### 4.2 Layer-by-Layer Technical Specification Matrix
 
-| Tech Layer | Platform Standard | Specific Implementation & Package Specification |
+| Tech Layer | Platform Standard | Implementation & Package Specification |
 |---|---|---|
-| **Frontend Framework** | React 18 + Vite | Modular Monorepo Monolith with Isolated Build Targets (`dist/portal`, `dist/tunestream`, `dist/syncmavens`). |
-| **Design System & Styling** | Vanilla CSS + Tokens | Custom HSL design tokens, glassmorphism, responsive grid systems, and Outfit/Inter typography. Zero heavy CSS framework overhead. |
-| **Native Mobile Packaging** | Capacitor | Wraps web frontend applications for iOS & Android native deployment with native audio background playback drivers. |
-| **Backend Framework** | FastAPI (Python 3.11) | ASGI asynchronous web server running Uvicorn workers with non-blocking event loops. |
-| **Database Engine** | MongoDB + Motor / PyMongo | Multi-tenant MongoDB replica set cluster using Motor for async Python database I/O. |
-| **Object Storage** | AWS S3 / Cloudflare R2 | Direct browser presigned URL upload pipeline for lossless audio stems (WAV/AIFF) and watermarked audio clips. |
-| **Single Sign-On (SSO)** | OIDC + PKCE | Custom OAuth2/OIDC SSO server (`sso_router.py`) issuing PyJWT session cookies across `.tunemavens.com`. |
-| **Payment Gateway** | Stripe Connect | Direct-to-creator payouts, subscription 4-tier entitlements, event ticketing QR validation, and escrow ledgers. |
-| **AI Recommendation Layer**| Claude Sonnet 4.6 | 15s capped recommendation synthesis engine (`users_router.py`) recommending apps and marketplace features. |
-| **Social AI Generation** | Gemini Nano + Sora 2 | Multi-format image (`/generate-art`) and short-form video clip (`/generate-video`) generator matching recommended channels. |
-| **Growth & CRM Engine** | Resend API + Inbox | Multi-channel messaging engine dispatching emails via Resend (`resend-python`) and in-app inbox threads (`messages`). |
+| **Frontend Framework** | React 18 + Vite | Modular Monorepo Monolith with Isolated Build Targets (<code>dist/portal</code>, <code>dist/tunestream</code>, <code>dist/syncmavens</code>). |
+| **Styling System** | Vanilla CSS + Tokens | Custom HSL design tokens, glassmorphism, responsive grid layouts, Outfit/Inter fonts. Zero CSS framework bloat. |
+| **Native Packaging** | Capacitor | Wraps web frontend applications for iOS & Android native deployment with native audio drivers. |
+| **Backend Engine** | FastAPI (Python 3.11) | ASGI asynchronous web server running Uvicorn workers with non-blocking event loops. |
+| **Database Layer** | MongoDB + Motor | Multi-tenant MongoDB replica set cluster using Motor for async Python database I/O. |
+| **Object Storage** | AWS S3 / Cloudflare R2 | Direct browser presigned URL upload pipeline for lossless audio stems (WAV/AIFF) and preview clips. |
+| **Single Sign-On** | OIDC + PKCE | Custom OAuth2/OIDC SSO server (<code>sso_router.py</code>) issuing PyJWT cookies across <code>.tunemavens.com</code>. |
+| **Payment Gateway** | Stripe Connect | Direct payouts, 4-tier entitlements, QR event ticketing scanner, Option 1 (30/25/52.5) & Option 2 (15% agency fee) ledgers. |
+| **AI Recommendation** | Claude Sonnet 4.6 | 15s capped recommendation synthesis engine (<code>users_router.py</code>) recommending tools and apps. |
+| **Social AI Studio** | Gemini Nano + Sora 2 | Multi-format image (<code>/generate-art</code>) and short-form video clip (<code>/generate-video</code>) campaign generator. |
+| **CRM Engine** | Resend API + Inbox | Multi-channel messaging engine dispatching emails via Resend and in-app inbox threads (<code>messages</code>). |
