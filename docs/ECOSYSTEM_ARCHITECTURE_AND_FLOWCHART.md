@@ -64,9 +64,9 @@ The Intermaven Ecosystem is architected as a **Unified Monorepo with Multi-Targe
 
 ---
 
-## 2. High-Impact Ecosystem Flowchart Diagrams
+## 2. Platform Interconnection & Data Flow Diagrams
 
-### Flowchart 1: Platform Connectivity & Brand-Coded Domain Routing
+### Flowchart 1: Ecosystem Platform Connectivity & Ingress Architecture
 
 ```mermaid
 flowchart TD
@@ -124,52 +124,69 @@ flowchart TD
 
 ---
 
-### Flowchart 2: End-to-End Data & Asset Lifecycle Sequence
+### Flowchart 2: Inter-Platform Data & Financial Stream Flowchart
 
-This sequence diagram illustrates the lifecycle of track metadata, splits cascade, sync brief pitching, streaming tipping, and automated marketing campaigns across all 4 platforms.
+This flowchart demonstrates the exact multi-directional flow of audio assets, user auth sessions, licensing revenue, and activity events across the 4 platforms.
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor Creator as Creator / Label
-    participant TM as TuneMavens Portal
-    participant S3 as AWS S3 Storage
-    participant DB as MongoDB Cluster
-    participant SM as SyncMavens Hub
-    participant Supervisor as Film/TV Supervisor
-    participant TS as TuneStream App
-    participant Fan as Consumer / Listener
-    participant IM as Intermaven Social AI
+flowchart LR
+    %% Subgraph Styling
+    classDef platformNode fill:#131b2e,stroke:#3b82f6,stroke-width:2px,color:#fff;
+    classDef dataFlow fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#fff;
+    classDef financialFlow fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff;
 
-    %% Step 1: Catalog Ingestion
-    Creator->>TM: Upload Master Audio & Stems
-    TM->>S3: Store Original Lossless Audio Stems
-    TM->>DB: Upsert Track to 'catalogs' & Generate ISRC Code
+    subgraph TM_Platform ["TuneMavens (Marketplace Hub)"]
+        TM_Ingest["Audio Stem & Metadata Ingestion"]
+        TM_Contracts["Contract Negotiation & Split Ledgers"]
+    end
+
+    subgraph SM_Platform ["SyncMavens (Sync Portal)"]
+        SM_Matcher["AI Brief Match Simulator"]
+        SM_Option1["Option 1: Agency (30/25/52.5)"]
+        SM_Option2["Option 2: Direct (15% Agency Fee)"]
+    end
+
+    subgraph TS_Platform ["TuneStream (Streaming App)"]
+        TS_Player["Lossless Stream Player"]
+        TS_Tipping["Direct Fan Tipping"]
+    end
+
+    subgraph IM_Platform ["Intermaven (Mother Platform)"]
+        IM_SocialAI["Social AI Studio (Gemini/Sora)"]
+        IM_CMS["Mother-CMS & EPK Builder"]
+    end
+
+    subgraph Core_Services ["Unified Core & Infrastructure"]
+        SSO["SSO Auth Engine (.tunemavens.com)"]
+        MongoDB[("MongoDB Cluster")]
+        S3["AWS S3 Stems Storage"]
+        Stripe["Stripe Escrow Wallet"]
+    end
+
+    %% Data Connections & Flows
+    TM_Ingest -- "1. Upload Audio Stems" --> S3
+    TM_Ingest -- "2. Upsert Metadata & ISRCs" --> MongoDB
     
-    %% Step 2: Split Cascade Contract
-    Creator->>TM: Define Royalty Split Cascade (Writer/Producer Shares)
-    TM->>DB: Store Agreement in 'publishing_deals' & 'contracts'
+    TM_Ingest -- "3. Sync Catalog Stems" --> SM_Matcher
+    SM_Matcher -- "4. Match Briefs & Deliver Pitch" --> SM_Option1
+    SM_Matcher -- "4. Index 'Sync Ready' Gallery" --> SM_Option2
+    
+    SM_Option1 -- "5. Disburse Waterfall (30/25/52.5)" --> Stripe
+    SM_Option2 -- "5. Disburse Waterfall (15% Agency)" --> Stripe
 
-    %% Step 3: Sync Brief Matching & Licensing Options
-    Supervisor->>SM: Post Sync Brief (Film/TV/Gaming)
-    SM->>DB: Save Opportunity to 'briefs' Collection
-    SM->>SM: Run AI Match Simulator against Catalog Stems
-    SM->>Creator: Present Placement Match Score (%) & Option (Option 1 vs Option 2: 15% Agency Fee)
-    Creator->>SM: Submit Pitch Track
-    SM->>Supervisor: Deliver Pitch with 45s Watermarked Preview
-    Supervisor->>SM: Accept Pitch & Sign Licensing Agreement
-    SM->>DB: Record Deal in 'pitches' & Disburse Waterfall (Option 1: 30/25/52.5 vs Option 2: 15% SyncMavens Agency Fee / 85% Creator Pool)
+    TM_Ingest -- "6. Publish Release Tracks" --> TS_Player
+    TS_Tipping -- "7. Direct Fan Tips & Streams" --> Stripe
+    TS_Player -- "8. Fanout Stream Events" --> MongoDB
 
-    %% Step 4: Consumer Streaming & Direct Fan Monetization
-    TM->>TS: Synchronize Track to Streaming Library
-    Fan->>TS: Stream Lossless Track & Direct Tip Artist
-    TS->>DB: Record Stream Event & Fan Tipping in 'activity_events'
-    TS->>Creator: Payout Dispatched to Unified Network Wallet
+    IM_SocialAI -- "9. Generate 1:1 & 9:16 Assets" --> IM_CMS
+    IM_CMS -- "10. Dispatch Social & CRM Invites" --> TS_Player
 
-    %% Step 5: AI Social Marketing Automation
-    Creator->>IM: Trigger Social AI Studio Campaign
-    IM->>IM: Render Visual Formats (1:1 & 9:16) via Gemini / Sora
-    IM->>Fan: Dispatch Campaign via Resend Email / Social Channels
+    SSO -. "Shared Auth Session Token" .-> TM_Platform
+    SSO -. "Shared Auth Session Token" .-> SM_Platform
+    SSO -. "Shared Auth Session Token" .-> TS_Platform
+    SSO -. "Shared Auth Session Token" .-> IM_Platform
+
+    Stripe ==> "Final Payout Disbursed to Creator Wallet" ==> TM_Contracts
 ```
 
 ---
@@ -219,14 +236,14 @@ tunemaven/
 
 | Tech Layer | Platform Standard | Implementation & Package Specification |
 |---|---|---|
-| **Frontend Framework** | React 18 + Vite | Modular Monorepo Monolith with Isolated Build Targets (<code>dist/portal</code>, <code>dist/tunestream</code>, <code>dist/syncmavens</code>). |
+| **Frontend Framework** | React 18 + Vite | Modular Monorepo Monolith with Isolated Build Targets (`dist/portal`, `dist/tunestream`, `dist/syncmavens`). |
 | **Styling System** | Vanilla CSS + Tokens | Custom HSL design tokens, glassmorphism, responsive grid layouts, Outfit/Inter fonts. Zero CSS framework bloat. |
 | **Native Packaging** | Capacitor | Wraps web frontend applications for iOS & Android native deployment with native audio drivers. |
 | **Backend Engine** | FastAPI (Python 3.11) | ASGI asynchronous web server running Uvicorn workers with non-blocking event loops. |
 | **Database Layer** | MongoDB + Motor | Multi-tenant MongoDB replica set cluster using Motor for async Python database I/O. |
 | **Object Storage** | AWS S3 / Cloudflare R2 | Direct browser presigned URL upload pipeline for lossless audio stems (WAV/AIFF) and preview clips. |
-| **Single Sign-On** | OIDC + PKCE | Custom OAuth2/OIDC SSO server (<code>sso_router.py</code>) issuing PyJWT cookies across <code>.tunemavens.com</code>. |
+| **Single Sign-On** | OIDC + PKCE | Custom OAuth2/OIDC SSO server (`sso_router.py`) issuing PyJWT cookies across `.tunemavens.com`. |
 | **Payment Gateway** | Stripe Connect | Direct payouts, 4-tier entitlements, QR event ticketing scanner, Option 1 (30/25/52.5) & Option 2 (15% agency fee) ledgers. |
-| **AI Recommendation** | Claude Sonnet 4.6 | 15s capped recommendation synthesis engine (<code>users_router.py</code>) recommending tools and apps. |
-| **Social AI Studio** | Gemini Nano + Sora 2 | Multi-format image (<code>/generate-art</code>) and short-form video clip (<code>/generate-video</code>) campaign generator. |
-| **CRM Engine** | Resend API + Inbox | Multi-channel messaging engine dispatching emails via Resend and in-app inbox threads (<code>messages</code>). |
+| **AI Recommendation** | Claude Sonnet 4.6 | 15s capped recommendation synthesis engine (`users_router.py`) recommending tools and apps. |
+| **Social AI Studio** | Gemini Nano + Sora 2 | Multi-format image (`/generate-art`) and short-form video clip (`/generate-video`) campaign generator. |
+| **CRM Engine** | Resend API + Inbox | Multi-channel messaging engine dispatching emails via Resend and in-app inbox threads (`messages`). |
