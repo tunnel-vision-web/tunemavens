@@ -44,13 +44,16 @@ The **Intermaven Ecosystem** disrupts this model through **5 core competitive ad
 ### 1. Closed-Loop Creator-to-Consumer Pipeline
 Tracks ingested via **TuneMavens** flow instantly into **SyncMavens** for licensing pitches, **TuneStream** for consumer streaming, and **Intermaven** for AI social marketing—eliminating multi-platform friction and third-party aggregation delays.
 
-### 2. Dual Sync Licensing Frameworks & $0 Catalog Advance Policy
-Unlike traditional sync publishers that lock up catalogs with advances and seize publishing rights, **SyncMavens** offers **two transparent, creator-friendly licensing models**:
+### 2. Dual Licensing Frameworks & Exact Waterfall Breakdown (30% / 25% / 52.5%)
+Unlike traditional sync publishers that lock up catalogs with advances and seize publishing rights, **SyncMavens** offers **two transparent, artist-friendly licensing frameworks with exact waterfall payouts**:
 * **Option 1: Guaranteed Placements (Agency Partner Network)**  
-  Curated pitching backed by agency partners. 30% agency fee off the top, 25% SyncMavens administration fee from the remainder (leaving 52.5% net creator buyout pool), while artists retain **100% of their writer and composer publishing shares**.
+  * **30% Agency Fee (Off the Top)**: Paid to agency partners who secure the television, film, or commercial contract.
+  * **25% SyncMavens Admin Fee**: Taken from the remaining 70% balance (equaling 17.5% gross).
+  * **52.5% Net Creator Royalty Pool**: Paid directly to creator team (split dynamically between Writer & Producer).
+  * **100% Writer & Composer Publishing Share Retained**: Creator retains 100% of their publishing copyrights.
 * **Option 2: Sync Brief AI & 'Sync Ready' Gallery**  
-  Direct AI metadata matching against active supervisor briefs, 45-second audio preview clips, and a secure stem vault accessible only by verified supervisors.  
-* **$0 Upfront Advances**: We do not offer catalog sign advances, keeping our incentives 100% aligned with creators—we only earn when creators get placed. Creators retain 100% ownership control of their copyrights.
+  * Automated AI metadata tagging, 45-second supervisor audio previews, and secure stem vault indexing.
+* **$0 Upfront Catalog Sign Advances**: We do not offer advances, keeping our interests 100% aligned with creators—we only make money when we secure placements.
 
 ### 3. Mother-CMS & Shared Token Architecture
 **Intermaven** acts as the mother platform driving shared design tokens, multi-tenant UI grids, and localized key overlays across all sub-applications. Updates to the core design system flow seamlessly across all 4 platforms.
@@ -79,7 +82,7 @@ Users sign up once and navigate frictionlessly across `intermaven.io`, `tunemave
 +-----------------------------------+-----------------------------------------------+
 |  SYNCMAVENS (syncmavens.com)      |  TUNESTREAM (tunestream.co)                   |
 |  - Ditto Sync Portal & Brief AI   |  - Consumer Audio Streaming Platform          |
-|  - Option 1: Agency Placements    |  - High-Fidelity Audio Player                 |
+|  - Option 1: Agency (30/25/52.5)  |  - High-Fidelity Audio Player                 |
 |  - Option 2: Sync Ready Gallery   |  - Direct Fan Tipping & Offline Library       |
 +-----------------------------------------------------------------------------------+
 ```
