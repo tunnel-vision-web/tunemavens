@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unified Ecosystem Overview - Intermaven Network</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            margin: 0;
+            padding: 24px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            color: #ffffff;
+            margin-top: 0;
+        }
+        .header {
+            text-align: center;
+            padding: 24px 0 20px 0;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 24px;
+        }
+        .logo-img {
+            max-width: 320px;
+            height: auto;
+            margin-bottom: 16px;
+        }
+        .title {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-cyan { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); }
+        .badge-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        
+        .section {
+            margin-bottom: 28px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            border-left: 4px solid #863bff;
+            padding-left: 12px;
+            margin-bottom: 14px;
+            color: #f8fafc;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .card {
+            background: #131b2e;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 16px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+        }
+        .card-domain {
+            font-family: monospace;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .card-body {
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #131b2e;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #1e293b;
+        }
+        th {
+            background: #1e293b;
+            color: #f8fafc;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #1e293b;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .feature-card {
+            background: linear-gradient(135deg, #131b2e 0%, #1a243d 100%);
+            border: 1px solid #243252;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+        .feature-title {
+            font-weight: 700;
+            color: #38bdf8;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 16px;
+            border-top: 1px solid #1e293b;
+            text-align: center;
+            font-size: 10px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="data:image/png;base64,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" class="logo-img" alt="Intermaven Logo" />
+        <div class="title">UNIFIED ECOSYSTEM OVERVIEW</div>
+        <div class="subtitle">Intermaven Network • Master Platform Strategy & Business Architecture</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">1. High-Level Vision & Ecosystem Strategy</div>
+        <p>
+            The <strong>Intermaven Network Ecosystem</strong> is a unified, next-generation music-business operational platform and direct-to-consumer marketplace. Rather than forcing creators, record labels, music supervisors, and fans to fragment their workflows across multiple disconnected third-party software tools, our ecosystem combines <strong>AI business tools, direct catalog monetization, sync placement, and consumer streaming</strong> into a single, self-reinforcing network powered by a unified Single Sign-On (SSO) and shared credit engine.
+        </p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">2. The 4 Interconnected Core Platforms</div>
+        <div class="grid-2">
+            <div class="card" style="border-left: 3px solid #a855f7;">
+                <div class="card-header">
+                    <div class="card-title">Intermaven</div>
+                    <span class="badge badge-purple">Parent Platform</span>
+                </div>
+                <div class="card-domain">intermaven.io</div>
+                <div class="card-body">
+                    The parent ("Mother") platform housing the core AI Business Suite, Mother-CMS grid, Mother-EPK Builder, and Social AI Studio for automated campaign asset generation and social dispatching.
+                </div>
+            </div>
+
+            <div class="card" style="border-left: 3px solid #00c2ff;">
+                <div class="card-header">
+                    <div class="card-title">TuneMavens</div>
+                    <span class="badge badge-cyan">Marketplace Hub</span>
+                </div>
+                <div class="card-domain">tunemavens.com</div>
+                <div class="card-body">
+                    The primary music business community & marketplace hub. Handles creator distribution elections, record label catalog management, contract negotiations, split cascade ledgers, community Wall of Fame, and CRM target marketing.
+                </div>
+            </div>
+
+            <div class="card" style="border-left: 3px solid #10b981;">
+                <div class="card-header">
+                    <div class="card-title">TuneStream</div>
+                    <span class="badge badge-emerald">Streaming App</span>
+                </div>
+                <div class="card-domain">tunestream.co</div>
+                <div class="card-body">
+                    The direct-to-consumer lossless audio streaming and discovery platform. Enables fans to stream catalog tracks, tip artists, and build offline music libraries while feeding streaming metrics back into creator analytics.
+                </div>
+            </div>
+
+            <div class="card" style="border-left: 3px solid #3b82f6;">
+                <div class="card-header">
+                    <div class="card-title">SyncMavens</div>
+                    <span class="badge badge-blue">Sync Marketplace</span>
+                </div>
+                <div class="card-domain">syncmavens.com</div>
+                <div class="card-body">
+                    The Ditto-inspired sync licensing marketplace connecting independent creators directly with film, TV, gaming, and commercial music supervisors through AI brief matching and a transparent 90/10 split waterfall.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">3. Targeted User Personas & Customer Matrix</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>User Persona</th>
+                    <th>Motivations & Core Needs</th>
+                    <th>Primary Platform Ingress</th>
+                    <th>Key Ecosystem Features</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Creators</strong> (Artists, Songwriters)</td>
+                    <td>Catalog distribution, contract safety, sync licensing, AI marketing</td>
+                    <td><code>tunemavens.com</code> / <code>intermaven.io</code></td>
+                    <td>Split Cascade Engine, AI Recommendation Agent, Mother-EPK</td>
+                </tr>
+                <tr>
+                    <td><strong>Record Labels & A&R</strong></td>
+                    <td>Roster ingestion, track management, catalog split tracking, payouts</td>
+                    <td><code>tunemavens.com</code> (Label Console)</td>
+                    <td>Catalogue Roster CSV Ingestion, Advance Recoupment Ledger</td>
+                </tr>
+                <tr>
+                    <td><strong>Music Supervisors</strong></td>
+                    <td>Cleared audio stems, transparent licensing splits, zero-friction matching</td>
+                    <td><code>syncmavens.com</code></td>
+                    <td>AI Sync Match Simulator, Interactive Brief Index</td>
+                </tr>
+                <tr>
+                    <td><strong>DJs & Engineers</strong></td>
+                    <td>High-bitrate audio pools, studio mastering previews, track stems</td>
+                    <td><code>djs.tunemavens.com</code></td>
+                    <td>DJ Pool Engine, Mastering Preview Testbed</td>
+                </tr>
+                <tr>
+                    <td><strong>Media Houses</strong></td>
+                    <td>Programmatic content acquisition, bulk sync licensing, custom portals</td>
+                    <td><code>media.tunemavens.com</code></td>
+                    <td>Media House Routing, Bulk Contract Subsystem</td>
+                </tr>
+                <tr>
+                    <td><strong>Everyday Listeners / Fans</strong></td>
+                    <td>High-fidelity streaming, artist discovery, direct tipping, offline playback</td>
+                    <td><code>tunestream.co</code></td>
+                    <td>Lossless Stream Player, Direct Artist Tipping</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">4. Unique Market Positioning & Competitive Advantages</div>
+        
+        <div class="feature-card">
+            <div class="feature-title">1. Closed-Loop Creator-to-Consumer Pipeline</div>
+            <div style="font-size: 11px; color: #cbd5e1;">Tracks ingested via <strong>TuneMavens</strong> flow instantly into <strong>SyncMavens</strong> for licensing pitches, <strong>TuneStream</strong> for consumer streaming, and <strong>Intermaven</strong> for AI social marketing—eliminating multi-platform friction and third-party aggregation delays.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-title">2. 90/10 Placement Split & $0 Catalog Advance Model</div>
+            <div style="font-size: 11px; color: #cbd5e1;">Unlike traditional sync publishers that demand ownership rights or charge heavy catalog sign-up fees, <strong>SyncMavens</strong> operates on a <strong>pure 90/10 waterfall model</strong> (90% to creators, 10% facilitation fee). Creators maintain 100% ownership control of their copyrights without predatory catalog buyouts.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-title">3. Mother-CMS & Shared Token Architecture</div>
+            <div style="font-size: 11px; color: #cbd5e1;"><strong>Intermaven</strong> acts as the mother platform driving shared design tokens, multi-tenant UI grids, and localized key overlays across all sub-applications. Updates to the core design system flow seamlessly across all 4 platforms.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-title">4. Native AI Business & Social Studio</div>
+            <div style="font-size: 11px; color: #cbd5e1;">Creators gain access to built-in AI tools (Claude Sonnet 4.6 Recommendation Agent, Gemini/Sora Social AI Studio) that generate platform-specific creative assets (1:1 square, 9:16 vertical video) tailored to recommended channel paths.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-title">5. Shared Single Sign-On (SSO) & Unified Credit Bank</div>
+            <div style="font-size: 11px; color: #cbd5e1;">Users sign up once and navigate frictionlessly across all 4 platforms. Unified Network Credits can be earned from TuneStream listener tips or marketplace sales and spent on AI runs or CRM marketing campaigns across the entire network.</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        CONFIDENTIAL • INTERMAVEN NETWORK UNIFIED SPECIFICATION • TARGET GO-LIVE: SEPTEMBER 30, 2026
+    </div>
+
+</body>
+</html>
