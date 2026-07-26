@@ -3,11 +3,10 @@
 Handles product listing, product creation, order lookups,
 and secure digital download streaming.
 """
-from __future__ import annotations
-
 from datetime import datetime, timezone
 import logging
 from typing import List, Optional
+
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse, RedirectResponse
@@ -93,6 +92,62 @@ def list_my_orders(current_user: dict = Depends(get_current_user)):
     return orders_list
 
 
+@router.get("/products/{product_id}")
+def get_product(product_id: str):
+    """Retrieves single product details."""
+    from bson import ObjectId
+    try:
+        doc = db.products.find_one({"_id": ObjectId(product_id)})
+    except Exception:
+        doc = db.products.find_one({"_id": product_id})
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    doc["_id"] = str(doc["_id"])
+    return doc
+
+
+class OrderFulfillRequest(BaseModel):
+    tracking_number: Optional[str] = None
+    carrier: Optional[str] = "Standard Shipping"
+    status: Optional[str] = "shipped"
+
+
+@router.post("/orders/{order_id}/fulfill")
+def fulfill_order(
+    order_id: str,
+    payload: OrderFulfillRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Allows creators or admins to update physical order shipping status."""
+    from bson import ObjectId
+    user_roles = current_user.get("roles", [current_user.get("role", "creator")])
+    if not any(r in ("creator", "admin", "exec", "label") for r in user_roles):
+        raise HTTPException(status_code=403, detail="Restricted to Creators and Execs")
+
+    try:
+        order = db.orders.find_one({"_id": ObjectId(order_id)})
+    except Exception:
+        order = db.orders.find_one({"_id": order_id})
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    db.orders.update_one(
+        {"_id": order["_id"]},
+        {
+            "$set": {
+                "status": payload.status or "shipped",
+                "tracking_number": payload.tracking_number,
+                "carrier": payload.carrier,
+                "fulfilled_at": datetime.now(timezone.utc),
+            }
+        }
+    )
+    return {"status": payload.status or "shipped", "order_id": str(order["_id"])}
+
+
 @router.get("/download/{token}")
 def download_digital_product(token: str):
     """Securely streams or redirects to a digital file download link
@@ -123,4 +178,4 @@ def download_digital_product(token: str):
 
     # Otherwise redirect to the S3/R2 presigned URL prefix
     return RedirectResponse(url=file_url)
-import os
+

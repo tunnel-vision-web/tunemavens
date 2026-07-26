@@ -3,11 +3,10 @@
 Handles event creation, listing, retrieval of purchased tickets,
 and QR code ticket scanning validation.
 """
-from __future__ import annotations
-
 from datetime import datetime, timezone
 import logging
 from typing import List, Optional
+
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
@@ -95,6 +94,53 @@ def list_my_tickets(current_user: dict = Depends(get_current_user)):
     return tickets_list
 
 
+@router.get("/events/{event_id}")
+def get_event(event_id: str):
+    """Retrieves detailed information for a specific event."""
+    from bson import ObjectId
+    try:
+        doc = db.events.find_one({"_id": ObjectId(event_id)})
+    except Exception:
+        doc = db.events.find_one({"_id": event_id})
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    doc["_id"] = str(doc["_id"])
+    return doc
+
+
+class RefundRequest(BaseModel):
+    ticket_id: str
+
+
+@router.post("/refund")
+def refund_ticket(
+    payload: RefundRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Refunds a purchased ticket and frees event capacity."""
+    from bson import ObjectId
+    try:
+        ticket = db.tickets.find_one({"_id": ObjectId(payload.ticket_id)})
+    except Exception:
+        ticket = db.tickets.find_one({"_id": payload.ticket_id})
+
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    if ticket.get("user_id") != str(current_user["_id"]) and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to refund this ticket")
+
+    if ticket.get("scanned", False):
+        raise HTTPException(status_code=400, detail="Cannot refund a ticket that has already been scanned")
+
+    db.tickets.delete_one({"_id": ticket["_id"]})
+    db.events.update_one({"_id": ticket["event_id"]}, {"$inc": {"tickets_sold": -1}})
+
+    return {"status": "refunded", "ticket_id": payload.ticket_id}
+
+
 @router.post("/scan")
 def scan_ticket(
     payload: ScanRequest,
@@ -143,3 +189,4 @@ def scan_ticket(
         "buyer_name": buyer_name,
         "ticket_id": str(ticket["_id"]),
     }
+

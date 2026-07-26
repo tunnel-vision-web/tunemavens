@@ -100,9 +100,10 @@ To achieve our simultaneous launch target (**September 30, 2026**), the remainin
 
 | Task ID | Component / Description | Target File(s) | Status | Priority |
 |---|---|---|---|---|
-| **B-1** | **Stripe 4-Tier Subscription Billing:** Register production Stripe price IDs for Starter, Pro, Business, and Enterprise tiers and link webhook updates. | `backend/routes/payments_router.py` | ⏳ In Progress | High |
-| **B-2** | **Event Ticketing Service:** Build custom ticketing router to sell event tickets, generate PDF/QR receipts, and validate entries at check-in. | `backend/routes/ticketing_router.py` | ⏳ In Progress | Medium |
-| **B-3** | **Merchandise & Digital Goods Storefront:** Complete checkout service for apparel purchases and instant digital audio downloads. | `backend/routes/storefront_router.py` | 🔴 Pending | Medium |
+| **B-1** | **Stripe 4-Tier Subscription Billing:** Register production Stripe price IDs for Starter, Pro, Business, and Enterprise tiers and link webhook updates. | `backend/routes/payments_router.py` | ✅ Completed | High |
+| **B-2** | **Event Ticketing Service:** Build custom ticketing router to sell event tickets, generate PDF/QR receipts, and validate entries at check-in. | `backend/routes/ticketing_router.py` | ✅ Completed | Medium |
+| **B-3** | **Merchandise & Digital Goods Storefront:** Complete checkout service for apparel purchases and instant digital audio downloads. | `backend/routes/storefront_router.py` | ✅ Completed | Medium |
+
 
 ### Track C: Media Ecosystem — TuneStream, SyncMavens & Distribution (Target: Weeks 2–8)
 

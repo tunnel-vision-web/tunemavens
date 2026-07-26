@@ -3,13 +3,12 @@
 Handles creating Stripe checkout sessions and processing webhooks.
 Includes sandbox mock fallbacks if Stripe keys are not configured.
 """
-from __future__ import annotations
-
 from datetime import datetime, timezone
 import logging
 import os
 import secrets
 from typing import Optional
+
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
@@ -35,6 +34,57 @@ except ImportError:
     STRIPE_AVAILABLE = False
 
 
+# Tier pricing matrix
+SUBSCRIPTION_PLANS = {
+    "starter": {
+        "id": "starter",
+        "name": "Starter",
+        "price_monthly": 0.0,
+        "credits": 600,
+        "features": ["Catalog Ingestion", "Community Access", "Lossless Audio Player"],
+    },
+    "pro": {
+        "id": "pro",
+        "name": "Professional",
+        "price_monthly": 19.99,
+        "credits": 2000,
+        "features": ["EPK Builder", "AI Match Simulator", "Sync Placement Pitching", "2,000 Network Credits"],
+    },
+    "business": {
+        "id": "business",
+        "name": "Business",
+        "price_monthly": 49.99,
+        "credits": 10000,
+        "features": ["Label Roster Console", "Social AI Studio", "Contract E-Signatures", "10,000 Network Credits"],
+    },
+    "enterprise": {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "price_monthly": 199.99,
+        "credits": 50000,
+        "features": ["Dedicated API Access", "Media House Portal", "White-Label CMS", "50,000 Network Credits"],
+    },
+}
+
+
+@router.get("/plans")
+def get_subscription_plans():
+    """Returns official 4-tier subscription pricing matrix."""
+    return {"plans": list(SUBSCRIPTION_PLANS.values())}
+
+
+@router.post("/cancel-subscription")
+def cancel_subscription(current_user: dict = Depends(get_current_user)):
+    """Cancels active subscription and reverts account to Starter tier."""
+    user_id = current_user["_id"]
+    db.users.update_one(
+        {"_id": user_id},
+        {"$set": {"plan": "starter", "subscription_cancelled_at": datetime.now(timezone.utc)}}
+    )
+    logger.info(f"User {user_id} cancelled subscription. Reverted to starter.")
+    return {"status": "cancelled", "plan": "starter"}
+
+
 class CheckoutSessionRequest(BaseModel):
     item_type: str  # 'subscription' | 'ticket' | 'merch'
     item_id: str    # plan name (starter/pro/etc) | event_id | product_id
@@ -47,6 +97,7 @@ def create_checkout_session(
     payload: CheckoutSessionRequest,
     current_user: dict = Depends(get_current_user),
 ):
+
     """Creates a Stripe Checkout Session.
 
     Falls back to a mock session URL if Stripe credentials are missing.
@@ -59,16 +110,15 @@ def create_checkout_session(
     title = ""
 
     if payload.item_type == "subscription":
-        plans = {
-            "starter": 0.0,
-            "professional": 29.99,
-            "business": 99.99,
-            "enterprise": 299.99,
-        }
-        if payload.item_id not in plans:
+        item_id_key = payload.item_id.lower()
+        if item_id_key == "professional":
+            item_id_key = "pro"
+        
+        plan_info = SUBSCRIPTION_PLANS.get(item_id_key)
+        if not plan_info:
             raise HTTPException(status_code=400, detail="Invalid subscription plan")
-        price = plans[payload.item_id]
-        title = f"TuneMavens {payload.item_id.capitalize()} Subscription"
+        price = plan_info["price_monthly"]
+        title = f"TuneMavens {plan_info['name']} Subscription"
     elif payload.item_type == "ticket":
         event = db.events.find_one({"_id": payload.item_id})
         if not event:
@@ -162,7 +212,7 @@ def create_checkout_session(
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request):
-    """Processes Stripe checkout success events.
+    """Processes Stripe checkout success and subscription lifecycle events.
 
     Supports simulated payloads for sandbox testing.
     """
@@ -175,9 +225,13 @@ async def stripe_webhook(request: Request):
             event = stripe.Webhook.construct_event(
                 payload, sig_header, STRIPE_WEBHOOK_SECRET
             )
-            if event["type"] == "checkout.session.completed":
+            event_type = event["type"]
+            if event_type in ("checkout.session.completed", "invoice.payment_succeeded"):
                 session = event["data"]["object"]
                 _process_successful_checkout(session.get("metadata", {}))
+            elif event_type == "customer.subscription.deleted":
+                subscription = event["data"]["object"]
+                _process_subscription_cancelled(subscription.get("metadata", {}))
             return {"status": "success"}
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Webhook Error: {e}")
@@ -185,15 +239,31 @@ async def stripe_webhook(request: Request):
     # Sandbox / Mock Webhook parsing (direct POST payload fallback)
     try:
         data = await request.json()
-        # Direct webhook simulations or sandbox bypass checks
-        if data.get("type") == "checkout.session.completed":
+        event_type = data.get("type")
+        if event_type in ("checkout.session.completed", "invoice.payment_succeeded"):
             metadata = data.get("data", {}).get("object", {}).get("metadata", {})
             _process_successful_checkout(metadata)
+            return {"status": "success", "mocked": True}
+        elif event_type == "customer.subscription.deleted":
+            metadata = data.get("data", {}).get("object", {}).get("metadata", {})
+            _process_subscription_cancelled(metadata)
             return {"status": "success", "mocked": True}
     except Exception:
         pass
 
     raise HTTPException(status_code=400, detail="Invalid webhook structure")
+
+
+def _process_subscription_cancelled(metadata: dict):
+    from bson import ObjectId
+    user_id = metadata.get("user_id")
+    if user_id:
+        db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"plan": "starter", "credits": 600}}
+        )
+        logger.info(f"Processed subscription cancellation webhook for user {user_id}")
+
 
 
 @router.post("/sandbox-bypass")
@@ -243,10 +313,12 @@ def _process_successful_checkout(metadata: dict):
         # Grant tier properties
         credit_grants = {
             "starter": 600,
+            "pro": 2000,
             "professional": 2000,
             "business": 10000,
             "enterprise": 50000,
         }
+
         credits = credit_grants.get(item_id, 600)
         db.users.update_one(
             {"_id": ObjectId(user_id)},
