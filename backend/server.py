@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db
-from routes import admin_router, auth_router, contracts_router, dashboard_router, deals_router, users_router, sso_router, payments_router, ticketing_router, storefront_router, distro_router, stream_router, match_router, social_ai_router, crm_router, cms_router, seo_router, djpool_router
+from routes import admin_router, auth_router, contracts_router, dashboard_router, deals_router, users_router, sso_router, payments_router, ticketing_router, storefront_router, distro_router, stream_router, match_router, social_ai_router, crm_router, cms_router, seo_router, djpool_router, storage_router
 from routes.admin_router import seed_domain_mappings_if_empty
 
 # Sentry initialization
@@ -58,6 +58,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(sso_router)
+app.include_router(storage_router)
 app.include_router(payments_router)
 app.include_router(ticketing_router)
 app.include_router(storefront_router)
@@ -74,6 +75,7 @@ app.include_router(deals_router)
 app.include_router(admin_router)
 app.include_router(users_router)
 app.include_router(contracts_router)
+
 
 # Seed default domain mappings on first boot (idempotent).
 from fastapi.exceptions import RequestValidationError

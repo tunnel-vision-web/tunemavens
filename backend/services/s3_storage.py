@@ -111,6 +111,81 @@ class StorageManager:
         safe_filename = unique_filename.replace('\\', '/')
         return f"{LOCAL_UPLOADS_URL_PREFIX.rstrip('/')}/{safe_filename}"
 
+    def generate_presigned_upload_url(
+        self,
+        filename: str,
+        content_type: str,
+        folder: str = "stems",
+        expires_in: int = 3600,
+    ) -> dict:
+        """Generates a presigned URL for direct browser-to-S3/R2 uploads.
+
+        Returns a dictionary with 'upload_url', 'file_key', 'public_url', and 'is_s3'.
+        """
+        extension = Path(filename).suffix
+        file_key = f"{folder}/{uuid.uuid4()}{extension}"
+
+        if self.use_s3:
+            try:
+                upload_url = self.s3_client.generate_presigned_url(
+                    ClientMethod="put_object",
+                    Params={
+                        "Bucket": S3_BUCKET_NAME,
+                        "Key": file_key,
+                        "ContentType": content_type,
+                    },
+                    ExpiresIn=expires_in,
+                )
+                if S3_PUBLIC_URL_PREFIX:
+                    public_url = f"{S3_PUBLIC_URL_PREFIX.rstrip('/')}/{file_key}"
+                else:
+                    public_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{file_key}"
+
+                return {
+                    "upload_url": upload_url,
+                    "file_key": file_key,
+                    "public_url": public_url,
+                    "is_s3": True,
+                    "expires_in": expires_in,
+                }
+            except Exception as e:
+                logger.error(f"Failed to generate S3 presigned upload URL: {e}")
+
+        # Local fallback simulation URL
+        safe_key = file_key.replace("\\", "/")
+        fallback_upload_url = f"{LOCAL_UPLOADS_URL_PREFIX.rstrip('/')}/upload-fallback?key={safe_key}"
+        public_url = f"{LOCAL_UPLOADS_URL_PREFIX.rstrip('/')}/{safe_key}"
+        return {
+            "upload_url": fallback_upload_url,
+            "file_key": file_key,
+            "public_url": public_url,
+            "is_s3": False,
+            "expires_in": expires_in,
+        }
+
+    def generate_presigned_download_url(
+        self,
+        file_key: str,
+        expires_in: int = 3600,
+    ) -> str:
+        """Generates a temporary presigned URL for accessing protected stem assets."""
+        if self.use_s3:
+            try:
+                return self.s3_client.generate_presigned_url(
+                    ClientMethod="get_object",
+                    Params={
+                        "Bucket": S3_BUCKET_NAME,
+                        "Key": file_key,
+                    },
+                    ExpiresIn=expires_in,
+                )
+            except Exception as e:
+                logger.error(f"Failed to generate S3 presigned download URL: {e}")
+
+        safe_key = file_key.replace("\\", "/")
+        return f"{LOCAL_UPLOADS_URL_PREFIX.rstrip('/')}/{safe_key}"
+
 
 # Global single instance export
 storage = StorageManager()
+

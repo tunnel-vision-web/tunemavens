@@ -16,6 +16,7 @@ from .crm_router import router as crm_router
 from .cms_router import router as cms_router
 from .seo_router import router as seo_router
 from .djpool_router import router as djpool_router
+from .storage_router import router as storage_router
 
 __all__ = [
     "admin_router",
@@ -36,4 +37,6 @@ __all__ = [
     "cms_router",
     "seo_router",
     "djpool_router",
+    "storage_router",
 ]
+

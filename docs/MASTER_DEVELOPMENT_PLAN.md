@@ -90,10 +90,11 @@ To achieve our simultaneous launch target (**September 30, 2026**), the remainin
 
 | Task ID | Component / Description | Target File(s) | Status | Priority |
 |---|---|---|---|---|
-| **A-1** | **Multi-Domain SSO Authorization:** Expand `sso_router.py` to support `client_id` configurations for `tunemavens.com`, `tunestream.co`, and `syncmavens.com`. | `backend/routes/sso_router.py` | ⏳ In Progress | High |
-| **A-2** | **Cross-Portal Auth Cookie Sync:** Validate JWT tokens minted by unified provider across root domain and subdomains (`COOKIE_DOMAIN=.tunemavens.com`). | `backend/auth.py` | ⏳ In Progress | High |
-| **A-3** | **S3/R2 Asset Storage Pipeline:** Replace base64 upload pipelines with direct AWS S3 / Cloudflare R2 presigned upload URLs for stems and audio. | `backend/services/s3_storage.py` | ⏳ In Progress | High |
-| **A-4** | **Mother-CMS Admin Editor UI:** Build admin editor interface with localized key overlays and CMS version rollback UI. | `backend/routes/cms_router.py`, `apps/portal/src/views/admin/` | 🔴 Pending | Medium |
+| **A-1** | **Multi-Domain SSO Authorization:** Expand `sso_router.py` with PKCE verifier validation and `client_id` configurations for `intermaven`, `tunemavens`, `tunestream`, and `syncmavens`. | `backend/routes/sso_router.py` | ✅ Completed | High |
+| **A-2** | **Cross-Portal Auth Cookie Sync:** Validate JWT tokens minted by unified provider across root domain and subdomains (`COOKIE_DOMAIN=.tunemavens.com`). | `backend/auth.py` | ✅ Completed | High |
+| **A-3** | **S3/R2 Asset Storage Pipeline:** Replace base64 upload pipelines with direct AWS S3 / Cloudflare R2 presigned upload/download URLs. | `backend/services/s3_storage.py`, `backend/routes/storage_router.py` | ✅ Completed | High |
+| **A-4** | **Mother-CMS Admin Editor UI:** Build admin editor interface with localized key overlays and CMS version rollback UI. | `backend/routes/cms_router.py`, `apps/portal/src/views/admin/CmsAdminView.jsx` | ✅ Completed | Medium |
+
 
 ### Track B: Payments & Commerce Wave (Target: Weeks 1–6)
 

@@ -18,10 +18,23 @@ from models import UserPublic
 
 router = APIRouter(prefix="/api/sso", tags=["sso"])
 
+import base64
+import hashlib
+
 # Allowed clients registry mapping to domain eTLD+1 configurations
 ALLOWED_CLIENTS: Dict[str, Dict] = {
+    "intermaven": {
+        "client_id": "intermaven",
+        "name": "Intermaven Parent Platform",
+        "redirect_uris": [
+            "http://localhost:3000/callback",
+            "https://intermaven.io/callback",
+            "https://www.intermaven.io/callback",
+        ],
+    },
     "tunemavens": {
         "client_id": "tunemavens",
+        "name": "TuneMavens Marketplace Hub",
         "redirect_uris": [
             "http://localhost:3000/callback",
             "https://tunemavens.com/callback",
@@ -30,6 +43,7 @@ ALLOWED_CLIENTS: Dict[str, Dict] = {
     },
     "tunestream": {
         "client_id": "tunestream",
+        "name": "TuneStream Lossless Player",
         "redirect_uris": [
             "http://localhost:3001/callback",
             "https://tunestream.co/callback",
@@ -37,6 +51,7 @@ ALLOWED_CLIENTS: Dict[str, Dict] = {
     },
     "syncmavens": {
         "client_id": "syncmavens",
+        "name": "SyncMavens Sync Licensing Hub",
         "redirect_uris": [
             "http://localhost:3002/callback",
             "https://syncmavens.com/callback",
@@ -45,7 +60,6 @@ ALLOWED_CLIENTS: Dict[str, Dict] = {
 }
 
 # Temporary in-memory store for authorization codes
-# Format: code -> {user_id, client_id, code_challenge, expires_at}
 _auth_codes_store: Dict[str, Dict] = {}
 
 
@@ -63,6 +77,22 @@ class TokenResponse(BaseModel):
     expires_in: int = 10080 * 60
 
 
+def _verify_pkce_challenge(code_verifier: str, code_challenge: str, method: str) -> bool:
+    if method == "plain":
+        return code_verifier == code_challenge
+    elif method == "S256":
+        digest = hashlib.sha256(code_verifier.encode("utf-8")).digest()
+        calculated_challenge = base64.urlsafe_b64encode(digest).decode("utf-8").rstrip("=")
+        return calculated_challenge == code_challenge.rstrip("=")
+    return False
+
+
+@router.get("/clients")
+def get_sso_clients():
+    """Returns registered ecosystem OIDC/PKCE clients."""
+    return {"clients": list(ALLOWED_CLIENTS.values())}
+
+
 @router.get("/authorize")
 def authorize(
     client_id: str = Query(...),
@@ -70,7 +100,7 @@ def authorize(
     response_type: str = Query("code"),
     scope: str = Query("openid profile email"),
     code_challenge: Optional[str] = Query(None),
-    code_challenge_method: Optional[str] = Query(None),
+    code_challenge_method: Optional[str] = Query("S256"),
     current_user: dict = Depends(get_current_user),
 ):
     """OIDC Authorization Code endpoint.
@@ -94,6 +124,7 @@ def authorize(
         "user_id": str(current_user["_id"]),
         "client_id": client_id,
         "code_challenge": code_challenge,
+        "code_challenge_method": code_challenge_method or "S256",
         "expires_at": datetime.now(timezone.utc) + timedelta(minutes=5),
     }
 
@@ -122,6 +153,15 @@ def token_exchange(payload: TokenExchangeRequest):
     if code_data["client_id"] != payload.client_id:
         raise HTTPException(status_code=400, detail="Client mismatch")
 
+    # PKCE verification if challenge was provided during /authorize
+    expected_challenge = code_data.get("code_challenge")
+    if expected_challenge:
+        if not payload.code_verifier:
+            raise HTTPException(status_code=400, detail="PKCE code_verifier is required")
+        method = code_data.get("code_challenge_method", "S256")
+        if not _verify_pkce_challenge(payload.code_verifier, expected_challenge, method):
+            raise HTTPException(status_code=400, detail="PKCE code_verifier verification failed")
+
     # Remove code to prevent reuse
     _auth_codes_store.pop(payload.code, None)
 
@@ -134,3 +174,4 @@ def token_exchange(payload: TokenExchangeRequest):
     # Mint JWT access token
     access_token = create_access_token(sub=str(user["_id"]))
     return TokenResponse(access_token=access_token)
+
