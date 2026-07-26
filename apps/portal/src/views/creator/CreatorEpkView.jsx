@@ -9,7 +9,7 @@ import {
   RiShoppingBasket2Fill, RiUserAddFill, RiShieldCheckFill,
   RiMusic2Fill, RiFileCopyFill, RiSearchLine, RiImageFill, RiArrowDownSLine,
   RiArrowLeftSLine, RiArrowRightSLine, RiThumbUpFill, RiMessage2Fill, RiAddFill, RiSubtractFill, RiDeleteBinFill,
-  RiBankCardFill, RiCellphoneFill, RiDiscFill, RiArrowRightLine
+  RiBankCardFill, RiCellphoneFill, RiDiscFill, RiArrowRightLine, RiMenuFill, RiCloseFill
 } from 'react-icons/ri'
 
 import heroSlide1 from '../../assets/creator_hero_banner.jpg'
@@ -47,18 +47,19 @@ export default function CreatorEpkView() {
   const artistName = rawArtistName.charAt(0).toUpperCase() + rawArtistName.slice(1)
   const artistSlug = (username || 'kip').toLowerCase().replace(/[^a-z0-9]/g, '')
 
-  // Navigation & Sticky Header State (Transparent -> 0.80 Opacity)
+  // Navigation & Sticky Header State (Transparent overlay over Hero -> Background appears only after scroll)
   const [activeTab, setActiveTab] = useState('home')
   const [mediaFilter, setMediaFilter] = useState('all')
   const [selectedTheme] = useState(EPK_THEMES[0])
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTrack, setActiveTrack] = useState({ id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', duration: '3:45', priceCredits: 50 })
   const [scrolled, setScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Sticky Scroll Header Effect
+  // Scroll listener: Header background color appears ONLY after scroll
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 30) setScrolled(true)
+      if (window.scrollY > 40) setScrolled(true)
       else setScrolled(false)
     }
     window.addEventListener('scroll', handleScroll)
@@ -310,7 +311,7 @@ export default function CreatorEpkView() {
     }
   }
 
-  // Filtered Shows, Discography & Media
+  // Filtered Collections
   const filteredShows = shows.filter(s => 
     s.venue.toLowerCase().includes(showsSearch.toLowerCase()) || 
     s.city.toLowerCase().includes(showsSearch.toLowerCase())
@@ -339,6 +340,8 @@ export default function CreatorEpkView() {
     return matchesSearch && p.category === storeCategory
   })
 
+  const totalCartQty = cart.reduce((acc, c) => acc + c.qty, 0)
+
   return (
     <div style={{
       background: selectedTheme.bg,
@@ -350,7 +353,7 @@ export default function CreatorEpkView() {
       position: 'relative'
     }}>
 
-      {/* Animation Styles Block */}
+      {/* Animation & Mobile Responsive Media Styles */}
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -359,59 +362,80 @@ export default function CreatorEpkView() {
         .anim-fade-up {
           animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
+        .desktop-nav {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+        }
+
+        .mobile-hamburger-btn {
+          display: none;
+        }
+
+        @media (max-width: 900px) {
+          .desktop-nav {
+            display: none !important;
+          }
+          .mobile-hamburger-btn {
+            display: flex !important;
+          }
+        }
       `}</style>
 
-      {/* ================= 1. EXACT STICKY TOP NAVBAR HEADER ================= */}
+      {/* ================= 1. HEADER OVERLAY (Transparent over Image -> Background appears only after scroll) ================= */}
       <header style={{
-        background: scrolled ? 'rgba(6, 8, 18, 0.80)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        padding: '14px 32px',
+        background: scrolled ? 'rgba(6, 8, 18, 0.90)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(14px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
+        padding: '16px 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        position: 'sticky',
+        position: 'fixed',
         top: 0,
+        left: 0,
+        right: 0,
         zIndex: 1000,
-        boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.6)' : 'none',
-        transition: 'all 0.3s ease'
+        boxShadow: scrolled ? '0 4px 25px rgba(0,0,0,0.7)' : 'none',
+        transition: 'all 0.35s ease'
       }}>
         
-        {/* Creator Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* Creator Brand Logo over Image */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 1001 }}>
           <div style={{
-            width: '40px',
-            height: '40px',
+            width: '42px',
+            height: '42px',
             borderRadius: '3px',
             background: selectedTheme.accent,
             color: '#000',
             fontWeight: 900,
-            fontSize: '1.25rem',
+            fontSize: '1.3rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: `0 0 12px ${selectedTheme.accent}66`
+            boxShadow: `0 0 14px ${selectedTheme.accent}88`
           }}>
             {artistName.charAt(0)}
           </div>
           <div>
-            <div style={{ fontWeight: 900, fontSize: '1.25rem', color: '#fff', letterSpacing: '-0.3px', fontFamily: "'Sansation', sans-serif" }}>
+            <div style={{ fontWeight: 900, fontSize: '1.3rem', color: '#fff', letterSpacing: '-0.3px', fontFamily: "'Sansation', sans-serif", textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
               {artistName}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.75rem', color: '#cbd5e1', textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}>
               {artistSlug}.tunemavens.com
             </div>
           </div>
         </div>
 
-        {/* Spaced Top Menu Navigation */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+        {/* Spaced Desktop Top Menu Navigation (No Discography at top level) */}
+        <nav className="desktop-nav">
           
           <button
             onClick={() => setActiveTab('home')}
             style={{
               background: activeTab === 'home' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'home' ? '#000' : '#cbd5e1',
+              color: activeTab === 'home' ? '#000' : '#ffffff',
               border: 'none',
               padding: '8px 14px',
               borderRadius: '3px',
@@ -421,7 +445,8 @@ export default function CreatorEpkView() {
               alignItems: 'center',
               gap: '6px',
               fontSize: '0.9rem',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              textShadow: activeTab === 'home' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
             }}
           >
             <RiHomeFill /> Home
@@ -431,7 +456,7 @@ export default function CreatorEpkView() {
             onClick={() => setActiveTab('bio')}
             style={{
               background: activeTab === 'bio' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'bio' ? '#000' : '#cbd5e1',
+              color: activeTab === 'bio' ? '#000' : '#ffffff',
               border: 'none',
               padding: '8px 14px',
               borderRadius: '3px',
@@ -440,36 +465,18 @@ export default function CreatorEpkView() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
+              textShadow: activeTab === 'bio' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
             }}
           >
             <RiUserFill /> Bio
           </button>
 
           <button
-            onClick={() => setActiveTab('discography')}
-            style={{
-              background: activeTab === 'discography' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'discography' ? '#000' : '#cbd5e1',
-              border: 'none',
-              padding: '8px 14px',
-              borderRadius: '3px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.9rem'
-            }}
-          >
-            <RiDiscFill /> Discography
-          </button>
-
-          <button
             onClick={() => setActiveTab('shows')}
             style={{
               background: activeTab === 'shows' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'shows' ? '#000' : '#cbd5e1',
+              color: activeTab === 'shows' ? '#000' : '#ffffff',
               border: 'none',
               padding: '8px 14px',
               borderRadius: '3px',
@@ -478,7 +485,8 @@ export default function CreatorEpkView() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
+              textShadow: activeTab === 'shows' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
             }}
           >
             <RiCalendarEventFill /> Shows
@@ -489,8 +497,8 @@ export default function CreatorEpkView() {
             <button
               onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)}
               style={{
-                background: activeTab === 'media' ? selectedTheme.accent : 'transparent',
-                color: activeTab === 'media' ? '#000' : '#cbd5e1',
+                background: (activeTab === 'media' || activeTab === 'discography') ? selectedTheme.accent : 'transparent',
+                color: (activeTab === 'media' || activeTab === 'discography') ? '#000' : '#ffffff',
                 border: 'none',
                 padding: '8px 14px',
                 borderRadius: '3px',
@@ -499,7 +507,8 @@ export default function CreatorEpkView() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                fontSize: '0.9rem'
+                fontSize: '0.9rem',
+                textShadow: (activeTab === 'media' || activeTab === 'discography') ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
               }}
             >
               <RiVideoFill /> Media <RiArrowDownSLine />
@@ -551,7 +560,7 @@ export default function CreatorEpkView() {
             onClick={() => setActiveTab('store')}
             style={{
               background: activeTab === 'store' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'store' ? '#000' : '#cbd5e1',
+              color: activeTab === 'store' ? '#000' : '#ffffff',
               border: 'none',
               padding: '8px 14px',
               borderRadius: '3px',
@@ -560,7 +569,8 @@ export default function CreatorEpkView() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
+              textShadow: activeTab === 'store' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
             }}
           >
             <RiShoppingBagFill /> Store
@@ -570,7 +580,7 @@ export default function CreatorEpkView() {
             onClick={() => setActiveTab('press')}
             style={{
               background: activeTab === 'press' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'press' ? '#000' : '#cbd5e1',
+              color: activeTab === 'press' ? '#000' : '#ffffff',
               border: 'none',
               padding: '8px 14px',
               borderRadius: '3px',
@@ -579,7 +589,8 @@ export default function CreatorEpkView() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
+              textShadow: activeTab === 'press' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
             }}
           >
             <RiFileTextFill /> Press Kit
@@ -589,7 +600,7 @@ export default function CreatorEpkView() {
             onClick={() => setActiveTab('contact')}
             style={{
               background: activeTab === 'contact' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'contact' ? '#000' : '#cbd5e1',
+              color: activeTab === 'contact' ? '#000' : '#ffffff',
               border: 'none',
               padding: '8px 14px',
               borderRadius: '3px',
@@ -598,47 +609,68 @@ export default function CreatorEpkView() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
+              textShadow: activeTab === 'contact' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
             }}
           >
             <RiMailFill /> Contact
           </button>
         </nav>
 
-        {/* Right Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Right Action Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1001 }}>
           
-          {/* Cart Button */}
+          {/* Cart ICON ONLY Button with Badge Counter */}
           <button
             onClick={() => setCartOpen(true)}
+            title="View Shopping Cart"
             style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.15)',
+              position: 'relative',
+              background: 'rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255,255,255,0.25)',
               color: '#fff',
-              padding: '8px 14px',
+              width: '42px',
+              height: '42px',
               borderRadius: '3px',
-              fontWeight: 700,
-              fontSize: '0.85rem',
+              fontSize: '1.3rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
             }}
           >
-            <RiShoppingBasket2Fill /> Cart ({cart.reduce((acc, c) => acc + c.qty, 0)})
+            <RiShoppingBasket2Fill />
+            {totalCartQty > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                background: selectedTheme.accent,
+                color: '#000',
+                fontSize: '0.7rem',
+                fontWeight: 900,
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: `0 0 8px ${selectedTheme.accent}`
+              }}>
+                {totalCartQty}
+              </span>
+            )}
           </button>
 
-          {/* Fan Backend Sync */}
+          {/* Fan Backend Access */}
           {fanUser ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button 
-                onClick={navigateToFanDashboard}
-                style={{ background: 'rgba(34, 211, 238, 0.15)', border: '1px solid rgba(34, 211, 238, 0.4)', color: '#fff', padding: '6px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <RiShieldCheckFill style={{ color: selectedTheme.accent }} /> Fan Portal
-              </button>
-              <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer' }}>Log out</button>
-            </div>
+            <button 
+              onClick={navigateToFanDashboard}
+              style={{ background: 'rgba(34, 211, 238, 0.2)', border: '1px solid rgba(34, 211, 238, 0.5)', color: '#fff', padding: '8px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <RiShieldCheckFill style={{ color: selectedTheme.accent }} /> Fan Portal
+            </button>
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
@@ -646,7 +678,7 @@ export default function CreatorEpkView() {
                 background: selectedTheme.accent,
                 color: '#000',
                 border: 'none',
-                padding: '8px 16px',
+                padding: '10px 16px',
                 borderRadius: '3px',
                 fontWeight: 800,
                 fontSize: '0.85rem',
@@ -656,18 +688,91 @@ export default function CreatorEpkView() {
                 gap: '6px'
               }}
             >
-              <RiUserAddFill /> VIP Fan Sign In
+              <RiUserAddFill /> VIP Sign In
             </button>
           )}
 
+          {/* Right Mobile Hamburger Toggle Button */}
+          <button
+            className="mobile-hamburger-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              background: 'rgba(0,0,0,0.6)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: '#fff',
+              width: '42px',
+              height: '42px',
+              borderRadius: '3px',
+              fontSize: '1.4rem',
+              cursor: 'pointer',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {mobileMenuOpen ? <RiCloseFill /> : <RiMenuFill />}
+          </button>
+
         </div>
       </header>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div style={{
+          position: 'fixed',
+          top: '72px',
+          left: 0,
+          right: 0,
+          background: 'rgba(6, 8, 18, 0.98)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: `1px solid ${selectedTheme.accent}44`,
+          padding: '24px',
+          zIndex: 999,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          {['home', 'bio', 'shows', 'media', 'store', 'press', 'contact'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => { setActiveTab(tab); setMobileMenuOpen(false); }}
+              style={{
+                background: activeTab === tab ? selectedTheme.accent : 'transparent',
+                color: activeTab === tab ? '#000' : '#fff',
+                border: 'none',
+                padding: '12px',
+                borderRadius: '3px',
+                fontWeight: 800,
+                textAlign: 'left',
+                fontSize: '1rem',
+                textTransform: 'capitalize'
+              }}
+            >
+              {tab === 'press' ? 'Electronic Press Kit (EPK)' : tab}
+            </button>
+          ))}
+          <button
+            onClick={() => { setActiveTab('discography'); setMobileMenuOpen(false); }}
+            style={{
+              background: activeTab === 'discography' ? selectedTheme.accent : 'transparent',
+              color: activeTab === 'discography' ? '#000' : '#fff',
+              border: 'none',
+              padding: '12px',
+              borderRadius: '3px',
+              fontWeight: 800,
+              textAlign: 'left',
+              fontSize: '1rem'
+            }}
+          >
+            Discography & Albums
+          </button>
+        </div>
+      )}
 
       {/* ================= 2. HERO CAROUSEL ================= */}
       {activeTab === 'home' && (
         <section style={{
           position: 'relative',
-          height: '460px',
+          height: '520px',
           backgroundImage: `url(${heroSlides[currentSlideIndex].img})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -676,12 +781,12 @@ export default function CreatorEpkView() {
           justifyContent: 'center',
           alignItems: 'center',
           textAlign: 'center',
-          padding: '48px 32px',
+          padding: '80px 32px 48px',
           transition: 'background-image 0.8s ease-in-out',
           margin: 0
         }}>
           {/* Dark Overlay Gradient */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.45) 60%, rgba(4,6,14,0.7) 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.40) 60%, rgba(4,6,14,0.65) 100%)' }} />
 
           {/* Carousel Controls */}
           <button 
@@ -698,7 +803,7 @@ export default function CreatorEpkView() {
           </button>
           
           <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
-            <h1 style={{ fontSize: '4.4rem', margin: '0 auto', fontWeight: 900, fontFamily: "'Sansation', sans-serif", letterSpacing: '-1px', color: '#fff', textShadow: '0 4px 24px rgba(0,0,0,0.9)', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '4.5rem', margin: '0 auto', fontWeight: 900, fontFamily: "'Sansation', sans-serif", letterSpacing: '-1px', color: '#fff', textShadow: '0 4px 24px rgba(0,0,0,0.9)', textAlign: 'center' }}>
               {heroSlides[currentSlideIndex].title}
             </h1>
             <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.9)', maxWidth: '700px', margin: '12px auto 0', lineHeight: 1.5, textAlign: 'center' }}>
@@ -745,7 +850,7 @@ export default function CreatorEpkView() {
       {activeTab !== 'home' && (
         <section style={{
           position: 'relative',
-          height: '200px',
+          height: '240px',
           backgroundImage: `url(${heroSlide2})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -753,7 +858,7 @@ export default function CreatorEpkView() {
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          padding: '0 32px'
+          padding: '60px 32px 0'
         }}>
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.6) 100%)' }} />
           <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
@@ -786,7 +891,6 @@ export default function CreatorEpkView() {
                   </div>
                 </div>
 
-                {/* Prominent CTA to View Full Discography */}
                 <button
                   onClick={() => setActiveTab('discography')}
                   style={{
@@ -834,7 +938,6 @@ export default function CreatorEpkView() {
                       >
                         Buy Multitracks ({t.priceCredits} Credits)
                       </button>
-                      {/* Individual Track Call to Action: View Discography */}
                       <button 
                         onClick={() => setActiveTab('discography')}
                         style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center', marginTop: '2px' }}
@@ -886,7 +989,7 @@ export default function CreatorEpkView() {
           </div>
         )}
 
-        {/* ================= TAB 3: DISCOGRAPHY (PAGINATED ALBUMS GRID) ================= */}
+        {/* ================= TAB 3: DISCOGRAPHY ================= */}
         {activeTab === 'discography' && (
           <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
