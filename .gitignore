@@ -72,8 +72,11 @@ Thumbs.db
 *.sw?
 .env
 .env.*
+!.env.example
+!.env.production.example
 *.env
 credentials.json
 *.pem
 *.key
 .credentials
+
