@@ -457,7 +457,7 @@ function DashboardView({
       case 'cms':
         return <CmsPanel />;
       case 'epk-builder':
-        return <EpkBuilderIframePanel tracks={sampleTracks} epk={creatorEpk} setEpk={setCreatorEpk} />;
+        return <EpkBuilderIframePanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} />;
       case 'app-marketplace':
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       default:
@@ -784,7 +784,7 @@ function DashboardView({
             {/* Modal Body / EPK Builder or Iframe */}
             <div style={{ flex: 1, position: 'relative', background: '#0f172a', overflowY: 'auto', padding: activeModalApp.title === 'EPK Builder' ? '20px' : 0 }}>
               {activeModalApp.title === 'EPK Builder' ? (
-                <EPKBuilderPanel tracks={sampleTracks} epk={creatorEpk} setEpk={setCreatorEpk} />
+                <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} />
               ) : (
                 <iframe 
                   src={activeModalApp.url}
