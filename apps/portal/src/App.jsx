@@ -103,7 +103,8 @@ import {
 } from './views/consumer/TuneStreamViews.jsx'
 import LoginView from './views/auth/LoginView.jsx'
 import RegisterView from './views/auth/RegisterView.jsx'
-import CreatorEpkView from './views/creator/CreatorEpkView.jsx'
+import CreatorEpkView, { EPK_THEMES } from './views/creator/CreatorEpkView.jsx'
+
 
 
 
@@ -1921,6 +1922,39 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
 
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
+          {/* 20 Theme Templates Selector Grid */}
+          <div>
+            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>
+              Select Pre-Populated EPK Theme Template (20 Available)
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', maxHeight: '180px', overflowY: 'auto', background: '#090d16', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              {EPK_THEMES.map(theme => (
+                <div
+                  key={theme.id}
+                  onClick={() => {
+                    setThemeBg(theme.bg);
+                    if (!headline) setHeadline(`${theme.genre} Pioneer`);
+                  }}
+                  style={{
+                    background: theme.bg,
+                    border: themeBg === theme.bg ? `2px solid ${theme.accent}` : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    padding: '8px',
+                    cursor: 'pointer',
+                    fontSize: '10px',
+                    color: '#fff',
+                    textAlign: 'center',
+                    transition: 'all 0.2s ease',
+                    boxShadow: themeBg === theme.bg ? `0 0 10px ${theme.accent}66` : 'none'
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold', marginBottom: '2px', color: theme.accent }}>{theme.name}</div>
+                  <div style={{ fontSize: '8.5px', opacity: 0.8 }}>{theme.genre}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Subdomain */}
           <div>
             <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>EPK Subdomain Mapping</label>
@@ -1938,9 +1972,10 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
               <span style={{ fontSize: '12px', color: 'var(--cyan)', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderLeft: '1px solid rgba(255,255,255,0.06)', fontWeight: 'bold' }}>.tunemavens.com</span>
             </div>
             <span style={{ fontSize: '10px', color: 'var(--mu)', marginTop: '4px', display: 'block' }}>
-              Also resolves to <strong>{subdomain || 'yoursubdomain'}.intermaven.io</strong> via shared network profile.
+              Resolves to standalone website <strong>http://localhost:3000/#/epk/{subdomain || 'aisha'}</strong>
             </span>
           </div>
+
 
           {/* Headline & Background */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -2032,16 +2067,28 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={saving}
-            className="btn-primary" 
-            style={{ width: '100%', padding: '10px', fontSize: '12.5px', marginTop: '6px', fontWeight: 'bold' }}
-          >
-            {saving ? 'Publishing EPK to DNS...' : 'Publish & Sync EPK'}
-          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
+            <button 
+              type="submit" 
+              disabled={saving}
+              className="btn-primary" 
+              style={{ width: '100%', padding: '10px', fontSize: '12.5px', fontWeight: 'bold' }}
+            >
+              {saving ? 'Publishing EPK...' : 'Publish & Sync EPK'}
+            </button>
+            <a 
+              href={`/#/epk/${subdomain || 'aisha'}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary"
+              style={{ width: '100%', padding: '10px', fontSize: '12.5px', fontWeight: 'bold', background: 'var(--cyan)', color: '#000', textDecoration: 'none', textAlign: 'center', display: 'block', borderRadius: '4px' }}
+            >
+              Launch Web World 🌐
+            </a>
+          </div>
         </form>
       </div>
+
 
       {/* Live Preview column */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -4611,7 +4658,8 @@ function AppContent({
           pointerEvents: isAuthModalActive ? 'none' : 'auto'
         }}
       >
-        <Navbar sessionUser={sessionUser} />
+        {!location.pathname.startsWith('/epk') && <Navbar sessionUser={sessionUser} />}
+
 
         <Routes location={backgroundLocation}>
           <Route path="/" element={<HomeView sessionUser={sessionUser} />} />
@@ -4672,8 +4720,10 @@ function AppContent({
           } />
         </Routes>
 
-        {/* Detailed Footer similar to Intermaven - with second instance of Logo */}
-        <footer className="landing-footer">
+        {/* Detailed Footer - Hidden on EPK Web Worlds */}
+        {!location.pathname.startsWith('/epk') && (
+          <footer className="landing-footer">
+
           <div className="footer-inner-container">
             {location.pathname.startsWith('/native-apps/tunestream') ? (
               <div className="footer-grid">
@@ -4855,6 +4905,8 @@ function AppContent({
             </div>
           </div>
         </footer>
+        )}
+
 
         {/* Floating audio player removed — streaming handled by TuneStream app */}
       </div>
