@@ -103,6 +103,8 @@ import {
 } from './views/consumer/TuneStreamViews.jsx'
 import LoginView from './views/auth/LoginView.jsx'
 import RegisterView from './views/auth/RegisterView.jsx'
+import CreatorEpkView from './views/creator/CreatorEpkView.jsx'
+
 
 
 
@@ -4636,6 +4638,9 @@ function AppContent({
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView />} />
+          <Route path="/epk" element={<CreatorEpkView />} />
+          <Route path="/epk/:username" element={<CreatorEpkView />} />
+
           <Route path="/stream" element={
             <StreamView 
               catalogTracks={catalogTracks} 

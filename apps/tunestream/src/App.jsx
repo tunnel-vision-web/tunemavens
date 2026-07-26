@@ -679,23 +679,39 @@ function PlayerDashboard() {
       </main>
 
       {/* Persistent Audio Player Bar */}
-      <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%' }}>
-        <div className="player-track-info">
+      <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)' }}>
+        <div className="player-track-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img src={currentTrack.cover} alt={currentTrack.title} className="player-cover" />
           <div className="player-metadata">
             <span className="player-title">{currentTrack.title}</span>
-            <span className="player-artist">{currentTrack.artist}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="player-artist">{currentTrack.artist}</span>
+              <a 
+                href={`http://localhost:3000/#/epk/${currentTrack.artist.toLowerCase().replace(/\s+/g, '')}`}
+                target="_blank" 
+                rel="noreferrer"
+                style={{ fontSize: '10px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f0ff', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600 }}
+              >
+                🌐 Web World
+              </a>
+            </div>
           </div>
         </div>
 
         <div className="player-controls">
-          <div className="control-buttons">
+          <div className="control-buttons" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button className="btn-control"><RiSkipBackFill /></button>
             <button className="btn-control btn-play-pause" onClick={togglePlay}>
               {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
             </button>
             <button className="btn-control"><RiSkipForwardFill /></button>
+
+            {/* Plan-Based Audio Stream Gating Tag */}
+            <span style={{ fontSize: '10px', fontWeight: 'bold', background: 'rgba(255,183,3,0.15)', color: '#ffb703', border: '1px solid #ffb70344', padding: '2px 8px', borderRadius: '12px' }}>
+              🎧 45s Preview (Starter) • Upgrade for Full Stream
+            </span>
           </div>
+
           <div className="playback-bar">
             <span className="time-stamp">1:24</span>
             <div className="progress-bar-container">
@@ -705,7 +721,15 @@ function PlayerDashboard() {
           </div>
         </div>
 
-        <div className="player-volume">
+        <div className="player-volume" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Direct Artist Tip Button */}
+          <button 
+            onClick={() => alert(`Sent $5.00 tip to ${currentTrack.artist} via Intermaven Credit Bank!`)}
+            style={{ background: 'linear-gradient(135deg, #ff007f 0%, #7928ca 100%)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            <RiCoinsLine /> Tip Artist $5
+          </button>
+
           <RiVolumeUpFill className="volume-icon" />
           <input 
             type="range" 
@@ -717,6 +741,7 @@ function PlayerDashboard() {
           />
         </div>
       </footer>
+
     </div>
   );
 }
