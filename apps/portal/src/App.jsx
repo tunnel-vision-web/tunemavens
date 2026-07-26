@@ -1423,44 +1423,93 @@ function PromotedActsAdminPanel() {
 function ConsumerLibraryPanel() {
   const [tracks, setTracks] = useState([
     { id: 1, title: 'Nairobi Sunset', artist: 'Aisha Okoro', source: 'purchased', cached: true },
-    { id: 2, title: 'Lagos Lights', artist: 'Caleb', source: 'tipped', cached: false },
+    { id: 2, title: 'Nairobi Cyberwave (Master Multitracks)', artist: 'Kip & The Mavens', source: 'purchased', cached: true },
     { id: 3, title: 'Mombasa Midnight', artist: 'DJ Afro', source: 'streamed', cached: true },
     { id: 4, title: 'Jozi Underground', artist: 'Lerato', source: 'purchased', cached: false },
   ]);
+
+  const [subscribedCreators] = useState([
+    { id: 'kip', name: 'Kip & The Mavens', subdomain: 'kip', genre: 'Afro-Synth', url: 'http://localhost:3000/#/epk/kip' },
+    { id: 'aisha', name: 'Aisha Okoro', subdomain: 'aisha', genre: 'Afrobeat & R&B', url: 'http://localhost:3000/#/epk/aisha' }
+  ]);
+
+  const [purchasedTickets] = useState([
+    { id: 'tkt1', show: 'Nairobi Cyberdome', date: 'SEP 18, 2026', qr: 'TKT-849201', tier: 'VIP Pass' },
+    { id: 'tkt2', show: 'London O2 Academy', date: 'OCT 04, 2026', qr: 'TKT-194028', tier: 'General Admission' }
+  ]);
+
   const toggleCache = (id) => setTracks(ts => ts.map(t => t.id === id ? { ...t, cached: !t.cached } : t));
   const removeTrack = (id) => setTracks(ts => ts.filter(t => t.id !== id));
+
   return (
-    <div className="dashboard-card">
-      <PanelHeader title="My Library" desc="Manage what's saved on this account. Cache toggles propagate to your phone within 30 seconds." />
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <th style={{ padding: '10px 8px' }}>Track</th>
-            <th style={{ padding: '10px 8px' }}>Artist</th>
-            <th style={{ padding: '10px 8px' }}>Source</th>
-            <th style={{ padding: '10px 8px' }}>Offline cache</th>
-            <th style={{ padding: '10px 8px' }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {tracks.map(t => (
-            <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }} data-testid={`library-row-${t.id}`}>
-              <td style={{ padding: '10px 8px', color: '#f1f5f9' }}>{t.title}</td>
-              <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>{t.artist}</td>
-              <td style={{ padding: '10px 8px', color: '#94a3b8', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>{t.source}</td>
-              <td style={{ padding: '10px 8px' }}>
-                <button onClick={() => toggleCache(t.id)} className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} data-testid={`library-cache-${t.id}`}>
-                  {t.cached ? 'Cached ✓' : 'Cache'}
-                </button>
-              </td>
-              <td style={{ padding: '10px 8px' }}>
-                <button onClick={() => removeTrack(t.id)} style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '11px' }} data-testid={`library-remove-${t.id}`}>Remove</button>
-              </td>
-            </tr>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      
+      {/* Subscribed Creator Web Worlds Section */}
+      <div className="dashboard-card">
+        <PanelHeader title="My Subscribed Creator Web Worlds" desc="Creators you follow across the Intermaven Network with unified SSO access." />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginTop: '12px' }}>
+          {subscribedCreators.map(c => (
+            <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>{c.name}</div>
+                <div style={{ fontSize: '11px', color: 'var(--cyan)' }}>{c.genre}</div>
+              </div>
+              <a href={c.url} target="_blank" rel="noreferrer" className="btn-secondary" style={{ background: 'var(--cyan)', color: '#000', padding: '4px 10px', borderRadius: '3px', fontSize: '10.5px', fontWeight: 'bold', textDecoration: 'none' }}>
+                Visit Web World 🌐
+              </a>
+            </div>
           ))}
-        </tbody>
-      </table>
-      <p style={{ fontSize: '11px', color: '#64748b', marginTop: '14px' }}>Storage used: 1.4 GB / 8 GB</p>
+        </div>
+      </div>
+
+      {/* Purchased Tickets & Digital Vault */}
+      <div className="dashboard-card">
+        <PanelHeader title="My Digital Artifacts & Tour Passes" desc="Verified ticket entry passes and multitrack WAV stem collections." />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginTop: '12px' }}>
+          {purchasedTickets.map(t => (
+            <div key={t.id} style={{ background: 'rgba(34, 211, 238, 0.05)', border: '1px solid rgba(34, 211, 238, 0.2)', padding: '14px', borderRadius: '4px' }}>
+              <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>🎟️ {t.show}</div>
+              <div style={{ fontSize: '11px', color: 'var(--mu)', marginTop: '2px' }}>{t.date} • {t.tier}</div>
+              <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--cyan)', fontWeight: 'bold', fontFamily: 'monospace' }}>Pass Code: {t.qr}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TuneStream Playlists & Audio Tracks */}
+      <div className="dashboard-card">
+        <PanelHeader title="TuneStream Saved Playlists & Audio Vault" desc="Manage offline cached audio and TuneStream playlists." />
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginTop: '12px' }}>
+          <thead>
+            <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <th style={{ padding: '10px 8px' }}>Track</th>
+              <th style={{ padding: '10px 8px' }}>Artist</th>
+              <th style={{ padding: '10px 8px' }}>Source</th>
+              <th style={{ padding: '10px 8px' }}>Offline cache</th>
+              <th style={{ padding: '10px 8px' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {tracks.map(t => (
+              <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }} data-testid={`library-row-${t.id}`}>
+                <td style={{ padding: '10px 8px', color: '#f1f5f9' }}>{t.title}</td>
+                <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>{t.artist}</td>
+                <td style={{ padding: '10px 8px', color: '#94a3b8', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>{t.source}</td>
+                <td style={{ padding: '10px 8px' }}>
+                  <button onClick={() => toggleCache(t.id)} className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} data-testid={`library-cache-${t.id}`}>
+                    {t.cached ? 'Cached ✓' : 'Cache'}
+                  </button>
+                </td>
+                <td style={{ padding: '10px 8px' }}>
+                  <button onClick={() => removeTrack(t.id)} style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '11px' }} data-testid={`library-remove-${t.id}`}>Remove</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p style={{ fontSize: '11px', color: '#64748b', marginTop: '14px' }}>Storage used: 1.4 GB / 8 GB</p>
+      </div>
+
     </div>
   );
 }

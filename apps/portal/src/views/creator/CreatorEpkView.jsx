@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   RiHomeFill, RiUserFill, RiCalendarEventFill, RiVideoFill,
   RiShoppingBagFill, RiFileTextFill, RiMailFill, RiHeartFill,
@@ -8,7 +8,8 @@ import {
   RiSpotifyFill, RiAppleFill, RiTwitterXFill, RiDiscordFill, RiCheckFill,
   RiShoppingBasket2Fill, RiUserAddFill, RiShieldCheckFill,
   RiMusic2Fill, RiFileCopyFill, RiSearchLine, RiImageFill, RiArrowDownSLine,
-  RiArrowLeftSLine, RiArrowRightSLine, RiThumbUpFill, RiMessage2Fill, RiAddFill, RiSubtractFill, RiDeleteBinFill
+  RiArrowLeftSLine, RiArrowRightSLine, RiThumbUpFill, RiMessage2Fill, RiAddFill, RiSubtractFill, RiDeleteBinFill,
+  RiBankCardFill, RiCellphoneFill
 } from 'react-icons/ri'
 
 import heroSlide1 from '../../assets/creator_hero_banner.jpg'
@@ -41,11 +42,12 @@ export const EPK_THEMES = [
 
 export default function CreatorEpkView() {
   const { username } = useParams()
+  const navigate = useNavigate()
   const rawArtistName = username ? username.replace(/[-_]/g, ' ') : 'Kip & The Mavens'
   const artistName = rawArtistName.charAt(0).toUpperCase() + rawArtistName.slice(1)
   const artistSlug = (username || 'kip').toLowerCase().replace(/[^a-z0-9]/g, '')
 
-  // Navigation & Theme
+  // Navigation & Sticky Scroll Header State (Transparent -> 0.80 Opacity)
   const [activeTab, setActiveTab] = useState('home')
   const [mediaFilter, setMediaFilter] = useState('all')
   const [selectedTheme] = useState(EPK_THEMES[0])
@@ -53,10 +55,10 @@ export default function CreatorEpkView() {
   const [activeTrack, setActiveTrack] = useState({ id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', duration: '3:45', priceCredits: 50 })
   const [scrolled, setScrolled] = useState(false)
 
-  // Sticky Scroll Header Effect
+  // Sticky Scroll Header Effect (Transparent first, 0.8 opacity after scroll)
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 40) setScrolled(true)
+      if (window.scrollY > 30) setScrolled(true)
       else setScrolled(false)
     }
     window.addEventListener('scroll', handleScroll)
@@ -81,10 +83,10 @@ export default function CreatorEpkView() {
   // Media Dropdown Toggle
   const [mediaDropdownOpen, setMediaDropdownOpen] = useState(false)
 
-  // Fan Session State
+  // Fan Session State (SSO / PKCE Unified Login Sync)
   const [fanUser, setFanUser] = useState(() => {
     try {
-      const saved = localStorage.getItem(`fan_session_${artistSlug}`)
+      const saved = localStorage.getItem(`fan_session_${artistSlug}`) || sessionStorage.getItem('tunemavens_session')
       return saved ? JSON.parse(saved) : null
     } catch {
       return null
@@ -100,7 +102,10 @@ export default function CreatorEpkView() {
     meetAndGreet: false
   })
 
-  // Fully Functional Shopping Cart State
+  // Payment Gateway Protocol Selection (Stripe vs PesaPal M-Pesa + 90/10 Waterfall System)
+  const [paymentGateway, setPaymentGateway] = useState('pesapal') // 'pesapal' | 'stripe'
+
+  // Commerce & Cart State
   const [cart, setCart] = useState([])
   const [cartOpen, setCartOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -108,8 +113,6 @@ export default function CreatorEpkView() {
   const [storeCategory, setStoreCategory] = useState('all')
   const [storeSearch, setStoreSearch] = useState('')
   const [orderSuccess, setOrderSuccess] = useState(false)
-
-  // Shipping Address Form State
   const [shippingName, setShippingName] = useState('')
   const [shippingAddress, setShippingAddress] = useState('')
 
@@ -121,7 +124,7 @@ export default function CreatorEpkView() {
   const [showsSearch, setShowsSearch] = useState('')
   const [showsPage, setShowsPage] = useState(1)
   const [selectedShow, setSelectedShow] = useState(null)
-  const [ticketTier, setTicketTier] = useState('ga') // 'ga' | 'vip' | 'meet'
+  const [ticketTier, setTicketTier] = useState('ga')
   const [ticketQty, setTicketQty] = useState(1)
   const [ticketEmail, setTicketEmail] = useState('')
   const [ticketSuccess, setTicketSuccess] = useState(null)
@@ -135,7 +138,7 @@ export default function CreatorEpkView() {
   const [newCommentText, setNewCommentText] = useState('')
   const [mediaSearch, setMediaSearch] = useState('')
 
-  // Catalog & Media Data
+  // Data Collections
   const tracks = [
     { id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', streams: '3.4M', duration: '3:45', release: 'Single 2026', priceCredits: 50 },
     { id: 2, title: 'Sunset over Rift Valley', isrc: 'KE-TM1-26-00043', streams: '1.8M', duration: '4:12', release: 'Album 2026', priceCredits: 50 },
@@ -176,17 +179,28 @@ export default function CreatorEpkView() {
     const user = {
       name: authName || authEmail.split('@')[0],
       email: authEmail,
+      role: 'consumer',
       interests: fanInterests,
       crmId: `CRM-${Math.floor(100000 + Math.random() * 900000)}`
     }
     setFanUser(user)
     localStorage.setItem(`fan_session_${artistSlug}`, JSON.stringify(user))
+    sessionStorage.setItem('tunemavens_session', JSON.stringify(user))
     setAuthModalOpen(false)
   }
 
   const handleLogout = () => {
     setFanUser(null)
     localStorage.removeItem(`fan_session_${artistSlug}`)
+  }
+
+  const navigateToFanDashboard = () => {
+    if (fanUser) {
+      sessionStorage.setItem('tunemavens_session', JSON.stringify(fanUser))
+      window.location.hash = '#/dashboard'
+    } else {
+      setAuthModalOpen(true)
+    }
   }
 
   // Cart Functions
@@ -241,19 +255,26 @@ export default function CreatorEpkView() {
     }
   }
 
-  // Intermaven Ticketing System Handler
+  // Intermaven Ticketing System Handler (Location Dependent + 90/10 Waterfall Cascade)
   const handleTicketBuy = (e) => {
     e.preventDefault()
     let pricePerTicket = selectedShow.priceGA
     if (ticketTier === 'vip') pricePerTicket = selectedShow.priceVIP
     if (ticketTier === 'meet') pricePerTicket = selectedShow.priceMeet
 
+    const grossAmount = (pricePerTicket * ticketQty)
+    const creatorShare = (grossAmount * 0.90).toFixed(2)
+    const platformShare = (grossAmount * 0.10).toFixed(2)
+
     setTicketSuccess({
       qr: `TKT-${Math.floor(100000 + Math.random() * 900000)}`,
       show: selectedShow,
       tierName: ticketTier === 'ga' ? 'General Admission' : ticketTier === 'vip' ? 'VIP Pass' : 'Meet & Greet Upgrade',
       qty: ticketQty,
-      total: (pricePerTicket * ticketQty).toFixed(2),
+      gateway: paymentGateway,
+      total: grossAmount.toFixed(2),
+      creatorShare,
+      platformShare,
       fanEmail: ticketEmail || (fanUser ? fanUser.email : 'fan@intermaven.io')
     })
   }
@@ -308,19 +329,30 @@ export default function CreatorEpkView() {
       position: 'relative'
     }}>
 
-      {/* ================= 1. STICKY TOP NAVBAR HEADER ================= */}
+      {/* Animation Styles Block */}
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .anim-fade-up {
+          animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+
+      {/* ================= 1. EXACT STICKY TOP NAVBAR HEADER (Transparent -> 0.80 Opacity) ================= */}
       <header style={{
-        background: scrolled ? 'rgba(4, 6, 14, 0.96)' : 'rgba(6, 8, 18, 0.90)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: `1px solid ${selectedTheme.accent}33`,
-        padding: '12px 32px',
+        background: scrolled ? 'rgba(6, 8, 18, 0.80)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '14px 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
         zIndex: 1000,
-        boxShadow: scrolled ? '0 8px 30px rgba(0,0,0,0.8)' : '0 4px 20px rgba(0,0,0,0.5)',
+        boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.6)' : 'none',
         transition: 'all 0.3s ease'
       }}>
         
@@ -530,7 +562,7 @@ export default function CreatorEpkView() {
         {/* Right Action Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           
-          {/* Cart Button with Counter Badge */}
+          {/* Cart Button */}
           <button
             onClick={() => setCartOpen(true)}
             style={{
@@ -550,12 +582,16 @@ export default function CreatorEpkView() {
             <RiShoppingBasket2Fill /> Cart ({cart.reduce((acc, c) => acc + c.qty, 0)})
           </button>
 
-          {/* Fan Protocol Login / VIP Account */}
+          {/* Fan Backend Portal Sync Button */}
           {fanUser ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(34, 211, 238, 0.1)', border: '1px solid rgba(34, 211, 238, 0.3)', padding: '6px 12px', borderRadius: '3px' }}>
-              <RiShieldCheckFill style={{ color: selectedTheme.accent }} />
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>{fanUser.name}</span>
-              <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', marginLeft: '4px' }}>Log out</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button 
+                onClick={navigateToFanDashboard}
+                style={{ background: 'rgba(34, 211, 238, 0.15)', border: '1px solid rgba(34, 211, 238, 0.4)', color: '#fff', padding: '6px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <RiShieldCheckFill style={{ color: selectedTheme.accent }} /> Fan Portal
+              </button>
+              <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer' }}>Log out</button>
             </div>
           ) : (
             <button
@@ -574,14 +610,14 @@ export default function CreatorEpkView() {
                 gap: '6px'
               }}
             >
-              <RiUserAddFill /> Join VIP Fan Club
+              <RiUserAddFill /> VIP Fan Sign In
             </button>
           )}
 
         </div>
       </header>
 
-      {/* ================= 2. MULTI-SLIDE CREATOR HERO CAROUSEL ================= */}
+      {/* ================= 2. HORIZONTALLY CENTERED HERO CAROUSEL WITH FADEINUP ANIMATION ================= */}
       {activeTab === 'home' && (
         <section style={{
           position: 'relative',
@@ -590,91 +626,95 @@ export default function CreatorEpkView() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           display: 'flex',
-          alignItems: 'flex-end',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
           padding: '48px 32px',
           transition: 'background-image 0.8s ease-in-out',
           margin: 0
         }}>
           {/* Dark Overlay Gradient */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.4) 60%, rgba(4,6,14,0.7) 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.45) 60%, rgba(4,6,14,0.7) 100%)' }} />
 
-          {/* Carousel Next/Prev Controls */}
+          {/* Carousel Controls */}
           <button 
             onClick={() => setCurrentSlideIndex(prev => (prev === 0 ? heroSlides.length - 1 : prev - 1))}
-            style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '36px', height: '36px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <RiArrowLeftSLine style={{ fontSize: '1.4rem' }} />
+            <RiArrowLeftSLine style={{ fontSize: '1.5rem' }} />
           </button>
           <button 
             onClick={() => setCurrentSlideIndex(prev => (prev + 1) % heroSlides.length)}
-            style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '36px', height: '36px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <RiArrowRightSLine style={{ fontSize: '1.4rem' }} />
+            <RiArrowRightSLine style={{ fontSize: '1.5rem' }} />
           </button>
           
-          <div style={{ position: 'relative', zIndex: 10, maxWidth: '1200px', width: '100%', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '24px' }}>
-            <div>
-              <h1 style={{ fontSize: '4.2rem', margin: 0, fontWeight: 900, fontFamily: "'Sansation', sans-serif", letterSpacing: '-1px', color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.8)' }}>
-                {heroSlides[currentSlideIndex].title}
-              </h1>
-              <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.9)', maxWidth: '650px', margin: '8px 0 0', lineHeight: 1.5 }}>
-                {heroSlides[currentSlideIndex].subtitle}
-              </p>
-            </div>
+          <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '4.4rem', margin: '0 auto', fontWeight: 900, fontFamily: "'Sansation', sans-serif", letterSpacing: '-1px', color: '#fff', textShadow: '0 4px 24px rgba(0,0,0,0.9)', textAlign: 'center' }}>
+              {heroSlides[currentSlideIndex].title}
+            </h1>
+            <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.9)', maxWidth: '700px', margin: '12px auto 0', lineHeight: 1.5, textAlign: 'center' }}>
+              {heroSlides[currentSlideIndex].subtitle}
+            </p>
 
-            {/* Featured Track Player Card */}
+            {/* Centered Audio Player Bar */}
             <div style={{
               background: selectedTheme.cardBg,
               backdropFilter: 'blur(16px)',
               border: `1px solid ${selectedTheme.accent}44`,
               borderRadius: '3px',
-              padding: '16px 20px',
+              padding: '14px 20px',
               display: 'flex',
               alignItems: 'center',
               gap: '14px',
-              minWidth: '340px',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
+              maxWidth: '460px',
+              margin: '24px auto 0',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.7)',
+              textAlign: 'left'
             }}>
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
-                style={{ width: '48px', height: '48px', borderRadius: '3px', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                style={{ width: '46px', height: '46px', borderRadius: '3px', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
               >
                 {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
               </button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>{activeTrack.title}</div>
                 <div style={{ fontSize: '0.75rem', color: selectedTheme.accent, marginTop: '2px' }}>ISRC: {activeTrack.isrc} • Lossless 24-Bit</div>
-                <button 
-                  onClick={() => handlePurchaseTrackWithCredits(activeTrack)}
-                  style={{ marginTop: '8px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: `1px solid ${selectedTheme.accent}66`, padding: '4px 10px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  📥 Purchase Stems ({activeTrack.priceCredits} Credits)
-                </button>
               </div>
+              <button 
+                onClick={() => handlePurchaseTrackWithCredits(activeTrack)}
+                style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '6px 12px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
+              >
+                Buy Multitracks (50 Credits)
+              </button>
             </div>
-
           </div>
         </section>
       )}
 
-      {/* Page Header Banners for Page Tabs */}
+      {/* Page Header Banner with Centered Title & Animation */}
       {activeTab !== 'home' && (
         <section style={{
           position: 'relative',
-          height: '220px',
+          height: '200px',
           backgroundImage: `url(${heroSlide2})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
           padding: '0 32px'
         }}>
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.6) 100%)' }} />
-          <div style={{ position: 'relative', zIndex: 10, maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '3rem', margin: 0, fontWeight: 900, fontFamily: "'Sansation', sans-serif", color: '#fff', textTransform: 'capitalize' }}>
+          <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '3.2rem', margin: '0 auto', fontWeight: 900, fontFamily: "'Sansation', sans-serif", color: '#fff', textTransform: 'capitalize', textAlign: 'center' }}>
               {activeTab === 'press' ? 'Electronic Press Kit (EPK)' : activeTab}
             </h1>
-            <p style={{ margin: '6px 0 0', color: selectedTheme.accent, fontSize: '1rem' }}>
+            <p style={{ margin: '6px auto 0', color: selectedTheme.accent, fontSize: '1.05rem', textAlign: 'center' }}>
               Official Standalone Creator Web World • {artistName}
             </p>
           </div>
@@ -688,7 +728,7 @@ export default function CreatorEpkView() {
         {activeTab === 'home' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '44px' }}>
             
-            {/* TuneStream Lossless Catalog & Purchase CTA */}
+            {/* TuneStream Lossless Catalog */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: selectedTheme.accent, margin: 0, fontFamily: "'Sansation', sans-serif" }}>
@@ -734,7 +774,9 @@ export default function CreatorEpkView() {
 
             {/* Featured Tour Spotlight */}
             <div style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '28px', borderRadius: '3px' }}>
-              <h3 style={{ marginTop: 0, fontSize: '1.4rem', fontWeight: 900, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>Featured World Tour Dates</h3>
+              <h3 style={{ marginTop: 0, fontSize: '1.4rem', fontWeight: 900, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
+                Featured World Tour Dates
+              </h3>
               {shows.slice(0, 3).map(s => (
                 <div key={s.id} style={{ padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
@@ -745,7 +787,7 @@ export default function CreatorEpkView() {
                     onClick={() => { setSelectedShow(s); setTicketSuccess(null); }}
                     style={{ background: selectedTheme.accent, border: 'none', color: '#000', padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
                   >
-                    Buy Ticket (${s.priceGA})
+                    Reserve Tickets (From ${s.priceGA})
                   </button>
                 </div>
               ))}
@@ -757,10 +799,10 @@ export default function CreatorEpkView() {
         {/* ================= TAB 2: BIO ================= */}
         {activeTab === 'bio' && (
           <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
+            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
               Biography & Heritage Lineage
             </h2>
-            <p style={{ lineHeight: '1.8', fontSize: '1.1rem', color: '#e2e8f0' }}>
+            <p style={{ lineHeight: '1.8', fontSize: '1.1rem', color: '#e2e8f0', marginTop: '20px' }}>
               <b>{artistName}</b> is a pioneering force within the modern electronic and global fusion scene. Synthesizing traditional East African acoustic arrangements with cutting-edge cyber-synth soundscapes, {artistName} has captivated international audiences across Nairobi, London, Berlin, and New York.
             </p>
             <p style={{ lineHeight: '1.8', fontSize: '1.05rem', color: '#cbd5e1' }}>
@@ -769,15 +811,15 @@ export default function CreatorEpkView() {
           </div>
         )}
 
-        {/* ================= TAB 3: SHOWS (PAGINATED WITH FULL TICKETING SYSTEM) ================= */}
+        {/* ================= TAB 3: SHOWS (PAGINATED WITH STRIPE & PESAPAL LOCATION PAYMENT PROTOCOLS) ================= */}
         {activeTab === 'shows' && (
           <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <h2 style={{ color: selectedTheme.accent, margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
-                  World Tour Dates & Ticketing Engine
+                  World Tour Dates & Intermaven Ticketing Engine
                 </h2>
-                <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>Intermaven QR Entry Pass validation system</p>
+                <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>Stripe & PesaPal Location-Dependent Gateways • 90/10 Waterfall Cascade</p>
               </div>
 
               {/* Search Bar */}
@@ -882,7 +924,7 @@ export default function CreatorEpkView() {
           </div>
         )}
 
-        {/* ================= TAB 5: INDUSTRY-STANDARD E-COMMERCE STORE ================= */}
+        {/* ================= TAB 5: E-COMMERCE STORE ================= */}
         {activeTab === 'store' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
@@ -893,7 +935,7 @@ export default function CreatorEpkView() {
                 <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>Direct Order Fulfillment & Lossless Audio Multitracks</p>
               </div>
 
-              {/* Store Category Tabs */}
+              {/* Category Filter */}
               <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
                 {['all', 'vinyl', 'apparel', 'stems', 'collectors'].map(cat => (
                   <button
@@ -944,7 +986,7 @@ export default function CreatorEpkView() {
         {/* ================= TAB 6: PRESS KIT ================= */}
         {activeTab === 'press' && (
           <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
+            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
               Electronic Press Kit (EPK) Assets
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '24px' }}>
@@ -969,7 +1011,7 @@ export default function CreatorEpkView() {
         {/* ================= TAB 7: CONTACT ================= */}
         {activeTab === 'contact' && (
           <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '650px', margin: '0 auto' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
+            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
               Management & Booking Inquiries
             </h2>
             <form onSubmit={(e) => { e.preventDefault(); alert('Inquiry message dispatched to creator management inbox!'); }}>
@@ -1062,24 +1104,96 @@ export default function CreatorEpkView() {
 
       {/* ================= MODALS & DRAWERS ================= */}
 
-      {/* Media Gallery / Video Lightbox Modal with Fan Commenting */}
+      {/* Intermaven Location-Dependent Ticketing Modal (Stripe & PesaPal + 90/10 Waterfall) */}
+      {selectedShow && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '480px', padding: '28px', color: '#fff', position: 'relative' }}>
+            <button onClick={() => setSelectedShow(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            
+            {ticketSuccess ? (
+              <div style={{ textAlign: 'center' }}>
+                <RiCheckFill style={{ fontSize: '3.2rem', color: '#00ff80' }} />
+                <h3 style={{ margin: '8px 0', color: '#00ff80', fontFamily: "'Sansation', sans-serif" }}>Ticket Purchase Confirmed!</h3>
+                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '3px', margin: '16px 0', textAlign: 'left', fontSize: '0.85rem' }}>
+                  <div><strong>Venue:</strong> {ticketSuccess.show.venue} ({ticketSuccess.show.city})</div>
+                  <div><strong>Tier:</strong> {ticketSuccess.tierName}</div>
+                  <div><strong>Quantity:</strong> {ticketSuccess.qty} Ticket(s)</div>
+                  <div><strong>Payment Gateway:</strong> {ticketSuccess.gateway === 'pesapal' ? '📱 PesaPal M-Pesa Mobile Money' : '💳 Stripe Global USD'}</div>
+                  <div style={{ margin: '8px 0', padding: '8px', background: 'rgba(34, 211, 238, 0.08)', borderRadius: '3px', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
+                    <div><strong>90/10 Waterfall Revenue Split:</strong></div>
+                    <div>• Creator Share (90%): <span style={{ color: '#00ff80' }}>${ticketSuccess.creatorShare} USD</span></div>
+                    <div>• Network Fee (10%): <span style={{ color: '#cbd5e1' }}>${ticketSuccess.platformShare} USD</span></div>
+                  </div>
+                  <div><strong>Pass Code:</strong> <span style={{ color: selectedTheme.accent, fontFamily: 'monospace' }}>{ticketSuccess.qr}</span></div>
+                </div>
+                <button onClick={() => setSelectedShow(null)} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>Done</button>
+              </div>
+            ) : (
+              <div>
+                <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>Intermaven Network Ticketing Engine</h3>
+                <div style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '16px' }}>
+                  <strong>{selectedShow.venue}</strong> • {selectedShow.city} ({selectedShow.date})
+                </div>
+                <form onSubmit={handleTicketBuy} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Select Payment Gateway (Location-Dependent)</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <button 
+                        type="button" 
+                        onClick={() => setPaymentGateway('pesapal')}
+                        style={{ background: paymentGateway === 'pesapal' ? selectedTheme.accent : 'rgba(255,255,255,0.05)', color: paymentGateway === 'pesapal' ? '#000' : '#fff', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      >
+                        <RiCellphoneFill /> PesaPal M-Pesa
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setPaymentGateway('stripe')}
+                        style={{ background: paymentGateway === 'stripe' ? selectedTheme.accent : 'rgba(255,255,255,0.05)', color: paymentGateway === 'stripe' ? '#000' : '#fff', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      >
+                        <RiBankCardFill /> Stripe Global
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Select Ticket Tier</label>
+                    <select value={ticketTier} onChange={(e) => setTicketTier(e.target.value)} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }}>
+                      <option value="ga">General Admission (${selectedShow.priceGA})</option>
+                      <option value="vip">VIP Backstage Pass (${selectedShow.priceVIP})</option>
+                      <option value="meet">Meet & Greet Upgrade (${selectedShow.priceMeet})</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Ticket Quantity</label>
+                    <input type="number" min={1} max={6} value={ticketQty} onChange={(e) => setTicketQty(Number(e.target.value))} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} />
+                  </div>
+
+                  {/* 90/10 Waterfall Preview */}
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '3px' }}>
+                    90/10 Revenue Waterfall: <strong>90% Creator Direct</strong> • 10% Intermaven Pool
+                  </div>
+
+                  <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>
+                    Process Payment with {paymentGateway === 'pesapal' ? 'PesaPal' : 'Stripe'}
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Media Lightbox Modal */}
       {selectedMedia && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', color: '#fff', position: 'relative' }}>
             <button onClick={() => setSelectedMedia(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer' }}>✕</button>
-            
             <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>{selectedMedia.title}</h3>
+            <img src={selectedMedia.thumbnail} alt={selectedMedia.title} style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '3px', marginBottom: '16px' }} />
             
-            <div style={{ position: 'relative', borderRadius: '3px', overflow: 'hidden', marginBottom: '18px' }}>
-              <img src={selectedMedia.thumbnail} alt={selectedMedia.title} style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '3px' }} />
-            </div>
-
-            {/* Interactive Fan Commenting Section */}
+            {/* Fan Comments */}
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: '1rem', color: selectedTheme.accent, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <RiMessage2Fill /> Fan Discussion & Comments
-              </h4>
-
+              <h4 style={{ margin: '0 0 12px', color: selectedTheme.accent }}>Fan Discussion & Comments</h4>
               <form onSubmit={handleAddMediaComment} style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
                 <input 
                   type="text" 
@@ -1093,133 +1207,12 @@ export default function CreatorEpkView() {
                   Comment
                 </button>
               </form>
-
-              {/* Comments Feed */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {(mediaComments[selectedMedia.id] || [
-                  { author: 'CyberFan', text: 'Stunning visual aesthetic and audio production!', likes: 5 }
-                ]).map((c, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: '3px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <strong style={{ color: selectedTheme.accent }}>{c.author}: </strong>
-                      <span style={{ color: '#cbd5e1' }}>{c.text}</span>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <RiThumbUpFill style={{ color: selectedTheme.accent }} /> {c.likes}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* Cart Drawer Modal */}
-      {cartOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ background: '#0a0d18', borderLeft: `1px solid ${selectedTheme.accent}44`, width: '100%', maxWidth: '440px', height: '100%', padding: '28px', color: '#fff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            <button onClick={() => setCartOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>Your Shopping Cart</h3>
-            
-            <div style={{ flex: 1, overflowY: 'auto', margin: '20px 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {cart.length === 0 ? (
-                <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '40px' }}>Your shopping cart is empty.</div>
-              ) : (
-                cart.map((item, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255,255,255,0.04)', padding: '12px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{item.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Size: {item.selectedSize}</div>
-                      <div style={{ fontWeight: 800, color: selectedTheme.accent, marginTop: '4px' }}>${(item.numPrice * item.qty).toFixed(2)}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <button onClick={() => updateCartQty(idx, -1)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '3px', cursor: 'pointer' }}>-</button>
-                      <span style={{ fontWeight: 800 }}>{item.qty}</span>
-                      <button onClick={() => updateCartQty(idx, 1)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '3px', cursor: 'pointer' }}>+</button>
-                      <button onClick={() => removeFromCart(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', marginLeft: '6px', cursor: 'pointer' }}><RiDeleteBinFill /></button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {cart.length > 0 && (
-              <form onSubmit={handleCheckoutCart} style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Shipping Full Name</label>
-                  <input type="text" value={shippingName} onChange={(e) => setShippingName(e.target.value)} required style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                </div>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Shipping Address</label>
-                  <input type="text" value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} required style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                </div>
-
-                <div style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '14px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Total Amount:</span>
-                  <span style={{ color: selectedTheme.accent }}>
-                    ${cart.reduce((acc, curr) => acc + (curr.numPrice * curr.qty), 0).toFixed(2)} USD
-                  </span>
-                </div>
-                <button type="submit" style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '14px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>
-                  Complete Order Checkout
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Intermaven Ticketing Modal */}
-      {selectedShow && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '440px', padding: '28px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedShow(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-            
-            {ticketSuccess ? (
-              <div style={{ textAlign: 'center' }}>
-                <RiCheckFill style={{ fontSize: '3.2rem', color: '#00ff80' }} />
-                <h3 style={{ margin: '8px 0', color: '#00ff80', fontFamily: "'Sansation', sans-serif" }}>Ticket Purchase Confirmed!</h3>
-                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '3px', margin: '16px 0', textAlign: 'left', fontSize: '0.85rem' }}>
-                  <div><strong>Venue:</strong> {ticketSuccess.show.venue} ({ticketSuccess.show.city})</div>
-                  <div><strong>Tier:</strong> {ticketSuccess.tierName}</div>
-                  <div><strong>Quantity:</strong> {ticketSuccess.qty} Ticket(s)</div>
-                  <div><strong>Pass Code:</strong> <span style={{ color: selectedTheme.accent, fontFamily: 'monospace' }}>{ticketSuccess.qr}</span></div>
-                  <div><strong>Total Paid:</strong> ${ticketSuccess.total} USD</div>
-                </div>
-                <button onClick={() => setSelectedShow(null)} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>Done</button>
-              </div>
-            ) : (
-              <div>
-                <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>Intermaven Ticketing Engine</h3>
-                <div style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '16px' }}>
-                  <strong>{selectedShow.venue}</strong> • {selectedShow.city} ({selectedShow.date})
-                </div>
-                <form onSubmit={handleTicketBuy} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Select Ticket Tier</label>
-                    <select value={ticketTier} onChange={(e) => setTicketTier(e.target.value)} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }}>
-                      <option value="ga">General Admission (${selectedShow.priceGA})</option>
-                      <option value="vip">VIP Backstage Pass (${selectedShow.priceVIP})</option>
-                      <option value="meet">Meet & Greet Upgrade (${selectedShow.priceMeet})</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Ticket Quantity</label>
-                    <input type="number" min={1} max={6} value={ticketQty} onChange={(e) => setTicketQty(Number(e.target.value))} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} />
-                  </div>
-                  <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>
-                    Process Payment
-                  </button>
-                </form>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Fan Interest Sign Up Modal */}
+      {/* Fan Protocol Sign Up Modal */}
       {authModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '440px', padding: '28px', color: '#fff', position: 'relative' }}>
@@ -1228,7 +1221,7 @@ export default function CreatorEpkView() {
               Join {artistName}'s VIP Fan Vault
             </h3>
             <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '16px' }}>
-              Tailored to your music & tour interests. Directly synchronized to Creator Smart CRM.
+              Synchronized with Intermaven Unified SSO & Smart CRM.
             </p>
 
             <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1249,72 +1242,10 @@ export default function CreatorEpkView() {
                 style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} 
               />
 
-              {/* Fan Interest Options */}
-              <div style={{ margin: '8px 0', fontSize: '0.85rem' }}>
-                <div style={{ fontWeight: 700, marginBottom: '6px', color: selectedTheme.accent }}>Select Your Fan Interests:</div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={fanInterests.unreleasedAudio} onChange={(e) => setFanInterests({ ...fanInterests, unreleasedAudio: e.target.checked })} />
-                  🎵 Unreleased Audio Demos & Stems
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={fanInterests.presaleCodes} onChange={(e) => setFanInterests({ ...fanInterests, presaleCodes: e.target.checked })} />
-                  🎟️ Concert Presale Codes & Tour Alerts
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={fanInterests.merchDrops} onChange={(e) => setFanInterests({ ...fanInterests, merchDrops: e.target.checked })} />
-                  👕 Limited Vinyl & Merch Drops
-                </label>
-              </div>
-
               <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', marginTop: '6px' }}>
-                Join VIP Fan Club
+                Join VIP Fan Vault (Unified SSO)
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Product Configure Modal */}
-      {selectedProduct && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '440px', padding: '28px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedProduct(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-            
-            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>Configure Product</h3>
-            <div style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '4px' }}>{selectedProduct.title}</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: selectedTheme.accent, marginBottom: '16px' }}>{selectedProduct.price}</div>
-
-            {selectedProduct.hasSizes && (
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '6px', fontWeight: 700 }}>Select Apparel Size</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {['S', 'M', 'L', 'XL'].map(sz => (
-                    <button
-                      key={sz}
-                      onClick={() => setProductSize(sz)}
-                      style={{
-                        background: productSize === sz ? selectedTheme.accent : 'rgba(255,255,255,0.05)',
-                        color: productSize === sz ? '#000' : '#fff',
-                        border: 'none',
-                        padding: '8px 14px',
-                        borderRadius: '3px',
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <button 
-              onClick={() => addToCart(selectedProduct)}
-              style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}
-            >
-              Add to Shopping Cart
-            </button>
           </div>
         </div>
       )}
