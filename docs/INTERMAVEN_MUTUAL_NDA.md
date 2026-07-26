@@ -10,11 +10,11 @@
 
 ## Preamble
 
-This Master Mutual Non-Disclosure Agreement (the **"Agreement"**) is entered into by and between **Intermaven Network Inc.**, together with its subsidiaries, divisions, brands, and affiliated digital platforms (collectively, **"INTERMAVEN NETWORK"**, including but not limited to *Intermaven Portal*, *TuneMavens*, *TuneStream*, and *SyncMavens*), and the undersigned individual, entity, or partner (the **"Receiving Party"** or **"Subject"**).
+This Master Mutual Non-Disclosure Agreement (the **"Agreement"**) is entered into by and between **Intermaven Network Inc.**, together with its subsidiaries, divisions, brands, registered domains, and affiliated digital platforms (collectively, **"INTERMAVEN NETWORK"**, including but not limited to *Intermaven Portal* [**intermaven.io**], *TuneMavens* [**tunemavens.com**], *TuneStream* [**tunestream.co**], and *SyncMavens* [**syncmavens.com**]), and the undersigned individual, entity, or partner (the **"Receiving Party"** or **"Subject"**).
 
 **WHEREAS**, the Parties intend to engage in business discussions, strategic evaluations, music catalog ingestion, sync licensing distribution, technology integration, or commercial operations across global markets, including North America, Europe, East Africa (including Kenya), and worldwide territories; and
 
-**WHEREAS**, in connection with such engagement, INTERMAVEN NETWORK may disclose to the Receiving Party certain highly valuable, non-public, proprietary, and confidential business, technical, financial, and music industry information.
+**WHEREAS**, in connection with such engagement, INTERMAVEN NETWORK may disclose to the Receiving Party certain highly valuable, non-public, proprietary, and confidential business, technical, financial, and music industry information across its digital properties (*intermaven.io*, *tunemavens.com*, *tunestream.co*, and *syncmavens.com*).
 
 ---
 
@@ -22,7 +22,7 @@ This Master Mutual Non-Disclosure Agreement (the **"Agreement"**) is entered int
 
 ### 1. Definition of Confidential Information
 **"Confidential Information"** shall mean all non-public, confidential, or proprietary information, in any form or medium (whether oral, written, electronic, or visual), disclosed or made available by INTERMAVEN NETWORK to the Receiving Party. Confidential Information includes, without limitation:
-* **Technical & Software Data**: Source code, database schemas, API architecture, algorithmic match scores, Mother-CMS layout engine configs, audio streaming pipelines, and presigned upload protocols.
+* **Technical & Software Data**: Source code, database schemas, API architecture, algorithmic match scores, Mother-CMS layout engine configs, audio streaming pipelines, and presigned upload protocols operating on *intermaven.io*, *tunemavens.com*, *tunestream.co*, and *syncmavens.com*.
 * **Financial & Compensation Models**: The 90/10 placement split waterfall algorithms, $0 catalog advance business models, agency fee structures (including 15% SyncMavens agency terms), rate cards, and financial forecasts.
 * **Catalog & Music Metadata**: Unreleased audio tracks, stems, ISRC registries (e.g. `KE-TM1-26-XXXXX` sequences), cue sheets, DDEX metadata packages, EPK press kits, and artist roster identities.
 * **Business & Strategic Data**: Sync supervisor briefs, client databases, music supervisor contacts, label partnerships, branding strategies, and trade secrets.
@@ -70,7 +70,8 @@ If any provision of this Agreement is held invalid or unenforceable, the remaini
 | **FOR INTERMAVEN NETWORK INC.** | **FOR RECEIVING PARTY / PARTNER** |
 |---|---|
 | **Signature**: ___________________________ | **Signature**: ___________________________ |
-| **Name**: Judit / Intermaven Executive | **Name**: ______________________________ |
+| **Name**: Otieno Timothy Waindi | **Name**: ______________________________ |
 | **Title**: Authorized Representative | **Title / Entity**: _______________________ |
 | **Country/Territory**: Global / Kenya / US | **Country/Territory**: ___________________ |
 | **Date**: _______________________________ | **Date**: _______________________________ |
+
