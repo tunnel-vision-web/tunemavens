@@ -457,7 +457,7 @@ function DashboardView({
       case 'cms':
         return <CmsPanel />;
       case 'epk-builder':
-        return <EpkBuilderIframePanel />;
+        return <EpkBuilderIframePanel tracks={sampleTracks} epk={creatorEpk} setEpk={setCreatorEpk} />;
       case 'app-marketplace':
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       default:
@@ -781,19 +781,23 @@ function DashboardView({
               </button>
             </div>
             
-            {/* Modal Body / Iframe */}
-            <div style={{ flex: 1, position: 'relative', background: '#0f172a', overflow: 'hidden' }}>
-              <iframe 
-                src={activeModalApp.url}
-                title={activeModalApp.title}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  background: '#0f172a'
-                }}
-                allow="clipboard-write"
-              />
+            {/* Modal Body / EPK Builder or Iframe */}
+            <div style={{ flex: 1, position: 'relative', background: '#0f172a', overflowY: 'auto', padding: activeModalApp.title === 'EPK Builder' ? '20px' : 0 }}>
+              {activeModalApp.title === 'EPK Builder' ? (
+                <EPKBuilderPanel tracks={sampleTracks} epk={creatorEpk} setEpk={setCreatorEpk} />
+              ) : (
+                <iframe 
+                  src={activeModalApp.url}
+                  title={activeModalApp.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    background: '#0f172a'
+                  }}
+                  allow="clipboard-write"
+                />
+              )}
             </div>
           </div>
           
@@ -5828,23 +5832,56 @@ function CmsPanel() {
   );
 }
 
-// ================= Track D: EPK Builder Panel (Intermaven.io Protocol) =================
-function EpkBuilderIframePanel() {
+// ================= Track D: EPK Builder Panel (Dual Mode & Intermaven Protocol) =================
+function EpkBuilderIframePanel({ tracks, epk, setEpk }) {
+  const [viewMode, setViewMode] = useState('native');
   const targetUrl = getIntermavenUrl('epk-builder');
 
   return (
-    <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 180px)', padding: 0, overflow: 'hidden', background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
-      <iframe
-        src={targetUrl}
-        title="Intermaven EPK Builder"
-        style={{
-          width: '100%',
-          height: '100%',
-          border: 'none',
-          background: '#0f172a'
-        }}
-        allow="clipboard-write"
-      />
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* Protocol Control Header Bar */}
+      <div style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', padding: '12px 18px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00f0ff', boxShadow: '0 0 8px #00f0ff' }} />
+          <strong style={{ color: '#fff', fontSize: '13px' }}>Intermaven EPK Builder Engine</strong>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>• Syncing with intermaven.io</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '3px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <button 
+            type="button"
+            onClick={() => setViewMode('native')}
+            style={{ background: viewMode === 'native' ? '#00f0ff' : 'transparent', color: viewMode === 'native' ? '#000' : '#cbd5e1', border: 'none', padding: '6px 14px', borderRadius: '3px', fontWeight: 800, fontSize: '11px', cursor: 'pointer' }}
+          >
+            ⚡ Native Builder
+          </button>
+          <button 
+            type="button"
+            onClick={() => setViewMode('cloud')}
+            style={{ background: viewMode === 'cloud' ? '#00f0ff' : 'transparent', color: viewMode === 'cloud' ? '#000' : '#cbd5e1', border: 'none', padding: '6px 14px', borderRadius: '3px', fontWeight: 800, fontSize: '11px', cursor: 'pointer' }}
+          >
+            🌐 intermaven.io Embed
+          </button>
+        </div>
+      </div>
+
+      {viewMode === 'native' ? (
+        <EPKBuilderPanel tracks={tracks} epk={epk} setEpk={setEpk} />
+      ) : (
+        <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 230px)', padding: 0, overflow: 'hidden', background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
+          <iframe
+            src={targetUrl}
+            title="Intermaven EPK Builder Cloud Embed"
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              background: '#0f172a'
+            }}
+            allow="clipboard-write"
+          />
+        </div>
+      )}
     </div>
   );
 }

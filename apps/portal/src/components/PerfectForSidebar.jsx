@@ -56,7 +56,8 @@ export const getIntermavenUrl = (appId, path = '') => {
   const mappedAppId = appMapping[appId] || appId;
   
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return `${protocol}//${hostname}:3004/embed/${mappedAppId}${tokenQuery}`;
+    // If testing on localhost without local embed server on 3004, point to intermaven.io
+    return `https://intermaven.io/embed/${mappedAppId}${tokenQuery}`;
   }
   return `https://intermaven.io/embed/${mappedAppId}${tokenQuery}`;
 };
