@@ -5,9 +5,11 @@ import {
   RiShoppingBagFill, RiFileTextFill, RiMailFill, RiHeartFill,
   RiFlashlightFill, RiPlayFill, RiPauseFill, RiDownloadFill,
   RiTicket2Fill, RiExternalLinkFill, RiInstagramFill, RiYoutubeFill,
-  RiSpotifyFill, RiAppleFill, RiTwitterXFill, RiDiscordFill, RiCheckFill
+  RiSpotifyFill, RiAppleFill, RiTwitterXFill, RiDiscordFill, RiCheckFill,
+  RiShoppingBasket2Fill, RiLockPasswordFill, RiUserAddFill, RiShieldCheckFill,
+  RiLayoutGridFill, RiMusic2Fill, RiInformationFill, RiStarFill, RiCloseFill,
+  RiFileCopyFill, RiArrowRightSFill
 } from 'react-icons/ri'
-
 
 // 20 Pre-populated Theme Templates Specification
 export const EPK_THEMES = [
@@ -35,37 +37,120 @@ export const EPK_THEMES = [
 
 export default function CreatorEpkView() {
   const { username } = useParams()
-  const artistName = username ? username.charAt(0).toUpperCase() + username.slice(1) : 'Kip & The Mavens'
+  const rawArtistName = username ? username.replace(/[-_]/g, ' ') : 'Kip & The Mavens'
+  const artistName = rawArtistName.charAt(0).toUpperCase() + rawArtistName.slice(1)
+  const artistSlug = (username || 'kip').toLowerCase().replace(/[^a-z0-9]/g, '')
 
+  // State Management
   const [activeTab, setActiveTab] = useState('home')
   const [selectedTheme, setSelectedTheme] = useState(EPK_THEMES[0])
-  const [layoutMode, setLayoutMode] = useState('parallax') // 'parallax' | 'split' | 'floating' | 'mono' | 'cyber'
+  const [layoutMode, setLayoutMode] = useState('hero') // 'hero' | 'split' | 'glass' | 'cyber'
   const [isPlaying, setIsPlaying] = useState(false)
-  const [aiModalOpen, setAiModalOpen] = useState(false)
+  const [activeTrack, setActiveTrack] = useState({ title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', duration: '3:45' })
+  
+  // Auth / Fan Protocol State (Isolated to Creator Admin CRM + Intermaven Global)
+  const [fanUser, setFanUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`fan_session_${artistSlug}`)
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authMode, setAuthMode] = useState('signup') // 'signup' | 'login'
+  const [authEmail, setAuthEmail] = useState('')
+  const [authName, setAuthName] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
 
-  // Fan Club CRM Form State
-  const [fanEmail, setFanEmail] = useState('')
-  const [fanName, setFanName] = useState('')
+  // Commerce & Ticket Modals
+  const [selectedShow, setSelectedShow] = useState(null)
+  const [ticketQty, setTicketQty] = useState(1)
+  const [ticketSuccess, setTicketSuccess] = useState(null)
+
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [orderSuccess, setOrderSuccess] = useState(false)
+
+  // Fan Club CRM
   const [fanJoined, setFanJoined] = useState(false)
+  const [fanPosts, setFanPosts] = useState([
+    { id: 1, author: 'Sarafina M.', date: '2 hours ago', text: 'Can wait for the London O2 show! Pre-ordered the vinyl!' },
+    { id: 2, author: 'David K.', date: '1 day ago', text: 'The stems on track 3 are incredible for my DJ sets.' }
+  ])
+  const [newPostText, setNewPostText] = useState('')
 
-  // Demo Shows Data
+  // AI Assistant Drawer
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false)
+
+  // Discography Catalog
+  const tracks = [
+    { id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', streams: '3.4M', duration: '3:45', release: 'Single 2026' },
+    { id: 2, title: 'Sunset over Rift Valley', isrc: 'KE-TM1-26-00043', streams: '1.8M', duration: '4:12', release: 'Album 2026' },
+    { id: 3, title: 'Afro-Synth Cascade', isrc: 'KE-TM1-26-00044', streams: '940K', duration: '3:18', release: 'Single 2025' },
+    { id: 4, title: 'Midnight Mara Starlight', isrc: 'KE-TM1-26-00045', streams: '2.1M', duration: '5:02', release: 'EP 2025' }
+  ]
+
+  // Shows Data
   const shows = [
-    { date: 'SEP 18, 2026', venue: 'Nairobi Cyberdome', city: 'Nairobi, Kenya', price: '$25.00', status: 'On Sale' },
-    { date: 'OCT 04, 2026', venue: 'London O2 Academy', city: 'London, UK', price: '£30.00', status: 'Selling Fast' },
-    { date: 'OCT 22, 2026', venue: 'Brooklyn Steel', city: 'New York, US', price: '$35.00', status: 'On Sale' },
+    { id: 101, date: 'SEP 18, 2026', venue: 'Nairobi Cyberdome', city: 'Nairobi, Kenya', price: '$25.00', numPrice: 25, status: 'On Sale' },
+    { id: 102, date: 'OCT 04, 2026', venue: 'London O2 Academy', city: 'London, UK', price: '$38.00', numPrice: 38, status: 'Selling Fast' },
+    { id: 103, date: 'OCT 22, 2026', venue: 'Brooklyn Steel', city: 'New York, US', price: '$35.00', numPrice: 35, status: 'On Sale' },
+    { id: 104, date: 'NOV 12, 2026', venue: 'Tokyo Shibuya Club Quattro', city: 'Tokyo, Japan', price: '$45.00', numPrice: 45, status: 'Limited VIP' }
   ]
 
-  // Demo Merch Data
+  // Store Merchandise Data
   const products = [
-    { title: 'Nairobi Cyberwave Vinyl LP (Limited Edition)', price: '$34.99', img: 'https://picsum.photos/seed/vinyl_epk/300' },
-    { title: 'TuneMavens Heavyweight Tour Hoodie', price: '$59.99', img: 'https://picsum.photos/seed/hoodie_epk/300' },
-    { title: 'Lossless Stems & Studio Multitracks (WAV)', price: '$19.99', img: 'https://picsum.photos/seed/stems_epk/300' },
+    { id: 201, title: 'Nairobi Cyberwave Limited 180g Vinyl LP', price: '$34.99', numPrice: 34.99, img: 'https://picsum.photos/seed/vinyl_epk/400', category: 'Physical Vinyl' },
+    { id: 202, title: 'Intermaven Tour Heavyweight Hoodie (Black)', price: '$59.99', numPrice: 59.99, img: 'https://picsum.photos/seed/hoodie_epk/400', category: 'Apparel' },
+    { id: 203, title: 'Lossless 24-Bit WAV Multitrack Stems Pack', price: '$19.99', numPrice: 19.99, img: 'https://picsum.photos/seed/stems_epk/400', category: 'Digital Stems' },
+    { id: 204, title: 'Official World Tour Poster (Signed Edition)', price: '$24.99', numPrice: 24.99, img: 'https://picsum.photos/seed/poster_epk/400', category: 'Collector Item' }
   ]
 
-  const handleFanJoin = (e) => {
+  // Videos Data
+  const videos = [
+    { id: 301, title: `${artistName} — Nairobi Cyberwave (Official 4K Music Video)`, views: '1.2M views', duration: '3:50', thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340' },
+    { id: 302, title: 'Live at SyncMavens Vault (Full Concert 4K)', views: '840K views', duration: '45:10', thumbnail: 'https://picsum.photos/seed/yt_vid2/600/340' },
+    { id: 303, title: 'Inside the Studio: Synthesizing Afro-House Soundscapes', views: '320K views', duration: '14:22', thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340' }
+  ]
+
+  // Handlers
+  const handleAuthSubmit = (e) => {
     e.preventDefault()
-    if (fanEmail) {
-      setFanJoined(true)
+    const user = { name: authName || authEmail.split('@')[0], email: authEmail, crmId: `CRM-${Math.floor(100000 + Math.random() * 900000)}` }
+    setFanUser(user)
+    localStorage.setItem(`fan_session_${artistSlug}`, JSON.stringify(user))
+    setAuthModalOpen(false)
+  }
+
+  const handleLogout = () => {
+    setFanUser(null)
+    localStorage.removeItem(`fan_session_${artistSlug}`)
+  }
+
+  const handleTicketBuy = (e) => {
+    e.preventDefault()
+    setTicketSuccess({
+      qr: `TKT-${Math.floor(100000 + Math.random() * 900000)}`,
+      show: selectedShow,
+      qty: ticketQty,
+      total: (selectedShow.numPrice * ticketQty).toFixed(2)
+    })
+  }
+
+  const handleOrderBuy = (e) => {
+    e.preventDefault()
+    setOrderSuccess(true)
+    setTimeout(() => {
+      setOrderSuccess(false)
+      setSelectedProduct(null)
+    }, 3000)
+  }
+
+  const handlePostSubmit = (e) => {
+    e.preventDefault()
+    if (newPostText) {
+      setFanPosts([{ id: Date.now(), author: fanUser ? fanUser.name : 'Anonymous Fan', date: 'Just now', text: newPostText }, ...fanPosts])
+      setNewPostText('')
     }
   }
 
@@ -77,322 +162,784 @@ export default function CreatorEpkView() {
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      transition: 'all 0.4s ease'
+      transition: 'all 0.4s ease',
+      position: 'relative'
     }}>
-      
-      {/* Top Network Sub-Navigation Header */}
+
+      {/* ================= 1. MAIN TOP HEADER (NAVBAR AT VERY TOP) ================= */}
       <header style={{
-        background: 'rgba(0,0,0,0.6)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
-        padding: '12px 24px',
+        background: 'rgba(5, 7, 15, 0.85)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: `1px solid ${selectedTheme.accent}33`,
+        padding: '14px 28px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
-        zIndex: 100
+        zIndex: 1000,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '0.85rem', color: '#a0a0a0' }}>INTERMAVEN WEB WORLD 🌐</span>
-          <span style={{ fontWeight: 700, fontSize: '1.1rem', color: selectedTheme.accent }}>{artistName}</span>
-          <span style={{ fontSize: '0.75rem', padding: '2px 8px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}>
-            {selectedTheme.genre}
-          </span>
-        </div>
-
-        {/* Studio Control Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <select
-            value={selectedTheme.id}
-            onChange={(e) => setSelectedTheme(EPK_THEMES.find(t => t.id === e.target.value))}
-            style={{ background: '#1e1e24', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
-          >
-            {EPK_THEMES.map(t => <option key={t.id} value={t.id}>Theme: {t.name}</option>)}
-          </select>
-
-          <button
-            onClick={() => setAiModalOpen(true)}
-            style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '6px 14px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <RiFlashlightFill /> AI Studio Assistant
-          </button>
-
-        </div>
-      </header>
-
-      {/* Main EPK World Hero Header */}
-      <section style={{
-        padding: '80px 24px 40px',
-        textAlign: 'center',
-        background: `radial-gradient(circle at center, ${selectedTheme.secondary}22 0%, transparent 70%)`
-      }}>
-        <h1 style={{ fontSize: '3.5rem', margin: 0, letterSpacing: '-1px' }}>{artistName}</h1>
-        <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.8)', maxWidth: '600px', margin: '12px auto' }}>
-          Official Standalone Artist Web World & Intermaven EPK
-        </p>
-
-        {/* Audio Player Bar */}
-        <div style={{
-          maxHeight: '400px',
-          maxWidth: '500px',
-          margin: '24px auto',
-          background: selectedTheme.cardBg,
-          backdropFilter: 'blur(16px)',
-          border: `1px solid ${selectedTheme.accent}44`,
-          borderRadius: '16px',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-          boxShadow: `0 8px 32px ${selectedTheme.accent}22`
-        }}>
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            style={{ width: '48px', height: '48px', borderRadius: '50%', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
-          </button>
-          <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: '1rem' }}>Nairobi Cyberwave (Official Master)</div>
-            <div style={{ fontSize: '0.8rem', color: selectedTheme.accent }}>TuneStream Lossless Audio • 24-bit 96kHz</div>
+        {/* Brand & Creator Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width: '42px',
+            height: '42px',
+            borderRadius: '50%',
+            background: selectedTheme.accent,
+            color: '#000',
+            fontWeight: 900,
+            fontSize: '1.3rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: `0 0 12px ${selectedTheme.accent}`
+          }}>
+            {artistName.charAt(0)}
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#fff', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {artistName}
+              <span style={{ fontSize: '0.65rem', background: `${selectedTheme.accent}22`, color: selectedTheme.accent, border: `1px solid ${selectedTheme.accent}55`, padding: '2px 8px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                {selectedTheme.genre}
+              </span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              {artistSlug}.tunemavens.com • Official Site
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* 8 Customizable Navigation Menu Tabs */}
-      <nav style={{
-        display: 'flex',
-        justifyContent: 'center',
-        flexWrap: 'wrap',
-        gap: '8px',
-        padding: '16px 24px',
-        background: 'rgba(0,0,0,0.4)',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)'
-      }}>
-        {[
-          { id: 'home', label: 'Home', icon: <RiHomeFill /> },
-          { id: 'bio', label: 'Bio', icon: <RiUserFill /> },
-          { id: 'shows', label: 'Shows', icon: <RiCalendarEventFill /> },
-          { id: 'videos', label: 'Videos', icon: <RiVideoFill /> },
-          { id: 'store', label: 'Store', icon: <RiShoppingBagFill /> },
-          { id: 'press', label: 'Press Kit', icon: <RiFileTextFill /> },
-          { id: 'contact', label: 'Contact', icon: <RiMailFill /> },
-          { id: 'fanclub', label: 'Fan Club', icon: <RiHeartFill /> },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+        {/* Header Menu Items */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {[
+            { id: 'home', label: 'Home', icon: <RiHomeFill /> },
+            { id: 'bio', label: 'Bio', icon: <RiUserFill /> },
+            { id: 'shows', label: 'Shows', icon: <RiCalendarEventFill /> },
+            { id: 'videos', label: 'Videos', icon: <RiVideoFill /> },
+            { id: 'store', label: 'Store', icon: <RiShoppingBagFill /> },
+            { id: 'press', label: 'Press Kit', icon: <RiFileTextFill /> },
+            { id: 'contact', label: 'Contact', icon: <RiMailFill /> },
+            { id: 'fanclub', label: 'Fan Club', icon: <RiHeartFill /> },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                background: activeTab === tab.id ? selectedTheme.accent : 'transparent',
+                color: activeTab === tab.id ? '#000' : '#cbd5e1',
+                border: 'none',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                fontWeight: activeTab === tab.id ? 700 : 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.9rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Right Action Tools: Fan VIP Auth Protocol & Layout Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          
+          {/* Layout Mode Selector */}
+          <select
+            value={layoutMode}
+            onChange={(e) => setLayoutMode(e.target.value)}
             style={{
-              background: activeTab === tab.id ? selectedTheme.accent : 'transparent',
-              color: activeTab === tab.id ? '#000' : '#fff',
-              border: `1px solid ${activeTab === tab.id ? selectedTheme.accent : 'rgba(255,255,255,0.15)'}`,
-              padding: '8px 18px',
-              borderRadius: '24px',
+              background: 'rgba(255,255,255,0.06)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.15)',
+              padding: '6px 10px',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="hero">Layout: Full Hero Banner</option>
+            <option value="split">Layout: Split Screen</option>
+            <option value="glass">Layout: Glassmorphic</option>
+            <option value="cyber">Layout: Cyber Matrix</option>
+          </select>
+
+          {/* AI Assistant */}
+          <button
+            onClick={() => setAiDrawerOpen(true)}
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: `1px solid ${selectedTheme.accent}66`,
+              color: selectedTheme.accent,
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
               fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease'
+              gap: '6px'
             }}
           >
-            {tab.icon} {tab.label}
+            <RiFlashlightFill /> AI Studio
           </button>
-        ))}
-      </nav>
 
-      {/* Main Tab View Contents */}
-      <main style={{ flex: 1, padding: '40px 24px', maxWidth: '1100px', width: '100%', margin: '0 auto' }}>
-        
-        {/* TAB 1: HOME */}
-        {activeTab === 'home' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-            <div style={{ background: selectedTheme.cardBg, padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <h3 style={{ marginTop: 0, color: selectedTheme.accent }}>Featured Release</h3>
-              <img src="https://picsum.photos/seed/epk_release/500/300" alt="Release Cover" style={{ width: '100%', borderRadius: '12px', marginBottom: '16px' }} />
-              <p>Stream the brand new album on <b>TuneStream</b> or acquire licensing rights via <b>SyncMavens</b>.</p>
+          {/* Fan Protocol Login / VIP Account */}
+          {fanUser ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(34, 211, 238, 0.1)', border: '1px solid rgba(34, 211, 238, 0.3)', padding: '4px 10px', borderRadius: '20px' }}>
+              <RiShieldCheckFill style={{ color: selectedTheme.accent }} />
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff' }}>{fanUser.name}</span>
+              <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', marginLeft: '4px' }}>Log out</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              style={{
+                background: selectedTheme.accent,
+                color: '#000',
+                border: 'none',
+                padding: '7px 16px',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: `0 0 10px ${selectedTheme.accent}44`
+              }}
+            >
+              <RiUserAddFill /> VIP Access / Login
+            </button>
+          )}
+
+        </div>
+      </header>
+
+      {/* ================= 2. HERO SECTION / LAYOUT MODES ================= */}
+      {activeTab === 'home' && (
+        <section style={{
+          padding: layoutMode === 'split' ? '40px 48px' : '60px 24px',
+          textAlign: layoutMode === 'split' ? 'left' : 'center',
+          background: layoutMode === 'cyber' 
+            ? `radial-gradient(circle at top left, ${selectedTheme.secondary}33 0%, #000 80%)`
+            : `radial-gradient(circle at center, ${selectedTheme.secondary}25 0%, transparent 70%)`,
+          borderBottom: '1px solid rgba(255,255,255,0.08)'
+        }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: layoutMode === 'split' ? 'grid' : 'block', gridTemplateColumns: '1.2fr 1fr', gap: '40px', alignItems: 'center' }}>
+            <div>
+              <span style={{ fontSize: '0.85rem', color: selectedTheme.accent, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>
+                STANDALONE CREATOR WEB WORLD
+              </span>
+              <h1 style={{ fontSize: layoutMode === 'split' ? '3.8rem' : '4.2rem', margin: '8px 0 12px', letterSpacing: '-1px', fontWeight: 900, lineHeight: 1.1 }}>
+                {artistName}
+              </h1>
+              <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.85)', maxWidth: '650px', margin: layoutMode === 'split' ? '0 0 24px' : '0 auto 24px', lineHeight: 1.6 }}>
+                Nairobi Electronic Sunset Pioneer • Lossless Master Audio Catalog & Direct Intermaven Split Engine.
+              </p>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', justifyContent: layoutMode === 'split' ? 'flex-start' : 'center', gap: '14px', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => setActiveTab('shows')}
+                  style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px 28px', borderRadius: '8px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <RiTicket2Fill /> Get Tour Tickets
+                </button>
+                <button 
+                  onClick={() => setActiveTab('store')}
+                  style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '12px 28px', borderRadius: '8px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <RiShoppingBagFill /> Order Merch & Stems
+                </button>
+              </div>
             </div>
 
-            <div style={{ background: selectedTheme.cardBg, padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <h3 style={{ marginTop: 0, color: selectedTheme.accent }}>Upcoming Tour Highlights</h3>
-              {shows.slice(0, 2).map((s, idx) => (
-                <div key={idx} style={{ padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{s.venue}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>{s.city} • {s.date}</div>
+            {/* Audio Player Card */}
+            <div style={{
+              background: selectedTheme.cardBg,
+              backdropFilter: 'blur(20px)',
+              border: `1px solid ${selectedTheme.accent}44`,
+              borderRadius: '20px',
+              padding: '24px',
+              marginTop: layoutMode === 'split' ? 0 : '36px',
+              maxWidth: '520px',
+              margin: layoutMode === 'split' ? 0 : '36px auto 0',
+              boxShadow: `0 12px 40px ${selectedTheme.accent}22`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  style={{ width: '56px', height: '56px', borderRadius: '50%', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 16px ${selectedTheme.accent}66` }}
+                >
+                  {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
+                </button>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff' }}>{activeTrack.title}</div>
+                  <div style={{ fontSize: '0.8rem', color: selectedTheme.accent, marginTop: '2px' }}>
+                    ISRC: {activeTrack.isrc} • Lossless 24-bit 96kHz
                   </div>
-                  <button style={{ background: selectedTheme.accent, border: 'none', color: '#000', padding: '4px 12px', borderRadius: '6px', fontWeight: 600 }}>Get Tickets</button>
+                </div>
+              </div>
+
+              {/* Audio Waveform progress line */}
+              <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '3px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ width: isPlaying ? '65%' : '30%', height: '100%', background: selectedTheme.accent, transition: 'width 0.3s ease' }} />
+              </div>
+            </div>
+
+          </div>
+        </section>
+      )}
+
+      {/* ================= 3. MAIN CONTENT BODY ================= */}
+      <main style={{ flex: 1, padding: '40px 24px', maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
+        
+        {/* ================= TAB 1: HOME ================= */}
+        {activeTab === 'home' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+            
+            {/* Catalog Tracks Grid */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: selectedTheme.accent, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <RiMusic2Fill /> Discography & Lossless Master Tracks
+                </h3>
+                <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>4 Verified Tracks • Shared Ledger Verified</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+                {tracks.map(t => (
+                  <div 
+                    key={t.id} 
+                    style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.08)', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', transition: 'all 0.2s ease' }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: selectedTheme.accent, fontWeight: 700 }}>{t.release}</div>
+                      <h4 style={{ margin: '6px 0 4px', fontSize: '1rem', fontWeight: 800 }}>{t.title}</h4>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>ISRC: {t.isrc} • {t.streams} Streams</div>
+                    </div>
+                    <button 
+                      onClick={() => { setActiveTrack(t); setIsPlaying(true); }}
+                      style={{ marginTop: '14px', background: activeTrack.id === t.id && isPlaying ? selectedTheme.accent : 'rgba(255,255,255,0.08)', color: activeTrack.id === t.id && isPlaying ? '#000' : '#fff', border: `1px solid ${selectedTheme.accent}44`, padding: '8px', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}
+                    >
+                      {activeTrack.id === t.id && isPlaying ? <><RiPauseFill /> Playing...</> : <><RiPlayFill /> Stream Master</>}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Featured Tour Dates & Store Spotlight */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '28px' }}>
+              
+              {/* Shows Quick Card */}
+              <div style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '24px', borderRadius: '16px' }}>
+                <h3 style={{ marginTop: 0, fontSize: '1.3rem', fontWeight: 800, color: selectedTheme.accent }}>Upcoming Live Dates</h3>
+                {shows.slice(0, 3).map((s) => (
+                  <div key={s.id} style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>{s.venue}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{s.city} • {s.date}</div>
+                    </div>
+                    <button 
+                      onClick={() => { setSelectedShow(s); setTicketSuccess(null); }}
+                      style={{ background: selectedTheme.accent, border: 'none', color: '#000', padding: '6px 14px', borderRadius: '6px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
+                    >
+                      Buy {s.price}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Merch Spotlight Card */}
+              <div style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '24px', borderRadius: '16px', textAlign: 'center' }}>
+                <h3 style={{ marginTop: 0, fontSize: '1.3rem', fontWeight: 800, color: selectedTheme.accent }}>Merchandise Spotlight</h3>
+                <img src={products[0].img} alt={products[0].title} style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px', marginBottom: '12px' }} />
+                <h4 style={{ margin: '4px 0', fontSize: '0.95rem' }}>{products[0].title}</h4>
+                <div style={{ fontWeight: 800, color: selectedTheme.accent, fontSize: '1.1rem', marginBottom: '12px' }}>{products[0].price}</div>
+                <button 
+                  onClick={() => setSelectedProduct(products[0])}
+                  style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 800, cursor: 'pointer' }}
+                >
+                  Order Vinyl LP
+                </button>
+              </div>
+
+            </div>
+
+            {/* Social Media Photo Stream */}
+            <div>
+              <h3 style={{ marginTop: 0, fontSize: '1.3rem', fontWeight: 800, color: selectedTheme.accent, marginBottom: '16px' }}>
+                Instagram & Live Tour Photo Stream
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                {[1, 2, 3, 4, 5, 6].map(num => (
+                  <div key={num} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', height: '160px', background: 'rgba(255,255,255,0.04)' }}>
+                    <img src={`https://picsum.photos/seed/epk_feed_${num}/300/300`} alt="Feed" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ================= TAB 2: BIO ================= */}
+        {activeTab === 'bio' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2rem', fontWeight: 900 }}>
+                Biography & Artistic Lineage
+              </h2>
+              <p style={{ lineHeight: '1.8', fontSize: '1.1rem', color: '#e2e8f0' }}>
+                <b>{artistName}</b> is a pioneering force within the modern electronic and global fusion scene. Synthesizing traditional East African acoustic arrangements with cutting-edge cyber-synth soundscapes, {artistName} has captivated international audiences across Nairobi, London, Berlin, and New York.
+              </p>
+              <p style={{ lineHeight: '1.8', fontSize: '1.05rem', color: '#cbd5e1' }}>
+                With over 8 million cumulative streams on <b>TuneStream</b> and verified splits registered on the <b>Intermaven Shared Ledger</b>, {artistName} represents a new generation of independent creators controlling their master recordings, sync placements, and direct fan CRM relationships.
+              </p>
+              
+              <blockquote style={{ borderLeft: `4px solid ${selectedTheme.accent}`, paddingLeft: '20px', margin: '28px 0', fontStyle: 'italic', fontSize: '1.15rem', color: '#f8fafc' }}>
+                "A breathtaking fusion of heritage soundscapes and forward-thinking electronic production." — <i>Pitchfork / Intermaven Music Journal</i>
+              </blockquote>
+            </div>
+
+            {/* Production Credits Table */}
+            <div style={{ background: selectedTheme.cardBg, padding: '28px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontWeight: 800 }}>Key Discography & Metadata Credits</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid rgba(255,255,255,0.1)', textAlign: 'left', color: '#94a3b8' }}>
+                    <th style={{ padding: '10px' }}>Release Title</th>
+                    <th style={{ padding: '10px' }}>Year</th>
+                    <th style={{ padding: '10px' }}>ISRC Code</th>
+                    <th style={{ padding: '10px' }}>Label / Network</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tracks.map(t => (
+                    <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '12px 10px', fontWeight: 700 }}>{t.title}</td>
+                      <td style={{ padding: '12px 10px' }}>2026</td>
+                      <td style={{ padding: '12px 10px', color: selectedTheme.accent, fontFamily: 'monospace' }}>{t.isrc}</td>
+                      <td style={{ padding: '12px 10px' }}>TuneMavens / Intermaven Record Network</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ================= TAB 3: SHOWS ================= */}
+        {activeTab === 'shows' && (
+          <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div>
+                <h2 style={{ color: selectedTheme.accent, margin: 0, fontSize: '2rem', fontWeight: 900 }}>Tour Dates & Live Experiences</h2>
+                <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>QR Entry Passes generated with instant Stripe validation</p>
+              </div>
+              <span style={{ background: 'rgba(34, 211, 238, 0.1)', color: selectedTheme.accent, border: `1px solid ${selectedTheme.accent}44`, padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700 }}>
+                World Tour 2026
+              </span>
+            </div>
+
+            {shows.map((s) => (
+              <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: '16px' }}>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#fff' }}>{s.venue}</div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '2px' }}>{s.city} • {s.date}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: selectedTheme.accent }}>{s.price}</span>
+                  <button 
+                    onClick={() => { setSelectedShow(s); setTicketSuccess(null); }}
+                    style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 22px', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem', boxShadow: `0 0 12px ${selectedTheme.accent}44` }}
+                  >
+                    Buy Ticket
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ================= TAB 4: VIDEOS ================= */}
+        {activeTab === 'videos' && (
+          <div>
+            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2rem', fontWeight: 900, marginBottom: '24px' }}>
+              4K Music Videos & Live Performances
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '28px' }}>
+              {videos.map(v => (
+                <div key={v.id} style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px' }}>
+                  <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', marginBottom: '14px' }}>
+                    <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <button 
+                        onClick={() => alert(`Playing 4K Video Stream: ${v.title}`)}
+                        style={{ width: '50px', height: '50px', borderRadius: '50%', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  </div>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 800, color: '#fff' }}>{v.title}</h4>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{v.views} • Duration: {v.duration}</div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* TAB 2: BIO */}
-        {activeTab === 'bio' && (
-          <div style={{ background: selectedTheme.cardBg, padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0 }}>Artist Biography & Lineage</h2>
-            <p style={{ lineHeight: '1.7', fontSize: '1.05rem' }}>
-              <b>{artistName}</b> is a pioneering force within the modern electronic and global fusion scene. Synthesizing traditional acoustic arrangements with cutting-edge cyber-synth soundscapes, {artistName} has captivated audiences across East Africa, Europe, and North America.
-            </p>
-            <blockquote style={{ borderLeft: `4px solid ${selectedTheme.accent}`, paddingLeft: '16px', margin: '24px 0', fontStyle: 'italic', color: 'rgba(255,255,255,0.85)' }}>
-              "A breathtaking fusion of heritage soundscapes and forward-thinking electronic production." — <i>Intermaven Music Journal</i>
-            </blockquote>
-          </div>
-        )}
-
-        {/* TAB 3: SHOWS */}
-        {activeTab === 'shows' && (
-          <div style={{ background: selectedTheme.cardBg, padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0 }}>Tour Dates & Live Experiences</h2>
-            {shows.map((s, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '1.2rem' }}>{s.venue}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.7)' }}>{s.city} | {s.date}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <span style={{ fontWeight: 600 }}>{s.price}</span>
-                  <button style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>Buy Ticket</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 4: VIDEOS */}
-        {activeTab === 'videos' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-            <div style={{ background: selectedTheme.cardBg, padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <img src="https://picsum.photos/seed/yt_vid1/450/250" alt="Video 1" style={{ width: '100%', borderRadius: '12px' }} />
-              <h4>Nairobi Cyberwave (Official 4K Music Video)</h4>
-            </div>
-            <div style={{ background: selectedTheme.cardBg, padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <img src="https://picsum.photos/seed/yt_vid2/450/250" alt="Video 2" style={{ width: '100%', borderRadius: '12px' }} />
-              <h4>Live Studio Session at SyncMavens Vault</h4>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: STORE */}
+        {/* ================= TAB 5: STORE ================= */}
         {activeTab === 'store' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-            {products.map((p, idx) => (
-              <div key={idx} style={{ background: selectedTheme.cardBg, padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
-                <img src={p.img} alt={p.title} style={{ width: '100%', borderRadius: '12px', marginBottom: '12px' }} />
-                <h4 style={{ margin: '8px 0' }}>{p.title}</h4>
-                <div style={{ fontWeight: 700, color: selectedTheme.accent, marginBottom: '12px' }}>{p.price}</div>
-                <button style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', width: '100%' }}>Order Now</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 6: PRESS KIT */}
-        {activeTab === 'press' && (
-          <div style={{ background: selectedTheme.cardBg, padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0 }}>Press Assets & Technical Rider</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '24px' }}>
-              <a href="#download" style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <RiDownloadFill style={{ color: selectedTheme.accent }} /> Official One-Sheet PDF
-              </a>
-              <a href="#download" style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <RiDownloadFill style={{ color: selectedTheme.accent }} /> High-Res Press Photos (ZIP)
-              </a>
-              <a href="#download" style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <RiDownloadFill style={{ color: selectedTheme.accent }} /> Stage Plot & Tech Rider
-              </a>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ color: selectedTheme.accent, margin: 0, fontSize: '2rem', fontWeight: 900 }}>Official Creator Storefront</h2>
+              <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Direct Order Fulfillment • Lossless Digital Stems</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+              {products.map(p => (
+                <div key={p.id} style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <img src={p.img} alt={p.title} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px', marginBottom: '14px' }} />
+                    <span style={{ fontSize: '0.7rem', color: selectedTheme.accent, textTransform: 'uppercase', fontWeight: 700 }}>{p.category}</span>
+                    <h4 style={{ margin: '4px 0 8px', fontSize: '1rem', fontWeight: 800 }}>{p.title}</h4>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 900, color: selectedTheme.accent, fontSize: '1.2rem', marginBottom: '14px' }}>{p.price}</div>
+                    <button 
+                      onClick={() => setSelectedProduct(p)}
+                      style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem' }}
+                    >
+                      Order Now
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* TAB 7: CONTACT */}
+        {/* ================= TAB 6: PRESS KIT ================= */}
+        {activeTab === 'press' && (
+          <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2rem', fontWeight: 900 }}>
+              Electronic Press Kit (EPK) Assets & Technical Rider
+            </h2>
+            <p style={{ color: '#94a3b8', marginBottom: '28px' }}>Approved high-resolution press assets, stage plots, and official one-sheets for festival bookers and media outlets.</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '36px' }}>
+              <a href="#download" onClick={(e) => { e.preventDefault(); alert('Downloading Official 1-Sheet PDF...'); }} style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 700 }}>
+                <RiDownloadFill style={{ fontSize: '1.5rem', color: selectedTheme.accent }} />
+                <div>
+                  <div>Official 1-Sheet PDF</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Download (2.4 MB)</div>
+                </div>
+              </a>
+              <a href="#download" onClick={(e) => { e.preventDefault(); alert('Downloading High-Res Press Photos (ZIP)...'); }} style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 700 }}>
+                <RiDownloadFill style={{ fontSize: '1.5rem', color: selectedTheme.accent }} />
+                <div>
+                  <div>Hi-Res Photos (ZIP)</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Download (48 MB)</div>
+                </div>
+              </a>
+              <a href="#download" onClick={(e) => { e.preventDefault(); alert('Downloading Technical Stage Plot Rider...'); }} style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 700 }}>
+                <RiDownloadFill style={{ fontSize: '1.5rem', color: selectedTheme.accent }} />
+                <div>
+                  <div>Stage Plot & Rider</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Download (1.1 MB)</div>
+                </div>
+              </a>
+            </div>
+
+            {/* Approved Short Bio */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h4 style={{ margin: 0, color: selectedTheme.accent, fontWeight: 800 }}>Approved Press Bio (Short 100-Word Copy)</h4>
+                <button onClick={() => alert('Press bio copied to clipboard!')} style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <RiFileCopyFill /> Copy Text
+                </button>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '0.95rem', color: '#cbd5e1', lineHeight: '1.6' }}>
+                "{artistName} is an East African electronic fusion artist blending organic acoustic percussion with cutting-edge synth basslines. With over 8 million cumulative streams and headlining performances across Europe and Kenya, {artistName} delivers unforgettable live experiences."
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= TAB 7: CONTACT ================= */}
         {activeTab === 'contact' && (
-          <div style={{ background: selectedTheme.cardBg, padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '600px', margin: '0 auto' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0 }}>Management & Sync Contact</h2>
-            <form onSubmit={(e) => { e.preventDefault(); alert('Message dispatched to creator management!'); }}>
+          <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '650px', margin: '0 auto' }}>
+            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2rem', fontWeight: 900 }}>
+              Management & Booking Inquiries
+            </h2>
+            <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Direct portal to {artistName}'s authorized representative and management team.</p>
+            
+            <form onSubmit={(e) => { e.preventDefault(); alert('Inquiry message dispatched to creator management inbox!'); }}>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '6px' }}>Your Name</label>
-                <input type="text" required style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px' }} />
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 700, fontSize: '0.85rem' }}>Your Name / Agency</label>
+                <input type="text" required style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px', fontSize: '0.95rem' }} />
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '6px' }}>Email Address</label>
-                <input type="email" required style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px' }} />
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 700, fontSize: '0.85rem' }}>Email Address</label>
+                <input type="email" required style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px', fontSize: '0.95rem' }} />
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '6px' }}>Inquiry Type</label>
-                <select style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px' }}>
-                  <option>Sync Licensing (Film / TV / Game)</option>
-                  <option>Booking & Live Shows</option>
-                  <option>Press & Interviews</option>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 700, fontSize: '0.85rem' }}>Inquiry Category</label>
+                <select style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px', fontSize: '0.95rem' }}>
+                  <option>Sync Licensing (Film / TV / Gaming)</option>
+                  <option>Live Festival & Tour Booking</option>
+                  <option>Brand Sponsorship & Press Inquiry</option>
                 </select>
               </div>
-              <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 700, width: '100%', cursor: 'pointer' }}>Send Inquiry</button>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 700, fontSize: '0.85rem' }}>Message Details</label>
+                <textarea required rows={4} style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px', fontSize: '0.95rem', resize: 'none' }} />
+              </div>
+              <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '14px 28px', borderRadius: '8px', fontWeight: 900, width: '100%', cursor: 'pointer', fontSize: '1rem' }}>
+                Send Inquiry
+              </button>
             </form>
           </div>
         )}
 
-        {/* TAB 8: FAN CLUB (SMART CRM SYNCHRONIZATION) */}
+        {/* ================= TAB 8: FAN CLUB / VIP VAULT ================= */}
         {activeTab === 'fanclub' && (
-          <div style={{ background: selectedTheme.cardBg, padding: '32px', borderRadius: '16px', border: `1px solid ${selectedTheme.accent}66`, textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-            <RiHeartFill style={{ fontSize: '3rem', color: selectedTheme.accent }} />
-            <h2 style={{ marginTop: '12px' }}>Join {artistName}'s Official Fan Club</h2>
-            <p style={{ color: 'rgba(255,255,255,0.8)' }}>
-              Get direct email updates, unreleased audio snippets, and presale tour ticket codes. Powered by <b>Intermaven Smart CRM</b>.
-            </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '20px', border: `1px solid ${selectedTheme.accent}66`, textAlign: 'center', maxWidth: '700px', margin: '0 auto', width: '100%' }}>
+              <RiHeartFill style={{ fontSize: '3.5rem', color: selectedTheme.accent }} />
+              <h2 style={{ marginTop: '12px', fontSize: '2rem', fontWeight: 900 }}>
+                Join {artistName}'s Official VIP Fan Vault
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.05rem', lineHeight: '1.6' }}>
+                Get exclusive access to unreleased master demos, presale tour ticket codes, and direct messaging with {artistName}. Synchronized directly into <b>Intermaven Smart CRM</b>.
+              </p>
 
-            {fanJoined ? (
-              <div style={{ padding: '20px', background: 'rgba(0, 255, 128, 0.15)', borderRadius: '12px', border: '1px solid #00ff80', color: '#00ff80' }}>
-                <RiCheckFill style={{ fontSize: '1.5rem' }} /> You are officially subscribed to {artistName}'s Smart CRM Fanbase!
-              </div>
-            ) : (
-              <form onSubmit={handleFanJoin} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
+              {fanUser || fanJoined ? (
+                <div style={{ padding: '20px', background: 'rgba(0, 255, 128, 0.15)', borderRadius: '12px', border: '1px solid #00ff80', color: '#00ff80', marginTop: '20px' }}>
+                  <RiCheckFill style={{ fontSize: '1.8rem' }} />
+                  <div style={{ fontWeight: 800, fontSize: '1.1rem', marginTop: '6px' }}>VIP Membership Active!</div>
+                  <div style={{ fontSize: '0.85rem', color: '#cbd5e1', marginTop: '4px' }}>Member ID: {fanUser ? fanUser.crmId : 'CRM-884029'}</div>
+                </div>
+              ) : (
+                <form onSubmit={(e) => { e.preventDefault(); setFanJoined(true); }} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '24px' }}>
+                  <input
+                    type="text"
+                    placeholder="Your Full Name"
+                    required
+                    style={{ padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px', fontSize: '0.95rem' }}
+                  />
+                  <input
+                    type="email"
+                    placeholder="Your Email Address"
+                    required
+                    style={{ padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px', fontSize: '0.95rem' }}
+                  />
+                  <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer', fontSize: '1rem' }}>
+                    Join VIP Fan Club
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* Fan Message Wall */}
+            <div style={{ background: selectedTheme.cardBg, padding: '28px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontWeight: 800 }}>Fan Community Message Wall</h3>
+              
+              <form onSubmit={handlePostSubmit} style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                 <input
                   type="text"
-                  placeholder="Your Name"
-                  value={fanName}
-                  onChange={(e) => setFanName(e.target.value)}
-                  required
-                  style={{ padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px' }}
+                  placeholder="Post a message to the fan wall..."
+                  value={newPostText}
+                  onChange={(e) => setNewPostText(e.target.value)}
+                  style={{ flex: 1, padding: '12px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '8px' }}
                 />
-                <input
-                  type="email"
-                  placeholder="Your Email Address"
-                  value={fanEmail}
-                  onChange={(e) => setFanEmail(e.target.value)}
-                  required
-                  style={{ padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '8px' }}
-                />
-                <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>Join Fan Club</button>
+                <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 800, cursor: 'pointer' }}>
+                  Post
+                </button>
               </form>
-            )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {fanPosts.map(post => (
+                  <div key={post.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '14px 18px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <strong style={{ color: selectedTheme.accent }}>{post.author}</strong>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{post.date}</span>
+                    </div>
+                    <div style={{ fontSize: '0.95rem', color: '#e2e8f0' }}>{post.text}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
       </main>
 
-      {/* Sleek Social Media Footer */}
+      {/* ================= 4. COMPREHENSIVE FOOTER & POWERED BY INTERMAVEN ONLY AT BOTTOM ================= */}
       <footer style={{
-        background: 'rgba(0,0,0,0.8)',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        padding: '32px 24px',
+        background: 'rgba(3, 5, 12, 0.95)',
+        borderTop: `1px solid ${selectedTheme.accent}33`,
+        padding: '48px 32px 24px',
         textAlign: 'center',
-        marginTop: 'auto'
+        marginTop: 'auto',
+        boxShadow: '0 -10px 30px rgba(0,0,0,0.5)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '1.5rem', marginBottom: '16px' }}>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiInstagramFill /></a>
-          <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiYoutubeFill /></a>
-          <a href="https://spotify.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiSpotifyFill /></a>
-          <a href="https://apple.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiAppleFill /></a>
-          <a href="https://x.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiTwitterXFill /></a>
-          <a href="https://discord.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiDiscordFill /></a>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '32px', textAlign: 'left', marginBottom: '40px' }}>
+          
+          {/* Creator Brand Column */}
+          <div>
+            <div style={{ fontWeight: 900, fontSize: '1.3rem', color: '#fff', marginBottom: '8px' }}>
+              {artistName}
+            </div>
+            <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: '1.6' }}>
+              Official Standalone Creator Web World. All rights reserved. Registered on the Intermaven Shared Network.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 style={{ color: selectedTheme.accent, margin: '0 0 12px 0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Site Sections</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem' }}>
+              <span onClick={() => setActiveTab('home')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Home</span>
+              <span onClick={() => setActiveTab('bio')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Bio</span>
+              <span onClick={() => setActiveTab('shows')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Tour Dates</span>
+              <span onClick={() => setActiveTab('store')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Storefront</span>
+            </div>
+          </div>
+
+          {/* Social Icons */}
+          <div>
+            <h4 style={{ color: selectedTheme.accent, margin: '0 0 12px 0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Connect</h4>
+            <div style={{ display: 'flex', gap: '14px', fontSize: '1.4rem' }}>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiInstagramFill /></a>
+              <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiYoutubeFill /></a>
+              <a href="https://spotify.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiSpotifyFill /></a>
+              <a href="https://apple.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiAppleFill /></a>
+            </div>
+          </div>
+
         </div>
-        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>
-          © 2026 {artistName} • Powered by Intermaven Network Inc. (`intermaven.io`)
+
+        {/* Powered by Intermaven Badge - ONLY AT THE BOTTOM */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.8rem', color: '#64748b' }}>
+          <div>© 2026 {artistName}. All rights reserved.</div>
+          <a 
+            href="https://intermaven.io" 
+            target="_blank" 
+            rel="noreferrer" 
+            style={{ color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            powered by <strong style={{ color: selectedTheme.accent }}>intermaven</strong>
+          </a>
         </div>
       </footer>
+
+      {/* ================= MODALS ================= */}
+
+      {/* Auth VIP Modal */}
+      {authModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '16px', width: '100%', maxWidth: '420px', padding: '28px', color: '#fff', position: 'relative' }}>
+            <button onClick={() => setAuthModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontWeight: 900 }}>
+              {authMode === 'signup' ? `Join ${artistName}'s VIP Portal` : `VIP Fan Login`}
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '18px' }}>
+              Credentials saved to creator's admin database. Intermaven master access active.
+            </p>
+            <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {authMode === 'signup' && (
+                <input type="text" placeholder="Full Name" value={authName} onChange={(e) => setAuthName(e.target.value)} required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '6px' }} />
+              )}
+              <input type="email" placeholder="Email Address" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '6px' }} />
+              <input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '6px' }} />
+              <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 800, cursor: 'pointer', marginTop: '6px' }}>
+                {authMode === 'signup' ? 'Create VIP Account' : 'Log In'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Ticket Purchase Modal */}
+      {selectedShow && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '16px', width: '100%', maxWidth: '460px', padding: '28px', color: '#fff', position: 'relative' }}>
+            <button onClick={() => setSelectedShow(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            
+            {ticketSuccess ? (
+              <div style={{ textAlign: 'center' }}>
+                <RiCheckFill style={{ fontSize: '3rem', color: '#00ff80' }} />
+                <h3 style={{ margin: '8px 0', color: '#00ff80' }}>Ticket Order Confirmed!</h3>
+                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '10px', margin: '16px 0', textAlign: 'left', fontSize: '0.85rem' }}>
+                  <div><strong>Show:</strong> {ticketSuccess.show.venue} ({ticketSuccess.show.city})</div>
+                  <div><strong>Date:</strong> {ticketSuccess.show.date}</div>
+                  <div><strong>Pass Code:</strong> <span style={{ color: selectedTheme.accent, fontFamily: 'monospace' }}>{ticketSuccess.qr}</span></div>
+                  <div><strong>Total Paid:</strong> ${ticketSuccess.total} USD</div>
+                </div>
+                <button onClick={() => setSelectedShow(null)} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 800, cursor: 'pointer' }}>Done</button>
+              </div>
+            ) : (
+              <div>
+                <h3 style={{ marginTop: 0, color: selectedTheme.accent }}>Buy Concert Tickets</h3>
+                <div style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '16px' }}>
+                  <strong>{selectedShow.venue}</strong> • {selectedShow.city} ({selectedShow.date})
+                </div>
+                <form onSubmit={handleTicketBuy} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '4px', color: '#94a3b8' }}>Ticket Quantity</label>
+                    <select value={ticketQty} onChange={(e) => setTicketQty(Number(e.target.value))} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '6px' }}>
+                      <option value={1}>1 Ticket (${(selectedShow.numPrice * 1).toFixed(2)})</option>
+                      <option value={2}>2 Tickets (${(selectedShow.numPrice * 2).toFixed(2)})</option>
+                      <option value={4}>4 VIP Bundle (${(selectedShow.numPrice * 4).toFixed(2)})</option>
+                    </select>
+                  </div>
+                  <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 800, cursor: 'pointer' }}>
+                    Process Payment (${(selectedShow.numPrice * ticketQty).toFixed(2)})
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Product Order Modal */}
+      {selectedProduct && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '16px', width: '100%', maxWidth: '440px', padding: '28px', color: '#fff', position: 'relative' }}>
+            <button onClick={() => setSelectedProduct(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            
+            {orderSuccess ? (
+              <div style={{ textAlign: 'center' }}>
+                <RiCheckFill style={{ fontSize: '3rem', color: '#00ff80' }} />
+                <h3 style={{ margin: '8px 0', color: '#00ff80' }}>Order Dispatched!</h3>
+                <p style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Fulfillment confirmation sent to your email.</p>
+              </div>
+            ) : (
+              <div>
+                <h3 style={{ marginTop: 0, color: selectedTheme.accent }}>Order Merchandise</h3>
+                <div style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '6px' }}>{selectedProduct.title}</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: selectedTheme.accent, marginBottom: '16px' }}>{selectedProduct.price}</div>
+                <form onSubmit={handleOrderBuy} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <input type="text" placeholder="Shipping Full Name" required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '6px' }} />
+                  <input type="text" placeholder="Delivery Shipping Address" required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '6px' }} />
+                  <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 800, cursor: 'pointer' }}>
+                    Confirm & Pay {selectedProduct.price}
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
