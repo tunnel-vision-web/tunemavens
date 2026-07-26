@@ -1,0 +1,18 @@
+[Unit]
+Description=Intermaven Network FastAPI Core Backend Server
+After=network.target mongodb.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/tunemavens/backend
+EnvironmentFile=/var/www/tunemavens/backend/.env
+ExecStart=/var/www/tunemavens/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8001 --workers 4
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=intermaven-backend
+
+[Install]
+WantedBy=multi-user.target
