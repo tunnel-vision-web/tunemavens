@@ -63,8 +63,18 @@ Unlike traditional sync publishers that lock up catalogs with advances and seize
 ### 4. Native AI Business & Social Studio
 Creators gain access to built-in AI tools (Claude Sonnet 4.6 Recommendation Agent, Gemini/Sora Social AI Studio) that generate platform-specific creative assets (1:1 square, 9:16 vertical video) tailored to recommended channel paths.
 
-### 5. Shared Single Sign-On (SSO) & Unified Credit Bank
+### 5. Bandzoogle-Style Creator Web Worlds & 20 Pre-Populated EPK Templates
+EPKs in the Intermaven Network are not simple modal popups or static card previews—they function as **fully functional, standalone independent Creator Web Worlds** (`/epk/:username` or `username.tunemavens.com`).
+* **Immersive Navigation**: Clicking "View EPK" anywhere in the network transitions fans directly into the artist's dedicated visual universe.
+* **20 Pre-Populated Theme Templates**: 20 sleek, tech-forward design templates (ranging from *Cyberpunk Neon* and *Afrobeat Gold* to *Ambient Glass* and *Lo-Fi Chill*) pre-configured with creator assets.
+* **8 Standard Customizable Sections**: Home, Bio, Shows (Ticketing), Videos (YouTube v3), Store (Merch/Digital Downloads), Press Kit (Stems/Tech Rider/One-Sheet PDF), Contact, and Fan Club.
+* **DOM Layout Flexibility & AI Assistance**: Dynamic DOM layouts (Full-Screen Parallax, Split Column, Floating Glassmorphism) with built-in AI assistance for bio writing, palette generation, and promo clips.
+* **Smart CRM Fanbase Data Retention**: All fan sign-ups, ticket purchases, and merch orders captured on creator Web Worlds automatically populate the creator's cohort in the **Intermaven Smart CRM** for direct multi-channel communication.
+* **Sleek Social Footer**: Styled social icon bar linking to Instagram, TikTok, YouTube, Spotify, Apple Music, and Discord.
+
+### 6. Shared Single Sign-On (SSO) & Unified Credit Bank
 Users sign up once and navigate frictionlessly across `intermaven.io`, `tunemavens.com`, `tunestream.co`, and `syncmavens.com`. Unified Network Credits can be earned from TuneStream listener tips or marketplace sales and spent on AI runs or CRM marketing campaigns across the entire network.
+
 
 ---
 
