@@ -9,7 +9,7 @@ import {
   RiShoppingBasket2Fill, RiUserAddFill, RiShieldCheckFill,
   RiMusic2Fill, RiFileCopyFill, RiSearchLine, RiImageFill, RiArrowDownSLine,
   RiArrowLeftSLine, RiArrowRightSLine, RiThumbUpFill, RiMessage2Fill, RiAddFill, RiSubtractFill, RiDeleteBinFill,
-  RiBankCardFill, RiCellphoneFill
+  RiBankCardFill, RiCellphoneFill, RiDiscFill, RiArrowRightLine
 } from 'react-icons/ri'
 
 import heroSlide1 from '../../assets/creator_hero_banner.jpg'
@@ -47,7 +47,7 @@ export default function CreatorEpkView() {
   const artistName = rawArtistName.charAt(0).toUpperCase() + rawArtistName.slice(1)
   const artistSlug = (username || 'kip').toLowerCase().replace(/[^a-z0-9]/g, '')
 
-  // Navigation & Sticky Scroll Header State (Transparent -> 0.80 Opacity)
+  // Navigation & Sticky Header State (Transparent -> 0.80 Opacity)
   const [activeTab, setActiveTab] = useState('home')
   const [mediaFilter, setMediaFilter] = useState('all')
   const [selectedTheme] = useState(EPK_THEMES[0])
@@ -55,7 +55,7 @@ export default function CreatorEpkView() {
   const [activeTrack, setActiveTrack] = useState({ id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', duration: '3:45', priceCredits: 50 })
   const [scrolled, setScrolled] = useState(false)
 
-  // Sticky Scroll Header Effect (Transparent first, 0.8 opacity after scroll)
+  // Sticky Scroll Header Effect
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 30) setScrolled(true)
@@ -83,7 +83,7 @@ export default function CreatorEpkView() {
   // Media Dropdown Toggle
   const [mediaDropdownOpen, setMediaDropdownOpen] = useState(false)
 
-  // Fan Session State (SSO / PKCE Unified Login Sync)
+  // Fan Session State
   const [fanUser, setFanUser] = useState(() => {
     try {
       const saved = localStorage.getItem(`fan_session_${artistSlug}`) || sessionStorage.getItem('tunemavens_session')
@@ -102,8 +102,8 @@ export default function CreatorEpkView() {
     meetAndGreet: false
   })
 
-  // Payment Gateway Protocol Selection (Stripe vs PesaPal M-Pesa + 90/10 Waterfall System)
-  const [paymentGateway, setPaymentGateway] = useState('pesapal') // 'pesapal' | 'stripe'
+  // Payment Gateway Protocol Selection
+  const [paymentGateway, setPaymentGateway] = useState('pesapal')
 
   // Commerce & Cart State
   const [cart, setCart] = useState([])
@@ -129,8 +129,12 @@ export default function CreatorEpkView() {
   const [ticketEmail, setTicketEmail] = useState('')
   const [ticketSuccess, setTicketSuccess] = useState(null)
 
-  // Media Gallery Lightbox Carousel & Video Player Modals
+  // Media Gallery & Discography State
   const [selectedMedia, setSelectedMedia] = useState(null)
+  const [selectedAlbumModal, setSelectedAlbumModal] = useState(null)
+  const [discographySearch, setDiscographySearch] = useState('')
+  const [discographyPage, setDiscographyPage] = useState(1)
+
   const [mediaComments, setMediaComments] = useState({
     301: [{ author: 'KipFan99', text: 'This video production quality is unreal!', likes: 14 }],
     302: [{ author: 'Aisha_Lover', text: 'The stage lighting at Nairobi Cyberdome was electric!', likes: 9 }]
@@ -138,7 +142,16 @@ export default function CreatorEpkView() {
   const [newCommentText, setNewCommentText] = useState('')
   const [mediaSearch, setMediaSearch] = useState('')
 
-  // Data Collections
+  // Full Discography Collection
+  const albums = [
+    { id: 401, title: 'Nairobi Cyberwave (Deluxe LP)', year: '2026', type: 'Album', tracksCount: 12, cover: 'https://picsum.photos/seed/album1_epk/400', streams: '3.4M', isrc: 'KE-TM1-26-00042', priceCredits: 50 },
+    { id: 402, title: 'Rift Valley Soundscapes', year: '2026', type: 'Album', tracksCount: 10, cover: 'https://picsum.photos/seed/album2_epk/400', streams: '1.8M', isrc: 'KE-TM1-26-00043', priceCredits: 50 },
+    { id: 403, title: 'Afro-Synth Cascade', year: '2025', type: 'Single', tracksCount: 2, cover: 'https://picsum.photos/seed/album3_epk/400', streams: '940K', isrc: 'KE-TM1-26-00044', priceCredits: 40 },
+    { id: 404, title: 'Midnight Mara Starlight', year: '2025', type: 'EP', tracksCount: 5, cover: 'https://picsum.photos/seed/album4_epk/400', streams: '2.1M', isrc: 'KE-TM1-26-00045', priceCredits: 45 },
+    { id: 405, title: 'Mombasa Neon Nights', year: '2024', type: 'Album', tracksCount: 14, cover: 'https://picsum.photos/seed/album5_epk/400', streams: '4.2M', isrc: 'KE-TM1-24-00010', priceCredits: 50 },
+    { id: 406, title: 'Savannah Electric Stems', year: '2024', type: 'Remix EP', tracksCount: 6, cover: 'https://picsum.photos/seed/album6_epk/400', streams: '1.1M', isrc: 'KE-TM1-24-00011', priceCredits: 40 }
+  ]
+
   const tracks = [
     { id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', streams: '3.4M', duration: '3:45', release: 'Single 2026', priceCredits: 50 },
     { id: 2, title: 'Sunset over Rift Valley', isrc: 'KE-TM1-26-00043', streams: '1.8M', duration: '4:12', release: 'Album 2026', priceCredits: 50 },
@@ -255,7 +268,7 @@ export default function CreatorEpkView() {
     }
   }
 
-  // Intermaven Ticketing System Handler (Location Dependent + 90/10 Waterfall Cascade)
+  // Intermaven Ticketing Handler
   const handleTicketBuy = (e) => {
     e.preventDefault()
     let pricePerTicket = selectedShow.priceGA
@@ -297,13 +310,21 @@ export default function CreatorEpkView() {
     }
   }
 
-  // Filtered Shows & Media
+  // Filtered Shows, Discography & Media
   const filteredShows = shows.filter(s => 
     s.venue.toLowerCase().includes(showsSearch.toLowerCase()) || 
     s.city.toLowerCase().includes(showsSearch.toLowerCase())
   )
   const showsPerPage = 3
   const paginatedShows = filteredShows.slice((showsPage - 1) * showsPerPage, showsPage * showsPerPage)
+
+  const filteredAlbums = albums.filter(a => 
+    a.title.toLowerCase().includes(discographySearch.toLowerCase()) ||
+    a.year.includes(discographySearch) ||
+    a.type.toLowerCase().includes(discographySearch.toLowerCase())
+  )
+  const albumsPerPage = 4
+  const paginatedAlbums = filteredAlbums.slice((discographyPage - 1) * albumsPerPage, discographyPage * albumsPerPage)
 
   const filteredMedia = mediaItems.filter(m => {
     const matchesSearch = m.title.toLowerCase().includes(mediaSearch.toLowerCase())
@@ -340,7 +361,7 @@ export default function CreatorEpkView() {
         }
       `}</style>
 
-      {/* ================= 1. EXACT STICKY TOP NAVBAR HEADER (Transparent -> 0.80 Opacity) ================= */}
+      {/* ================= 1. EXACT STICKY TOP NAVBAR HEADER ================= */}
       <header style={{
         background: scrolled ? 'rgba(6, 8, 18, 0.80)' : 'transparent',
         backdropFilter: scrolled ? 'blur(12px)' : 'none',
@@ -426,6 +447,25 @@ export default function CreatorEpkView() {
           </button>
 
           <button
+            onClick={() => setActiveTab('discography')}
+            style={{
+              background: activeTab === 'discography' ? selectedTheme.accent : 'transparent',
+              color: activeTab === 'discography' ? '#000' : '#cbd5e1',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '3px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.9rem'
+            }}
+          >
+            <RiDiscFill /> Discography
+          </button>
+
+          <button
             onClick={() => setActiveTab('shows')}
             style={{
               background: activeTab === 'shows' ? selectedTheme.accent : 'transparent',
@@ -475,7 +515,7 @@ export default function CreatorEpkView() {
                 border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: '3px',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
-                minWidth: '160px',
+                minWidth: '180px',
                 zIndex: 1100,
                 overflow: 'hidden'
               }}>
@@ -484,6 +524,12 @@ export default function CreatorEpkView() {
                   style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
                   <RiVideoFill /> All Media
+                </div>
+                <div 
+                  onClick={() => { setActiveTab('discography'); setMediaDropdownOpen(false); }}
+                  style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <RiDiscFill /> Discography & Albums
                 </div>
                 <div 
                   onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaDropdownOpen(false); }}
@@ -582,7 +628,7 @@ export default function CreatorEpkView() {
             <RiShoppingBasket2Fill /> Cart ({cart.reduce((acc, c) => acc + c.qty, 0)})
           </button>
 
-          {/* Fan Backend Portal Sync Button */}
+          {/* Fan Backend Sync */}
           {fanUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button 
@@ -617,7 +663,7 @@ export default function CreatorEpkView() {
         </div>
       </header>
 
-      {/* ================= 2. HORIZONTALLY CENTERED HERO CAROUSEL WITH FADEINUP ANIMATION ================= */}
+      {/* ================= 2. HERO CAROUSEL ================= */}
       {activeTab === 'home' && (
         <section style={{
           position: 'relative',
@@ -659,7 +705,7 @@ export default function CreatorEpkView() {
               {heroSlides[currentSlideIndex].subtitle}
             </p>
 
-            {/* Centered Audio Player Bar */}
+            {/* Audio Player Bar */}
             <div style={{
               background: selectedTheme.cardBg,
               backdropFilter: 'blur(16px)',
@@ -695,7 +741,7 @@ export default function CreatorEpkView() {
         </section>
       )}
 
-      {/* Page Header Banner with Centered Title & Animation */}
+      {/* Page Header Banner */}
       {activeTab !== 'home' && (
         <section style={{
           position: 'relative',
@@ -728,15 +774,37 @@ export default function CreatorEpkView() {
         {activeTab === 'home' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '44px' }}>
             
-            {/* TuneStream Lossless Catalog */}
+            {/* TuneStream Catalog & Call To Action to View Discography */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: selectedTheme.accent, margin: 0, fontFamily: "'Sansation', sans-serif" }}>
-                  Discography & Lossless Multitracks
-                </h2>
-                <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-                  Your Balance: <strong style={{ color: selectedTheme.accent }}>{userCredits} Intermaven Credits</strong>
-                </span>
+                <div>
+                  <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: selectedTheme.accent, margin: 0, fontFamily: "'Sansation', sans-serif" }}>
+                    Featured Singles & Lossless Audio
+                  </h2>
+                  <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
+                    Balance: <strong style={{ color: selectedTheme.accent }}>{userCredits} Intermaven Credits</strong>
+                  </div>
+                </div>
+
+                {/* Prominent CTA to View Full Discography */}
+                <button
+                  onClick={() => setActiveTab('discography')}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${selectedTheme.accent}`,
+                    color: selectedTheme.accent,
+                    padding: '8px 18px',
+                    borderRadius: '3px',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <RiDiscFill /> View Full Discography <RiArrowRightLine />
+                </button>
               </div>
 
               {creditPurchaseSuccess && (
@@ -765,6 +833,13 @@ export default function CreatorEpkView() {
                         style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}
                       >
                         Buy Multitracks ({t.priceCredits} Credits)
+                      </button>
+                      {/* Individual Track Call to Action: View Discography */}
+                      <button 
+                        onClick={() => setActiveTab('discography')}
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center', marginTop: '2px' }}
+                      >
+                        View in Discography ➔
                       </button>
                     </div>
                   </div>
@@ -811,7 +886,84 @@ export default function CreatorEpkView() {
           </div>
         )}
 
-        {/* ================= TAB 3: SHOWS (PAGINATED WITH STRIPE & PESAPAL LOCATION PAYMENT PROTOCOLS) ================= */}
+        {/* ================= TAB 3: DISCOGRAPHY (PAGINATED ALBUMS GRID) ================= */}
+        {activeTab === 'discography' && (
+          <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <h2 style={{ color: selectedTheme.accent, margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
+                  Complete Discography & Album Catalog
+                </h2>
+                <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>High-density album grid with paginated access & multitrack downloads</p>
+              </div>
+
+              {/* Search Bar */}
+              <div style={{ position: 'relative', width: '280px' }}>
+                <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input 
+                  type="text"
+                  placeholder="Search albums or year..."
+                  value={discographySearch}
+                  onChange={(e) => { setDiscographySearch(e.target.value); setDiscographyPage(1); }}
+                  style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
+                />
+              </div>
+            </div>
+
+            {/* Paginated Album Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+              {paginatedAlbums.map(a => (
+                <div key={a.id} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <img src={a.cover} alt={a.title} style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '3px', marginBottom: '14px' }} />
+                    <span style={{ fontSize: '0.75rem', color: selectedTheme.accent, fontWeight: 700, textTransform: 'uppercase' }}>{a.type} • {a.year}</span>
+                    <h3 style={{ margin: '4px 0 6px', fontSize: '1.2rem', fontWeight: 800 }}>{a.title}</h3>
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{a.tracksCount} Tracks • {a.streams} Streams</div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+                    <button 
+                      onClick={() => setSelectedAlbumModal(a)}
+                      style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: `1px solid ${selectedTheme.accent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      View Album Tracklist ({a.tracksCount} Tracks)
+                    </button>
+                    <button 
+                      onClick={() => handlePurchaseTrackWithCredits(a)}
+                      style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      Buy Full Stems ({a.priceCredits} Credits)
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
+              {Array.from({ length: Math.ceil(filteredAlbums.length / albumsPerPage) }).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setDiscographyPage(idx + 1)}
+                  style={{
+                    background: discographyPage === idx + 1 ? selectedTheme.accent : 'rgba(255,255,255,0.08)',
+                    color: discographyPage === idx + 1 ? '#000' : '#fff',
+                    border: 'none',
+                    padding: '8px 14px',
+                    borderRadius: '3px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {idx + 1}
+                </button>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* ================= TAB 4: SHOWS ================= */}
         {activeTab === 'shows' && (
           <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
@@ -878,7 +1030,7 @@ export default function CreatorEpkView() {
           </div>
         )}
 
-        {/* ================= TAB 4: MEDIA (LIGHTBOX CAROUSEL & VIDEO MODALS WITH FAN COMMENTING) ================= */}
+        {/* ================= TAB 5: MEDIA ================= */}
         {activeTab === 'media' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
@@ -924,7 +1076,7 @@ export default function CreatorEpkView() {
           </div>
         )}
 
-        {/* ================= TAB 5: E-COMMERCE STORE ================= */}
+        {/* ================= TAB 6: E-COMMERCE STORE ================= */}
         {activeTab === 'store' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
@@ -983,7 +1135,7 @@ export default function CreatorEpkView() {
           </div>
         )}
 
-        {/* ================= TAB 6: PRESS KIT ================= */}
+        {/* ================= TAB 7: PRESS KIT ================= */}
         {activeTab === 'press' && (
           <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
@@ -1008,7 +1160,7 @@ export default function CreatorEpkView() {
           </div>
         )}
 
-        {/* ================= TAB 7: CONTACT ================= */}
+        {/* ================= TAB 8: CONTACT ================= */}
         {activeTab === 'contact' && (
           <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '650px', margin: '0 auto' }}>
             <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
@@ -1032,7 +1184,7 @@ export default function CreatorEpkView() {
 
       </main>
 
-      {/* ================= 4. 4-COLUMN BRANDED FOOTER WITH POWERED BY INTERMAVEN ONLY AT BOTTOM ================= */}
+      {/* ================= 4. FOOTER ================= */}
       <footer style={{
         background: 'rgba(3, 5, 12, 0.96)',
         borderTop: `1px solid ${selectedTheme.accent}33`,
@@ -1041,7 +1193,6 @@ export default function CreatorEpkView() {
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '32px', marginBottom: '40px' }}>
           
-          {/* Column 1: Brand & Creator Bio */}
           <div>
             <div style={{ fontWeight: 900, fontSize: '1.3rem', color: '#fff', marginBottom: '10px', fontFamily: "'Sansation', sans-serif" }}>
               {artistName}
@@ -1051,18 +1202,17 @@ export default function CreatorEpkView() {
             </p>
           </div>
 
-          {/* Column 2: Navigation Links */}
           <div>
             <h4 style={{ color: selectedTheme.accent, margin: '0 0 14px 0', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800 }}>Site Navigation</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
               <span onClick={() => setActiveTab('home')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Home</span>
               <span onClick={() => setActiveTab('bio')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Biography</span>
+              <span onClick={() => setActiveTab('discography')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Discography</span>
               <span onClick={() => setActiveTab('shows')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Tour Dates</span>
               <span onClick={() => setActiveTab('media')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Media & Gallery</span>
             </div>
           </div>
 
-          {/* Column 3: E-Commerce & Licensing */}
           <div>
             <h4 style={{ color: selectedTheme.accent, margin: '0 0 14px 0', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800 }}>Store & Sync</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
@@ -1072,7 +1222,6 @@ export default function CreatorEpkView() {
             </div>
           </div>
 
-          {/* Column 4: Fan Club & Social Connections */}
           <div>
             <h4 style={{ color: selectedTheme.accent, margin: '0 0 14px 0', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800 }}>Connect</h4>
             <div style={{ display: 'flex', gap: '14px', fontSize: '1.4rem', marginBottom: '14px' }}>
@@ -1088,7 +1237,6 @@ export default function CreatorEpkView() {
 
         </div>
 
-        {/* Powered by Intermaven Badge - ONLY AT VERY BOTTOM */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.8rem', color: '#64748b' }}>
           <div>© 2026 {artistName}. All rights reserved.</div>
           <a 
@@ -1102,9 +1250,99 @@ export default function CreatorEpkView() {
         </div>
       </footer>
 
-      {/* ================= MODALS & DRAWERS ================= */}
+      {/* ================= MODALS ================= */}
 
-      {/* Intermaven Location-Dependent Ticketing Modal (Stripe & PesaPal + 90/10 Waterfall) */}
+      {/* Album Tracklist Modal */}
+      {selectedAlbumModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '520px', padding: '24px', color: '#fff', position: 'relative' }}>
+            <button onClick={() => setSelectedAlbumModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer' }}>✕</button>
+            
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '18px' }}>
+              <img src={selectedAlbumModal.cover} alt={selectedAlbumModal.title} style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '3px' }} />
+              <div>
+                <h3 style={{ margin: '0 0 4px', color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>{selectedAlbumModal.title}</h3>
+                <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{selectedAlbumModal.type} • Released {selectedAlbumModal.year}</div>
+                <div style={{ fontSize: '0.8rem', color: selectedTheme.accent, marginTop: '4px' }}>ISRC: {selectedAlbumModal.isrc}</div>
+              </div>
+            </div>
+
+            <h4 style={{ margin: '0 0 10px', fontSize: '0.95rem', color: '#cbd5e1' }}>Album Tracklist ({selectedAlbumModal.tracksCount} Tracks)</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', marginBottom: '18px' }}>
+              {Array.from({ length: selectedAlbumModal.tracksCount }).map((_, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '3px', fontSize: '0.85rem' }}>
+                  <span>{idx + 1}. Track Title {idx + 1} ({selectedAlbumModal.title})</span>
+                  <span style={{ color: '#94a3b8' }}>3:45</span>
+                </div>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => { handlePurchaseTrackWithCredits(selectedAlbumModal); setSelectedAlbumModal(null); }}
+              style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}
+            >
+              Purchase Full Album Lossless Multitracks ({selectedAlbumModal.priceCredits} Credits)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Cart Drawer Modal */}
+      {cartOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ background: '#0a0d18', borderLeft: `1px solid ${selectedTheme.accent}44`, width: '100%', maxWidth: '440px', height: '100%', padding: '28px', color: '#fff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <button onClick={() => setCartOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>Your Shopping Cart</h3>
+            
+            <div style={{ flex: 1, overflowY: 'auto', margin: '20px 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {cart.length === 0 ? (
+                <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '40px' }}>Your shopping cart is empty.</div>
+              ) : (
+                cart.map((item, idx) => (
+                  <div key={idx} style={{ background: 'rgba(255,255,255,0.04)', padding: '12px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{item.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Size: {item.selectedSize}</div>
+                      <div style={{ fontWeight: 800, color: selectedTheme.accent, marginTop: '4px' }}>${(item.numPrice * item.qty).toFixed(2)}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button onClick={() => updateCartQty(idx, -1)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '3px', cursor: 'pointer' }}>-</button>
+                      <span style={{ fontWeight: 800 }}>{item.qty}</span>
+                      <button onClick={() => updateCartQty(idx, 1)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '3px', cursor: 'pointer' }}>+</button>
+                      <button onClick={() => removeFromCart(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', marginLeft: '6px', cursor: 'pointer' }}><RiDeleteBinFill /></button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {cart.length > 0 && (
+              <form onSubmit={handleCheckoutCart} style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Shipping Full Name</label>
+                  <input type="text" value={shippingName} onChange={(e) => setShippingName(e.target.value)} required style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                </div>
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Shipping Address</label>
+                  <input type="text" value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} required style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                </div>
+
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '14px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Total Amount:</span>
+                  <span style={{ color: selectedTheme.accent }}>
+                    ${cart.reduce((acc, curr) => acc + (curr.numPrice * curr.qty), 0).toFixed(2)} USD
+                  </span>
+                </div>
+                <button type="submit" style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '14px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>
+                  Complete Order Checkout
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Ticketing Modal */}
       {selectedShow && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '480px', padding: '28px', color: '#fff', position: 'relative' }}>
@@ -1136,7 +1374,7 @@ export default function CreatorEpkView() {
                 </div>
                 <form onSubmit={handleTicketBuy} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Select Payment Gateway (Location-Dependent)</label>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Select Payment Gateway</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                       <button 
                         type="button" 
@@ -1168,11 +1406,6 @@ export default function CreatorEpkView() {
                     <input type="number" min={1} max={6} value={ticketQty} onChange={(e) => setTicketQty(Number(e.target.value))} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} />
                   </div>
 
-                  {/* 90/10 Waterfall Preview */}
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '3px' }}>
-                    90/10 Revenue Waterfall: <strong>90% Creator Direct</strong> • 10% Intermaven Pool
-                  </div>
-
                   <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>
                     Process Payment with {paymentGateway === 'pesapal' ? 'PesaPal' : 'Stripe'}
                   </button>
@@ -1183,36 +1416,7 @@ export default function CreatorEpkView() {
         </div>
       )}
 
-      {/* Media Lightbox Modal */}
-      {selectedMedia && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedMedia(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer' }}>✕</button>
-            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>{selectedMedia.title}</h3>
-            <img src={selectedMedia.thumbnail} alt={selectedMedia.title} style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '3px', marginBottom: '16px' }} />
-            
-            {/* Fan Comments */}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
-              <h4 style={{ margin: '0 0 12px', color: selectedTheme.accent }}>Fan Discussion & Comments</h4>
-              <form onSubmit={handleAddMediaComment} style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                <input 
-                  type="text" 
-                  placeholder={fanUser ? "Add a comment..." : "Join VIP Fan Club to comment..."}
-                  value={newCommentText}
-                  onChange={(e) => setNewCommentText(e.target.value)}
-                  disabled={!fanUser}
-                  style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} 
-                />
-                <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>
-                  Comment
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Fan Protocol Sign Up Modal */}
+      {/* Fan Sign Up Modal */}
       {authModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '440px', padding: '28px', color: '#fff', position: 'relative' }}>
