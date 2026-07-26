@@ -47,7 +47,7 @@ export default function CreatorEpkView() {
   const artistName = rawArtistName.charAt(0).toUpperCase() + rawArtistName.slice(1)
   const artistSlug = (username || 'kip').toLowerCase().replace(/[^a-z0-9]/g, '')
 
-  // Navigation & Sticky Header State (Transparent overlay over Hero -> Background appears only after scroll)
+  // Navigation & Sticky Header State
   const [activeTab, setActiveTab] = useState('home')
   const [mediaFilter, setMediaFilter] = useState('all')
   const [selectedTheme] = useState(EPK_THEMES[0])
@@ -56,7 +56,7 @@ export default function CreatorEpkView() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Scroll listener: Header background color appears ONLY after scroll
+  // Scroll Listener
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 40) setScrolled(true)
@@ -83,6 +83,9 @@ export default function CreatorEpkView() {
 
   // Media Dropdown Toggle
   const [mediaDropdownOpen, setMediaDropdownOpen] = useState(false)
+
+  // Landing Page Video Carousel Index State
+  const [landingVideoIndex, setLandingVideoIndex] = useState(0)
 
   // Fan Session State
   const [fanUser, setFanUser] = useState(() => {
@@ -186,6 +189,8 @@ export default function CreatorEpkView() {
     { id: 305, type: 'video', title: 'Inside the Synthesizer Soundscapes', thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340', views: '320K views' },
     { id: 306, type: 'gallery', title: 'London O2 Backstage Session', thumbnail: 'https://picsum.photos/seed/gal3/600/340', views: 'Photo Gallery' }
   ]
+
+  const videoCarouselItems = mediaItems.filter(m => m.type === 'video')
 
   // Handlers
   const handleAuthSubmit = (e) => {
@@ -383,7 +388,7 @@ export default function CreatorEpkView() {
         }
       `}</style>
 
-      {/* ================= 1. HEADER OVERLAY (Transparent over Image -> Background appears only after scroll) ================= */}
+      {/* ================= 1. HEADER OVERLAY ================= */}
       <header style={{
         background: scrolled ? 'rgba(6, 8, 18, 0.90)' : 'transparent',
         backdropFilter: scrolled ? 'blur(14px)' : 'none',
@@ -401,7 +406,7 @@ export default function CreatorEpkView() {
         transition: 'all 0.35s ease'
       }}>
         
-        {/* Creator Brand Logo over Image */}
+        {/* Creator Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 1001 }}>
           <div style={{
             width: '42px',
@@ -428,347 +433,92 @@ export default function CreatorEpkView() {
           </div>
         </div>
 
-        {/* Spaced Desktop Top Menu Navigation (No Discography at top level) */}
+        {/* Spaced Desktop Top Menu */}
         <nav className="desktop-nav">
-          
-          <button
-            onClick={() => setActiveTab('home')}
-            style={{
-              background: activeTab === 'home' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'home' ? '#000' : '#ffffff',
-              border: 'none',
-              padding: '8px 14px',
-              borderRadius: '3px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.9rem',
-              transition: 'all 0.2s ease',
-              textShadow: activeTab === 'home' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
-            }}
-          >
+          <button onClick={() => setActiveTab('home')} style={{ background: activeTab === 'home' ? selectedTheme.accent : 'transparent', color: activeTab === 'home' ? '#000' : '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
             <RiHomeFill /> Home
           </button>
-
-          <button
-            onClick={() => setActiveTab('bio')}
-            style={{
-              background: activeTab === 'bio' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'bio' ? '#000' : '#ffffff',
-              border: 'none',
-              padding: '8px 14px',
-              borderRadius: '3px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.9rem',
-              textShadow: activeTab === 'bio' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
-            }}
-          >
+          <button onClick={() => setActiveTab('bio')} style={{ background: activeTab === 'bio' ? selectedTheme.accent : 'transparent', color: activeTab === 'bio' ? '#000' : '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
             <RiUserFill /> Bio
           </button>
-
-          <button
-            onClick={() => setActiveTab('shows')}
-            style={{
-              background: activeTab === 'shows' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'shows' ? '#000' : '#ffffff',
-              border: 'none',
-              padding: '8px 14px',
-              borderRadius: '3px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.9rem',
-              textShadow: activeTab === 'shows' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
-            }}
-          >
+          <button onClick={() => setActiveTab('shows')} style={{ background: activeTab === 'shows' ? selectedTheme.accent : 'transparent', color: activeTab === 'shows' ? '#000' : '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
             <RiCalendarEventFill /> Shows
           </button>
 
           {/* Media Menu Dropdown */}
           <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)}
-              style={{
-                background: (activeTab === 'media' || activeTab === 'discography') ? selectedTheme.accent : 'transparent',
-                color: (activeTab === 'media' || activeTab === 'discography') ? '#000' : '#ffffff',
-                border: 'none',
-                padding: '8px 14px',
-                borderRadius: '3px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '0.9rem',
-                textShadow: (activeTab === 'media' || activeTab === 'discography') ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
-              }}
-            >
+            <button onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)} style={{ background: (activeTab === 'media' || activeTab === 'discography') ? selectedTheme.accent : 'transparent', color: (activeTab === 'media' || activeTab === 'discography') ? '#000' : '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
               <RiVideoFill /> Media <RiArrowDownSLine />
             </button>
 
             {mediaDropdownOpen && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                marginTop: '6px',
-                background: '#0a0d18',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: '3px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
-                minWidth: '180px',
-                zIndex: 1100,
-                overflow: 'hidden'
-              }}>
-                <div 
-                  onClick={() => { setActiveTab('media'); setMediaFilter('all'); setMediaDropdownOpen(false); }}
-                  style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: '#0a0d18', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', boxShadow: '0 10px 30px rgba(0,0,0,0.8)', minWidth: '180px', zIndex: 1100, overflow: 'hidden' }}>
+                <div onClick={() => { setActiveTab('media'); setMediaFilter('all'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <RiVideoFill /> All Media
                 </div>
-                <div 
-                  onClick={() => { setActiveTab('discography'); setMediaDropdownOpen(false); }}
-                  style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
+                <div onClick={() => { setActiveTab('discography'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <RiDiscFill /> Discography & Albums
                 </div>
-                <div 
-                  onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaDropdownOpen(false); }}
-                  style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
+                <div onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <RiImageFill /> Photo Gallery
                 </div>
-                <div 
-                  onClick={() => { setActiveTab('media'); setMediaFilter('videos'); setMediaDropdownOpen(false); }}
-                  style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
+                <div onClick={() => { setActiveTab('media'); setMediaFilter('videos'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <RiVideoFill /> 4K Videos
                 </div>
               </div>
             )}
           </div>
 
-          <button
-            onClick={() => setActiveTab('store')}
-            style={{
-              background: activeTab === 'store' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'store' ? '#000' : '#ffffff',
-              border: 'none',
-              padding: '8px 14px',
-              borderRadius: '3px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.9rem',
-              textShadow: activeTab === 'store' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
-            }}
-          >
+          <button onClick={() => setActiveTab('store')} style={{ background: activeTab === 'store' ? selectedTheme.accent : 'transparent', color: activeTab === 'store' ? '#000' : '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
             <RiShoppingBagFill /> Store
           </button>
-
-          <button
-            onClick={() => setActiveTab('press')}
-            style={{
-              background: activeTab === 'press' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'press' ? '#000' : '#ffffff',
-              border: 'none',
-              padding: '8px 14px',
-              borderRadius: '3px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.9rem',
-              textShadow: activeTab === 'press' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
-            }}
-          >
+          <button onClick={() => setActiveTab('press')} style={{ background: activeTab === 'press' ? selectedTheme.accent : 'transparent', color: activeTab === 'press' ? '#000' : '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
             <RiFileTextFill /> Press Kit
           </button>
-
-          <button
-            onClick={() => setActiveTab('contact')}
-            style={{
-              background: activeTab === 'contact' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'contact' ? '#000' : '#ffffff',
-              border: 'none',
-              padding: '8px 14px',
-              borderRadius: '3px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.9rem',
-              textShadow: activeTab === 'contact' ? 'none' : '0 2px 8px rgba(0,0,0,0.8)'
-            }}
-          >
+          <button onClick={() => setActiveTab('contact')} style={{ background: activeTab === 'contact' ? selectedTheme.accent : 'transparent', color: activeTab === 'contact' ? '#000' : '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
             <RiMailFill /> Contact
           </button>
         </nav>
 
         {/* Right Action Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1001 }}>
-          
-          {/* Cart ICON ONLY Button with Badge Counter */}
-          <button
-            onClick={() => setCartOpen(true)}
-            title="View Shopping Cart"
-            style={{
-              position: 'relative',
-              background: 'rgba(0,0,0,0.5)',
-              border: '1px solid rgba(255,255,255,0.25)',
-              color: '#fff',
-              width: '42px',
-              height: '42px',
-              borderRadius: '3px',
-              fontSize: '1.3rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-            }}
-          >
+          <button onClick={() => setCartOpen(true)} title="View Shopping Cart" style={{ position: 'relative', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', width: '42px', height: '42px', borderRadius: '3px', fontSize: '1.3rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
             <RiShoppingBasket2Fill />
             {totalCartQty > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '-4px',
-                right: '-4px',
-                background: selectedTheme.accent,
-                color: '#000',
-                fontSize: '0.7rem',
-                fontWeight: 900,
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: `0 0 8px ${selectedTheme.accent}`
-              }}>
+              <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: selectedTheme.accent, color: '#000', fontSize: '0.7rem', fontWeight: 900, width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 8px ${selectedTheme.accent}` }}>
                 {totalCartQty}
               </span>
             )}
           </button>
 
-          {/* Fan Backend Access */}
           {fanUser ? (
-            <button 
-              onClick={navigateToFanDashboard}
-              style={{ background: 'rgba(34, 211, 238, 0.2)', border: '1px solid rgba(34, 211, 238, 0.5)', color: '#fff', padding: '8px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
+            <button onClick={navigateToFanDashboard} style={{ background: 'rgba(34, 211, 238, 0.2)', border: '1px solid rgba(34, 211, 238, 0.5)', color: '#fff', padding: '8px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <RiShieldCheckFill style={{ color: selectedTheme.accent }} /> Fan Portal
             </button>
           ) : (
-            <button
-              onClick={() => setAuthModalOpen(true)}
-              style={{
-                background: selectedTheme.accent,
-                color: '#000',
-                border: 'none',
-                padding: '10px 16px',
-                borderRadius: '3px',
-                fontWeight: 800,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
+            <button onClick={() => setAuthModalOpen(true)} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 16px', borderRadius: '3px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <RiUserAddFill /> VIP Sign In
             </button>
           )}
 
-          {/* Right Mobile Hamburger Toggle Button */}
-          <button
-            className="mobile-hamburger-btn"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{
-              background: 'rgba(0,0,0,0.6)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              color: '#fff',
-              width: '42px',
-              height: '42px',
-              borderRadius: '3px',
-              fontSize: '1.4rem',
-              cursor: 'pointer',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
+          <button className="mobile-hamburger-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '42px', height: '42px', borderRadius: '3px', fontSize: '1.4rem', cursor: 'pointer', alignItems: 'center', justifyContent: 'center' }}>
             {mobileMenuOpen ? <RiCloseFill /> : <RiMenuFill />}
           </button>
-
         </div>
       </header>
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div style={{
-          position: 'fixed',
-          top: '72px',
-          left: 0,
-          right: 0,
-          background: 'rgba(6, 8, 18, 0.98)',
-          backdropFilter: 'blur(16px)',
-          borderBottom: `1px solid ${selectedTheme.accent}44`,
-          padding: '24px',
-          zIndex: 999,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
+        <div style={{ position: 'fixed', top: '72px', left: 0, right: 0, background: 'rgba(6, 8, 18, 0.98)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${selectedTheme.accent}44`, padding: '24px', zIndex: 999, display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {['home', 'bio', 'shows', 'media', 'store', 'press', 'contact'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => { setActiveTab(tab); setMobileMenuOpen(false); }}
-              style={{
-                background: activeTab === tab ? selectedTheme.accent : 'transparent',
-                color: activeTab === tab ? '#000' : '#fff',
-                border: 'none',
-                padding: '12px',
-                borderRadius: '3px',
-                fontWeight: 800,
-                textAlign: 'left',
-                fontSize: '1rem',
-                textTransform: 'capitalize'
-              }}
-            >
+            <button key={tab} onClick={() => { setActiveTab(tab); setMobileMenuOpen(false); }} style={{ background: activeTab === tab ? selectedTheme.accent : 'transparent', color: activeTab === tab ? '#000' : '#fff', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, textAlign: 'left', fontSize: '1rem', textTransform: 'capitalize' }}>
               {tab === 'press' ? 'Electronic Press Kit (EPK)' : tab}
             </button>
           ))}
-          <button
-            onClick={() => { setActiveTab('discography'); setMobileMenuOpen(false); }}
-            style={{
-              background: activeTab === 'discography' ? selectedTheme.accent : 'transparent',
-              color: activeTab === 'discography' ? '#000' : '#fff',
-              border: 'none',
-              padding: '12px',
-              borderRadius: '3px',
-              fontWeight: 800,
-              textAlign: 'left',
-              fontSize: '1rem'
-            }}
-          >
-            Discography & Albums
-          </button>
         </div>
       )}
 
-      {/* ================= 2. HERO CAROUSEL ================= */}
+      {/* ================= 2. HERO CAROUSEL WITH 30% SMALLER TITLES & PROXIMITY ADJUSTED ================= */}
       {activeTab === 'home' && (
         <section style={{
           position: 'relative',
@@ -788,58 +538,33 @@ export default function CreatorEpkView() {
           {/* Dark Overlay Gradient */}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.40) 60%, rgba(4,6,14,0.65) 100%)' }} />
 
-          {/* Carousel Controls */}
-          <button 
-            onClick={() => setCurrentSlideIndex(prev => (prev === 0 ? heroSlides.length - 1 : prev - 1))}
-            style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
+          <button onClick={() => setCurrentSlideIndex(prev => (prev === 0 ? heroSlides.length - 1 : prev - 1))} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <RiArrowLeftSLine style={{ fontSize: '1.5rem' }} />
           </button>
-          <button 
-            onClick={() => setCurrentSlideIndex(prev => (prev + 1) % heroSlides.length)}
-            style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
+          <button onClick={() => setCurrentSlideIndex(prev => (prev + 1) % heroSlides.length)} style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <RiArrowRightSLine style={{ fontSize: '1.5rem' }} />
           </button>
           
-          <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
-            <h1 style={{ fontSize: '4.5rem', margin: '0 auto', fontWeight: 900, fontFamily: "'Sansation', sans-serif", letterSpacing: '-1px', color: '#fff', textShadow: '0 4px 24px rgba(0,0,0,0.9)', textAlign: 'center' }}>
+          <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '850px', margin: '0 auto', textAlign: 'center' }}>
+            {/* Main Title: 30% Smaller (3.1rem) and sits closely just above the subtitle */}
+            <h1 style={{ fontSize: '3.1rem', margin: '0 auto 6px auto', lineHeight: 1.1, fontWeight: 900, fontFamily: "'Sansation', sans-serif", letterSpacing: '-0.5px', color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.9)', textAlign: 'center' }}>
               {heroSlides[currentSlideIndex].title}
             </h1>
-            <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.9)', maxWidth: '700px', margin: '12px auto 0', lineHeight: 1.5, textAlign: 'center' }}>
+            <p style={{ fontSize: '1.15rem', color: 'rgba(255,255,255,0.92)', maxWidth: '680px', margin: '0 auto', lineHeight: 1.4, textAlign: 'center' }}>
               {heroSlides[currentSlideIndex].subtitle}
             </p>
 
             {/* Audio Player Bar */}
-            <div style={{
-              background: selectedTheme.cardBg,
-              backdropFilter: 'blur(16px)',
-              border: `1px solid ${selectedTheme.accent}44`,
-              borderRadius: '3px',
-              padding: '14px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '14px',
-              maxWidth: '460px',
-              margin: '24px auto 0',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.7)',
-              textAlign: 'left'
-            }}>
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                style={{ width: '46px', height: '46px', borderRadius: '3px', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-              >
+            <div style={{ background: selectedTheme.cardBg, backdropFilter: 'blur(16px)', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '14px', maxWidth: '460px', margin: '22px auto 0', boxShadow: '0 10px 30px rgba(0,0,0,0.7)', textAlign: 'left' }}>
+              <button onClick={() => setIsPlaying(!isPlaying)} style={{ width: '46px', height: '46px', borderRadius: '3px', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
               </button>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>{activeTrack.title}</div>
                 <div style={{ fontSize: '0.75rem', color: selectedTheme.accent, marginTop: '2px' }}>ISRC: {activeTrack.isrc} • Lossless 24-Bit</div>
               </div>
-              <button 
-                onClick={() => handlePurchaseTrackWithCredits(activeTrack)}
-                style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '6px 12px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
-              >
-                Buy Multitracks (50 Credits)
+              <button onClick={() => handlePurchaseTrackWithCredits(activeTrack)} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '6px 12px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>
+                Buy Stems (50 Credits)
               </button>
             </div>
           </div>
@@ -848,24 +573,13 @@ export default function CreatorEpkView() {
 
       {/* Page Header Banner */}
       {activeTab !== 'home' && (
-        <section style={{
-          position: 'relative',
-          height: '240px',
-          backgroundImage: `url(${heroSlide2})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          padding: '60px 32px 0'
-        }}>
+        <section style={{ position: 'relative', height: '240px', backgroundImage: `url(${heroSlide2})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 32px 0' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.6) 100%)' }} />
           <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-            <h1 style={{ fontSize: '3.2rem', margin: '0 auto', fontWeight: 900, fontFamily: "'Sansation', sans-serif", color: '#fff', textTransform: 'capitalize', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '2.5rem', margin: '0 auto 4px auto', fontWeight: 900, fontFamily: "'Sansation', sans-serif", color: '#fff', textTransform: 'capitalize', textAlign: 'center' }}>
               {activeTab === 'press' ? 'Electronic Press Kit (EPK)' : activeTab}
             </h1>
-            <p style={{ margin: '6px auto 0', color: selectedTheme.accent, fontSize: '1.05rem', textAlign: 'center' }}>
+            <p style={{ margin: '0 auto', color: selectedTheme.accent, fontSize: '1rem', textAlign: 'center' }}>
               Official Standalone Creator Web World • {artistName}
             </p>
           </div>
@@ -879,7 +593,7 @@ export default function CreatorEpkView() {
         {activeTab === 'home' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '44px' }}>
             
-            {/* TuneStream Catalog & Call To Action to View Discography */}
+            {/* TuneStream Catalog */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
@@ -891,22 +605,7 @@ export default function CreatorEpkView() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setActiveTab('discography')}
-                  style={{
-                    background: 'transparent',
-                    border: `1px solid ${selectedTheme.accent}`,
-                    color: selectedTheme.accent,
-                    padding: '8px 18px',
-                    borderRadius: '3px',
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
+                <button onClick={() => setActiveTab('discography')} style={{ background: 'transparent', border: `1px solid ${selectedTheme.accent}`, color: selectedTheme.accent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <RiDiscFill /> View Full Discography <RiArrowRightLine />
                 </button>
               </div>
@@ -926,22 +625,13 @@ export default function CreatorEpkView() {
                       <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>ISRC: {t.isrc} • {t.streams} Streams</div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
-                      <button 
-                        onClick={() => { setActiveTrack(t); setIsPlaying(true); }}
-                        style={{ background: activeTrack.id === t.id && isPlaying ? selectedTheme.accent : 'rgba(255,255,255,0.08)', color: activeTrack.id === t.id && isPlaying ? '#000' : '#fff', border: `1px solid ${selectedTheme.accent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}
-                      >
+                      <button onClick={() => { setActiveTrack(t); setIsPlaying(true); }} style={{ background: activeTrack.id === t.id && isPlaying ? selectedTheme.accent : 'rgba(255,255,255,0.08)', color: activeTrack.id === t.id && isPlaying ? '#000' : '#fff', border: `1px solid ${selectedTheme.accent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
                         {activeTrack.id === t.id && isPlaying ? <><RiPauseFill /> Playing...</> : <><RiPlayFill /> Stream on TuneStream</>}
                       </button>
-                      <button 
-                        onClick={() => handlePurchaseTrackWithCredits(t)}
-                        style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}
-                      >
+                      <button onClick={() => handlePurchaseTrackWithCredits(t)} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>
                         Buy Multitracks ({t.priceCredits} Credits)
                       </button>
-                      <button 
-                        onClick={() => setActiveTab('discography')}
-                        style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center', marginTop: '2px' }}
-                      >
+                      <button onClick={() => setActiveTab('discography')} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center', marginTop: '2px' }}>
                         View in Discography ➔
                       </button>
                     </div>
@@ -961,14 +651,59 @@ export default function CreatorEpkView() {
                     <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{s.venue}</div>
                     <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{s.city} • {s.date}</div>
                   </div>
-                  <button 
-                    onClick={() => { setSelectedShow(s); setTicketSuccess(null); }}
-                    style={{ background: selectedTheme.accent, border: 'none', color: '#000', padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
-                  >
+                  <button onClick={() => { setSelectedShow(s); setTicketSuccess(null); }} style={{ background: selectedTheme.accent, border: 'none', color: '#000', padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>
                     Reserve Tickets (From ${s.priceGA})
                   </button>
                 </div>
               ))}
+            </div>
+
+            {/* ================= NEW FEATURE: VIDEO CAROUSEL CONTENT AREA BELOW TOURS ================= */}
+            <div style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '28px', borderRadius: '3px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>
+                    Featured 4K Video Reel
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Official concert videos & studio performances</div>
+                </div>
+
+                {/* Video Carousel Controls */}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => setLandingVideoIndex(prev => (prev === 0 ? videoCarouselItems.length - 1 : prev - 1))} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '34px', height: '34px', borderRadius: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RiArrowLeftSLine />
+                  </button>
+                  <button onClick={() => setLandingVideoIndex(prev => (prev + 1) % videoCarouselItems.length)} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '34px', height: '34px', borderRadius: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RiArrowRightSLine />
+                  </button>
+                </div>
+              </div>
+
+              {/* Video Carousel Active Card */}
+              <div style={{ position: 'relative', borderRadius: '3px', overflow: 'hidden' }}>
+                <img src={videoCarouselItems[landingVideoIndex].thumbnail} alt="Featured Video" style={{ width: '100%', height: '320px', objectFit: 'cover', borderRadius: '3px' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <span style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: selectedTheme.accent, padding: '4px 10px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 800 }}>
+                      {videoCarouselItems[landingVideoIndex].views}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                      <h4 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 900, color: '#fff' }}>
+                        {videoCarouselItems[landingVideoIndex].title}
+                      </h4>
+                      <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Click to play 4K stream with fan comments</div>
+                    </div>
+
+                    <button onClick={() => setSelectedMedia(videoCarouselItems[landingVideoIndex])} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 22px', borderRadius: '3px', fontWeight: 900, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <RiPlayFill /> Play 4K Video
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
           </div>
@@ -1000,20 +735,12 @@ export default function CreatorEpkView() {
                 <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>High-density album grid with paginated access & multitrack downloads</p>
               </div>
 
-              {/* Search Bar */}
               <div style={{ position: 'relative', width: '280px' }}>
                 <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input 
-                  type="text"
-                  placeholder="Search albums or year..."
-                  value={discographySearch}
-                  onChange={(e) => { setDiscographySearch(e.target.value); setDiscographyPage(1); }}
-                  style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
-                />
+                <input type="text" placeholder="Search albums or year..." value={discographySearch} onChange={(e) => { setDiscographySearch(e.target.value); setDiscographyPage(1); }} style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }} />
               </div>
             </div>
 
-            {/* Paginated Album Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
               {paginatedAlbums.map(a => (
                 <div key={a.id} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -1025,16 +752,10 @@ export default function CreatorEpkView() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
-                    <button 
-                      onClick={() => setSelectedAlbumModal(a)}
-                      style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: `1px solid ${selectedTheme.accent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}
-                    >
+                    <button onClick={() => setSelectedAlbumModal(a)} style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: `1px solid ${selectedTheme.accent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>
                       View Album Tracklist ({a.tracksCount} Tracks)
                     </button>
-                    <button 
-                      onClick={() => handlePurchaseTrackWithCredits(a)}
-                      style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}
-                    >
+                    <button onClick={() => handlePurchaseTrackWithCredits(a)} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>
                       Buy Full Stems ({a.priceCredits} Credits)
                     </button>
                   </div>
@@ -1042,27 +763,13 @@ export default function CreatorEpkView() {
               ))}
             </div>
 
-            {/* Pagination Controls */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
               {Array.from({ length: Math.ceil(filteredAlbums.length / albumsPerPage) }).map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setDiscographyPage(idx + 1)}
-                  style={{
-                    background: discographyPage === idx + 1 ? selectedTheme.accent : 'rgba(255,255,255,0.08)',
-                    color: discographyPage === idx + 1 ? '#000' : '#fff',
-                    border: 'none',
-                    padding: '8px 14px',
-                    borderRadius: '3px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
+                <button key={idx} onClick={() => setDiscographyPage(idx + 1)} style={{ background: discographyPage === idx + 1 ? selectedTheme.accent : 'rgba(255,255,255,0.08)', color: discographyPage === idx + 1 ? '#000' : '#fff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer' }}>
                   {idx + 1}
                 </button>
               ))}
             </div>
-
           </div>
         )}
 
@@ -1077,20 +784,12 @@ export default function CreatorEpkView() {
                 <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>Stripe & PesaPal Location-Dependent Gateways • 90/10 Waterfall Cascade</p>
               </div>
 
-              {/* Search Bar */}
               <div style={{ position: 'relative', width: '280px' }}>
                 <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input 
-                  type="text"
-                  placeholder="Search venue or city..."
-                  value={showsSearch}
-                  onChange={(e) => { setShowsSearch(e.target.value); setShowsPage(1); }}
-                  style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
-                />
+                <input type="text" placeholder="Search venue or city..." value={showsSearch} onChange={(e) => { setShowsSearch(e.target.value); setShowsPage(1); }} style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }} />
               </div>
             </div>
 
-            {/* Paginated Shows List */}
             {paginatedShows.map((s) => (
               <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
@@ -1099,37 +798,12 @@ export default function CreatorEpkView() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                   <span style={{ fontWeight: 800, fontSize: '1.1rem', color: selectedTheme.accent }}>From ${s.priceGA}</span>
-                  <button 
-                    onClick={() => { setSelectedShow(s); setTicketSuccess(null); }}
-                    style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 22px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem' }}
-                  >
+                  <button onClick={() => { setSelectedShow(s); setTicketSuccess(null); }} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 22px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem' }}>
                     Reserve Tickets
                   </button>
                 </div>
               </div>
             ))}
-
-            {/* Pagination Controls */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '28px' }}>
-              {Array.from({ length: Math.ceil(filteredShows.length / showsPerPage) }).map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setShowsPage(idx + 1)}
-                  style={{
-                    background: showsPage === idx + 1 ? selectedTheme.accent : 'rgba(255,255,255,0.08)',
-                    color: showsPage === idx + 1 ? '#000' : '#fff',
-                    border: 'none',
-                    padding: '8px 14px',
-                    borderRadius: '3px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  {idx + 1}
-                </button>
-              ))}
-            </div>
-
           </div>
         )}
 
@@ -1141,32 +815,21 @@ export default function CreatorEpkView() {
                 Media Gallery & 4K Videos
               </h2>
 
-              {/* Media Filter & Search */}
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <div style={{ position: 'relative', width: '240px' }}>
                   <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input 
-                    type="text"
-                    placeholder="Search photos & videos..."
-                    value={mediaSearch}
-                    onChange={(e) => setMediaSearch(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
-                  />
+                  <input type="text" placeholder="Search photos & videos..." value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }} />
                 </div>
               </div>
             </div>
 
-            {/* Media Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
               {filteredMedia.map(m => (
                 <div key={m.id} style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '3px' }}>
                   <div style={{ position: 'relative', borderRadius: '3px', overflow: 'hidden', marginBottom: '14px' }}>
                     <img src={m.thumbnail} alt={m.title} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '3px' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <button 
-                        onClick={() => setSelectedMedia(m)}
-                        style={{ width: '48px', height: '48px', borderRadius: '3px', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >
+                      <button onClick={() => setSelectedMedia(m)} style={{ width: '48px', height: '48px', borderRadius: '3px', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {m.type === 'video' ? '▶' : <RiImageFill />}
                       </button>
                     </div>
@@ -1190,31 +853,15 @@ export default function CreatorEpkView() {
                 <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>Direct Order Fulfillment & Lossless Audio Multitracks</p>
               </div>
 
-              {/* Category Filter */}
               <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
                 {['all', 'vinyl', 'apparel', 'stems', 'collectors'].map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setStoreCategory(cat)}
-                    style={{
-                      background: storeCategory === cat ? selectedTheme.accent : 'transparent',
-                      color: storeCategory === cat ? '#000' : '#cbd5e1',
-                      border: 'none',
-                      padding: '6px 12px',
-                      borderRadius: '3px',
-                      fontWeight: 700,
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      textTransform: 'uppercase'
-                    }}
-                  >
+                  <button key={cat} onClick={() => setStoreCategory(cat)} style={{ background: storeCategory === cat ? selectedTheme.accent : 'transparent', color: storeCategory === cat ? '#000' : '#cbd5e1', border: 'none', padding: '6px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', textTransform: 'uppercase' }}>
                     {cat}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Products Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
               {filteredProducts.map(p => (
                 <div key={p.id} style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -1225,10 +872,7 @@ export default function CreatorEpkView() {
                   </div>
                   <div>
                     <div style={{ fontWeight: 900, color: selectedTheme.accent, fontSize: '1.2rem', marginBottom: '14px' }}>{p.price}</div>
-                    <button 
-                      onClick={() => setSelectedProduct(p)}
-                      style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem' }}
-                    >
+                    <button onClick={() => setSelectedProduct(p)} style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem' }}>
                       Configure & Add to Cart
                     </button>
                   </div>
@@ -1288,14 +932,8 @@ export default function CreatorEpkView() {
       </main>
 
       {/* ================= 4. FOOTER ================= */}
-      <footer style={{
-        background: 'rgba(3, 5, 12, 0.96)',
-        borderTop: `1px solid ${selectedTheme.accent}33`,
-        padding: '48px 32px 24px',
-        marginTop: 'auto'
-      }}>
+      <footer style={{ background: 'rgba(3, 5, 12, 0.96)', borderTop: `1px solid ${selectedTheme.accent}33`, padding: '48px 32px 24px', marginTop: 'auto' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '32px', marginBottom: '40px' }}>
-          
           <div>
             <div style={{ fontWeight: 900, fontSize: '1.3rem', color: '#fff', marginBottom: '10px', fontFamily: "'Sansation', sans-serif" }}>
               {artistName}
@@ -1337,191 +975,24 @@ export default function CreatorEpkView() {
               Direct fanbase synchronization via Smart CRM.
             </div>
           </div>
-
         </div>
 
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.8rem', color: '#64748b' }}>
           <div>© 2026 {artistName}. All rights reserved.</div>
-          <a 
-            href="https://intermaven.io" 
-            target="_blank" 
-            rel="noreferrer" 
-            style={{ color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
+          <a href="https://intermaven.io" target="_blank" rel="noreferrer" style={{ color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
             powered by <strong style={{ color: selectedTheme.accent }}>intermaven</strong>
           </a>
         </div>
       </footer>
 
-      {/* ================= MODALS ================= */}
+      {/* ================= MODALS WITH CLICK-OUTSIDE BACKDROP RETURN TO FAN PAGE ================= */}
 
-      {/* Album Tracklist Modal */}
-      {selectedAlbumModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '520px', padding: '24px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedAlbumModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer' }}>✕</button>
-            
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '18px' }}>
-              <img src={selectedAlbumModal.cover} alt={selectedAlbumModal.title} style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '3px' }} />
-              <div>
-                <h3 style={{ margin: '0 0 4px', color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>{selectedAlbumModal.title}</h3>
-                <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{selectedAlbumModal.type} • Released {selectedAlbumModal.year}</div>
-                <div style={{ fontSize: '0.8rem', color: selectedTheme.accent, marginTop: '4px' }}>ISRC: {selectedAlbumModal.isrc}</div>
-              </div>
-            </div>
-
-            <h4 style={{ margin: '0 0 10px', fontSize: '0.95rem', color: '#cbd5e1' }}>Album Tracklist ({selectedAlbumModal.tracksCount} Tracks)</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', marginBottom: '18px' }}>
-              {Array.from({ length: selectedAlbumModal.tracksCount }).map((_, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '3px', fontSize: '0.85rem' }}>
-                  <span>{idx + 1}. Track Title {idx + 1} ({selectedAlbumModal.title})</span>
-                  <span style={{ color: '#94a3b8' }}>3:45</span>
-                </div>
-              ))}
-            </div>
-
-            <button 
-              onClick={() => { handlePurchaseTrackWithCredits(selectedAlbumModal); setSelectedAlbumModal(null); }}
-              style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}
-            >
-              Purchase Full Album Lossless Multitracks ({selectedAlbumModal.priceCredits} Credits)
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Cart Drawer Modal */}
-      {cartOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ background: '#0a0d18', borderLeft: `1px solid ${selectedTheme.accent}44`, width: '100%', maxWidth: '440px', height: '100%', padding: '28px', color: '#fff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            <button onClick={() => setCartOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>Your Shopping Cart</h3>
-            
-            <div style={{ flex: 1, overflowY: 'auto', margin: '20px 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {cart.length === 0 ? (
-                <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '40px' }}>Your shopping cart is empty.</div>
-              ) : (
-                cart.map((item, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255,255,255,0.04)', padding: '12px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{item.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Size: {item.selectedSize}</div>
-                      <div style={{ fontWeight: 800, color: selectedTheme.accent, marginTop: '4px' }}>${(item.numPrice * item.qty).toFixed(2)}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <button onClick={() => updateCartQty(idx, -1)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '3px', cursor: 'pointer' }}>-</button>
-                      <span style={{ fontWeight: 800 }}>{item.qty}</span>
-                      <button onClick={() => updateCartQty(idx, 1)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '3px', cursor: 'pointer' }}>+</button>
-                      <button onClick={() => removeFromCart(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', marginLeft: '6px', cursor: 'pointer' }}><RiDeleteBinFill /></button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {cart.length > 0 && (
-              <form onSubmit={handleCheckoutCart} style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Shipping Full Name</label>
-                  <input type="text" value={shippingName} onChange={(e) => setShippingName(e.target.value)} required style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                </div>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Shipping Address</label>
-                  <input type="text" value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} required style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                </div>
-
-                <div style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '14px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Total Amount:</span>
-                  <span style={{ color: selectedTheme.accent }}>
-                    ${cart.reduce((acc, curr) => acc + (curr.numPrice * curr.qty), 0).toFixed(2)} USD
-                  </span>
-                </div>
-                <button type="submit" style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '14px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>
-                  Complete Order Checkout
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Ticketing Modal */}
-      {selectedShow && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '480px', padding: '28px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedShow(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-            
-            {ticketSuccess ? (
-              <div style={{ textAlign: 'center' }}>
-                <RiCheckFill style={{ fontSize: '3.2rem', color: '#00ff80' }} />
-                <h3 style={{ margin: '8px 0', color: '#00ff80', fontFamily: "'Sansation', sans-serif" }}>Ticket Purchase Confirmed!</h3>
-                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '3px', margin: '16px 0', textAlign: 'left', fontSize: '0.85rem' }}>
-                  <div><strong>Venue:</strong> {ticketSuccess.show.venue} ({ticketSuccess.show.city})</div>
-                  <div><strong>Tier:</strong> {ticketSuccess.tierName}</div>
-                  <div><strong>Quantity:</strong> {ticketSuccess.qty} Ticket(s)</div>
-                  <div><strong>Payment Gateway:</strong> {ticketSuccess.gateway === 'pesapal' ? '📱 PesaPal M-Pesa Mobile Money' : '💳 Stripe Global USD'}</div>
-                  <div style={{ margin: '8px 0', padding: '8px', background: 'rgba(34, 211, 238, 0.08)', borderRadius: '3px', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
-                    <div><strong>90/10 Waterfall Revenue Split:</strong></div>
-                    <div>• Creator Share (90%): <span style={{ color: '#00ff80' }}>${ticketSuccess.creatorShare} USD</span></div>
-                    <div>• Network Fee (10%): <span style={{ color: '#cbd5e1' }}>${ticketSuccess.platformShare} USD</span></div>
-                  </div>
-                  <div><strong>Pass Code:</strong> <span style={{ color: selectedTheme.accent, fontFamily: 'monospace' }}>{ticketSuccess.qr}</span></div>
-                </div>
-                <button onClick={() => setSelectedShow(null)} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>Done</button>
-              </div>
-            ) : (
-              <div>
-                <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>Intermaven Network Ticketing Engine</h3>
-                <div style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '16px' }}>
-                  <strong>{selectedShow.venue}</strong> • {selectedShow.city} ({selectedShow.date})
-                </div>
-                <form onSubmit={handleTicketBuy} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Select Payment Gateway</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      <button 
-                        type="button" 
-                        onClick={() => setPaymentGateway('pesapal')}
-                        style={{ background: paymentGateway === 'pesapal' ? selectedTheme.accent : 'rgba(255,255,255,0.05)', color: paymentGateway === 'pesapal' ? '#000' : '#fff', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                      >
-                        <RiCellphoneFill /> PesaPal M-Pesa
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setPaymentGateway('stripe')}
-                        style={{ background: paymentGateway === 'stripe' ? selectedTheme.accent : 'rgba(255,255,255,0.05)', color: paymentGateway === 'stripe' ? '#000' : '#fff', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                      >
-                        <RiBankCardFill /> Stripe Global
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Select Ticket Tier</label>
-                    <select value={ticketTier} onChange={(e) => setTicketTier(e.target.value)} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }}>
-                      <option value="ga">General Admission (${selectedShow.priceGA})</option>
-                      <option value="vip">VIP Backstage Pass (${selectedShow.priceVIP})</option>
-                      <option value="meet">Meet & Greet Upgrade (${selectedShow.priceMeet})</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>Ticket Quantity</label>
-                    <input type="number" min={1} max={6} value={ticketQty} onChange={(e) => setTicketQty(Number(e.target.value))} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} />
-                  </div>
-
-                  <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer' }}>
-                    Process Payment with {paymentGateway === 'pesapal' ? 'PesaPal' : 'Stripe'}
-                  </button>
-                </form>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Fan Sign Up Modal */}
+      {/* VIP Fan Sign Up Modal with Backdrop Click Returning to Fan Page */}
       {authModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setAuthModalOpen(false); }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+        >
           <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '440px', padding: '28px', color: '#fff', position: 'relative' }}>
             <button onClick={() => setAuthModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
             <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
@@ -1532,27 +1003,35 @@ export default function CreatorEpkView() {
             </p>
 
             <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input 
-                type="text" 
-                placeholder="Full Name" 
-                value={authName} 
-                onChange={(e) => setAuthName(e.target.value)} 
-                required 
-                style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} 
-              />
-              <input 
-                type="email" 
-                placeholder="Email Address" 
-                value={authEmail} 
-                onChange={(e) => setAuthEmail(e.target.value)} 
-                required 
-                style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} 
-              />
+              <input type="text" placeholder="Full Name" value={authName} onChange={(e) => setAuthName(e.target.value)} required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} />
+              <input type="email" placeholder="Email Address" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} />
 
               <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', marginTop: '6px' }}>
                 Join VIP Fan Vault (Unified SSO)
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Media Lightbox Modal */}
+      {selectedMedia && (
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedMedia(null); }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+        >
+          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', color: '#fff', position: 'relative' }}>
+            <button onClick={() => setSelectedMedia(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer' }}>✕</button>
+            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>{selectedMedia.title}</h3>
+            <img src={selectedMedia.thumbnail} alt={selectedMedia.title} style={{ width: '100%', maxHeight: '380px', objectFit: 'cover', borderRadius: '3px', marginBottom: '16px' }} />
+            
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+              <h4 style={{ margin: '0 0 12px', color: selectedTheme.accent }}>Fan Discussion & Comments</h4>
+              <form onSubmit={handleAddMediaComment} style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                <input type="text" placeholder={fanUser ? "Add a comment..." : "Join VIP Fan Club to comment..."} value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} disabled={!fanUser} style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>Comment</button>
+              </form>
+            </div>
           </div>
         </div>
       )}
