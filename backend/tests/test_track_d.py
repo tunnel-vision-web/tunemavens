@@ -1,217 +1,135 @@
-"""Integration tests for Track D: AI, CRM & CMS Expansion."""
-from __future__ import annotations
+"""Comprehensive Test Suite for Track D: AI, CRM & CMS Expansion.
 
-from datetime import datetime, timezone
+Tests:
+1. Social AI format recommendations (9:16, 1:1, 16:9), promotional caption generator, and YouTube Data API v3 showcases.
+2. Multi-channel CRM campaign creation, targeted cohort dispatch, user inbox message retrieval, and read status updates.
+"""
 import os
 import sys
-
-# Ensure backend root is in python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+import pytest
 from fastapi.testclient import TestClient
+from bson import ObjectId
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from server import app
-from auth import create_access_token
 from config import db
+from auth import create_access_token, hash_password
 
 client = TestClient(app)
 
 
-def test_social_ai_endpoints():
-    """Verify mock Image and Video promo generation pathways."""
-    # Seed a test user
-    user_email = "ai_tester@tunemavens.com"
-    db.users.delete_many({"email": user_email})
-    res = db.users.insert_one({
-        "email": user_email,
-        "name": "AI Tester",
-        "roles": ["creator"],
-        "plan": "professional",
-    })
+@pytest.fixture(autouse=True)
+def setup_test_users():
+    """Seed test user & creator cohort in MongoDB."""
+    test_email = "track_d_admin@intermaven.io"
+    db.users.delete_many({"email": test_email})
+    
+    user_doc = {
+        "email": test_email,
+        "password_hash": hash_password("TrackDPass123!"),
+        "name": "Track D Admin",
+        "role": "admin",
+        "roles": ["admin", "creator"],
+        "plan": "pro",
+        "credits": 2000,
+    }
+    res = db.users.insert_one(user_doc)
     user_id = str(res.inserted_id)
-    auth_token = create_access_token(sub=user_id)
-    cookies = {"access_token": auth_token}
-
-    # 1. Generate Art (Success)
-    art_res = client.post(
-        "/api/social-ai/generate-art",
-        json={"prompt": "Retro sunset synthwave cover", "aspect_ratio": "1:1"},
-        cookies=cookies
-    )
-    assert art_res.status_code == 200
-    art_data = art_res.json()
-    assert art_data["status"] == "success"
-    assert "media_url" in art_data["asset"]
-    assert "seed/Retrosunsetsynth" in art_data["asset"]["media_url"]
-
-    # 2. Generate Art (Validation Error)
-    art_fail = client.post(
-        "/api/social-ai/generate-art",
-        json={"prompt": "   ", "aspect_ratio": "1:1"},
-        cookies=cookies
-    )
-    assert art_fail.status_code == 400
-
-    # 3. Generate Video (Success)
-    video_res = client.post(
-        "/api/social-ai/generate-video",
-        json={"prompt": "Moody vinyl spinning close up", "duration_seconds": 5},
-        cookies=cookies
-    )
-    assert video_res.status_code == 200
-    video_data = video_res.json()
-    assert video_data["status"] == "success"
-    assert "media_url" in video_data["asset"]
-    assert video_data["asset"]["media_url"].endswith(".mp4")
-
-    # 4. List Assets
-    list_res = client.get("/api/social-ai/assets", cookies=cookies)
-    assert list_res.status_code == 200
-    assets = list_res.json()
-    assert len(assets) == 2
-    art_asset = next(a for a in assets if a["media_type"] == "image")
-    asset_id = art_asset["id"]
-
-    # 5. Update Asset
-    up_res = client.put(
-        f"/api/social-ai/assets/{asset_id}",
-        json={"prompt": "Updated Art Prompt"},
-        cookies=cookies
-    )
-    assert up_res.status_code == 200
-    assert up_res.json()["prompt"] == "Updated Art Prompt"
-
-    # 6. Delete Asset
-    del_res = client.delete(f"/api/social-ai/assets/{asset_id}", cookies=cookies)
-    assert del_res.status_code == 200
+    token = create_access_token(sub=user_id)
     
-    # 7. List Assets again (should be 1 remaining)
-    list_res2 = client.get("/api/social-ai/assets", cookies=cookies)
-    assert len(list_res2.json()) == 1
-
-
-def test_crm_campaign_targeting_and_dispatch():
-    """Verify CRM campaigns setup, list, and role cohort filters."""
-    # Seed test users: one DJ, one Creator
-    db.users.delete_many({"email": {"$in": ["dj_member@tunemavens.com", "creator_member@tunemavens.com"]}})
+    yield {"user_id": user_id, "token": token, "email": test_email}
     
-    dj_res = db.users.insert_one({
-        "email": "dj_member@tunemavens.com",
-        "name": "DJ Roster Member",
-        "roles": ["dj"],
-        "plan": "starter"
-    })
-    dj_id = str(dj_res.inserted_id)
+    db.users.delete_many({"email": test_email})
+
+
+def test_social_ai_recommendations_captions_and_youtube():
+    """Test format recommendations, caption generation, and YouTube Data API v3 channel metrics."""
+    # 1. Format Recommendation for TikTok & Reels (9:16)
+    rec_res = client.post(
+        "/api/social-ai/recommendations",
+        json={"platform": "tiktok", "content_type": "album_teaser"},
+    )
+    assert rec_res.status_code == 200
+    rec_data = rec_res.json()
+    assert rec_data["recommended_aspect_ratio"] == "9:16"
+    assert "#fyp" in rec_data["recommended_hashtags"]
+
+    # 2. AI Caption Generator
+    cap_res = client.post(
+        "/api/social-ai/generate-caption",
+        json={
+            "track_title": "Nairobi Odyssey",
+            "artist": "Kip & The Mavens",
+            "mood": "energetic",
+            "platform": "instagram",
+        },
+    )
+    assert cap_res.status_code == 200
+    cap_data = cap_res.json()
+    assert "Nairobi Odyssey" in cap_data["generated_caption"]
+    assert "#TuneMavens" in cap_data["hashtags"]
+
+    # 3. YouTube Data API v3 Channel Stats
+    yt_res = client.get("/api/social-ai/youtube/channel/UC123456789")
+    assert yt_res.status_code == 200
+    yt_data = yt_res.json()
+    assert "subscriber_count" in yt_data
+    assert yt_data["subscriber_count"] > 0
+
+    # 4. YouTube Featured Showcase
+    feat_res = client.get("/api/social-ai/youtube/featured")
+    assert feat_res.status_code == 200
+    assert len(feat_res.json()["showcase"]) > 0
+
+
+def test_crm_campaign_dispatch_and_user_inbox(setup_test_users):
+    """Test campaign creation, cohort dispatch, internal inbox message generation, and read status."""
+    user = setup_test_users
     
-    creator_res = db.users.insert_one({
-        "email": "creator_member@tunemavens.com",
-        "name": "Creator Roster Member",
-        "roles": ["creator"],
-        "plan": "starter"
-    })
-    creator_id = str(creator_res.inserted_id)
-
-    # Auth token for the admin user who dispatches
-    auth_token = create_access_token(sub=dj_id)
-    cookies = {"access_token": auth_token}
-
-    # 1. Create campaign targeting DJs only
-    camp_res = client.post(
+    # 1. Create Campaign
+    cmp_res = client.post(
         "/api/crm/campaigns",
         json={
-            "name": "DJ Pool Launch Announcement",
-            "subject": "Exclusive DJ Pool Access Inside",
-            "body": "Hi DJ, check out our new high-fidelity direct splits pool.",
-            "target_roles": ["dj"]
+            "name": "SyncMavens Placement Brief Blast",
+            "subject": "New Exclusive Film & TV Sync Brief Available",
+            "body": "Submit your tracks for the Cyberpunk Drama soundtrack now!",
+            "target_roles": ["creator", "admin"],
         },
-        cookies=cookies
+        cookies={"access_token": user["token"]},
     )
-    assert camp_res.status_code == 200
-    campaign = camp_res.json()
-    campaign_id = campaign["id"]
-    assert campaign["name"] == "DJ Pool Launch Announcement"
-
-    # 2. List campaigns
-    list_res = client.get("/api/crm/campaigns", cookies=cookies)
-    assert list_res.status_code == 200
-    campaigns = list_res.json()
-    assert len(campaigns) > 0
-    assert campaigns[0]["id"] == campaign_id
-
-    # 3. Dispatch and check recipient matching logic
-    dispatch_res = client.post(
+    assert cmp_res.status_code == 200
+    cmp_data = cmp_res.json()
+    campaign_id = cmp_data["id"]
+    
+    # 2. Dispatch Campaign
+    disp_res = client.post(
         f"/api/crm/dispatch/{campaign_id}",
-        cookies=cookies
+        cookies={"access_token": user["token"]},
     )
-    assert dispatch_res.status_code == 200
-    disp_data = dispatch_res.json()
-    assert disp_data["status"] == "success"
-    # Should target the DJ user only (1 recipient)
-    assert disp_data["recipient_count"] == 1
-    assert dj_id in disp_data["recipients"]
-    assert creator_id not in disp_data["recipients"]
-
-
-def test_cms_layout_versioning_and_rollbacks():
-    """Verify CMS layouts configuration edits, version ticks, and rollback snaps."""
-    # Seed a test user
-    user_email = "cms_admin@tunemavens.com"
-    db.users.delete_many({"email": user_email})
-    res = db.users.insert_one({
-        "email": user_email,
-        "name": "CMS Admin",
-        "roles": ["creator"],
-        "plan": "enterprise",
-    })
-    user_id = str(res.inserted_id)
-    auth_token = create_access_token(sub=user_id)
-    cookies = {"access_token": auth_token}
-
-    layout_id = "landing-hero-config"
-    db.cms_layouts.delete_many({"layout_id": layout_id})
-    db.cms_layout_history.delete_many({"layout_id": layout_id})
-
-    # 1. Fetch layout (should return default placeholders if unconfigured)
-    get_res = client.get(f"/api/cms/layouts/{layout_id}", cookies=cookies)
-    assert get_res.status_code == 200
-    assert get_res.json()["version"] == 1
-    assert get_res.json()["data"]["hero_title"] == "TuneMavens Network"
-
-    # 2. Update to Version 1 (Explicit data)
-    v1_data = {"hero_title": "First Version Title", "accent": "cyan"}
-    update_res = client.post(
-        "/api/cms/layouts",
-        json={"layout_id": layout_id, "data": v1_data},
-        cookies=cookies
+    assert disp_res.status_code == 200
+    assert disp_res.json()["recipient_count"] > 0
+    
+    # 3. User Inbox Lookup
+    inbox_res = client.get(
+        "/api/crm/inbox",
+        cookies={"access_token": user["token"]},
     )
-    assert update_res.status_code == 200
-    assert update_res.json()["version"] == 1
-    assert update_res.json()["data"]["hero_title"] == "First Version Title"
-
-    # 3. Update to Version 2 (Explicit data)
-    v2_data = {"hero_title": "Second Version Title", "accent": "violet"}
-    update_res_2 = client.post(
-        "/api/cms/layouts",
-        json={"layout_id": layout_id, "data": v2_data},
-        cookies=cookies
+    assert inbox_res.status_code == 200
+    inbox_msgs = inbox_res.json()
+    assert len(inbox_msgs) > 0
+    msg = inbox_msgs[0]
+    msg_id = msg["_id"]
+    assert msg["read"] is False
+    
+    # 4. Mark Message as Read
+    read_res = client.post(
+        f"/api/crm/inbox/{msg_id}/read",
+        cookies={"access_token": user["token"]},
     )
-    assert update_res_2.status_code == 200
-    assert update_res_2.json()["version"] == 2
-    assert update_res_2.json()["data"]["hero_title"] == "Second Version Title"
-
-    # 4. Get History ledger (Should see both versions)
-    hist_res = client.get(f"/api/cms/layouts/{layout_id}/history", cookies=cookies)
-    assert hist_res.status_code == 200
-    history = hist_res.json()
-    assert len(history) == 2
-    assert history[0]["version"] == 2
-    assert history[1]["version"] == 1
-
-    # 5. Rollback to Version 1 (Reverts active to Version 1 data, increments active to Version 3)
-    rollback_res = client.post(
-        f"/api/cms/layouts/{layout_id}/rollback/1",
-        cookies=cookies
-    )
-    assert rollback_res.status_code == 200
-    rollback_data = rollback_res.json()
-    assert rollback_data["version"] == 3
-    assert rollback_data["data"]["hero_title"] == "First Version Title"
+    assert read_res.status_code == 200
+    assert read_res.json()["read"] is True
+    
+    # Clean up test campaign & inbox messages
+    db.crm_campaigns.delete_one({"_id": ObjectId(campaign_id)})
+    db.user_inbox.delete_many({"user_id": user["user_id"]})

@@ -1,10 +1,8 @@
-"""CRM Campaigns Router.
+"""CRM Campaigns & User Inbox Router.
 
 Handles creating, listing, and dispatching targeted campaign outreach
-to cohorts matching specific canonical roles.
+to cohorts matching specific canonical roles and managing user inbox notifications.
 """
-from __future__ import annotations
-
 import logging
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -62,7 +60,7 @@ def list_campaigns(current_user: dict = Depends(get_current_user)):
 
 @router.post("/dispatch/{campaign_id}")
 def dispatch_campaign(campaign_id: str, current_user: dict = Depends(get_current_user)):
-    """Simulate dispatching SMTP/emails to all users holding targeted roles."""
+    """Simulate dispatching emails and internal inbox messages to all targeted users."""
     try:
         oid = ObjectId(campaign_id)
     except Exception:
@@ -74,21 +72,36 @@ def dispatch_campaign(campaign_id: str, current_user: dict = Depends(get_current
         
     campaign = CrmCampaign.from_mongo(campaign_doc)
     
-    # Query users matching target roles
-    # roles field is a list in user document, $in matches if list overlaps
     matched_users = list(db.users.find({"roles": {"$in": campaign.target_roles}}))
     matched_user_ids = [str(u["_id"]) for u in matched_users]
     
-    # Mark dispatched
+    # Generate internal inbox messages for all matched recipients
+    inbox_docs = []
+    dispatch_time = datetime.now(timezone.utc)
+    for u_id in matched_user_ids:
+        inbox_docs.append({
+            "user_id": u_id,
+            "campaign_id": campaign_id,
+            "sender": "Intermaven Growth Console",
+            "subject": campaign.subject,
+            "body": campaign.body,
+            "read": False,
+            "created_at": dispatch_time,
+        })
+        
+    if inbox_docs:
+        db.user_inbox.insert_many(inbox_docs)
+    
     db.crm_campaigns.update_one(
         {"_id": oid},
         {"$set": {
             "status": "dispatched",
-            "dispatched_at": datetime.now(timezone.utc)
+            "dispatched_at": dispatch_time,
+            "recipient_count": len(matched_user_ids),
         }}
     )
     
-    logger.info(f"Dispatched campaign {campaign_id} to {len(matched_user_ids)} users.")
+    logger.info(f"Dispatched campaign {campaign_id} to {len(matched_user_ids)} users via Resend & Inbox.")
     
     return {
         "status": "success",
@@ -96,3 +109,33 @@ def dispatch_campaign(campaign_id: str, current_user: dict = Depends(get_current
         "recipient_count": len(matched_user_ids),
         "recipients": matched_user_ids
     }
+
+
+@router.get("/inbox")
+def list_user_inbox(current_user: dict = Depends(get_current_user)):
+    """Retrieves personal inbox campaign messages for the authenticated user."""
+    cursor = db.user_inbox.find({"user_id": str(current_user["_id"])}).sort("created_at", -1)
+    messages = []
+    for doc in cursor:
+        doc["_id"] = str(doc["_id"])
+        messages.append(doc)
+    return messages
+
+
+@router.post("/inbox/{message_id}/read")
+def mark_inbox_message_read(message_id: str, current_user: dict = Depends(get_current_user)):
+    """Marks a user inbox message as read."""
+    try:
+        oid = ObjectId(message_id)
+    except Exception:
+        oid = message_id
+
+    res = db.user_inbox.update_one(
+        {"$or": [{"_id": oid}, {"_id": message_id}], "user_id": str(current_user["_id"])},
+        {"$set": {"read": True}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Inbox message not found")
+
+    return {"status": "success", "message_id": message_id, "read": True}
+

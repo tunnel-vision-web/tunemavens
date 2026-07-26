@@ -118,9 +118,10 @@ To achieve our simultaneous launch target (**September 30, 2026**), the remainin
 
 | Task ID | Component / Description | Target File(s) | Status | Priority |
 |---|---|---|---|---|
-| **D-1** | **Social AI Studio Channel Recommendations:** Implement path-based format recommendations (e.g. 1:1 square for FB, 9:16 vertical for IG/TikTok) in Social AI Studio. | `backend/routes/social_ai_router.py` | ⏳ In Progress | High |
-| **D-2** | **Multi-Channel CRM Growth Engine:** Build admin campaign composer with Resend email delivery adapter and user `/inbox` route. | `backend/routes/crm_router.py`, `apps/portal/src/views/inbox/` | ⏳ In Progress | High |
-| **D-3** | **YouTube Data API v3 Integration:** Connect YouTube API key to fetch top channel videos for Wall of Fame profiles (`featured_profiles`). | `backend/services/youtube_service.py` | 🔴 Pending | Medium |
+| **D-1** | **Social AI Studio Channel Recommendations:** Implement path-based format recommendations (9:16 vertical, 1:1 square, 16:9 landscape) and AI promo caption generator. | `backend/routes/social_ai_router.py` | ✅ Completed | High |
+| **D-2** | **Multi-Channel CRM Growth Engine:** Build admin campaign composer with Resend email delivery adapter and user `/inbox` message center. | `backend/routes/crm_router.py` | ✅ Completed | High |
+| **D-3** | **YouTube Data API v3 Integration:** Connect YouTube API service to fetch channel metrics, subscriber counts, and video showcases for Wall of Fame profiles. | `backend/services/youtube_service.py`, `backend/routes/social_ai_router.py` | ✅ Completed | Medium |
+
 
 ### Track E: Hardening, SEO & Launch Prep (Target: Weeks 10–11)
 

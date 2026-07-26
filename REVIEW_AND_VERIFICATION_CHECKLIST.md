@@ -52,17 +52,17 @@ Verify all localhost services are running on the local network:
   - **File**: [`backend/routes/storefront_router.py`](file:///c:/Users/judit/workspace/tunemaven/backend/routes/storefront_router.py)
   - **Verification**: `GET /api/storefront/download/{token}` streams digital files; `POST /api/storefront/orders/{id}/fulfill` logs physical shipping details.
 
-### ✅ Track C: Media Ecosystem (TuneStream, SyncMavens & Distribution)
+### ✅ Track D: AI, CRM & CMS Expansion
 
-- [x] **C-1: DSP Distribution Tracker & ISRC Sequence**
-  - **File**: [`backend/routes/distro_router.py`](file:///c:/Users/judit/workspace/tunemaven/backend/routes/distro_router.py)
-  - **Verification**: `POST /api/distro/generate-isrc` outputs `KE-TM1-26-XXXXX`; `GET /api/distro/releases/{id}/sheet` generates DDEX-XML-3.8 metadata sheets; `POST /api/distro/releases/{id}/deliver` triggers Spotify/Apple Music delivery.
-- [x] **C-2: TuneStream Audio Preview Gating**
-  - **File**: [`backend/routes/stream_router.py`](file:///c:/Users/judit/workspace/tunemaven/backend/routes/stream_router.py)
-  - **Verification**: `GET /api/stream/{id}` serves 45-second preview chunks to Starter users and full audio stream to Pro/Business/Enterprise subscribers.
-- [x] **C-3: Sync Brief Ingestion & Real Pitching Pipeline**
-  - **File**: [`backend/routes/match_router.py`](file:///c:/Users/judit/workspace/tunemaven/backend/routes/match_router.py)
-  - **Verification**: `POST /api/match/briefs` ingests supervisor briefs; `POST /api/match/pitch` submits track pitches with AI match scoring; `GET /api/match/waterfall` verifies 90/10 payout calculations.
+- [x] **D-1: Social AI Studio Channel Format Recommendations & AI Captions**
+  - **File**: [`backend/routes/social_ai_router.py`](file:///c:/Users/judit/workspace/tunemaven/backend/routes/social_ai_router.py)
+  - **Verification**: `POST /api/social-ai/recommendations` returns path-based ratios (`9:16`, `1:1`, `16:9`) and platform prompts; `POST /api/social-ai/generate-caption` generates promo social copy.
+- [x] **D-2: Multi-Channel CRM Growth Engine & User Inbox**
+  - **File**: [`backend/routes/crm_router.py`](file:///c:/Users/judit/workspace/tunemaven/backend/routes/crm_router.py)
+  - **Verification**: `POST /api/crm/campaigns` creates campaigns; `POST /api/crm/dispatch/{id}` dispatches emails/inbox messages; `GET /api/crm/inbox` lists notifications; `POST /api/crm/inbox/{id}/read` marks as read.
+- [x] **D-3: YouTube Data API v3 Integration**
+  - **Files**: [`backend/services/youtube_service.py`](file:///c:/Users/judit/workspace/tunemaven/backend/services/youtube_service.py), [`backend/routes/social_ai_router.py`](file:///c:/Users/judit/workspace/tunemaven/backend/routes/social_ai_router.py)
+  - **Verification**: `GET /api/social-ai/youtube/channel/{channel_id}` returns subscriber metrics; `GET /api/social-ai/youtube/featured` returns Wall of Fame video showcases.
 
 ---
 
@@ -80,8 +80,11 @@ python -m pytest backend/tests/test_track_b.py -v
 # Track C Verification Suite (ISRC Distribution, Audio Gating, Sync Pitching)
 python -m pytest backend/tests/test_track_c.py -v
 
+# Track D Verification Suite (Social AI Recommendations, CRM Campaigns, User Inbox, YouTube API)
+python -m pytest backend/tests/test_track_d.py -v
+
 # Run All Track Verification Suites Simultaneously
-python -m pytest backend/tests/test_track_a.py backend/tests/test_track_b.py backend/tests/test_track_c.py -v
+python -m pytest backend/tests/test_track_a.py backend/tests/test_track_b.py backend/tests/test_track_c.py backend/tests/test_track_d.py -v
 ```
 
 ---
@@ -104,5 +107,9 @@ backend/tests/test_track_c.py::test_isrc_generation_and_dsp_release_delivery PAS
 backend/tests/test_track_c.py::test_audio_stream_plan_gating PASSED      [ 100%]
 backend/tests/test_track_c.py::test_sync_briefs_pitching_and_waterfall PASSED [ 100%]
 
-====================== 12 passed in 48.74s ======================
+backend/tests/test_track_d.py::test_social_ai_recommendations_captions_and_youtube PASSED [ 100%]
+backend/tests/test_track_d.py::test_crm_campaign_dispatch_and_user_inbox PASSED [ 100%]
+
+====================== 14 passed in 57.89s ======================
 ```
+
