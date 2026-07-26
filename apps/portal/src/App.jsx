@@ -1867,6 +1867,21 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
     setPortedAsset(null);
   };
 
+  const [logoUrl, setLogoUrl] = useState(epk.logoUrl || '');
+  const [accentColor, setAccentColor] = useState(epk.accentColor || '#00f0ff');
+  const [secondaryColor, setSecondaryColor] = useState(epk.secondaryColor || '#ff007f');
+  const [fontFamily, setFontFamily] = useState(epk.fontFamily || 'Sansation, sans-serif');
+  const [generatingLogo, setGeneratingLogo] = useState(false);
+
+  const handleGenerateBrandKitLogo = () => {
+    setGeneratingLogo(true);
+    setTimeout(() => {
+      setGeneratingLogo(false);
+      setLogoUrl('https://picsum.photos/seed/brandkit_logo/200');
+      alert('✨ BrandKit AI Emblem generated and applied to your Creator Web World!');
+    }, 1500);
+  };
+
   const handleSave = (e) => {
     e.preventDefault();
     setSaving(true);
@@ -1876,6 +1891,10 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
         subdomain,
         headline,
         themeBg,
+        logoUrl,
+        accentColor,
+        secondaryColor,
+        fontFamily,
         featuredTrackIsrc,
         spotify,
         instagram,
@@ -1885,9 +1904,10 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
         pressQuote,
         bio
       });
-      alert('Intermaven Standard EPK published & synchronized successfully!');
+      alert('Intermaven Standalone Creator Web World published & synchronized successfully!');
     }, 1200);
   };
+
 
   const selectedTrack = tracks.find(t => t.isrc === featuredTrackIsrc) || tracks[0];
 
@@ -1977,6 +1997,68 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
           </div>
 
 
+          {/* Creator Brand Logo & BrandKit AI Emblem Generator */}
+          <div>
+            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+              Creator Brand Logo & Emblem
+            </label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                type="text" 
+                value={logoUrl} 
+                onChange={(e) => setLogoUrl(e.target.value)} 
+                placeholder="Upload or paste Logo URL (https://...)" 
+                className="form-control" 
+                style={{ flex: 1, fontSize: '12px', padding: '8px' }} 
+              />
+              <button 
+                type="button" 
+                onClick={handleGenerateBrandKitLogo}
+                disabled={generatingLogo}
+                style={{ background: 'var(--cyan)', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '3px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                {generatingLogo ? 'Generating...' : '✨ BrandKit AI Logo'}
+              </button>
+            </div>
+          </div>
+
+          {/* Custom Color Theme & Typography Options */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div>
+              <label style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Primary Accent Color</label>
+              <input 
+                type="color" 
+                value={accentColor} 
+                onChange={(e) => setAccentColor(e.target.value)} 
+                style={{ width: '100%', height: '34px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', borderRadius: '3px' }} 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Secondary Color</label>
+              <input 
+                type="color" 
+                value={secondaryColor} 
+                onChange={(e) => setSecondaryColor(e.target.value)} 
+                style={{ width: '100%', height: '34px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', borderRadius: '3px' }} 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Typography Font</label>
+              <select 
+                value={fontFamily} 
+                onChange={(e) => setFontFamily(e.target.value)}
+                className="form-control"
+                style={{ width: '100%', fontSize: '11.5px', padding: '6px', background: '#0a0f1d', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                <option value="Sansation, sans-serif">Sansation (Default)</option>
+                <option value="Outfit, sans-serif">Outfit</option>
+                <option value="Orbitron, sans-serif">Orbitron Cyber</option>
+                <option value="Inter, sans-serif">Inter Mono</option>
+                <option value="Space Grotesk, sans-serif">Space Grotesk</option>
+              </select>
+            </div>
+          </div>
+
           {/* Headline & Background */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
@@ -1990,6 +2072,7 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
                 required 
               />
             </div>
+
             <div>
               <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>EPK Cover Background CSS</label>
               <input 
