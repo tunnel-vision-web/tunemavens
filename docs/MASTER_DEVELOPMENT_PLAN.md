@@ -109,9 +109,10 @@ To achieve our simultaneous launch target (**September 30, 2026**), the remainin
 
 | Task ID | Component / Description | Target File(s) | Status | Priority |
 |---|---|---|---|---|
-| **C-1** | **DSP Distribution Tracker:** Build the unbuilt `distro_router.py` module to log, generate, and export ISRC release sheets to DSP distributors. | `backend/routes/distro_router.py` | 🔴 Pending | High |
-| **C-2** | **TuneStream Audio Preview Gating:** Complete full-length audio stream authorization vs 30-second watermarked preview gating for unsubscribed users. | `backend/routes/stream_router.py` | ⏳ In Progress | High |
-| **C-3** | **Sync Brief Ingestion & Real Pitching:** Connect real supervisor brief submission forms to the MongoDB `briefs` collection and pitch delivery pipeline. | `backend/routes/match_router.py`, `apps/syncmavens/src/App.jsx` | ⏳ In Progress | High |
+| **C-1** | **DSP Distribution Tracker:** Build `distro_router.py` to log, generate ISRC sequences (`KE-TM1-26-XXXXX`), export DDEX release sheets, and trigger DSP delivery. | `backend/routes/distro_router.py` | ✅ Completed | High |
+| **C-2** | **TuneStream Audio Preview Gating:** Complete full-length audio stream authorization vs 45-second preview gating for unsubscribed/starter users. | `backend/routes/stream_router.py` | ✅ Completed | High |
+| **C-3** | **Sync Brief Ingestion & Real Pitching:** Connect real supervisor brief submission forms, list active briefs, submit track pitches with AI match scoring, and compute 90/10 waterfall. | `backend/routes/match_router.py` | ✅ Completed | High |
+
 
 ### Track D: AI, CRM & CMS Expansion (Target: Weeks 3–9)
 

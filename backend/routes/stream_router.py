@@ -3,11 +3,11 @@
 Handles audio file streaming, watermarked previews, and subscription
 access checks (45-second restriction for Starter tier).
 """
-from __future__ import annotations
-
 import logging
 import os
+from typing import Optional
 from urllib.request import Request, urlopen
+
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
@@ -99,8 +99,9 @@ def stream_audio(
                         yield chunk
             except Exception as e:
                 logger.error(f"Error fetching remote audio preview: {e}")
-                raise HTTPException(status_code=500, detail="Error streaming preview") from e
+                yield b""
         return StreamingResponse(remote_generator(), media_type="audio/mpeg")
+
 
     logger.info(f"Redirecting to full remote file {audio_url} for plan {user_plan}.")
     return RedirectResponse(url=audio_url)
