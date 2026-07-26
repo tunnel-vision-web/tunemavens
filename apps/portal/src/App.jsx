@@ -1920,6 +1920,7 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
   const [accentColor, setAccentColor] = useState(epk.accentColor || '#00f0ff');
   const [secondaryColor, setSecondaryColor] = useState(epk.secondaryColor || '#ff007f');
   const [fontFamily, setFontFamily] = useState(epk.fontFamily || 'Sansation, sans-serif');
+  const [youtubeVideoUrl, setYoutubeVideoUrl] = useState(epk.youtubeVideoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ');
   const [generatingLogo, setGeneratingLogo] = useState(false);
 
   const handleGenerateBrandKitLogo = () => {
@@ -1944,6 +1945,7 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
         accentColor,
         secondaryColor,
         fontFamily,
+        youtubeVideoUrl,
         featuredTrackIsrc,
         spotify,
         instagram,
@@ -2069,6 +2071,21 @@ function EPKBuilderPanel({ tracks, epk, setEpk }) {
                 {generatingLogo ? 'Generating...' : '✨ BrandKit AI Logo'}
               </button>
             </div>
+          </div>
+
+          {/* YouTube Video URL Stream Configuration */}
+          <div>
+            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+              YouTube Streaming Video URL (Embed Link)
+            </label>
+            <input 
+              type="text" 
+              value={youtubeVideoUrl} 
+              onChange={(e) => setYoutubeVideoUrl(e.target.value)} 
+              placeholder="https://www.youtube.com/embed/..." 
+              className="form-control" 
+              style={{ width: '100%', fontSize: '12px', padding: '8px' }} 
+            />
           </div>
 
           {/* Custom Color Theme & Typography Options */}

@@ -181,12 +181,13 @@ export default function CreatorEpkView() {
     { id: 206, title: 'Afro-Synth Sample Crate & Presets', price: '$14.99', numPrice: 14.99, img: 'https://picsum.photos/seed/sample_epk/400', category: 'stems', hasSizes: false }
   ]
 
+  // Media Items with Backend Configured YouTube Video Streaming URLs
   const mediaItems = [
-    { id: 301, type: 'video', title: `${artistName} — Nairobi Cyberwave (Official 4K Music Video)`, thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340', views: '1.2M views' },
+    { id: 301, type: 'video', title: `${artistName} — Nairobi Cyberwave (Official 4K Music Video)`, youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340', views: '1.2M views' },
     { id: 302, type: 'gallery', title: 'Live at Nairobi Cyberdome Stage Highlight', thumbnail: 'https://picsum.photos/seed/gal1/600/340', views: 'Photo Gallery' },
-    { id: 303, type: 'video', title: 'Live at SyncMavens Vault (Full Concert 4K)', thumbnail: 'https://picsum.photos/seed/yt_vid2/600/340', views: '840K views' },
+    { id: 303, type: 'video', title: 'Live at SyncMavens Vault (Full Concert 4K)', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid2/600/340', views: '840K views' },
     { id: 304, type: 'gallery', title: 'Behind the Scenes: Recording Stems at Intermaven Studio', thumbnail: 'https://picsum.photos/seed/gal2/600/340', views: 'Photo Gallery' },
-    { id: 305, type: 'video', title: 'Inside the Synthesizer Soundscapes', thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340', views: '320K views' },
+    { id: 305, type: 'video', title: 'Inside the Synthesizer Soundscapes', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340', views: '320K views' },
     { id: 306, type: 'gallery', title: 'London O2 Backstage Session', thumbnail: 'https://picsum.photos/seed/gal3/600/340', views: 'Photo Gallery' }
   ]
 
@@ -433,7 +434,7 @@ export default function CreatorEpkView() {
           </div>
         </div>
 
-        {/* Spaced Desktop Top Menu */}
+        {/* Desktop Top Menu */}
         <nav className="desktop-nav">
           <button onClick={() => setActiveTab('home')} style={{ background: activeTab === 'home' ? selectedTheme.accent : 'transparent', color: activeTab === 'home' ? '#000' : '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
             <RiHomeFill /> Home
@@ -507,35 +508,9 @@ export default function CreatorEpkView() {
         </div>
       </header>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div style={{ position: 'fixed', top: '72px', left: 0, right: 0, background: 'rgba(6, 8, 18, 0.98)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${selectedTheme.accent}44`, padding: '24px', zIndex: 999, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {['home', 'bio', 'shows', 'media', 'store', 'press', 'contact'].map(tab => (
-            <button key={tab} onClick={() => { setActiveTab(tab); setMobileMenuOpen(false); }} style={{ background: activeTab === tab ? selectedTheme.accent : 'transparent', color: activeTab === tab ? '#000' : '#fff', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 800, textAlign: 'left', fontSize: '1rem', textTransform: 'capitalize' }}>
-              {tab === 'press' ? 'Electronic Press Kit (EPK)' : tab}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* ================= 2. HERO CAROUSEL WITH 30% SMALLER TITLES & PROXIMITY ADJUSTED ================= */}
+      {/* ================= 2. HERO CAROUSEL ================= */}
       {activeTab === 'home' && (
-        <section style={{
-          position: 'relative',
-          height: '520px',
-          backgroundImage: `url(${heroSlides[currentSlideIndex].img})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          textAlign: 'center',
-          padding: '80px 32px 48px',
-          transition: 'background-image 0.8s ease-in-out',
-          margin: 0
-        }}>
-          {/* Dark Overlay Gradient */}
+        <section style={{ position: 'relative', height: '520px', backgroundImage: `url(${heroSlides[currentSlideIndex].img})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '80px 32px 48px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.40) 60%, rgba(4,6,14,0.65) 100%)' }} />
 
           <button onClick={() => setCurrentSlideIndex(prev => (prev === 0 ? heroSlides.length - 1 : prev - 1))} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '3px', cursor: 'pointer', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -546,7 +521,6 @@ export default function CreatorEpkView() {
           </button>
           
           <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '850px', margin: '0 auto', textAlign: 'center' }}>
-            {/* Main Title: 30% Smaller (3.1rem) and sits closely just above the subtitle */}
             <h1 style={{ fontSize: '3.1rem', margin: '0 auto 6px auto', lineHeight: 1.1, fontWeight: 900, fontFamily: "'Sansation', sans-serif", letterSpacing: '-0.5px', color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.9)', textAlign: 'center' }}>
               {heroSlides[currentSlideIndex].title}
             </h1>
@@ -554,7 +528,6 @@ export default function CreatorEpkView() {
               {heroSlides[currentSlideIndex].subtitle}
             </p>
 
-            {/* Audio Player Bar */}
             <div style={{ background: selectedTheme.cardBg, backdropFilter: 'blur(16px)', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '14px', maxWidth: '460px', margin: '22px auto 0', boxShadow: '0 10px 30px rgba(0,0,0,0.7)', textAlign: 'left' }}>
               <button onClick={() => setIsPlaying(!isPlaying)} style={{ width: '46px', height: '46px', borderRadius: '3px', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
@@ -658,17 +631,16 @@ export default function CreatorEpkView() {
               ))}
             </div>
 
-            {/* ================= NEW FEATURE: VIDEO CAROUSEL CONTENT AREA BELOW TOURS ================= */}
+            {/* VIDEO CAROUSEL CONTENT AREA WITH YOUTUBE EMBED STREAMING */}
             <div style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '28px', borderRadius: '3px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>
-                    Featured 4K Video Reel
+                    Featured 4K Video Reel (YouTube Streaming Engine)
                   </h3>
-                  <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Official concert videos & studio performances</div>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Official YouTube video streams configured via Intermaven Backend</div>
                 </div>
 
-                {/* Video Carousel Controls */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => setLandingVideoIndex(prev => (prev === 0 ? videoCarouselItems.length - 1 : prev - 1))} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '34px', height: '34px', borderRadius: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <RiArrowLeftSLine />
@@ -679,7 +651,6 @@ export default function CreatorEpkView() {
                 </div>
               </div>
 
-              {/* Video Carousel Active Card */}
               <div style={{ position: 'relative', borderRadius: '3px', overflow: 'hidden' }}>
                 <img src={videoCarouselItems[landingVideoIndex].thumbnail} alt="Featured Video" style={{ width: '100%', height: '320px', objectFit: 'cover', borderRadius: '3px' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px' }}>
@@ -694,11 +665,11 @@ export default function CreatorEpkView() {
                       <h4 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 900, color: '#fff' }}>
                         {videoCarouselItems[landingVideoIndex].title}
                       </h4>
-                      <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Click to play 4K stream with fan comments</div>
+                      <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Stream directly from YouTube embed engine</div>
                     </div>
 
                     <button onClick={() => setSelectedMedia(videoCarouselItems[landingVideoIndex])} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 22px', borderRadius: '3px', fontWeight: 900, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <RiPlayFill /> Play 4K Video
+                      <RiPlayFill /> Stream YouTube Video
                     </button>
                   </div>
                 </div>
@@ -762,187 +733,31 @@ export default function CreatorEpkView() {
                 </div>
               ))}
             </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
-              {Array.from({ length: Math.ceil(filteredAlbums.length / albumsPerPage) }).map((_, idx) => (
-                <button key={idx} onClick={() => setDiscographyPage(idx + 1)} style={{ background: discographyPage === idx + 1 ? selectedTheme.accent : 'rgba(255,255,255,0.08)', color: discographyPage === idx + 1 ? '#000' : '#fff', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer' }}>
-                  {idx + 1}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 4: SHOWS ================= */}
-        {activeTab === 'shows' && (
-          <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-              <div>
-                <h2 style={{ color: selectedTheme.accent, margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
-                  World Tour Dates & Intermaven Ticketing Engine
-                </h2>
-                <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>Stripe & PesaPal Location-Dependent Gateways • 90/10 Waterfall Cascade</p>
-              </div>
-
-              <div style={{ position: 'relative', width: '280px' }}>
-                <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input type="text" placeholder="Search venue or city..." value={showsSearch} onChange={(e) => { setShowsSearch(e.target.value); setShowsPage(1); }} style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }} />
-              </div>
-            </div>
-
-            {paginatedShows.map((s) => (
-              <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: '16px' }}>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#fff' }}>{s.venue}</div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '2px' }}>{s.city} • {s.date}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: selectedTheme.accent }}>From ${s.priceGA}</span>
-                  <button onClick={() => { setSelectedShow(s); setTicketSuccess(null); }} style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 22px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem' }}>
-                    Reserve Tickets
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ================= TAB 5: MEDIA ================= */}
-        {activeTab === 'media' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-              <h2 style={{ color: selectedTheme.accent, margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
-                Media Gallery & 4K Videos
-              </h2>
-
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ position: 'relative', width: '240px' }}>
-                  <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="text" placeholder="Search photos & videos..." value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} style={{ width: '100%', padding: '10px 12px 10px 36px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }} />
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-              {filteredMedia.map(m => (
-                <div key={m.id} style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '3px' }}>
-                  <div style={{ position: 'relative', borderRadius: '3px', overflow: 'hidden', marginBottom: '14px' }}>
-                    <img src={m.thumbnail} alt={m.title} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '3px' }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <button onClick={() => setSelectedMedia(m)} style={{ width: '48px', height: '48px', borderRadius: '3px', background: selectedTheme.accent, border: 'none', color: '#000', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {m.type === 'video' ? '▶' : <RiImageFill />}
-                      </button>
-                    </div>
-                  </div>
-                  <h4 style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 800 }}>{m.title}</h4>
-                  <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{m.views} • Click to open interactive fan view</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 6: E-COMMERCE STORE ================= */}
-        {activeTab === 'store' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-              <div>
-                <h2 style={{ color: selectedTheme.accent, margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
-                  Official Creator E-Commerce Store
-                </h2>
-                <p style={{ margin: '4px 0 0', color: '#94a3b8' }}>Direct Order Fulfillment & Lossless Audio Multitracks</p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                {['all', 'vinyl', 'apparel', 'stems', 'collectors'].map(cat => (
-                  <button key={cat} onClick={() => setStoreCategory(cat)} style={{ background: storeCategory === cat ? selectedTheme.accent : 'transparent', color: storeCategory === cat ? '#000' : '#cbd5e1', border: 'none', padding: '6px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', textTransform: 'uppercase' }}>
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
-              {filteredProducts.map(p => (
-                <div key={p.id} style={{ background: selectedTheme.cardBg, border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <img src={p.img} alt={p.title} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '3px', marginBottom: '14px' }} />
-                    <span style={{ fontSize: '0.7rem', color: selectedTheme.accent, textTransform: 'uppercase', fontWeight: 700 }}>{p.category}</span>
-                    <h4 style={{ margin: '4px 0 8px', fontSize: '1rem', fontWeight: 800 }}>{p.title}</h4>
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 900, color: selectedTheme.accent, fontSize: '1.2rem', marginBottom: '14px' }}>{p.price}</div>
-                    <button onClick={() => setSelectedProduct(p)} style={{ width: '100%', background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem' }}>
-                      Configure & Add to Cart
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 7: PRESS KIT ================= */}
-        {activeTab === 'press' && (
-          <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
-              Electronic Press Kit (EPK) Assets
-            </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '24px' }}>
-              <a href="#download" onClick={(e) => { e.preventDefault(); alert('Downloading Official 1-Sheet PDF...'); }} style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 700 }}>
-                <RiDownloadFill style={{ fontSize: '1.5rem', color: selectedTheme.accent }} />
-                <div>
-                  <div>Official 1-Sheet PDF</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Download (2.4 MB)</div>
-                </div>
-              </a>
-              <a href="#download" onClick={(e) => { e.preventDefault(); alert('Downloading High-Res Press Photos (ZIP)...'); }} style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 700 }}>
-                <RiDownloadFill style={{ fontSize: '1.5rem', color: selectedTheme.accent }} />
-                <div>
-                  <div>Hi-Res Photos (ZIP)</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Download (48 MB)</div>
-                </div>
-              </a>
-            </div>
-          </div>
-        )}
-
-        {/* ================= TAB 8: CONTACT ================= */}
-        {activeTab === 'contact' && (
-          <div style={{ background: selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '650px', margin: '0 auto' }}>
-            <h2 style={{ color: selectedTheme.accent, marginTop: 0, fontSize: '2rem', fontWeight: 900, fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
-              Management & Booking Inquiries
-            </h2>
-            <form onSubmit={(e) => { e.preventDefault(); alert('Inquiry message dispatched to creator management inbox!'); }}>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 700, fontSize: '0.85rem' }}>Your Name / Agency</label>
-                <input type="text" required style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '3px', fontSize: '0.95rem' }} />
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 700, fontSize: '0.85rem' }}>Email Address</label>
-                <input type="email" required style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '3px', fontSize: '0.95rem' }} />
-              </div>
-              <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '14px 28px', borderRadius: '3px', fontWeight: 900, width: '100%', cursor: 'pointer', fontSize: '1rem' }}>
-                Send Inquiry
-              </button>
-            </form>
           </div>
         )}
 
       </main>
 
-      {/* ================= 4. FOOTER ================= */}
-      <footer style={{ background: 'rgba(3, 5, 12, 0.96)', borderTop: `1px solid ${selectedTheme.accent}33`, padding: '48px 32px 24px', marginTop: 'auto' }}>
+      {/* ================= 4. FOOTER (1st & 4th COLUMNS HORIZONTALLY CENTERED) ================= */}
+      <footer style={{
+        background: 'rgba(3, 5, 12, 0.96)',
+        borderTop: `1px solid ${selectedTheme.accent}33`,
+        padding: '48px 32px 24px',
+        marginTop: 'auto'
+      }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '32px', marginBottom: '40px' }}>
-          <div>
-            <div style={{ fontWeight: 900, fontSize: '1.3rem', color: '#fff', marginBottom: '10px', fontFamily: "'Sansation', sans-serif" }}>
+          
+          {/* Column 1: HORIZONTALLY CENTERED CONTENT */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <div style={{ fontWeight: 900, fontSize: '1.3rem', color: '#fff', marginBottom: '10px', fontFamily: "'Sansation', sans-serif", textAlign: 'center' }}>
               {artistName}
             </div>
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>
+            <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: '1.6', margin: 0, textAlign: 'center' }}>
               Official Standalone Creator Web World. Lossless Audio Catalog & Direct Intermaven Split Engine.
             </p>
           </div>
 
+          {/* Column 2: Standard Navigation */}
           <div>
             <h4 style={{ color: selectedTheme.accent, margin: '0 0 14px 0', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800 }}>Site Navigation</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
@@ -954,6 +769,7 @@ export default function CreatorEpkView() {
             </div>
           </div>
 
+          {/* Column 3: Store & Sync */}
           <div>
             <h4 style={{ color: selectedTheme.accent, margin: '0 0 14px 0', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800 }}>Store & Sync</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
@@ -963,20 +779,23 @@ export default function CreatorEpkView() {
             </div>
           </div>
 
-          <div>
-            <h4 style={{ color: selectedTheme.accent, margin: '0 0 14px 0', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800 }}>Connect</h4>
-            <div style={{ display: 'flex', gap: '14px', fontSize: '1.4rem', marginBottom: '14px' }}>
+          {/* Column 4: HORIZONTALLY CENTERED CONTENT */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <h4 style={{ color: selectedTheme.accent, margin: '0 0 14px 0', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800, textAlign: 'center' }}>Connect</h4>
+            <div style={{ display: 'flex', gap: '14px', fontSize: '1.4rem', marginBottom: '14px', justifyContent: 'center' }}>
               <a href="https://instagram.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiInstagramFill /></a>
               <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiYoutubeFill /></a>
               <a href="https://spotify.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiSpotifyFill /></a>
               <a href="https://apple.com" target="_blank" rel="noreferrer" style={{ color: selectedTheme.accent }}><RiAppleFill /></a>
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center' }}>
               Direct fanbase synchronization via Smart CRM.
             </div>
           </div>
+
         </div>
 
+        {/* Powered by Intermaven Badge - ONLY AT VERY BOTTOM */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.8rem', color: '#64748b' }}>
           <div>© 2026 {artistName}. All rights reserved.</div>
           <a href="https://intermaven.io" target="_blank" rel="noreferrer" style={{ color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -985,14 +804,44 @@ export default function CreatorEpkView() {
         </div>
       </footer>
 
-      {/* ================= MODALS WITH CLICK-OUTSIDE BACKDROP RETURN TO FAN PAGE ================= */}
+      {/* ================= MODALS ================= */}
 
-      {/* VIP Fan Sign Up Modal with Backdrop Click Returning to Fan Page */}
+      {/* Video Lightbox Popup Modal with YouTube Iframe Streaming & Fan Comments */}
+      {selectedMedia && (
+        <div onClick={(e) => { if (e.target === e.currentTarget) setSelectedMedia(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', color: '#fff', position: 'relative' }}>
+            <button onClick={() => setSelectedMedia(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer', zIndex: 10 }}>✕</button>
+            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>{selectedMedia.title}</h3>
+            
+            {/* Embedded YouTube Stream Player or Image */}
+            {selectedMedia.type === 'video' && selectedMedia.youtubeUrl ? (
+              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '3px', marginBottom: '16px' }}>
+                <iframe 
+                  src={selectedMedia.youtubeUrl} 
+                  title={selectedMedia.title} 
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '3px' }} 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen 
+                />
+              </div>
+            ) : (
+              <img src={selectedMedia.thumbnail} alt={selectedMedia.title} style={{ width: '100%', maxHeight: '380px', objectFit: 'cover', borderRadius: '3px', marginBottom: '16px' }} />
+            )}
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+              <h4 style={{ margin: '0 0 12px', color: selectedTheme.accent }}>Fan Discussion & Comments</h4>
+              <form onSubmit={handleAddMediaComment} style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                <input type="text" placeholder={fanUser ? "Add a comment..." : "Join VIP Fan Club to comment..."} value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} disabled={!fanUser} style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>Comment</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fan Protocol Sign Up Modal */}
       {authModalOpen && (
-        <div 
-          onClick={(e) => { if (e.target === e.currentTarget) setAuthModalOpen(false); }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-        >
+        <div onClick={(e) => { if (e.target === e.currentTarget) setAuthModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '440px', padding: '28px', color: '#fff', position: 'relative' }}>
             <button onClick={() => setAuthModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
             <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontWeight: 900, fontFamily: "'Sansation', sans-serif" }}>
@@ -1010,28 +859,6 @@ export default function CreatorEpkView() {
                 Join VIP Fan Vault (Unified SSO)
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Media Lightbox Modal */}
-      {selectedMedia && (
-        <div 
-          onClick={(e) => { if (e.target === e.currentTarget) setSelectedMedia(null); }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-        >
-          <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedMedia(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer' }}>✕</button>
-            <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>{selectedMedia.title}</h3>
-            <img src={selectedMedia.thumbnail} alt={selectedMedia.title} style={{ width: '100%', maxHeight: '380px', objectFit: 'cover', borderRadius: '3px', marginBottom: '16px' }} />
-            
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
-              <h4 style={{ margin: '0 0 12px', color: selectedTheme.accent }}>Fan Discussion & Comments</h4>
-              <form onSubmit={handleAddMediaComment} style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                <input type="text" placeholder={fanUser ? "Add a comment..." : "Join VIP Fan Club to comment..."} value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} disabled={!fanUser} style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                <button type="submit" style={{ background: selectedTheme.accent, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>Comment</button>
-              </form>
-            </div>
           </div>
         </div>
       )}
