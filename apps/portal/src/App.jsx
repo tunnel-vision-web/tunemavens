@@ -456,6 +456,8 @@ function DashboardView({
         return <CrmPanel />;
       case 'cms':
         return <CmsPanel />;
+      case 'epk-builder':
+        return <EpkBuilderIframePanel />;
       case 'app-marketplace':
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       default:
@@ -591,15 +593,15 @@ function DashboardView({
                     <li key={item.id}>
                       <button 
                         onClick={() => {
-                          const isInterApp = ['crm', 'cms'].includes(item.id);
+                          const isInterApp = ['crm', 'cms', 'epk-builder'].includes(item.id);
                           if (isInterApp) {
-                            const targetUrl = getIntermavenUrl(item.id === 'crm' ? 'intermaven-smart-crm' : 'cms');
+                            const targetUrl = getIntermavenUrl(item.id === 'crm' ? 'intermaven-smart-crm' : item.id === 'cms' ? 'cms' : 'epk-builder');
                             setActiveModalApp({ url: targetUrl, title: item.label });
                           } else {
                             setActiveTab(item.id);
                           }
                         }} 
-                        className={`dashboard-nav-item ${activeTab === item.id && !['crm', 'cms'].includes(item.id) ? 'active' : ''}`}
+                        className={`dashboard-nav-item ${activeTab === item.id && !['crm', 'cms', 'epk-builder'].includes(item.id) ? 'active' : ''}`}
                         title={item.label}
                       >
                         <Icon size={16} />
@@ -5814,6 +5816,27 @@ function CmsPanel() {
       <iframe
         src={targetUrl}
         title="Intermaven Mother CMS"
+        style={{
+          width: '100%',
+          height: '100%',
+          border: 'none',
+          background: '#0f172a'
+        }}
+        allow="clipboard-write"
+      />
+    </div>
+  );
+}
+
+// ================= Track D: EPK Builder Panel (Intermaven.io Protocol) =================
+function EpkBuilderIframePanel() {
+  const targetUrl = getIntermavenUrl('epk-builder');
+
+  return (
+    <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 180px)', padding: 0, overflow: 'hidden', background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
+      <iframe
+        src={targetUrl}
+        title="Intermaven EPK Builder"
         style={{
           width: '100%',
           height: '100%',

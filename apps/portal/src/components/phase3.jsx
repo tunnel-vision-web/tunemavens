@@ -1369,7 +1369,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
               <button
                 type="button"
                 onClick={() => {
-                  if (a.slug && a.slug.startsWith('intermaven-')) {
+                  if (a.slug && (a.slug.startsWith('intermaven-') || a.slug === 'epk-builder')) {
                     const targetUrl = getIntermavenUrl(a.slug);
                     if (onOpenAppModal) {
                       onOpenAppModal(targetUrl, a.name);
