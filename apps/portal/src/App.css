@@ -26,13 +26,14 @@
 
 .nav-inner-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
+  box-sizing: border-box;
 }
 
 .logo-image {
@@ -116,7 +117,7 @@
 }
 
 .dropdown-link:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(16, 22, 46, 0.88);
   color: var(--cyan);
 }
 
@@ -385,7 +386,7 @@
   transform: translateY(-50%) translateX(-50%) translateX(120px);
   z-index: 4;
   width: 100%;
-  max-width: min(1200px, 100% - 48px);
+  max-width: min(1280px, 100% - 48px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -401,7 +402,7 @@
   width: 44px;
   height: 44px;
   border-radius: var(--r);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(6, 8, 19, 0.5);
   color: #fff;
   cursor: pointer;
@@ -424,7 +425,7 @@
   transform: translateX(-50%) translateX(120px);
   z-index: 4;
   width: 100%;
-  max-width: min(1200px, 100% - 48px);
+  max-width: min(1280px, 100% - 48px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -538,7 +539,7 @@
   position: relative;
   border-radius: var(--r);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .flagship-image {
@@ -690,8 +691,8 @@
 }
 
 .arch-node {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(14, 20, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--r);
   padding: 16px;
   display: flex;
@@ -855,8 +856,8 @@
 
 .form-control {
   width: 100%;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 20, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--r);
   padding: 12px 16px;
   color: var(--tx);
@@ -891,11 +892,12 @@
 
 .footer-inner-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .footer-grid {
@@ -947,8 +949,8 @@
 .fbadge {
   font-size: 10px;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(16, 22, 46, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 4px 10px;
   border-radius: var(--r);
   color: var(--tx);
@@ -1072,7 +1074,7 @@
   flex: 1;
   height: 38px;
   background: rgba(6, 8, 19, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   color: #fff;
   padding: 0 16px;
@@ -1321,8 +1323,8 @@
   display: inline-flex; 
   align-items: center; 
   gap: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 24, 50, 0.90);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--tx);
   padding: 8px 12px; 
   border-radius: var(--r);
@@ -1352,7 +1354,7 @@
   right: 0;
   width: 280px; 
   background: var(--bg2);
-  border: 1px solid rgba(255, 255, 255, 0.08); 
+  border: 1px solid rgba(255, 255, 255, 0.15); 
   border-radius: var(--r);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
   padding: 16px; 
@@ -1382,7 +1384,7 @@
   border-radius: var(--r);
   background: var(--bg); 
   color: var(--tx);
-  border: 1px solid rgba(255, 255, 255, 0.08); 
+  border: 1px solid rgba(255, 255, 255, 0.15); 
   font-size: 13px; 
   cursor: pointer;
   appearance: none; 
@@ -1551,8 +1553,8 @@
   position: relative;
   width: 100%;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(14, 20, 42, 0.88);
   border-radius: var(--r);
   margin-top: 30px;
 }
@@ -1569,7 +1571,7 @@
   aspect-ratio: 1 / 1;
   border-radius: var(--r);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .persona-carousel-image {
@@ -1618,7 +1620,7 @@
   flex-direction: column;
   gap: 10px;
   background: rgba(6, 8, 19, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--r);
   padding: 16px;
 }
@@ -1784,17 +1786,17 @@
 }
 
 .role-card {
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 4px;
   padding: 16px 12px;
-  background: rgba(255, 255, 255, 0.01);
+  background: rgba(14, 20, 42, 0.88);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
 }
 
 .role-card:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(14, 20, 42, 0.88);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
@@ -1851,8 +1853,8 @@
 }
 
 .ai-chat-bubble.ai {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(16, 22, 46, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: #fff;
   align-self: flex-start;
   border-bottom-left-radius: 2px;
@@ -1880,8 +1882,8 @@
   gap: 10px;
   width: 100%;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 20, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   color: #fff;
   font-size: 13px;
@@ -1904,8 +1906,8 @@
 }
 
 .porting-card {
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(14, 20, 42, 0.88);
   border-radius: 4px;
   padding: 10px;
   cursor: pointer;
@@ -1914,7 +1916,7 @@
 }
 
 .porting-card:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(14, 20, 42, 0.88);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
@@ -1946,7 +1948,7 @@
   padding: 10px 14px;
   font-size: 13px;
   background: rgba(6, 8, 19, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   color: #fff;
   display: flex;
@@ -1986,7 +1988,7 @@
 }
 
 .multiselect-option:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(16, 22, 46, 0.88);
 }
 
 .multiselect-checkbox {
@@ -2186,7 +2188,7 @@
 
 .dashboard-nav-item:hover, .dashboard-nav-item.active {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(18, 24, 50, 0.90);
   box-shadow: none;
 }
 
@@ -2524,7 +2526,7 @@
   /* Flat color background — no gradients. Uses a slightly lightened slate
      so the accent bar at the top does the visual heavy lifting. */
   background: #131a2e;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   overflow: hidden;
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               border-color 0.25s ease,
@@ -2558,7 +2560,7 @@
   height: 52px;
   border-radius: 3px;
   background: #0b0f1e;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--app-accent);
   display: flex;
   align-items: center;
@@ -2629,7 +2631,7 @@
   gap: 10px;
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(11, 15, 30, 0.9);
   color: #f1f5f9;
   cursor: pointer;
@@ -2681,8 +2683,8 @@
   gap: 5px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(14, 20, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   font-size: 10px;
   color: #64748b;
   letter-spacing: 0.5px;
@@ -2724,7 +2726,7 @@
 
 .dashboard-card {
   background: rgba(17, 24, 39, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
@@ -2795,7 +2797,7 @@
 }
 
 .dashboard-table tr:hover td {
-  background: rgba(255, 255, 255, 0.01);
+  background: rgba(14, 20, 42, 0.88);
   color: #ffffff;
 }
 
@@ -2859,7 +2861,7 @@
   background: rgba(6, 8, 19, 0.55);
   backdrop-filter: blur(10px);
   padding: 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 3px;
 }
 .landing-back-overlay:hover {
@@ -3623,9 +3625,11 @@
   display: flex;
   align-items: flex-start;
   gap: 40px;
-  max-width: 1400px;
+  max-width: 1280px;
+  width: 100%;
   margin: 48px auto 0;
   padding: 0 24px;
+  box-sizing: border-box;
 }
 
 .landing-content-main {
@@ -3655,9 +3659,11 @@
   display: flex;
   align-items: flex-start;
   gap: 40px;
-  max-width: 1400px;
+  max-width: 1280px;
+  width: 100%;
   margin: 48px auto 0;
   padding: 0 24px;
+  box-sizing: border-box;
 }
 
 .landing-content-main {
@@ -3681,7 +3687,7 @@
   height: 640px;
   z-index: 5;
   background: linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.008) 100%), rgba(11, 15, 30, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--r);
   backdrop-filter: blur(14px);
   overflow: hidden;
@@ -3870,7 +3876,7 @@
   width: 44px;
   height: 44px;
   border-radius: var(--r);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(6, 8, 19, 0.5);
   color: #fff;
   cursor: pointer;

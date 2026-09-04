@@ -133,3 +133,29 @@ def me(current_user: dict = Depends(get_current_user)):
 def logout(response: Response):
     response.delete_cookie(key="access_token", domain=COOKIE_DOMAIN, path="/")
     return {"ok": True}
+
+
+@router.post("/demo", response_model=AuthResponse)
+def demo_login(response: Response):
+    """Sandbox/demo login helper to issue a valid JWT for testing."""
+    user = db.users.find_one({"email": "creator_member@tunemavens.com"})
+    if not user:
+        user = db.users.find_one({"role": "creator"})
+    if not user:
+        doc = User(
+            email="creator_member@tunemavens.com",
+            name="Aisha Okoro",
+            role="creator",
+            roles=["creator"],
+            brand_name="Okoro Sounds",
+            country="KE",
+            credits=600,
+            apps=["epk-builder", "catalog-porting"]
+        ).to_mongo()
+        res = db.users.insert_one(doc)
+        doc["_id"] = res.inserted_id
+        user = doc
+
+    token = create_access_token(sub=str(user["_id"]))
+    _set_cookie(response, token)
+    return AuthResponse(user=_to_public(user), access_token=token)

@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { RiCloseFill, RiCheckboxCircleFill, RiArrowDownSFill, RiArrowLeftFill, RiArrowRightFill, RiResetLeftFill, RiSendPlaneFill, RiPenNibFill, RiLinksFill, RiMailFill, RiLockFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDatabase2Fill, RiCoinsFill, RiGroupFill as UsersIcon, RiDiscFill } from 'react-icons/ri'
-import { dealsApi, usersApi, contractsApi } from '../lib/api.js'
+import { dealsApi, usersApi, contractsApi, tokenStore } from '../lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from '../lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'
 import { lookupApp } from '../lib/appCatalog.js'
@@ -30,7 +30,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    if (dismissed) return;
+    if (dismissed || !tokenStore.get()) return;
     let cancelled = false;
     Promise.all([
       dealsApi.publishing.list({ active_only: true }).catch(() => []),
@@ -1259,6 +1259,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!tokenStore.get()) return;
     usersApi.listMyApps()
       .then((apps) => setActivated(Array.isArray(apps) ? apps : []))
       .catch(() => {});
@@ -1305,6 +1306,10 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
       setActivated(apps);
       if (onUpdateUser && sessionUser) {
         onUpdateUser({ ...sessionUser, apps });
+      }
+      const catItem = visible.find((a) => a.slug === slug);
+      if (catItem && catItem.tab && setActiveTab) {
+        setActiveTab(catItem.tab);
       }
     } catch (e) {
       setError(e.data?.detail || e.message || 'Could not activate app');
@@ -1369,7 +1374,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
               <button
                 type="button"
                 onClick={() => {
-                  if (a.slug && (a.slug.startsWith('intermaven-') || a.slug === 'epk-builder')) {
+                  if (a.slug && a.slug.startsWith('intermaven-')) {
                     const targetUrl = getIntermavenUrl(a.slug);
                     if (onOpenAppModal) {
                       onOpenAppModal(targetUrl, a.name);

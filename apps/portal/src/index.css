@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg: #060813;
-  --bg2: #0c0f20;
-  --bg3: #13172e;
-  --bg4: #1c2242;
-  --b1: rgba(255, 255, 255, 0.05);
-  --b2: rgba(255, 255, 255, 0.1);
-  --b3: rgba(255, 255, 255, 0.18);
+  --bg: #050712;
+  --bg2: #0e142a;
+  --bg3: #161e3c;
+  --bg4: #202950;
+  --b1: rgba(255, 255, 255, 0.14);
+  --b2: rgba(255, 255, 255, 0.22);
+  --b3: rgba(255, 255, 255, 0.35);
   --tx: #f8fafc;
-  --mu: #94a3b8;
-  --mu2: #475569;
+  --mu: #cbd5e1;
+  --mu2: #64748b;
   --cyan: #22d3ee;
   --blue: #2563eb;
   --purple: #8b5cf6;
@@ -19,9 +19,9 @@
   --gr: #10b981;
   --am: #f59e0b;
   --rd: #ef4444;
-  --ca: rgba(255, 255, 255, 0.04);
-  --ch: rgba(255, 255, 255, 0.08);
-  --r: 4px;
+  --ca: rgba(14, 20, 42, 0.88);
+  --ch: rgba(22, 30, 60, 0.95);
+  --r: 6px;
 }
 
 *, *::before, *::after {
@@ -73,25 +73,29 @@ a {
 
 /* Glassmorphism helpers */
 .glass-panel {
-  background: rgba(12, 15, 32, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(14, 20, 42, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--r);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(34, 211, 238, 0.25);
-  background: rgba(12, 15, 32, 0.7);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(20, 28, 56, 0.95);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(34, 211, 238, 0.15);
+  transform: translateY(-2px);
   transition: all 0.3s ease;
 }
 
 /* Page alignment helpers */
 .container {
-  max-width: 1200px;
+  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 24px;
+  box-sizing: border-box;
 }
 
 .text-center {

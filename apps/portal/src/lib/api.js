@@ -14,9 +14,22 @@ const BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 // cross-subdomain cookie isn't reachable, e.g. local dev across ports).
 const TOKEN_KEY = 'tunemavens_token';
 export const tokenStore = {
-  get: () => sessionStorage.getItem(TOKEN_KEY),
-  set: (t) => sessionStorage.setItem(TOKEN_KEY, t),
-  clear: () => sessionStorage.removeItem(TOKEN_KEY),
+  get: () => 
+    sessionStorage.getItem(TOKEN_KEY) || 
+    localStorage.getItem(TOKEN_KEY) || 
+    localStorage.getItem('token') || 
+    sessionStorage.getItem('token') || '',
+  set: (t) => {
+    if (!t) return;
+    sessionStorage.setItem(TOKEN_KEY, t);
+    localStorage.setItem(TOKEN_KEY, t);
+  },
+  clear: () => {
+    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem('token');
+    localStorage.removeItem('token');
+  },
 };
 
 async function request(path, { method = 'GET', body, token } = {}) {
@@ -33,6 +46,13 @@ async function request(path, { method = 'GET', body, token } = {}) {
     credentials: 'include',
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+
+  if (res.status === 401) {
+    if (effectiveToken && path !== '/api/auth/login' && path !== '/api/auth/register') {
+      tokenStore.clear();
+      sessionStorage.removeItem('tunemavens_session');
+    }
+  }
 
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
@@ -60,6 +80,7 @@ async function request(path, { method = 'GET', body, token } = {}) {
 export const authApi = {
   register: (payload) => request('/api/auth/register', { method: 'POST', body: payload }),
   login: (payload) => request('/api/auth/login', { method: 'POST', body: payload }),
+  demo: () => request('/api/auth/demo', { method: 'POST' }),
   me: (token) => request('/api/auth/me', { token }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
 };

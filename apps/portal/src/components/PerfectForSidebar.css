@@ -40,7 +40,6 @@
   display: flex;
   gap: 20px;
   width: max-content;
-  /* Smooth horizontal animation. Speed reduced by 30% */
   animation: pf-horizontal-scroll 45s linear infinite;
   will-change: transform;
 }
@@ -50,7 +49,6 @@
   animation-play-state: paused;
 }
 
-/* Keyframes for seamless horizontal loop */
 @keyframes pf-horizontal-scroll {
   0% {
     transform: translateX(0);
@@ -70,19 +68,21 @@
   justify-content: center;
   padding: 18px 12px;
   border-radius: var(--r);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(14, 20, 42, 0.88);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   text-align: center;
   gap: 6px;
   cursor: pointer;
-  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   text-decoration: none;
 }
 
 .pf-carousel-tile:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(22, 30, 60, 0.95);
   border-color: var(--pf-accent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(34, 211, 238, 0.2);
   transform: translateY(-4px) scale(1.02);
 }
 
@@ -100,7 +100,6 @@
   color: rgba(6, 8, 19, 0.7) !important;
 }
 
-/* Transparent logo box */
 .pf-tile-logo {
   background: transparent !important;
   border: none !important;
@@ -117,7 +116,6 @@
   transform: scale(1.08);
 }
 
-/* Image styles */
 .pf-tile-logo img {
   display: block;
   height: 24px;
@@ -142,7 +140,6 @@
   color: var(--mu);
 }
 
-/* Swapped logo container in navbar */
 .nav-logo-container-role {
   display: flex !important;
   flex-direction: column !important;
@@ -154,7 +151,6 @@
   display: block !important;
 }
 
-/* Back to TuneMavens button */
 .back-to-main {
   font-size: 12px !important;
   font-weight: 700 !important;
@@ -163,20 +159,19 @@
   align-items: center !important;
   gap: 6px !important;
   text-decoration: none !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(14, 20, 42, 0.88) !important;
   padding: 6px 14px !important;
   border-radius: 20px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   transition: background 0.3s ease, border-color 0.3s ease, transform 0.2s ease !important;
 }
 
 .back-to-main:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(22, 30, 60, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
   transform: translateX(-2px) !important;
 }
 
-/* Perfect For Page grid & cards */
 .pf-grid-page {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
@@ -190,19 +185,20 @@
   align-items: center !important;
   text-align: center !important;
   padding: 32px 24px !important;
-  border-radius: 3px !important; /* Changed to 3px */
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  border-radius: 6px !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
   position: relative !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(14, 20, 42, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   backdrop-filter: blur(12px) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
 }
 
 .pf-card-page:hover {
   transform: translateY(-6px) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(22, 30, 60, 0.95) !important;
   border-color: var(--pf-accent) !important;
-  box-shadow: none !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(34, 211, 238, 0.2) !important;
 }
 
 .pf-card-logo-container {
@@ -214,7 +210,7 @@
 }
 
 .pf-card-logo-img {
-  height: 36px !important; /* Prominent size on card */
+  height: 36px !important;
   width: auto !important;
   display: block !important;
 }
@@ -247,8 +243,8 @@
   align-items: center !important;
   justify-content: center !important;
   padding: 10px 20px !important;
-  border-radius: 3px !important; /* Changed to 3px */
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
   font-size: 13px !important;
   font-weight: 700 !important;
@@ -263,15 +259,14 @@
   box-shadow: 0 0 15px var(--pf-accent) !important;
 }
 
-/* Modal overlay styling */
 .pf-modal-overlay {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(6, 8, 19, 0.9) !important;
-  backdrop-filter: blur(10px) !important;
+  background: rgba(4, 6, 16, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -283,35 +278,9 @@
   position: relative !important;
   max-width: 90% !important;
   max-height: 90% !important;
-  background: #0a0f1d !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 3px !important; /* 3px border radius */
-  padding: 8px !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
-}
-
-.pf-modal-close {
-  position: absolute !important;
-  top: -40px !important;
-  right: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  color: #fff !important;
-  font-size: 32px !important;
-  cursor: pointer !important;
-  transition: color 0.2s ease !important;
-}
-
-.pf-modal-close:hover {
-  color: var(--cyan) !important;
-}
-
-.pf-modal-img {
-  display: block !important;
-  max-width: 100% !important;
-  max-height: 80vh !important;
-  width: auto !important;
-  height: auto !important;
-  border-radius: 3px !important; /* 3px border radius */
-  object-fit: contain !important;
+  background: #0e142a !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7) !important;
 }

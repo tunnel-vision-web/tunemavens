@@ -11,21 +11,32 @@ export default function LoginView({ onLogin }) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setGoogleLoading(true);
-    setTimeout(() => {
-      setGoogleLoading(false);
+    try {
+      // In sandbox/dev, /api/auth/demo mints a valid JWT for the built-in
+      // creator account — no 401/409 noise from login-then-register chains.
+      const res = await authApi.demo();
+      if (res?.access_token) {
+        tokenStore.set(res.access_token);
+        onLogin(res.user || res);
+      } else {
+        onLogin({ email: 'creator_member@tunemavens.com', name: 'Creator Roster Member', role: 'creator', credits: 600 });
+      }
+    } catch {
       onLogin({
-        email: 'googleuser@tunemavens.com',
-        name: 'Aisha Okoro',
+        email: 'creator_member@tunemavens.com',
+        name: 'Creator Roster Member',
         role: 'creator',
         credits: 600,
         plan: 'creator',
         brand_name: 'Okoro Sounds',
         country: 'KE'
       });
+    } finally {
+      setGoogleLoading(false);
       navigate('/dashboard');
-    }, 1200);
+    }
   };
 
   const handleEmailSubmit = async (e) => {
@@ -33,23 +44,52 @@ export default function LoginView({ onLogin }) {
     setErrorMsg('');
     setSubmitting(true);
     try {
+      let loggedInUser = null;
+      let loginErr = null;
       try {
         const { user, access_token } = await authApi.login({ email: emailVal, password: passwordVal });
         tokenStore.set(access_token);
-        onLogin(user);
-      } catch {
-        try {
-          const { user, access_token } = await authApi.register({
-            email: emailVal,
-            password: passwordVal && passwordVal.length >= 8 ? passwordVal : passwordVal + 'xxxxxxxx',
-            name: (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase()),
-            role: 'creator',
-          });
-          tokenStore.set(access_token);
-          onLogin(user);
-        } catch {
+        loggedInUser = user;
+      } catch (err) {
+        loginErr = err;
+      }
+
+      if (!loggedInUser) {
+        // Only attempt registration if login returned 401 (bad creds), not a server error.
+        // If the error isn't 401, it's a server issue — don't try register.
+        // If it IS 401 but the email already exists, register would return 409 —
+        // instead we try demo login for sandbox, or show the appropriate error.
+        if (loginErr?.status === 401) {
+          try {
+            const { user, access_token } = await authApi.register({
+              email: emailVal || 'sandbox@tunemavens.com',
+              password: passwordVal && passwordVal.length >= 8 ? passwordVal : 'SandboxPass123!',
+              name: (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase()),
+              role: 'creator',
+            });
+            tokenStore.set(access_token);
+            loggedInUser = user;
+          } catch (regErr) {
+            // 409 = email already registered — wrong password was entered
+            if (regErr?.status === 409) {
+              setErrorMsg('Wrong password. Please try again.');
+              return;
+            }
+            // Any other register error — use stub session
+            const stubName = (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase());
+            loggedInUser = {
+              email: emailVal || 'sandbox@tunemavens.com',
+              name: stubName,
+              role: 'creator',
+              credits: 600,
+              plan: 'creator',
+              brand_name: `${stubName} Music`,
+              country: 'KE',
+            };
+          }
+        } else {
           const stubName = (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase());
-          onLogin({
+          loggedInUser = {
             email: emailVal || 'sandbox@tunemavens.com',
             name: stubName,
             role: 'creator',
@@ -57,10 +97,14 @@ export default function LoginView({ onLogin }) {
             plan: 'creator',
             brand_name: `${stubName} Music`,
             country: 'KE',
-          });
+          };
         }
       }
-      navigate('/dashboard');
+
+      if (loggedInUser) {
+        onLogin(loggedInUser);
+        navigate('/dashboard');
+      }
     } finally {
       setSubmitting(false);
     }

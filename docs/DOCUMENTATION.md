@@ -732,3 +732,82 @@ Upon every push to `main`, the deployment workflow builds each app target indepe
 - **Platform Parity:** The EPK Builder in TuneMavens is identical to the one on the Intermaven platform. Intermaven serves as the parent ("mother") platform, ensuring that all templates, metadata fields, and media asset associations are synchronized.
 - **Activation Lifecycle:** Creators can activate or deactivate the EPK Builder app dynamically from the **App Marketplace** in the admin panel.
 
+---
+
+## §9.18 — Standalone Creator Web Worlds (EPK) & Multi-Domain Ingress Engine
+
+### 9.18.1 Multi-Domain Subdomain & Custom Ingress
+Creators have the flexibility to publish and host their Standalone Creator Web World across multiple high-traffic ecosystem domains:
+- **Tri-Domain Availability:** The wizard allows simultaneous deployment to:
+  - `{subdomain}.tunemavens.com` (Main Creator Hub)
+  - `{subdomain}.tunestream.co` (Consumer Streaming Portal)
+  - `{subdomain}.syncmavens.com` (Music Supervisor Sync Licensing Hub)
+- **Custom Domains:** Supports mapping a fully custom domain (e.g. `artistname.com`) directly to the creator's EPK container.
+
+### 9.18.2 Site Name, Tagline & Dynamic SEO Indexing
+- **First Step Inputs:** The EPK Wizard captures `siteName` and `tagline` during initial onboarding.
+- **SEO Title Protocol:** Dynamically sets browser `<title>` and OpenGraph tags to `{siteName} | {tagline}`.
+- **Header Display Rules:** If a custom logo image is uploaded, the site name text is hidden to prevent redundancy; if no logo exists, the styled artist/site name appears. Extraneous raw URLs below logos are omitted for clean branding.
+
+### 9.18.3 Multi-Slide Hero Carousel & Contextual AI Generation
+- **Hero Carousel:** Supports up to 6 high-definition hero slides with custom or AI-generated artwork.
+- **3-Line Music Business Hierarchy:**
+  1. `heroTitle1`: Creator / Artist Name.
+  2. `heroTitle2`: Dynamic Tagline / Campaign Headline.
+  3. `heroTitle3`: Standardized Music Business Context (e.g. *100% Pre-Cleared One-Stop Sync Licensing & Master Stems • TuneStream Lossless*).
+- **Context-Aware AI Generation:** AI prompts are tuned to music business roles (Sync Composer, Touring Artist, Indie Label), generating tailored imagery and titles with full upload replacement capabilities.
+- **Hero Animation Modes:**
+  - `anim-synergy`: Multi-phase dynamic stagger matching modern landing animations.
+  - `anim-fade-seq`: Elegant sequential fade-in / fade-out transition between titles and background imagery.
+
+### 9.18.4 Social Account Validation & Sync Check
+- **Supported Networks:** Instagram, YouTube, Spotify, SoundCloud, TikTok, Twitter/X, and Apple Music.
+- **Sync Engine:** Validates usernames and URLs via regular expression checks, displaying live sync status indicators and link health checks.
+
+### 9.18.5 Intermaven Smart CRM Lead Routing
+- **Contact & Booking Forms:** Submissions from the EPK's Booking and Contact modules directly submit to the Intermaven Smart CRM backend (`POST /api/crm/leads`).
+- **Lead Segmentation:** Automatically populates lead type (`booking_inquiry`, `sync_request`, `fan_vault`), capturing contact details, event dates, budgets, and messages for direct follow-up in the admin CRM panel.
+
+---
+
+## §9.19 — Mother-CMS Backend EPK Architecture & Live Studio Subsystem
+
+### 9.19.1 Centralized Backend CMS Endpoints (`backend/routes/cms_router.py`)
+All Creator Web World CMS operations reside in the FastAPI backend:
+- `GET /api/cms/epk/{subdomain}`: Fetches active Mother-CMS layout (`layout_id: epk_{subdomain}`) and version.
+- `POST /api/cms/epk/{subdomain}`: Publishes full EPK layout, increments version, and writes immutable snapshots to `db.cms_layout_history`.
+- `PATCH /api/cms/epk/{subdomain}/sections/{section_id}`: Performs granular section updates (Bio, Hero, Catalog, Shows, Media, Store).
+- `POST /api/cms/epk/bio/generate`: Generates rich HTML narrative content focused on master rights, 24-bit stems, and sonic identity.
+- `GET /api/cms/epk/{subdomain}/history`: Returns the version snapshot audit trail.
+- `POST /api/cms/epk/{subdomain}/rollback/{version}`: Restores any historical snapshot with 1-click execution.
+
+### 9.19.2 Floating Live Mother-CMS Studio (`LiveEpkCmsStudio.jsx`)
+- Provides an overlay drawer for creators to modify any section in real time.
+- Integrated rich text canvas, color pickers, animation toggles, and live rollback selector without disrupting the public view.
+
+---
+
+## §9.20 — Layout & 1280px Container Standards
+
+### 9.20.1 Global Container Standard (`index.css`)
+- `.container` is strictly defined as:
+  ```css
+  .container {
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
+  ```
+- Constrains all content below the hero section across the entire TuneMavens portal, including `PerfectForSidebar` and all interior pages (`Tools`, `Apps`, `Pricing`, `About`, `Help`, `Publishing`, `Distribution`, `Tours`, `Sync`, `Native Apps`).
+
+### 9.20.2 Landing Content Split Grid (`App.css`)
+- `.landing-content-split` enforces `max-width: 1280px; width: 100%; margin: 48px auto 0; padding: 0 24px; box-sizing: border-box;`, ensuring that flagship cards, persona carousels, frustration cards, and CTA banners never stretch past 1280px on ultra-wide screens.
+
+### 9.20.3 Hero Controls & Footer Grid Alignment
+- Hero side navigation arrows (`.sui-arrows`) and bottom indicators (`.sui-bottom`) are bound to `max-width: min(1280px, 100% - 48px)`.
+- Navbar (`.nav-inner-container`) and Footer (`.footer-inner-container`) are locked to `max-width: 1280px; margin: 0 auto; box-sizing: border-box;`.
+- Creator EPK footer and bottom branding bar are bound to `maxWidth: maxContentWidth` (1280px in wide layout), maintaining strict grid harmony across all marketing and creator surfaces.
+
+

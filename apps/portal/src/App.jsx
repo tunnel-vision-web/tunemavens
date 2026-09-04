@@ -104,6 +104,7 @@ import {
 import LoginView from './views/auth/LoginView.jsx'
 import RegisterView from './views/auth/RegisterView.jsx'
 import CreatorEpkView, { EPK_THEMES } from './views/creator/CreatorEpkView.jsx'
+import EpkWizard from './components/EpkWizard.jsx'
 
 
 
@@ -344,7 +345,14 @@ function DashboardView({
   setCreatorEpk
 }) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(() => {
+    const target = sessionStorage.getItem('preferred_dashboard_tab');
+    if (target) {
+      sessionStorage.removeItem('preferred_dashboard_tab');
+      return target;
+    }
+    return 'home';
+  });
   const [userCredits, setUserCredits] = useState(sessionUser?.credits || 600);
   const [payoutBalance, setPayoutBalance] = useState(4235.80);
   const [collapsed, setCollapsed] = useState(false);
@@ -355,7 +363,7 @@ function DashboardView({
   // Fetch onboarding on mount so the OnboardingStripe knows whether the wizard
   // has been completed.
   useEffect(() => {
-    if (!sessionUser) return;
+    if (!sessionUser || !tokenStore.get()) return;
     usersApi.getOnboarding()
       .then((o) => setWizardAnswers(o))
       .catch(() => setWizardAnswers(null));
@@ -363,8 +371,8 @@ function DashboardView({
 
   // Log tab-visit activity signals  -  the recommendation engine uses them.
   useEffect(() => {
-    if (!sessionUser || !activeTab) return;
-    usersApi.logActivity({ kind: 'tab_visit', ref: activeTab });
+    if (!sessionUser || !activeTab || !tokenStore.get()) return;
+    usersApi.logActivity({ kind: 'tab_visit', ref: activeTab }).catch(() => {});
   }, [activeTab, sessionUser?.id]);
 
   useEffect(() => {
@@ -393,14 +401,6 @@ function DashboardView({
             setActiveTab={setActiveTab} 
             tracks={catalogTracks} 
             setTracks={setCatalogTracks} 
-          />
-        );
-      case 'epk-builder':
-        return (
-          <EPKBuilderPanel 
-            tracks={catalogTracks} 
-            epk={creatorEpk} 
-            setEpk={setCreatorEpk} 
           />
         );
       case 'splits':
@@ -457,7 +457,7 @@ function DashboardView({
       case 'cms':
         return <CmsPanel />;
       case 'epk-builder':
-        return <EpkBuilderIframePanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} />;
+        return <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} sessionUser={sessionUser} />;
       case 'app-marketplace':
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       default:
@@ -593,15 +593,15 @@ function DashboardView({
                     <li key={item.id}>
                       <button 
                         onClick={() => {
-                          const isInterApp = ['crm', 'cms', 'epk-builder'].includes(item.id);
+                          const isInterApp = ['crm', 'cms'].includes(item.id);
                           if (isInterApp) {
-                            const targetUrl = getIntermavenUrl(item.id === 'crm' ? 'intermaven-smart-crm' : item.id === 'cms' ? 'cms' : 'epk-builder');
+                            const targetUrl = getIntermavenUrl(item.id === 'crm' ? 'intermaven-smart-crm' : 'cms');
                             setActiveModalApp({ url: targetUrl, title: item.label });
                           } else {
                             setActiveTab(item.id);
                           }
                         }} 
-                        className={`dashboard-nav-item ${activeTab === item.id && !['crm', 'cms', 'epk-builder'].includes(item.id) ? 'active' : ''}`}
+                        className={`dashboard-nav-item ${activeTab === item.id && !['crm', 'cms'].includes(item.id) ? 'active' : ''}`}
                         title={item.label}
                       >
                         <Icon size={16} />
@@ -655,7 +655,7 @@ function DashboardView({
                   title="Sandbox Toggle: Click to toggle Admin/Creator role"
                   style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', display: 'inline-block', marginTop: '2px' }}
                 >
-                  ⚙️ {sessionUser.role || 'creator'}
+                  ⚙️ {sessionUser.role || 'creator'}
                 </span>
               </div>
             )}
@@ -784,7 +784,7 @@ function DashboardView({
             {/* Modal Body / EPK Builder or Iframe */}
             <div style={{ flex: 1, position: 'relative', background: '#0f172a', overflowY: 'auto', padding: activeModalApp.title === 'EPK Builder' ? '20px' : 0 }}>
               {activeModalApp.title === 'EPK Builder' ? (
-                <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} />
+                <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} sessionUser={sessionUser} />
               ) : (
                 <iframe 
                   src={activeModalApp.url}
@@ -922,7 +922,7 @@ function DashboardSearchBar({ value, onChange, placeholder = "Search..." }) {
         }}
       />
       <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4, fontSize: '13px', pointerEvents: 'none' }}>
-        🔍
+        🔍
       </span>
     </div>
   );
@@ -1461,7 +1461,7 @@ function ConsumerLibraryPanel() {
                 <div style={{ fontSize: '11px', color: 'var(--cyan)' }}>{c.genre}</div>
               </div>
               <a href={c.url} target="_blank" rel="noreferrer" className="btn-secondary" style={{ background: 'var(--cyan)', color: '#000', padding: '4px 10px', borderRadius: '3px', fontSize: '10.5px', fontWeight: 'bold', textDecoration: 'none' }}>
-                Visit Web World 🌐
+                Visit Web World 🌐
               </a>
             </div>
           ))}
@@ -1474,7 +1474,7 @@ function ConsumerLibraryPanel() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginTop: '12px' }}>
           {purchasedTickets.map(t => (
             <div key={t.id} style={{ background: 'rgba(34, 211, 238, 0.05)', border: '1px solid rgba(34, 211, 238, 0.2)', padding: '14px', borderRadius: '4px' }}>
-              <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>🎟️ {t.show}</div>
+              <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>🎟️ {t.show}</div>
               <div style={{ fontSize: '11px', color: 'var(--mu)', marginTop: '2px' }}>{t.date} • {t.tier}</div>
               <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--cyan)', fontWeight: 'bold', fontFamily: 'monospace' }}>Pass Code: {t.qr}</div>
             </div>
@@ -1647,7 +1647,7 @@ function PosInventoryPanel() {
                   <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>${i.price.toFixed(2)}</td>
                   <td style={{ padding: '10px 8px', color: i.stock < 10 ? '#f59e0b' : '#10b981', fontWeight: 700 }}>{i.stock}</td>
                   <td style={{ padding: '10px 8px', display: 'flex', gap: '6px' }}>
-                    <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, -1)} data-testid={`pos-stock-dec-${i.id}`}>−</button>
+                    <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, -1)} data-testid={`pos-stock-dec-${i.id}`}>âˆ’</button>
                     <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, +1)} data-testid={`pos-stock-inc-${i.id}`}>+</button>
                   </td>
                 </tr>
@@ -1899,470 +1899,53 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
   );
 }
 
-// ================= SUB-PANEL: EPK Builder =================
-function EPKBuilderPanel({ tracks, epk, setEpk }) {
-  const [subdomain, setSubdomain] = useState(epk.subdomain || '');
-  const [headline, setHeadline] = useState(epk.headline || '');
-  const [themeBg, setThemeBg] = useState(epk.themeBg || '');
-  const [featuredTrackIsrc, setFeaturedTrackIsrc] = useState(epk.featuredTrackIsrc || '');
-  const [spotify, setSpotify] = useState(epk.spotify || '');
-  const [instagram, setInstagram] = useState(epk.instagram || '');
-  const [soundcloud, setSoundcloud] = useState(epk.soundcloud || '');
-  const [bookingEmail, setBookingEmail] = useState(epk.bookingEmail || '');
-  const [pressOutlet, setPressOutlet] = useState(epk.pressOutlet || '');
-  const [pressQuote, setPressQuote] = useState(epk.pressQuote || '');
-  const [bio, setBio] = useState(epk.bio || '');
-  const [saving, setSaving] = useState(false);
-
+// ================= SUB-PANEL: EPK Builder (Wizard) =================
+function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser }) {
   const [portedAsset, setPortedAsset] = useState(() => sessionStorage.getItem('ported_asset_url'));
 
-  const handleApplyPortedAsset = () => {
-    setThemeBg(`url("${portedAsset}") center/cover`);
-    sessionStorage.removeItem('ported_asset_url');
-    setPortedAsset(null);
-  };
-
-  const [logoUrl, setLogoUrl] = useState(epk.logoUrl || '');
-  const [accentColor, setAccentColor] = useState(epk.accentColor || '#00f0ff');
-  const [secondaryColor, setSecondaryColor] = useState(epk.secondaryColor || '#ff007f');
-  const [fontFamily, setFontFamily] = useState(epk.fontFamily || 'Sansation, sans-serif');
-  const [youtubeVideoUrl, setYoutubeVideoUrl] = useState(epk.youtubeVideoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ');
-  const [generatingLogo, setGeneratingLogo] = useState(false);
-
-  const handleGenerateBrandKitLogo = () => {
-    setGeneratingLogo(true);
-    setTimeout(() => {
-      setGeneratingLogo(false);
-      setLogoUrl('https://picsum.photos/seed/brandkit_logo/200');
-      alert('✨ BrandKit AI Emblem generated and applied to your Creator Web World!');
-    }, 1500);
-  };
-
-  const handleSave = (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      setEpk({
-        subdomain,
-        headline,
-        themeBg,
-        logoUrl,
-        accentColor,
-        secondaryColor,
-        fontFamily,
-        youtubeVideoUrl,
-        featuredTrackIsrc,
-        spotify,
-        instagram,
-        soundcloud,
-        bookingEmail,
-        pressOutlet,
-        pressQuote,
-        bio
-      });
-      alert('Intermaven Standalone Creator Web World published & synchronized successfully!');
-    }, 1200);
-  };
-
-
-  const selectedTrack = tracks.find(t => t.isrc === featuredTrackIsrc) || tracks[0];
-
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', textAlign: 'left' }}>
-      
-      {/* Form column */}
-      <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '12px' }}>
-          <div>
-            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>Intermaven Standard EPK Builder</h3>
-            <p style={{ fontSize: '11.5px', color: 'var(--mu)', margin: '4px 0 0' }}>Configure your Electronic Press Kit profile & subdomain portal.</p>
-          </div>
-          <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--cyan)', background: 'rgba(34,211,238,0.08)', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Core EPK v2.1
-          </span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>
+            Intermaven Creator Web World Builder
+          </h3>
+          <p style={{ fontSize: '11.5px', color: 'var(--mu)', margin: '4px 0 0' }}>
+            Build your full Electronic Press Kit &amp; standalone creator site, step by step.
+          </p>
         </div>
-
-        {portedAsset && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(34, 211, 238, 0.06)', border: '1px solid rgba(34, 211, 238, 0.20)', padding: '12px 18px', borderRadius: '4px', marginBottom: '8px' }}>
-            <div style={{ flex: 1, fontSize: '12.5px', color: '#cbd5e1' }}>
-              🎨 <strong>Ported Asset Detected:</strong> You have a generated artwork from your Social AI Studio ready.
-            </div>
-            <button type="button" onClick={handleApplyPortedAsset} className="btn-secondary" style={{ background: 'var(--cyan)', color: '#000', padding: '6px 12px', fontSize: '11px', fontWeight: 'bold', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
-              Apply as EPK Cover
-            </button>
-            <button type="button" onClick={() => { sessionStorage.removeItem('ported_asset_url'); setPortedAsset(null); }} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', marginLeft: '6px' }}>
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
-          {/* 20 Theme Templates Selector Grid */}
-          <div>
-            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>
-              Select Pre-Populated EPK Theme Template (20 Available)
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', maxHeight: '180px', overflowY: 'auto', background: '#090d16', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              {EPK_THEMES.map(theme => (
-                <div
-                  key={theme.id}
-                  onClick={() => {
-                    setThemeBg(theme.bg);
-                    if (!headline) setHeadline(`${theme.genre} Pioneer`);
-                  }}
-                  style={{
-                    background: theme.bg,
-                    border: themeBg === theme.bg ? `2px solid ${theme.accent}` : '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '6px',
-                    padding: '8px',
-                    cursor: 'pointer',
-                    fontSize: '10px',
-                    color: '#fff',
-                    textAlign: 'center',
-                    transition: 'all 0.2s ease',
-                    boxShadow: themeBg === theme.bg ? `0 0 10px ${theme.accent}66` : 'none'
-                  }}
-                >
-                  <div style={{ fontWeight: 'bold', marginBottom: '2px', color: theme.accent }}>{theme.name}</div>
-                  <div style={{ fontSize: '8.5px', opacity: 0.8 }}>{theme.genre}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Subdomain */}
-          <div>
-            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>EPK Subdomain Mapping</label>
-            <div style={{ display: 'flex', alignItems: 'center', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-              <span style={{ fontSize: '12px', color: 'var(--mu)', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRight: '1px solid rgba(255,255,255,0.06)' }}>https://</span>
-              <input 
-                type="text" 
-                value={subdomain} 
-                onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                className="form-control"
-                style={{ flex: 1, border: 'none', background: 'none', color: '#fff', padding: '8px 12px', fontSize: '13px' }}
-                placeholder="subdomain"
-                required
-              />
-              <span style={{ fontSize: '12px', color: 'var(--cyan)', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderLeft: '1px solid rgba(255,255,255,0.06)', fontWeight: 'bold' }}>.tunemavens.com</span>
-            </div>
-            <span style={{ fontSize: '10px', color: 'var(--mu)', marginTop: '4px', display: 'block' }}>
-              Resolves to standalone website <strong>http://localhost:3000/#/epk/{subdomain || 'aisha'}</strong>
-            </span>
-          </div>
-
-
-          {/* Creator Brand Logo & BrandKit AI Emblem Generator */}
-          <div>
-            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              Creator Brand Logo & Emblem
-            </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="text" 
-                value={logoUrl} 
-                onChange={(e) => setLogoUrl(e.target.value)} 
-                placeholder="Upload or paste Logo URL (https://...)" 
-                className="form-control" 
-                style={{ flex: 1, fontSize: '12px', padding: '8px' }} 
-              />
-              <button 
-                type="button" 
-                onClick={handleGenerateBrandKitLogo}
-                disabled={generatingLogo}
-                style={{ background: 'var(--cyan)', color: '#000', border: 'none', padding: '6px 12px', borderRadius: '3px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-              >
-                {generatingLogo ? 'Generating...' : '✨ BrandKit AI Logo'}
-              </button>
-            </div>
-          </div>
-
-          {/* YouTube Video URL Stream Configuration */}
-          <div>
-            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              YouTube Streaming Video URL (Embed Link)
-            </label>
-            <input 
-              type="text" 
-              value={youtubeVideoUrl} 
-              onChange={(e) => setYoutubeVideoUrl(e.target.value)} 
-              placeholder="https://www.youtube.com/embed/..." 
-              className="form-control" 
-              style={{ width: '100%', fontSize: '12px', padding: '8px' }} 
-            />
-          </div>
-
-          {/* Custom Color Theme & Typography Options */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-            <div>
-              <label style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Primary Accent Color</label>
-              <input 
-                type="color" 
-                value={accentColor} 
-                onChange={(e) => setAccentColor(e.target.value)} 
-                style={{ width: '100%', height: '34px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', borderRadius: '3px' }} 
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Secondary Color</label>
-              <input 
-                type="color" 
-                value={secondaryColor} 
-                onChange={(e) => setSecondaryColor(e.target.value)} 
-                style={{ width: '100%', height: '34px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', borderRadius: '3px' }} 
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Typography Font</label>
-              <select 
-                value={fontFamily} 
-                onChange={(e) => setFontFamily(e.target.value)}
-                className="form-control"
-                style={{ width: '100%', fontSize: '11.5px', padding: '6px', background: '#0a0f1d', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
-              >
-                <option value="Sansation, sans-serif">Sansation (Default)</option>
-                <option value="Outfit, sans-serif">Outfit</option>
-                <option value="Orbitron, sans-serif">Orbitron Cyber</option>
-                <option value="Inter, sans-serif">Inter Mono</option>
-                <option value="Space Grotesk, sans-serif">Space Grotesk</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Headline & Background */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Headline / Punchline</label>
-              <input 
-                type="text" 
-                value={headline} 
-                onChange={(e) => setHeadline(e.target.value)} 
-                className="form-control" 
-                style={{ width: '100%', fontSize: '12.5px', padding: '8px' }} 
-                required 
-              />
-            </div>
-
-            <div>
-              <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>EPK Cover Background CSS</label>
-              <input 
-                type="text" 
-                value={themeBg} 
-                onChange={(e) => setThemeBg(e.target.value)} 
-                className="form-control" 
-                style={{ width: '100%', fontSize: '12.5px', padding: '8px' }} 
-                required 
-              />
-            </div>
-          </div>
-
-          {/* Bio */}
-          <div>
-            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Biography</label>
-            <textarea 
-              value={bio} 
-              onChange={(e) => setBio(e.target.value)} 
-              className="form-control" 
-              style={{ width: '100%', fontSize: '12.5px', padding: '8px', height: '60px', resize: 'none' }}
-              required
-            />
-          </div>
-
-          {/* Featured Showcase Track selection */}
-          <div>
-            <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Featured Showcase Track</label>
-            <select 
-              value={featuredTrackIsrc} 
-              onChange={(e) => setFeaturedTrackIsrc(e.target.value)}
-              className="form-control"
-              style={{ width: '100%', background: '#0a0f1d', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', fontSize: '12.5px', padding: '8px' }}
-            >
-              {tracks.map(t => (
-                <option key={t.isrc} value={t.isrc}>{t.title} ({t.artist})</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Press Review Quote */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
-            <div>
-              <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Press Outlet</label>
-              <input 
-                type="text" 
-                value={pressOutlet} 
-                onChange={(e) => setPressOutlet(e.target.value)} 
-                className="form-control" 
-                style={{ width: '100%', fontSize: '12.5px', padding: '8px' }} 
-                placeholder="Pitchfork" 
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: '11px', color: '#cbd5e1', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Review / Press Quote</label>
-              <input 
-                type="text" 
-                value={pressQuote} 
-                onChange={(e) => setPressQuote(e.target.value)} 
-                className="form-control" 
-                style={{ width: '100%', fontSize: '12.5px', padding: '8px' }} 
-                placeholder="Outstanding track delivery..." 
-              />
-            </div>
-          </div>
-
-          {/* Social Links */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
-            <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Social Networks & Contact</span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <input type="text" placeholder="Spotify URL" value={spotify} onChange={(e) => setSpotify(e.target.value)} className="form-control" style={{ fontSize: '11.5px', padding: '6px' }} />
-              <input type="text" placeholder="Soundcloud URL" value={soundcloud} onChange={(e) => setSoundcloud(e.target.value)} className="form-control" style={{ fontSize: '11.5px', padding: '6px' }} />
-              <input type="text" placeholder="Instagram URL" value={instagram} onChange={(e) => setInstagram(e.target.value)} className="form-control" style={{ fontSize: '11.5px', padding: '6px' }} />
-              <input type="email" placeholder="Booking Contact Email" value={bookingEmail} onChange={(e) => setBookingEmail(e.target.value)} className="form-control" style={{ fontSize: '11.5px', padding: '6px' }} />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
-            <button 
-              type="submit" 
-              disabled={saving}
-              className="btn-primary" 
-              style={{ width: '100%', padding: '10px', fontSize: '12.5px', fontWeight: 'bold' }}
-            >
-              {saving ? 'Publishing EPK...' : 'Publish & Sync EPK'}
-            </button>
-            <a 
-              href={`/#/epk/${subdomain || 'aisha'}`}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {epk?.subdomain && (
+            <a
+              href={`/#/epk/${epk.subdomain}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary"
-              style={{ width: '100%', padding: '10px', fontSize: '12.5px', fontWeight: 'bold', background: 'var(--cyan)', color: '#000', textDecoration: 'none', textAlign: 'center', display: 'block', borderRadius: '4px' }}
+              style={{ fontSize: '10px', fontWeight: 'bold', color: '#00f0ff', background: 'rgba(0,240,255,0.1)', padding: '5px 10px', borderRadius: '4px', textDecoration: 'none', border: '1px solid rgba(0,240,255,0.3)' }}
             >
-              Launch Web World 🌐
+              Preview Live EPK
             </a>
-          </div>
-        </form>
-      </div>
-
-
-      {/* Live Preview column */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <h4 style={{ margin: 0, fontSize: '12px', color: 'var(--mu)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Live EPK Resolving Preview
-        </h4>
-
-        {/* Replica EPK Portal */}
-        <div style={{
-          background: '#070a13',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          boxShadow: '0 15px 30px rgba(0,0,0,0.5)',
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '420px',
-          color: '#fff'
-        }}>
-          {/* Header Banner */}
-          <div style={{ background: themeBg, padding: '24px 16px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
-            <div style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '8px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.12)', padding: '2px 6px', borderRadius: '2px' }}>
-              {subdomain || 'aisha'}.tunemavens.com
-            </div>
-            
-            <div style={{
-              width: '60px',
-              height: '60px',
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.1)',
-              border: '2px solid #fff',
-              margin: '0 auto 8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '28px',
-              fontWeight: '900',
-              textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-            }}>
-              A
-            </div>
-            <h3 style={{ margin: '0 0 2px 0', fontSize: '16px', fontWeight: '900', textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>Aisha Okoro</h3>
-            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>{headline || 'Headline Statement'}</span>
-          </div>
-
-          {/* Bio block */}
-          <div style={{ padding: '16px', fontSize: '11.5px', color: 'var(--mu)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            <p style={{ margin: 0, lineHeight: '1.4' }}>{bio || 'Biography content...'}</p>
-          </div>
-
-          {/* Featured Showcase Item */}
-          {selectedTrack && (
-            <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-              <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>
-                Featured Audio Master
-              </span>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <div style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '3px',
-                  background: selectedTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '7px',
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  flexShrink: 0
-                }}>
-                  {selectedTrack.coverText || 'Art'}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong style={{ display: 'block', fontSize: '11.5px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedTrack.title}</strong>
-                  <span style={{ fontSize: '9.5px', color: 'var(--mu)' }}>{selectedTrack.artist} • {selectedTrack.genre}</span>
-                </div>
-                <button 
-                  onClick={() => alert(`Play featured master track from EPK Showcase`)}
-                  style={{
-                    width: '26px',
-                    height: '26px',
-                    borderRadius: '50%',
-                    border: 'none',
-                    background: 'var(--cyan)',
-                    color: '#000',
-                    cursor: 'pointer',
-                    fontSize: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  ▶
-                </button>
-              </div>
-            </div>
           )}
-
-          {/* Press Review Quote */}
-          {pressQuote && (
-            <div style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '11px', color: '#cbd5e1' }}>
-              <p style={{ margin: '0 0 4px', fontStyle: 'italic' }}>"{pressQuote}"</p>
-              <strong style={{ color: 'var(--cyan)', fontSize: '9.5px' }}>— {pressOutlet || 'Press Outlet'}</strong>
-            </div>
-          )}
-
-          {/* Footer & Social Badge */}
-          <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', background: 'rgba(0,0,0,0.2)', fontSize: '11px' }}>
-            <span style={{ color: 'var(--mu)', fontSize: '9.5px' }}>Booking: {bookingEmail || 'N/A'}</span>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {spotify && <span style={{ opacity: 0.6, fontSize: '12px' }}>🟢</span>}
-              {soundcloud && <span style={{ opacity: 0.6, fontSize: '12px' }}>🟠</span>}
-              {instagram && <span style={{ opacity: 0.6, fontSize: '12px' }}>📸</span>}
-            </div>
-          </div>
-
+          <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--cyan)', background: 'rgba(34,211,238,0.08)', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Wizard v3.0
+          </span>
         </div>
       </div>
 
+      {/* Ported asset notice */}
+      {portedAsset && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', padding: '12px 18px', borderRadius: '4px' }}>
+          <div style={{ flex: 1, fontSize: '12.5px', color: '#cbd5e1' }}>
+            <strong>Ported Asset Detected:</strong> You have generated artwork ready from Social AI Studio.
+          </div>
+          <button type="button" onClick={() => setPortedAsset(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer' }}>
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* The wizard */}
+      <EpkWizard tracks={tracks} epk={epk} setEpk={setEpk} sessionUser={sessionUser} />
     </div>
   );
 }
@@ -2472,7 +2055,7 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
           statTrend: "↗ +$340.20 this week",
           stat2Label: "Active Releases",
           stat2Value: "24 Releases",
-          stat2Trend: "🗄️ Standard Schema Compliant",
+          stat2Trend: "🗄️ Standard Schema Compliant",
           chartTitle: "Monthly Earnings Progress ($)",
           chartPoints: [1200, 1800, 2500, 3100, 3900, payoutBalance],
           chartLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
@@ -3019,7 +2602,7 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
                 onChange={handleFileChange} 
                 style={{ display: 'none' }} 
               />
-              <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px' }}>📁</span>
+              <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px' }}>📜</span>
               <span style={{ fontSize: '12px', color: '#fff', fontWeight: '600' }}>Drag & Drop Audio Files Here</span>
               <span style={{ fontSize: '10px', color: 'var(--mu)', display: 'block', marginTop: '4px' }}>Or click to select multiple WAV, MP3, or FLAC files</span>
             </div>
@@ -3239,7 +2822,7 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
                                 }}
                                 title={tr.isFeatured ? "Unmark as featured" : "Mark as featured"}
                               >
-                                ⭐
+                                â­
                               </button>
                             </td>
                             <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
@@ -3268,7 +2851,7 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
                                   onClick={() => startEdit(tr)}
                                   title="Edit track metadata inline"
                                 >
-                                  ✏️ Edit
+                                  ✏️ Edit
                                 </button>
                                 <button 
                                   className="plan-btn outline" 
@@ -3649,9 +3232,9 @@ function DjPoolPanel() {
 
   const statusColors = { approved: '#22c55e', pending: '#f59e0b', declined: '#ef4444' };
   const vibeOptions = [
-    { value: 'fill_dancefloor', label: '🔥 Fills the Dancefloor' },
+    { value: 'fill_dancefloor', label: '🔍¥ Fills the Dancefloor' },
     { value: 'keep_crowd', label: '🎵 Keeps the Crowd Moving' },
-    { value: 'room_cooler', label: '❄️ Too Slow for the Room' },
+    { value: 'room_cooler', label: 'â„ Too Slow for the Room' },
     { value: 'peak_moment', label: '⚡ Peak Hour Banger' },
   ];
 
@@ -3702,8 +3285,8 @@ function DjPoolPanel() {
       {/* Tab Bar */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
         {tabBtn('pool', 'Promo Pool', '🎵')}
-        {tabBtn('clearance', 'Clearance Hub', '📋')}
-        {tabBtn('upload', 'Drop a Promo', '⬆️')}
+        {tabBtn('clearance', 'Clearance Hub', '📜‹')}
+        {tabBtn('upload', 'Drop a Promo', 'â¬†')}
       </div>
 
       {/* Toast notification */}
@@ -3720,7 +3303,7 @@ function DjPoolPanel() {
         </div>
       ) : (
         <>
-          {/* ── PROMO POOL TAB ── */}
+          {/* â”€â”€ PROMO POOL TAB â”€â”€ */}
           {activeTab === 'pool' && (
             <div>
               {tracks.length === 0 ? (
@@ -3738,7 +3321,7 @@ function DjPoolPanel() {
                           <span style={{ fontSize: '11px', background: 'rgba(0,212,255,0.12)', color: 'var(--cyan)', padding: '2px 8px', borderRadius: '99px', fontWeight: '700' }}>{track.genre}</span>
                           {track.allowed_regions && track.allowed_regions.length > 0 && (
                             <span style={{ fontSize: '11px', background: 'rgba(245,158,11,0.15)', color: '#fbbf24', padding: '2px 8px', borderRadius: '99px', fontWeight: '700' }}>
-                              🌍 {track.allowed_regions.join(', ')} only
+                              🌐 {track.allowed_regions.join(', ')} only
                             </span>
                           )}
                           {track.feedback_submitted && (
@@ -3747,9 +3330,9 @@ function DjPoolPanel() {
                         </div>
                         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '12px', color: '#64748b' }}>By <strong style={{ color: '#94a3b8' }}>{track.artist}</strong></span>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>⏱ <strong style={{ color: '#94a3b8' }}>{track.bpm} BPM</strong></span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>â± <strong style={{ color: '#94a3b8' }}>{track.bpm} BPM</strong></span>
                           <span style={{ fontSize: '12px', color: '#64748b' }}>🎵 Key <strong style={{ color: '#94a3b8' }}>{track.key}</strong></span>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>⬇️ <strong style={{ color: '#94a3b8' }}>{track.downloads_count}</strong> downloads</span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>â¬‡ <strong style={{ color: '#94a3b8' }}>{track.downloads_count}</strong> downloads</span>
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
@@ -3778,7 +3361,7 @@ function DjPoolPanel() {
                           ) : track.feedback_submitted ? (
                             <><RiDownloadFill size={13} /> Download WAV</>
                           ) : (
-                            <>⭐ Review & Download</>
+                            <>â­ Review & Download</>
                           )}
                         </button>
                         {!track.feedback_submitted && (
@@ -3792,7 +3375,7 @@ function DjPoolPanel() {
             </div>
           )}
 
-          {/* ── CLEARANCE HUB TAB ── */}
+          {/* â”€â”€ CLEARANCE HUB TAB â”€â”€ */}
           {activeTab === 'clearance' && (
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
               {/* Clearance Ledger */}
@@ -3839,7 +3422,7 @@ function DjPoolPanel() {
 
               {/* Clearance Request Form */}
               <div className="dashboard-card" style={{ height: 'fit-content' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', marginBottom: '16px' }}>📝 Request Drop Clearance</h3>
+                <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', marginBottom: '16px' }}>📜 Request Drop Clearance</h3>
                 <form onSubmit={handleClearanceSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {[
                     { label: 'Original Track ID', value: clearTrackId, set: setClearTrackId, placeholder: 'Paste track ID from the pool' },
@@ -3853,14 +3436,14 @@ function DjPoolPanel() {
                     </div>
                   ))}
                   <button type="submit" disabled={submittingClear} style={{ padding: '11px', borderRadius: '6px', border: 'none', cursor: submittingClear ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '700', fontFamily: 'Outfit, sans-serif', background: 'var(--cyan)', color: '#060813', width: '100%' }}>
-                    {submittingClear ? 'Submitting…' : '🔐 Request IP Clearance'}
+                    {submittingClear ? 'Submitting…' : '🔍 Request IP Clearance'}
                   </button>
                 </form>
               </div>
             </div>
           )}
 
-          {/* ── UPLOAD TAB ── */}
+          {/* â”€â”€ UPLOAD TAB â”€â”€ */}
           {activeTab === 'upload' && (
             <div style={{ maxWidth: '640px' }}>
               {uploadSuccess && (
@@ -3898,7 +3481,7 @@ function DjPoolPanel() {
                     </div>
                   </div>
                   <button type="submit" disabled={submittingUpload} style={{ padding: '13px', borderRadius: '6px', border: 'none', cursor: submittingUpload ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', background: 'linear-gradient(135deg, var(--cyan), #4f46e5)', color: '#fff', width: '100%', marginTop: '8px' }}>
-                    {submittingUpload ? 'Uploading…' : '⬆️ Publish Promo to DJ Pool'}
+                    {submittingUpload ? 'Uploading…' : 'â¬† Publish Promo to DJ Pool'}
                   </button>
                 </form>
               </div>
@@ -3907,7 +3490,7 @@ function DjPoolPanel() {
         </>
       )}
 
-      {/* ── FEEDBACK GATE MODAL ── */}
+      {/* â”€â”€ FEEDBACK GATE MODAL â”€â”€ */}
       {feedbackModal && (
         <div
           onClick={e => { if (e.target === e.currentTarget) setFeedbackModal(null); }}
@@ -3927,7 +3510,7 @@ function DjPoolPanel() {
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {[1,2,3,4,5].map(star => (
                     <button key={star} type="button" onClick={() => setFeedbackRating(star)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '24px', opacity: star <= feedbackRating ? 1 : 0.3, transition: 'opacity 0.15s' }}>
-                      ⭐
+                      â­
                     </button>
                   ))}
                 </div>
@@ -3956,7 +3539,7 @@ function DjPoolPanel() {
                 />
               </div>
               <button type="submit" disabled={submittingFeedback || !feedbackText.trim()} style={{ padding: '13px', borderRadius: '6px', border: 'none', cursor: (submittingFeedback || !feedbackText.trim()) ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', background: 'linear-gradient(135deg, var(--cyan), #4f46e5)', color: '#fff', opacity: (submittingFeedback || !feedbackText.trim()) ? 0.6 : 1, transition: 'opacity 0.2s' }}>
-                {submittingFeedback ? 'Submitting…' : '🔓 Submit Review & Download Track'}
+                {submittingFeedback ? 'Submitting…' : '🔍“ Submit Review & Download Track'}
               </button>
             </form>
           </div>
@@ -4396,7 +3979,7 @@ function GlobalAudioPlayer({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-            <span style={{ fontSize: '12px', animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }}>💿</span>
+            <span style={{ fontSize: '12px', animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }}>💽</span>
             <span style={{ fontSize: '11px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80px' }}>
               {globalTrack.title}
             </span>
@@ -4406,7 +3989,7 @@ function GlobalAudioPlayer({
               onClick={(e) => { e.stopPropagation(); setGlobalPlaying(!globalPlaying); }}
               style={{ background: 'none', border: 'none', color: 'var(--cyan)', cursor: 'pointer', fontSize: '11px', padding: '4px' }}
             >
-              {globalPlaying ? '⏸' : '▶'}
+              {globalPlaying ? 'â¸' : '▶'}
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); setIsMinimized(false); }}
@@ -4451,7 +4034,7 @@ function GlobalAudioPlayer({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
-            <span style={{ animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }}>💿</span>
+            <span style={{ animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }}>💽</span>
             <strong style={{ color: '#fff' }}>{globalTrack.title}</strong>
             <span style={{ color: 'var(--mu)' }}>•</span>
             <span style={{ color: 'var(--mu)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</span>
@@ -4461,7 +4044,7 @@ function GlobalAudioPlayer({
               onClick={() => setGlobalPlaying(!globalPlaying)}
               style={{ background: 'none', border: 'none', color: 'var(--cyan)', cursor: 'pointer', fontSize: '11px' }}
             >
-              {globalPlaying ? '⏸' : '▶'}
+              {globalPlaying ? 'â¸' : '▶'}
             </button>
             <button 
               onClick={() => setIsMinimized(false)}
@@ -4554,7 +4137,7 @@ function GlobalAudioPlayer({
               }}
               title="Dock to bottom"
             >
-              ⬇ Dock
+              â¬‡ Dock
             </button>
           </div>
         </div>
@@ -4584,7 +4167,7 @@ function GlobalAudioPlayer({
               <h4 style={{ margin: '0 0 2px 0', fontSize: '13.5px', fontWeight: 'bold', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.title}</h4>
               <p style={{ margin: 0, fontSize: '11px', color: 'var(--mu)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</p>
               <span style={{ fontSize: '9px', color: 'var(--cyan)', background: 'rgba(34,211,238,0.06)', padding: '2px 4px', borderRadius: '3px', display: 'inline-block', marginTop: '4px' }}>
-                {featuredTracks.length > 0 ? '★ Featured Playlist' : 'All Catalogue'}
+                {featuredTracks.length > 0 ? 'â˜… Featured Playlist' : 'All Catalogue'}
               </span>
             </div>
           </div>
@@ -4610,21 +4193,21 @@ function GlobalAudioPlayer({
               onClick={handlePrev}
               style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              ⏮
+              â®
             </button>
             <button 
               onClick={() => setGlobalPlaying(!globalPlaying)}
               className="btn-primary"
               style={{ width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', cursor: 'pointer', border: 'none' }}
             >
-              {globalPlaying ? '⏸' : '▶'}
+              {globalPlaying ? 'â¸' : '▶'}
             </button>
             <button 
               className="plan-btn outline"
               onClick={handleNext}
               style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              ⏭
+              â­
             </button>
           </div>
         </div>
@@ -4685,21 +4268,21 @@ function GlobalAudioPlayer({
             style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: '15px' }}
             title="Previous track"
           >
-            ⏮
+            â®
           </button>
           <button 
             onClick={() => setGlobalPlaying(!globalPlaying)}
             className="btn-primary"
             style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', border: 'none', cursor: 'pointer' }}
           >
-            {globalPlaying ? '⏸' : '▶'}
+            {globalPlaying ? 'â¸' : '▶'}
           </button>
           <button 
             onClick={handleNext}
             style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: '15px' }}
             title="Next track"
           >
-            ⏭
+            â­
           </button>
         </div>
 
@@ -4720,7 +4303,7 @@ function GlobalAudioPlayer({
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '30%', justifyContent: 'flex-end' }}>
         {featuredTracks.length > 0 && (
           <span style={{ fontSize: '9px', color: 'var(--green)', border: '1px solid rgba(16,185,129,0.3)', padding: '2px 6px', borderRadius: '10px', background: 'rgba(16,185,129,0.05)', fontWeight: 'bold' }}>
-            ★ Featured List ({featuredTracks.length})
+            â˜… Featured List ({featuredTracks.length})
           </span>
         )}
         <button 
@@ -4841,8 +4424,8 @@ function AppContent({
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView />} />
-          <Route path="/epk" element={<CreatorEpkView />} />
-          <Route path="/epk/:username" element={<CreatorEpkView />} />
+          <Route path="/epk" element={<CreatorEpkView creatorEpk={creatorEpk} sessionUser={sessionUser} />} />
+          <Route path="/epk/:username" element={<CreatorEpkView creatorEpk={creatorEpk} sessionUser={sessionUser} />} />
 
           <Route path="/stream" element={
             <StreamView 
@@ -5176,12 +4759,31 @@ function App() {
   useEffect(() => {
     let cancelled = false;
     const token = tokenStore.get();
-    authApi.me(token).then((user) => {
-      if (cancelled) return;
-      const merged = { ...user };
-      setSessionUser(merged);
-      sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
-    }).catch(() => {});
+    if (token) {
+      authApi.me(token).then((user) => {
+        if (cancelled) return;
+        const merged = { ...user };
+        setSessionUser(merged);
+        sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
+      }).catch((err) => {
+        if (cancelled) return;
+        if (err?.status === 401) {
+          tokenStore.clear();
+          sessionStorage.removeItem('tunemavens_session');
+          setSessionUser(null);
+        }
+      });
+    } else if (sessionUser) {
+      authApi.demo().then(({ user, access_token }) => {
+        if (cancelled) return;
+        if (access_token) {
+          tokenStore.set(access_token);
+          const merged = { ...sessionUser, ...user };
+          setSessionUser(merged);
+          sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
+        }
+      }).catch(() => {});
+    }
     return () => { cancelled = true; };
   }, []);
 
@@ -5392,7 +4994,7 @@ function SocialAiPanel({ setActiveTab }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(34, 211, 238, 0.06)', border: '1px solid rgba(34, 211, 238, 0.20)', padding: '12px 18px', borderRadius: '4px', marginBottom: '24px' }}>
         <RiCpuFill style={{ color: 'var(--cyan)', flexShrink: 0 }} size={20} />
         <div style={{ flex: 1, fontSize: '13px', color: '#cbd5e1' }}>
-          <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>🔗 Linked to Intermaven Social AI:</span> Auto-scheduling is active. Created assets sync directly with your Intermaven visual post calendar and automatic publishing queues.
+          <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>🔍— Linked to Intermaven Social AI:</span> Auto-scheduling is active. Created assets sync directly with your Intermaven visual post calendar and automatic publishing queues.
         </div>
       </div>
 
@@ -5641,7 +5243,7 @@ function SocialAiPanel({ setActiveTab }) {
       {/* Asset Manager Grid */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '40px', paddingTop: '32px' }}>
         <div className="dashboard-card-header" style={{ marginBottom: '20px', padding: 0 }}>
-          <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: '800', margin: 0 }}>📦 Saved Creative Asset Manager</h4>
+          <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: '800', margin: 0 }}>📜¦ Saved Creative Asset Manager</h4>
           <p style={{ color: '#94a3b8', fontSize: '12px', margin: '4px 0 0' }}>Manage, reference, edit captions, delete, or port previously generated visual assets.</p>
         </div>
 
@@ -5768,14 +5370,14 @@ function SocialAiPanel({ setActiveTab }) {
                           onClick={() => { setEditingAssetId(asset.id); setEditingPrompt(asset.prompt); }}
                           style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#cbd5e1', fontSize: '10px', padding: '4px', cursor: 'pointer' }}
                         >
-                          ✏️ Edit
+                          ✏️ Edit
                         </button>
                         <button 
                           type="button" 
                           onClick={() => handleDeleteAsset(asset.id)}
                           style={{ flex: 1, background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '3px', color: '#ef4444', fontSize: '10px', padding: '4px', cursor: 'pointer' }}
                         >
-                          🗑️ Delete
+                          🗑️ Delete
                         </button>
                       </div>
                     </div>
@@ -5833,7 +5435,7 @@ function CmsPanel() {
 }
 
 // ================= Track D: EPK Builder Panel (Dual Mode & Intermaven Protocol) =================
-function EpkBuilderIframePanel({ tracks, epk, setEpk }) {
+function EpkBuilderIframePanel({ tracks, epk, setEpk, sessionUser }) {
   const [viewMode, setViewMode] = useState('native');
   const targetUrl = getIntermavenUrl('epk-builder');
 
@@ -5844,7 +5446,7 @@ function EpkBuilderIframePanel({ tracks, epk, setEpk }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00f0ff', boxShadow: '0 0 8px #00f0ff' }} />
           <strong style={{ color: '#fff', fontSize: '13px' }}>Intermaven EPK Builder Engine</strong>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>• Syncing with intermaven.io</span>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>Syncing with intermaven.io</span>
         </div>
 
         <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '3px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -5853,20 +5455,20 @@ function EpkBuilderIframePanel({ tracks, epk, setEpk }) {
             onClick={() => setViewMode('native')}
             style={{ background: viewMode === 'native' ? '#00f0ff' : 'transparent', color: viewMode === 'native' ? '#000' : '#cbd5e1', border: 'none', padding: '6px 14px', borderRadius: '3px', fontWeight: 800, fontSize: '11px', cursor: 'pointer' }}
           >
-            ⚡ Native Builder
+            Native Builder
           </button>
           <button 
             type="button"
             onClick={() => setViewMode('cloud')}
             style={{ background: viewMode === 'cloud' ? '#00f0ff' : 'transparent', color: viewMode === 'cloud' ? '#000' : '#cbd5e1', border: 'none', padding: '6px 14px', borderRadius: '3px', fontWeight: 800, fontSize: '11px', cursor: 'pointer' }}
           >
-            🌐 intermaven.io Embed
+            🌎 intermaven.io Embed
           </button>
         </div>
       </div>
 
       {viewMode === 'native' ? (
-        <EPKBuilderPanel tracks={tracks} epk={epk} setEpk={setEpk} />
+        <EPKBuilderPanel tracks={tracks} epk={epk} setEpk={setEpk} sessionUser={sessionUser} />
       ) : (
         <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 230px)', padding: 0, overflow: 'hidden', background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
           <iframe
