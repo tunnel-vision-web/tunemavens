@@ -810,4 +810,91 @@ All Creator Web World CMS operations reside in the FastAPI backend:
 - Navbar (`.nav-inner-container`) and Footer (`.footer-inner-container`) are locked to `max-width: 1280px; margin: 0 auto; box-sizing: border-box;`.
 - Creator EPK footer and bottom branding bar are bound to `maxWidth: maxContentWidth` (1280px in wide layout), maintaining strict grid harmony across all marketing and creator surfaces.
 
+---
 
+## §9.21 — Comprehensive Creator Web World, Mother-CMS Studio & Setup Wizard Modals
+
+### 9.21.1 Dedicated Full Event Showcase & Ticketing Protocol
+- **Route / State:** `activeTab === 'event-detail'` in `CreatorEpkView.jsx`.
+- **Hero & Venue Architecture:** Displays high-resolution tour flyers, venue name, city, performance date, doors open, and age restrictions (All Ages, 18+, 21+).
+- **Multi-Tier Ticketing:** General Admission, VIP Balcony (includes laminate), and VIP Meet & Greet (soundcheck + photo + exclusive merchandise).
+- **Multi-Rail Checkout:**
+  - Full Credit/Debit Card fields: Cardholder Name, 16-digit Card Number, Expiration Date (`MM/YY`), CVC/CVV, Postal / ZIP Code, and Country selection.
+  - Direct TM Credit instant debit.
+  - Instant M-Pesa STK Push / PesaPal mobile rails.
+- **QR Digital Ticket Pass:** Checkout generates a digital boarding pass with unique QR code, pass ID (`TM-TKT-...`), and wallet integration.
+
+### 9.21.2 Dedicated Full Album Page & TuneStream 30s Free Preview Protocol
+- **Route / State:** `activeTab === 'album-detail'`.
+- **Liner Notes & Sonic Credentials:** Showcases 280x280 vinyl cover art, master metadata, 24-Bit / 96kHz FLAC badge, studio synthesizer specifications (Moog One, Prophet-6, Eurorack Modular), Executive Producers, and Publisher (e.g. *Intermaven Songs / ASCAP*).
+- **TuneStream Audio Player Integration:** Dedicated player positioned directly beneath primary action buttons. Plays the first 30 seconds for free with countdown timer; continuing playback consumes 1 TM Credit matching the canonical TuneStream streaming protocol.
+
+### 9.21.3 Commercial Access Tiering & Practitioner Role Verification
+- **Buy Full Album ($9.99 / 50 Credits):** Available to all fans and VIP vault members.
+- **Buy Stems:** Restricted to industry practitioners (producers, DJs, labels, music supervisors) via a 1-click Practitioner Role Verification modal.
+
+### 9.21.4 Universal In-Context Quick Top-Up System
+- Triggered whenever an action requires credits or via the "+ Top-Up Credits" button on the balance section.
+- **Quick Packs:** 50 Credits ($9.99), 150 Credits ($24.99), 350 Credits ($49.99).
+- **Custom Amount Slot:** Strictly enforces minimum $5.00 USD (USA / Global) and minimum KES 200 (Kenya / East Africa).
+- Multi-rail payment via Card and instant M-Pesa STK push.
+
+### 9.21.5 Mother-CMS Setup Wizard Modals
+All four primary configuration workflows launch in dedicated, responsive **Modal Dialogs** with background blur (`backdropFilter: 'blur(10px)'`):
+1. **Discography Release Setup Wizard** (`discographyWizardOpen`):
+   - Step 1: Release Details & Musical Metadata (Title, Single/EP/Album/Stems, Year, Genre, BPM, Key).
+   - Step 2: Master Audio (WAV/FLAC) & Multitrack Stems (ZIP) URLs, ISRC Code, Duration.
+   - Step 3: High-Res Cover Artwork + 1-Click AI Cover Generator with custom prompts.
+   - Step 4: Songwriters, Producers, Publisher & PRO, Credits & USD Pricing, Practitioner-Only Stems toggle.
+   - Step 5: Review & Ingest into Discography.
+2. **Store & Merch Setup Wizard** (`storeWizardOpen`):
+   - Step 1: Product Basics & Category (Vinyl, Apparel, Stems, Digital, VIP Bundles).
+   - Step 2: Multi-Image Carousel (Primary angle + multi-angle carousel shots).
+   - Step 3: Product Description, Materials & Delivery Specs.
+   - Step 4: Pricing in USD & Credits, Inventory Stock Level.
+3. **Press & EPK Setup Wizard** (`pressWizardOpen`):
+   - Step 1: EPK Headline Hook & Pitch Angle.
+   - Step 2: Lead Editorial Quotes & Publication Outlets.
+   - Step 3: Front-of-House Console & Technical Rider Summary.
+   - Step 4: High-Res Assets & Direct PDF Press Kit Export.
+4. **Tours & Live Shows Setup Wizard** (`showsWizardOpen`):
+   - Step 1: Venue Name, City, Country, Capacity.
+   - Step 2: Performance Date, Doors Open, Age Restrictions.
+   - Step 3: Multi-Tier Tickets (GA, VIP Balcony, VIP Meet & Greet, On-sale status).
+   - Step 4: Tour Flyer Artwork URL, Event Description & Special Guest Lineup.
+
+### 9.21.6 Discography Ingestion Hub (`activeTab === 'music'`)
+- Renamed from "Singles & Stems" to **"Discography"** (`RiDiscFill`) in CMS Studio.
+- **Singles & Master Tracks:** High-resolution cover artwork, title, release, ISRC code, stems credits, direct audio masters, and 1-click AI Cover Generator with custom prompts.
+- **Studio Albums & Master Collections:** Tracklists, album artwork, release dates, comprehensive liner notes, and dual USD/credits pricing.
+- **Bulk Catalog CSV Ingestion:** Purpose-built for labels and publishers to paste hundreds of tracks (`Title, Year, Type, ISRC, Streams, Duration, Credits`) with instant 1-click batch ingestion into MongoDB.
+
+---
+
+## §9.22 — Native Intermaven Smart CRM Studio & Fan Vault Engine
+
+### 9.22.1 Native Smart CRM Studio Architecture (`SmartCrmStudioPanel.jsx`)
+- Replaces blocked external iframes (`X-Frame-Options: SAMEORIGIN`) with a high-performance native component.
+- Directly integrated with FastAPI backend endpoints:
+  - `GET /api/crm/contacts`: Retrieves contacts formatted specifically for the Smart CRM panel.
+  - `POST /api/crm/campaigns` & `POST /api/crm/dispatch/{id}`: Creates and dispatches omnichannel broadcast campaigns.
+  - `POST /api/crm/leads`: Registers new fan club and EPK inquiry leads.
+
+### 9.22.2 Audience & Fan Leads Management
+- Comprehensive contacts table with search and channel filtering (WhatsApp, SMS, Email).
+- Direct actions: Simulated STK/SMS push and direct email dispatch.
+- Lead status badges: `Active VIP`, `Qualified Lead`, `Booked`, `Inquiry`.
+- "+ Add Fan / Lead" modal and CSV export functionality.
+
+### 9.22.3 Omnichannel Broadcast Dispatcher
+- Targeted messaging to specific audience segments (All Verified Fans, VIP Passholders, Ticket Attendees).
+- Channels: WhatsApp Direct Broadcast (98% open rate), SMS / STK Push Alert, Rich Email.
+- Live dispatch log tracking recipients, delivery status, and open rates.
+
+### 9.22.4 Fan Curated Playlists & Vault Collections
+- Integrates with playlists created by fans on the public Creator EPK.
+- Displays curator identity, track counts, tracklist inspection, and direct curator messaging.
+
+### 9.22.5 High-Contrast Analogous Notification Styling & Flat Color Button Standard
+- **Analogous High-Contrast Notifications:** Deep midnight navy base (`#071d2c`) with vibrant 1.5px cyan/emerald borders (`#00f0ff`), left 5px solid highlight indicator strip, and high-contrast tag pills.
+- **Strict Flat Colors Standard:** Buttons across the ecosystem strictly use solid flat colors; all gradients on `<button>` elements are eliminated for visual clarity.

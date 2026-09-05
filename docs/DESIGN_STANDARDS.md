@@ -172,6 +172,12 @@ Used for sub-applications or landing sub-views to easily jump back to the core p
 ### D. Icons Selection
 We standardized on the **Remix Icons** library (`react-icons/ri`) to preserve a cohesive style for line/fill weights across all interactive buttons, drop-downs, and sidebars.
 
+### D. Flat Colors Standard (Strict No Gradients on Buttons)
+To preserve visual clarity, tactile predictability, and modern cyber minimalism:
+- **Zero Gradients:** Buttons across the ecosystem must strictly use solid flat colors (`var(--cyan)`, `#10b981`, `#8b5cf6`, `#ef4444`, `rgba(255, 255, 255, 0.06)`).
+- Gradient fills (`linear-gradient`) on `<button>` elements or `.btn` classes are strictly prohibited.
+- Subtle contrast is achieved via solid hover color shifts (`var(--btn-hover)`), 1px solid accent borders, and neon ambient box shadows, rather than multi-color gradient fills.
+
 ---
 
 ## 5. Header & Sticky Behaviors
@@ -518,3 +524,17 @@ Useful for background ambient decoration graphics, radar nodes, or circular visu
     to { transform: rotate(360deg); }
   }
   ```
+
+---
+
+## 13. High-Contrast Analogous Notification & Toast System
+
+All system alerts, affirmative confirmations, and floating toasts follow our **analogous high-contrast standard**:
+
+### Visual & Color Tokens
+- **Analogous Base Layer:** Solid deep midnight navy (`#071d2c` / `#091629`) serving as the high-depth analogous foundation to the brand's cyan and deep blue identity.
+- **Glowing Contrast Border:** 1.5px solid neon border (`#00f0ff` for updates and success, `#f43f5e` for errors or alerts).
+- **5px Left Indicator Strip:** Solid left accent bar (`border-left: 5px solid #00f0ff` or `#f43f5e`) providing immediate visual categorization.
+- **High-Contrast Tag Badges:** Solid color indicator pill (`SUCCESS`, `ALERT`, `UPDATE`) with `#000` text for maximum legibility.
+- **Ambient Glow Shadow:** `box-shadow: 0 12px 36px rgba(0,0,0,0.85), 0 0 16px rgba(0, 240, 255, 0.32)`.
+- **High-Contrast Text:** Pure white (`#ffffff`) message content ensuring clear readability against dark background layers.

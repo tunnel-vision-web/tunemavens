@@ -9,7 +9,7 @@ import headerPricingWesternImg from '../../assets/images/header_pricing_western.
 
 const PLANS = [
   {
-    name: 'Free Starter',
+    name: 'Starter Top-Up',
     price: 0,
     credits: 50,
     desc: '50 Free Signup Credits to test standard audio and sync tools.',
@@ -17,71 +17,71 @@ const PLANS = [
       { text: '50 Free Signup Credits', on: true },
       { text: 'Standard sync brief generation', on: true },
       { text: 'Basic analytics dashboard', on: true },
-      { text: 'Community access', on: true },
+      { text: 'Community access & TuneStream play', on: true },
     ],
-    cta: 'Start Free',
+    cta: 'Claim Free Credits',
     style: 'outline',
   },
   {
-    name: 'Creator',
+    name: 'Creator Top-Up',
     price: 9.99,
     credits: 350,
     desc: '350 Non-Expiring Credits. Perfect for independent artists and producers.',
     features: [
-      { text: '350 Unified Network Credits', on: true },
-      { text: 'AI mastering (3 tracks/mo)', on: true },
-      { text: 'Sync placement submissions (5/mo)', on: true },
-      { text: 'Advanced analytics', on: true },
+      { text: '350 Non-Expiring Credits', on: true },
+      { text: 'AI mastering (3 tracks)', on: true },
+      { text: 'Sync placement submissions (5 submissions)', on: true },
+      { text: 'Advanced analytics & EPK hosting', on: true },
     ],
-    cta: 'Subscribe',
+    cta: 'Top-Up 350 Credits',
     style: 'outline',
   },
   {
-    name: 'Pro',
+    name: 'Pro Maven Pack',
     price: 29.99,
     credits: 1500,
     desc: '1,500 Non-Expiring Credits. For serious creators scaling their catalog.',
     features: [
-      { text: '1,500 Unified Network Credits', on: true },
+      { text: '1,500 Non-Expiring Credits', on: true },
       { text: 'Unlimited AI mastering', on: true },
       { text: 'Priority sync placements', on: true },
       { text: 'Splits management & collaboration', on: true },
       { text: 'Custom domain mapping', on: true },
     ],
-    cta: 'Subscribe',
+    cta: 'Top-Up 1,500 Credits',
     style: 'cyan',
     popular: true,
   },
   {
-    name: 'Label',
+    name: 'Studio Master Pack',
     price: 49.99,
     credits: 5000,
     desc: '5,000 Non-Expiring Credits. Enterprise-grade tools for labels and managers.',
     features: [
-      { text: '5,000 Unified Network Credits', on: true },
-      { text: 'Unlimited everything', on: true },
-      { text: 'White-label dashboards', on: true },
+      { text: '5,000 Non-Expiring Credits', on: true },
+      { text: 'Lossless multitrack stem downloads', on: true },
+      { text: 'White-label dashboards & EPKs', on: true },
       { text: 'API access & webhooks', on: true },
-      { text: 'Dedicated support', on: true },
+      { text: 'Dedicated sync curation support', on: true },
     ],
-    cta: 'Subscribe',
+    cta: 'Top-Up 5,000 Credits',
     style: 'outline',
   },
   {
-    name: 'Label Bulk (Team)',
+    name: 'Label Bulk Pool',
     price: 149.99,
     credits: 25000,
     seats: 5,
     desc: '25,000 Non-Expiring Credits. Bulk pool for multi-artist catalogs with 5 team seats.',
     features: [
-      { text: '25,000 Unified Network Credits', on: true },
+      { text: '25,000 Non-Expiring Credits', on: true },
       { text: '5 team seats included', on: true },
       { text: 'Bulk catalog operations', on: true },
       { text: 'Dedicated account manager', on: true },
       { text: 'Priority catalog curation', on: true },
       { text: 'Split Cascade ledger engines', on: true },
     ],
-    cta: 'Contact Sales',
+    cta: 'Top-Up 25,000 Credits',
     style: 'outline',
     team: true,
   },
@@ -93,17 +93,15 @@ function CheckoutModal({ plan, onClose, formatPrice, currencyInfo, convertPrice 
 
   const handleStripeCheckout = async () => {
     setLoading(true);
-    // In production, this would call your backend to create a Stripe Checkout Session
-    // For now, simulate with a redirect to Stripe's test payment link
     const amount = convertPrice(plan.price);
     const currency = currencyInfo?.code?.toLowerCase() || 'usd';
     
     alert(
-      `Stripe Checkout will open for:\n\n` +
-      `Plan: ${plan.name}\n` +
-      `Amount: ${currencyInfo?.symbol}${amount.toFixed(2)} ${currency.toUpperCase()}/mo\n` +
-      `Credits: ${plan.credits.toLocaleString()}\n\n` +
-      `To enable live payments, configure your Stripe keys in the environment.`
+      `Credit Top-Up Checkout will open for:\n\n` +
+      `Package: ${plan.name}\n` +
+      `Amount: ${currencyInfo?.symbol}${amount.toFixed(2)} ${currency.toUpperCase()} (One-Time)\n` +
+      `Credits: ${plan.credits.toLocaleString()} Non-Expiring TM Credits\n\n` +
+      `Your balance will update immediately upon checkout.`
     );
     setLoading(false);
     onClose();
@@ -118,20 +116,24 @@ function CheckoutModal({ plan, onClose, formatPrice, currencyInfo, convertPrice 
 
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <img src="/favicon.png" alt="TuneMavens" style={{ width: '42px', height: '42px', margin: '0 auto 12px', display: 'block' }} />
-          <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>Subscribe to {plan.name}</h3>
+          <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>Top-Up {plan.name}</h3>
           <p style={{ fontSize: '13px', color: 'var(--mu)', margin: 0 }}>
-            {plan.credits.toLocaleString()} credits · {currencyInfo?.symbol}{convertPrice(plan.price).toFixed(2)}/mo
+            {plan.credits.toLocaleString()} non-expiring credits · {currencyInfo?.symbol}{convertPrice(plan.price).toFixed(2)} one-time
           </p>
         </div>
 
         <div style={{ background: 'var(--ca)', border: '1px solid var(--b1)', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
-            <span style={{ color: 'var(--mu)' }}>Plan</span>
+            <span style={{ color: 'var(--mu)' }}>Package</span>
             <span style={{ color: '#fff', fontWeight: 600 }}>{plan.name}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
-            <span style={{ color: 'var(--mu)' }}>Credits</span>
-            <span style={{ color: '#fff', fontWeight: 600 }}>{plan.credits.toLocaleString()}</span>
+            <span style={{ color: 'var(--mu)' }}>Credits Added</span>
+            <span style={{ color: 'var(--cyan)', fontWeight: 800 }}>+{plan.credits.toLocaleString()} TM Credits</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
+            <span style={{ color: 'var(--mu)' }}>Type</span>
+            <span style={{ color: '#fff', fontWeight: 600 }}>One-Time Top-Up</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
             <span style={{ color: 'var(--mu)' }}>Currency</span>
@@ -139,7 +141,7 @@ function CheckoutModal({ plan, onClose, formatPrice, currencyInfo, convertPrice 
           </div>
           <div style={{ borderTop: '1px solid var(--b1)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '16px' }}>
             <span style={{ color: 'var(--mu)' }}>Total</span>
-            <span style={{ color: 'var(--cyan)', fontWeight: 800 }}>{currencyInfo?.symbol}{convertPrice(plan.price).toFixed(2)}/mo</span>
+            <span style={{ color: 'var(--cyan)', fontWeight: 800 }}>{currencyInfo?.symbol}{convertPrice(plan.price).toFixed(2)}</span>
           </div>
         </div>
 
@@ -155,11 +157,11 @@ function CheckoutModal({ plan, onClose, formatPrice, currencyInfo, convertPrice 
           disabled={loading}
           style={{ width: '100%', padding: '14px', background: 'var(--cyan)', color: '#060813', border: 'none', borderRadius: '6px', fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
         >
-          {loading ? 'Redirecting to Stripe…' : `Pay ${currencyInfo?.symbol}${convertPrice(plan.price).toFixed(2)}/mo`}
+          {loading ? 'Redirecting to Checkout…' : `Pay ${currencyInfo?.symbol}${convertPrice(plan.price).toFixed(2)} One-Time`}
         </button>
 
         <p style={{ fontSize: '11px', color: 'var(--mu2)', textAlign: 'center', marginTop: '12px' }}>
-          Powered by Stripe · Secure checkout · Cancel anytime
+          Powered by Stripe & PesaPal · Non-expiring credits · Instant top-up
         </p>
       </div>
     </div>
@@ -175,7 +177,7 @@ export default function PricingView() {
     if (plan.price === 0) {
       navigate('/register');
     } else if (plan.team) {
-      alert(`For Label Bulk (Team) packages, please contact sales@tunemavens.com.\n\nOur team will set up your custom bulk pricing and ${plan.seats} team seats.`);
+      setCheckoutPlan(plan);
     } else {
       setCheckoutPlan(plan);
     }
@@ -183,10 +185,10 @@ export default function PricingView() {
 
   return (
     <>
-      <PageHeader title="Plans & Pricing" bgImage={headerPricingImg} bgImageWestern={headerPricingWesternImg} breadcrumb="Pricing" />
+      <PageHeader title="Credits & Top-Ups" bgImage={headerPricingImg} bgImageWestern={headerPricingWesternImg} breadcrumb="Credits & Pricing" />
       <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
         <p className="section-desc" style={{ textAlign: 'center', marginBottom: '40px', maxWidth: '700px', margin: '0 auto 40px' }}>
-          Transparent pricing with local currency support. All credits are non-expiring and shared across the Intermaven network.
+          Top up your balance with non-expiring TM Credits. No recurring monthly subscriptions — pay only for what you use across the entire TuneMavens and Intermaven ecosystem.
         </p>
         <div className="pricing-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', maxWidth: '1300px' }}>
           {PLANS.map((plan) => (
@@ -196,7 +198,7 @@ export default function PricingView() {
               <h3 className="plan-name">{plan.name}</h3>
               <div className="plan-price">
                 {plan.price === 0 ? formatPrice(0) : `${currencyInfo?.symbol || '$'}${convertPrice(plan.price).toFixed(2)}`}
-                <span>/{plan.price === 0 ? 'free' : 'mo'}</span>
+                <span>/{plan.price === 0 ? 'free' : 'top-up'}</span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '24px' }}>{plan.desc}</p>
               <ul className="plan-features">

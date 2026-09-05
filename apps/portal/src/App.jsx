@@ -105,6 +105,8 @@ import LoginView from './views/auth/LoginView.jsx'
 import RegisterView from './views/auth/RegisterView.jsx'
 import CreatorEpkView, { EPK_THEMES } from './views/creator/CreatorEpkView.jsx'
 import EpkWizard from './components/EpkWizard.jsx'
+import DashboardCmsStudio from './components/DashboardCmsStudio.jsx'
+import SmartCrmStudioPanel from './components/SmartCrmStudioPanel.jsx'
 
 
 
@@ -453,11 +455,11 @@ function DashboardView({
       case 'social-ai':
         return <SocialAiPanel setActiveTab={setActiveTab} />;
       case 'crm':
-        return <CrmPanel />;
+        return <CrmPanel sessionUser={sessionUser} />;
       case 'cms':
-        return <CmsPanel />;
+        return <CmsPanel sessionUser={sessionUser} epk={creatorEpk} setEpk={setCreatorEpk} tracks={catalogTracks} onSwitchToWizard={() => setActiveTab('epk-builder')} />;
       case 'epk-builder':
-        return <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} sessionUser={sessionUser} />;
+        return <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} sessionUser={sessionUser} setActiveTab={setActiveTab} />;
       case 'app-marketplace':
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       default:
@@ -488,7 +490,7 @@ function DashboardView({
       'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: RiGlobalFill, category: 'Royalty Ledgers' },
       'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: RiFlashlightFill, category: 'Apps & Marketplace' },
       'social-ai': { id: 'social-ai', label: 'Social AI Studio', icon: RiCpuFill, category: 'Creator Tools' },
-      crm: { id: 'crm', label: 'CRM Campaigns', icon: RiMessage2Fill, category: 'Admin' },
+      crm: { id: 'crm', label: 'Smart CRM', icon: RiMessage2Fill, category: 'Creator Tools' },
       cms: { id: 'cms', label: 'CMS Layouts', icon: RiFileTextFill, category: 'Admin' },
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: RiGlobalFill, category: 'Admin' },
       'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: RiStarFill, category: 'Admin' },
@@ -538,8 +540,8 @@ function DashboardView({
 
     const categories = {};
     visibleKeys.forEach(k => {
-      // Check if this tab is a marketplace app, and if so, only show if activated.
-      if (APP_SLUGS[k]) {
+      // Check if this tab is a marketplace app, and if so, only show if activated (CRM is always available).
+      if (APP_SLUGS[k] && k !== 'crm') {
         const activeApps = sessionUser?.apps || [];
         if (!activeApps.includes(APP_SLUGS[k])) {
           return;
@@ -593,10 +595,34 @@ function DashboardView({
                     <li key={item.id}>
                       <button 
                         onClick={() => {
-                          const isInterApp = ['crm', 'cms'].includes(item.id);
-                          if (isInterApp) {
-                            const targetUrl = getIntermavenUrl(item.id === 'crm' ? 'intermaven-smart-crm' : 'cms');
-                            setActiveModalApp({ url: targetUrl, title: item.label });
+                          if (item.id === 'crm') {
+                            const activeSub = localStorage.getItem('last_saved_epk_subdomain') || 'ndufo';
+                            try {
+                              const localFans = JSON.parse(localStorage.getItem(`creator_crm_fans_${activeSub}`) || '[]');
+                              fetch(`http://localhost:8001/api/crm/contacts?creator_username=${activeSub}`)
+                                .then(r => r.json())
+                                .then(d => {
+                                  const remoteContacts = d.contacts || [];
+                                  const merged = [...remoteContacts, ...localFans.map((f, i) => ({
+                                    id: `CRM-FAN-${i+1}`,
+                                    first_name: (f.name || 'Fan').split(' ')[0],
+                                    last_name: (f.name || '').split(' ').slice(1).join(' '),
+                                    email: f.email,
+                                    phone: f.phone || '+1 (555) 019-2834',
+                                    company: activeSub.toUpperCase(),
+                                    tags: ['fan', 'vip'],
+                                    source: 'creator_fan_portal',
+                                    status: 'active'
+                                  }))];
+                                  localStorage.setItem('intermaven_crm', JSON.stringify(merged));
+                                })
+                                .catch(() => {});
+                            } catch (_) {}
+
+                            const targetUrl = getIntermavenUrl('intermaven-smart-crm');
+                            setActiveModalApp({ url: targetUrl, title: 'Intermaven Smart CRM' });
+                          } else if (item.id === 'cms') {
+                            setActiveTab('cms');
                           } else {
                             setActiveTab(item.id);
                           }
@@ -784,7 +810,21 @@ function DashboardView({
             {/* Modal Body / EPK Builder or Iframe */}
             <div style={{ flex: 1, position: 'relative', background: '#0f172a', overflowY: 'auto', padding: activeModalApp.title === 'EPK Builder' ? '20px' : 0 }}>
               {activeModalApp.title === 'EPK Builder' ? (
-                <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} sessionUser={sessionUser} />
+                <EPKBuilderPanel 
+                  tracks={catalogTracks} 
+                  epk={creatorEpk} 
+                  setEpk={setCreatorEpk} 
+                  sessionUser={sessionUser} 
+                  setActiveTab={(tab) => {
+                    setActiveModalApp(null);
+                    setActiveTab(tab);
+                  }} 
+                />
+              ) : activeModalApp.title === 'Intermaven Smart CRM' ? (
+                <SmartCrmStudioPanel
+                  sessionUser={sessionUser}
+                  onClose={() => setActiveModalApp(null)}
+                />
               ) : (
                 <iframe 
                   src={activeModalApp.url}
@@ -1900,7 +1940,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
 }
 
 // ================= SUB-PANEL: EPK Builder (Wizard) =================
-function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser }) {
+function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab }) {
   const [portedAsset, setPortedAsset] = useState(() => sessionStorage.getItem('ported_asset_url'));
 
   return (
@@ -1916,17 +1956,48 @@ function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser }) {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {epk?.subdomain && (
-            <a
-              href={`/#/epk/${epk.subdomain}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontSize: '10px', fontWeight: 'bold', color: '#00f0ff', background: 'rgba(0,240,255,0.1)', padding: '5px 10px', borderRadius: '4px', textDecoration: 'none', border: '1px solid rgba(0,240,255,0.3)' }}
-            >
-              Preview Live EPK
-            </a>
-          )}
-          <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--cyan)', background: 'rgba(34,211,238,0.08)', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof setActiveTab === 'function') {
+                setActiveTab('cms');
+              } else {
+                window.location.hash = '#/cms';
+              }
+            }}
+            style={{
+              fontSize: '11px',
+              fontWeight: '800',
+              color: '#0f172a',
+              background: 'linear-gradient(135deg, #22d3ee, #00f0ff)',
+              padding: '6px 12px',
+              borderRadius: '3px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              boxShadow: '0 2px 8px rgba(34,211,238,0.25)',
+              transition: 'all 0.2s ease'
+            }}
+            title="Access Mother CMS Studio"
+          >
+            <span>⚡</span> CMS Studio
+          </button>
+          {(() => {
+            const activeSub = (epk?.subdomain && epk.subdomain !== 'aisha' ? epk.subdomain : null) || (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || 'ndufo';
+            return (
+              <a
+                href={`/#/epk/${activeSub}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: '10px', fontWeight: 'bold', color: '#00f0ff', background: 'rgba(0,240,255,0.1)', padding: '5px 10px', borderRadius: '3px', textDecoration: 'none', border: '1px solid rgba(0,240,255,0.3)' }}
+              >
+                Preview Live EPK
+              </a>
+            );
+          })()}
+          <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--cyan)', background: 'rgba(34,211,238,0.08)', padding: '4px 8px', borderRadius: '3px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             Wizard v3.0
           </span>
         </div>
@@ -3480,7 +3551,7 @@ function DjPoolPanel() {
                       <input type="text" value={upRegions} onChange={e => setUpRegions(e.target.value)} placeholder="e.g. KE, NG, ZA (blank = global)" style={inputStyle} />
                     </div>
                   </div>
-                  <button type="submit" disabled={submittingUpload} style={{ padding: '13px', borderRadius: '6px', border: 'none', cursor: submittingUpload ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', background: 'linear-gradient(135deg, var(--cyan), #4f46e5)', color: '#fff', width: '100%', marginTop: '8px' }}>
+                  <button type="submit" disabled={submittingUpload} style={{ padding: '13px', borderRadius: '6px', border: 'none', cursor: submittingUpload ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', background: 'var(--cyan)', color: '#060813', border: 'none', width: '100%', marginTop: '8px' }}>
                     {submittingUpload ? 'Uploading…' : 'â¬† Publish Promo to DJ Pool'}
                   </button>
                 </form>
@@ -3538,7 +3609,7 @@ function DjPoolPanel() {
                   style={{ ...inputStyle, height: '80px', resize: 'none' }}
                 />
               </div>
-              <button type="submit" disabled={submittingFeedback || !feedbackText.trim()} style={{ padding: '13px', borderRadius: '6px', border: 'none', cursor: (submittingFeedback || !feedbackText.trim()) ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', background: 'linear-gradient(135deg, var(--cyan), #4f46e5)', color: '#fff', opacity: (submittingFeedback || !feedbackText.trim()) ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+              <button type="submit" disabled={submittingFeedback || !feedbackText.trim()} style={{ padding: '13px', borderRadius: '6px', border: 'none', cursor: (submittingFeedback || !feedbackText.trim()) ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', background: 'var(--cyan)', color: '#060813', border: 'none', opacity: (submittingFeedback || !feedbackText.trim()) ? 0.6 : 1, transition: 'opacity 0.2s' }}>
                 {submittingFeedback ? 'Submitting…' : '🔍“ Submit Review & Download Track'}
               </button>
             </form>
@@ -4424,8 +4495,8 @@ function AppContent({
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView />} />
-          <Route path="/epk" element={<CreatorEpkView creatorEpk={creatorEpk} sessionUser={sessionUser} />} />
-          <Route path="/epk/:username" element={<CreatorEpkView creatorEpk={creatorEpk} sessionUser={sessionUser} />} />
+          <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
+          <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
 
           <Route path="/stream" element={
             <StreamView 
@@ -4680,18 +4751,29 @@ function App() {
     { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe', isFeatured: false }
   ]);
 
-  const [creatorEpk, setCreatorEpk] = useState({
-    subdomain: 'aisha',
-    headline: 'Nairobi Electronic Sunset Pioneer',
-    themeBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-    featuredTrackIsrc: 'US-123-45678',
-    spotify: 'https://spotify.com/artist/aisha',
-    instagram: 'https://instagram.com/aisha_okoro',
-    soundcloud: 'https://soundcloud.com/aisha',
-    bookingEmail: 'booking@aishaokoro.com',
-    pressOutlet: 'Pitchfork',
-    pressQuote: 'Okoro is redefining the contours of Afro-House on a global scale.',
-    bio: 'Independent creator on the TuneMavens and Intermaven network.'
+  const [creatorEpk, setCreatorEpk] = useState(() => {
+    try {
+      const activeSub = (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || 'ndufo';
+      const cached = localStorage.getItem(`epk_public_${activeSub}`) || localStorage.getItem(`epk_${activeSub}`) || localStorage.getItem('last_saved_epk_data');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return { subdomain: activeSub, artist_name: parsed.artist_name || (activeSub === 'ndufo' ? 'Ndufo' : activeSub), ...parsed };
+      }
+    } catch (_) {}
+    return {
+      subdomain: 'ndufo',
+      artist_name: 'Ndufo',
+      headline: 'Official Standalone Creator Web World',
+      themeBg: 'linear-gradient(135deg, #0f0c20 0%, #1a0826 100%)',
+      featuredTrackIsrc: 'KE-TM1-26-00042',
+      spotify: 'https://spotify.com/artist/ndufo',
+      instagram: 'https://instagram.com/ndufo',
+      soundcloud: 'https://soundcloud.com/ndufo',
+      bookingEmail: 'booking@ndufo.com',
+      pressOutlet: 'Billboard & SyncMavens',
+      pressQuote: 'Redefining the sonic architecture of electronic soundscapes and rights ownership.',
+      bio: 'Independent creator on the TuneMavens and Intermaven network.'
+    };
   });
 
   const [ledgerRows, setLedgerRows] = useState([
@@ -5393,49 +5475,29 @@ function SocialAiPanel({ setActiveTab }) {
 }
 
 // ================= Track D: CRM Campaigns Panel =================
-function CrmPanel() {
-  const targetUrl = getIntermavenUrl('intermaven-smart-crm');
-
+function CrmPanel({ sessionUser }) {
   return (
-    <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 180px)', padding: 0, overflow: 'hidden', background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
-      <iframe
-        src={targetUrl}
-        title="Intermaven Smart CRM"
-        style={{
-          width: '100%',
-          height: '100%',
-          border: 'none',
-          background: '#0f172a'
-        }}
-        allow="clipboard-write"
-      />
+    <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 180px)', padding: 0, overflow: 'hidden', background: '#070a13', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
+      <SmartCrmStudioPanel sessionUser={sessionUser} />
     </div>
   );
 }
 
 // ================= Track D: CMS Layouts & Rollbacks Panel =================
-function CmsPanel() {
-  const targetUrl = getIntermavenUrl('cms');
-
+function CmsPanel({ sessionUser, epk, setEpk, tracks, onSwitchToWizard }) {
   return (
-    <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 180px)', padding: 0, overflow: 'hidden', background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
-      <iframe
-        src={targetUrl}
-        title="Intermaven Mother CMS"
-        style={{
-          width: '100%',
-          height: '100%',
-          border: 'none',
-          background: '#0f172a'
-        }}
-        allow="clipboard-write"
-      />
-    </div>
+    <DashboardCmsStudio 
+      sessionUser={sessionUser}
+      epk={epk}
+      setEpk={setEpk}
+      tracks={tracks}
+      onSwitchToWizard={onSwitchToWizard}
+    />
   );
 }
 
 // ================= Track D: EPK Builder Panel (Dual Mode & Intermaven Protocol) =================
-function EpkBuilderIframePanel({ tracks, epk, setEpk, sessionUser }) {
+function EpkBuilderIframePanel({ tracks, epk, setEpk, sessionUser, setActiveTab }) {
   const [viewMode, setViewMode] = useState('native');
   const targetUrl = getIntermavenUrl('epk-builder');
 
@@ -5468,7 +5530,7 @@ function EpkBuilderIframePanel({ tracks, epk, setEpk, sessionUser }) {
       </div>
 
       {viewMode === 'native' ? (
-        <EPKBuilderPanel tracks={tracks} epk={epk} setEpk={setEpk} sessionUser={sessionUser} />
+        <EPKBuilderPanel tracks={tracks} epk={epk} setEpk={setEpk} sessionUser={sessionUser} setActiveTab={setActiveTab} />
       ) : (
         <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 230px)', padding: 0, overflow: 'hidden', background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
           <iframe

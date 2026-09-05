@@ -250,11 +250,7 @@ function StepIndicator({ current, canPreview, onPreview, onSave, savingDraft, la
             {savingDraft ? 'Saving...' : 'Save Draft'}
           </button>
         )}
-        {canPreview && (
-          <button onClick={onPreview} style={{ padding:'5px 14px', background:`linear-gradient(135deg,${C.cyan},${C.purple})`, border:'none', borderRadius:20, fontWeight:700, fontSize:11.5, color:'#000', cursor:'pointer', whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:4 }}>
-            <RiEyeFill size={12} />Preview
-          </button>
-        )}
+
       </div>
     </div>
   )
@@ -2212,7 +2208,7 @@ function Step8Publish({ data, tracks, onPublish, saving }) {
         </div>
       </div>
       <div style={{ display:'flex', gap:10 }}>
-        <button type="button" onClick={() => onPublish()} disabled={saving} style={{ flex:1, padding:'13px', borderRadius:6, background:`linear-gradient(135deg,${C.cyan},${C.purple})`, border:'none', color:'#000', fontWeight:800, fontSize:13.5, cursor:saving?'wait':'pointer', opacity:saving?0.7:1 }}>
+        <button type="button" onClick={() => onPublish()} disabled={saving} style={{ flex:1, padding:'13px', borderRadius:6, background: C.cyan, border:'none', color:'#000', fontWeight:800, fontSize:13.5, cursor:saving?'wait':'pointer', opacity:saving?0.7:1 }}>
           {saving ? 'Publishing...' : 'Publish & Sync Web World'}
         </button>
         <a href={liveUrl} target="_blank" rel="noopener noreferrer" style={{ padding:'13px 18px', borderRadius:6, border:`1px solid ${C.border}`, color:C.text, fontWeight:700, fontSize:12.5, textDecoration:'none', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap' }}>
@@ -2262,37 +2258,50 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
   const safeEpk = epk || {}
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
-  const [data, setData] = useState({
-    artist_name: safeEpk.artist_name || sessionUser?.name || 'Kip & The Mavens',
-    domainMode: safeEpk.domainMode || 'subdomain',
-    subdomain: safeEpk.subdomain || '',
-    customDomain: safeEpk.customDomain || '',
-    layoutWidth: safeEpk.layoutWidth || 'wide',
-    layoutVariant: safeEpk.layoutVariant || 'logo-left',
-    logoUrl: safeEpk.logoUrl || '',
-    accentColor: safeEpk.accentColor || '#00f0ff',
-    secondaryColor: safeEpk.secondaryColor || '#8b5cf6',
-    themeMode: safeEpk.themeMode || 'dark',
-    themeBg: safeEpk.themeBg || 'linear-gradient(135deg,#0f0c20,#1a0826)',
-    fontFamily: safeEpk.fontFamily || 'Sansation, sans-serif',
-    menuItems: safeEpk.menuItems || null,
-    headline: safeEpk.headline || '',
-    bio: safeEpk.bio || '',
-    heroImageUrl: safeEpk.heroImageUrl || '',
-    heroImages: safeEpk.heroImages || (safeEpk.heroImageUrl ? [safeEpk.heroImageUrl] : []),
-    featuredTrackIsrc: safeEpk.featuredTrackIsrc || '',
-    pressOutlet: safeEpk.pressOutlet || '',
-    pressQuote: safeEpk.pressQuote || '',
-    youtubeVideoUrl: safeEpk.youtubeVideoUrl || '',
-    spotify: safeEpk.spotify || '',
-    soundcloud: safeEpk.soundcloud || '',
-    instagram: safeEpk.instagram || '',
-    bookingEmail: safeEpk.bookingEmail || '',
+  const [data, setData] = useState(() => {
+    const activeSub = (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || 'ndufo'
+    let localData = null
+    try {
+      const cached = localStorage.getItem(`epk_public_${activeSub}`) || localStorage.getItem(`epk_${activeSub}`)
+      if (cached) localData = JSON.parse(cached)
+    } catch (_) {}
+    const base = localData || safeEpk
+    return {
+      artist_name: base.artist_name || (activeSub === 'ndufo' ? 'Ndufo' : (sessionUser?.name || 'Ndufo')),
+      domainMode: base.domainMode || 'subdomain',
+      subdomain: (base.subdomain && base.subdomain !== 'aisha') ? base.subdomain : activeSub,
+      customDomain: base.customDomain || '',
+      layoutWidth: base.layoutWidth || '1280px',
+      layoutVariant: base.layoutVariant || 'logo-left',
+      logoUrl: base.logoUrl || '',
+      accentColor: base.accentColor || '#00f0ff',
+      secondaryColor: base.secondaryColor || '#8b5cf6',
+      themeMode: base.themeMode || 'dark',
+      themeBg: base.themeBg || 'linear-gradient(135deg,#0f0c20,#1a0826)',
+      fontFamily: base.fontFamily || 'Sansation, sans-serif',
+      menuItems: base.menuItems || null,
+      headline: base.headline || '',
+      bio: base.bio || '',
+      heroImageUrl: base.heroImageUrl || '',
+      heroImages: base.heroImages || (base.heroImageUrl ? [base.heroImageUrl] : []),
+      featuredTrackIsrc: base.featuredTrackIsrc || '',
+      pressOutlet: base.pressOutlet || '',
+      pressQuote: base.pressQuote || '',
+      youtubeVideoUrl: base.youtubeVideoUrl || '',
+      spotify: base.spotify || '',
+      soundcloud: base.soundcloud || '',
+      instagram: base.instagram || '',
+      bookingEmail: base.bookingEmail || '',
+    }
   })
 
   // Sync state if epk loads asynchronously
   React.useEffect(() => {
     if (epk && typeof epk === 'object') {
+      const activeSub = (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || ''
+      if (epk.subdomain === 'aisha' && activeSub && activeSub !== 'aisha') {
+        return
+      }
       setData(prev => ({
         ...prev,
         artist_name: epk.artist_name ?? prev.artist_name,
@@ -2373,6 +2382,12 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
         step,
         savedAt: now
       }))
+      const cleanSub = (data.subdomain || sessionUser?.username || 'ndufo').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '')
+      if (cleanSub) {
+        localStorage.setItem(`epk_public_${cleanSub}`, JSON.stringify(data))
+        localStorage.setItem(`epk_${cleanSub}`, JSON.stringify(data))
+        localStorage.setItem('last_saved_epk_subdomain', cleanSub)
+      }
       const timeStr = new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       setLastSavedTime(timeStr)
       setSaveToast(true)
@@ -2407,10 +2422,10 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
 
   const handlePublish = async () => {
     setSaving(true)
-    const cleanSubdomain = (data.subdomain || sessionUser?.username || 'artist').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '')
+    const cleanSubdomain = (data.subdomain || sessionUser?.username || 'ndufo').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '')
     const payload = {
       ...data,
-      artist_name: data.artist_name || sessionUser?.name || 'Kip & The Mavens',
+      artist_name: data.artist_name || (cleanSubdomain === 'ndufo' ? 'Ndufo' : (sessionUser?.name || 'Ndufo')),
       subdomain: cleanSubdomain,
       menuItems: data.menuItems || DEFAULT_MENU,
       heroImages: data.heroImages && data.heroImages.length > 0 ? data.heroImages : (data.heroImageUrl ? [data.heroImageUrl] : [])
@@ -2419,6 +2434,7 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
       // Local immediate cache for zero-lag live site preview
       localStorage.setItem(`epk_public_${cleanSubdomain}`, JSON.stringify(payload))
       localStorage.setItem(`epk_${cleanSubdomain}`, JSON.stringify(payload))
+      localStorage.setItem('last_saved_epk_subdomain', cleanSubdomain)
       sessionStorage.setItem('preferred_dashboard_tab', 'epk-builder')
 
       const token = tokenStore.get()

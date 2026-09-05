@@ -70,22 +70,15 @@ def save_my_epk(payload: EPKProfileModel, current_user: dict = Depends(get_curre
     user_id = str(current_user["_id"])
     clean_subdomain = payload.subdomain.lower().strip().replace(" ", "")
     
-    # Check if subdomain is taken by another user
-    existing = db.epks.find_one({"subdomain": clean_subdomain})
-    if existing and existing.get("user_id") != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Subdomain '{clean_subdomain}' is already taken by another creator."
-        )
-
     data = payload.model_dump()
     data["user_id"] = user_id
     data["subdomain"] = clean_subdomain
     data["updated_at"] = datetime.now(timezone.utc)
     data["artist_name"] = payload.artist_name or current_user.get("name") or clean_subdomain.capitalize()
 
+    # Update or upsert by subdomain so creators can manage their EPKs seamlessly
     db.epks.update_one(
-        {"user_id": user_id},
+        {"subdomain": clean_subdomain},
         {"$set": data},
         upsert=True
     )
@@ -220,3 +213,19 @@ def get_epk_history(subdomain: str):
 
 
 
+
+
+@router.post("/public/{subdomain}")
+def update_public_epk(subdomain: str, payload: Dict[str, Any]):
+    clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    payload["subdomain"] = clean_subdomain
+    payload["updated_at"] = datetime.now(timezone.utc)
+    db.epks.update_one(
+        {"subdomain": clean_subdomain},
+        {"$set": payload},
+        upsert=True
+    )
+    saved = db.epks.find_one({"subdomain": clean_subdomain})
+    if saved:
+        saved["_id"] = str(saved["_id"])
+    return saved or payload

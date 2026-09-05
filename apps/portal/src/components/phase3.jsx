@@ -359,7 +359,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
         </div>
 
         <div style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', marginBottom: '24px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${Math.round(((step + 1) / totalSteps) * 100)}%`, background: 'linear-gradient(90deg, var(--cyan), var(--purple))', transition: 'width 0.3s ease' }} />
+          <div style={{ height: '100%', width: `${Math.round(((step + 1) / totalSteps) * 100)}%`, background: 'var(--cyan)', color: '#000', transition: 'width 0.3s ease' }} />
         </div>
 
         {current && (
@@ -425,7 +425,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
           </button>
           {isLast ? (
             <button type="button" onClick={save} disabled={saving} data-testid="wizard-submit"
-              style={{ padding: '10px 20px', background: 'linear-gradient(90deg, var(--cyan), var(--purple))', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: saving ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
+              style={{ padding: '10px 20px', background: 'var(--cyan)', color: '#000', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: saving ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
               {saving ? 'Saving\u2026' : 'Get my picks'} <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
             </button>
           ) : (
@@ -478,7 +478,7 @@ export function RecommendationHero({ activatedSlugs, onActivate, onOpen, onOpenW
           <div style={{ fontSize: '14px', color: '#f1f5f9', fontWeight: 700 }}>Answer 5 quick questions and the AI Recommendation Agent will pick the best combination of apps for you.</div>
         </div>
         <button type="button" onClick={onOpenWizard} data-testid="recommendation-hero-open-wizard"
-          style={{ padding: '10px 18px', background: 'linear-gradient(90deg, var(--cyan), var(--purple))', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '12px', cursor: 'pointer', letterSpacing: '0.3px' }}>
+          style={{ padding: '10px 18px', background: 'var(--cyan)', color: '#000', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '12px', cursor: 'pointer', letterSpacing: '0.3px' }}>
           Get my picks <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
         </button>
       </div>
