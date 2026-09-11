@@ -5,9 +5,13 @@ intermaven.io. Any user record created here is the same record intermaven.io see
 and any JWT minted here is valid on intermaven.io (and vice versa).
 """
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
+# Explicitly load .env from backend directory first, then current working directory
+backend_env = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=backend_env)
 load_dotenv()
 
 # --- Mongo (shared with intermaven.io) ---

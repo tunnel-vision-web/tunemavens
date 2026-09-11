@@ -192,7 +192,16 @@ export function CreatorEpkView(props = {}) {
       } catch (_) {}
 
       if (freshData) {
-        setEpkData(prev => ({ ...(prev || {}), ...freshData }))
+        setEpkData(prev => {
+          const merged = { ...(prev || {}), ...freshData }
+          if (!merged.heroImageUrl && prev?.heroImageUrl) merged.heroImageUrl = prev.heroImageUrl
+          if ((!merged.heroImages || !merged.heroImages.length) && prev?.heroImages?.length) merged.heroImages = prev.heroImages
+          if ((!merged.heroSlides || !merged.heroSlides.length) && prev?.heroSlides?.length) merged.heroSlides = prev.heroSlides
+          if (prev?.pageHeaders) {
+            merged.pageHeaders = { ...(prev.pageHeaders || {}), ...(merged.pageHeaders || {}) }
+          }
+          return merged
+        })
         try {
           localStorage.setItem(`epk_public_${artistSlug}`, JSON.stringify(freshData))
           localStorage.setItem(`epk_${artistSlug}`, JSON.stringify(freshData))
@@ -387,15 +396,10 @@ export function CreatorEpkView(props = {}) {
         { id: 1, img: primaryHero, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 }
       ]
     }
-    if (artistSlug === 'kip') {
-      return [
-        { id: 1, img: heroSlide1, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 },
-        { id: 2, img: heroSlide2, title1: 'World Tour 2026 Live Showcase', title2: 'Live at Nairobi Cyberdome, London O2 & Brooklyn Steel', title3: 'Direct Fan Ticketing via TuneBooking • Reserved Seating', title: 'World Tour 2026', subtitle: 'Live at Nairobi Cyberdome, London O2 Academy & Brooklyn Steel' },
-        { id: 3, img: heroSlide3, title1: 'Exclusive Digital MP3s', title2: 'Unreleased High-Quality MP3 Singles Available for Credits', title3: 'High-Quality Digital MP3 Singles • Collector Vinyl & CDs • Direct Fan Passes', title: 'Exclusive Digital MP3s', subtitle: 'Unreleased High-Quality MP3 Singles Available for Intermaven Credits' }
-      ]
-    }
     return [
-      { id: 1, img: null, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 }
+      { id: 1, img: heroSlide1, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 },
+      { id: 2, img: heroSlide2, title1: 'World Tour 2026 Live Showcase', title2: 'Live at Nairobi Cyberdome, London O2 & Brooklyn Steel', title3: 'Direct Fan Ticketing via TuneBooking • Reserved Seating', title: 'World Tour 2026', subtitle: 'Live at Nairobi Cyberdome, London O2 Academy & Brooklyn Steel' },
+      { id: 3, img: heroSlide3, title1: 'Exclusive Digital MP3s', title2: 'Unreleased High-Quality MP3 Singles Available for Credits', title3: 'High-Quality Digital MP3 Singles • Collector Vinyl & CDs • Direct Fan Passes', title: 'Exclusive Digital MP3s', subtitle: 'Unreleased High-Quality MP3 Singles Available for Intermaven Credits' }
     ]
   }, [epkData?.heroSlides, epkData?.heroImages, epkData?.hero_images, epkData?.heroImageUrl, epkData?.heroImage, epkData?.hero_image_url, epkData?.heroTitle1, epkData?.heroTitle2, epkData?.heroTitle3, effectiveArtistName, effectiveHeadline, artistSlug])
 
@@ -418,7 +422,7 @@ export function CreatorEpkView(props = {}) {
   const safeSlideIndex = (currentSlideIndex >= 0 && currentSlideIndex < (heroSlides?.length || 0)) ? currentSlideIndex : 0
   const currentSlide = (heroSlides && heroSlides[safeSlideIndex]) || (heroSlides && heroSlides[0]) || {
     id: 1,
-    img: artistSlug === 'kip' ? heroSlide1 : null,
+    img: heroSlide1,
     title: effectiveArtistName,
     subtitle: effectiveHeadline
   }
@@ -2771,7 +2775,7 @@ Direct Management Contact: mgmt@intermaven.io`
 
       {/* ================= 2. HERO CAROUSEL ================= */}
       {activeTab === 'home' && (
-        <section style={{ position: 'relative', height: '520px', backgroundImage: currentSlide?.img ? `url(${currentSlide.img})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '80px 32px 48px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
+        <section style={{ position: 'relative', height: '520px', backgroundImage: `url(${currentSlide?.img || heroSlide1})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '80px 32px 48px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
           <div style={{ position: 'absolute', inset: 0, background: isLight ? 'linear-gradient(to top, rgba(248,250,252,0.95) 0%, rgba(248,250,252,0.50) 60%, rgba(248,250,252,0.7) 100%)' : 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.40) 60%, rgba(4,6,14,0.65) 100%)' }} />
 
           {/* HERO Arrows Constrained to Content Width (e.g. 1280px / 960px) */}

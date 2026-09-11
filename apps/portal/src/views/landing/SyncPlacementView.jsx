@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { RiSearchLine, RiShieldKeyholeLine, RiFlashlightLine, RiCheckboxCircleLine } from 'react-icons/ri'
+import { RiSearchLine, RiShieldKeyholeLine, RiSendPlaneLine, RiCheckboxCircleLine } from 'react-icons/ri'
 import PageHeader from '../../components/common/PageHeader.jsx'
 import syncHeaderImg from '../../assets/images/sync_header.png'
 import { getServiceUrl } from '../../components/PerfectForSidebar.jsx'
@@ -34,7 +34,7 @@ export default function SyncPlacementView({ sessionUser }) {
     {
       title: "Real-time Brief Pitching",
       desc: "Get notified when major studios submit licensing briefs. Pitch your tracks directly with single-click submissions.",
-      icon: <RiFlashlightLine size={24} style={{ color: 'var(--cyan)' }} />
+      icon: <RiSendPlaneLine size={24} style={{ color: 'var(--cyan)' }} />
     }
   ];
 

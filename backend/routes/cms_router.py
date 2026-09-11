@@ -233,6 +233,8 @@ def get_epk_cms(subdomain: str, response: Response):
                 "updated_at": epk_doc.get("updated_at", datetime.now(timezone.utc))
             }
         # Return fallback default structure
+        default_hero = "https://image.pollinations.ai/prompt/Young%20African%20lady%20singing%20soulfully%20in%20a%20studio%20in%20Nairobi.%20Nairobi%20skyline%20shows%20through%20the%20window?width=1400&height=700&nologo=true&seed=3044680"
+        default_hero_2 = "https://image.pollinations.ai/prompt/Young%20African%20lady%20singing%20in%20front%20of%20a%20crowd%20of%20hundreds%20in%20an%20outdoor%20concert%20in%20Nairobi.%20The%20skyline%20is%20visible%20in%20the%20background%20and%20she%20is%20backed%20by%20a%20full%20band?width=1400&height=700&nologo=true&seed=3153304"
         return {
             "layout_id": layout_id,
             "subdomain": clean_subdomain,
@@ -251,16 +253,22 @@ def get_epk_cms(subdomain: str, response: Response):
                 "heroTitle1": f"{clean_subdomain.capitalize()} — Broadcast Sync & Master Catalog",
                 "heroTitle2": "100% Pre-Cleared One-Stop Sync Licensing on SyncMavens",
                 "heroTitle3": "Instrumental Cues, 24-Bit WAV Stems & Automated PRO Splits",
+                "heroImageUrl": default_hero,
+                "heroImages": [default_hero, default_hero_2],
                 "bio": f"<h2>About {clean_subdomain.capitalize()}</h2><p>Welcome to the official Electronic Press Kit for {clean_subdomain.capitalize()}.</p>"
             }
         }
+
+    res_data = dict(doc.get("data", {}))
+    if not res_data.get("heroImageUrl"):
+        res_data["heroImageUrl"] = "https://image.pollinations.ai/prompt/Young%20African%20lady%20singing%20soulfully%20in%20a%20studio%20in%20Nairobi.%20Nairobi%20skyline%20shows%20through%20the%20window?width=1400&height=700&nologo=true&seed=3044680"
 
     return {
         "layout_id": layout_id,
         "subdomain": clean_subdomain,
         "version": doc.get("version", 1),
         "status": "published",
-        "data": doc.get("data", {}),
+        "data": res_data,
         "updated_at": doc.get("updated_at")
     }
 

@@ -133,8 +133,12 @@ def get_public_epk(subdomain: str, response: Response):
     cms_data = dict(cms_doc.get("data", {})) if cms_doc else {}
     cms_data.pop("_id", None)
 
+    default_hero_url = "https://image.pollinations.ai/prompt/Young%20African%20lady%20singing%20soulfully%20in%20a%20studio%20in%20Nairobi.%20Nairobi%20skyline%20shows%20through%20the%20window?width=1400&height=700&nologo=true&seed=3044680"
+    default_hero_url_2 = "https://image.pollinations.ai/prompt/Young%20African%20lady%20singing%20in%20front%20of%20a%20crowd%20of%20hundreds%20in%20an%20outdoor%20concert%20in%20Nairobi.%20The%20skyline%20is%20visible%20in%20the%20background%20and%20she%20is%20backed%20by%20a%20full%20band?width=1400&height=700&nologo=true&seed=3153304"
+    default_hero_url_3 = "https://picsum.photos/seed/producer_studio_gear_3/1200/600"
+
     if not epk_doc and not cms_data:
-        # Return fallback template shape
+        # Return fallback template shape with full hero presentation
         return {
             "subdomain": clean_subdomain,
             "artist_name": clean_subdomain.capitalize(),
@@ -144,6 +148,31 @@ def get_public_epk(subdomain: str, response: Response):
             "secondaryColor": "#ff007f",
             "fontFamily": "Sansation, sans-serif",
             "themeBg": "linear-gradient(135deg, #0f0c20 0%, #1a0826 100%)",
+            "heroImageUrl": default_hero_url,
+            "heroImages": [default_hero_url, default_hero_url_2, default_hero_url_3],
+            "heroSlides": [
+                {
+                    "id": 1,
+                    "img": default_hero_url,
+                    "title1": clean_subdomain.capitalize(),
+                    "title2": "Soulful Afro-fusion Musician",
+                    "title3": "High-Quality Digital Singles • Collector Vinyl & CDs • Direct Fan Ticketing"
+                },
+                {
+                    "id": 2,
+                    "img": default_hero_url_2,
+                    "title1": "World Tour 2026 Live Showcase",
+                    "title2": "Headline Dates: Tokyo, London & Nairobi",
+                    "title3": "VIP Fan Pass & Direct Ticketing via TuneBooking"
+                },
+                {
+                    "id": 3,
+                    "img": default_hero_url_3,
+                    "title1": f"{clean_subdomain.capitalize()} — Master Audio",
+                    "title2": "Lossless Audio & Direct Fan Passes",
+                    "title3": "Exclusive VIP Vault Access"
+                }
+            ],
             "is_default": True
         }
 
@@ -189,6 +218,36 @@ def get_public_epk(subdomain: str, response: Response):
             )
         except Exception:
             pass
+
+    # Ensure hero presentation fields are never empty
+    if not merged.get("heroImageUrl"):
+        merged["heroImageUrl"] = default_hero_url
+    if not merged.get("heroImages") or not len(merged["heroImages"]):
+        merged["heroImages"] = [default_hero_url, default_hero_url_2, default_hero_url_3]
+    if not merged.get("heroSlides") or not len(merged["heroSlides"]):
+        merged["heroSlides"] = [
+            {
+                "id": 1,
+                "img": default_hero_url,
+                "title1": merged.get("artist_name") or clean_subdomain.capitalize(),
+                "title2": merged.get("headline") or "Official Intermaven Creator Web World",
+                "title3": "High-Quality Digital Singles • Collector Vinyl & CDs • Direct Fan Ticketing"
+            },
+            {
+                "id": 2,
+                "img": default_hero_url_2,
+                "title1": "World Tour 2026 Live Showcase",
+                "title2": "Headline Dates: Tokyo, London & Nairobi",
+                "title3": "VIP Fan Pass & Direct Ticketing via TuneBooking"
+            },
+            {
+                "id": 3,
+                "img": default_hero_url_3,
+                "title1": f"{merged.get('artist_name') or clean_subdomain.capitalize()} — Master Audio",
+                "title2": "Lossless Audio & Direct Fan Passes",
+                "title3": "Exclusive VIP Vault Access"
+            }
+        ]
 
     if "_id" not in merged:
         merged["_id"] = clean_subdomain

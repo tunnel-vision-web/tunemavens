@@ -19,7 +19,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { 
   HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams
 } from 'react-router-dom'
-import { RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiFlashlightFill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill } from 'react-icons/ri'
+import { RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill } from 'react-icons/ri'
 
 // Local assets
 import logoImg from './assets/logo.png'
@@ -507,7 +507,7 @@ function DashboardView({
       'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: RiSmartphoneFill, category: 'tunepay' },
       'publishing-election': { id: 'publishing-election', label: 'Publishing Election', icon: RiBookOpenFill, category: 'Royalty Ledgers' },
       'distribution-election': { id: 'distribution-election', label: 'Distribution Election', icon: RiGlobalFill, category: 'Royalty Ledgers' },
-      'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: RiFlashlightFill, category: 'Apps & Marketplace' },
+      'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: RiApps2Fill, category: 'Apps & Marketplace' },
       'social-ai': { id: 'social-ai', label: 'Social AI Studio', icon: RiCpuFill, category: 'Creator Tools' },
       crm: { id: 'crm', label: 'Smart CRM', icon: RiMessage2Fill, category: 'Creator Tools' },
       cms: { id: 'cms', label: 'CMS Layouts', icon: RiFileTextFill, category: 'Admin' },
