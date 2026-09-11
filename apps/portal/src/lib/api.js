@@ -8,7 +8,7 @@
  * - `credentials: 'include'` so the HttpOnly access_token cookie is sent
  *   automatically once cross-subdomain cookies are configured in production.
  */
-const BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const BASE = ((typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '').replace(/\/$/, '');
 
 // Token persistence helpers (for the Bearer-token fallback path when the
 // cross-subdomain cookie isn't reachable, e.g. local dev across ports).
@@ -132,6 +132,7 @@ export const usersApi = {
   listMyApps: () => request('/api/users/me/apps'),
   activateApp: (slug) => request('/api/users/me/apps', { method: 'POST', body: { slug } }),
   deactivateApp: (slug) => request(`/api/users/me/apps/${encodeURIComponent(slug)}`, { method: 'DELETE' }),
+  syncApps: (apps) => request('/api/users/me/apps', { method: 'PUT', body: { apps } }),
   getOnboarding: () => request('/api/users/me/onboarding'),
   saveOnboarding: (payload) => request('/api/users/me/onboarding', { method: 'POST', body: payload }),
   logActivity: (event) => request('/api/users/me/activity', { method: 'POST', body: event }).catch(() => null),

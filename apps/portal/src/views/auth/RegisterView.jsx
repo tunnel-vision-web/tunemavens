@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { RiRefreshFill } from 'react-icons/ri'
 import { authApi, tokenStore } from '../../lib/api.js'
 import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
+import { reconcileUserApps } from '../../lib/activatedApps.js'
 
 export default function RegisterView({ onLogin }) {
   const navigate = useNavigate();
@@ -483,7 +484,7 @@ export default function RegisterView({ onLogin }) {
         country: 'KE',
       });
       tokenStore.set(access_token);
-      onLogin(user);
+      onLogin(reconcileUserApps(user));
       alert(`SSO registration successfully complete! Welcome, ${name}!`);
       clearSignupMemory();
       navigate('/dashboard');

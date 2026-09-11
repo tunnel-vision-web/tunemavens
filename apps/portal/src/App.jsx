@@ -72,6 +72,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
 import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi } from './lib/api.js'
+import { reconcileUserApps, persistAppActivation, getStoredActivatedApps } from './lib/activatedApps.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
 import { PerfectForSidebar, PERFECT_FOR_ROLES, ROLE_LOGOS, getIntermavenUrl } from './components/PerfectForSidebar.jsx'
@@ -377,6 +378,24 @@ function DashboardView({
     usersApi.logActivity({ kind: 'tab_visit', ref: activeTab }).catch(() => {});
   }, [activeTab, sessionUser?.id]);
 
+  // Ensure activated app choice (like EPK Builder) is remembered whenever viewed or active
+  useEffect(() => {
+    if (activeTab === 'epk-builder') {
+      const activeApps = sessionUser?.apps || getStoredActivatedApps(sessionUser) || [];
+      if (!activeApps.includes('epk-builder')) {
+        persistAppActivation('epk-builder', sessionUser, onUpdateUser);
+      }
+    }
+  }, [activeTab, sessionUser]);
+
+  // Reactive listener for app activations/deactivations across the system
+  const [, setAppsUpdateTrigger] = useState(0);
+  useEffect(() => {
+    const handleAppsUpdated = () => setAppsUpdateTrigger(prev => prev + 1);
+    window.addEventListener('tunemavens-apps-updated', handleAppsUpdated);
+    return () => window.removeEventListener('tunemavens-apps-updated', handleAppsUpdated);
+  }, []);
+
   useEffect(() => {
     if (!sessionUser) {
       navigate('/login');
@@ -542,7 +561,7 @@ function DashboardView({
     visibleKeys.forEach(k => {
       // Check if this tab is a marketplace app, and if so, only show if activated (CRM is always available).
       if (APP_SLUGS[k] && k !== 'crm') {
-        const activeApps = sessionUser?.apps || [];
+        const activeApps = sessionUser?.apps || getStoredActivatedApps(sessionUser) || [];
         if (!activeApps.includes(APP_SLUGS[k])) {
           return;
         }
@@ -4746,8 +4765,12 @@ function ScrollToTop() {
 function App() {
   const [sessionUser, setSessionUser] = useState(() => {
     try {
-      const saved = sessionStorage.getItem('tunemavens_session');
-      return saved ? JSON.parse(saved) : null;
+      const saved = sessionStorage.getItem('tunemavens_session') || localStorage.getItem('tunemavens_saved_user');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return reconcileUserApps(parsed);
+      }
+      return null;
     } catch {
       return null;
     }
@@ -4801,6 +4824,7 @@ function App() {
     const updated = { ...sessionUser, credits: current - amount };
     setSessionUser(updated);
     sessionStorage.setItem('tunemavens_session', JSON.stringify(updated));
+    localStorage.setItem('tunemavens_saved_user', JSON.stringify(updated));
     return true;
   };
 
@@ -4831,8 +4855,13 @@ function App() {
   }, [globalPlaying]);
 
   const handleLogin = (user) => {
-    setSessionUser(user);
-    sessionStorage.setItem('tunemavens_session', JSON.stringify(user));
+    const reconciled = reconcileUserApps(user);
+    setSessionUser(reconciled);
+    sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
+    localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
+    if (tokenStore.get() && Array.isArray(reconciled.apps) && reconciled.apps.length > 0) {
+      usersApi.syncApps?.(reconciled.apps).catch(() => {});
+    }
   };
 
   const handleLogout = async () => {
@@ -4844,6 +4873,7 @@ function App() {
     tokenStore.clear();
     setSessionUser(null);
     sessionStorage.removeItem('tunemavens_session');
+    localStorage.removeItem('tunemavens_saved_user');
   };
 
   // Recognises your Intermaven session when you land on the TuneMavens app.
@@ -4853,14 +4883,16 @@ function App() {
     if (token) {
       authApi.me(token).then((user) => {
         if (cancelled) return;
-        const merged = { ...user };
-        setSessionUser(merged);
-        sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
+        const reconciled = reconcileUserApps(user);
+        setSessionUser(reconciled);
+        sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
+        localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
       }).catch((err) => {
         if (cancelled) return;
         if (err?.status === 401) {
           tokenStore.clear();
           sessionStorage.removeItem('tunemavens_session');
+          localStorage.removeItem('tunemavens_saved_user');
           setSessionUser(null);
         }
       });
@@ -4869,9 +4901,10 @@ function App() {
         if (cancelled) return;
         if (access_token) {
           tokenStore.set(access_token);
-          const merged = { ...sessionUser, ...user };
-          setSessionUser(merged);
-          sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
+          const reconciled = reconcileUserApps({ ...sessionUser, ...user });
+          setSessionUser(reconciled);
+          sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
+          localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
         }
       }).catch(() => {});
     }

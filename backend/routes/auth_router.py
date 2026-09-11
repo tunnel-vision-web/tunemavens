@@ -24,6 +24,10 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def _to_public(user: dict) -> UserPublic:
+    apps = user.get("apps")
+    if apps is None:
+        role = user.get("role", "creator")
+        apps = ["epk-builder", "catalog-porting"] if role in ("creator", "label", "admin") else []
     return UserPublic(
         id=str(user["_id"]),
         email=user["email"],
@@ -36,7 +40,7 @@ def _to_public(user: dict) -> UserPublic:
         brand_name=user.get("brand_name"),
         country=user.get("country"),
         bio=user.get("bio"),
-        apps=user.get("apps", []),
+        apps=apps,
         dashboard_layout=user.get("dashboard_layout"),
     )
 
@@ -100,6 +104,7 @@ def register(payload: RegisterRequest, response: Response):
         brand_name=payload.brand_name,
         country=payload.country,
         credits=600,  # default sandbox credit grant
+        apps=["epk-builder", "catalog-porting"] if primary_role in ("creator", "label", "admin") else [],
     ).to_mongo()
 
     result = db.users.insert_one(user_doc)
@@ -155,6 +160,10 @@ def demo_login(response: Response):
         res = db.users.insert_one(doc)
         doc["_id"] = res.inserted_id
         user = doc
+    else:
+        if not user.get("apps"):
+            db.users.update_one({"_id": user["_id"]}, {"$set": {"apps": ["epk-builder", "catalog-porting"]}})
+            user["apps"] = ["epk-builder", "catalog-porting"]
 
     token = create_access_token(sub=str(user["_id"]))
     _set_cookie(response, token)

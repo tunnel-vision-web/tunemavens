@@ -21,6 +21,7 @@ import {
 import heroSlide1 from '../../assets/creator_hero_banner.jpg'
 import heroSlide2 from '../../assets/creator_hero_slide2.jpg'
 import heroSlide3 from '../../assets/creator_hero_slide3.jpg'
+import { persistAppActivation } from '../../lib/activatedApps.js'
 
 // 20 Pre-populated Theme Templates Specification
 const DEFAULT_PAGE_HEADERS = {
@@ -320,6 +321,7 @@ export function CreatorEpkView(props = {}) {
 
   const handleReturnToBuilder = () => {
     sessionStorage.setItem('preferred_dashboard_tab', 'epk-builder')
+    persistAppActivation('epk-builder')
     navigate('/dashboard')
   }
 

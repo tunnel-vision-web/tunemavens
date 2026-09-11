@@ -1,7 +1,7 @@
 // Unified lookup for every slug the App Marketplace can recommend.
 // The recommendation engine returns slugs + rationale; this helper resolves
 // them to the visual fields (icon, accent, name, open target).
-import { RiDatabase2Fill, RiCoinsFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill } from 'react-icons/ri';
+import { RiDatabase2Fill, RiCoinsFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDiscFill } from 'react-icons/ri';
 import { INTERMAVEN_NATIVE_APPS } from './nativeApps.js';
 import { INTERMAVEN_PLATFORM_APPS } from './intermavenPlatformApps.js';
 
@@ -10,6 +10,7 @@ import { INTERMAVEN_PLATFORM_APPS } from './intermavenPlatformApps.js';
 // long descriptions.
 const TUNEMAVENS_APPS = [
   { slug: 'catalog-porting', name: 'Catalog Porting', icon: RiDatabase2Fill, accent: '#22d3ee', tab: 'catalog' },
+  { slug: 'epk-builder', name: 'EPK Builder', icon: RiDiscFill, accent: '#22d3ee', tab: 'epk-builder' },
   { slug: 'split-cascade', name: 'Split Cascade', icon: RiCoinsFill, accent: '#a78bfa', tab: 'splits' },
   { slug: 'publishing-election', name: 'Publishing Election', icon: RiBookOpenFill, accent: '#22d3ee', tab: 'publishing-election' },
   { slug: 'distribution-election', name: 'Distribution Election', icon: RiGlobalFill, accent: '#a78bfa', tab: 'distribution-election' },

@@ -67,6 +67,10 @@ class AppActivationRequest(BaseModel):
     slug: str
 
 
+class AppSyncRequest(BaseModel):
+    apps: List[str]
+
+
 @router.get("/me/apps", response_model=List[str])
 def list_my_apps(current_user: dict = Depends(get_current_user)):
     return current_user.get("apps", [])
@@ -79,6 +83,17 @@ def activate_app(payload: AppActivationRequest, current_user: dict = Depends(get
     db.users.update_one(
         {"_id": ObjectId(str(current_user["_id"]))},
         {"$addToSet": {"apps": payload.slug}},
+    )
+    updated = db.users.find_one({"_id": ObjectId(str(current_user["_id"]))})
+    return updated.get("apps", []) if updated else []
+
+
+@router.put("/me/apps", response_model=List[str])
+def sync_my_apps(payload: AppSyncRequest, current_user: dict = Depends(get_current_user)):
+    valid_slugs = [s for s in payload.apps if s in ALLOWED_APP_SLUGS]
+    db.users.update_one(
+        {"_id": ObjectId(str(current_user["_id"]))},
+        {"$addToSet": {"apps": {"$each": valid_slugs}}},
     )
     updated = db.users.find_one({"_id": ObjectId(str(current_user["_id"]))})
     return updated.get("apps", []) if updated else []

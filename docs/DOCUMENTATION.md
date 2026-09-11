@@ -176,6 +176,12 @@ Slugs live in `src/lib/appCatalog.js`, `src/lib/nativeApps.js`, and
 `src/lib/intermavenPlatformApps.js`. Backend allow-list mirror:
 `backend/routes/users_router.py::ALLOWED_APP_SLUGS`.
 
+**Activation Persistence Across Logins**:
+Activated choices (e.g. `epk-builder`, `catalog-porting`) are tracked via `src/lib/activatedApps.js` with dual storage:
+1. **Frontend Local Storage**: `tunemavens_activated_apps` and per-account keys remember choices across browser restarts, tab closures, and logouts.
+2. **Backend Sync**: Synchronized with `users.apps[]` via `POST /api/users/me/apps` and `PUT /api/users/me/apps`.
+3. **Sidebar Continuity**: Activated apps always appear in the sidebar under their respective categories on every login until explicitly deactivated by the user via the App Marketplace. Explicit deactivations are saved to `tunemavens_deactivated_apps` and `DELETE /api/users/me/apps/{slug}`.
+
 ### 9.8.2 Onboarding questionnaire
 `onboarding_responses` — keyed by `user_id`, upserted. Multi-select
 `primary_goal` and `revenue_focus` arrays; every question has an

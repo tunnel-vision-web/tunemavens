@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { RiRefreshFill } from 'react-icons/ri'
 import { authApi, tokenStore } from '../../lib/api.js'
+import { reconcileUserApps } from '../../lib/activatedApps.js'
 
 export default function LoginView({ onLogin }) {
   const navigate = useNavigate();
@@ -19,12 +20,12 @@ export default function LoginView({ onLogin }) {
       const res = await authApi.demo();
       if (res?.access_token) {
         tokenStore.set(res.access_token);
-        onLogin(res.user || res);
+        onLogin(reconcileUserApps(res.user || res));
       } else {
-        onLogin({ email: 'creator_member@tunemavens.com', name: 'Creator Roster Member', role: 'creator', credits: 600 });
+        onLogin(reconcileUserApps({ email: 'creator_member@tunemavens.com', name: 'Creator Roster Member', role: 'creator', credits: 600 }));
       }
     } catch {
-      onLogin({
+      onLogin(reconcileUserApps({
         email: 'creator_member@tunemavens.com',
         name: 'Creator Roster Member',
         role: 'creator',
@@ -32,7 +33,7 @@ export default function LoginView({ onLogin }) {
         plan: 'creator',
         brand_name: 'Okoro Sounds',
         country: 'KE'
-      });
+      }));
     } finally {
       setGoogleLoading(false);
       navigate('/dashboard');
@@ -102,7 +103,7 @@ export default function LoginView({ onLogin }) {
       }
 
       if (loggedInUser) {
-        onLogin(loggedInUser);
+        onLogin(reconcileUserApps(loggedInUser));
         navigate('/dashboard');
       }
     } finally {

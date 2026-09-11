@@ -11,6 +11,7 @@ import { INTERMAVEN_NATIVE_APPS } from '../lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'
 import { lookupApp } from '../lib/appCatalog.js'
 import { getIntermavenUrl } from '../PerfectForSidebar.jsx'
+import { persistAppActivation, persistAppDeactivation, getStoredActivatedApps } from '../lib/activatedApps.js'
 
 // Small shared helper  -  a plain title + description block used by every
 // Phase 3 panel. Kept next to the panels that use it.
@@ -1252,18 +1253,35 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
 // Activation persists to `users.apps[]` via POST /api/users/me/apps and ticks
 // off the "Activate a Dashboard App" step in the OnboardingStripe.
 export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, onOpenWizard, wizardAnswers, onOpenAppModal }) {
-  const [activated, setActivated] = useState(sessionUser?.apps || []);
+  const [activated, setActivated] = useState(() => getStoredActivatedApps(sessionUser) || sessionUser?.apps || []);
   const [busySlug, setBusySlug] = useState(null);
   const [error, setError] = useState('');
   const [activeMarketTab, setActiveMarketTab] = useState('recommended');
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!tokenStore.get()) return;
-    usersApi.listMyApps()
-      .then((apps) => setActivated(Array.isArray(apps) ? apps : []))
-      .catch(() => {});
-  }, []);
+    const handleAppsUpdated = (e) => {
+      if (e.detail?.apps) {
+        setActivated(e.detail.apps);
+      }
+    };
+    window.addEventListener('tunemavens-apps-updated', handleAppsUpdated);
+
+    if (tokenStore.get()) {
+      usersApi.listMyApps()
+        .then((apps) => {
+          if (Array.isArray(apps)) {
+            setActivated(apps);
+            if (sessionUser && onUpdateUser) {
+              onUpdateUser({ ...sessionUser, apps });
+            }
+          }
+        })
+        .catch(() => {});
+    }
+
+    return () => window.removeEventListener('tunemavens-apps-updated', handleAppsUpdated);
+  }, [sessionUser?.id]);
 
   // Role-aware recommendations. Each slug matches the backend allow-list and
   // is paired with the dashboard tab it unlocks so we can route directly.
@@ -1302,11 +1320,8 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
     setError('');
     setBusySlug(slug);
     try {
-      const apps = await usersApi.activateApp(slug);
+      const apps = await persistAppActivation(slug, sessionUser, onUpdateUser);
       setActivated(apps);
-      if (onUpdateUser && sessionUser) {
-        onUpdateUser({ ...sessionUser, apps });
-      }
       const catItem = visible.find((a) => a.slug === slug);
       if (catItem && catItem.tab && setActiveTab) {
         setActiveTab(catItem.tab);
@@ -1322,11 +1337,8 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
     setError('');
     setBusySlug(slug);
     try {
-      const apps = await usersApi.deactivateApp(slug);
+      const apps = await persistAppDeactivation(slug, sessionUser, onUpdateUser);
       setActivated(apps);
-      if (onUpdateUser && sessionUser) {
-        onUpdateUser({ ...sessionUser, apps });
-      }
     } catch (e) {
       setError(e.data?.detail || e.message || 'Could not deactivate app');
     } finally {
