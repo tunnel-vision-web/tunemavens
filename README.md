@@ -62,13 +62,15 @@ npm run dev
 ### 5. Design Standards & Visual Identity
 - **Analogous High-Contrast Notifications:** Deep midnight navy base (`#071d2c`) with vibrant 1.5px cyan/emerald borders (`#00f0ff`), left 5px solid highlight indicator strip, and high-contrast tag pills.
 - **Strict Flat Colors Standard:** Buttons across the ecosystem strictly use solid flat colors; all gradients on `<button>` elements are eliminated for visual clarity.
+- **AI Hero & Header Image Live Synchronization:** Real-time bi-directional synchronization between Mother-CMS (`db.cms_layouts`) and public EPKs (`db.epks`), cache-busting HTTP headers, and instantaneous frontend event bus updates.
+- **40% Header Image Luminance Boost:** Header banners across interior pages and Creator Web Worlds apply `filter: brightness(1.4)` (hover `brightness(1.55)`) with lightened overlays for maximum visual punch and legibility.
 - **Strict 1280px Grid:** All content below the hero section across TuneMavens is locked to `max-width: 1280px; margin: 0 auto;`.
 - **Split Cascade Ledger:** Ingest statement CSVs and calculate cascading splits for writers, producers, and labels.
 - **Sync Brief AI:** Parse creative scripts into supervisor-friendly tags (BPM, mood, instrumentation, vocal type).
 - **Mastering Brief AI:** Target loudness matching (LUFS) and peak reference compliance.
 - **Unified Network Credits:** Single balance shared across TuneMavens, TuneStream, and the Intermaven network.
 
-### 4. Layout & Design Standards
+### 6. Layout & Design Standards
 - **Strict 1280px Content Constraint:** All page content below the hero section across TuneMavens (`.container`, `.landing-content-split`, interior pages, and EPK views) is strictly bound to `max-width: 1280px; margin: 0 auto;`.
 - **Typography & Theme:** Sansation typeface with flat dark ink backgrounds and neon accents (`--cyan: #22d3ee`, `--purple: #8b5cf6`, `--amber: #f59e0b`).
 

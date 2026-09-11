@@ -898,3 +898,33 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
 ### 9.22.5 High-Contrast Analogous Notification Styling & Flat Color Button Standard
 - **Analogous High-Contrast Notifications:** Deep midnight navy base (`#071d2c`) with vibrant 1.5px cyan/emerald borders (`#00f0ff`), left 5px solid highlight indicator strip, and high-contrast tag pills.
 - **Strict Flat Colors Standard:** Buttons across the ecosystem strictly use solid flat colors; all gradients on `<button>` elements are eliminated for visual clarity.
+
+---
+
+## §9.23 — AI Hero & Header Image Live Synchronization & Luminance Boost Protocol
+
+### 9.23.1 Dual-Collection Parity & MongoDB Coherence (`backend/routes/epk_router.py` & `cms_router.py`)
+- **Root Cause & Fix:** CMS Studio and Mother-CMS operations persist state to `db.cms_layouts` under `layout_id = f"epk_{clean_subdomain}"`. Previously, the public EPK router (`/api/epk/public/{subdomain}`) only read from `db.epks`, leading to stale placeholder images (`picsum.photos`) displaying when AI generated fresh assets.
+- **Unified Querying & Merging:** `get_public_epk` now queries both `db.epks` and `db.cms_layouts`. If CMS layout data is newer (or `db.epks` lacks hero/header data), it merges the freshest values (`heroSlides`, `heroImages`, `heroImageUrl`, `pageHeaders`, `headerImageUrl`, `headerImages`) and synchronizes `db.epks` automatically.
+- **Bi-directional Persistence:** `save_my_epk`, `update_public_epk` (PUT and POST), and `rollback_public_epk` now update both `db.epks` and `db.cms_layouts` atomically without MongoDB `_id` immutable write collisions.
+- **Zero-Cache HTTP Headers:** `get_public_epk` and `get_epk_cms` send `Cache-Control: no-cache, no-store, must-revalidate, max-age=0`, `Pragma: no-cache`, and `Expires: 0` headers, preventing browser 304 Not Modified disk caching.
+
+### 9.23.2 Real-Time Live Sync & Resilient Frontend Resolvers (`CreatorEpkView.jsx`)
+- **Cache-Busted Fetch & LocalStorage Coherence:** `fetchPublicEpk` appends a millisecond timestamp parameter (`?_t=${Date.now()}`) and uses `{ cache: 'no-store' }`. On response, it updates both React state (`epkData`) and `localStorage` (`epk_public_${artistSlug}`).
+- **Event Bus Integration:** Added listeners for `epk_updated`, `epk_storage_sync`, and window `storage` events. When AI generates hero slides or header artwork in Mother-CMS Studio, `CreatorEpkView` re-synchronizes state immediately without requiring manual page reload.
+- **Hierarchical Hero Resolver:**
+  1. `epkData.heroSlides`: Preserves structured slide definitions (artwork URL, 3-tier typography hierarchy).
+  2. `primaryHero` (`heroImageUrl` / `heroImage` / `hero_image_url`): Prioritized if updated by AI, ensuring single-asset changes are promoted to slide 1.
+  3. `heroImages`: Array fallback.
+  4. Role template fallback.
+- **Resilient Page Header Resolver:** `getPageHeader(pageKey)` checks `pageHeaders[pageKey]`, `page_headers[pageKey]`, `headerImageUrl`, `headerImage`, `header_image_url`, and `headerImages[0]`.
+
+### 9.23.3 40% Luminance Boost on Header Images
+- **Creator Web World Page Banners (`CreatorEpkView.jsx`):**
+  - Background image container uses `filter: brightness(1.4)` (+40% luminance boost).
+  - Gradient overlay lightened from `rgba(4,6,14,0.98)` / `0.65` to `rgba(4,6,14,0.72)` / `0.30` for rich color vibrancy while preserving accessibility of white Sansation display titles.
+- **Global Page Header Banners (`App.css`):**
+  - `.page-header-banner` sets `filter: brightness(1.4)` with hover state `brightness(1.55)`.
+  - `.page-header-overlay` lightened to `linear-gradient(180deg, rgba(6, 8, 19, 0.25) 0%, rgba(6, 8, 19, 0.55) 100%)`.
+- **CMS Studio Header Preview (`DashboardCmsStudio.jsx`):**
+  - Added `filter: 'brightness(1.4)'` and soft overlay in the Page Header Banners preview drawer.

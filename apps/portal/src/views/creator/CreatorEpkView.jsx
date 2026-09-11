@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import JSZip from 'jszip'
 import {
   RiHomeFill, RiUserFill, RiCalendarEventFill, RiVideoFill,
   RiShoppingBagFill, RiFileTextFill, RiMailFill, RiHeartFill,
@@ -12,7 +13,9 @@ import {
   RiBankCardFill, RiCellphoneFill, RiDiscFill, RiArrowRightLine, RiMenuFill, RiCloseFill, RiSoundcloudFill,
   RiWhatsappFill, RiNotification3Fill, RiStarFill, RiPercentFill,
   RiStopFill, RiSkipBackFill, RiSkipForwardFill, RiSparklingFill,
-  RiMapPin2Fill, RiTimeFill, RiQrCodeFill, RiCoinsFill, RiExchangeDollarLine
+  RiMapPin2Fill, RiTimeFill, RiQrCodeFill, RiCoinsFill, RiExchangeDollarLine,
+  RiEyeLine, RiEyeOffLine, RiShuffleLine, RiRepeatLine, RiRepeatOneLine,
+  RiDragMove2Fill, RiVolumeUpFill, RiVolumeMuteFill, RiUploadFill
 } from 'react-icons/ri'
 
 import heroSlide1 from '../../assets/creator_hero_banner.jpg'
@@ -20,7 +23,7 @@ import heroSlide2 from '../../assets/creator_hero_slide2.jpg'
 import heroSlide3 from '../../assets/creator_hero_slide3.jpg'
 
 // 20 Pre-populated Theme Templates Specification
-export const DEFAULT_PAGE_HEADERS = {
+const DEFAULT_PAGE_HEADERS = {
   discography: 'https://picsum.photos/seed/discography_banner/1400/450',
   bio: 'https://picsum.photos/seed/bio_banner/1400/450',
   shows: 'https://picsum.photos/seed/shows_banner/1400/450',
@@ -124,58 +127,112 @@ export function CreatorEpkView(props = {}) {
   const [contactSubmitted, setContactSubmitted] = useState(false)
   const [contactError, setContactError] = useState('')
 
-  // Fetch Public EPK Profile with Local Storage Fallback
-  useEffect(() => {
-    const fetchPublicEpk = async () => {
-      try {
-        const passedSlug = (passedEpk?.subdomain || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-        if (passedEpk && typeof passedEpk === 'object' && (!username || passedSlug === artistSlug)) {
-          setEpkData(prev => ({ ...(prev || {}), ...passedEpk }))
-          if (passedEpk.themeBg) {
-            const matchedTheme = EPK_THEMES.find(t => t.bg === passedEpk.themeBg)
+  // Fetch Public EPK Profile with Local Storage Fallback & Live Cache-Busting
+  const fetchPublicEpk = async () => {
+    try {
+      const passedSlug = (passedEpk?.subdomain || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+      if (passedEpk && typeof passedEpk === 'object' && (!username || passedSlug === artistSlug)) {
+        setEpkData(prev => ({ ...(prev || {}), ...passedEpk }))
+        if (passedEpk.themeBg) {
+          const matchedTheme = EPK_THEMES.find(t => t.bg === passedEpk.themeBg)
+          if (matchedTheme) setSelectedTheme(matchedTheme)
+        }
+      }
+      const local = localStorage.getItem(`epk_public_${artistSlug}`) || localStorage.getItem(`epk_${artistSlug}`)
+      if (local) {
+        try {
+          const parsed = JSON.parse(local)
+          setEpkData(prev => ({ ...(prev || {}), ...parsed }))
+          if (parsed.themeBg) {
+            const matchedTheme = EPK_THEMES.find(t => t.bg === parsed.themeBg)
             if (matchedTheme) setSelectedTheme(matchedTheme)
           }
+        } catch (_) {}
+      }
+
+      // 1. Fetch freshest public EPK with cache-busting
+      const res = await fetch(`/api/epk/public/${artistSlug}?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      })
+
+      let freshData = null
+      if (res.ok) {
+        const data = await res.json()
+        if (data && typeof data === 'object') {
+          freshData = data
         }
-        const local = localStorage.getItem(`epk_public_${artistSlug}`) || localStorage.getItem(`epk_${artistSlug}`)
-        if (local) {
-          try {
-            const parsed = JSON.parse(local)
-            setEpkData(prev => ({ ...(prev || {}), ...parsed }))
-            if (parsed.themeBg) {
-              const matchedTheme = EPK_THEMES.find(t => t.bg === parsed.themeBg)
-              if (matchedTheme) setSelectedTheme(matchedTheme)
-            }
-          } catch (_) {}
-        }
-        const res = await fetch(`/api/epk/public/${artistSlug}`)
-        if (res.ok) {
-          const data = await res.json()
-          if (data && typeof data === 'object') {
-            setEpkData(prev => ({ ...(prev || {}), ...data }))
-            if (data.themeBg) {
-              const matchedTheme = EPK_THEMES.find(t => t.bg === data.themeBg)
-              if (matchedTheme) setSelectedTheme(matchedTheme)
-            }
-          }
-        } else {
-          const cmsRes = await fetch(`/api/cms/epk/${artistSlug}`)
-          if (cmsRes.ok) {
-            const cmsLayout = await cmsRes.json()
-            if (cmsLayout?.data) {
-              setEpkData(prev => ({ ...(prev || {}), ...cmsLayout.data }))
-              if (cmsLayout.data.themeBg) {
-                const matchedTheme = EPK_THEMES.find(t => t.bg === cmsLayout.data.themeBg)
-                if (matchedTheme) setSelectedTheme(matchedTheme)
+      }
+
+      // 2. Also check Mother-CMS endpoint for any active live layouts
+      try {
+        const cmsRes = await fetch(`/api/cms/epk/${artistSlug}?_t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        })
+        if (cmsRes.ok) {
+          const cmsLayout = await cmsRes.json()
+          const cmsData = cmsLayout?.data || cmsLayout
+          if (cmsData && typeof cmsData === 'object') {
+            freshData = {
+              ...(freshData || {}),
+              ...cmsData,
+              // Ensure hero & header properties are prioritized from whichever source has them
+              heroSlides: cmsData.heroSlides || freshData?.heroSlides,
+              heroImages: cmsData.heroImages || freshData?.heroImages,
+              heroImageUrl: cmsData.heroImageUrl || freshData?.heroImageUrl,
+              pageHeaders: {
+                ...(freshData?.pageHeaders || {}),
+                ...(cmsData.pageHeaders || {})
               }
             }
           }
         }
-      } catch (err) {
-        console.warn('Could not load public EPK profile:', err)
+      } catch (_) {}
+
+      if (freshData) {
+        setEpkData(prev => ({ ...(prev || {}), ...freshData }))
+        try {
+          localStorage.setItem(`epk_public_${artistSlug}`, JSON.stringify(freshData))
+          localStorage.setItem(`epk_${artistSlug}`, JSON.stringify(freshData))
+        } catch (_) {}
+
+        if (freshData.themeBg) {
+          const matchedTheme = EPK_THEMES.find(t => t.bg === freshData.themeBg)
+          if (matchedTheme) setSelectedTheme(matchedTheme)
+        }
       }
+    } catch (err) {
+      console.warn('Could not load public EPK profile:', err)
     }
+  }
+
+  useEffect(() => {
     fetchPublicEpk()
   }, [artistSlug, passedEpk, username])
+
+  // Live real-time syncing for AI-generated Hero and Header updates
+  useEffect(() => {
+    const handleLiveSync = (e) => {
+      if (e?.detail && typeof e.detail === 'object') {
+        const d = e.detail
+        const dSub = (d.subdomain || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+        if (!dSub || dSub === artistSlug) {
+          setEpkData(prev => ({ ...(prev || {}), ...d }))
+        }
+      } else {
+        fetchPublicEpk()
+      }
+    }
+    window.addEventListener('epk_updated', handleLiveSync)
+    window.addEventListener('epk_storage_sync', handleLiveSync)
+    window.addEventListener('storage', handleLiveSync)
+    return () => {
+      window.removeEventListener('epk_updated', handleLiveSync)
+      window.removeEventListener('epk_storage_sync', handleLiveSync)
+      window.removeEventListener('storage', handleLiveSync)
+    }
+  }, [artistSlug])
 
   // Google Font Dynamic Loader
   useEffect(() => {
@@ -197,9 +254,15 @@ export function CreatorEpkView(props = {}) {
 
   // Computed layout and theme variables
   // Robust Logo Resolver: prioritizes the freshest uploaded logo
-  // Resolve distinct page header image
+  // Resolve distinct page header image with full alias support
   const getPageHeader = (pageKey) => {
-    return epkData?.pageHeaders?.[pageKey] || DEFAULT_PAGE_HEADERS[pageKey] || currentSlide?.img || heroSlide1
+    const headers = epkData?.pageHeaders || epkData?.page_headers
+    if (headers?.[pageKey]) return headers[pageKey]
+    if (epkData?.headerImageUrl) return epkData.headerImageUrl
+    if (epkData?.headerImage) return epkData.headerImage
+    if (epkData?.header_image_url) return epkData.header_image_url
+    if (Array.isArray(epkData?.headerImages) && epkData.headerImages.length > 0) return epkData.headerImages[0]
+    return DEFAULT_PAGE_HEADERS[pageKey] || currentSlide?.img || heroSlide1
   }
 
   const resolveLogo = () => {
@@ -270,40 +333,69 @@ export function CreatorEpkView(props = {}) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Dynamic Hero Slides Carousel with 3-line Music Business titles
+  // Platformwide Scroll-to-Top: Any tab switch always begins cleanly at top of page
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [activeTab])
+
+  // Dynamic Hero Slides Carousel with 3-line Music Business titles & AI asset sync
   const heroSlides = React.useMemo(() => {
-    const validHeroImages = Array.isArray(epkData?.heroImages) ? epkData.heroImages.filter(Boolean) : []
     const baseTitle1 = epkData?.heroTitle1 || effectiveArtistName
     const baseTitle2 = epkData?.heroTitle2 || effectiveHeadline
-    const baseTitle3 = epkData?.heroTitle3 || "100% Pre-Cleared One-Stop Sync Licensing & Master Stems • TuneStream"
+    const baseTitle3 = epkData?.heroTitle3 || "High-Quality Digital MP3 Singles • Collector Vinyl & CDs • Direct Fan Ticketing"
+
+    // 1. Prioritize structured heroSlides (persisted by Mother-CMS / AI Slide Studio)
+    if (Array.isArray(epkData?.heroSlides) && epkData.heroSlides.length > 0) {
+      const validSlides = epkData.heroSlides.filter(s => s && (s.img || s.url || s.image))
+      if (validSlides.length > 0) {
+        return validSlides.map((s, idx) => ({
+          id: s.id || idx + 1,
+          img: s.img || s.url || s.image,
+          title1: s.title1 || (idx === 0 ? baseTitle1 : (idx === 1 ? 'World Tour 2026 Live Showcase' : `${effectiveArtistName} — Lossless Audio`)),
+          title2: s.title2 || (idx === 0 ? baseTitle2 : (idx === 1 ? 'Headline Dates: Tokyo, London & Nairobi' : 'Lossless Audio & Digital MP3 Singles')),
+          title3: s.title3 || (idx === 0 ? baseTitle3 : (idx === 1 ? 'VIP Fan Pass & Direct Ticketing via TuneBooking' : 'Exclusive VIP Vault Access')),
+          title: s.title1 || baseTitle1,
+          subtitle: s.title2 || baseTitle2
+        }))
+      }
+    }
+
+    // 2. Prioritize primaryHero if updated by AI (heroImageUrl / heroImage / hero_image_url)
+    const primaryHero = epkData?.heroImageUrl || epkData?.heroImage || epkData?.hero_image_url || epkData?.hero_image
+    const rawImages = Array.isArray(epkData?.heroImages) ? epkData.heroImages : (Array.isArray(epkData?.hero_images) ? epkData.hero_images : [])
+    let validHeroImages = rawImages.filter(Boolean)
+
+    if (primaryHero && (!validHeroImages.length || validHeroImages[0] !== primaryHero)) {
+      validHeroImages = [primaryHero, ...validHeroImages.filter(u => u !== primaryHero)]
+    }
 
     if (validHeroImages.length > 0) {
       return validHeroImages.map((imgUrl, idx) => ({
         id: idx + 1,
         img: imgUrl,
         title1: idx === 0 ? baseTitle1 : (idx === 1 ? 'World Tour 2026 Live Showcase' : `${effectiveArtistName} — Lossless Audio`),
-        title2: idx === 0 ? baseTitle2 : (idx === 1 ? 'Headline Dates: Tokyo, London & Nairobi' : '24-Bit / 96kHz Multitrack Stems'),
-        title3: idx === 0 ? baseTitle3 : (idx === 1 ? 'VIP Fan Pass & Direct Ticketing via TuneBooking' : 'Instant Sync Clearance on SyncMavens'),
+        title2: idx === 0 ? baseTitle2 : (idx === 1 ? 'Headline Dates: Tokyo, London & Nairobi' : 'Lossless Audio & Digital MP3 Singles'),
+        title3: idx === 0 ? baseTitle3 : (idx === 1 ? 'VIP Fan Pass & Direct Ticketing via TuneBooking' : 'Exclusive VIP Vault Access'),
         title: baseTitle1,
         subtitle: baseTitle2
       }))
     }
-    if (epkData?.heroImageUrl) {
+    if (primaryHero) {
       return [
-        { id: 1, img: epkData.heroImageUrl, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 }
+        { id: 1, img: primaryHero, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 }
       ]
     }
     if (artistSlug === 'kip') {
       return [
         { id: 1, img: heroSlide1, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 },
         { id: 2, img: heroSlide2, title1: 'World Tour 2026 Live Showcase', title2: 'Live at Nairobi Cyberdome, London O2 & Brooklyn Steel', title3: 'Direct Fan Ticketing via TuneBooking • Reserved Seating', title: 'World Tour 2026', subtitle: 'Live at Nairobi Cyberdome, London O2 Academy & Brooklyn Steel' },
-        { id: 3, img: heroSlide3, title1: 'Exclusive Studio Stems', title2: 'Unreleased 24-Bit WAV Multitracks Available for Credits', title3: 'Transparent Publishing Splits & PRO Collection via Intermaven Ledger', title: 'Exclusive Studio Stems', subtitle: 'Unreleased 24-Bit WAV Multitracks Available for Intermaven Credits' }
+        { id: 3, img: heroSlide3, title1: 'Exclusive Digital MP3s', title2: 'Unreleased High-Quality MP3 Singles Available for Credits', title3: 'High-Quality Digital MP3 Singles • Collector Vinyl & CDs • Direct Fan Passes', title: 'Exclusive Digital MP3s', subtitle: 'Unreleased High-Quality MP3 Singles Available for Intermaven Credits' }
       ]
     }
     return [
       { id: 1, img: null, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 }
     ]
-  }, [epkData?.heroImages, epkData?.heroImageUrl, epkData?.heroTitle1, epkData?.heroTitle2, epkData?.heroTitle3, effectiveArtistName, effectiveHeadline, artistSlug])
+  }, [epkData?.heroSlides, epkData?.heroImages, epkData?.hero_images, epkData?.heroImageUrl, epkData?.heroImage, epkData?.hero_image_url, epkData?.heroTitle1, epkData?.heroTitle2, epkData?.heroTitle3, effectiveArtistName, effectiveHeadline, artistSlug])
 
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
 
@@ -359,7 +451,7 @@ export function CreatorEpkView(props = {}) {
   const [authCommMethod, setAuthCommMethod] = useState('email')
   const [authSelectedInterests, setAuthSelectedInterests] = useState([
     'VIP Tour Pre-Sales & Discounts',
-    'Unreleased WAV Master Stems',
+    'Unreleased Digital MP3 Singles',
     'Exclusive Fan Club Merch Drops'
   ])
   const [pendingComment, setPendingComment] = useState(null)
@@ -377,10 +469,26 @@ export function CreatorEpkView(props = {}) {
     }, 4000)
   }
 
-  // Hero Music Player & Cycling Playlist State
+  // Hero & Floating Music Player State
   const [playlistIndex, setPlaylistIndex] = useState(0)
   const [playbackProgress, setPlaybackProgress] = useState(45) // seconds
   const [selectedTrackModal, setSelectedTrackModal] = useState(null)
+
+  // Persistent Floating Hi-Fi Audio Player Overlay State
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState('all') // 'all' | 'vault' | 'top' | playlistId
+  const [shuffleMode, setShuffleMode] = useState(false)
+  const [repeatMode, setRepeatMode] = useState('playlist') // 'off' | 'track' | 'playlist'
+  const [isPlayerMinimized, setIsPlayerMinimized] = useState(false)
+  const [isPlayerMuted, setIsPlayerMuted] = useState(false)
+  const [playerVolume, setPlayerVolume] = useState(0.85)
+  const [isPlayerVisible, setIsPlayerVisible] = useState(true)
+  const [playerPos, setPlayerPos] = useState(() => {
+    const w = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const h = typeof window !== 'undefined' ? window.innerHeight : 800
+    return { x: Math.max(20, w - 460), y: Math.max(80, h - 280) }
+  })
+  const isDraggingRef = useRef(false)
+  const dragStartRef = useRef({ mouseX: 0, mouseY: 0, posX: 0, posY: 0 })
 
   // Event Page Full Page & Purchasing Protocol State
   const [selectedEventDetail, setSelectedEventDetail] = useState(null)
@@ -451,6 +559,56 @@ export function CreatorEpkView(props = {}) {
   const [fanQuestionSent, setFanQuestionSent] = useState(false)
   const [copiedPromo, setCopiedPromo] = useState(false)
 
+  // Fan Profile Settings State
+  const [fanProfileName, setFanProfileName] = useState(fanUser?.name || 'VIP Member')
+  const [fanProfileEmail, setFanProfileEmail] = useState(fanUser?.email || 'fan@intermaven.io')
+  const [fanProfilePassword, setFanProfilePassword] = useState('••••••••')
+  const [fanCurrentPassword, setFanCurrentPassword] = useState('')
+  const [fanNewPassword, setFanNewPassword] = useState('')
+  const [fanConfirmPassword, setFanConfirmPassword] = useState('')
+  const [fanProfileAvatar, setFanProfileAvatar] = useState(fanUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Fan Avatar File Upload Handler
+  const handleFanAvatarUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result
+      setFanProfileAvatar(dataUrl)
+      showToast('📸 Fan profile image uploaded! Remember to click Save Profile.', 'info')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Dynamic Credit Pack Calculation Helper ($1 = 10 Credits baseline, bonuses for higher tiers)
+  const calcCreditsForAmount = (dollars) => {
+    const d = Number(dollars) || 0
+    if (d >= 100) return Math.round(d * 13) // +30% Bonus ($100 = 1,300 Cr)
+    if (d >= 20) return Math.round(d * 12)  // +20% Bonus ($20 = 240 Cr)
+    if (d >= 10) return Math.round(d * 11)  // +10% Bonus ($10 = 110 Cr)
+    return Math.round(d * 10)               // Baseline ($5 = 50 Cr)
+  }
+
+  // Fan Top-Up Form State (Starts at $5, $10, $20, $100 + Custom multiples of $5)
+  const [fanTopUpCredits, setFanTopUpCredits] = useState(50)
+  const [fanTopUpPrice, setFanTopUpPrice] = useState(5)
+  const [fanCustomAmount, setFanCustomAmount] = useState('')
+  const [fanTopUpGateway, setFanTopUpGateway] = useState('card')
+  const [fanTopUpProcessing, setFanTopUpProcessing] = useState(false)
+
+  // Ticketing Tier Info Tooltip & Delivery Preference State
+  const [hoveredTierInfo, setHoveredTierInfo] = useState(null)
+  const [ticketDeliveryChannel, setTicketDeliveryChannel] = useState(fanUser?.preferredCommMethod || 'email')
+  const [ticketPhone, setTicketPhone] = useState(fanUser?.phone || '+1 555 019 2834')
+
+  // Pagination States (2 rows x 3 cols = 6 items per page)
+  const [featuredSinglesPage, setFeaturedSinglesPage] = useState(1)
+  const [mediaPage, setMediaPage] = useState(1)
+
   // Photo Gallery Lightbox Carousel State
   const [galleryModalOpen, setGalleryModalOpen] = useState(false)
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
@@ -459,7 +617,12 @@ export function CreatorEpkView(props = {}) {
     { id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', streams: '3.4M', duration: '3:45', release: 'Single 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/cyberwave_master/600/600' },
     { id: 2, title: 'Sunset over Rift Valley', isrc: 'KE-TM1-26-00043', streams: '1.8M', duration: '4:12', release: 'Album 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/riftvalley_master/600/600' },
     { id: 3, title: 'Afro-Synth Cascade', isrc: 'KE-TM1-26-00044', streams: '940K', duration: '3:18', release: 'Single 2025', priceCredits: 40, coverArt: 'https://picsum.photos/seed/afrosynth_master/600/600' },
-    { id: 4, title: 'Midnight Mara Starlight', isrc: 'KE-TM1-26-00045', streams: '2.1M', duration: '5:02', release: 'EP 2025', priceCredits: 60, coverArt: 'https://picsum.photos/seed/marastarlight_master/600/600' }
+    { id: 4, title: 'Midnight Mara Starlight', isrc: 'KE-TM1-26-00045', streams: '2.1M', duration: '5:02', release: 'EP 2025', priceCredits: 60, coverArt: 'https://picsum.photos/seed/marastarlight_master/600/600' },
+    { id: 5, title: 'Solar Flare Groove (Original)', isrc: 'KE-TM1-26-00046', streams: '1.4M', duration: '3:58', release: 'Single 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/solarflare_master/600/600' },
+    { id: 6, title: 'Neon Equator (Live Dub)', isrc: 'KE-TM1-26-00047', streams: '820K', duration: '4:30', release: 'Live 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/neonequator_master/600/600' },
+    { id: 7, title: 'Kilimanjaro Heights', isrc: 'KE-TM1-26-00048', streams: '2.7M', duration: '4:15', release: 'Single 2026', priceCredits: 55, coverArt: 'https://picsum.photos/seed/kilimanjaromaster/600/600' },
+    { id: 8, title: 'Savannah Sunset (Radio Cut)', isrc: 'KE-TM1-26-00049', streams: '1.1M', duration: '3:22', release: 'Single 2025', priceCredits: 40, coverArt: 'https://picsum.photos/seed/savannahsunset/600/600' },
+    { id: 9, title: 'Serengeti Sunrise (Ambient Mix)', isrc: 'KE-TM1-26-00050', streams: '650K', duration: '5:10', release: 'VIP 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/serengetisunrise/600/600' }
   ]
   const rawTracks = (epkData?.tracks && Array.isArray(epkData.tracks) && epkData.tracks.length > 0) ? epkData.tracks : defaultTracks
   const tracks = rawTracks.map((t, idx) => ({
@@ -468,15 +631,108 @@ export function CreatorEpkView(props = {}) {
     coverArt: t.coverArt || t.cover || `https://picsum.photos/seed/${encodeURIComponent(t.title || 'single')}/600/600`
   }))
 
-  // Playback timer & playlist auto-cycle
+  // Fan Playlists & Library State
+  const [fanPlaylists, setFanPlaylists] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tm_fan_playlists')
+      return saved ? JSON.parse(saved) : [
+        { id: 101, name: 'Night Cyberwave Vibes', desc: 'Late night modular synth rotation', trackIds: [1, 2], createdAt: '2026-08-20' },
+        { id: 102, name: 'Roadtrip Safari', desc: 'East African electronic selections', trackIds: [3, 4], createdAt: '2026-09-01' }
+      ]
+    } catch {
+      return []
+    }
+  })
+  const [fanPurchasedLibrary, setFanPurchasedLibrary] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tm_fan_library')
+      return saved ? JSON.parse(saved) : [
+        { id: 'alb-401', type: 'album', title: 'Nairobi Cyberwave (Deluxe LP)', date: '2026-08-15', format: 'FLAC 24/96' },
+        { id: 'trk-1', type: 'single', title: 'Nairobi Cyberwave (Master)', date: '2026-08-18', format: 'WAV Master' }
+      ]
+    } catch {
+      return []
+    }
+  })
+
+  // Compute active playlist tracks
+  const currentPlaylistTracks = React.useMemo(() => {
+    if (selectedPlaylistId === 'vault') {
+      return [
+        { id: 901, title: 'Nairobi Cyberwave (VIP MP3 Single)', isrc: 'KE-TM1-26-901', streams: 'VIP Vault', duration: '3:45', release: 'VIP 2026', priceCredits: 40, coverArt: 'https://picsum.photos/seed/cyberwave_master/600/600' },
+        { id: 902, title: 'Sunset over Rift Valley (Acoustic VIP)', isrc: 'KE-TM1-26-902', streams: 'VIP Vault', duration: '4:12', release: 'VIP 2026', priceCredits: 40, coverArt: 'https://picsum.photos/seed/riftvalley_master/600/600' },
+        { id: 903, title: 'Afro-Synth Cascade (Unreleased Club Dub)', isrc: 'KE-TM1-26-903', streams: 'VIP Vault', duration: '3:18', release: 'VIP 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/afrosynth_master/600/600' }
+      ]
+    }
+    if (selectedPlaylistId === 'top') {
+      return [...tracks].slice(0, 5)
+    }
+    const fp = (fanPlaylists || []).find(p => String(p.id) === String(selectedPlaylistId))
+    if (fp) {
+      const pTracks = tracks.filter(t => (fp.trackIds || []).includes(t.id))
+      return pTracks.length > 0 ? pTracks : tracks
+    }
+    return tracks
+  }, [selectedPlaylistId, tracks, fanPlaylists])
+
+  // Active track resolved from current playlist selection
+  const currentTrack = currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || tracks[0] || activeTrack
+
+  // Keep activeTrack in sync with currentTrack
+  useEffect(() => {
+    if (currentTrack) {
+      setActiveTrack(currentTrack)
+    }
+  }, [playlistIndex, selectedPlaylistId])
+
+  // Track Advancement Helper (Sequenced vs Shuffle vs Repeat Loop)
+  const handleTrackAdvance = () => {
+    if (repeatMode === 'track') {
+      setPlaybackProgress(0)
+      return
+    }
+    if (shuffleMode && currentPlaylistTracks.length > 1) {
+      let nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length)
+      if (nextIdx === playlistIndex) nextIdx = (nextIdx + 1) % currentPlaylistTracks.length
+      setPlaylistIndex(nextIdx)
+      setPlaybackProgress(0)
+      return
+    }
+    if (playlistIndex < currentPlaylistTracks.length - 1) {
+      setPlaylistIndex(curr => curr + 1)
+      setPlaybackProgress(0)
+    } else if (repeatMode === 'playlist') {
+      setPlaylistIndex(0)
+      setPlaybackProgress(0)
+    } else {
+      setIsPlaying(false)
+      setPlaybackProgress(0)
+    }
+  }
+
+  const handleTrackPrevious = () => {
+    if (playbackProgress > 4) {
+      setPlaybackProgress(0)
+      return
+    }
+    if (shuffleMode && currentPlaylistTracks.length > 1) {
+      const nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length)
+      setPlaylistIndex(nextIdx)
+      setPlaybackProgress(0)
+      return
+    }
+    setPlaylistIndex(curr => (curr === 0 ? currentPlaylistTracks.length - 1 : curr - 1))
+    setPlaybackProgress(0)
+  }
+
+  // Playback timer & playlist auto-cycle with loop & shuffle modes
   useEffect(() => {
     let interval = null
     if (isPlaying) {
       interval = setInterval(() => {
         setPlaybackProgress(prev => {
           if (prev >= 225) {
-            // Auto-advance to next track in playlist
-            setPlaylistIndex(curr => (curr + 1) % (tracks?.length || 1))
+            handleTrackAdvance()
             return 0
           }
           return prev + 1
@@ -484,7 +740,36 @@ export function CreatorEpkView(props = {}) {
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [isPlaying, tracks?.length])
+  }, [isPlaying, playlistIndex, repeatMode, shuffleMode, currentPlaylistTracks.length])
+
+  // Floating Player Dragging Handlers
+  const handleMouseDownDrag = (e) => {
+    if (e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) return
+    isDraggingRef.current = true
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      posX: playerPos.x,
+      posY: playerPos.y
+    }
+    const onMove = (ev) => {
+      if (!isDraggingRef.current) return
+      const dx = ev.clientX - dragStartRef.current.mouseX
+      const dy = ev.clientY - dragStartRef.current.mouseY
+      const maxX = Math.max(10, (window.innerWidth || 1200) - 340)
+      const maxY = Math.max(10, (window.innerHeight || 800) - 100)
+      const newX = Math.max(10, Math.min(maxX, dragStartRef.current.posX + dx))
+      const newY = Math.max(10, Math.min(maxY, dragStartRef.current.posY + dy))
+      setPlayerPos({ x: newX, y: newY })
+    }
+    const onUp = () => {
+      isDraggingRef.current = false
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   // Payment Gateway Protocol Selection
   const [paymentGateway, setPaymentGateway] = useState('pesapal')
@@ -533,7 +818,7 @@ export function CreatorEpkView(props = {}) {
     { id: 403, title: 'Afro-Synth Cascade', year: '2025', type: 'Single', tracksCount: 2, cover: 'https://picsum.photos/seed/album3_epk/400', streams: '940K', isrc: 'KE-TM1-26-00044', priceCredits: 40 },
     { id: 404, title: 'Midnight Mara Starlight', year: '2025', type: 'EP', tracksCount: 5, cover: 'https://picsum.photos/seed/album4_epk/400', streams: '2.1M', isrc: 'KE-TM1-26-00045', priceCredits: 45 },
     { id: 405, title: 'Mombasa Neon Nights', year: '2024', type: 'Album', tracksCount: 14, cover: 'https://picsum.photos/seed/album5_epk/400', streams: '4.2M', isrc: 'KE-TM1-24-00010', priceCredits: 50 },
-    { id: 406, title: 'Savannah Electric Stems', year: '2024', type: 'Remix EP', tracksCount: 6, cover: 'https://picsum.photos/seed/album6_epk/400', streams: '1.1M', isrc: 'KE-TM1-24-00011', priceCredits: 40 }
+    { id: 406, title: 'Savannah Electric Remixes (MP3)', year: '2024', type: 'Remix EP', tracksCount: 6, cover: 'https://picsum.photos/seed/album6_epk/400', streams: '1.1M', isrc: 'KE-TM1-24-00011', priceCredits: 40 }
   ]
 
 
@@ -657,7 +942,7 @@ export function CreatorEpkView(props = {}) {
         { id: 'boxset', name: 'Signed Deluxe Gatefold Box Set + Poster', addPrice: 20 }
       ],
       stock: '14 copies remaining',
-      desc: 'Mastered directly from 24-bit/96kHz analog tapes. Includes high-gloss lyric sleeve and digital stem download voucher.'
+      desc: 'Mastered directly from 24-bit/96kHz analog tapes. Includes high-gloss lyric sleeve and digital MP3 download voucher.'
     },
     { 
       id: 202, 
@@ -679,7 +964,7 @@ export function CreatorEpkView(props = {}) {
     },
     { 
       id: 203, 
-      title: 'Lossless 24-Bit WAV Multitrack Stems Pack', 
+      title: 'High-Quality Digital MP3 Singles & Audio Pack', 
       price: '$19.99', 
       numPrice: 19.99, 
       img: 'https://picsum.photos/seed/stems_epk/600/600',
@@ -688,15 +973,15 @@ export function CreatorEpkView(props = {}) {
         'https://picsum.photos/seed/stems_tracks/800/800',
         'https://picsum.photos/seed/stems_meter/800/800'
       ], 
-      category: 'stems', 
+      category: 'mp3s', 
       hasSizes: false,
       licenseTiers: [
-        { id: 'personal', name: 'Personal Listening WAV (96kHz)', addPrice: 0 },
-        { id: 'remix', name: 'Producer / Remix Commercial License', addPrice: 20 },
-        { id: 'broadcast', name: 'Film & Advertising One-Stop Sync License', addPrice: 50 }
+        { id: 'personal', name: 'High-Quality 320kbps MP3 Single', addPrice: 0 },
+        { id: 'remix', name: 'Extended Lossless MP3 & Studio Mixes', addPrice: 10 },
+        { id: 'broadcast', name: 'Deluxe Digital MP3 Collector Bundle', addPrice: 25 }
       ],
       stock: 'Instant Digital Download',
-      desc: 'Complete lossless multitracks (Drums, Bass, Synths, Lead Vocals, Backing Vocals, FX) in 24-bit / 96kHz broadcast WAV.'
+      desc: 'Complete high-resolution MP3 singles and extended master cuts (Drums, Bass, Synths, Vocals in pristine 320kbps digital audio).'
     },
     { 
       id: 204, 
@@ -726,9 +1011,13 @@ export function CreatorEpkView(props = {}) {
     { id: 301, type: 'video', title: `${artistName} — Nairobi Cyberwave (Official 4K Music Video)`, youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340', views: '1.2M views' },
     { id: 302, type: 'gallery', title: 'Live at Nairobi Cyberdome Stage Highlight', thumbnail: 'https://picsum.photos/seed/gal1/600/340', views: 'Photo Gallery' },
     { id: 303, type: 'video', title: 'Live at SyncMavens Vault (Full Concert 4K)', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid2/600/340', views: '840K views' },
-    { id: 304, type: 'gallery', title: 'Behind the Scenes: Recording Stems at Intermaven Studio', thumbnail: 'https://picsum.photos/seed/gal2/600/340', views: 'Photo Gallery' },
+    { id: 304, type: 'gallery', title: 'Behind the Scenes: Recording MP3 Singles at Intermaven Studio', thumbnail: 'https://picsum.photos/seed/gal2/600/340', views: 'Photo Gallery' },
     { id: 305, type: 'video', title: 'Inside the Synthesizer Soundscapes', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340', views: '320K views' },
-    { id: 306, type: 'gallery', title: 'London O2 Backstage Session', thumbnail: 'https://picsum.photos/seed/gal3/600/340', views: 'Photo Gallery' }
+    { id: 306, type: 'gallery', title: 'London O2 Backstage Session', thumbnail: 'https://picsum.photos/seed/gal3/600/340', views: 'Photo Gallery' },
+    { id: 307, type: 'video', title: `${artistName} — Rift Valley Sunset (Acoustic Session 4K)`, youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid4/600/340', views: '620K views' },
+    { id: 308, type: 'gallery', title: 'Modular Synthesizer Rig & Live Sound Plot', thumbnail: 'https://picsum.photos/seed/gal4/600/340', views: 'Photo Gallery' },
+    { id: 309, type: 'video', title: `${artistName} — Afro-Synth Cascade (Live at O2)`, youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid5/600/340', views: '490K views' },
+    { id: 310, type: 'gallery', title: 'World Tour Soundcheck & VIP Meet and Greet', thumbnail: 'https://picsum.photos/seed/gal5/600/340', views: 'Photo Gallery' }
   ]
 
   const videoCarouselItems = mediaItems.filter(m => m.type === 'video')
@@ -756,7 +1045,7 @@ export function CreatorEpkView(props = {}) {
     }
     return [
       { id: 302, title: 'Live at Nairobi Cyberdome Stage Highlight', caption: 'Sold out main stage performance with live audiovisual lasers and modular synthesizers.', url: 'https://picsum.photos/seed/gal1/1200/800', thumbnail: 'https://picsum.photos/seed/gal1/600/340' },
-      { id: 304, title: 'Behind the Scenes: Recording Stems at Intermaven Studio', caption: 'Late night master tracking session capturing analog synthesizers and vocal harmonies.', url: 'https://picsum.photos/seed/gal2/1200/800', thumbnail: 'https://picsum.photos/seed/gal2/600/340' },
+      { id: 304, title: 'Behind the Scenes: Recording Masters at Intermaven Studio', caption: 'Late night master tracking session capturing analog synthesizers and vocal harmonies.', url: 'https://picsum.photos/seed/gal2/1200/800', thumbnail: 'https://picsum.photos/seed/gal2/600/340' },
       { id: 306, title: 'London O2 Backstage VIP Session', caption: 'Exclusive fan meet and greet session before taking the stage at London O2 Academy.', url: 'https://picsum.photos/seed/gal3/1200/800', thumbnail: 'https://picsum.photos/seed/gal3/600/340' },
       { id: 307, title: 'Modular Synthesizer & Patch Bay Experimentation', caption: 'Creating custom analog timbre waveforms for upcoming sync licensing catalogue.', url: 'https://picsum.photos/seed/gal4/1200/800', thumbnail: 'https://picsum.photos/seed/gal4/600/340' },
       { id: 308, title: 'Tokyo Club Quattro Soundcheck', caption: 'Fine-tuning the low-end sub-bass resonance during tour acoustics calibration.', url: 'https://picsum.photos/seed/gal5/1200/800', thumbnail: 'https://picsum.photos/seed/gal5/600/340' }
@@ -875,7 +1164,7 @@ export function CreatorEpkView(props = {}) {
       email: email,
       phone: '+1 555-019-2834',
       preferredCommMethod: 'whatsapp',
-      interests: ['VIP Tour Pre-Sales & Discounts', 'Unreleased WAV Master Stems'],
+      interests: ['VIP Tour Pre-Sales & Discounts', 'Unreleased Digital MP3 Singles'],
       role: 'vip_fan',
       crmId: `CRM-${Math.floor(100000 + Math.random() * 900000)}`,
       joinedAt: new Date().toLocaleDateString(),
@@ -893,6 +1182,236 @@ export function CreatorEpkView(props = {}) {
     setFanPortalOpen(true)
   }
 
+  // Handle saving Fan Profile in Fan Portal Settings (with 3-field password confirmation & channel notification)
+  const handleSaveFanProfile = (e) => {
+    if (e) e.preventDefault()
+
+    let passwordUpdated = false
+    let finalPassword = fanProfilePassword
+
+    // If new password attempted, validate all 3 fields
+    if (fanNewPassword || fanConfirmPassword || fanCurrentPassword) {
+      if (!fanCurrentPassword) {
+        showToast('⚠️ Please enter your current password to authorize security changes.', 'error')
+        return
+      }
+      if (fanCurrentPassword !== fanProfilePassword && fanProfilePassword !== '••••••••') {
+        showToast('⚠️ Current password confirmation does not match existing password.', 'error')
+        return
+      }
+      if (fanNewPassword.length < 6) {
+        showToast('⚠️ New password must be at least 6 characters.', 'error')
+        return
+      }
+      if (fanNewPassword !== fanConfirmPassword) {
+        showToast('⚠️ New password and confirmation do not match.', 'error')
+        return
+      }
+      finalPassword = fanNewPassword
+      setFanProfilePassword(fanNewPassword)
+      passwordUpdated = true
+    }
+
+    const updated = {
+      ...(fanUser || {}),
+      name: fanProfileName.trim() || fanUser?.name || 'VIP Member',
+      email: fanProfileEmail.trim().toLowerCase() || fanUser?.email || 'fan@intermaven.io',
+      avatar: fanProfileAvatar,
+      password: finalPassword,
+      preferredCommMethod: ticketDeliveryChannel || fanUser?.preferredCommMethod || 'email'
+    }
+    setFanUser(updated)
+    try {
+      localStorage.setItem(`fan_session_${artistSlug}`, JSON.stringify(updated))
+      sessionStorage.setItem('tunemavens_session', JSON.stringify(updated))
+      const crmKey = `creator_crm_fans_${artistSlug}`
+      const existingFans = JSON.parse(localStorage.getItem(crmKey) || '[]')
+      const updatedFans = [updated, ...existingFans.filter(f => f.email !== updated.email)]
+      localStorage.setItem(crmKey, JSON.stringify(updatedFans))
+    } catch (_) {}
+
+    if (passwordUpdated) {
+      const channelLabel = (ticketDeliveryChannel || 'email').toUpperCase()
+      const targetDest = ticketDeliveryChannel === 'email' ? fanProfileEmail : (ticketPhone || fanProfileEmail)
+      showToast(`🔒 Password changed! Security confirmation dispatched to ${channelLabel} (${targetDest}).`, 'success')
+      setFanCurrentPassword('')
+      setFanNewPassword('')
+      setFanConfirmPassword('')
+    } else {
+      showToast('✅ Profile information updated and synchronized across Intermaven!')
+    }
+  }
+
+  // Handle Executing Direct TM Credits Top-Up in Fan Portal
+  const handleExecuteFanTopUp = (e) => {
+    if (e) e.preventDefault()
+    setFanTopUpProcessing(true)
+    setTimeout(() => {
+      setUserCredits(prev => prev + fanTopUpCredits)
+      setFanTopUpProcessing(false)
+      showToast(`🎉 Successfully topped up +${fanTopUpCredits} non-expiring TM Credits ($${fanTopUpPrice}) via ${fanTopUpGateway.toUpperCase()}!`)
+      setFanPortalTab('vault')
+    }, 600)
+  }
+
+  // Real ZIP File Generator & Downloader for Official Press Photos
+  const handleDownloadPressPhotosZip = async () => {
+    showToast('📦 Packaging High-Res Press Photos (300 DPI) ZIP archive...', 'info')
+    try {
+      const zip = new JSZip()
+      const folder = zip.folder(`${artistSlug}_press_photos_300dpi`)
+
+      folder.file('README_PRESS_METADATA.txt',
+`${effectiveArtistName.toUpperCase()} — OFFICIAL HIGH-RES PRESS ASSETS (300 DPI)
+Year: 2026
+Verified TuneMavens Creator World
+Copyright (c) 2026 ${effectiveArtistName} / Intermaven Talent Group
+
+INCLUDED HIGH-RES FILES:
+1. 01_${artistSlug}_portrait_hero_300dpi.jpg - High-Resolution Studio Portrait
+2. 02_${artistSlug}_live_stage_cyberdome_300dpi.jpg - Live Concert Action Shot
+3. 03_${artistSlug}_modular_synth_studio_300dpi.jpg - Studio Synthesizer Session
+4. 04_${artistSlug}_monochrome_editorial_300dpi.jpg - Editorial B&W Feature
+
+USAGE CLEARANCE:
+Pre-cleared for festival promotion, press reviews, digital media publications, and print editorials.
+Direct Management Contact: mgmt@intermaven.io`
+      )
+
+      const photos = [
+        { name: `01_${artistSlug}_portrait_hero_300dpi.jpg`, url: epkData?.profilePhoto || epkData?.heroImage || heroSlide1 },
+        { name: `02_${artistSlug}_live_stage_cyberdome_300dpi.jpg`, url: heroSlide2 },
+        { name: `03_${artistSlug}_modular_synth_studio_300dpi.jpg`, url: heroSlide3 },
+        { name: `04_${artistSlug}_monochrome_editorial_300dpi.jpg`, url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1600' }
+      ]
+
+      for (const p of photos) {
+        try {
+          const res = await fetch(p.url)
+          if (res.ok) {
+            const blob = await res.blob()
+            folder.file(p.name, blob)
+          } else {
+            folder.file(p.name, `300 DPI Asset Placeholder for ${p.name}`)
+          }
+        } catch (_) {
+          folder.file(p.name, `300 DPI Asset Placeholder for ${p.name}`)
+        }
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' })
+      const downloadUrl = URL.createObjectURL(content)
+      const a = document.createElement('a')
+      a.href = downloadUrl
+      a.download = `${artistSlug}_official_press_photos_300dpi.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(downloadUrl)
+      showToast(`🎉 Downloaded ${artistSlug}_official_press_photos_300dpi.zip!`, 'success')
+    } catch (err) {
+      console.error('Error generating zip:', err)
+      showToast('⚠️ Could not build ZIP archive. Please try again.', 'error')
+    }
+  }
+
+  // Real Printable/Downloadable PDF Generator for Technical Rider & Stage Plot
+  const handleDownloadTechRiderPdf = () => {
+    showToast('📄 Generating Technical Stage Rider & Patch List PDF...', 'info')
+    const printWin = window.open('', '_blank', 'width=950,height=1100')
+    if (!printWin) {
+      showToast('⚠️ Pop-up blocked! Please allow pop-ups to view/print the Stage Plot PDF.', 'error')
+      return
+    }
+    const riderHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${effectiveArtistName} — Technical Rider & Stage Plot (2026)</title>
+  <style>
+    @page { margin: 0; size: auto; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #070a14; color: #f8fafc; margin: 0; padding: 14mm; }
+    .page { max-width: 820px; margin: 0 auto; background: #0c1020; border: 1px solid ${effectiveAccent}44; border-radius: 6px; padding: 28px; }
+    h1 { margin: 0 0 4px; font-size: 26px; color: #fff; }
+    .badge { background: ${effectiveAccent}; color: #000; font-weight: 900; font-size: 11px; padding: 3px 8px; border-radius: 3px; }
+    .sec-title { font-size: 13px; font-weight: 900; color: ${effectiveAccent}; text-transform: uppercase; margin: 20px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+    th { background: rgba(0,240,255,0.15); color: ${effectiveAccent}; text-align: left; padding: 8px; font-weight: 800; border: 1px solid rgba(255,255,255,0.1); }
+    td { padding: 8px; border: 1px solid rgba(255,255,255,0.08); color: #cbd5e1; }
+    .stage-box { background: rgba(255,255,255,0.02); border: 2px dashed ${effectiveAccent}66; border-radius: 4px; padding: 22px; text-align: center; margin: 14px 0; }
+    @media print {
+      body { padding: 12mm; background: #070a14 !important; color: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="max-width:820px; margin:0 auto 16px; display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:12px 20px; border-radius:4px;">
+    <span style="font-size:13px; color:#fff; font-weight:700;">Technical Stage Rider & Patch List Engine</span>
+    <button onclick="window.print()" style="background:${effectiveAccent}; color:#000; border:none; padding:8px 18px; border-radius:3px; font-weight:900; font-size:12px; cursor:pointer;">
+      🖨️ Print or Save as PDF
+    </button>
+  </div>
+  <div class="page">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid ${effectiveAccent}; padding-bottom:14px; margin-bottom:18px;">
+      <div>
+        <h1>${effectiveArtistName}</h1>
+        <div style="color:${effectiveAccent}; font-weight:700; font-size:14px;">Technical Rider & Stage Plot Specification • Tour 2026</div>
+      </div>
+      <span class="badge">CONFIDENTIAL • PRODUCTION ONLY</span>
+    </div>
+
+    <div class="sec-title">Front of House (FOH) & Monitoring Specifications</div>
+    <p style="font-size:12.5px; color:#cbd5e1; line-height:1.6; margin:0 0 10px;">
+      FOH Console: DiGiCo SD12 / Quantum 225 or Avid S6L with Dante network integration running at 96kHz. Artist travels with dedicated FOH sound engineer.
+      Monitors: 4x Stereo IEM wireless channels (Sennheiser 2000 / Shure PSM1000). No stage wedges needed. Dedicated antenna combiner with helical directional antenna required.
+    </p>
+
+    <div class="sec-title">Stage Plot Layout</div>
+    <div class="stage-box">
+      <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; margin-bottom:8px;">[ REAR OF STAGE / BACKDROP ]</div>
+      <div style="display:flex; justify-content:space-around; margin:16px 0; font-weight:800; font-size:12px;">
+        <div style="padding:10px 16px; background:rgba(0,240,255,0.15); border:1px solid ${effectiveAccent}; border-radius:3px;">STAGE LEFT<br>Modular Synthesizer Rack & Moog</div>
+        <div style="padding:10px 16px; background:rgba(0,240,255,0.25); border:2px solid ${effectiveAccent}; border-radius:3px; color:#fff;">CENTER STAGE<br>${effectiveArtistName} Master DJ / Ableton Console</div>
+        <div style="padding:10px 16px; background:rgba(0,240,255,0.15); border:1px solid ${effectiveAccent}; border-radius:3px;">STAGE RIGHT<br>Roland SPD-SX & Electronic Percussion</div>
+      </div>
+      <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; margin-top:8px;">[ FRONT OF STAGE / AUDIENCE BARRIER ]</div>
+    </div>
+
+    <div class="sec-title">Input Channel Patch List</div>
+    <table>
+      <thead>
+        <tr><th>CH</th><th>SOURCE</th><th>MIC / DI TYPE</th><th>STAND</th><th>PHANTOM</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1-2</td><td>Master Stereo Mix L/R</td><td>Radial J48 Stereo DI</td><td>—</td><td>+48V</td></tr>
+        <tr><td>3-4</td><td>Modular Synth Submix L/R</td><td>Radial ProD2</td><td>—</td><td>Passive</td></tr>
+        <tr><td>5</td><td>Moog Subsequent 37 Bass</td><td>Radial JDI Active</td><td>—</td><td>+48V</td></tr>
+        <tr><td>6-7</td><td>Roland SPD-SX Percussion</td><td>BSS AR-133 DI x2</td><td>—</td><td>+48V</td></tr>
+        <tr><td>8</td><td>Lead Talkback Vocal</td><td>Shure Beta 58A (Switched)</td><td>Boom</td><td>Off</td></tr>
+        <tr><td>9-10</td><td>Audience Ambient Mics L/R</td><td>Sennheiser e914 x2</td><td>Tall Boom</td><td>+48V</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sec-title">Production & Hospitality Contact</div>
+    <div style="font-size:12px; color:#cbd5e1; line-height:1.6;">
+      Tour Manager: <strong>Marcus Sterling</strong> • Phone: +44 7911 204918 • Email: production@intermaven.io<br>
+      FOH Audio Lead: <strong>Elena Richter</strong> • Email: audio@intermaven.io
+    </div>
+  </div>
+  <script>
+    window.onload = function() { setTimeout(function() { window.print(); }, 400); };
+  <\/script>
+</body>
+</html>`
+    printWin.document.open()
+    printWin.document.write(riderHtml)
+    printWin.document.close()
+    showToast('✅ Technical Rider PDF generated! Print or Save as PDF in the opened dialog.')
+  }
+
+  // Official EPK PDF Generator (with Social Media Icons, Clean Page Breaks, and Suppressed Browser Headers/Footers)
   const handleDownloadEpkAssets = (e) => {
     if (e) e.preventDefault()
     showToast('📄 Generating high-res EPK Press Kit PDF...', 'info')
@@ -907,49 +1426,52 @@ export function CreatorEpkView(props = {}) {
     const logoImg = effectiveLogoUrl || ''
     const currentUrl = typeof window !== 'undefined' ? window.location.href : 'http://localhost:3000/#/epk/' + artistSlug
 
+    // Inline SVG Icons for Social Media
+    const igIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${effectiveAccent}" style="vertical-align:middle; margin-right:6px;"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`
+    const ytIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${effectiveAccent}" style="vertical-align:middle; margin-right:6px;"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`
+    const spIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${effectiveAccent}" style="vertical-align:middle; margin-right:6px;"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.495 17.307c-.215.352-.674.464-1.026.248-2.812-1.718-6.353-2.107-10.523-1.155-.403.092-.806-.16-.898-.563-.092-.403.16-.806.563-.898 4.567-1.043 8.49-.602 11.637 1.342.352.216.464.674.247 1.026zm1.467-3.262c-.27.44-.848.577-1.288.307-3.218-1.978-8.125-2.55-11.93-1.394-.496.15-1.024-.135-1.174-.631-.15-.497.135-1.025.631-1.175 4.354-1.321 9.774-.68 13.454 1.583.44.27.577.848.307 1.288zm.126-3.41c-3.859-2.292-10.228-2.503-13.916-1.383-.593.18-1.224-.162-1.404-.755-.18-.593.162-1.224.755-1.404 4.241-1.288 11.272-1.042 15.706 1.591.534.317.708 1.011.391 1.545-.317.534-1.011.708-1.532.406z"/></svg>`
+    const twIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="${effectiveAccent}" style="vertical-align:middle; margin-right:6px;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`
+
     const pdfHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>${effectiveArtistName} — Official Press Kit (EPK)</title>
   <style>
-    @page { size: A4 portrait; margin: 12mm; }
+    @page { size: auto; margin: 0; }
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #070a14; color: #f8fafc; margin: 0; padding: 24px; }
-    .page { max-width: 820px; margin: 0 auto; background: #0c1020; border: 1px solid ${effectiveAccent}44; border-radius: 6px; padding: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.7); }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${effectiveAccent}; padding-bottom: 18px; margin-bottom: 24px; }
-    .logo-box { max-width: 200px; max-height: 60px; display: flex; align-items: center; }
-    .logo-box img { max-width: 100%; max-height: 55px; object-fit: contain; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #070a14; color: #f8fafc; margin: 0; padding: 14mm; }
+    .page { max-width: 820px; margin: 0 auto; background: #0c1020; border: 1px solid ${effectiveAccent}44; border-radius: 6px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.7); }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${effectiveAccent}; padding-bottom: 16px; margin-bottom: 22px; }
+    .logo-box { max-width: 200px; max-height: 55px; display: flex; align-items: center; }
+    .logo-box img { max-width: 100%; max-height: 50px; object-fit: contain; }
     .badge { background: ${effectiveAccent}; color: #000; font-weight: 900; font-size: 11px; padding: 4px 10px; border-radius: 3px; text-transform: uppercase; letter-spacing: 1px; }
-    .hero-flex { display: flex; gap: 24px; margin-bottom: 28px; align-items: center; }
-    .profile-photo { width: 220px; height: 280px; object-fit: cover; border-radius: 4px; border: 2px solid ${effectiveAccent}; box-shadow: 0 8px 25px rgba(0,0,0,0.6); flex-shrink: 0; }
+    .hero-flex { display: flex; gap: 24px; margin-bottom: 24px; align-items: center; }
+    .profile-photo { width: 210px; height: 260px; object-fit: cover; border-radius: 4px; border: 2px solid ${effectiveAccent}; box-shadow: 0 8px 25px rgba(0,0,0,0.6); flex-shrink: 0; }
     .meta-content { flex: 1; }
-    h1 { margin: 0 0 6px; font-size: 32px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
-    .headline { font-size: 15px; color: ${effectiveAccent}; font-weight: 700; margin-bottom: 14px; }
-    .quote-box { background: rgba(34,211,238,0.06); border-left: 3px solid ${effectiveAccent}; padding: 12px 16px; margin: 14px 0; font-style: italic; color: #e2e8f0; font-size: 12.5px; border-radius: 0 3px 3px 0; }
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
-    .stat-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 3px; text-align: center; }
-    .stat-num { font-size: 20px; font-weight: 900; color: ${effectiveAccent}; }
+    h1 { margin: 0 0 4px; font-size: 30px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+    .headline { font-size: 14.5px; color: ${effectiveAccent}; font-weight: 700; margin-bottom: 12px; }
+    .quote-box { background: rgba(34,211,238,0.06); border-left: 3px solid ${effectiveAccent}; padding: 10px 14px; margin: 12px 0; font-style: italic; color: #e2e8f0; font-size: 12px; border-radius: 0 3px 3px 0; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+    .stat-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 3px; text-align: center; }
+    .stat-num { font-size: 19px; font-weight: 900; color: ${effectiveAccent}; }
     .stat-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
-    .sec-title { font-size: 13px; font-weight: 900; color: ${effectiveAccent}; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 5px; margin: 20px 0 10px; }
-    .bio-p { font-size: 12.5px; line-height: 1.65; color: #cbd5e1; margin: 0 0 10px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 12px; color: #cbd5e1; }
-    .grid-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 3px; }
-    .grid-box strong { color: #fff; display: block; margin-bottom: 3px; }
-    .footer { margin-top: 26px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: #64748b; display: flex; justify-content: space-between; }
+    .sec-title { font-size: 13px; font-weight: 900; color: ${effectiveAccent}; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 5px; margin: 18px 0 10px; }
+    .bio-p { font-size: 12px; line-height: 1.65; color: #cbd5e1; margin: 0 0 10px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; color: #cbd5e1; }
+    .grid-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px 12px; border-radius: 3px; }
+    .grid-box strong { color: #fff; display: flex; align-items: center; margin-bottom: 3px; font-size: 12.5px; }
+
+    /* Page Break to ensure Management and Sync Clearance start cleanly on Page 2 */
+    .page-break {
+      page-break-before: always;
+      break-before: page;
+      margin-top: 24px;
+    }
+
     @media print {
-      body { background: #fff !important; color: #000 !important; padding: 0 !important; }
-      .page { background: #fff !important; border: none !important; color: #000 !important; box-shadow: none !important; padding: 0 !important; }
-      h1 { color: #000 !important; }
-      .headline { color: #0369a1 !important; }
-      .bio-p { color: #334155 !important; }
-      .stat-box { background: #f8fafc !important; border-color: #cbd5e1 !important; }
-      .stat-num { color: #0284c7 !important; }
-      .stat-label { color: #64748b !important; }
-      .quote-box { background: #f0f9ff !important; border-color: #0284c7 !important; color: #0f172a !important; }
-      .grid-box { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #334155 !important; }
-      .grid-box strong { color: #0f172a !important; }
-      .footer { color: #94a3b8 !important; }
+      body { background: #070a14 !important; color: #f8fafc !important; padding: 12mm !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page { box-shadow: none !important; }
       .no-print { display: none !important; }
     }
   </style>
@@ -962,6 +1484,7 @@ export function CreatorEpkView(props = {}) {
     </button>
   </div>
 
+  <!-- PAGE 1: HERO, SOCIALS WITH ICONS, BIOGRAPHY -->
   <div class="page">
     <div class="header">
       <div class="logo-box">
@@ -990,28 +1513,40 @@ export function CreatorEpkView(props = {}) {
       </div>
     </div>
 
-    <div class="sec-title">Biography & Narrative</div>
+    <div class="sec-title">Official Social Media & Streaming Handles</div>
+    <div class="grid-2">
+      <div class="grid-box">
+        <strong>${igIcon} Instagram</strong>
+        ${epkData?.instagram || ('@' + artistSlug)} • Official Verified Profile
+      </div>
+      <div class="grid-box">
+        <strong>${ytIcon} YouTube</strong>
+        ${epkData?.youtube || ('youtube.com/@' + artistSlug)} • Official Channel & 4K Visuals
+      </div>
+      <div class="grid-box">
+        <strong>${spIcon} Spotify</strong>
+        ${epkData?.spotify || ('spotify.com/artist/' + artistSlug)} • Verified Artist Discography
+      </div>
+      <div class="grid-box">
+        <strong>${twIcon} X / Twitter</strong>
+        ${epkData?.twitter || ('@' + artistSlug)} • Tour Announcements & Updates
+      </div>
+    </div>
+
+    <div class="sec-title">Biography & Artistic Narrative</div>
     <div class="bio-p">
       ${effectiveBio.replace(/<[^>]+>/g, ' ')}
     </div>
+  </div>
 
-    <div class="sec-title">Technical Rider & Stage Plot Specifications</div>
-    <div class="grid-2">
-      <div class="grid-box">
-        <strong>Front of House (FOH)</strong>
-        DiGiCo SD12 / Quantum 225 or Avid S6L with Dante network integration.
+  <!-- PAGE 2: CLEAN PAGE BREAK -> MANAGEMENT, SYNC CLEARANCE, STAGE SPECS -->
+  <div class="page page-break">
+    <div class="header">
+      <div class="logo-box">
+        ${logoImg ? `<img src="${logoImg}" alt="Official Logo" />` : `<h2 style="margin:0; color:${effectiveAccent}; font-size:22px;">${effectiveArtistName}</h2>`}
       </div>
-      <div class="grid-box">
-        <strong>In-Ear Monitoring (IEM)</strong>
-        4x Stereo IEM wireless mixes (Sennheiser G4 / Shure PSM1000). No wedges needed.
-      </div>
-      <div class="grid-box">
-        <strong>Backline Requirements</strong>
-        2x Pioneer CDJ-3000, 1x DJM-A9 / V10, 1x Moog Subsequent 37, Roland SPD-SX.
-      </div>
-      <div class="grid-box">
-        <strong>Tour Capacities & Draw</strong>
-        1,500 - 3,500 Cap Headline Venues Sold Out. Festival Mainstage Ready.
+      <div style="text-align:right;">
+        <span class="badge">EPK Page 2 • Representation</span>
       </div>
     </div>
 
@@ -1030,17 +1565,37 @@ export function CreatorEpkView(props = {}) {
       <div class="grid-box">
         <strong>Sync & Master Licensing</strong>
         SyncMavens Global Network<br>
-        Email: sync@tunemaven.com (One-Stop Pre-Cleared)
+        Email: sync@tunemaven.com (100% One-Stop Pre-Cleared)
       </div>
       <div class="grid-box">
-        <strong>Live Creator World</strong>
+        <strong>Live Creator World Portal</strong>
         ${currentUrl}
       </div>
     </div>
 
-    <div class="footer">
-      <span>Generated by TuneMavens Creator EPK Engine • Verified Intermaven Protocol</span>
-      <span>${effectiveArtistName} • All Master & Publishing Rights Reserved</span>
+    <div class="sec-title">Technical Rider & Stage Plot Specifications</div>
+    <div class="grid-2">
+      <div class="grid-box">
+        <strong>Front of House (FOH) Audio</strong>
+        DiGiCo SD12 / Quantum 225 or Avid S6L with Dante network integration.
+      </div>
+      <div class="grid-box">
+        <strong>In-Ear Monitoring (IEM)</strong>
+        4x Stereo IEM wireless mixes (Sennheiser G4 / Shure PSM1000). No wedges needed.
+      </div>
+      <div class="grid-box">
+        <strong>Backline Requirements</strong>
+        2x Pioneer CDJ-3000, 1x DJM-A9 / V10, 1x Moog Subsequent 37, Roland SPD-SX.
+      </div>
+      <div class="grid-box">
+        <strong>Tour Capacities & Draw</strong>
+        1,500 - 3,500 Cap Headline Venues Sold Out. Festival Mainstage Ready.
+      </div>
+    </div>
+
+    <div class="sec-title">Verified Rights & Publishing Heritage</div>
+    <div class="bio-p">
+      All master sound recordings and musical compositions administered through the Intermaven Publishing Network. Cue sheets are automatically generated and pre-cleared for broadcast, film, streaming, and gaming synchronization without third-party encumbrances.
     </div>
   </div>
 
@@ -1101,27 +1656,37 @@ export function CreatorEpkView(props = {}) {
 
   const handleMerchCheckoutSubmit = (e) => {
     if (e) e.preventDefault()
-    if (merchPaymentGateway === 'credits' && userCredits < 50) {
-      showToast('Insufficient TM Credits balance. Please top up first.', 'error')
-      return
+    const discountedTotal = cartTotal * (1 - appliedPromoDiscount)
+    const requiredCredits = Math.round(discountedTotal * 10)
+
+    let topUpCharged = 0
+    if (userCredits >= requiredCredits) {
+      setUserCredits(prev => prev - requiredCredits)
+    } else {
+      const shortfall = requiredCredits - userCredits
+      topUpCharged = Math.max(5, Math.ceil(shortfall / 10 / 5) * 5)
+      const topUpCredits = calcCreditsForAmount(topUpCharged)
+      setUserCredits(prev => prev + topUpCredits - requiredCredits)
     }
 
     const orderId = `TM-ORD-${Math.floor(100000 + Math.random() * 900000)}`
     const trackingCode = `TRK-IM-${Math.floor(10000000 + Math.random() * 90000000)}`
-    
-    if (merchPaymentGateway === 'credits') {
-      setUserCredits(prev => Math.max(0, prev - 50))
-    }
 
     setMerchOrderConfirmed({
       orderId,
       trackingCode,
-      gateway: merchPaymentGateway,
-      totalPaid: (cartTotal * (1 - appliedPromoDiscount)).toFixed(2),
+      gateway: userCredits >= requiredCredits ? 'credits' : merchPaymentGateway,
+      totalPaid: discountedTotal.toFixed(2),
+      totalCredits: requiredCredits,
+      topUpCharged,
       items: [...cart]
     })
     setCart([])
-    showToast(`🎉 Order ${orderId} confirmed! Tracking details generated.`)
+    if (topUpCharged > 0) {
+      showToast(`🎉 Top-Up of $${topUpCharged} authorized & ${requiredCredits} TM Credits deducted! Order ${orderId} confirmed.`, 'success')
+    } else {
+      showToast(`🎉 Order ${orderId} confirmed! Deducted ${requiredCredits} TM Credits.`, 'success')
+    }
   }
 
   const handleLogout = () => {
@@ -1245,29 +1810,7 @@ export function CreatorEpkView(props = {}) {
     return () => clearInterval(interval)
   }, [albumAudioPlaying, albumAudioUnlocked])
 
-  // Fan Playlists & Library State
-  const [fanPlaylists, setFanPlaylists] = useState(() => {
-    try {
-      const saved = localStorage.getItem('tm_fan_playlists')
-      return saved ? JSON.parse(saved) : [
-        { id: 101, name: 'Night Cyberwave Vibes', desc: 'Late night modular synth rotation', trackIds: [1, 2], createdAt: '2026-08-20' },
-        { id: 102, name: 'Roadtrip Safari', desc: 'East African electronic selections', trackIds: [3, 4], createdAt: '2026-09-01' }
-      ]
-    } catch {
-      return []
-    }
-  })
-  const [fanPurchasedLibrary, setFanPurchasedLibrary] = useState(() => {
-    try {
-      const saved = localStorage.getItem('tm_fan_library')
-      return saved ? JSON.parse(saved) : [
-        { id: 'alb-401', type: 'album', title: 'Nairobi Cyberwave (Deluxe LP)', date: '2026-08-15', format: 'FLAC 24/96' },
-        { id: 'trk-1', type: 'single', title: 'Nairobi Cyberwave (Master)', date: '2026-08-18', format: 'WAV Master' }
-      ]
-    } catch {
-      return []
-    }
-  })
+  // (fanPlaylists and fanPurchasedLibrary declared above)
   const [playlistModalOpen, setPlaylistModalOpen] = useState(false)
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [newPlaylistDesc, setNewPlaylistDesc] = useState('')
@@ -1428,7 +1971,7 @@ export function CreatorEpkView(props = {}) {
     }
   }
 
-  // Full Event Ticket Purchasing Protocol Handler
+  // Full Event Ticket Purchasing Protocol Handler (Strict Credits Deduction & Top-Up Protocol)
   const handleEventPurchase = (e) => {
     if (e) e.preventDefault()
     setEventPurchasing(true)
@@ -1448,13 +1991,14 @@ export function CreatorEpkView(props = {}) {
     const totalCash = (tierPrice * eventQty).toFixed(2)
     const totalCredits = tierCredits * eventQty
 
-    if (eventPaymentGateway === 'credits') {
-      if (userCredits < totalCredits) {
-        showToast(`Insufficient TM Credits! You need ${totalCredits} credits, but have ${userCredits}.`)
-        setEventPurchasing(false)
-        return
-      }
+    let topUpCharged = 0
+    if (userCredits >= totalCredits) {
       setUserCredits(prev => prev - totalCredits)
+    } else {
+      const shortfall = totalCredits - userCredits
+      topUpCharged = Math.max(5, Math.ceil(shortfall / 10 / 5) * 5)
+      const topUpCredits = calcCreditsForAmount(topUpCharged)
+      setUserCredits(prev => prev + topUpCredits - totalCredits)
     }
 
     setTimeout(() => {
@@ -1466,18 +2010,23 @@ export function CreatorEpkView(props = {}) {
         tier: eventTier,
         tierName: eventTier === 'ga' ? 'General Admission' : eventTier === 'vip' ? 'VIP Access Pass' : 'VIP Meet & Greet Pass',
         qty: eventQty,
-        gateway: eventPaymentGateway,
+        gateway: userCredits >= totalCredits ? 'credits' : eventPaymentGateway,
+        topUpCharged,
         totalCash,
         totalCredits,
         buyerName: eventCardName || (fanUser ? fanUser.name : 'VIP Maven Fan'),
         buyerEmail: ticketEmail || (fanUser ? fanUser.email : 'fan@intermaven.io'),
         datePurchased: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       })
-      showToast(`Ticket Purchase Confirmed for ${ev.venue}!`)
-    }, 600)
+      if (topUpCharged > 0) {
+        showToast(`🎉 Top-Up of $${topUpCharged} completed & ${totalCredits} TM Credits deducted! Pass reserved for ${ev.venue}.`, 'success')
+      } else {
+        showToast(`🎟️ Pass reserved for ${ev.venue}! Deducted ${totalCredits} TM Credits.`, 'success')
+      }
+    }, 500)
   }
 
-  // Full Stems Purchase & Download Generation Handler
+  // Full Stems Purchase & Download Generation Handler (Strict Credits Deduction & Top-Up Protocol)
   const handleStemsPurchase = (e) => {
     if (e) e.preventDefault()
     setStemsProcessing(true)
@@ -1501,13 +2050,14 @@ export function CreatorEpkView(props = {}) {
       tierLabel = 'One-Stop Sync & Commercial License + Multitracks'
     }
 
-    if (stemsPaymentMethod === 'credits') {
-      if (userCredits < priceCredits) {
-        showToast(`Insufficient TM Credits! You need ${priceCredits} credits, but have ${userCredits}.`)
-        setStemsProcessing(false)
-        return
-      }
+    let topUpCharged = 0
+    if (userCredits >= priceCredits) {
       setUserCredits(prev => prev - priceCredits)
+    } else {
+      const shortfall = priceCredits - userCredits
+      topUpCharged = Math.max(5, Math.ceil(shortfall / 10 / 5) * 5)
+      const topUpCredits = calcCreditsForAmount(topUpCharged)
+      setUserCredits(prev => prev + topUpCredits - priceCredits)
     }
 
     setTimeout(() => {
@@ -1519,7 +2069,8 @@ export function CreatorEpkView(props = {}) {
         tierLabel,
         priceCash,
         priceCredits,
-        paymentMethod: stemsPaymentMethod,
+        paymentMethod: userCredits >= priceCredits ? 'credits' : stemsPaymentMethod,
+        topUpCharged,
         downloadExpiry: '30 Days Access',
         stemsList: [
           { name: '01_DRUMS_Percussion_24b96k.wav', size: '78.4 MB' },
@@ -1531,33 +2082,63 @@ export function CreatorEpkView(props = {}) {
           { name: '07_MIDI_TempoMap_Chords.mid', size: '142 KB' }
         ]
       })
-      showToast(`Stems Unlocked: ${t.title}! Downloads ready.`)
+      if (topUpCharged > 0) {
+        showToast(`🎉 Top-Up of $${topUpCharged} completed & ${priceCredits} TM Credits deducted! Stems Unlocked: ${t.title}.`, 'success')
+      } else {
+        showToast(`Stems Unlocked: ${t.title}! Deducted ${priceCredits} TM Credits.`, 'success')
+      }
     }, 500)
   }
 
 
-  // Intermaven Ticketing Handler
+  // Intermaven Ticketing Handler (Strict Credits Deduction & Top-Up Protocol)
   const handleTicketBuy = (e) => {
     e.preventDefault()
-    let pricePerTicket = selectedShow.priceGA
-    if (ticketTier === 'vip') pricePerTicket = selectedShow.priceVIP
-    if (ticketTier === 'meet') pricePerTicket = selectedShow.priceMeet
+    let pricePerTicket = selectedShow?.priceGA || 25
+    let tierCredits = 25
+    if (ticketTier === 'vip') {
+      pricePerTicket = selectedShow?.priceVIP || 50
+      tierCredits = 50
+    }
+    if (ticketTier === 'meet') {
+      pricePerTicket = selectedShow?.priceMeet || 100
+      tierCredits = 100
+    }
 
     const grossAmount = (pricePerTicket * ticketQty)
+    const requiredCredits = tierCredits * ticketQty
     const creatorShare = (grossAmount * 0.90).toFixed(2)
     const platformShare = (grossAmount * 0.10).toFixed(2)
+
+    let topUpCharged = 0
+    if (userCredits >= requiredCredits) {
+      setUserCredits(prev => prev - requiredCredits)
+    } else {
+      const shortfall = requiredCredits - userCredits
+      topUpCharged = Math.max(5, Math.ceil(shortfall / 10 / 5) * 5)
+      const topUpCredits = calcCreditsForAmount(topUpCharged)
+      setUserCredits(prev => prev + topUpCredits - requiredCredits)
+    }
 
     setTicketSuccess({
       qr: `TKT-${Math.floor(100000 + Math.random() * 900000)}`,
       show: selectedShow,
       tierName: ticketTier === 'ga' ? 'General Admission' : ticketTier === 'vip' ? 'VIP Pass' : 'Meet & Greet Upgrade',
       qty: ticketQty,
-      gateway: paymentGateway,
+      gateway: userCredits >= requiredCredits ? 'credits' : paymentGateway,
+      topUpCharged,
       total: grossAmount.toFixed(2),
+      totalCredits: requiredCredits,
       creatorShare,
       platformShare,
       fanEmail: ticketEmail || (fanUser ? fanUser.email : 'fan@intermaven.io')
     })
+
+    if (topUpCharged > 0) {
+      showToast(`🎉 Top-Up of $${topUpCharged} completed & ${requiredCredits} TM Credits deducted for ${selectedShow?.venue || 'Show'}!`, 'success')
+    } else {
+      showToast(`🎟️ Reserved with ${requiredCredits} TM Credits for ${selectedShow?.venue || 'Show'}!`, 'success')
+    }
   }
 
   // Media Commenting Handler with VIP Fan CRM Prompt
@@ -1608,6 +2189,13 @@ export function CreatorEpkView(props = {}) {
     if (mediaFilter === 'videos') return matchesSearch && m.type === 'video'
     return matchesSearch
   })
+  const mediaPerPage = 6
+  const totalMediaPages = Math.ceil(filteredMedia.length / mediaPerPage) || 1
+  const paginatedMedia = filteredMedia.slice((mediaPage - 1) * mediaPerPage, mediaPage * mediaPerPage)
+
+  const singlesPerPage = 6
+  const totalSinglesPages = Math.ceil(tracks.length / singlesPerPage) || 1
+  const paginatedFeaturedSingles = tracks.slice((featuredSinglesPage - 1) * singlesPerPage, featuredSinglesPage * singlesPerPage)
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(storeSearch.toLowerCase())
@@ -1850,11 +2438,127 @@ export function CreatorEpkView(props = {}) {
             {epkData?.menuItems && Array.isArray(epkData.menuItems) && epkData.menuItems.length > 0 ? (
               epkData.menuItems.map(item => {
                 const targetTab = mapTabKey(item.label)
+                const isMedia = item.label?.toLowerCase() === 'media' || targetTab === 'media'
+
+                if (isMedia) {
+                  return (
+                    <div key={item.id || 'media-nav'} style={{ position: 'relative' }} ref={dropdownRef} onMouseDown={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)}
+                        style={{
+                          background: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? effectiveAccent : 'transparent',
+                          color: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                          border: 'none',
+                          padding: '7px 14px',
+                          borderRadius: '3px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '0.88rem'
+                        }}
+                      >
+                        <RiVideoFill /> Media <RiArrowDownSLine />
+                      </button>
+                      {mediaDropdownOpen && (
+                        <div
+                          onMouseDown={(e) => e.stopPropagation()}
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            marginTop: '6px',
+                            background: isLight ? '#fff' : '#0a0d18',
+                            border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                            borderRadius: '3px',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                            minWidth: '190px',
+                            zIndex: 1100,
+                            overflow: 'hidden'
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={() => {
+                              setActiveTab('media');
+                              setMediaFilter('all');
+                              setMediaPage(1);
+                              setMediaDropdownOpen(false);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
+                          >
+                            <RiVideoFill /> All Media
+                          </button>
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={() => {
+                              setActiveTab('discography');
+                              setMediaDropdownOpen(false);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
+                          >
+                            <RiDiscFill /> Discography & Albums
+                          </button>
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={() => {
+                              setActiveTab('media');
+                              setMediaFilter('gallery');
+                              setMediaPage(1);
+                              setMediaDropdownOpen(false);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
+                          >
+                            <RiImageFill /> Photo Gallery
+                          </button>
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={() => {
+                              setActiveTab('media');
+                              setMediaFilter('videos');
+                              setMediaPage(1);
+                              setMediaDropdownOpen(false);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
+                          >
+                            <RiVideoFill /> 4K Videos
+                          </button>
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={() => {
+                              setActiveTab('pricing');
+                              setMediaDropdownOpen(false);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: effectiveAccent, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}
+                          >
+                            <RiCoinsFill /> Fan Top Up Pricing
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+
                 const isSelected = activeTab === targetTab || (targetTab === 'home' && activeTab === 'home')
                 return (
                   <button 
                     key={item.id || item.label} 
-                    onClick={() => setActiveTab(targetTab)} 
+                    onClick={() => {
+                      setActiveTab(targetTab)
+                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }} 
                     style={{ background: isSelected ? effectiveAccent : 'transparent', color: isSelected ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
                   >
                     {item.label}
@@ -1863,46 +2567,46 @@ export function CreatorEpkView(props = {}) {
               })
             ) : (
               <>
-                <button onClick={() => setActiveTab('home')} style={{ background: activeTab === 'home' ? effectiveAccent : 'transparent', color: activeTab === 'home' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+                <button onClick={() => { setActiveTab('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'home' ? effectiveAccent : 'transparent', color: activeTab === 'home' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
                   <RiHomeFill /> Home
                 </button>
-                <button onClick={() => setActiveTab('bio')} style={{ background: activeTab === 'bio' ? effectiveAccent : 'transparent', color: activeTab === 'bio' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+                <button onClick={() => { setActiveTab('bio'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'bio' ? effectiveAccent : 'transparent', color: activeTab === 'bio' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
                   <RiUserFill /> Bio
                 </button>
-                <button onClick={() => setActiveTab('shows')} style={{ background: activeTab === 'shows' ? effectiveAccent : 'transparent', color: activeTab === 'shows' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+                <button onClick={() => { setActiveTab('shows'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'shows' ? effectiveAccent : 'transparent', color: activeTab === 'shows' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
                   <RiCalendarEventFill /> Shows
                 </button>
-                <div style={{ position: 'relative' }} ref={dropdownRef}>
-                  <button onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)} style={{ background: (activeTab === 'media' || activeTab === 'discography') ? effectiveAccent : 'transparent', color: (activeTab === 'media' || activeTab === 'discography') ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+                <div style={{ position: 'relative' }} ref={dropdownRef} onMouseDown={(e) => e.stopPropagation()}>
+                  <button type="button" onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)} style={{ background: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? effectiveAccent : 'transparent', color: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
                     <RiVideoFill /> Media <RiArrowDownSLine />
                   </button>
                   {mediaDropdownOpen && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: isLight ? '#fff' : '#0a0d18', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '180px', zIndex: 1100, overflow: 'hidden' }}>
-                      <div onClick={() => { setActiveTab('media'); setMediaFilter('all'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div onMouseDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: isLight ? '#fff' : '#0a0d18', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '190px', zIndex: 1100, overflow: 'hidden' }}>
+                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('all'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
                         <RiVideoFill /> All Media
-                      </div>
-                      <div onClick={() => { setActiveTab('discography'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      </button>
+                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('discography'); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
                         <RiDiscFill /> Discography & Albums
-                      </div>
-                      <div onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      </button>
+                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
                         <RiImageFill /> Photo Gallery
-                      </div>
-                      <div onClick={() => { setActiveTab('media'); setMediaFilter('videos'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      </button>
+                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('videos'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
                         <RiVideoFill /> 4K Videos
-                      </div>
-                      <div onClick={() => { setActiveTab('pricing'); setMediaDropdownOpen(false); }} style={{ padding: '10px 14px', color: effectiveAccent, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
+                      </button>
+                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('pricing'); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: effectiveAccent, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
                         <RiCoinsFill /> Fan Top Up Pricing
-                      </div>
+                      </button>
                     </div>
                   )}
                 </div>
-                <button onClick={() => setActiveTab('store')} style={{ background: activeTab === 'store' ? effectiveAccent : 'transparent', color: activeTab === 'store' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+                <button onClick={() => { setActiveTab('store'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'store' ? effectiveAccent : 'transparent', color: activeTab === 'store' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
                   <RiShoppingBagFill /> Store
                 </button>
-                <button onClick={() => setActiveTab('press')} style={{ background: activeTab === 'press' ? effectiveAccent : 'transparent', color: activeTab === 'press' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+                <button onClick={() => { setActiveTab('press'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'press' ? effectiveAccent : 'transparent', color: activeTab === 'press' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
                   <RiFileTextFill /> Press Kit
                 </button>
-                <button onClick={() => setActiveTab('contact')} style={{ background: activeTab === 'contact' ? effectiveAccent : 'transparent', color: activeTab === 'contact' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+                <button onClick={() => { setActiveTab('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'contact' ? effectiveAccent : 'transparent', color: activeTab === 'contact' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
                   <RiMailFill /> Contact
                 </button>
               </>
@@ -1992,7 +2696,51 @@ export function CreatorEpkView(props = {}) {
         }}>
           {(epkData?.menuItems || DEFAULT_MENU).map(item => {
             const targetTab = mapTabKey(item.label)
+            const isMedia = item.label?.toLowerCase() === 'media' || targetTab === 'media'
             const isSelected = activeTab === targetTab
+
+            if (isMedia) {
+              return (
+                <div key={item.id || 'mobile-media'} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <button
+                    onClick={() => {
+                      setActiveTab('media')
+                      setMediaFilter('all')
+                      setMediaPage(1)
+                      setMobileMenuOpen(false)
+                    }}
+                    style={{
+                      background: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? effectiveAccent : 'transparent',
+                      color: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? '#000' : (isLight ? '#0f172a' : '#fff'),
+                      border: `1px solid ${isSelected ? effectiveAccent : 'rgba(255,255,255,0.1)'}`,
+                      padding: '12px 18px',
+                      borderRadius: '4px',
+                      fontWeight: 800,
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      textAlign: 'left'
+                    }}
+                  >
+                    Media
+                  </button>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', paddingLeft: '12px' }}>
+                    <button onClick={() => { setActiveTab('discography'); setMobileMenuOpen(false); }} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
+                      🎵 Discography
+                    </button>
+                    <button onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaPage(1); setMobileMenuOpen(false); }} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
+                      📷 Photo Gallery
+                    </button>
+                    <button onClick={() => { setActiveTab('media'); setMediaFilter('videos'); setMediaPage(1); setMobileMenuOpen(false); }} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
+                      ▶ 4K Videos
+                    </button>
+                    <button onClick={() => { setActiveTab('pricing'); setMobileMenuOpen(false); }} style={{ background: 'rgba(0,240,255,0.12)', border: `1px solid ${effectiveAccent}66`, color: effectiveAccent, padding: '8px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', textAlign: 'left' }}>
+                      💎 Top Up Credits
+                    </button>
+                  </div>
+                </div>
+              )
+            }
+
             return (
               <button
                 key={item.id || item.label}
@@ -2085,7 +2833,7 @@ export function CreatorEpkView(props = {}) {
             const animClass = (epkData?.heroAnimStyle === 'fade' || epkData?.heroAnimStyle === 'fade-seq') ? 'anim-fade-seq' : 'anim-synergy'
             const title1 = currentSlide?.title1 || epkData?.heroTitle1 || currentSlide?.title || effectiveArtistName
             const title2 = currentSlide?.title2 || epkData?.heroTitle2 || currentSlide?.subtitle || effectiveHeadline
-            const title3 = currentSlide?.title3 || epkData?.heroTitle3 || "100% Pre-Cleared One-Stop Sync Licensing & Master Stems • TuneStream Lossless"
+            const title3 = currentSlide?.title3 || epkData?.heroTitle3 || "High-Quality Digital MP3 Singles • Collector Vinyl & CDs • Direct Fan Passes"
             return (
               <div
                 key={currentSlideIndex}
@@ -2295,8 +3043,21 @@ export function CreatorEpkView(props = {}) {
 
       {/* Dynamic Page Header Banner - Customized per Page Tab */}
       {activeTab !== 'home' && (
-        <section style={{ position: 'relative', height: '260px', backgroundImage: `url(${getPageHeader(activeTab)})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 32px 0' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.65) 100%)' }} />
+        <section style={{ position: 'relative', height: '260px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 32px 0' }}>
+          {/* Background image container with 40% increased brightness */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url(${getPageHeader(activeTab)})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              filter: 'brightness(1.4)',
+              transform: 'scale(1.02)'
+            }}
+          />
+          {/* Lightened gradient overlay ensuring 40% more luminance while keeping text legible */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(4,6,14,0.72) 0%, rgba(4,6,14,0.30) 100%)' }} />
           <div className="anim-fade-up" style={{ position: 'relative', zIndex: 10, maxWidth: '850px', margin: '0 auto', textAlign: 'center' }}>
             <h1 style={{ fontSize: '2.5rem', margin: '0 auto 6px auto', fontWeight: 900, fontFamily: effectiveFont, color: '#fff', textTransform: 'capitalize', textAlign: 'center' }}>
               {activeTab === 'press' ? 'Electronic Press Kit (EPK)' :
@@ -2413,6 +3174,15 @@ export function CreatorEpkView(props = {}) {
                       </div>
                     ))}
                   </div>
+                  <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: isLight ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)', textAlign: 'right' }}>
+                    <button 
+                      type="button"
+                      onClick={() => { setActiveTab('shows'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      style={{ background: 'transparent', border: 'none', color: effectiveAccent, fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      View all shows <RiArrowRightLine />
+                    </button>
+                  </div>
                 </div>
               </aside>
 
@@ -2426,23 +3196,23 @@ export function CreatorEpkView(props = {}) {
                         Featured Singles
                       </h2>
                       <div style={{ fontSize: '0.85rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>
-                        Lossless 24-Bit Stems & Multitrack Recordings
+                        Official MP3 Digital Singles & Audio Releases (2 Rows × 3 Columns)
                       </div>
                     </div>
 
-                    <button onClick={() => setActiveTab('discography')} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button onClick={() => { setActiveTab('discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <RiDiscFill /> View All Albums <RiArrowRightLine />
                     </button>
                   </div>
 
                   {creditPurchaseSuccess && (
                     <div style={{ padding: '14px 18px', background: 'rgba(0, 255, 128, 0.15)', border: '1px solid #00ff80', borderRadius: '3px', color: '#00ff80', marginBottom: '18px', fontSize: '0.9rem' }}>
-                      <RiCheckFill /> Lossless WAV Stems for <strong>{creditPurchaseSuccess.track.title}</strong> purchased! 50 Credits deducted. Remaining Balance: {creditPurchaseSuccess.remainingCredits} Credits.
+                      <RiCheckFill /> MP3 Digital Single for <strong>{creditPurchaseSuccess.track.title}</strong> purchased! 50 Credits deducted. Remaining Balance: {creditPurchaseSuccess.remainingCredits} Credits.
                     </div>
                   )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '18px' }}>
-                    {tracks.map(t => {
+                    {paginatedFeaturedSingles.map(t => {
                       const isCurrent = activeTrack?.id === t.id;
                       return (
                         <div key={t.id} style={{ background: isLight ? '#ffffff' : selectedTheme.cardBg, border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)', padding: '14px', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: isLight ? '0 2px 8px rgba(0,0,0,0.04)' : 'none' }}>
@@ -2478,12 +3248,45 @@ export function CreatorEpkView(props = {}) {
                               {isCurrent && isPlaying ? <><RiPauseFill /> Playing Master</> : <><RiPlayFill /> Stream on TuneStream</>}
                             </button>
                             <button onClick={() => handlePurchaseTrackWithCredits(t)} style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.82rem' }}>
-                              Buy Multitracks ({t.priceCredits} Credits)
+                              Buy MP3 Single ({t.priceCredits} Credits)
                             </button>
                           </div>
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Pagination Controls & View All Singles Link */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', flexWrap: 'wrap', gap: '12px', padding: '10px 0', borderTop: isLight ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        type="button"
+                        disabled={featuredSinglesPage <= 1}
+                        onClick={() => setFeaturedSinglesPage(prev => Math.max(1, prev - 1))}
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: featuredSinglesPage <= 1 ? '#64748b' : '#fff', padding: '6px 12px', borderRadius: '3px', fontSize: '0.78rem', fontWeight: 800, cursor: featuredSinglesPage <= 1 ? 'not-allowed' : 'pointer' }}
+                      >
+                        ← Prev
+                      </button>
+                      <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 700 }}>
+                        Page <strong style={{ color: effectiveAccent }}>{featuredSinglesPage}</strong> of {totalSinglesPages}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={featuredSinglesPage >= totalSinglesPages}
+                        onClick={() => setFeaturedSinglesPage(prev => Math.min(totalSinglesPages, prev + 1))}
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: featuredSinglesPage >= totalSinglesPages ? '#64748b' : '#fff', padding: '6px 12px', borderRadius: '3px', fontSize: '0.78rem', fontWeight: 800, cursor: featuredSinglesPage >= totalSinglesPages ? 'not-allowed' : 'pointer' }}
+                      >
+                        Next →
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => { setActiveTab('discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      style={{ background: 'transparent', border: 'none', color: effectiveAccent, fontWeight: 800, fontSize: '0.86rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      View all singles <RiArrowRightLine />
+                    </button>
                   </div>
                 </div>
 
@@ -2530,6 +3333,17 @@ export function CreatorEpkView(props = {}) {
                       </div>
                     </div>
                   </div>
+
+                  {/* View All Videos Link at Bottom Right */}
+                  <div style={{ marginTop: '14px', textAlign: 'right' }}>
+                    <button
+                      type="button"
+                      onClick={() => { setActiveTab('media'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      style={{ background: 'transparent', border: 'none', color: effectiveAccent, fontWeight: 800, fontSize: '0.84rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      View all videos <RiArrowRightLine />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2543,23 +3357,23 @@ export function CreatorEpkView(props = {}) {
                       Featured Singles
                     </h2>
                     <div style={{ fontSize: '0.85rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>
-                      Balance: <strong style={{ color: effectiveAccent }}>{userCredits} Intermaven Credits</strong>
+                      Official MP3 Digital Singles & Audio Releases (2 Rows × 3 Columns) • Balance: <strong style={{ color: effectiveAccent }}>{userCredits} TM Credits</strong>
                     </div>
                   </div>
 
-                  <button onClick={() => setActiveTab('discography')} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button onClick={() => { setActiveTab('discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <RiDiscFill /> View Full Discography <RiArrowRightLine />
                   </button>
                 </div>
 
                 {creditPurchaseSuccess && (
                   <div style={{ padding: '14px 18px', background: 'rgba(0, 255, 128, 0.15)', border: '1px solid #00ff80', borderRadius: '3px', color: '#00ff80', marginBottom: '18px', fontSize: '0.9rem' }}>
-                    <RiCheckFill /> Lossless WAV Stems for <strong>{creditPurchaseSuccess.track.title}</strong> purchased! 50 Credits deducted. Remaining Balance: {creditPurchaseSuccess.remainingCredits} Credits.
+                    <RiCheckFill /> MP3 Digital Single for <strong>{creditPurchaseSuccess.track.title}</strong> purchased! 50 Credits deducted. Remaining Balance: {creditPurchaseSuccess.remainingCredits} Credits.
                   </div>
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
-                  {tracks.map(t => {
+                  {paginatedFeaturedSingles.map(t => {
                     const isCurrent = activeTrack?.id === t.id;
                     return (
                       <div key={t.id} style={{ background: isLight ? '#ffffff' : selectedTheme.cardBg, border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)', padding: '16px', borderRadius: '3px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: isLight ? '0 2px 8px rgba(0,0,0,0.04)' : 'none' }}>
@@ -2595,12 +3409,45 @@ export function CreatorEpkView(props = {}) {
                             {isCurrent && isPlaying ? <><RiPauseFill /> Playing Master</> : <><RiPlayFill /> Stream on TuneStream</>}
                           </button>
                           <button onClick={() => handlePurchaseTrackWithCredits(t)} style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>
-                            Buy Multitracks ({t.priceCredits} Credits)
+                            Buy MP3 Single ({t.priceCredits} Credits)
                           </button>
                         </div>
                       </div>
                     );
                   })}
+                </div>
+
+                {/* Pagination Controls & View All Singles Link */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', flexWrap: 'wrap', gap: '12px', padding: '12px 0', borderTop: isLight ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      type="button"
+                      disabled={featuredSinglesPage <= 1}
+                      onClick={() => setFeaturedSinglesPage(prev => Math.max(1, prev - 1))}
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: featuredSinglesPage <= 1 ? '#64748b' : '#fff', padding: '6px 14px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 800, cursor: featuredSinglesPage <= 1 ? 'not-allowed' : 'pointer' }}
+                    >
+                      ← Prev
+                    </button>
+                    <span style={{ fontSize: '0.84rem', color: '#94a3b8', fontWeight: 700 }}>
+                      Page <strong style={{ color: effectiveAccent }}>{featuredSinglesPage}</strong> of {totalSinglesPages}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={featuredSinglesPage >= totalSinglesPages}
+                      onClick={() => setFeaturedSinglesPage(prev => Math.min(totalSinglesPages, prev + 1))}
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: featuredSinglesPage >= totalSinglesPages ? '#64748b' : '#fff', padding: '6px 14px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 800, cursor: featuredSinglesPage >= totalSinglesPages ? 'not-allowed' : 'pointer' }}
+                    >
+                      Next →
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTab('discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{ background: 'transparent', border: 'none', color: effectiveAccent, fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    View all singles <RiArrowRightLine />
+                  </button>
                 </div>
               </div>
 
@@ -2620,6 +3467,17 @@ export function CreatorEpkView(props = {}) {
                     </button>
                   </div>
                 ))}
+
+                {/* View All Shows Link at Bottom */}
+                <div style={{ marginTop: '18px', textAlign: 'right', paddingTop: '10px', borderTop: isLight ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)' }}>
+                  <button 
+                    type="button"
+                    onClick={() => { setActiveTab('shows'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{ background: 'transparent', border: 'none', color: effectiveAccent, fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    View all shows <RiArrowRightLine />
+                  </button>
+                </div>
               </div>
 
               {/* VIDEO CAROUSEL CONTENT AREA WITH YOUTUBE EMBED STREAMING */}
@@ -2666,6 +3524,16 @@ export function CreatorEpkView(props = {}) {
                   </div>
                 </div>
 
+                {/* View All Videos Link at Bottom */}
+                <div style={{ marginTop: '16px', textAlign: 'right' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTab('media'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{ background: 'transparent', border: 'none', color: effectiveAccent, fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    View all videos <RiArrowRightLine />
+                  </button>
+                </div>
               </div>
 
               {/* Ecosystem Content Box 1: SyncMavens One-Stop Sync Licensing Clearance */}
@@ -2709,10 +3577,10 @@ export function CreatorEpkView(props = {}) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
                   <div>
                     <h3 style={{ margin: '0 0 6px', fontSize: '1.4rem', fontWeight: 900, color: effectiveAccent, fontFamily: effectiveFont }}>
-                      VIP Fan Vault & Multitrack Access
+                      VIP Fan Vault & Digital MP3 Access
                     </h3>
                     <p style={{ margin: 0, fontSize: '0.88rem', color: isLight ? '#475569' : '#94a3b8', maxWidth: '600px', lineHeight: 1.5 }}>
-                      Join {effectiveArtistName}'s inner circle to receive unreleased studio stems, secret tour presale codes, limited vinyl drops, and direct creator updates.
+                      Join {effectiveArtistName}'s inner circle to receive unreleased digital MP3 singles, secret tour presale codes, limited vinyl drops, and direct creator updates.
                     </p>
                   </div>
 
@@ -2787,7 +3655,7 @@ export function CreatorEpkView(props = {}) {
               <div style={{ background: isLight ? '#ffffff' : selectedTheme.cardBg, padding: '24px', borderRadius: '4px', border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
                 <h4 style={{ margin: '0 0 10px', color: effectiveAccent, fontSize: '1.05rem', fontWeight: 800 }}>Studio & Audio Specs</h4>
                 <div style={{ fontSize: '0.9rem', color: isLight ? '#475569' : '#cbd5e1' }}>24-Bit / 96kHz Lossless Broadcast Masters</div>
-                <div style={{ marginTop: '10px', fontSize: '0.78rem', color: isLight ? '#64748b' : '#94a3b8' }}>Stems available for sync & licensing</div>
+                <div style={{ marginTop: '10px', fontSize: '0.78rem', color: isLight ? '#64748b' : '#94a3b8' }}>Lossless masters & MP3s available</div>
               </div>
               <div style={{ background: isLight ? '#ffffff' : selectedTheme.cardBg, padding: '24px', borderRadius: '4px', border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
                 <h4 style={{ margin: '0 0 10px', color: effectiveAccent, fontSize: '1.05rem', fontWeight: 800 }}>Direct Representation</h4>
@@ -2806,7 +3674,7 @@ export function CreatorEpkView(props = {}) {
                 <h2 style={{ color: effectiveAccent, margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: effectiveFont }}>
                   Complete Discography & Album Catalog
                 </h2>
-                <p style={{ margin: '4px 0 0', color: isLight ? '#64748b' : '#94a3b8' }}>Lossless audio catalog with multitrack stem downloads</p>
+                <p style={{ margin: '4px 0 0', color: isLight ? '#64748b' : '#94a3b8' }}>Lossless audio catalog with high-quality MP3 downloads</p>
               </div>
 
               <div style={{ position: 'relative', width: '280px' }}>
@@ -2849,7 +3717,7 @@ export function CreatorEpkView(props = {}) {
                       }}
                       style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}
                     >
-                      Buy Multitrack Stems ({a.priceCredits} Credits)
+                      Buy MP3 Album ({a.priceCredits} Credits)
                     </button>
                   </div>
                 </div>
@@ -2959,15 +3827,16 @@ export function CreatorEpkView(props = {}) {
 
               <div style={{ display: 'flex', gap: '8px' }}>
                 {['all', 'videos', 'gallery'].map(f => (
-                  <button key={f} onClick={() => setMediaFilter(f)} style={{ padding: '7px 16px', borderRadius: '20px', border: mediaFilter === f ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)', background: mediaFilter === f ? effectiveAccent : 'transparent', color: mediaFilter === f ? '#000' : (isLight ? '#0f172a' : '#fff'), fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', textTransform: 'capitalize' }}>
+                  <button key={f} onClick={() => { setMediaFilter(f); setMediaPage(1); }} style={{ padding: '7px 16px', borderRadius: '20px', border: mediaFilter === f ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)', background: mediaFilter === f ? effectiveAccent : 'transparent', color: mediaFilter === f ? '#000' : (isLight ? '#0f172a' : '#fff'), fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', textTransform: 'capitalize' }}>
                     {f}
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* 3 Columns x 2 Rows Paginated Media Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '22px' }}>
-              {filteredMedia.map(m => (
+              {paginatedMedia.map(m => (
                 <div 
                   key={m.id} 
                   onClick={() => {
@@ -2994,6 +3863,29 @@ export function CreatorEpkView(props = {}) {
                 </div>
               ))}
             </div>
+
+            {/* Media Pagination Controls (3 Columns x 2 Rows = 6 Items) */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '30px', paddingTop: '16px', borderTop: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+              <button
+                type="button"
+                disabled={mediaPage <= 1}
+                onClick={() => setMediaPage(prev => Math.max(1, prev - 1))}
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: mediaPage <= 1 ? '#64748b' : '#fff', padding: '7px 16px', borderRadius: '3px', fontSize: '0.82rem', fontWeight: 800, cursor: mediaPage <= 1 ? 'not-allowed' : 'pointer' }}
+              >
+                ← Prev Media
+              </button>
+              <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 700 }}>
+                Page <strong style={{ color: effectiveAccent }}>{mediaPage}</strong> of {totalMediaPages} ({filteredMedia.length} items)
+              </span>
+              <button
+                type="button"
+                disabled={mediaPage >= totalMediaPages}
+                onClick={() => setMediaPage(prev => Math.min(totalMediaPages, prev + 1))}
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: mediaPage >= totalMediaPages ? '#64748b' : '#fff', padding: '7px 16px', borderRadius: '3px', fontSize: '0.82rem', fontWeight: 800, cursor: mediaPage >= totalMediaPages ? 'not-allowed' : 'pointer' }}
+              >
+                Next Media →
+              </button>
+            </div>
           </div>
         )}
 
@@ -3003,16 +3895,16 @@ export function CreatorEpkView(props = {}) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <h2 style={{ color: effectiveAccent, margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: effectiveFont }}>
-                  Official Merchandise & Stems Store
+                  Official Merchandise & Digital MP3s Store
                 </h2>
                 <p style={{ margin: '4px 0 0', color: isLight ? '#64748b' : '#94a3b8' }}>
-                  Limited vinyl pressings, apparel, collector boxes & lossless multitrack stems with custom options
+                  Limited vinyl pressings, apparel, collector boxes & digital MP3 downloads with custom options
                 </p>
               </div>
 
               {/* Comprehensive Category Filter with 3px border radius */}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {['all', 'vinyl', 'apparel', 'stems', 'collectors'].map(cat => (
+                {['all', 'vinyl', 'apparel', 'mp3s', 'collectors'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setStoreCategory(cat)}
@@ -3029,7 +3921,7 @@ export function CreatorEpkView(props = {}) {
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    {cat}
+                    {cat === 'mp3s' ? 'Digital MP3s' : cat}
                   </button>
                 ))}
               </div>
@@ -3337,13 +4229,16 @@ export function CreatorEpkView(props = {}) {
                       <div style={{ fontSize: '0.8rem', color: isLight ? '#64748b' : '#94a3b8', margin: '4px 0 12px' }}>{item.desc}</div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => {
                         if (item.id === 'epk') {
                           setEpkPreviewModalOpen(true)
                         } else if (item.id === 'rider') {
-                          setTechRiderModalOpen(true)
+                          handleDownloadTechRiderPdf()
+                        } else if (item.id === 'photos') {
+                          handleDownloadPressPhotosZip()
                         } else {
-                          showToast('📥 Downloading 300 DPI High-Res Press Photos ZIP...')
+                          showToast('📥 Downloading requested press asset...')
                         }
                       }}
                       style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '6px 12px', borderRadius: '3px', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer', alignSelf: 'flex-start' }}
@@ -3537,14 +4432,14 @@ export function CreatorEpkView(props = {}) {
               </div>
 
               <p style={{ color: isLight ? '#475569' : '#cbd5e1', fontSize: '0.95rem', maxWidth: '850px', lineHeight: 1.6, marginBottom: '28px' }}>
-                TuneMavens operates exclusively on a direct credit top-up system. Credits never expire and are directly redeemable for lossless multitrack audio stems, uncompressed master downloads, concert VIP passes, and creator merchandise across the unified Intermaven ecosystem.
+                TuneMavens operates exclusively on a direct credit top-up system. Credits never expire and are directly redeemable for official MP3 digital singles, collector vinyl & CD releases, concert tour tickets, VIP meet & greets, and exclusive fan merchandise across the unified Intermaven ecosystem. (Master stems and broadcast sync clearances are reserved exclusively for verified industry professionals via TuneMavens Admin).
               </p>
 
-              {/* Credit Top-Up Package Cards */}
+              {/* Credit Top-Up Package Cards Speaking Directly to Fans */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', marginBottom: '36px' }}>
                 {[
                   {
-                    title: 'Starter Top-Up',
+                    title: 'Fan Starter Pack',
                     credits: 250,
                     price: '$25',
                     rate: '$0.10 / credit',
@@ -3552,13 +4447,14 @@ export function CreatorEpkView(props = {}) {
                     highlight: false,
                     features: [
                       '250 non-expiring TM Credits',
-                      'Unlock 5 lossless single masters',
-                      'Buy 1 concert General Admission pass',
-                      'Valid across all creators on TuneMavens'
+                      'Unlock 5 official MP3 digital singles',
+                      'Reserve 1 General Admission concert pass',
+                      'VIP Fan Club badge & community comments',
+                      'Credits valid across all creators on TuneMavens'
                     ]
                   },
                   {
-                    title: 'Creator Top-Up',
+                    title: 'Superfan VIP Pack',
                     credits: 750,
                     price: '$65',
                     rate: '$0.087 / credit (13% savings)',
@@ -3566,14 +4462,14 @@ export function CreatorEpkView(props = {}) {
                     highlight: true,
                     features: [
                       '750 non-expiring TM Credits',
-                      'Unlock 3 full multitrack stem packages',
-                      '1 VIP tour pass + signed laminate',
-                      'Priority chat & live Q&A access',
-                      'Instant digital pass delivery'
+                      'Unlock 15 bonus MP3 single releases & acoustic cuts',
+                      '1 VIP concert tour pass + collectible laminate',
+                      '10% discount on all tour merchandise & vinyl drops',
+                      'Priority fan setlist voting & monthly livestream Q&A'
                     ]
                   },
                   {
-                    title: 'Pro Maven Pack',
+                    title: 'Ultimate Fan Collector',
                     credits: 2000,
                     price: '$150',
                     rate: '$0.075 / credit (25% savings)',
@@ -3581,25 +4477,25 @@ export function CreatorEpkView(props = {}) {
                     highlight: false,
                     features: [
                       '2,000 non-expiring TM Credits',
-                      'Full discography multitracks access',
-                      'One-stop commercial sync licensing',
-                      'Collector vinyl + hoodie merch pack',
-                      'VIP Meet & Greet reservation pass'
+                      'Complete digital MP3 discography & collector editions',
+                      'Collector vinyl LP or exclusive tour hoodie pack',
+                      'VIP Meet & Greet reservation pass with photo session',
+                      'Exclusive unreleased live concert recordings'
                     ]
                   },
                   {
-                    title: 'Studio Master Pack',
+                    title: 'Fan Club Champion',
                     credits: 5000,
                     price: '$325',
                     rate: '$0.065 / credit (35% savings)',
-                    badge: 'Label / Studio Tier',
+                    badge: 'Fan Legend Tier',
                     highlight: false,
                     features: [
                       '5,000 non-expiring TM Credits',
-                      'Unlimited stems & audio master access',
-                      'Master sync broadcast clearance',
-                      'Direct booking & studio session priority',
-                      'Dedicated account concierge'
+                      'Lifetime access to all current & future MP3 releases',
+                      'Front-row concert tour ticket reservation holds',
+                      'Personalized creator video shoutout & signed tour bundle',
+                      'Direct creator livestream green-room access'
                     ]
                   }
                 ].map(pkg => (
@@ -3683,7 +4579,7 @@ export function CreatorEpkView(props = {}) {
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button onClick={() => { setActiveTab('discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}66`, color: effectiveAccent, padding: '8px 14px', borderRadius: '3px', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
-                    Browse Stems
+                    Browse MP3 Singles
                   </button>
                   <button onClick={() => { setActiveTab('shows'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px 14px', borderRadius: '3px', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer' }}>
                     Redeem on Tickets
@@ -3799,9 +4695,9 @@ export function CreatorEpkView(props = {}) {
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: '16px', borderTop: '1px dashed rgba(255,255,255,0.15)', paddingTop: '16px', alignItems: 'center' }}>
                             <div>
                               <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Attendee: <strong style={{ color: '#fff' }}>{eventTicketSuccess.buyerName}</strong></div>
-                              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>Email: <strong style={{ color: '#fff' }}>{eventTicketSuccess.buyerEmail}</strong></div>
+                              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>Delivery Channel: <strong style={{ color: effectiveAccent }}>{eventTicketSuccess.deliveryMethod?.toUpperCase() || 'EMAIL'} ({eventTicketSuccess.deliveryTarget || eventTicketSuccess.buyerEmail})</strong></div>
                               <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>Passes: <strong style={{ color: '#fff' }}>{eventTicketSuccess.qty} Ticket(s)</strong></div>
-                              <div style={{ fontSize: '0.75rem', color: effectiveAccent, marginTop: '4px' }}>Protocol: {eventTicketSuccess.gateway.toUpperCase()} • Paid ${eventTicketSuccess.totalCash}</div>
+                              <div style={{ fontSize: '0.75rem', color: effectiveAccent, marginTop: '4px' }}>Protocol: {eventTicketSuccess.gateway.toUpperCase()} • Paid {eventTicketSuccess.gateway === 'credits' ? `${eventTicketSuccess.totalCredits} Credits` : `$${eventTicketSuccess.totalCash}`}</div>
                             </div>
 
                             {/* Ticket QR Code Display */}
@@ -3840,12 +4736,33 @@ export function CreatorEpkView(props = {}) {
                           </h3>
                         </div>
 
-                        {/* Tier Selector */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                        {/* Tier Selector with 'i' Tooltip */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
                           {[
-                            { id: 'ga', label: 'General Admission', price: gaPrice, credits: 25, perks: 'Floor Entry • Sound System Access' },
-                            { id: 'vip', label: 'VIP Pass', price: vipPrice, credits: 50, perks: 'Priority Entry • VIP Balcony • Laminate' },
-                            { id: 'meet', label: 'VIP Meet & Greet', price: meetPrice, credits: 100, perks: 'Soundcheck Access • Photo with Artist • Merch Pack' }
+                            {
+                              id: 'ga',
+                              label: 'General Admission',
+                              price: gaPrice,
+                              credits: 25,
+                              perks: 'Floor Entry • Sound System Access',
+                              info: 'General Admission: Standard floor entry with high-definition venue acoustics, direct mainstage viewing, and bar access.'
+                            },
+                            {
+                              id: 'vip',
+                              label: 'VIP Pass',
+                              price: vipPrice,
+                              credits: 50,
+                              perks: 'Priority Entry • VIP Balcony • Laminate',
+                              info: 'VIP Pass: Priority expedited lane entry, exclusive mezzanine/balcony viewing lounge, dedicated VIP bar, and collectible tour lanyard.'
+                            },
+                            {
+                              id: 'meet',
+                              label: 'VIP Meet & Greet',
+                              price: meetPrice,
+                              credits: 100,
+                              perks: 'Soundcheck Access • Photo with Artist • Merch Pack',
+                              info: 'VIP Meet & Greet: Full VIP access plus pre-show soundcheck attendance, private 1-on-1 photo session with artist, and signed commemorative tour poster.'
+                            }
                           ].map(tier => (
                             <div
                               key={tier.id}
@@ -3856,12 +4773,60 @@ export function CreatorEpkView(props = {}) {
                                 cursor: 'pointer',
                                 border: eventTier === tier.id ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.12)',
                                 background: eventTier === tier.id ? (isLight ? 'rgba(0,240,255,0.08)' : 'rgba(0,240,255,0.12)') : (isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)'),
-                                transition: 'all 0.15s ease'
+                                transition: 'all 0.15s ease',
+                                position: 'relative'
                               }}
                             >
-                              <div style={{ fontSize: '0.74rem', fontWeight: 800, color: eventTier === tier.id ? effectiveAccent : '#94a3b8', textTransform: 'uppercase' }}>
-                                {tier.label}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: eventTier === tier.id ? effectiveAccent : '#94a3b8', textTransform: 'uppercase' }}>
+                                  {tier.label}
+                                </div>
+                                <div
+                                  onMouseEnter={() => setHoveredTierInfo(tier.id)}
+                                  onMouseLeave={() => setHoveredTierInfo(null)}
+                                  onClick={(e) => { e.stopPropagation(); setHoveredTierInfo(prev => prev === tier.id ? null : tier.id); }}
+                                  title="Hover or click for tier overview"
+                                  style={{
+                                    width: '18px',
+                                    height: '18px',
+                                    borderRadius: '50%',
+                                    background: hoveredTierInfo === tier.id ? effectiveAccent : 'rgba(255,255,255,0.12)',
+                                    color: hoveredTierInfo === tier.id ? '#000' : '#fff',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.68rem',
+                                    fontWeight: 900,
+                                    cursor: 'help'
+                                  }}
+                                >
+                                  i
+                                </div>
                               </div>
+
+                              {/* Hover Information Tooltip Overlay */}
+                              {hoveredTierInfo === tier.id && (
+                                <div style={{
+                                  position: 'absolute',
+                                  bottom: 'calc(100% + 8px)',
+                                  left: 0,
+                                  right: 0,
+                                  background: '#090d1a',
+                                  border: `1px solid ${effectiveAccent}`,
+                                  borderRadius: '3px',
+                                  padding: '10px 12px',
+                                  boxShadow: '0 8px 24px rgba(0,0,0,0.95)',
+                                  zIndex: 60,
+                                  fontSize: '0.76rem',
+                                  color: '#e2e8f0',
+                                  lineHeight: 1.45,
+                                  pointerEvents: 'none'
+                                }}>
+                                  <div style={{ color: effectiveAccent, fontWeight: 800, marginBottom: '3px' }}>{tier.label} Overview</div>
+                                  {tier.info}
+                                </div>
+                              )}
+
                               <div style={{ fontSize: '1.4rem', fontWeight: 900, color: isLight ? '#0f172a' : '#fff', margin: '4px 0' }}>
                                 ${tier.price} <span style={{ fontSize: '0.75rem', color: effectiveAccent }}>({tier.credits} Cr)</span>
                               </div>
@@ -3872,184 +4837,188 @@ export function CreatorEpkView(props = {}) {
                           ))}
                         </div>
 
-                        {/* Step 2: Quantity and Buyer Details */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', alignItems: 'flex-start' }}>
-                          <div>
-                            <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>Tickets Qty</label>
-                            <div style={{ display: 'flex', alignItems: 'center', background: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.06)', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.15)', height: '42px' }}>
-                              <button type="button" onClick={() => setEventQty(prev => Math.max(1, prev - 1))} style={{ width: '36px', height: '100%', background: 'transparent', border: 'none', color: isLight ? '#000' : '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>-</button>
-                              <div style={{ flex: 1, textAlign: 'center', fontWeight: 900, fontSize: '1.1rem' }}>{eventQty}</div>
-                              <button type="button" onClick={() => setEventQty(prev => Math.min(8, prev + 1))} style={{ width: '36px', height: '100%', background: 'transparent', border: 'none', color: isLight ? '#000' : '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>+</button>
+                        {/* Step 2: Quantity and Buyer Delivery Preference */}
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>Step 2: Delivery Method & Details</div>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', alignItems: 'flex-start', marginBottom: '10px' }}>
+                            <div>
+                              <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>Tickets Qty</label>
+                              <div style={{ display: 'flex', alignItems: 'center', background: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.06)', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.15)', height: '42px' }}>
+                                <button type="button" onClick={() => setEventQty(prev => Math.max(1, prev - 1))} style={{ width: '36px', height: '100%', background: 'transparent', border: 'none', color: isLight ? '#000' : '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>-</button>
+                                <div style={{ flex: 1, textAlign: 'center', fontWeight: 900, fontSize: '1.1rem' }}>{eventQty}</div>
+                                <button type="button" onClick={() => setEventQty(prev => Math.min(8, prev + 1))} style={{ width: '36px', height: '100%', background: 'transparent', border: 'none', color: isLight ? '#000' : '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>+</button>
+                              </div>
                             </div>
-                          </div>
 
-                          <div>
-                            <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>Email For QR Ticket Delivery</label>
-                            <input
-                              type="email"
-                              required
-                              placeholder="fan@intermaven.io"
-                              value={ticketEmail}
-                              onChange={e => setTicketEmail(e.target.value)}
-                              style={{ width: '100%', height: '42px', boxSizing: 'border-box', padding: '0 12px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px' }}
-                            />
+                            <div>
+                              <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>
+                                Receive Tickets Via (Preselected Preference)
+                              </label>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '10px' }}>
+                                {[
+                                  { id: 'email', label: 'Email', icon: '✉️' },
+                                  { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
+                                  { id: 'sms', label: 'SMS', icon: '📱' },
+                                  { id: 'push', label: 'In-App', icon: '🎟️' }
+                                ].map(method => (
+                                  <button
+                                    key={method.id}
+                                    type="button"
+                                    onClick={() => setTicketDeliveryChannel(method.id)}
+                                    style={{
+                                      padding: '8px 4px',
+                                      borderRadius: '3px',
+                                      border: ticketDeliveryChannel === method.id ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.12)',
+                                      background: ticketDeliveryChannel === method.id ? (isLight ? 'rgba(0,240,255,0.1)' : 'rgba(0,240,255,0.15)') : 'rgba(255,255,255,0.03)',
+                                      color: ticketDeliveryChannel === method.id ? (isLight ? '#000' : effectiveAccent) : '#cbd5e1',
+                                      fontWeight: 800,
+                                      fontSize: '0.74rem',
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      gap: '4px'
+                                    }}
+                                  >
+                                    <span>{method.icon}</span> {method.label}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {ticketDeliveryChannel === 'email' && (
+                                <input
+                                  type="email"
+                                  required
+                                  placeholder="fan@intermaven.io"
+                                  value={ticketEmail}
+                                  onChange={e => setTicketEmail(e.target.value)}
+                                  style={{ width: '100%', height: '42px', boxSizing: 'border-box', padding: '0 12px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px' }}
+                                />
+                              )}
+                              {(ticketDeliveryChannel === 'sms' || ticketDeliveryChannel === 'whatsapp') && (
+                                <input
+                                  type="tel"
+                                  required
+                                  placeholder="+1 (555) 019-2834 or +254 712 345 678"
+                                  value={ticketPhone}
+                                  onChange={e => setTicketPhone(e.target.value)}
+                                  style={{ width: '100%', height: '42px', boxSizing: 'border-box', padding: '0 12px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px' }}
+                                />
+                              )}
+                              {ticketDeliveryChannel === 'push' && (
+                                <div style={{ padding: '10px 14px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700 }}>
+                                  ✓ Digital QR tickets will be deposited immediately into your Fan Portal account passes vault.
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
 
-                        {/* Step 3: Payment Protocol Selector */}
+                        {/* Step 3: Payment & Credits Protocol */}
                         <div>
-                          <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>Payment Protocol</label>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '14px' }}>
-                            {[
-                              { id: 'card', label: 'Credit / Debit Card', icon: RiBankCardFill },
-                              { id: 'credits', label: `TM Credits (${userCredits} Avail)`, icon: RiCoinsFill },
-                              { id: 'mpesa', label: 'PesaPal / M-Pesa', icon: RiCellphoneFill }
-                            ].map(gw => {
-                              const GwIcon = gw.icon
+                          {(() => {
+                            const hasCredits = userCredits >= totalCredits
+                            const shortfall = totalCredits - userCredits
+                            const suggestedDollars = Math.max(5, Math.ceil(shortfall / 10 / 5) * 5)
+                            const suggestedCredits = calcCreditsForAmount(suggestedDollars)
+
+                            if (hasCredits) {
                               return (
-                                <button
-                                  key={gw.id}
-                                  type="button"
-                                  onClick={() => setEventPaymentGateway(gw.id)}
-                                  style={{
-                                    padding: '10px 8px',
-                                    borderRadius: '3px',
-                                    border: eventPaymentGateway === gw.id ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.12)',
-                                    background: eventPaymentGateway === gw.id ? (isLight ? 'rgba(0,240,255,0.1)' : 'rgba(0,240,255,0.15)') : 'transparent',
-                                    color: eventPaymentGateway === gw.id ? (isLight ? '#000' : effectiveAccent) : (isLight ? '#475569' : '#cbd5e1'),
-                                    fontWeight: 800,
-                                    fontSize: '0.78rem',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
-                                >
-                                  <GwIcon size={18} />
-                                  <span>{gw.label}</span>
-                                </button>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                  <div style={{ background: 'rgba(0,240,255,0.08)', border: `1px solid ${effectiveAccent}`, padding: '18px 20px', borderRadius: '3px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.88rem' }}>
+                                      <span style={{ color: '#cbd5e1' }}>Available TM Credits Balance:</span>
+                                      <strong style={{ color: effectiveAccent, fontSize: '1.1rem' }}>{userCredits} TM</strong>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.88rem' }}>
+                                      <span style={{ color: '#cbd5e1' }}>Pass Reservation Deduction:</span>
+                                      <strong style={{ color: '#f87171', fontSize: '1.1rem' }}>-{totalCredits} TM</strong>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.88rem' }}>
+                                      <span style={{ color: '#cbd5e1' }}>Remaining Balance After Booking:</span>
+                                      <strong style={{ color: '#22c55e', fontSize: '1.1rem' }}>{userCredits - totalCredits} TM</strong>
+                                    </div>
+                                    <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '10px' }}>
+                                      ✓ Direct TM Credits Deduction active. No external card or payment processor required.
+                                    </div>
+                                  </div>
+                                </div>
                               )
-                            })}
-                          </div>
+                            }
 
-                          {/* Full Card Fields when card toggle is selected */}
-                          {eventPaymentGateway === 'card' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                              <div>
-                                <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Cardholder Full Name</label>
-                                <input
-                                  type="text"
-                                  placeholder="Jane Doe"
-                                  value={eventCardName}
-                                  onChange={e => setEventCardName(e.target.value)}
-                                  required
-                                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.88rem' }}
-                                />
-                              </div>
-
-                              <div>
-                                <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Card Number</label>
-                                <input
-                                  type="text"
-                                  placeholder="4242 •••• •••• 4242"
-                                  value={eventCardNumber}
-                                  onChange={e => setEventCardNumber(e.target.value)}
-                                  required
-                                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.88rem', letterSpacing: '0.06em' }}
-                                />
-                              </div>
-
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                                <div>
-                                  <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Exp (MM/YY)</label>
-                                  <input
-                                    type="text"
-                                    placeholder="08/28"
-                                    value={eventCardExp}
-                                    onChange={e => setEventCardExp(e.target.value)}
-                                    required
-                                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.88rem' }}
-                                  />
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.4)', padding: '16px', borderRadius: '3px' }}>
+                                  <div style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.88rem', marginBottom: '4px' }}>
+                                    ⚠️ Credits Shortfall: {shortfall} TM Needed
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: 1.5 }}>
+                                    Your balance is <strong>{userCredits} TM</strong>, but this reservation requires <strong>{totalCredits} TM</strong>.
+                                    Top up at least <strong>${suggestedDollars}.00</strong> (+{suggestedCredits} TM Credits in multiples of $5) to complete this purchase.
+                                  </div>
                                 </div>
+
                                 <div>
-                                  <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>CVC / CVV</label>
-                                  <input
-                                    type="password"
-                                    maxLength={4}
-                                    placeholder="•••"
-                                    value={eventCardCvc}
-                                    onChange={e => setEventCardCvc(e.target.value)}
-                                    required
-                                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.88rem' }}
-                                  />
-                                </div>
-                                <div>
-                                  <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Postal / ZIP</label>
-                                  <input
-                                    type="text"
-                                    placeholder="10001"
-                                    value={eventCardZip}
-                                    onChange={e => setEventCardZip(e.target.value)}
-                                    required
-                                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.88rem' }}
-                                  />
+                                  <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+                                    Select Top-Up Protocol
+                                  </label>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                                    {[
+                                      { id: 'card', label: 'Credit / Debit Card', icon: RiBankCardFill },
+                                      { id: 'mpesa', label: 'PesaPal / M-Pesa STK', icon: RiCellphoneFill }
+                                    ].map(gw => {
+                                      const GwIcon = gw.icon
+                                      return (
+                                        <button
+                                          key={gw.id}
+                                          type="button"
+                                          onClick={() => setEventPaymentGateway(gw.id)}
+                                          style={{
+                                            padding: '10px 8px',
+                                            borderRadius: '3px',
+                                            border: eventPaymentGateway === gw.id ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.12)',
+                                            background: eventPaymentGateway === gw.id ? (isLight ? 'rgba(0,240,255,0.1)' : 'rgba(0,240,255,0.15)') : 'transparent',
+                                            color: eventPaymentGateway === gw.id ? (isLight ? '#000' : effectiveAccent) : (isLight ? '#475569' : '#cbd5e1'),
+                                            fontWeight: 800,
+                                            fontSize: '0.78rem',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px'
+                                          }}
+                                        >
+                                          <GwIcon size={16} />
+                                          <span>{gw.label}</span>
+                                        </button>
+                                      )
+                                    })}
+                                  </div>
+
+                                  {eventPaymentGateway === 'card' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)', padding: '14px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                      <div>
+                                        <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Cardholder Name</label>
+                                        <input type="text" placeholder={eventCardName || "Alex Chen"} defaultValue={eventCardName || "Alex Chen"} required style={{ width: '100%', boxSizing: 'border-box', padding: '9px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                                      </div>
+                                      <div>
+                                        <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Card Number</label>
+                                        <input type="text" placeholder="4242 •••• •••• 4242" defaultValue="4242 •••• •••• 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '9px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {eventPaymentGateway === 'mpesa' && (
+                                    <div style={{ background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)', padding: '14px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                      <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number</label>
+                                      <input type="tel" placeholder="+254 712 345 678" defaultValue="+254 712 345 678" required style={{ width: '100%', boxSizing: 'border-box', padding: '9px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-
-                              <div>
-                                <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Country</label>
-                                <select
-                                  value={eventCardCountry}
-                                  onChange={e => setEventCardCountry(e.target.value)}
-                                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: isLight ? '#fff' : '#0a0d18', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.88rem' }}
-                                >
-                                  <option value="United States">United States</option>
-                                  <option value="Kenya">Kenya</option>
-                                  <option value="United Kingdom">United Kingdom</option>
-                                  <option value="Nigeria">Nigeria</option>
-                                  <option value="South Africa">South Africa</option>
-                                  <option value="Germany">Germany</option>
-                                  <option value="Canada">Canada</option>
-                                </select>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* M-Pesa STK Push */}
-                          {eventPaymentGateway === 'mpesa' && (
-                            <div style={{ background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                              <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number (STK Push Prompt)</label>
-                              <input
-                                type="tel"
-                                placeholder="+254 712 345 678"
-                                value={eventMpesaPhone}
-                                onChange={e => setEventMpesaPhone(e.target.value)}
-                                required
-                                style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.88rem' }}
-                              />
-                              <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '6px' }}>An instant STK Push pin prompt will be sent directly to your phone.</div>
-                            </div>
-                          )}
-
-                          {/* Credits Balance Option */}
-                          {eventPaymentGateway === 'credits' && (
-                            <div style={{ background: 'rgba(0,240,255,0.05)', border: `1px solid ${effectiveAccent}44`, padding: '16px', borderRadius: '3px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                  <div style={{ fontWeight: 800, color: isLight ? '#0f172a' : '#fff', fontSize: '0.92rem' }}>Pay with TM Credits Balance</div>
-                                  <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Total cost: <strong>{totalCredits} Credits</strong> • Your Balance: <strong>{userCredits} Credits</strong></div>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => { setActiveTab('pricing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                  style={{ background: 'transparent', border: `1px solid ${effectiveAccent}66`, color: effectiveAccent, padding: '6px 12px', borderRadius: '3px', fontWeight: 800, fontSize: '0.74rem', cursor: 'pointer' }}
-                                >
-                                  + Top Up Credits
-                                </button>
-                              </div>
-                            </div>
-                          )}
+                            )
+                          })()}
                         </div>
 
                         {/* Order Summary & Submit Button */}
@@ -4057,7 +5026,7 @@ export function CreatorEpkView(props = {}) {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                             <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: 700 }}>Total Order ({eventQty} Tickets)</span>
                             <span style={{ fontSize: '1.6rem', fontWeight: 900, color: effectiveAccent }}>
-                              {eventPaymentGateway === 'credits' ? `${totalCredits} Credits` : `$${totalAmount}`}
+                              {totalCredits} TM Credits
                             </span>
                           </div>
 
@@ -4191,7 +5160,7 @@ export function CreatorEpkView(props = {}) {
                           onClick={() => {
                             setStemsModalTrack({
                               id: alb.id,
-                              title: `${alb.title} (Full Album Stems Pack)`,
+                              title: `${alb.title} (Full Digital MP3 Album Pack)`,
                               coverArt: alb.cover,
                               isrc: alb.isrc,
                               priceCredits: 100
@@ -4212,7 +5181,7 @@ export function CreatorEpkView(props = {}) {
                             gap: '8px'
                           }}
                         >
-                          ⚡ Buy Full Album Stems (100 Credits)
+                          ⚡ Buy Full Digital MP3 Album (100 Credits)
                         </button>
                         <button
                           type="button"
@@ -4315,10 +5284,10 @@ export function CreatorEpkView(props = {}) {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                       <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: effectiveAccent }}>
-                        Album Tracklist & Stems Marketplace
+                        Album Tracklist & MP3 Singles
                       </h3>
                       <span style={{ fontSize: '0.78rem', color: isLight ? '#64748b' : '#94a3b8' }}>
-                        Click track to preview • Direct STEMS purchasing available for all tracks
+                        Click track to preview • Direct MP3 singles purchasing available for all tracks
                       </span>
                     </div>
 
@@ -4415,7 +5384,7 @@ export function CreatorEpkView(props = {}) {
                                 gap: '6px'
                               }}
                             >
-                              ⚡ Buy Stems ({trk.priceCredits} Credits)
+                              ⚡ Buy MP3 Single ({trk.priceCredits} Credits)
                             </button>
                           </div>
                         </div>
@@ -4489,7 +5458,7 @@ export function CreatorEpkView(props = {}) {
             <h4 style={{ color: selectedTheme.accent, margin: '0 0 14px 0', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 800 }}>Store & Sync</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
               <span onClick={() => setActiveTab('store')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Limited Vinyl LPs</span>
-              <span onClick={() => setActiveTab('store')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Lossless WAV Stems</span>
+              <span onClick={() => setActiveTab('store')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Lossless Digital MP3s</span>
               <span onClick={() => setActiveTab('contact')} style={{ color: '#cbd5e1', cursor: 'pointer' }}>Sync Licensing Pitching</span>
             </div>
           </div>
@@ -4693,32 +5662,86 @@ export function CreatorEpkView(props = {}) {
                   <input type="email" placeholder="your@email.com" value={ticketEmail} onChange={e => setTicketEmail(e.target.value)} required style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px' }} />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Payment Protocol</label>
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                    {[['pesapal', 'PesaPal / M-Pesa'], ['stripe', 'Stripe / Card']].map(([gw, lbl]) => (
-                      <button key={gw} type="button" onClick={() => setPaymentGateway(gw)} style={{ flex: 1, padding: '8px', borderRadius: '3px', border: paymentGateway === gw ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)', background: paymentGateway === gw ? 'rgba(0,240,255,0.1)' : 'transparent', color: paymentGateway === gw ? effectiveAccent : '#cbd5e1', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
-                        {lbl}
+                {(() => {
+                  const showTierCredits = ticketTier === 'ga' ? 25 : ticketTier === 'vip' ? 50 : 100
+                  const showTotalCredits = showTierCredits * ticketQty
+                  const hasCredits = userCredits >= showTotalCredits
+                  const shortfall = showTotalCredits - userCredits
+                  const topUpDollars = Math.max(5, Math.ceil(shortfall / 10 / 5) * 5)
+                  const topUpCredits = calcCreditsForAmount(topUpDollars)
+
+                  if (hasCredits) {
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ background: 'rgba(0,240,255,0.08)', border: `1px solid ${effectiveAccent}`, borderRadius: '3px', padding: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Available Credits Balance:</span>
+                            <strong style={{ color: effectiveAccent, fontSize: '1.05rem' }}>{userCredits} TM</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Pass Reservation Deduction:</span>
+                            <strong style={{ color: '#f87171', fontSize: '1.05rem' }}>-{showTotalCredits} TM</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Remaining Balance After Booking:</span>
+                            <strong style={{ color: '#22c55e', fontSize: '1.05rem' }}>{userCredits - showTotalCredits} TM</strong>
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '10px' }}>
+                            ✓ Direct TM Credits Deduction active. No external card or payment processor required.
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          style={{ width: '100%', background: effectiveAccent, color: '#000', border: 'none', padding: '13px', borderRadius: '3px', fontWeight: 900, cursor: 'pointer', fontSize: '0.95rem', marginTop: '4px' }}
+                        >
+                          Confirm Pass Reservation ({showTotalCredits} TM Credits)
+                        </button>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', padding: '14px' }}>
+                        <div style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.86rem', marginBottom: '4px' }}>
+                          ⚠️ Credits Shortfall: {shortfall} TM Needed
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.45 }}>
+                          Your current balance is <strong>{userCredits} TM</strong>, but this reservation requires <strong>{showTotalCredits} TM</strong>.
+                          Top up at least <strong>${topUpDollars}.00</strong> (+{topUpCredits} TM Credits in multiples of $5) to complete this purchase.
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>Top-Up Protocol</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                          {[['card', 'Credit / Debit Card'], ['pesapal', 'M-Pesa STK Push']].map(([gw, lbl]) => (
+                            <button key={gw} type="button" onClick={() => setPaymentGateway(gw)} style={{ padding: '8px', borderRadius: '3px', border: paymentGateway === gw ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)', background: paymentGateway === gw ? 'rgba(0,240,255,0.1)' : 'transparent', color: paymentGateway === gw ? effectiveAccent : '#cbd5e1', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+                              {lbl}
+                            </button>
+                          ))}
+                        </div>
+
+                        {paymentGateway === 'pesapal' ? (
+                          <div>
+                            <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number</label>
+                            <input type="tel" placeholder="+254 712 345 678" defaultValue="+254 712 345 678" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Card Number</label>
+                            <input type="text" placeholder="4242 •••• •••• 4242" defaultValue="4242 •••• •••• 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                          </div>
+                        )}
+                      </div>
+
+                      <button type="submit" style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '13px', borderRadius: '3px', fontWeight: 900, cursor: 'pointer', fontSize: '0.95rem' }}>
+                        Authorize Top-Up +${topUpDollars} (+{topUpCredits} TM) & Reserve Pass
                       </button>
-                    ))}
-                  </div>
-
-                  {paymentGateway === 'pesapal' ? (
-                    <div>
-                      <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number (STK Push)</label>
-                      <input type="tel" placeholder="+254 712 345 678" defaultValue="+254 712 345 678" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                     </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Card Number</label>
-                      <input type="text" placeholder="4242 •••• •••• 4242" defaultValue="4242 •••• •••• 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                    </div>
-                  )}
-                </div>
-
-                <button type="submit" style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 900, cursor: 'pointer', fontSize: '0.95rem', marginTop: '6px' }}>
-                  Complete Ticket Purchase (${((ticketTier === 'ga' ? selectedShow.priceGA : ticketTier === 'vip' ? selectedShow.priceVIP : selectedShow.priceMeet) * ticketQty).toFixed(2)})
-                </button>
+                  )
+                })()}
               </form>
             )}
           </div>
@@ -4853,118 +5876,151 @@ export function CreatorEpkView(props = {}) {
                   </div>
                 </div>
 
-                {/* Payment Method Selector */}
-                <div>
-                  <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
-                    Payment Method
-                  </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
-                    {[
-                      { id: 'credits', label: `TM Credits (${userCredits} Avail)`, icon: RiCoinsFill },
-                      { id: 'card', label: 'Credit / Debit Card', icon: RiBankCardFill },
-                      { id: 'mpesa', label: 'M-Pesa STK Push', icon: RiCellphoneFill }
-                    ].map(pm => {
-                      const PmIcon = pm.icon
-                      return (
+                {/* Strict Credits Deduction & Top-Up Protocol */}
+                {(() => {
+                  let priceCredits = 60
+                  if (stemsPackageType === 'instrumental') priceCredits = 40
+                  else if (stemsPackageType === 'acapella') priceCredits = 35
+                  else if (stemsPackageType === 'sync') priceCredits = 150
+
+                  const hasCredits = userCredits >= priceCredits
+                  const shortfall = priceCredits - userCredits
+                  const topUpDollars = Math.max(5, Math.ceil(shortfall / 10 / 5) * 5)
+                  const topUpCredits = calcCreditsForAmount(topUpDollars)
+
+                  if (hasCredits) {
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <div style={{ background: 'rgba(0,240,255,0.08)', border: `1px solid ${effectiveAccent}`, borderRadius: '3px', padding: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Available Credits Balance:</span>
+                            <strong style={{ color: effectiveAccent, fontSize: '1.05rem' }}>{userCredits} TM</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Stems Pack Deduction:</span>
+                            <strong style={{ color: '#f87171', fontSize: '1.05rem' }}>-{priceCredits} TM</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Remaining Balance After Download:</span>
+                            <strong style={{ color: '#22c55e', fontSize: '1.05rem' }}>{userCredits - priceCredits} TM</strong>
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '10px' }}>
+                            ✓ Direct TM Credits Deduction active. No external payment protocol required.
+                          </div>
+                        </div>
+
                         <button
-                          key={pm.id}
-                          type="button"
-                          onClick={() => setStemsPaymentMethod(pm.id)}
+                          type="submit"
+                          disabled={stemsProcessing}
                           style={{
-                            padding: '10px 6px',
+                            width: '100%',
+                            background: effectiveAccent,
+                            color: '#000',
+                            border: 'none',
+                            padding: '14px',
                             borderRadius: '3px',
-                            border: stemsPaymentMethod === pm.id ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.12)',
-                            background: stemsPaymentMethod === pm.id ? 'rgba(0,240,255,0.12)' : 'transparent',
-                            color: stemsPaymentMethod === pm.id ? effectiveAccent : '#cbd5e1',
-                            fontWeight: 800,
-                            fontSize: '0.76rem',
+                            fontWeight: 900,
+                            fontSize: '0.95rem',
                             cursor: 'pointer',
                             display: 'flex',
-                            flexDirection: 'column',
                             alignItems: 'center',
-                            gap: '4px'
+                            justifyContent: 'center',
+                            gap: '8px',
+                            boxShadow: `0 4px 20px ${effectiveAccent}44`
                           }}
                         >
-                          <PmIcon size={16} />
-                          <span>{pm.label}</span>
+                          <RiDownloadFill size={18} />
+                          {stemsProcessing ? 'Generating Stem Tokens...' : `Unlock & Download Stems Pack (${priceCredits} TM Credits)`}
                         </button>
-                      )
-                    })}
-                  </div>
+                      </div>
+                    )
+                  }
 
-                  {stemsPaymentMethod === 'card' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '14px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', padding: '14px' }}>
+                        <div style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.86rem', marginBottom: '4px' }}>
+                          ⚠️ Credits Shortfall: {shortfall} TM Needed
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.45 }}>
+                          Your current balance is <strong>{userCredits} TM</strong>, but this stems pack requires <strong>{priceCredits} TM</strong>.
+                          Top up at least <strong>${topUpDollars}.00</strong> (+{topUpCredits} TM Credits in multiples of $5) to complete this purchase.
+                        </div>
+                      </div>
+
                       <div>
-                        <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Cardholder Name</label>
-                        <input
-                          type="text"
-                          placeholder="Jane Producer"
-                          value={stemsCardName}
-                          onChange={e => setStemsCardName(e.target.value)}
-                          required
-                          style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Card Number</label>
-                        <input
-                          type="text"
-                          placeholder="4242 •••• •••• 4242"
-                          value={stemsCardNumber}
-                          onChange={e => setStemsCardNumber(e.target.value)}
-                          required
-                          style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
-                        />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                        <div>
-                          <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Exp</label>
-                          <input type="text" placeholder="MM/YY" value={stemsCardExp} onChange={e => setStemsCardExp(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                        <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>Top-Up Protocol</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                          {[
+                            ['card', 'Credit / Debit Card'],
+                            ['mpesa', 'M-Pesa STK Push']
+                          ].map(([gw, lbl]) => (
+                            <button
+                              key={gw}
+                              type="button"
+                              onClick={() => setStemsPaymentMethod(gw)}
+                              style={{ padding: '8px', borderRadius: '3px', border: stemsPaymentMethod === gw ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)', background: stemsPaymentMethod === gw ? `${effectiveAccent}22` : 'transparent', color: stemsPaymentMethod === gw ? effectiveAccent : '#cbd5e1', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
+                            >
+                              {lbl}
+                            </button>
+                          ))}
                         </div>
-                        <div>
-                          <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>CVC</label>
-                          <input type="password" placeholder="•••" value={stemsCardCvc} onChange={e => setStemsCardCvc(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>ZIP</label>
-                          <input type="text" placeholder="90210" value={stemsCardZip} onChange={e => setStemsCardZip(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
-                  {stemsPaymentMethod === 'credits' && (
-                    <div style={{ background: 'rgba(0,240,255,0.06)', border: `1px solid ${effectiveAccent}44`, padding: '12px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: '0.82rem', color: '#cbd5e1' }}>
-                        Deducting from your TM Credits balance. Instant unmetered download tokens will be minted.
+                        {stemsPaymentMethod === 'mpesa' ? (
+                          <div>
+                            <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number</label>
+                            <input
+                              type="tel"
+                              placeholder="+254 712 345 678"
+                              defaultValue="+254 712 345 678"
+                              required
+                              style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
+                            />
+                            <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>You will receive an STK prompt on your handset to authorize payment.</span>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <input
+                              type="text"
+                              placeholder="Card Number: 4242 •••• •••• 4242"
+                              defaultValue="4242 •••• •••• 4242"
+                              required
+                              style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
+                            />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                              <input type="text" placeholder="MM / YY" defaultValue="12/28" required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                              <input type="text" placeholder="CVC" defaultValue="345" required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={stemsProcessing}
-                  style={{
-                    width: '100%',
-                    background: effectiveAccent,
-                    color: '#000',
-                    border: 'none',
-                    padding: '14px',
-                    borderRadius: '3px',
-                    fontWeight: 900,
-                    fontSize: '0.95rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: `0 4px 20px ${effectiveAccent}44`
-                  }}
-                >
-                  <RiDownloadFill size={18} />
-                  {stemsProcessing ? 'Generating Stem Tokens...' : 'Unlock & Download Stems Pack'}
-                </button>
+                      <button
+                        type="submit"
+                        disabled={stemsProcessing}
+                        style={{
+                          width: '100%',
+                          background: effectiveAccent,
+                          color: '#000',
+                          border: 'none',
+                          padding: '14px',
+                          borderRadius: '3px',
+                          fontWeight: 900,
+                          fontSize: '0.95rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: `0 4px 20px ${effectiveAccent}44`
+                        }}
+                      >
+                        <RiDownloadFill size={18} />
+                        {stemsProcessing ? 'Authorizing...' : `Authorize Top-Up +$${topUpDollars} (+${topUpCredits} TM) & Unlock Stems`}
+                      </button>
+                    </div>
+                  )
+                })()}
               </form>
             )}
           </div>
@@ -5332,23 +6388,34 @@ export function CreatorEpkView(props = {}) {
       )}
 
       {/* ================= EPK PREVIEW MODAL WITH DIRECT PDF DOWNLOAD ================= */}
+      {/* ================= EPK PREVIEW MODAL WITH DIRECT PDF DOWNLOAD (SEAMLESS 2-STEP) ================= */}
       {epkPreviewModalOpen && (
-        <div onClick={(e) => { if (e.target === e.currentTarget) setEpkPreviewModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#0a0d18', border: `2px solid ${effectiveAccent}`, borderRadius: '4px', width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', color: '#fff', position: 'relative', boxShadow: `0 20px 80px ${effectiveAccent}44` }}>
+        <div onClick={(e) => { if (e.target === e.currentTarget) setEpkPreviewModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#0a0d18', border: `2px solid ${effectiveAccent}`, borderRadius: '4px', width: '100%', maxWidth: '820px', maxHeight: '92vh', overflowY: 'auto', padding: '32px', color: '#fff', position: 'relative', boxShadow: `0 25px 90px ${effectiveAccent}44` }}>
             <button onClick={() => setEpkPreviewModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
 
+            {/* Seamless 2-Step Process Step Tracker */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.74rem', background: effectiveAccent, color: '#000', fontWeight: 900, padding: '4px 10px', borderRadius: '3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Step 1 of 2: In-App EPK Preview
+              </span>
+              <span style={{ fontSize: '0.74rem', background: 'rgba(255,255,255,0.08)', color: '#94a3b8', fontWeight: 700, padding: '4px 10px', borderRadius: '3px' }}>
+                Step 2: Windows Save & Print Dialog
+              </span>
+            </div>
+
             {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <span style={{ fontSize: '0.72rem', background: effectiveAccent, color: '#000', fontWeight: 900, padding: '2px 8px', borderRadius: '3px', textTransform: 'uppercase' }}>
-                  Official Press Kit Preview
-                </span>
-                <h3 style={{ margin: '6px 0 0', fontSize: '1.5rem', fontWeight: 900, color: '#fff' }}>
-                  {effectiveArtistName} • Executive Press Kit
+                <h3 style={{ margin: '0 0 4px', fontSize: '1.5rem', fontWeight: 900, color: '#fff', fontFamily: effectiveFont }}>
+                  {effectiveArtistName} • Executive Press Kit (EPK)
                 </h3>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                  Inspect high-resolution layout preview below. Clicking download launches your Windows save dialog.
+                </div>
               </div>
 
-              {/* Direct PDF Download Action */}
+              {/* Direct Step 2 PDF Download Action */}
               <button
                 type="button"
                 onClick={() => {
@@ -5359,17 +6426,18 @@ export function CreatorEpkView(props = {}) {
                   background: effectiveAccent,
                   color: '#000',
                   border: 'none',
-                  padding: '10px 18px',
+                  padding: '12px 22px',
                   borderRadius: '3px',
                   fontWeight: 900,
-                  fontSize: '0.85rem',
+                  fontSize: '0.88rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '8px',
+                  boxShadow: `0 4px 18px ${effectiveAccent}55`
                 }}
               >
-                <RiDownloadFill size={16} /> Download PDF Press Kit
+                <RiDownloadFill size={18} /> Step 2: Download EPK (Windows Dialog)
               </button>
             </div>
 
@@ -5385,12 +6453,12 @@ export function CreatorEpkView(props = {}) {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284c7', textTransform: 'uppercase' }}>Official Press Kit 2026</div>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b' }}>TuneMavens Verified Creator</div>
+                  <div style={{ fontSize: '0.68rem', color: '#64748b' }}>TuneMavens Verified Creator World</div>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: '20px', marginBottom: '20px' }}>
-                <img src={epkData?.profilePhoto || epkData?.heroImage || heroSlide1} alt="Profile" style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '3px' }} />
+                <img src={epkData?.profilePhoto || epkData?.heroImage || heroSlide1} alt="Profile" style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #0284c7' }} />
                 <div>
                   <h3 style={{ margin: '0 0 6px', fontSize: '1.3rem', fontWeight: 900 }}>{effectiveArtistName}</h3>
                   <div style={{ fontSize: '0.82rem', color: '#0284c7', fontWeight: 700, marginBottom: '10px' }}>{effectiveHeadline}</div>
@@ -5400,33 +6468,64 @@ export function CreatorEpkView(props = {}) {
                 </div>
               </div>
 
+              {/* Core Metrics */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', background: '#f8fafc', padding: '12px', borderRadius: '3px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '16px' }}>
-                <div><div style={{ fontSize: '0.65rem', color: '#64748b' }}>STREAMS</div><div style={{ fontWeight: 900, color: '#0f172a' }}>4.2M+</div></div>
-                <div><div style={{ fontSize: '0.65rem', color: '#64748b' }}>LISTENERS</div><div style={{ fontWeight: 900, color: '#0f172a' }}>385K/mo</div></div>
-                <div><div style={{ fontSize: '0.65rem', color: '#64748b' }}>TOUR CAPACITY</div><div style={{ fontWeight: 900, color: '#0f172a' }}>1.5K - 3.5K</div></div>
-                <div><div style={{ fontSize: '0.65rem', color: '#64748b' }}>SYNC STATUS</div><div style={{ fontWeight: 900, color: '#16a34a' }}>100% Cleared</div></div>
+                <div><div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>STREAMS</div><div style={{ fontWeight: 900, color: '#0f172a', fontSize: '1.1rem' }}>4.2M+</div></div>
+                <div><div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>LISTENERS</div><div style={{ fontWeight: 900, color: '#0f172a', fontSize: '1.1rem' }}>385K/mo</div></div>
+                <div><div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>TOUR CAPACITY</div><div style={{ fontWeight: 900, color: '#0f172a', fontSize: '1.1rem' }}>1.5K - 3.5K</div></div>
+                <div><div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>SYNC STATUS</div><div style={{ fontWeight: 900, color: '#16a34a', fontSize: '1.1rem' }}>100% Cleared</div></div>
+              </div>
+
+              {/* Official Social Media & Streaming Handles in Preview */}
+              <div style={{ background: '#f1f5f9', padding: '14px', borderRadius: '3px', border: '1px solid #cbd5e1' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.04em' }}>
+                  Official Social Media & Streaming Handles
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '0.72rem' }}>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '3px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a' }}>Instagram</div>
+                    <div style={{ color: '#0284c7', marginTop: '2px', wordBreak: 'break-all' }}>{epkData?.instagram || ('@' + artistSlug)}</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '3px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a' }}>YouTube</div>
+                    <div style={{ color: '#0284c7', marginTop: '2px', wordBreak: 'break-all' }}>{epkData?.youtube || ('youtube.com/@' + artistSlug)}</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '3px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a' }}>Spotify</div>
+                    <div style={{ color: '#0284c7', marginTop: '2px', wordBreak: 'break-all' }}>{epkData?.spotify || ('spotify.com/artist/' + artistSlug)}</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '8px', borderRadius: '3px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a' }}>X / Twitter</div>
+                    <div style={{ color: '#0284c7', marginTop: '2px', wordBreak: 'break-all' }}>{epkData?.twitter || ('@' + artistSlug)}</div>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Modal Bottom Actions */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-              <button
-                type="button"
-                onClick={() => setEpkPreviewModalOpen(false)}
-                style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer' }}
-              >
-                Close Preview
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEpkPreviewModalOpen(false)
-                  handleDownloadEpkAssets()
-                }}
-                style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '3px', fontWeight: 900, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <RiDownloadFill size={16} /> Download PDF File
-              </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                Clicking Download brings up your native Windows / browser print and PDF export dialog.
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setEpkPreviewModalOpen(false)}
+                  style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer' }}
+                >
+                  Close Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEpkPreviewModalOpen(false)
+                    handleDownloadEpkAssets()
+                  }}
+                  style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '10px 22px', borderRadius: '3px', fontWeight: 900, fontSize: '0.86rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <RiDownloadFill size={16} /> Download PDF File
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -5464,7 +6563,7 @@ export function CreatorEpkView(props = {}) {
                 type="button"
                 onClick={() => {
                   setTechRiderModalOpen(false)
-                  showToast('📥 Downloading Technical Stage Rider PDF...')
+                  handleDownloadTechRiderPdf()
                 }}
                 style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '10px 18px', borderRadius: '3px', fontWeight: 900, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
@@ -5516,13 +6615,25 @@ export function CreatorEpkView(props = {}) {
                 </div>
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px', fontSize: '1.1rem', fontWeight: 900 }}>
-                    <span>Subtotal</span>
-                    <span style={{ color: effectiveAccent }}>${cart.reduce((sum, item) => sum + (item.numPrice * item.qty), 0).toFixed(2)}</span>
-                  </div>
-                  <button onClick={handleCheckoutCart} style={{ width: '100%', background: effectiveAccent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 900, cursor: 'pointer', fontSize: '0.95rem' }}>
-                    Checkout with PesaPal / Stripe
-                  </button>
+                  {(() => {
+                    const cartSubtotal = cart.reduce((sum, item) => sum + ((item.numPrice !== undefined ? item.numPrice : parseFloat(String(item.price || '0').replace(/[^0-9.]/g, '')) || 0) * item.qty), 0)
+                    const cartCredits = Math.round(cartSubtotal * 10)
+                    return (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '1.1rem', fontWeight: 900 }}>
+                          <span>Subtotal</span>
+                          <span style={{ color: effectiveAccent }}>${cartSubtotal.toFixed(2)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px', fontSize: '0.84rem', color: '#94a3b8' }}>
+                          <span>Credits Equivalent</span>
+                          <strong style={{ color: effectiveAccent }}>{cartCredits} TM Credits</strong>
+                        </div>
+                        <button onClick={handleCheckoutCart} style={{ width: '100%', background: effectiveAccent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 900, cursor: 'pointer', fontSize: '0.95rem' }}>
+                          Checkout with TM Credits ({cartCredits} TM)
+                        </button>
+                      </>
+                    )
+                  })()}
                 </div>
               </>
             )}
@@ -5563,7 +6674,7 @@ export function CreatorEpkView(props = {}) {
             </div>
 
             <button onClick={() => { handlePurchaseTrackWithCredits(selectedAlbumModal); setSelectedAlbumModal(null); }} style={{ width: '100%', marginTop: '20px', background: effectiveAccent, color: '#000', border: 'none', padding: '10px', borderRadius: '3px', fontWeight: 900, cursor: 'pointer', fontSize: '0.88rem' }}>
-              Purchase Lossless Multitrack Stems ({selectedAlbumModal.priceCredits} Credits)
+              Purchase Full Digital MP3 Album ({selectedAlbumModal.priceCredits} Credits)
             </button>
           </div>
         </div>
@@ -5847,7 +6958,7 @@ export function CreatorEpkView(props = {}) {
                     Join {effectiveArtistName}'s Fan Club
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
-                    Sign up to post comments, unlock unreleased stems, claim 20% ticket discounts, and configure your preferred alerts.
+                    Sign up to post comments, unlock unreleased MP3s, claim 20% ticket discounts, and configure your preferred alerts.
                   </p>
                 </div>
 
@@ -5925,7 +7036,7 @@ export function CreatorEpkView(props = {}) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {[
                       'VIP Tour Pre-Sales & Discounts',
-                      'Unreleased WAV Master Stems',
+                      'Unreleased Digital MP3 Singles',
                       'Exclusive Fan Club Merch Drops',
                       'Backstage Passes & Meet & Greet'
                     ].map(interest => {
@@ -6008,32 +7119,95 @@ export function CreatorEpkView(props = {}) {
             {/* Fan Portal Header Bar */}
             <div style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '3px', background: effectiveAccent, color: '#000', fontWeight: 900, fontSize: '1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {effectiveArtistName.charAt(0)}
+                <div style={{ width: '48px', height: '48px', borderRadius: '3px', overflow: 'hidden', border: `2px solid ${effectiveAccent}`, flexShrink: 0 }}>
+                  <img
+                    src={fanProfileAvatar || fanUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+                    alt={fanUser?.name || 'Fan Avatar'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 </div>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#fff', fontFamily: effectiveFont }}>
-                      {effectiveArtistName} Fan Portal
-                    </h3>
+                  <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: '#fff', fontFamily: effectiveFont }}>
+                    {effectiveArtistName || 'Ndufo'} Fan Portal
+                  </h3>
+                  <div style={{ fontSize: '1.02rem', fontWeight: 800, color: '#fff', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span>
+                      <strong style={{ color: effectiveAccent }}>{fanProfileName || fanUser?.name || 'Alex Chen'}</strong>{' '}
+                      <span style={{ color: '#cbd5e1', fontWeight: 600 }}>[{fanProfileEmail || fanUser?.email || 'fan@intermaven.io'}]</span>
+                    </span>
                     <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', padding: '2px 8px', borderRadius: '3px', fontSize: '0.72rem', fontWeight: 800 }}>
                       🌟 VIP Member
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-                    Logged in as <strong style={{ color: '#fff' }}>{fanUser?.name}</strong> • CRM ID: {fanUser?.crmId || 'CRM-849201'} • Alerts: <span style={{ color: effectiveAccent }}>{fanUser?.preferredCommMethod?.toUpperCase() || 'EMAIL'}</span>
+                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '3px' }}>
+                    CRM ID: {fanUser?.crmId || 'CRM-849201'} • Preferred Alerts: <span style={{ color: effectiveAccent, fontWeight: 700 }}>{(ticketDeliveryChannel || fanUser?.preferredCommMethod || 'EMAIL').toUpperCase()}</span>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.12)', padding: '6px 12px', borderRadius: '3px', fontSize: '0.8rem', textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Intermaven Credits</div>
-                  <div style={{ fontWeight: 900, color: effectiveAccent, fontSize: '0.95rem' }}>{userCredits} TM</div>
+              {/* Right Cluster: Credits Box on Top + [Top Up] & [Settings] directly below */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                  <div style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: '3px', fontSize: '0.8rem', textAlign: 'right', minWidth: '160px' }}>
+                    <div style={{ fontSize: '0.66rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.04em' }}>Non-Expiring Credits</div>
+                    <div style={{ fontWeight: 900, color: effectiveAccent, fontSize: '1.1rem' }}>{userCredits} TM</div>
+                  </div>
+                  
+                  {/* Action Buttons Below Credits */}
+                  <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+                    <button
+                      type="button"
+                      onClick={() => setFanPortalTab('topup')}
+                      title="Top Up TM Credits"
+                      style={{
+                        flex: 1,
+                        background: fanPortalTab === 'topup' ? effectiveAccent : 'rgba(0,240,255,0.14)',
+                        color: fanPortalTab === 'topup' ? '#000' : effectiveAccent,
+                        border: `1px solid ${effectiveAccent}`,
+                        padding: '6px 10px',
+                        borderRadius: '3px',
+                        fontWeight: 900,
+                        fontSize: '0.76rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <RiCoinsFill size={13} /> + Top Up
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFanPortalTab('settings')}
+                      title="Profile Settings"
+                      style={{
+                        flex: 1,
+                        background: fanPortalTab === 'settings' ? effectiveAccent : 'rgba(255,255,255,0.08)',
+                        color: fanPortalTab === 'settings' ? '#000' : '#fff',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        padding: '6px 10px',
+                        borderRadius: '3px',
+                        fontWeight: 800,
+                        fontSize: '0.76rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      ⚙️ Settings
+                    </button>
+                  </div>
                 </div>
+
                 <button 
                   onClick={() => setFanPortalOpen(false)} 
-                  style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', width: '34px', height: '34px', borderRadius: '3px', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title="Close Fan Portal"
+                  style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', width: '36px', height: '36px', borderRadius: '3px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   ✕
                 </button>
@@ -6043,11 +7217,12 @@ export function CreatorEpkView(props = {}) {
             {/* Portal Navigation Tabs */}
             <div style={{ display: 'flex', gap: '8px', padding: '12px 24px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto' }}>
               {[
-                { id: 'vault', label: 'Exclusive Vault & Stems', icon: '🎵' },
+                { id: 'vault', label: 'Exclusive Fan Vault (MP3 & Audio)', icon: '🎵' },
+                { id: 'topup', label: 'Top Up Credits', icon: '💳' },
                 { id: 'tickets', label: 'Discounted Show Tickets', icon: '🎟️' },
                 { id: 'merch', label: 'Special Fan Merch Drops', icon: '👕' },
                 { id: 'voting', label: 'Setlist Voting & Interaction', icon: '🗳️' },
-                { id: 'settings', label: 'Communication Preferences', icon: '⚙️' }
+                { id: 'settings', label: 'Profile & Settings', icon: '⚙️' }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -6074,57 +7249,272 @@ export function CreatorEpkView(props = {}) {
 
             {/* Portal Tab Content Body */}
             <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
-              {/* TAB 1: EXCLUSIVE VAULT & STEMS */}
+              {/* TAB 1: EXCLUSIVE FAN VAULT (MP3 & AUDIO) */}
               {fanPortalTab === 'vault' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                  <div style={{ background: 'rgba(34,211,238,0.06)', border: `1px solid ${effectiveAccent}33`, padding: '16px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                    <div>
-                      <h4 style={{ margin: 0, color: effectiveAccent, fontSize: '1rem', fontWeight: 800 }}>
-                        24-Bit / 96kHz Multitrack Lossless Stems Vault
-                      </h4>
-                      <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#cbd5e1' }}>
-                        Direct master stems pre-cleared for VIP members. Redeem stems directly with your Intermaven Credits balance.
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => { setActiveTab('pricing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                      style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '6px 14px', borderRadius: '3px', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer' }}
-                    >
-                      Top Up Credits
-                    </button>
+                  <div style={{ background: 'rgba(34,211,238,0.06)', border: `1px solid ${effectiveAccent}33`, padding: '16px 20px', borderRadius: '3px' }}>
+                    <h4 style={{ margin: 0, color: effectiveAccent, fontSize: '1.05rem', fontWeight: 800 }}>
+                      Lossless Digital MP3 Singles & Audio Vault
+                    </h4>
+                    <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: 1.5 }}>
+                      Direct high-quality 320kbps MP3 and lossless audio tracks pre-cleared for VIP members. Redeem MP3 singles directly with your non-expiring TM Credits balance. <strong style={{ color: '#94a3b8' }}>Note: Uncompressed master multitracks and commercial sync licensing are strictly reserved for verified industry professionals via TuneMavens Backend Admin.</strong>
+                    </p>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {[
-                      { id: 901, title: 'Nairobi Cyberwave (Studio Multitrack Stems Pack)', stems: 'Drums • Sub-Bass • Lead Synth • Vocal FX', duration: '3:45', credits: 40, format: '24-Bit WAV / ZIP (320 MB)' },
-                      { id: 902, title: 'Sunset over Rift Valley (Acoustic VIP Stems)', stems: 'Nylon Guitar • Kalimba • Percussion • Ambient Pad', duration: '4:12', credits: 40, format: '24-Bit WAV / ZIP (280 MB)' },
-                      { id: 903, title: 'Afro-Synth Cascade (Unreleased Club Dub Stems)', stems: 'Korg Poly • Modular Bass • Drum Machine • Stabs', duration: '3:18', credits: 45, format: '24-Bit WAV / ZIP (310 MB)' }
-                    ].map(stem => (
-                      <div key={stem.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px 18px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      { id: 901, title: 'Nairobi Cyberwave (Exclusive VIP MP3 Single)', formatText: 'High-Quality 320kbps MP3 / Lossless Master', duration: '3:45', credits: 40, size: '9.2 MB' },
+                      { id: 902, title: 'Sunset over Rift Valley (Acoustic VIP Edition)', formatText: 'High-Quality 320kbps MP3 / Lossless Master', duration: '4:12', credits: 40, size: '10.5 MB' },
+                      { id: 903, title: 'Afro-Synth Cascade (Unreleased Club Dub MP3)', formatText: 'High-Quality 320kbps MP3 / Lossless Master', duration: '3:18', credits: 45, size: '8.1 MB' }
+                    ].map(item => (
+                      <div key={item.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px 18px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                         <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>{stem.title}</div>
-                          <div style={{ fontSize: '0.78rem', color: effectiveAccent, marginTop: '3px' }}>{stem.stems}</div>
-                          <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>{stem.format} • {stem.duration}</div>
+                          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>{item.title}</div>
+                          <div style={{ fontSize: '0.78rem', color: effectiveAccent, marginTop: '3px' }}>{item.formatText}</div>
+                          <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>{item.size} • {item.duration}</div>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <button 
                             onClick={() => {
-                              if (userCredits >= stem.credits) {
-                                setUserCredits(prev => prev - stem.credits)
-                                alert(`Redeemed ${stem.title}! Download link generated (Simulated). Remaining Credits: ${userCredits - stem.credits}`)
+                              if (userCredits >= item.credits) {
+                                setUserCredits(prev => prev - item.credits)
+                                showToast(`🎉 Redeemed ${item.title}! Digital MP3 download link active. Remaining Credits: ${userCredits - item.credits}`)
                               } else {
-                                showToast('⚠️ Insufficient credits. Please top up your balance.')
+                                showToast('⚠️ Insufficient credits. Please top up your balance using the Top Up tab.')
                               }
                             }} 
                             style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px 16px', borderRadius: '3px', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer' }}
                           >
-                            Redeem Stems ({stem.credits} Credits)
+                            Redeem MP3 Single ({item.credits} Credits)
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* TAB: TOP UP CREDITS PROTOCOL */}
+              {fanPortalTab === 'topup' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ background: 'rgba(0,240,255,0.06)', border: `1px solid ${effectiveAccent}44`, padding: '18px 22px', borderRadius: '3px' }}>
+                    <h4 style={{ margin: '0 0 6px', color: effectiveAccent, fontSize: '1.15rem', fontWeight: 900 }}>
+                      Instant Non-Expiring TM Credits Top-Up
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '0.84rem', color: '#cbd5e1', lineHeight: 1.5 }}>
+                      Platformwide purchases (MP3 digital singles, tour tickets, limited edition vinyl, and merch) are completed using non-expiring TM Credits. Credits never expire and sync across your unified Intermaven wallet.
+                    </p>
+                  </div>
+
+                  {/* Select Top-Up Package */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800 }}>
+                        Select Credits Package ($5, $10, $20, $100)
+                      </label>
+                      <span style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 700 }}>
+                        Selected: ${fanTopUpPrice}.00 USD = {fanTopUpCredits} TM Credits
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+                      {[
+                        { amount: 5, credits: 50, price: '$5.00', title: 'Starter Pack', perk: 'Unlock unreleased MP3 singles & digital drops' },
+                        { amount: 10, credits: 110, price: '$10.00', title: 'Fan VIP Pack (+10% Bonus)', perk: 'Priority pre-sale codes & discography audio' },
+                        { amount: 20, credits: 240, price: '$20.00', title: 'Superfan Collector (+20% Bonus)', perk: '20% off all tour passes & limited merch drops' },
+                        { amount: 100, credits: 1300, price: '$100.00', title: 'Champion VIP Club (+30% Bonus)', perk: 'Lifetime fan club badge, private listening & VIP access' }
+                      ].map(pkg => (
+                        <div
+                          key={pkg.amount}
+                          onClick={() => {
+                            setFanTopUpPrice(pkg.amount)
+                            setFanTopUpCredits(pkg.credits)
+                          }}
+                          style={{
+                            padding: '14px',
+                            borderRadius: '3px',
+                            border: fanTopUpPrice === pkg.amount ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.12)',
+                            background: fanTopUpPrice === pkg.amount ? 'rgba(0,240,255,0.14)' : 'rgba(255,255,255,0.03)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: '0.72rem', color: fanTopUpPrice === pkg.amount ? effectiveAccent : '#94a3b8', fontWeight: 800 }}>{pkg.title}</div>
+                            <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#fff', margin: '4px 0' }}>{pkg.credits} Credits</div>
+                            <div style={{ fontSize: '0.92rem', color: effectiveAccent, fontWeight: 800 }}>{pkg.price}</div>
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '8px', lineHeight: 1.35 }}>{pkg.perk}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Custom Top-Up in Multiples of $5 */}
+                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '14px 18px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#fff' }}>Custom Top-Up (Multiples of $5)</div>
+                        <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>
+                          Add any custom amount in $5 increments ($15, $25, $35, $50...). Higher amounts include tiered bonus credits.
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = Math.max(5, (fanTopUpPrice || 5) - 5)
+                            setFanTopUpPrice(next)
+                            setFanTopUpCredits(calcCreditsForAmount(next))
+                          }}
+                          style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '3px', fontWeight: 900, fontSize: '1.1rem', cursor: 'pointer' }}
+                        >
+                          -
+                        </button>
+                        <div style={{ position: 'relative', width: '110px' }}>
+                          <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: effectiveAccent, fontWeight: 900, fontSize: '0.9rem' }}>$</span>
+                          <input
+                            type="number"
+                            min="5"
+                            step="5"
+                            value={fanTopUpPrice}
+                            onChange={(e) => {
+                              const raw = parseInt(e.target.value, 10) || 5
+                              const rounded = Math.max(5, Math.round(raw / 5) * 5)
+                              setFanTopUpPrice(rounded)
+                              setFanTopUpCredits(calcCreditsForAmount(rounded))
+                            }}
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px 8px 24px', background: 'rgba(0,0,0,0.5)', border: `1px solid ${effectiveAccent}88`, color: '#fff', borderRadius: '3px', fontWeight: 900, fontSize: '1rem', textAlign: 'center' }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = (fanTopUpPrice || 5) + 5
+                            setFanTopUpPrice(next)
+                            setFanTopUpCredits(calcCreditsForAmount(next))
+                          }}
+                          style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '3px', fontWeight: 900, fontSize: '1.1rem', cursor: 'pointer' }}
+                        >
+                          +
+                        </button>
+                        <div style={{ background: `${effectiveAccent}22`, border: `1px solid ${effectiveAccent}`, padding: '7px 12px', borderRadius: '3px', fontSize: '0.84rem', fontWeight: 900, color: effectiveAccent, whiteSpace: 'nowrap' }}>
+                          = {fanTopUpCredits} TM Credits
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Protocol & Details */}
+                  <form onSubmit={handleExecuteFanTopUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+                        Payment Protocol
+                      </label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setFanTopUpGateway('card')}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '3px',
+                            border: fanTopUpGateway === 'card' ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)',
+                            background: fanTopUpGateway === 'card' ? 'rgba(0,240,255,0.12)' : 'transparent',
+                            color: fanTopUpGateway === 'card' ? effectiveAccent : '#cbd5e1',
+                            fontWeight: 800,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <RiBankCardFill size={16} /> Credit / Debit Card
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFanTopUpGateway('mpesa')}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '3px',
+                            border: fanTopUpGateway === 'mpesa' ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)',
+                            background: fanTopUpGateway === 'mpesa' ? 'rgba(0,240,255,0.12)' : 'transparent',
+                            color: fanTopUpGateway === 'mpesa' ? effectiveAccent : '#cbd5e1',
+                            fontWeight: 800,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <RiCellphoneFill size={16} /> M-Pesa STK Push
+                        </button>
+                      </div>
+                    </div>
+
+                    {fanTopUpGateway === 'card' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Cardholder Name</label>
+                          <input type="text" placeholder={fanProfileName || "Alex Chen"} defaultValue={fanProfileName || "Alex Chen"} required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Card Number</label>
+                          <input type="text" placeholder="4242 •••• •••• 4242" defaultValue="4242 •••• •••• 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                          <div>
+                            <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Exp (MM/YY)</label>
+                            <input type="text" placeholder="08/28" defaultValue="08/28" required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>CVC</label>
+                            <input type="password" placeholder="•••" defaultValue="888" required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>ZIP</label>
+                            <input type="text" placeholder="90210" defaultValue="90210" required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number (STK Push PIN Prompt)</label>
+                        <input type="tel" placeholder="+254 712 345 678" defaultValue="+254 712 345 678" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                        <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '6px' }}>An instant STK Push prompt will be sent to your phone to authorize non-expiring TM credits.</div>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={fanTopUpProcessing}
+                      style={{
+                        width: '100%',
+                        background: effectiveAccent,
+                        color: '#000',
+                        border: 'none',
+                        padding: '13px',
+                        borderRadius: '3px',
+                        fontWeight: 900,
+                        fontSize: '0.95rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        boxShadow: `0 4px 18px ${effectiveAccent}44`
+                      }}
+                    >
+                      <RiCoinsFill size={18} />
+                      {fanTopUpProcessing ? 'Authorizing Credit Top-Up...' : `Authorize & Top Up +${fanTopUpCredits} TM Credits Now`}
+                    </button>
+                  </form>
                 </div>
               )}
 
@@ -6158,7 +7548,6 @@ export function CreatorEpkView(props = {}) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {shows.map(show => {
                       const discountedGA = (show.priceGA * 0.8).toFixed(2)
-                      const discountedVIP = (show.priceVIP * 0.8).toFixed(2)
                       return (
                         <div key={show.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px 18px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
                           <div>
@@ -6234,7 +7623,6 @@ export function CreatorEpkView(props = {}) {
               {/* TAB 4: SETLIST VOTING & FAN INTERACTION */}
               {fanPortalTab === 'voting' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  {/* Setlist Voting Card */}
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '3px' }}>
                     <span style={{ fontSize: '0.72rem', color: effectiveAccent, fontWeight: 900, textTransform: 'uppercase' }}>Fan Poll</span>
                     <h4 style={{ margin: '6px 0 6px', fontSize: '1.1rem', fontWeight: 900, color: '#fff' }}>
@@ -6277,7 +7665,6 @@ export function CreatorEpkView(props = {}) {
                     </div>
                   </div>
 
-                  {/* Ask Creator Question Card */}
                   <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '3px' }}>
                     <h4 style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 900, color: '#fff' }}>
                       Direct Creator Fan Q&A
@@ -6294,7 +7681,7 @@ export function CreatorEpkView(props = {}) {
                       <form onSubmit={(e) => { e.preventDefault(); if (fanQuestionText) setFanQuestionSent(true); }} style={{ display: 'flex', gap: '10px' }}>
                         <input 
                           type="text" 
-                          placeholder="Ask about stems, synthesis, tour dates..." 
+                          placeholder="Ask about synthesis, tour dates, acoustics..." 
                           value={fanQuestionText} 
                           onChange={(e) => setFanQuestionText(e.target.value)} 
                           required 
@@ -6309,71 +7696,325 @@ export function CreatorEpkView(props = {}) {
                 </div>
               )}
 
-              {/* TAB 5: COMMUNICATION PREFERENCES */}
+              {/* TAB 5: FAN PROFILE & SETTINGS (PERSONAL INFO + PREFERENCES) */}
               {fanPortalTab === 'settings' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '3px' }}>
-                    <h4 style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 900, color: '#fff' }}>
-                      Preferred Communication Channel
-                    </h4>
-                    <p style={{ margin: '0 0 14px', fontSize: '0.82rem', color: '#94a3b8' }}>
-                      Choose how you would like to receive secret tour ticket links, stem drops, and merchandise coupon codes.
-                    </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <form onSubmit={handleSaveFanProfile} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Personal Information Card */}
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '24px', borderRadius: '3px' }}>
+                      <h4 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900, color: effectiveAccent, fontFamily: effectiveFont }}>
+                        Personal Information & Account Settings
+                      </h4>
+                      <p style={{ margin: '0 0 20px', fontSize: '0.82rem', color: '#94a3b8' }}>
+                        Update your personal identity, email address, secure password, and select your fan club avatar.
+                      </p>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
-                      {[
-                        { id: 'email', label: 'Email', icon: '✉️' },
-                        { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
-                        { id: 'sms', label: 'SMS Alerts', icon: '📱' },
-                        { id: 'push', label: 'In-App Push', icon: '🔔' }
-                      ].map(channel => (
-                        <div
-                          key={channel.id}
-                          onClick={() => {
-                            const updated = { ...fanUser, preferredCommMethod: channel.id }
-                            setFanUser(updated)
-                            localStorage.setItem(`fan_session_${artistSlug}`, JSON.stringify(updated))
-                          }}
-                          style={{
-                            padding: '14px',
-                            borderRadius: '3px',
-                            border: fanUser?.preferredCommMethod === channel.id ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.1)',
-                            background: fanUser?.preferredCommMethod === channel.id ? `${effectiveAccent}18` : 'rgba(255,255,255,0.03)',
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>{channel.icon}</div>
-                          <div style={{ fontSize: '0.82rem', fontWeight: 800, color: fanUser?.preferredCommMethod === channel.id ? effectiveAccent : '#fff' }}>{channel.label}</div>
+                      {/* Avatar Selection with Custom Upload & Presets */}
+                      <div style={{ marginBottom: '20px' }}>
+                        <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+                          Fan Profile Avatar & Photo
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                          <div style={{ width: '72px', height: '72px', borderRadius: '3px', overflow: 'hidden', border: `2px solid ${effectiveAccent}`, flexShrink: 0 }}>
+                            <img src={fanProfileAvatar} alt="Current Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                          
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                              <input
+                                type="file"
+                                id="fan-avatar-file-upload"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={handleFanAvatarUpload}
+                              />
+                              <label
+                                htmlFor="fan-avatar-file-upload"
+                                style={{
+                                  background: effectiveAccent,
+                                  color: '#000',
+                                  border: 'none',
+                                  padding: '8px 16px',
+                                  borderRadius: '3px',
+                                  fontWeight: 800,
+                                  fontSize: '0.82rem',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px'
+                                }}
+                              >
+                                <RiUploadFill size={15} /> Upload Photo
+                              </label>
+                              <span style={{ fontSize: '0.76rem', color: '#94a3b8' }}>JPG, PNG or GIF from your device</span>
+                            </div>
+
+                            {/* Preset Avatars */}
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '6px' }}>Or select a preset avatar:</div>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                {[
+                                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+                                  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150',
+                                  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150',
+                                  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150'
+                                ].map((presetUrl, pIdx) => (
+                                  <div
+                                    key={pIdx}
+                                    onClick={() => setFanProfileAvatar(presetUrl)}
+                                    style={{
+                                      width: '40px',
+                                      height: '40px',
+                                      borderRadius: '3px',
+                                      overflow: 'hidden',
+                                      cursor: 'pointer',
+                                      border: fanProfileAvatar === presetUrl ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.2)',
+                                      opacity: fanProfileAvatar === presetUrl ? 1 : 0.65,
+                                      transition: 'all 0.15s ease'
+                                    }}
+                                  >
+                                    <img src={presetUrl} alt={`Avatar ${pIdx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      ))}
+
+                        {/* Custom Avatar URL input */}
+                        <div style={{ marginTop: '12px' }}>
+                          <input
+                            type="url"
+                            placeholder="Or enter custom image URL: https://..."
+                            value={fanProfileAvatar}
+                            onChange={e => setFanProfileAvatar(e.target.value)}
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.82rem' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Name & Email Fields */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>
+                            Fan Full Name
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Maya Chen"
+                            value={fanProfileName}
+                            onChange={e => setFanProfileName(e.target.value)}
+                            required
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.86rem' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            placeholder="fan@intermaven.io"
+                            value={fanProfileEmail}
+                            onChange={e => setFanProfileEmail(e.target.value)}
+                            required
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.86rem' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* 3-Field Password Change Section Laid Out Vertically (One Above The Other) */}
+                      <div style={{ background: 'rgba(0,0,0,0.35)', border: `1px solid ${effectiveAccent}44`, borderRadius: '3px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '6px' }}>
+                          <h5 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 800, color: effectiveAccent }}>
+                            Security & Password Authorization
+                          </h5>
+                          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                            Alert Target: <strong style={{ color: '#fff' }}>{(ticketDeliveryChannel || fanUser?.preferredCommMethod || 'EMAIL').toUpperCase()}</strong>
+                          </span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.4 }}>
+                          Provide your current password for confirmation, followed by your new password and re-confirmation. A security dispatch will notify your preferred channel upon successful update.
+                        </p>
+
+                        {/* 3 Password Fields Stacked Vertically */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {/* Field 1: Current Password */}
+                          <div>
+                            <label style={{ fontSize: '0.72rem', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>
+                              Current Password (for confirmation)
+                            </label>
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                              <input
+                                type={showCurrentPassword ? 'text' : 'password'}
+                                placeholder="Enter current password to authorize changes"
+                                value={fanCurrentPassword}
+                                onChange={e => setFanCurrentPassword(e.target.value)}
+                                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 42px 10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                title={showCurrentPassword ? 'Hide password' : 'Show password'}
+                                style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: showCurrentPassword ? effectiveAccent : '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                {showCurrentPassword ? <RiEyeOffLine size={17} /> : <RiEyeLine size={17} />}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Field 2: New Password */}
+                          <div>
+                            <label style={{ fontSize: '0.72rem', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>
+                              New Password
+                            </label>
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                              <input
+                                type={showNewPassword ? 'text' : 'password'}
+                                placeholder="Enter new password (min 6 chars)"
+                                value={fanNewPassword}
+                                onChange={e => setFanNewPassword(e.target.value)}
+                                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 42px 10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                title={showNewPassword ? 'Hide password' : 'Show password'}
+                                style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: showNewPassword ? effectiveAccent : '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                {showNewPassword ? <RiEyeOffLine size={17} /> : <RiEyeLine size={17} />}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Field 3: Confirm New Password */}
+                          <div>
+                            <label style={{ fontSize: '0.72rem', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>
+                              Confirm New Password
+                            </label>
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                              <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                placeholder="Re-enter new password"
+                                value={fanConfirmPassword}
+                                onChange={e => setFanConfirmPassword(e.target.value)}
+                                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 42px 10px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: showConfirmPassword ? effectiveAccent : '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                {showConfirmPassword ? <RiEyeOffLine size={17} /> : <RiEyeLine size={17} />}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Dedicated Password Submit Button */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={handleSaveFanProfile}
+                            style={{
+                              background: `linear-gradient(135deg, ${effectiveAccent}, #8b5cf6)`,
+                              color: '#000',
+                              border: 'none',
+                              padding: '10px 18px',
+                              borderRadius: '3px',
+                              fontWeight: 900,
+                              fontSize: '0.82rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <RiShieldCheckFill size={15} /> Update Password & Security
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    <h4 style={{ margin: '16px 0 10px', fontSize: '0.92rem', fontWeight: 800, color: '#fff' }}>
-                      Notification Category Subscriptions
-                    </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {[
-                        '⚡ Instant Tour Pre-Sale Alerts & Seat Holds',
-                        '🎵 Unreleased 24-Bit Lossless Stem Drops',
-                        '👕 Exclusive Fan Club Merchandise Flash Sales',
-                        '🎙️ Creator Behind-The-Scenes & Live Q&A Notifications'
-                      ].map((sub, idx) => (
-                        <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.84rem', color: '#cbd5e1', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '3px' }}>
-                          <input type="checkbox" defaultChecked style={{ accentColor: effectiveAccent }} />
-                          {sub}
-                        </label>
-                      ))}
+                    {/* Communication Preferences Card */}
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '24px', borderRadius: '3px' }}>
+                      <h4 style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 900, color: '#fff' }}>
+                        Preferred Ticket & Alert Delivery Method
+                      </h4>
+                      <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: '#94a3b8' }}>
+                        Reserved tickets and tour discount notifications default to this delivery method.
+                      </p>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '16px' }}>
+                        {[
+                          { id: 'email', label: 'Email', icon: '✉️' },
+                          { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
+                          { id: 'sms', label: 'SMS Alerts', icon: '📱' },
+                          { id: 'push', label: 'In-App Push', icon: '🔔' }
+                        ].map(channel => (
+                          <div
+                            key={channel.id}
+                            onClick={() => setTicketDeliveryChannel(channel.id)}
+                            style={{
+                              padding: '12px 8px',
+                              borderRadius: '3px',
+                              border: ticketDeliveryChannel === channel.id ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.1)',
+                              background: ticketDeliveryChannel === channel.id ? `${effectiveAccent}18` : 'rgba(255,255,255,0.03)',
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <div style={{ fontSize: '1.3rem', marginBottom: '4px' }}>{channel.icon}</div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: ticketDeliveryChannel === channel.id ? effectiveAccent : '#fff' }}>{channel.label}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {(ticketDeliveryChannel === 'sms' || ticketDeliveryChannel === 'whatsapp') && (
+                        <div style={{ marginBottom: '16px' }}>
+                          <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>
+                            {ticketDeliveryChannel === 'whatsapp' ? 'WhatsApp Mobile Number' : 'SMS Phone Number'}
+                          </label>
+                          <input
+                            type="tel"
+                            placeholder="+1 555 019 2834"
+                            value={ticketPhone}
+                            onChange={e => setTicketPhone(e.target.value)}
+                            required
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.86rem' }}
+                          />
+                        </div>
+                      )}
+
+                      <h4 style={{ margin: '18px 0 10px', fontSize: '0.92rem', fontWeight: 800, color: '#fff' }}>
+                        Notification Category Subscriptions
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {[
+                          '⚡ Instant Tour Pre-Sale Alerts & VIP Pass Holds',
+                          '🎵 Unreleased Digital MP3 Singles & Lossless Releases',
+                          '👕 Exclusive Fan Club Merchandise Flash Sales',
+                          '🎙️ Creator Behind-The-Scenes & Monthly Livestream Q&A'
+                        ].map((sub, idx) => (
+                          <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.84rem', color: '#cbd5e1', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '3px' }}>
+                            <input type="checkbox" defaultChecked style={{ accentColor: effectiveAccent }} />
+                            {sub}
+                          </label>
+                        ))}
+                      </div>
                     </div>
 
                     <button 
-                      onClick={() => showToast('Preferences saved and synced across Intermaven Smart CRM.')} 
-                      style={{ marginTop: '18px', background: effectiveAccent, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '3px', fontWeight: 900, fontSize: '0.84rem', cursor: 'pointer' }}
+                      type="submit"
+                      style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '12px 24px', borderRadius: '3px', fontWeight: 900, fontSize: '0.9rem', cursor: 'pointer', boxShadow: `0 4px 16px ${effectiveAccent}44` }}
                     >
-                      Save Preferences
+                      Save Profile & Preferences
                     </button>
-                  </div>
+                  </form>
                 </div>
               )}
             </div>
@@ -6442,7 +8083,7 @@ export function CreatorEpkView(props = {}) {
                   }}
                   style={{ background: 'rgba(255,255,255,0.08)', border: `1px solid ${effectiveAccent}66`, color: '#fff', padding: '10px', borderRadius: '3px', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  <RiCoinsFill style={{ color: effectiveAccent }} /> Buy Stems ({selectedTrackModal.priceCredits || 50} TM)
+                  <RiCoinsFill style={{ color: effectiveAccent }} /> Buy MP3 Single ({selectedTrackModal.priceCredits || 50} TM)
                 </button>
                 <button
                   onClick={() => {
@@ -6686,7 +8327,7 @@ export function CreatorEpkView(props = {}) {
                     Secure Merch Checkout
                   </span>
                   <h3 style={{ margin: '8px 0 4px', fontSize: '1.4rem', fontWeight: 900, color: '#fff' }}>
-                    Complete Your Merch & Stems Order
+                    Complete Your Merch & MP3s Order
                   </h3>
                   <div style={{ fontSize: '0.84rem', color: '#94a3b8' }}>
                     Total: <strong style={{ color: effectiveAccent }}>${(cartTotal * (1 - appliedPromoDiscount)).toFixed(2)}</strong> {appliedPromoDiscount > 0 && <span style={{ color: '#10b981' }}>(20% VIP Fan Discount Applied)</span>}
@@ -6721,73 +8362,116 @@ export function CreatorEpkView(props = {}) {
                   </div>
                 </div>
 
-                {/* Payment Gateway Selector */}
-                <div>
-                  <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>Select Payment Protocol</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                    {[
-                      ['stripe', 'Credit / Card', '💳'],
-                      ['pesapal', 'PesaPal / M-Pesa', '📱'],
-                      ['credits', 'TM Credits', '💎']
-                    ].map(([gw, lbl, icn]) => (
+                {/* Strict Credits Deduction & Top-Up Protocol */}
+                {(() => {
+                  const discountedTotal = cartTotal * (1 - appliedPromoDiscount)
+                  const requiredCredits = Math.round(discountedTotal * 10)
+                  const hasCredits = userCredits >= requiredCredits
+                  const shortfall = requiredCredits - userCredits
+                  const topUpDollars = Math.max(5, Math.ceil(shortfall / 10 / 5) * 5)
+                  const topUpCredits = calcCreditsForAmount(topUpDollars)
+
+                  if (hasCredits) {
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <div style={{ background: 'rgba(0,240,255,0.08)', border: `1px solid ${effectiveAccent}`, borderRadius: '3px', padding: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Available Credits Balance:</span>
+                            <strong style={{ color: effectiveAccent, fontSize: '1.05rem' }}>{userCredits} TM</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Merch & MP3s Order Deduction:</span>
+                            <strong style={{ color: '#f87171', fontSize: '1.05rem' }}>-{requiredCredits} TM</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Remaining Balance After Order:</span>
+                            <strong style={{ color: '#22c55e', fontSize: '1.05rem' }}>{userCredits - requiredCredits} TM</strong>
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '10px' }}>
+                            ✓ Direct TM Credits Deduction active. No external card or payment processor required.
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '14px', borderRadius: '3px', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', marginTop: '6px', boxShadow: `0 4px 16px ${effectiveAccent}55` }}
+                        >
+                          Confirm Order ({requiredCredits} TM Credits)
+                        </button>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', padding: '14px' }}>
+                        <div style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.86rem', marginBottom: '4px' }}>
+                          ⚠️ Credits Shortfall: {shortfall} TM Needed
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.45 }}>
+                          Your current balance is <strong>{userCredits} TM</strong>, but this order requires <strong>{requiredCredits} TM</strong>.
+                          Top up at least <strong>${topUpDollars}.00</strong> (+{topUpCredits} TM Credits in multiples of $5) to complete this purchase.
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>Top-Up Protocol</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                          {[
+                            ['stripe', 'Credit / Debit Card'],
+                            ['pesapal', 'M-Pesa STK Push']
+                          ].map(([gw, lbl]) => (
+                            <button
+                              key={gw}
+                              type="button"
+                              onClick={() => setMerchPaymentGateway(gw)}
+                              style={{ padding: '8px', borderRadius: '3px', border: merchPaymentGateway === gw ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)', background: merchPaymentGateway === gw ? `${effectiveAccent}22` : 'transparent', color: merchPaymentGateway === gw ? effectiveAccent : '#cbd5e1', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
+                            >
+                              {lbl}
+                            </button>
+                          ))}
+                        </div>
+
+                        {merchPaymentGateway === 'pesapal' ? (
+                          <div>
+                            <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number</label>
+                            <input
+                              type="tel"
+                              placeholder="+254 712 345 678"
+                              value={merchMpesaPhone}
+                              onChange={(e) => setMerchMpesaPhone(e.target.value)}
+                              required
+                              style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
+                            />
+                            <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>You will receive an STK prompt on your handset to authorize payment.</span>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <input
+                              type="text"
+                              placeholder="Card Number: 4242 •••• •••• 4242"
+                              value={merchCardNumber}
+                              onChange={(e) => setMerchCardNumber(e.target.value)}
+                              required
+                              style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
+                            />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                              <input type="text" placeholder="MM / YY" required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                              <input type="text" placeholder="CVC" required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       <button
-                        key={gw}
-                        type="button"
-                        onClick={() => setMerchPaymentGateway(gw)}
-                        style={{ padding: '10px 6px', borderRadius: '3px', border: merchPaymentGateway === gw ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)', background: merchPaymentGateway === gw ? `${effectiveAccent}22` : 'rgba(255,255,255,0.03)', color: merchPaymentGateway === gw ? effectiveAccent : '#cbd5e1', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
+                        type="submit"
+                        style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '14px', borderRadius: '3px', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', marginTop: '6px', boxShadow: `0 4px 16px ${effectiveAccent}55` }}
                       >
-                        <div>{icn}</div>
-                        <div style={{ marginTop: '2px' }}>{lbl}</div>
+                        Authorize Top-Up +${topUpDollars} (+{topUpCredits} TM) & Place Order
                       </button>
-                    ))}
-                  </div>
-                </div>
-
-                {merchPaymentGateway === 'pesapal' && (
-                  <div>
-                    <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number</label>
-                    <input
-                      type="tel"
-                      placeholder="+254 712 345 678"
-                      value={merchMpesaPhone}
-                      onChange={(e) => setMerchMpesaPhone(e.target.value)}
-                      required
-                      style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
-                    />
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>You will receive an STK prompt on your handset to authorize payment.</span>
-                  </div>
-                )}
-
-                {merchPaymentGateway === 'stripe' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <input
-                      type="text"
-                      placeholder="Card Number: 4242 •••• •••• 4242"
-                      value={merchCardNumber}
-                      onChange={(e) => setMerchCardNumber(e.target.value)}
-                      required
-                      style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
-                    />
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      <input type="text" placeholder="MM / YY" required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
-                      <input type="text" placeholder="CVC" required style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                     </div>
-                  </div>
-                )}
-
-                {merchPaymentGateway === 'credits' && (
-                  <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${effectiveAccent}33`, padding: '12px', borderRadius: '3px', fontSize: '0.84rem' }}>
-                    <div>Your Balance: <strong style={{ color: effectiveAccent }}>{userCredits} TM Credits</strong></div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '4px' }}>Cost for this order: 50 TM Credits.</div>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '14px', borderRadius: '3px', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', marginTop: '6px', boxShadow: `0 4px 16px ${effectiveAccent}55` }}
-                >
-                  Authorize Payment & Place Order
-                </button>
+                  )
+                })()}
               </form>
             )}
           </div>
@@ -6812,9 +8496,10 @@ export function CreatorEpkView(props = {}) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { credits: 50, price: 25, label: 'Starter Pack (+0%)' },
-                { credits: 150, price: 65, label: 'Producer Pack (+15% Bonus)' },
-                { credits: 500, price: 199, label: 'Label VIP Pack (+25% Bonus)' }
+                { credits: 50, price: 5, label: 'Starter Pack ($5.00)' },
+                { credits: 110, price: 10, label: 'Fan Booster (+10% Bonus)' },
+                { credits: 240, price: 20, label: 'VIP Pass Pack (+20% Bonus)' },
+                { credits: 1300, price: 100, label: 'Label Maven Pack (+30% Bonus)' }
               ].map(p => (
                 <button
                   key={p.credits}
@@ -6835,24 +8520,29 @@ export function CreatorEpkView(props = {}) {
         </div>
       )}
 
-      {/* ================= FLOATING TOAST NOTIFICATION SYSTEM ================= */}
+      {/* ================= FLOATING THEMED TOAST NOTIFICATION SYSTEM ================= */}
       {toasts.length > 0 && (
-        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '420px' }}>
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '440px', pointerEvents: 'none' }}>
           {toasts.map(t => (
             <div
               key={t.id}
               style={{
-                background: t.type === 'error' ? '#1c0e14' : '#071d2c',
-                border: `1.5px solid ${t.type === 'error' ? '#f43f5e' : (effectiveAccent || '#00f0ff')}`,
-                borderLeft: `5px solid ${t.type === 'error' ? '#f43f5e' : (effectiveAccent || '#00f0ff')}`,
-                padding: '12px 18px',
-                borderRadius: '4px',
-                color: '#ffffff',
+                pointerEvents: 'auto',
+                background: t.type === 'error'
+                  ? 'rgba(30, 10, 18, 0.95)'
+                  : (isLight ? '#ffffff' : (selectedTheme?.cardBg || 'rgba(12, 16, 32, 0.95)')),
+                backdropFilter: 'blur(16px)',
+                border: `1.5px solid ${t.type === 'error' ? '#f43f5e' : `${effectiveAccent}88`}`,
+                borderLeft: `5px solid ${t.type === 'error' ? '#f43f5e' : effectiveAccent}`,
+                padding: '14px 18px',
+                borderRadius: '3px',
+                color: isLight && t.type !== 'error' ? '#0f172a' : '#ffffff',
                 fontSize: '0.85rem',
                 fontWeight: 700,
+                fontFamily: effectiveFont,
                 boxShadow: t.type === 'error'
-                  ? '0 12px 36px rgba(0,0,0,0.85), 0 0 16px rgba(244, 63, 94, 0.35)'
-                  : '0 12px 36px rgba(0,0,0,0.85), 0 0 16px rgba(0, 240, 255, 0.35)',
+                  ? '0 14px 40px rgba(0,0,0,0.8), 0 0 20px rgba(244, 63, 94, 0.4)'
+                  : `0 14px 40px rgba(0,0,0,0.8), 0 0 20px ${effectiveAccent}44`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
@@ -6860,19 +8550,526 @@ export function CreatorEpkView(props = {}) {
               }}
             >
               <span style={{
-                background: t.type === 'error' ? '#f43f5e' : (effectiveAccent || '#00f0ff'),
+                background: t.type === 'error' ? '#f43f5e' : effectiveAccent,
                 color: '#000',
-                padding: '2px 7px',
+                padding: '3px 8px',
                 borderRadius: '3px',
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 fontWeight: 900,
-                letterSpacing: '0.04em'
+                letterSpacing: '0.05em',
+                flexShrink: 0
               }}>
-                {t.type === 'error' ? 'ALERT' : 'NOTE'}
+                {t.type === 'error' ? 'ALERT' : 'NOTICE'}
               </span>
-              <div style={{ flex: 1, color: '#ffffff' }}>{t.message}</div>
+              <div style={{ flex: 1, color: isLight && t.type !== 'error' ? '#0f172a' : '#ffffff', lineHeight: 1.45 }}>{t.message}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ================= TUNE STREAM PERSISTENT FLOATING AUDIO PLAYER OVERLAY ================= */}
+      {/* Hidden Restore Launcher Pill */}
+      {!isPlayerVisible && (
+        <button
+          type="button"
+          onClick={() => setIsPlayerVisible(true)}
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '24px',
+            zIndex: 9000,
+            background: isLight ? '#ffffff' : (selectedTheme?.cardBg || '#0c1020'),
+            backdropFilter: 'blur(16px)',
+            border: `1.5px solid ${effectiveAccent}`,
+            borderRadius: '3px',
+            boxShadow: `0 10px 30px rgba(0,0,0,0.6), 0 0 16px ${effectiveAccent}44`,
+            padding: '10px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: isLight ? '#0f172a' : '#fff',
+            cursor: 'pointer',
+            fontWeight: 800,
+            fontSize: '0.84rem'
+          }}
+          title="Open TuneMavens Hi-Fi Floating Audio Player"
+        >
+          <span style={{
+            width: '10px',
+            height: '10px',
+            borderRadius: '50%',
+            background: isPlaying ? '#22c55e' : effectiveAccent,
+            boxShadow: isPlaying ? '0 0 10px #22c55e' : 'none',
+            display: 'inline-block'
+          }} />
+          <RiMusic2Fill style={{ color: effectiveAccent, fontSize: '1.1rem' }} />
+          <span>TuneMavens Hi-Fi Player {isPlaying ? '• Playing' : '• Paused'}</span>
+        </button>
+      )}
+
+      {/* Floating Overlay Card */}
+      {isPlayerVisible && (
+        <div
+          style={{
+            position: 'fixed',
+            left: `${playerPos.x}px`,
+            top: `${playerPos.y}px`,
+            zIndex: 9000,
+            width: isPlayerMinimized ? '320px' : '440px',
+            maxWidth: 'calc(100vw - 24px)',
+            background: isLight ? 'rgba(255, 255, 255, 0.95)' : (selectedTheme?.cardBg || 'rgba(12, 16, 32, 0.95)'),
+            backdropFilter: 'blur(20px)',
+            border: `1.5px solid ${effectiveAccent}66`,
+            borderRadius: '3px',
+            boxShadow: `0 16px 48px rgba(0,0,0,0.75), 0 0 24px ${effectiveAccent}33`,
+            color: isLight ? '#0f172a' : '#fff',
+            fontFamily: effectiveFont,
+            userSelect: 'none',
+            transition: 'box-shadow 0.2s ease, width 0.2s ease'
+          }}
+        >
+          {/* Draggable Titlebar / Header */}
+          <div
+            onMouseDown={handleMouseDownDrag}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              borderBottom: `1px solid ${effectiveAccent}33`,
+              background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.3)',
+              cursor: 'grab',
+              borderRadius: '3px 3px 0 0'
+            }}
+            title="Click and drag anywhere on this header to move player"
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <RiDragMove2Fill style={{ color: effectiveAccent, fontSize: '1.05rem', flexShrink: 0 }} />
+              <span style={{ fontWeight: 900, fontSize: '0.82rem', letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                TuneMavens Hi-Fi Player
+              </span>
+              <span style={{
+                background: `${effectiveAccent}22`,
+                color: effectiveAccent,
+                border: `1px solid ${effectiveAccent}55`,
+                padding: '1px 5px',
+                borderRadius: '3px',
+                fontSize: '0.6rem',
+                fontWeight: 900,
+                letterSpacing: '0.04em',
+                flexShrink: 0
+              }}>
+                ⚡ TuneStream
+              </span>
+            </div>
+
+            {/* Window Controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => setIsPlayerMinimized(!isPlayerMinimized)}
+                title={isPlayerMinimized ? "Expand Player" : "Minimize Player"}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: isLight ? '#64748b' : '#94a3b8',
+                  padding: '4px 6px',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.9rem'
+                }}
+              >
+                {isPlayerMinimized ? <RiAddFill size={15} /> : <RiSubtractFill size={15} />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPlayerVisible(false)}
+                title="Hide to Bottom Floating Pill"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: isLight ? '#64748b' : '#94a3b8',
+                  padding: '4px 6px',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <RiCloseFill size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Minimized Compact View */}
+          {isPlayerMinimized ? (
+            <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img
+                src={currentTrack.coverArt || 'https://picsum.photos/seed/track_art/400'}
+                alt={currentTrack.title}
+                style={{ width: '36px', height: '36px', borderRadius: '3px', objectFit: 'cover', border: `1px solid ${effectiveAccent}44` }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {currentTrack.title}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: effectiveAccent, fontWeight: 700 }}>
+                  {Math.floor(playbackProgress / 60)}:{('0' + (playbackProgress % 60)).slice(-2)} / {currentTrack.duration || '3:45'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPlaying(!isPlaying)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '3px',
+                  background: effectiveAccent,
+                  color: '#000',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
+              >
+                {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
+              </button>
+              <button
+                type="button"
+                onClick={handleTrackAdvance}
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '3px',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: isLight ? '#0f172a' : '#fff',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <RiSkipForwardFill />
+              </button>
+            </div>
+          ) : (
+            /* Full Player Controls */
+            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Playlist Selector Bar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <RiDiscFill style={{ color: effectiveAccent, fontSize: '1rem', flexShrink: 0 }} />
+                <label style={{ fontSize: '0.72rem', color: isLight ? '#475569' : '#94a3b8', fontWeight: 800, textTransform: 'uppercase', flexShrink: 0 }}>
+                  Playlist:
+                </label>
+                <select
+                  value={selectedPlaylistId}
+                  onChange={(e) => {
+                    setSelectedPlaylistId(e.target.value)
+                    setPlaylistIndex(0)
+                    setPlaybackProgress(0)
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '6px 10px',
+                    borderRadius: '3px',
+                    background: isLight ? '#f1f5f9' : 'rgba(0,0,0,0.5)',
+                    border: `1px solid ${effectiveAccent}55`,
+                    color: isLight ? '#0f172a' : '#fff',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="all">🎵 All Singles ({tracks.length} Tracks)</option>
+                  <option value="vault">🔒 VIP Fan Vault Exclusives (3 Tracks)</option>
+                  <option value="top">🔥 Top Singles (5 Tracks)</option>
+                  {fanPlaylists.map(pl => (
+                    <option key={pl.id} value={pl.id}>📁 {pl.name} ({(pl.trackIds || []).length} Tracks)</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Track Metadata Card */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '10px 12px' }}>
+                <div style={{ position: 'relative' }}>
+                  <img
+                    src={currentTrack.coverArt || 'https://picsum.photos/seed/track_art/400'}
+                    alt={currentTrack.title}
+                    style={{
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: '3px',
+                      objectFit: 'cover',
+                      border: isPlaying ? `2px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.15)',
+                      boxShadow: isPlaying ? `0 0 14px ${effectiveAccent}66` : 'none',
+                      transition: 'border 0.2s ease, box-shadow 0.2s ease'
+                    }}
+                  />
+                  {isPlaying && (
+                    <div style={{ position: 'absolute', bottom: '3px', right: '3px', width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+                  )}
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 900, fontSize: '0.92rem', color: isLight ? '#0f172a' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentTrack.title}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: effectiveAccent, marginTop: '2px', fontWeight: 700, display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span>{effectiveArtistName}</span>
+                    <span>•</span>
+                    <span>ISRC: {currentTrack.isrc || 'KE-TM1-26-00042'}</span>
+                  </div>
+                  <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', padding: '1px 6px', borderRadius: '3px', fontSize: '0.62rem', fontWeight: 800 }}>
+                      Lossless MP3 • 320kbps
+                    </span>
+                    <span style={{ fontSize: '0.68rem', color: isLight ? '#64748b' : '#94a3b8' }}>
+                      Track {playlistIndex + 1} of {currentPlaylistTracks.length}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedTrackModal(currentTrack)}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${effectiveAccent}55`,
+                    color: effectiveAccent,
+                    padding: '6px 10px',
+                    borderRadius: '3px',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Details
+                </button>
+              </div>
+
+              {/* Scrubber & Timers */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', fontFamily: 'monospace', minWidth: '32px' }}>
+                    {Math.floor(playbackProgress / 60)}:{('0' + (playbackProgress % 60)).slice(-2)}
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="225"
+                    value={playbackProgress}
+                    onChange={(e) => setPlaybackProgress(Number(e.target.value))}
+                    style={{ flex: 1, accentColor: effectiveAccent, cursor: 'pointer', height: '4px' }}
+                  />
+                  <span style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', fontFamily: 'monospace', minWidth: '32px', textAlign: 'right' }}>
+                    {currentTrack.duration || '3:45'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Playback Controls & Mode Switches */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', paddingTop: '2px' }}>
+                {/* Mode: Shuffle Toggle */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShuffleMode(!shuffleMode)
+                    showToast(shuffleMode ? '🔀 Shuffle mode: Sequenced' : '🔀 Shuffle mode: Random', 'info')
+                  }}
+                  title={shuffleMode ? "Shuffle: Random On (Click to switch to Sequenced)" : "Shuffle: Sequenced (Click to switch to Random)"}
+                  style={{
+                    background: shuffleMode ? `${effectiveAccent}22` : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${shuffleMode ? effectiveAccent : 'rgba(255,255,255,0.15)'}`,
+                    color: shuffleMode ? effectiveAccent : (isLight ? '#64748b' : '#94a3b8'),
+                    padding: '8px 10px',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.76rem',
+                    fontWeight: 800
+                  }}
+                >
+                  <RiShuffleLine size={15} />
+                  <span>{shuffleMode ? 'Random' : 'Order'}</span>
+                </button>
+
+                {/* Center Audio Buttons: Prev, Play/Pause, Stop, Next */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {/* Previous Track */}
+                  <button
+                    type="button"
+                    onClick={handleTrackPrevious}
+                    title="Previous Track"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '3px',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: isLight ? '#0f172a' : '#fff',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    <RiSkipBackFill />
+                  </button>
+
+                  {/* Play / Pause */}
+                  <button
+                    type="button"
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    title={isPlaying ? "Pause" : "Play"}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '3px',
+                      background: effectiveAccent,
+                      border: 'none',
+                      color: '#000',
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: `0 2px 14px ${effectiveAccent}66`
+                    }}
+                  >
+                    {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
+                  </button>
+
+                  {/* Stop */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPlaying(false)
+                      setPlaybackProgress(0)
+                    }}
+                    title="Stop Track"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '3px',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: isLight ? '#0f172a' : '#fff',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.95rem'
+                    }}
+                  >
+                    <RiStopFill />
+                  </button>
+
+                  {/* Next Track */}
+                  <button
+                    type="button"
+                    onClick={handleTrackAdvance}
+                    title="Next Track"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '3px',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: isLight ? '#0f172a' : '#fff',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    <RiSkipForwardFill />
+                  </button>
+                </div>
+
+                {/* Mode: Repeat Loop Toggle */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextMode = repeatMode === 'off' ? 'playlist' : repeatMode === 'playlist' ? 'track' : 'off'
+                    setRepeatMode(nextMode)
+                    showToast(`🔁 Loop mode: ${nextMode === 'track' ? 'Repeat Track' : nextMode === 'playlist' ? 'Repeat Playlist' : 'Loop Off'}`, 'info')
+                  }}
+                  title={repeatMode === 'track' ? "Repeat: Single Track (Click to turn off)" : repeatMode === 'playlist' ? "Repeat: Entire Playlist (Click for single track)" : "Repeat: Off (Click for playlist loop)"}
+                  style={{
+                    background: repeatMode !== 'off' ? `${effectiveAccent}22` : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${repeatMode !== 'off' ? effectiveAccent : 'rgba(255,255,255,0.15)'}`,
+                    color: repeatMode !== 'off' ? effectiveAccent : (isLight ? '#64748b' : '#94a3b8'),
+                    padding: '8px 10px',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.76rem',
+                    fontWeight: 800
+                  }}
+                >
+                  {repeatMode === 'track' ? <RiRepeatOneLine size={15} /> : <RiRepeatLine size={15} />}
+                  <span>{repeatMode === 'track' ? 'Track' : repeatMode === 'playlist' ? 'Loop' : 'Off'}</span>
+                </button>
+              </div>
+
+              {/* Volume & TuneStream Engine Status */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                {/* Volume / Mute Controls */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsPlayerMuted(!isPlayerMuted)}
+                    title={isPlayerMuted ? "Unmute" : "Mute"}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: isPlayerMuted ? '#f43f5e' : (isLight ? '#475569' : '#94a3b8'),
+                      cursor: 'pointer',
+                      padding: 0,
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {isPlayerMuted ? <RiVolumeMuteFill size={17} /> : <RiVolumeUpFill size={17} />}
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={isPlayerMuted ? 0 : playerVolume}
+                    onChange={(e) => {
+                      setPlayerVolume(Number(e.target.value))
+                      if (isPlayerMuted) setIsPlayerMuted(false)
+                    }}
+                    style={{ width: '80px', accentColor: effectiveAccent, cursor: 'pointer', height: '4px' }}
+                  />
+                </div>
+
+                <div style={{ fontSize: '0.68rem', color: isLight ? '#64748b' : '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>Universal TuneStream Engine</span>
+                  <span style={{ color: '#22c55e' }}>●</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

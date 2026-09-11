@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 
 from auth import get_current_user
@@ -209,8 +209,12 @@ def generate_epk_bio(payload: EpkBioGenerateRequest):
 
 
 @router.get("/epk/{subdomain}")
-def get_epk_cms(subdomain: str):
+def get_epk_cms(subdomain: str, response: Response):
     """Retrieve complete Mother-CMS layout and state for an EPK."""
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
     layout_id = f"epk_{clean_subdomain}"
 
@@ -266,7 +270,10 @@ def save_epk_cms(subdomain: str, payload: Dict[str, Any]):
     """Save full EPK layout from Mother-CMS Studio, updating layout history snapshot."""
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
     layout_id = f"epk_{clean_subdomain}"
-    data = payload.get("data", payload)
+    raw_data = payload.get("data", payload)
+    data = dict(raw_data)
+    # Strip immutable _id to prevent MongoDB WriteError: Modifying immutable field _id
+    data.pop("_id", None)
 
     data["subdomain"] = clean_subdomain
     data["updated_at"] = datetime.now(timezone.utc)
@@ -301,9 +308,10 @@ def save_epk_cms(subdomain: str, payload: Dict[str, Any]):
 
     # 3. Synchronize to public EPKs collection
     data["version"] = new_version
+    epk_sync_data = {k: v for k, v in data.items() if k != "_id"}
     db.epks.update_one(
         {"subdomain": clean_subdomain},
-        {"$set": data},
+        {"$set": epk_sync_data},
         upsert=True
     )
 

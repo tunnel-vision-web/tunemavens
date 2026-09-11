@@ -5,7 +5,7 @@ and serves public artist web worlds by subdomain or username.
 """
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field, ConfigDict
 from jose import jwt
 
@@ -31,6 +31,10 @@ class EPKProfileModel(BaseModel):
     layoutVariant: Optional[str] = "logo-left"
     heroImageUrl: Optional[str] = None
     heroImages: Optional[List[str]] = None
+    heroSlides: Optional[List[Dict[str, Any]]] = None
+    pageHeaders: Optional[Dict[str, str]] = None
+    headerImageUrl: Optional[str] = None
+    headerImages: Optional[List[str]] = None
     menuItems: Optional[List[Dict[str, Any]]] = None
     domainMode: Optional[str] = "subdomain"
     customDomain: Optional[str] = None
@@ -75,30 +79,61 @@ def save_my_epk(payload: EPKProfileModel, current_user: dict = Depends(get_curre
     data["subdomain"] = clean_subdomain
     data["updated_at"] = datetime.now(timezone.utc)
     data["artist_name"] = payload.artist_name or current_user.get("name") or clean_subdomain.capitalize()
+    data.pop("_id", None)
 
-    # Update or upsert by subdomain so creators can manage their EPKs seamlessly
+    # 1. Update db.epks
     db.epks.update_one(
         {"subdomain": clean_subdomain},
         {"$set": data},
         upsert=True
     )
     
+    # 2. Also keep Mother-CMS db.cms_layouts synchronized
+    layout_id = f"epk_{clean_subdomain}"
+    existing_cms = db.cms_layouts.find_one({"layout_id": layout_id})
+    new_ver = (existing_cms.get("version", 1) + 1) if existing_cms else 1
+    db.cms_layouts.update_one(
+        {"layout_id": layout_id},
+        {"$set": {
+            "layout_id": layout_id,
+            "data": data,
+            "version": new_ver,
+            "updated_at": datetime.now(timezone.utc)
+        }},
+        upsert=True
+    )
+
     saved = db.epks.find_one({"user_id": user_id})
-    saved["_id"] = str(saved["_id"])
-    return saved
+    if saved:
+        saved["_id"] = str(saved["_id"])
+    return saved or data
 
 
 @router.get("/public/{subdomain}", response_model=Dict[str, Any])
-def get_public_epk(subdomain: str):
-    """Public endpoint to fetch published EPK profile by subdomain or artist username."""
-    clean_subdomain = subdomain.lower().strip().replace(" ", "")
-    epk_doc = db.epks.find_one({"subdomain": clean_subdomain})
+def get_public_epk(subdomain: str, response: Response):
+    """Public endpoint to fetch published EPK profile by subdomain or artist username.
     
+    Seamlessly synchronizes and merges with Mother-CMS layouts (db.cms_layouts) so
+    AI-generated hero images, hero slides, and page header banners are immediately reflected.
+    """
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+
+    clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    layout_id = f"epk_{clean_subdomain}"
+
+    # 1. Fetch from db.epks
+    epk_doc = db.epks.find_one({"subdomain": clean_subdomain})
     if not epk_doc:
-        # Fallback search by artist name or user_id
         epk_doc = db.epks.find_one({"artist_name": {"$regex": f"^{clean_subdomain}$", "$options": "i"}})
-        
-    if not epk_doc:
+
+    # 2. Fetch from db.cms_layouts
+    cms_doc = db.cms_layouts.find_one({"layout_id": layout_id})
+    cms_data = dict(cms_doc.get("data", {})) if cms_doc else {}
+    cms_data.pop("_id", None)
+
+    if not epk_doc and not cms_data:
         # Return fallback template shape
         return {
             "subdomain": clean_subdomain,
@@ -111,9 +146,53 @@ def get_public_epk(subdomain: str):
             "themeBg": "linear-gradient(135deg, #0f0c20 0%, #1a0826 100%)",
             "is_default": True
         }
-        
-    epk_doc["_id"] = str(epk_doc["_id"])
-    return epk_doc
+
+    merged = {}
+    if epk_doc:
+        merged = {k: v for k, v in epk_doc.items() if k != "_id"}
+        merged["_id"] = str(epk_doc["_id"])
+    else:
+        merged = dict(cms_data)
+        merged["subdomain"] = clean_subdomain
+
+    if cms_data:
+        cms_ver = cms_doc.get("version", 1)
+        epk_ver = epk_doc.get("version", 1) if epk_doc else 0
+        cms_updated = cms_doc.get("updated_at") or cms_data.get("updated_at")
+        epk_updated = epk_doc.get("updated_at") if epk_doc else None
+
+        cms_is_newer = (cms_ver >= epk_ver) or (cms_updated and epk_updated and cms_updated >= epk_updated)
+
+        # High-priority visual and layout keys that AI or CMS updates
+        priority_keys = [
+            "heroImageUrl", "heroImages", "heroSlides", "heroImage", "hero_image",
+            "pageHeaders", "headerImageUrl", "headerImages",
+            "heroAnimStyle", "heroTitle1", "heroTitle2", "heroTitle3"
+        ]
+        for pk in priority_keys:
+            if pk in cms_data and cms_data[pk]:
+                if cms_is_newer or pk not in merged or not merged[pk]:
+                    merged[pk] = cms_data[pk]
+
+        if cms_is_newer:
+            for k, v in cms_data.items():
+                if v is not None and v != "":
+                    merged[k] = v
+
+        # Synchronize db.epks with the merged state so both collections are always coherent
+        sync_payload = {k: v for k, v in merged.items() if k != "_id"}
+        try:
+            db.epks.update_one(
+                {"subdomain": clean_subdomain},
+                {"$set": sync_payload},
+                upsert=True
+            )
+        except Exception:
+            pass
+
+    if "_id" not in merged:
+        merged["_id"] = clean_subdomain
+    return merged
 
 
 @router.get("/check-availability/{subdomain}")
@@ -175,14 +254,32 @@ def update_public_epk(subdomain: str, payload: Dict[str, Any]):
     except Exception:
         pass
 
+    clean_payload = {k: v for k, v in payload.items() if k != "_id"}
     db.epks.update_one(
         {"subdomain": clean_subdomain},
-        {"$set": payload},
+        {"$set": clean_payload},
         upsert=True
     )
+
+    # Synchronize to Mother-CMS layouts
+    layout_id = f"epk_{clean_subdomain}"
+    existing_cms = db.cms_layouts.find_one({"layout_id": layout_id})
+    new_cms_ver = (existing_cms.get("version", 1) + 1) if existing_cms else 1
+    db.cms_layouts.update_one(
+        {"layout_id": layout_id},
+        {"$set": {
+            "layout_id": layout_id,
+            "data": clean_payload,
+            "version": new_cms_ver,
+            "updated_at": datetime.now(timezone.utc)
+        }},
+        upsert=True
+    )
+
     saved = db.epks.find_one({"subdomain": clean_subdomain})
-    saved["_id"] = str(saved["_id"])
-    return saved
+    if saved:
+        saved["_id"] = str(saved["_id"])
+    return saved or payload
 
 
 @router.post("/public/{subdomain}/rollback/{version}", response_model=Dict[str, Any])
@@ -194,10 +291,26 @@ def rollback_public_epk(subdomain: str, version: int):
         raise HTTPException(status_code=404, detail="Snapshot version not found")
     data = entry["data"]
     data["updated_at"] = datetime.now(timezone.utc)
-    db.epks.update_one({"subdomain": clean_subdomain}, {"$set": data})
+    clean_data = {k: v for k, v in data.items() if k != "_id"}
+    db.epks.update_one({"subdomain": clean_subdomain}, {"$set": clean_data})
+
+    # Synchronize rollback to db.cms_layouts
+    layout_id = f"epk_{clean_subdomain}"
+    db.cms_layouts.update_one(
+        {"layout_id": layout_id},
+        {"$set": {
+            "layout_id": layout_id,
+            "data": clean_data,
+            "version": version,
+            "updated_at": datetime.now(timezone.utc)
+        }},
+        upsert=True
+    )
+
     saved = db.epks.find_one({"subdomain": clean_subdomain})
-    saved["_id"] = str(saved["_id"])
-    return saved
+    if saved:
+        saved["_id"] = str(saved["_id"])
+    return saved or clean_data
 
 
 @router.get("/public/{subdomain}/history")
@@ -212,19 +325,32 @@ def get_epk_history(subdomain: str):
     return history
 
 
-
-
-
 @router.post("/public/{subdomain}")
-def update_public_epk(subdomain: str, payload: Dict[str, Any]):
+def update_public_epk_post(subdomain: str, payload: Dict[str, Any]):
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
     payload["subdomain"] = clean_subdomain
     payload["updated_at"] = datetime.now(timezone.utc)
+    clean_payload = {k: v for k, v in payload.items() if k != "_id"}
     db.epks.update_one(
         {"subdomain": clean_subdomain},
-        {"$set": payload},
+        {"$set": clean_payload},
         upsert=True
     )
+
+    layout_id = f"epk_{clean_subdomain}"
+    existing_cms = db.cms_layouts.find_one({"layout_id": layout_id})
+    new_cms_ver = (existing_cms.get("version", 1) + 1) if existing_cms else 1
+    db.cms_layouts.update_one(
+        {"layout_id": layout_id},
+        {"$set": {
+            "layout_id": layout_id,
+            "data": clean_payload,
+            "version": new_cms_ver,
+            "updated_at": datetime.now(timezone.utc)
+        }},
+        upsert=True
+    )
+
     saved = db.epks.find_one({"subdomain": clean_subdomain})
     if saved:
         saved["_id"] = str(saved["_id"])

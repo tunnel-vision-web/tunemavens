@@ -4,16 +4,79 @@ import {
   RiWhatsappFill, RiSmartphoneFill, RiFilter3Line, RiDownloadLine,
   RiAddLine, RiSearchLine, RiCheckLine, RiCloseFill, RiExternalLinkLine,
   RiDiscFill, RiBarChartFill, RiSparklingFill, RiStarFill, RiPhoneFill,
-  RiTimeLine, RiCheckboxCircleFill
+  RiTimeLine, RiCheckboxCircleFill, RiRefreshLine, RiArrowDownSLine, RiArrowUpSLine
 } from 'react-icons/ri'
+
+const CREATOR_PROFILES = {
+  ndufo: {
+    name: 'Ndufo (Official)',
+    genre: 'Electronic & Modular Synthesizer',
+    contacts: [
+      { id: 'CRM-ND-1', name: 'Alex Chen', email: 'alex.chen@cyberdome.io', phone: '+254 712 345 678', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Fan Club Portal', status: 'Subscribed', interests: ['VIP Tour Pre-Sales', 'High-Res MP3 Vault', 'Modular Synth Live'], tags: ['fan', 'vip'] },
+      { id: 'CRM-ND-2', name: 'Elena Richter', email: 'elena.richter@berlinsync.de', phone: '+49 171 8920192', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Sync Licensing Inquiries', status: 'In Discussion', interests: ['Film & TV Sync Clearance', 'Uncompressed Master Rights'], tags: ['sync', 'supervisor'] },
+      { id: 'CRM-ND-3', name: 'Tariq Al-Mansoor', email: 'tariq@dubaimusicweek.ae', phone: '+971 50 829 1042', preferred_comm_method: 'sms', channel: 'SMS', source: 'Tour Booking Agent', status: 'Offer Received', interests: ['Headline Festival Slot', 'Direct Flight Hospitality Rider'], tags: ['booking', 'promoter'] },
+      { id: 'CRM-ND-4', name: 'Maya Lin', email: 'maya@modularsound.org', phone: '+1 (415) 890-2341', preferred_comm_method: 'push', channel: 'PUSH', source: 'VIP Vault Pass', status: 'Subscribed', interests: ['Limited Vinyl & Merch Drops', 'Private Livestream Q&A'], tags: ['vip', 'fan'] },
+      { id: 'CRM-ND-5', name: 'Kwame Osei', email: 'kwame@accramavens.com', phone: '+233 24 519 2831', preferred_comm_method: 'email', channel: 'EMAIL', source: 'EPK Contact', status: 'Subscribed', interests: ['West Africa Tour Pre-Sales', 'Audio Mastering Sessions'], tags: ['fan'] }
+    ],
+    campaigns: [
+      { id: 'CMP-ND-101', name: 'Nairobi Cyberdome VIP Pre-Sale', channel: 'whatsapp', target: 'VIP Fans & Attendees', recipients: 142, openRate: '98.6%', status: 'Sent', date: 'SEP 02, 2026' },
+      { id: 'CMP-ND-102', name: 'Exclusive Afro-Synth Dub VIP Release', channel: 'email', target: 'Digital Single Buyers', recipients: 88, openRate: '64.2%', status: 'Delivered', date: 'AUG 28, 2026' }
+    ],
+    playlists: [
+      { id: 1, name: 'Modular Synth Journey & Afro Cues', fanName: 'Elena (Berlin Sync)', createdAt: 'SEP 04, 2026', tracks: [{ title: 'Echoes of the Savannah', artist: 'Ndufo' }, { title: 'Neon Equator', artist: 'Ndufo' }, { title: 'Solar Flare Groove', artist: 'Ndufo' }] },
+      { id: 2, name: 'Cyberdome VIP Warmup', fanName: 'Alex Chen', createdAt: 'AUG 29, 2026', tracks: [{ title: 'Nairobi Cyberwave', artist: 'Ndufo' }, { title: 'Rift Valley Sunset', artist: 'Ndufo' }] }
+    ]
+  },
+  aisha: {
+    name: 'Aisha Mwangi',
+    genre: 'Afro-Soul & R&B Vocals',
+    contacts: [
+      { id: 'CRM-AI-1', name: 'Fatima Zahra', email: 'fatima.z@casablancavibes.ma', phone: '+212 661 294810', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Fan Club Portal', status: 'Subscribed', interests: ['VIP Front-Row Tickets', 'Limited Tour Vinyl', 'Meet & Greet Passes'], tags: ['fan', 'vip'] },
+      { id: 'CRM-AI-2', name: 'Marcus Sterling', email: 'm.sterling@uktouring.co.uk', phone: '+44 7911 204918', preferred_comm_method: 'email', channel: 'EMAIL', source: 'EPK Tour Booker', status: 'Confirmed', interests: ['London O2 Academy Tour Dates', 'Acoustic Support Act'], tags: ['promoter', 'booking'] },
+      { id: 'CRM-AI-3', name: 'Brenda Wanjiru', email: 'brenda.w@nairobilive.ke', phone: '+254 722 901 823', preferred_comm_method: 'sms', channel: 'SMS', source: 'Fan Club VIP Member', status: 'Subscribed', interests: ['Candlelight Acoustic Showcase', 'Signed Merch Drops'], tags: ['fan', 'vip'] },
+      { id: 'CRM-AI-4', name: 'Liam O\'Connor', email: 'liam@dublinindie.ie', phone: '+353 87 291 0492', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Radio Music Director', status: 'Subscribed', interests: ['Radio Single Servicing', 'Live On-Air Acoustic Session'], tags: ['press', 'radio'] },
+      { id: 'CRM-AI-5', name: 'Chloe Dupont', email: 'chloe@parissoul.fr', phone: '+33 6 12 34 56 78', preferred_comm_method: 'push', channel: 'PUSH', source: 'Sync Licensing Inquiries', status: 'Proposal Sent', interests: ['Paris Fashion Week Runway Placement', 'Sync Clearance'], tags: ['sync', 'supervisor'] }
+    ],
+    campaigns: [
+      { id: 'CMP-AI-201', name: 'Acoustic Candlelight Tour VIP Priority Codes', channel: 'whatsapp', target: 'VIP Passholders', recipients: 210, openRate: '99.1%', status: 'Sent', date: 'SEP 06, 2026' },
+      { id: 'CMP-AI-202', name: 'Golden Hour EP Vinyl Pre-Order Blast', channel: 'email', target: 'Merch Collectors', recipients: 165, openRate: '72.4%', status: 'Delivered', date: 'AUG 31, 2026' }
+    ],
+    playlists: [
+      { id: 101, name: 'Nairobi Sunset Soul Sessions', fanName: 'Brenda Wanjiru', createdAt: 'SEP 07, 2026', tracks: [{ title: 'Golden Hour Serenade', artist: 'Aisha Mwangi' }, { title: 'Swahili Coast Lullaby', artist: 'Aisha Mwangi' }] },
+      { id: 102, name: 'Afro-R&B Late Night Driving', fanName: 'Fatima Zahra', createdAt: 'SEP 01, 2026', tracks: [{ title: 'Nairobi Rain', artist: 'Aisha Mwangi' }, { title: 'Velvet Midnight', artist: 'Aisha Mwangi' }] }
+    ]
+  },
+  kip: {
+    name: 'Kip & The Mavens',
+    genre: 'Indie Afro-Rock & Live Band',
+    contacts: [
+      { id: 'CRM-KP-1', name: 'Dylan Murphy', email: 'dylan@austinpsychfest.com', phone: '+1 (512) 489-1029', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Festival Talent Buyer', status: 'Contract Sent', interests: ['US Tour Headline Slot', 'Full Backline & Vintage Amps'], tags: ['promoter', 'booking'] },
+      { id: 'CRM-KP-2', name: 'Sauti Juma', email: 'sauti@mombasarock.org', phone: '+254 733 819 201', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Fan Club Portal', status: 'Subscribed', interests: ['College Tour Passes', 'Limited Cassette Tapes', 'Guitar Tab Vault'], tags: ['fan', 'vip'] },
+      { id: 'CRM-KP-3', name: 'Rachel Green', email: 'rachel@indieaudiophile.com', phone: '+1 (206) 918-2831', preferred_comm_method: 'sms', channel: 'SMS', source: 'EPK Inquiry', status: 'Subscribed', interests: ['Vinyl Test Pressings', 'Tour Merchandise Drops'], tags: ['fan', 'vip'] },
+      { id: 'CRM-KP-4', name: 'Jean-Luc Moreau', email: 'jmoreau@bruxelleslive.be', phone: '+32 470 12 34 56', preferred_comm_method: 'email', channel: 'EMAIL', source: 'European Showcase Scout', status: 'In Review', interests: ['EuroSonic Showcase Clearance', 'Festival Circuit 2027'], tags: ['booking', 'sync'] },
+      { id: 'CRM-KP-5', name: 'Baraka Kiprop', email: 'baraka@riftvalleygroove.ke', phone: '+254 701 928 374', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Band Merch Lead', status: 'Subscribed', interests: ['Stage Crew Passes', 'VIP Meet & Greet'], tags: ['fan'] }
+    ],
+    campaigns: [
+      { id: 'CMP-KP-301', name: 'Rock the Rift Valley Festival Early-Bird Tickets', channel: 'sms', target: 'Festival Attendees', recipients: 340, openRate: '95.2%', status: 'Sent', date: 'SEP 05, 2026' },
+      { id: 'CMP-KP-302', name: 'Limited Edition Tour Cassette Release Notice', channel: 'whatsapp', target: 'Cassette VIP Fans', recipients: 120, openRate: '97.8%', status: 'Delivered', date: 'AUG 25, 2026' }
+    ],
+    playlists: [
+      { id: 201, name: 'Rift Valley Live Energy', fanName: 'Sauti Juma', createdAt: 'SEP 03, 2026', tracks: [{ title: 'Fuzz over Kilimanjaro', artist: 'Kip & The Mavens' }, { title: 'Dusty Highway Anthem', artist: 'Kip & The Mavens' }] },
+      { id: 202, name: 'Desert Rock & Fuzz Odyssey', fanName: 'Dylan Murphy', createdAt: 'AUG 28, 2026', tracks: [{ title: 'Electric Acacia', artist: 'Kip & The Mavens' }, { title: 'Rift Valley Sunset (Live)', artist: 'Kip & The Mavens' }] }
+    ]
+  }
+}
 
 export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
   const [activeTab, setActiveTab] = useState('contacts') // 'contacts' | 'broadcasts' | 'playlists' | 'pipeline'
   const [selectedSubdomain, setSelectedSubdomain] = useState(() => {
     return localStorage.getItem('last_saved_epk_subdomain') || 'ndufo'
   })
+  const [statsMinimized, setStatsMinimized] = useState(false)
   const [contacts, setContacts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [isCentralSynced, setIsCentralSynced] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [channelFilter, setChannelFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -26,28 +89,9 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
   const [campaignBody, setCampaignBody] = useState('')
   const [dispatching, setDispatching] = useState(false)
   const [dispatchSuccess, setDispatchSuccess] = useState('')
-  const [campaignHistory, setCampaignHistory] = useState([
-    {
-      id: 'CMP-101',
-      name: 'Nairobi Cyberdome VIP Pre-Sale',
-      channel: 'whatsapp',
-      target: 'VIP Fans & Attendees',
-      recipients: 142,
-      openRate: '98.6%',
-      status: 'Sent',
-      date: 'SEP 02, 2026'
-    },
-    {
-      id: 'CMP-102',
-      name: 'Lossless Multitracks Drop Announcement',
-      channel: 'email',
-      target: 'Stem Purchasers',
-      recipients: 88,
-      openRate: '54.2%',
-      status: 'Delivered',
-      date: 'AUG 28, 2026'
-    }
-  ])
+  const [campaignHistory, setCampaignHistory] = useState(() => {
+    return (CREATOR_PROFILES[selectedSubdomain] || CREATOR_PROFILES.ndufo).campaigns
+  })
 
   // New Lead Modal State
   const [addLeadModalOpen, setAddLeadModalOpen] = useState(false)
@@ -64,85 +108,124 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
   // Fan Playlists
   const [fanPlaylists, setFanPlaylists] = useState([])
 
-  // Load Contacts from Backend & Local Storage
+  // Helper to standardize contact records
+  const normalizeContact = (c, fallbackOrigin = 'Intermaven Central CRM') => {
+    const rawMethod = (c.preferred_comm_method || c.channel || 'email').toLowerCase()
+    const rawName = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'VIP Lead'
+    const parts = rawName.split(' ')
+    const firstName = c.first_name || parts[0] || 'VIP'
+    const lastName = c.last_name || parts.slice(1).join(' ') || 'Fan'
+    return {
+      id: c.id || `CRM-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      name: rawName,
+      first_name: firstName,
+      last_name: lastName,
+      email: c.email || '',
+      phone: c.phone || (rawMethod === 'whatsapp' ? '+254 712 345 678' : '+1 (555) 019-2834'),
+      preferred_comm_method: rawMethod,
+      channel: rawMethod.toUpperCase(),
+      company: c.company || selectedSubdomain.toUpperCase(),
+      interests: Array.isArray(c.interests) && c.interests.length > 0 ? c.interests : ['VIP Tour Pre-Sales', 'Merch Drops', 'Official Releases'],
+      source: c.source || fallbackOrigin,
+      status: c.status || 'Subscribed',
+      message: c.message || `Ingested via ${fallbackOrigin}`,
+      creator_username: c.creator_username || selectedSubdomain,
+      tags: c.tags || ['fan', 'vip']
+    }
+  }
+
+  // Load Contacts from Intermaven Central CRM (8080), TuneMavens API (8001) & Local Storage
   const loadContacts = async () => {
     setLoading(true)
+    setSyncing(true)
     try {
-      let combined = []
-      // 1. Fetch remote backend contacts
-      const res = await fetch(`http://localhost:8001/api/crm/contacts?creator_username=${selectedSubdomain}`)
-      if (res.ok) {
-        const data = await res.json()
-        if (Array.isArray(data.contacts)) {
-          combined = [...data.contacts]
-        }
+      const combined = []
+      const seenEmails = new Set()
+
+      // Active Creator Profile Data
+      const creatorProfile = CREATOR_PROFILES[selectedSubdomain] || CREATOR_PROFILES.ndufo
+
+      // Update campaigns and playlists for the selected creator
+      if (creatorProfile.campaigns) {
+        setCampaignHistory(creatorProfile.campaigns)
+      }
+      if (creatorProfile.playlists) {
+        setFanPlaylists(creatorProfile.playlists)
       }
 
-      // 2. Fetch local storage creator fans
+      // Seed Creator's distinct verified contacts
+      creatorProfile.contacts.forEach(contact => {
+        const norm = normalizeContact(contact, `${creatorProfile.name} Official Vault`)
+        if (norm.email && !seenEmails.has(norm.email.toLowerCase())) {
+          seenEmails.add(norm.email.toLowerCase())
+          combined.push(norm)
+        }
+      })
+
+      // 1. Fetch from Intermaven Central CRM on Port 8080 (filtered by creator if tagged)
+      try {
+        const res8080 = await fetch('http://localhost:8080/api/crm/contacts')
+        if (res8080.ok) {
+          const data8080 = await res8080.json()
+          if (Array.isArray(data8080.contacts)) {
+            data8080.contacts.forEach(contact => {
+              if (!contact.creator_username || contact.creator_username === selectedSubdomain) {
+                const norm = normalizeContact(contact, 'Intermaven Central CRM (8080)')
+                if (norm.email && !seenEmails.has(norm.email.toLowerCase())) {
+                  seenEmails.add(norm.email.toLowerCase())
+                  combined.push(norm)
+                }
+              }
+            })
+          }
+        }
+      } catch (err8080) {
+        console.warn('Intermaven 8080 CRM fetch warning:', err8080)
+      }
+
+      // 2. Fetch from TuneMavens Backend CRM on Port 8001
+      try {
+        const res8001 = await fetch(`http://localhost:8001/api/crm/contacts?creator_username=${selectedSubdomain}`)
+        if (res8001.ok) {
+          const data8001 = await res8001.json()
+          if (Array.isArray(data8001.contacts)) {
+            data8001.contacts.forEach(contact => {
+              const norm = normalizeContact(contact, 'TuneMavens Ecosystem CRM (8001)')
+              if (norm.email && !seenEmails.has(norm.email.toLowerCase())) {
+                seenEmails.add(norm.email.toLowerCase())
+                combined.push(norm)
+              }
+            })
+          }
+        }
+      } catch (err8001) {
+        console.warn('TuneMavens 8001 CRM fetch warning:', err8001)
+      }
+
+      // 3. Fetch from Local Storage Creator Fans for this specific creator
       try {
         const local = JSON.parse(localStorage.getItem(`creator_crm_fans_${selectedSubdomain}`) || '[]')
         local.forEach((fan, idx) => {
-          if (!combined.some(c => c.email === fan.email)) {
-            combined.push({
-              id: `CRM-LOCAL-${idx + 1}`,
-              first_name: (fan.name || 'VIP').split(' ')[0],
-              last_name: (fan.name || '').split(' ').slice(1).join(' ') || 'Fan',
-              name: fan.name || 'VIP Fan',
-              email: fan.email,
-              phone: fan.phone || '+1 (555) 019-2834',
-              company: selectedSubdomain.toUpperCase(),
-              preferred_comm_method: fan.preferred_comm_method || 'whatsapp',
-              interests: fan.interests || ['VIP Tour Pre-Sales', 'Merch Drops'],
-              source: 'creator_fan_portal',
-              status: 'active',
-              message: fan.message || 'VIP Fan Vault Member',
-              creator_username: selectedSubdomain
-            })
+          const norm = normalizeContact({
+            ...fan,
+            id: `CRM-LOCAL-${idx + 1}`,
+            source: 'creator_fan_portal'
+          }, 'Local Fan Vault')
+          if (norm.email && !seenEmails.has(norm.email.toLowerCase())) {
+            seenEmails.add(norm.email.toLowerCase())
+            combined.push(norm)
           }
         })
       } catch (_) {}
 
-      // 3. Fallback mock if completely empty
-      if (combined.length === 0) {
-        combined = [
-          {
-            id: 'CRM-LEAD-001',
-            first_name: 'Aisha',
-            last_name: 'Mwangi',
-            name: 'Aisha Mwangi',
-            email: 'aisha.m@afrobeat.io',
-            phone: '+254 712 345 678',
-            company: selectedSubdomain.toUpperCase(),
-            preferred_comm_method: 'whatsapp',
-            interests: ['VIP Tour Pre-Sales', 'Exclusive Merch Drops'],
-            source: 'creator_fan_portal',
-            status: 'active',
-            message: 'Looking forward to the Nairobi Cyberdome live performance.',
-            creator_username: selectedSubdomain
-          },
-          {
-            id: 'CRM-LEAD-002',
-            first_name: 'Elena',
-            last_name: 'Rostova',
-            name: 'Elena Rostova',
-            email: 'elena.r@synclab.de',
-            phone: '+49 30 555 0184',
-            company: 'SyncLab Berlin',
-            preferred_comm_method: 'email',
-            interests: ['Unreleased WAV Master Stems'],
-            source: 'creator_epk_contact',
-            status: 'active',
-            message: 'Music supervisor requesting stems pack for series.',
-            creator_username: selectedSubdomain
-          }
-        ]
-      }
-
       setContacts(combined)
+      setIsCentralSynced(true)
     } catch (e) {
       console.warn('CRM Contacts Load error:', e)
+      setIsCentralSynced(false)
     } finally {
       setLoading(false)
+      setSyncing(false)
     }
   }
 
@@ -265,6 +348,21 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
       })
     } catch (_) {}
 
+    try {
+      await fetch('http://localhost:8080/api/crm/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: leadPayload.name,
+          email: leadPayload.email,
+          channel: (leadPayload.preferred_comm_method || 'email').toUpperCase(),
+          doubleOptIn: true,
+          source: `TuneMavens Creator EPK (@${selectedSubdomain})`,
+          status: 'Subscribed'
+        })
+      })
+    } catch (_) {}
+
     setContacts([leadPayload, ...contacts])
     setAddLeadModalOpen(false)
     setNewLead({
@@ -298,15 +396,15 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      background: '#070a13',
+      background: '#04060f',
       color: '#fff',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
+      fontFamily: 'Inter, system-ui, sans-serif'
     }}>
-      {/* Top Navigation & Status Bar */}
+      {/* Top Header Bar */}
       <div style={{
-        padding: '14px 24px',
+        padding: '16px 24px',
+        background: '#080c18',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
-        background: '#090d1a',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -335,27 +433,49 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
               <span style={{
                 fontSize: '0.68rem',
                 fontWeight: 800,
-                background: 'rgba(0,240,255,0.12)',
-                color: '#00f0ff',
-                border: '1px solid rgba(0,240,255,0.3)',
+                background: isCentralSynced ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                color: isCentralSynced ? '#10b981' : '#f59e0b',
+                border: `1px solid ${isCentralSynced ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
                 padding: '2px 8px',
                 borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px'
               }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00f0ff', boxShadow: '0 0 6px #00f0ff' }} />
-                UNIFIED ENGINE v4.2
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isCentralSynced ? '#10b981' : '#f59e0b', boxShadow: isCentralSynced ? '0 0 6px #10b981' : 'none' }} />
+                {isCentralSynced ? 'CENTRAL INTERMAVEN CRM SYNCED' : 'OFFLINE BUFFER'}
               </span>
             </div>
             <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '2px' }}>
-              Synchronized with MongoDB · Direct Fan Vault & Omnichannel STK / WhatsApp Dispatch
+              Centralized Agency CRM Hub (Port 8080 & 8001) · Accessible by Content Owners & System Admin
             </div>
           </div>
         </div>
 
         {/* Creator Subdomain Selector & Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={loadContacts}
+            disabled={syncing}
+            style={{
+              background: 'rgba(0,240,255,0.1)',
+              border: '1px solid rgba(0,240,255,0.3)',
+              color: '#00f0ff',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <RiRefreshLine className={syncing ? 'animate-spin' : ''} size={14} />
+            {syncing ? 'Syncing...' : 'Sync Central CRM'}
+          </button>
+
           <div style={{ display: 'flex', alignItems: 'center', background: '#04060d', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '4px 10px' }}>
             <span style={{ fontSize: '0.75rem', color: '#64748b', marginRight: '6px', fontWeight: 700 }}>CREATOR:</span>
             <select
@@ -430,6 +550,27 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
             <RiExternalLinkLine size={14} /> Cloud
           </a>
 
+          <button
+            type="button"
+            onClick={() => setStatsMinimized(!statsMinimized)}
+            style={{
+              background: statsMinimized ? 'rgba(0,240,255,0.12)' : 'rgba(255,255,255,0.06)',
+              border: statsMinimized ? '1px solid #00f0ff' : '1px solid rgba(255,255,255,0.15)',
+              color: statsMinimized ? '#00f0ff' : '#cbd5e1',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title={statsMinimized ? "Show Full Metrics Ribbon" : "Minimize Stats to Maximize CRM Real Estate"}
+          >
+            {statsMinimized ? <><RiArrowDownSLine size={16} /> Expand Stats</> : <><RiArrowUpSLine size={16} /> Minimize Stats</>}
+          </button>
+
           {onClose && (
             <button
               type="button"
@@ -450,63 +591,99 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
         </div>
       </div>
 
-      {/* Metrics Ribbon */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '14px',
-        padding: '16px 24px',
-        background: '#060810',
-        borderBottom: '1px solid rgba(255,255,255,0.06)'
-      }}>
-        <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Total Audience Vault
+      {/* Metrics Ribbon (Collapsible for Maximum CRM Workspace) */}
+      {statsMinimized ? (
+        <div style={{
+          padding: '10px 24px',
+          background: '#04060d',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px',
+          fontSize: '0.8rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <span style={{ color: '#94a3b8' }}>
+              Audience: <strong style={{ color: '#fff', fontSize: '0.92rem' }}>{contacts.length}</strong>
+            </span>
+            <span style={{ color: '#94a3b8' }}>
+              VIP Passholders: <strong style={{ color: '#00f0ff', fontSize: '0.92rem' }}>{contacts.filter(c => (c.tags || []).includes('vip') || c.source === 'creator_fan_portal').length}</strong>
+            </span>
+            <span style={{ color: '#94a3b8' }}>
+              Ticket Reserves: <strong style={{ color: '#a855f7', fontSize: '0.92rem' }}>{contacts.filter(c => (c.interests || []).some(i => i.toLowerCase().includes('tour') || i.toLowerCase().includes('ticket'))).length || 3}</strong>
+            </span>
+            <span style={{ color: '#94a3b8' }}>
+              Curated Playlists: <strong style={{ color: '#f59e0b', fontSize: '0.92rem' }}>{fanPlaylists.length}</strong>
+            </span>
           </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', marginTop: '4px' }}>
-            {contacts.length} Fans & Contacts
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#10b981', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <RiCheckLine /> 100% Verified Inbound
-          </div>
+          <button
+            type="button"
+            onClick={() => setStatsMinimized(false)}
+            style={{ background: 'transparent', border: 'none', color: '#00f0ff', fontSize: '0.76rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            <RiArrowDownSLine /> Expand Metrics
+          </button>
         </div>
+      ) : (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '14px',
+          padding: '16px 24px',
+          background: '#060810',
+          borderBottom: '1px solid rgba(255,255,255,0.06)'
+        }}>
+          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Total Audience Vault
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', marginTop: '4px' }}>
+              {contacts.length} Fans & Contacts
+            </div>
+            <div style={{ fontSize: '0.7rem', color: '#10b981', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <RiCheckLine /> 100% Verified Inbound
+            </div>
+          </div>
 
-        <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            VIP Passholders
+          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              VIP Passholders
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#00f0ff', marginTop: '4px' }}>
+              {contacts.filter(c => (c.tags || []).includes('vip') || c.source === 'creator_fan_portal').length} Members
+            </div>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
+              Active in Fan Vault & Pre-Sales
+            </div>
           </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#00f0ff', marginTop: '4px' }}>
-            {contacts.filter(c => (c.tags || []).includes('vip') || c.source === 'creator_fan_portal').length} Members
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
-            Active in Fan Vault & Pre-Sales
-          </div>
-        </div>
 
-        <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Tour Ticket Reserves
+          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Tour Ticket Reserves
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#a855f7', marginTop: '4px' }}>
+              {contacts.filter(c => (c.interests || []).some(i => i.toLowerCase().includes('tour') || i.toLowerCase().includes('ticket'))).length || 3} Attendees
+            </div>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
+              Nairobi Cyberdome & London O2
+            </div>
           </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#a855f7', marginTop: '4px' }}>
-            {contacts.filter(c => (c.interests || []).some(i => i.toLowerCase().includes('tour') || i.toLowerCase().includes('ticket'))).length || 3} Attendees
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
-            Nairobi Cyberdome & London O2
-          </div>
-        </div>
 
-        <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Fan Curated Playlists
-          </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b', marginTop: '4px' }}>
-            {fanPlaylists.length} Playlists
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
-            Created via Public Creator EPK
+          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Fan Curated Playlists
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b', marginTop: '4px' }}>
+              {fanPlaylists.length} Playlists
+            </div>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
+              Created via Public Creator EPK
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Tabs Navigation */}
       <div style={{

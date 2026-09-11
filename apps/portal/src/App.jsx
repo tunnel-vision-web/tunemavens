@@ -4733,6 +4733,15 @@ function AppContent({
   );
 }
 
+// Platformwide Scroll-to-Top Component: Ensures all route navigations reset to the top of the viewport
+function ScrollToTop() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, search]);
+  return null;
+}
+
 // ================= Main App Component =================
 function App() {
   const [sessionUser, setSessionUser] = useState(() => {
@@ -4883,6 +4892,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <AppContent 
         sessionUser={sessionUser}
         handleLogin={handleLogin}

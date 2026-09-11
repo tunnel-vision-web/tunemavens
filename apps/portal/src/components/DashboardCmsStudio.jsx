@@ -6,7 +6,7 @@ import {
   RiAddLine, RiDeleteBin6Line, RiImageAddFill, RiCodeBoxFill,
   RiBold, RiItalic, RiUnderline, RiStrikethrough, RiH2, RiH3,
   RiListUnordered, RiListOrdered, RiDoubleQuotesL, RiLink, RiCheckFill,
-  RiUploadFill, RiRefreshLine, RiPlayFill, RiDiscFill, RiArrowRightSLine, RiPriceTag3Fill, RiArrowLeftSLine, RiCheckLine, RiFolderUploadFill, RiImageFill, RiVideoAddFill
+    RiUploadFill, RiRefreshLine, RiPlayFill, RiDiscFill, RiArrowRightSLine, RiPriceTag3Fill, RiArrowLeftSLine, RiCheckLine, RiFolderUploadFill, RiImageFill, RiVideoAddFill, RiDatabase2Fill
 } from 'react-icons/ri'
 import { EPK_THEMES } from '../views/creator/CreatorEpkView'
 
@@ -88,6 +88,37 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
   const [saving, setSaving] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
   const [statusType, setStatusType] = useState('success')
+
+  const showStatus = (msg, type = 'success') => {
+    setStatusMsg(msg)
+    setStatusType(type)
+    setTimeout(() => {
+      setStatusMsg('')
+    }, 5000)
+  }
+
+  const autoSaveEpk = (updatedData) => {
+    const cleanSub = (activeSubdomain || 'ndufo').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '')
+    const payload = {
+      ...updatedData,
+      subdomain: cleanSub,
+      artist_name: updatedData.artist_name || updatedData.siteName || cleanSub.toUpperCase(),
+      updated_at: new Date().toISOString()
+    }
+    try {
+      localStorage.setItem(`epk_public_${cleanSub}`, JSON.stringify(payload))
+      localStorage.setItem(`epk_${cleanSub}`, JSON.stringify(payload))
+      localStorage.setItem('last_saved_epk_subdomain', cleanSub)
+      if (typeof setEpk === 'function') setEpk(payload)
+      window.dispatchEvent(new Event('epk_updated'))
+      window.dispatchEvent(new CustomEvent('epk_storage_sync', { detail: payload }))
+    } catch (_) {}
+    fetch(`/api/cms/epk/${cleanSub}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: payload, note: `Auto-saved asset update for ${cleanSub}` })
+    }).catch(() => {})
+  }
   const [historyList, setHistoryList] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [htmlMode, setHtmlMode] = useState(false)
@@ -98,6 +129,9 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
   // AI Prompting State across all modules
   const [heroAiPrompt, setHeroAiPrompt] = useState('Cinematic futuristic live stage with modular synthesizers, neon cyan glow, crowd silhouettes, 16:9 banner')
   const [heroAiGenerating, setHeroAiGenerating] = useState(false)
+  const [selectedHeroSlideIndex, setSelectedHeroSlideIndex] = useState(0)
+  const [bioProfilePrompt, setBioProfilePrompt] = useState('Editorial high-fashion studio portrait of an electronic music producer, dramatic rim lighting, cinematic 8k')
+  const [bioProfileGenerating, setBioProfileGenerating] = useState(false)
   const [bioAiPrompt, setBioAiPrompt] = useState('Internationally acclaimed electronic and modular synthesizer producer with Billboard charting sync placements and world tour achievements')
   const [bannerPrompts, setBannerPrompts] = useState({
     discography: 'Cinematic atmospheric music studio with analog mixing console, neon glow, 16:9 stage banner',
@@ -204,13 +238,149 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
   // Hero AI Art Generator Handler
   const handleGenerateHeroArt = async () => {
     setHeroAiGenerating(true)
+    const prompt = (heroAiPrompt || 'Futuristic live concert stage with neon lighting, 16:9 banner').trim()
+    try {
+      let generatedUrl = ''
+      try {
+        const res = await fetch('/api/social-ai/generate-art', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: prompt,
+            aspect_ratio: '16:9'
+          })
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data?.asset?.media_url) generatedUrl = data.asset.media_url
+        }
+      } catch (_) {}
+
+      if (!generatedUrl) {
+        const cleanPrompt = encodeURIComponent(`${prompt}, cinematic lighting, photorealistic, 4k, 16:9 widescreen`)
+        generatedUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=700&nologo=true&seed=${Date.now()}`
+      }
+      const currentImages = Array.isArray(formData.heroImages) ? [...formData.heroImages] : []
+      const newImages = [generatedUrl, ...currentImages]
+      const updated = {
+        ...formData,
+        heroImages: newImages,
+        heroImageUrl: generatedUrl
+      }
+      setFormData(updated)
+      autoSaveEpk(updated)
+      showStatus('Hero slide artwork generated with AI and synced!', 'success')
+    } catch {
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1400&height=700&nologo=true&seed=${Date.now()}`
+      const currentImages = Array.isArray(formData.heroImages) ? [...formData.heroImages] : []
+      const updated = {
+        ...formData,
+        heroImages: [fallbackUrl, ...currentImages],
+        heroImageUrl: fallbackUrl
+      }
+      setFormData(updated)
+      autoSaveEpk(updated)
+      showStatus('Hero slide artwork generated and synced!', 'success')
+    } finally {
+      setHeroAiGenerating(false)
+    }
+  }
+
+  // Get or construct initial hero slides
+  const getInitialHeroSlides = () => {
+    if (Array.isArray(formData.heroSlides) && formData.heroSlides.length > 0) {
+      return formData.heroSlides
+    }
+    const imgs = Array.isArray(formData.heroImages) && formData.heroImages.length > 0
+      ? formData.heroImages
+      : [formData.heroImageUrl || 'https://picsum.photos/seed/producer_studio_gear_1/1200/600']
+    return imgs.map((img, i) => ({
+      id: i + 1,
+      img,
+      title1: i === 0 ? (formData.heroTitle1 || formData.artist_name || 'Creator') : (i === 1 ? 'World Tour 2026 Live Showcase' : `${formData.artist_name || 'Creator'} — Master Audio`),
+      title2: i === 0 ? (formData.heroTitle2 || formData.headline || 'Electronic & Modular Synthesizer Producer') : (i === 1 ? 'Headline Dates: Tokyo, London & Nairobi' : 'Lossless Audio & Direct Fan Passes'),
+      title3: i === 0 ? (formData.heroTitle3 || 'High-Quality Digital Singles • Collector Vinyl & CDs • Direct Fan Ticketing') : (i === 1 ? 'VIP Fan Pass & Direct Ticketing via TuneBooking' : 'Exclusive VIP Vault Access')
+    }))
+  }
+
+  // Slide-Specific AI Art Generator
+  const handleGenerateHeroArtForSlide = async (slideIndex, promptText) => {
+    setHeroAiGenerating(true)
+    const effectivePrompt = (promptText || heroAiPrompt || 'Futuristic electronic music stage with neon cyan lasers and holographic visuals, 16:9 banner').trim()
+    try {
+      let generatedUrl = ''
+      try {
+        const res = await fetch('/api/social-ai/generate-art', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: effectivePrompt,
+            aspect_ratio: '16:9'
+          })
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data?.asset?.media_url) generatedUrl = data.asset.media_url
+        }
+      } catch (_) {}
+
+      if (!generatedUrl) {
+        const cleanPrompt = encodeURIComponent(`${effectivePrompt}, cinematic lighting, photorealistic, 4k, 16:9 widescreen`)
+        generatedUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=700&nologo=true&seed=${Date.now()}`
+      }
+
+      const slides = getInitialHeroSlides().map(s => ({ ...s }))
+      if (slides[slideIndex]) {
+        slides[slideIndex] = { ...slides[slideIndex], img: generatedUrl }
+      } else {
+        slides.push({
+          id: slideIndex + 1,
+          img: generatedUrl,
+          title1: formData.artist_name || 'Creator',
+          title2: formData.headline || '',
+          title3: ''
+        })
+      }
+      const updated = {
+        ...formData,
+        heroSlides: slides,
+        heroImages: slides.map(s => s.img),
+        ...(slideIndex === 0 ? { heroImageUrl: generatedUrl } : {})
+      }
+      setFormData(updated)
+      autoSaveEpk(updated)
+      showStatus(`Slide ${slideIndex + 1} artwork generated from prompt: "${effectivePrompt.slice(0, 40)}..."!`, 'success')
+    } catch {
+      const cleanPrompt = encodeURIComponent(`${effectivePrompt || 'music stage neon'}`)
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=700&nologo=true&seed=${Date.now()}`
+      const slides = getInitialHeroSlides().map(s => ({ ...s }))
+      if (slides[slideIndex]) {
+        slides[slideIndex] = { ...slides[slideIndex], img: fallbackUrl }
+      }
+      const updated = {
+        ...formData,
+        heroSlides: slides,
+        heroImages: slides.map(s => s.img),
+        ...(slideIndex === 0 ? { heroImageUrl: fallbackUrl } : {})
+      }
+      setFormData(updated)
+      autoSaveEpk(updated)
+      showStatus(`Slide ${slideIndex + 1} artwork generated!`, 'success')
+    } finally {
+      setHeroAiGenerating(false)
+    }
+  }
+
+  // Bio Profile AI Portrait Generator
+  const handleGenerateBioProfileArt = async (promptText) => {
+    setBioProfileGenerating(true)
     try {
       const res = await fetch('/api/social-ai/generate-art', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: heroAiPrompt || 'Futuristic live concert stage with neon lighting, 16:9 banner',
-          aspect_ratio: '16:9'
+          prompt: promptText || bioProfilePrompt || 'Editorial studio portrait of an electronic artist, cinematic lighting',
+          aspect_ratio: '1:1'
         })
       })
       let generatedUrl = ''
@@ -219,19 +389,17 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
         generatedUrl = data?.asset?.media_url
       }
       if (!generatedUrl) {
-        const seedStr = encodeURIComponent(heroAiPrompt.slice(0, 20).toLowerCase().replace(/[^a-z0-9]/g, '_'))
-        generatedUrl = `https://picsum.photos/seed/${seedStr}_hero/1400/700`
+        const seedStr = encodeURIComponent((promptText || bioProfilePrompt).slice(0, 20).toLowerCase().replace(/[^a-z0-9]/g, '_'))
+        generatedUrl = `https://picsum.photos/seed/${seedStr}_bio_${Date.now()}/800/800`
       }
-      const currentImages = Array.isArray(formData.heroImages) ? [...formData.heroImages] : []
-      updateField('heroImages', [generatedUrl, ...currentImages])
-      showStatus('Hero slide artwork generated with AI!', 'success')
+      updateField('profilePhoto', generatedUrl)
+      showStatus('Bio profile portrait generated with AI!', 'success')
     } catch {
-      const fallbackUrl = `https://picsum.photos/seed/hero_ai_${Date.now()}/1400/700`
-      const currentImages = Array.isArray(formData.heroImages) ? [...formData.heroImages] : []
-      updateField('heroImages', [fallbackUrl, ...currentImages])
-      showStatus('Hero slide artwork generated (Sample Seed)!', 'success')
+      const fallbackUrl = `https://picsum.photos/seed/bio_ai_${Date.now()}/800/800`
+      updateField('profilePhoto', fallbackUrl)
+      showStatus('Bio profile portrait generated (Sample Seed)!', 'success')
     } finally {
-      setHeroAiGenerating(false)
+      setBioProfileGenerating(false)
     }
   }
 
@@ -557,31 +725,51 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
 
   const handleGeneratePageHeader = async (pageKey, pageLabel, promptHint) => {
     setAiGeneratingHeaderKey(pageKey)
+    const effectivePrompt = (promptHint || bannerPrompts[pageKey] || `Cinematic widescreen banner for ${pageLabel} of music creator ${formData.artist_name || activeSubdomain}`).trim()
     try {
-      const promptText = `High-resolution widescreen cinematic banner for ${pageLabel} of music creator ${formData.artist_name || activeSubdomain}. ${promptHint}, neon aesthetics, 16:9 aspect ratio, 4K quality`
-      const res = await fetch('/api/social-ai/generate-art', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: promptText, aspect_ratio: '16:9' })
-      })
       let bannerUrl = ''
-      if (res.ok) {
-        const data = await res.json()
-        bannerUrl = data?.asset?.media_url
-      }
+      try {
+        const promptText = `High-resolution widescreen cinematic banner for ${pageLabel} of music creator ${formData.artist_name || activeSubdomain}. ${effectivePrompt}, neon aesthetics, 16:9 aspect ratio, 4K quality`
+        const res = await fetch('/api/social-ai/generate-art', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: promptText, aspect_ratio: '3:1' })
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data?.asset?.media_url) bannerUrl = data.asset.media_url
+        }
+      } catch (_) {}
+
+      // Prompt-driven AI engine so image accurately reflects user prompt
       if (!bannerUrl) {
-        bannerUrl = `https://picsum.photos/seed/${encodeURIComponent(pageKey + '_' + activeSubdomain)}/1400/450`
+        const cleanPrompt = encodeURIComponent(`${effectivePrompt}, 16:9 widescreen, cinematic lighting, 4k ultra detailed`)
+        bannerUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=450&nologo=true&seed=${Date.now()}`
       }
-      const currentHeaders = { ...(formData.pageHeaders || {}) }
-      currentHeaders[pageKey] = bannerUrl
-      updateField('pageHeaders', currentHeaders)
-      setStatusMsg(`✨ Generated new AI header banner for ${pageLabel}!`)
+
+      const updated = {
+        ...formData,
+        pageHeaders: {
+          ...(formData.pageHeaders || {}),
+          [pageKey]: bannerUrl
+        }
+      }
+      setFormData(updated)
+      autoSaveEpk(updated)
+      setStatusMsg(`✨ Generated new AI header banner matching: "${effectivePrompt.slice(0, 45)}..."!`)
       setStatusType('success')
     } catch (err) {
-      const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(pageKey)}/1400/450`
-      const currentHeaders = { ...(formData.pageHeaders || {}) }
-      currentHeaders[pageKey] = fallbackUrl
-      updateField('pageHeaders', currentHeaders)
+      const cleanPrompt = encodeURIComponent(`${effectivePrompt || pageLabel} banner`)
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=450&nologo=true&seed=${Date.now()}`
+      const updated = {
+        ...formData,
+        pageHeaders: {
+          ...(formData.pageHeaders || {}),
+          [pageKey]: fallbackUrl
+        }
+      }
+      setFormData(updated)
+      autoSaveEpk(updated)
       setStatusMsg(`AI banner applied for ${pageLabel}.`)
       setStatusType('success')
     } finally {
@@ -1173,140 +1361,303 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                 </div>
               )}
 
-              {activeTab === 'hero' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '820px' }}>
-                  <h3 style={{ margin: '0 0 6px', fontSize: '1.2rem', fontWeight: 900, color: '#fff' }}>
-                    Hero Banner Carousel & Headline Hierarchy
-                  </h3>
+              {activeTab === 'hero' && (() => {
+                const currentSlides = getInitialHeroSlides()
+                const activeSlideIdx = Math.min(selectedHeroSlideIndex, Math.max(0, currentSlides.length - 1))
+                const activeSlide = currentSlides[activeSlideIdx] || {
+                  id: 1,
+                  img: 'https://picsum.photos/seed/producer_studio_gear_1/1200/600',
+                  title1: formData.artist_name || 'Creator',
+                  title2: formData.headline || 'Producer & Artist',
+                  title3: 'High-Quality Digital Singles • Collector Vinyl & CDs'
+                }
 
-                  <div style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: accent, textTransform: 'uppercase', marginBottom: '4px' }}>
-                        Line 1: Primary Brand Identity Title
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.heroTitle1 || ''}
-                        onChange={e => updateField('heroTitle1', e.target.value)}
-                        placeholder={formData.artist_name || 'Creator Name'}
-                        style={{ width: '100%', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.88rem' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: accent, textTransform: 'uppercase', marginBottom: '4px' }}>
-                        Line 2: Value Proposition / Sync Pitch Sub-Headline
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.heroTitle2 || ''}
-                        onChange={e => updateField('heroTitle2', e.target.value)}
-                        placeholder="100% Pre-Cleared One-Stop Sync Licensing on SyncMavens"
-                        style={{ width: '100%', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.88rem' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: accent, textTransform: 'uppercase', marginBottom: '4px' }}>
-                        Line 3: Lossless Audio & Stems Ecosystem Hook
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.heroTitle3 || ''}
-                        onChange={e => updateField('heroTitle3', e.target.value)}
-                        placeholder="Instrumental Cues, 24-Bit WAV Stems & Automated PRO Splits"
-                        style={{ width: '100%', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.88rem' }}
-                      />
-                    </div>
-                  </div>
+                const updateActiveSlide = (field, val) => {
+                  const updated = [...currentSlides]
+                  updated[activeSlideIdx] = { ...updated[activeSlideIdx], [field]: val }
+                  updateField('heroSlides', updated)
+                  updateField('heroImages', updated.map(s => s.img))
+                  if (activeSlideIdx === 0) {
+                    if (field === 'title1') updateField('heroTitle1', val)
+                    if (field === 'title2') updateField('heroTitle2', val)
+                    if (field === 'title3') updateField('heroTitle3', val)
+                  }
+                }
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#cbd5e1', marginBottom: '10px' }}>
-                                        {/* AI Hero Imagery Generator with Custom Prompting */}
-                  <div style={{ background: '#0a0d1a', border: `1px solid ${accent}55`, borderRadius: '4px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <RiSparklingFill color={accent} size={18} />
-                      <span style={{ fontWeight: 900, color: '#fff', fontSize: '0.92rem' }}>AI Hero Imagery & Visuals Studio</span>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
-                        Custom Visual Prompt for Hero Artwork
-                      </label>
-                      <input
-                        type="text"
-                        value={heroAiPrompt}
-                        onChange={e => setHeroAiPrompt(e.target.value)}
-                        placeholder="e.g. Cinematic futuristic stage with modular synthesizers, neon cyan glow, 16:9 banner"
-                        style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      disabled={heroAiGenerating}
-                      onClick={handleGenerateHeroArt}
-                      style={{
-                        background: accent,
-                        color: '#000',
-                        border: 'none',
-                        padding: '10px 18px',
-                        borderRadius: '3px',
-                        fontWeight: 900,
-                        fontSize: '0.84rem',
-                        cursor: 'pointer',
-                        alignSelf: 'flex-start',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <RiSparklingFill size={14} />
-                      {heroAiGenerating ? 'Synthesizing 16:9 Artwork...' : 'Generate New Hero Slide Artwork (AI)'}
-                    </button>
-                  </div>
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '840px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <h3 style={{ margin: '0 0 4px', fontSize: '1.25rem', fontWeight: 900, color: '#fff' }}>
+                          Hero Banner Carousel & Slides
+                        </h3>
+                        <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+                          Select any slide to edit its visual artwork, 3-tier headline hierarchy, and call-to-action button.
+                        </div>
+                      </div>
 
-                  Carousel Slide Background Images (3 Recommended)
-                    </label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {(Array.isArray(formData.heroImages) && formData.heroImages.length > 0 
-                        ? formData.heroImages 
-                        : [formData.heroImageUrl || 'https://picsum.photos/seed/producer_studio_gear_1/1200/600']
-                      ).map((imgUrl, idx) => (
-                        <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '4px' }}>
-                          <img src={imgUrl} alt={`Slide ${idx + 1}`} style={{ width: '90px', height: '50px', objectFit: 'cover', borderRadius: '3px' }} />
-                          <input
-                            type="text"
-                            value={imgUrl}
-                            onChange={e => {
-                              const next = [...(formData.heroImages || [])]
-                              next[idx] = e.target.value
-                              updateField('heroImages', next)
-                            }}
-                            style={{ flex: 1, padding: '8px 10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
-                          />
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSlide = {
+                              id: Date.now(),
+                              img: `https://picsum.photos/seed/stage_hero_${Date.now()}/1200/600`,
+                              title1: formData.artist_name || 'Creator',
+                              title2: 'New Featured Showcase 2026',
+                              title3: 'Exclusive Fan Access & Collector Physical Editions'
+                            }
+                            const next = [...currentSlides, newSlide]
+                            updateField('heroSlides', next)
+                            updateField('heroImages', next.map(s => s.img))
+                            setSelectedHeroSlideIndex(next.length - 1)
+                            showStatus(`Slide ${next.length} added to Hero Carousel!`, 'success')
+                          }}
+                          style={{
+                            background: accent,
+                            color: '#000',
+                            border: 'none',
+                            padding: '8px 14px',
+                            borderRadius: '3px',
+                            fontWeight: 800,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <RiAddLine size={16} /> Add New Slide
+                        </button>
+
+                        {currentSlides.length > 1 && (
                           <button
                             type="button"
                             onClick={() => {
-                              const next = (formData.heroImages || []).filter((_, i) => i !== idx)
-                              updateField('heroImages', next)
+                              const next = currentSlides.filter((_, i) => i !== activeSlideIdx)
+                              updateField('heroSlides', next)
+                              updateField('heroImages', next.map(s => s.img))
+                              setSelectedHeroSlideIndex(Math.max(0, activeSlideIdx - 1))
+                              showStatus('Slide removed from Hero Carousel.', 'info')
                             }}
-                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '6px' }}
+                            style={{
+                              background: 'rgba(239,68,68,0.15)',
+                              border: '1px solid rgba(239,68,68,0.4)',
+                              color: '#ef4444',
+                              padding: '8px 12px',
+                              borderRadius: '3px',
+                              fontWeight: 700,
+                              fontSize: '0.82rem',
+                              cursor: 'pointer'
+                            }}
                           >
-                            <RiDeleteBin6Line size={16} />
+                            <RiDeleteBin6Line size={14} /> Remove Slide
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Top Slide Selector Dropdown */}
+                    <div style={{ background: '#0a0d1a', border: `1px solid ${accent}44`, padding: '16px 20px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#cbd5e1' }}>Select Slide to Edit:</span>
+                        <select
+                          value={activeSlideIdx}
+                          onChange={e => setSelectedHeroSlideIndex(Number(e.target.value))}
+                          style={{
+                            padding: '8px 14px',
+                            background: '#04060d',
+                            border: `1px solid ${accent}66`,
+                            borderRadius: '3px',
+                            color: '#fff',
+                            fontSize: '0.88rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {currentSlides.map((slide, idx) => (
+                            <option key={idx} value={idx}>
+                              Slide {idx + 1}: {slide.title1 || `Slide ${idx + 1}`} ({slide.title2?.slice(0, 24) || 'Visual'})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: accent, fontWeight: 700 }}>
+                        Currently Editing Slide {activeSlideIdx + 1} of {currentSlides.length}
+                      </div>
+                    </div>
+
+                    {/* Slide Headline & Copy Fields */}
+                    <div style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h4 style={{ margin: 0, color: '#fff', fontSize: '0.98rem', fontWeight: 800 }}>
+                          Slide {activeSlideIdx + 1} Typography & Hierarchy
+                        </h4>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Live on Carousel Rotation</span>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: accent, textTransform: 'uppercase', marginBottom: '4px' }}>
+                          Line 1: Primary Headline / Artist Identity
+                        </label>
+                        <input
+                          type="text"
+                          value={activeSlide.title1 || ''}
+                          onChange={e => updateActiveSlide('title1', e.target.value)}
+                          placeholder="e.g. Ndufo / World Tour Showcase"
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.88rem' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: accent, textTransform: 'uppercase', marginBottom: '4px' }}>
+                          Line 2: Sub-Headline / Value Proposition / Tour Headline
+                        </label>
+                        <input
+                          type="text"
+                          value={activeSlide.title2 || ''}
+                          onChange={e => updateActiveSlide('title2', e.target.value)}
+                          placeholder="e.g. Electronic & Modular Live Synthesizer Performance"
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.88rem' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: accent, textTransform: 'uppercase', marginBottom: '4px' }}>
+                          Line 3: Lossless Audio & Direct Commerce Feature Hook
+                        </label>
+                        <input
+                          type="text"
+                          value={activeSlide.title3 || ''}
+                          onChange={e => updateActiveSlide('title3', e.target.value)}
+                          placeholder="e.g. High-Quality Digital Singles • Collector Vinyl & CDs • Direct Fan Ticketing"
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.88rem' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Slide 16:9 Image & Dedicated AI Studio */}
+                    <div style={{ background: '#0a0d1a', border: `1px solid ${accent}55`, borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <RiSparklingFill color={accent} size={18} />
+                          <span style={{ fontWeight: 900, color: '#fff', fontSize: '0.95rem' }}>Slide {activeSlideIdx + 1} Artwork & Visual Prompt Studio</span>
+                        </div>
+                        <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>16:9 Cinematic Widescreen</span>
+                      </div>
+
+                      {/* Live Image Preview */}
+                      <div style={{ position: 'relative', width: '100%', height: '220px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)' }}>
+                        <img
+                          src={activeSlide.img || 'https://picsum.photos/seed/slide_ph/1200/600'}
+                          alt={`Slide ${activeSlideIdx + 1}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)' }} />
+                        <div style={{ position: 'absolute', bottom: '14px', left: '16px', right: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div>
+                            <span style={{ background: accent, color: '#000', fontSize: '0.68rem', fontWeight: 900, padding: '2px 8px', borderRadius: '3px', textTransform: 'uppercase' }}>
+                              Slide {activeSlideIdx + 1}
+                            </span>
+                            <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.05rem', marginTop: '4px' }}>
+                              {activeSlide.title1 || 'Hero Title'}
+                            </div>
+                            <div style={{ color: accent, fontSize: '0.8rem' }}>
+                              {activeSlide.title2 || 'Sub-headline'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Image URL & Upload controls */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={activeSlide.img || ''}
+                          onChange={e => updateActiveSlide('img', e.target.value)}
+                          placeholder="Image URL (https://...)"
+                          style={{ padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
+                        />
+                        <div>
+                          <input
+                            id={`slide-file-upload-${activeSlideIdx}`}
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={e => {
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                const reader = new FileReader()
+                                reader.onload = ev => {
+                                  updateActiveSlide('img', ev.target.result)
+                                  showStatus(`Slide ${activeSlideIdx + 1} custom image loaded!`, 'success')
+                                }
+                                reader.readAsDataURL(file)
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`slide-file-upload-${activeSlideIdx}`}
+                            style={{
+                              background: 'rgba(255,255,255,0.08)',
+                              border: '1px solid rgba(255,255,255,0.2)',
+                              color: '#fff',
+                              padding: '9px 14px',
+                              borderRadius: '3px',
+                              fontSize: '0.82rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <RiUploadFill size={14} /> Upload Custom
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* AI Prompting specifically for this slide */}
+                      <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px', borderRadius: '3px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800 }}>
+                          Custom AI Visual Prompt for Slide {activeSlideIdx + 1}
+                        </label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input
+                            type="text"
+                            value={heroAiPrompt}
+                            onChange={e => setHeroAiPrompt(e.target.value)}
+                            placeholder="e.g. Massive festival stage at dusk with neon cyan lasers and holographic visuals, 16:9 banner"
+                            style={{ flex: 1, padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
+                          />
+                          <button
+                            type="button"
+                            disabled={heroAiGenerating}
+                            onClick={() => handleGenerateHeroArtForSlide(activeSlideIdx, heroAiPrompt)}
+                            style={{
+                              background: heroAiGenerating ? 'rgba(34,211,238,0.2)' : `linear-gradient(135deg, ${accent}, #8b5cf6)`,
+                              color: '#000',
+                              border: 'none',
+                              padding: '9px 16px',
+                              borderRadius: '3px',
+                              fontWeight: 900,
+                              fontSize: '0.82rem',
+                              cursor: heroAiGenerating ? 'wait' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <RiSparklingFill size={14} />
+                            {heroAiGenerating ? 'Generating...' : '✨ Generate AI Artwork'}
                           </button>
                         </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const current = Array.isArray(formData.heroImages) ? [...formData.heroImages] : []
-                          updateField('heroImages', [...current, `https://picsum.photos/seed/studio_${Date.now()}/1200/600`])
-                        }}
-                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px dashed rgba(255,255,255,0.2)', color: '#cbd5e1', padding: '10px', borderRadius: '3px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                      >
-                        <RiAddLine /> Add Slide Image
-                      </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               {activeTab === 'banners' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '860px' }}>
@@ -1375,7 +1726,7 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
 
                               <button
                                 type="button"
-                                onClick={() => handleGeneratePageHeader(bp.key, bp.label, bp.defaultPrompt)}
+                                onClick={() => handleGeneratePageHeader(bp.key, bp.label, bannerPrompts[bp.key] || bp.defaultPrompt)}
                                 disabled={isGenerating}
                                 style={{
                                   background: isGenerating ? 'rgba(34,211,238,0.2)' : `linear-gradient(135deg, ${accent}, #8b5cf6)`,
@@ -1423,14 +1774,31 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                             </div>
                           </div>
 
+                          {/* Custom Visual Prompt for this Page Banner */}
+                          <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800 }}>
+                              Custom AI Prompt for {bp.label} Banner
+                            </label>
+                            <input
+                              type="text"
+                              value={bannerPrompts[bp.key] !== undefined ? bannerPrompts[bp.key] : bp.defaultPrompt}
+                              onChange={e => {
+                                const val = e.target.value
+                                setBannerPrompts(prev => ({ ...prev, [bp.key]: val }))
+                              }}
+                              placeholder="Enter custom visual prompt for this banner..."
+                              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.82rem' }}
+                            />
+                          </div>
+
                           {/* Banner Image Preview */}
                           <div style={{ position: 'relative', width: '100%', height: '180px', borderRadius: '3px', overflow: 'hidden', border: `1px solid ${accent}33` }}>
                             <img
                               src={currentBanner}
                               alt={`${bp.label} Banner`}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(1.4)' }}
                             />
-                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)' }} />
                             <div style={{ position: 'absolute', bottom: '12px', left: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <span style={{ background: accent, color: '#000', fontSize: '0.68rem', fontWeight: 900, padding: '2px 8px', borderRadius: '3px', textTransform: 'uppercase' }}>
                                 Live Header
@@ -1448,67 +1816,261 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
               )}
 
               {activeTab === 'bio' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '820px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '840px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#fff' }}>
-                      Rich Media Narrative Bio
-                    </h3>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        type="button"
-                        onClick={handleGenerateAiBio}
-                        disabled={aiBioGenerating}
-                        style={{ background: 'rgba(139, 92, 246, 0.2)', border: '1px solid #8b5cf6', color: '#c084fc', padding: '6px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: aiBioGenerating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                      >
-                        <RiSparklingFill /> {aiBioGenerating ? 'Generating...' : '✨ Generate AI Sync Bio'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setHtmlMode(!htmlMode)}
-                        style={{ background: htmlMode ? accent : 'rgba(255,255,255,0.06)', color: htmlMode ? '#000' : '#cbd5e1', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <RiCodeBoxFill /> {htmlMode ? 'Visual Mode' : 'HTML Code'}
-                      </button>
+                    <div>
+                      <h3 style={{ margin: '0 0 4px', fontSize: '1.25rem', fontWeight: 900, color: '#fff' }}>
+                        Biography, Heritage & Studio Specs
+                      </h3>
+                      <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+                        Customize your profile portrait, rich narrative story, press reviews, and technical studio credentials.
+                      </div>
                     </div>
                   </div>
 
-                  {!htmlMode && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '8px 10px', background: '#05070e', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px 3px 0 0', borderBottom: 'none' }}>
-                      <button type="button" onClick={() => execCmd('bold')} style={tbBtn}><RiBold /></button>
-                      <button type="button" onClick={() => execCmd('italic')} style={tbBtn}><RiItalic /></button>
-                      <button type="button" onClick={() => execCmd('underline')} style={tbBtn}><RiUnderline /></button>
-                      <button type="button" onClick={() => execCmd('strikeThrough')} style={tbBtn}><RiStrikethrough /></button>
-                      <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
-                      <button type="button" onClick={() => execCmd('formatBlock', '<h2>')} style={tbBtn}><RiH2 /></button>
-                      <button type="button" onClick={() => execCmd('formatBlock', '<h3>')} style={tbBtn}><RiH3 /></button>
-                      <button type="button" onClick={() => execCmd('formatBlock', '<p>')} style={tbBtn}>P</button>
-                      <button type="button" onClick={() => execCmd('formatBlock', '<blockquote>')} style={tbBtn}><RiDoubleQuotesL /></button>
-                      <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
-                      <button type="button" onClick={() => execCmd('insertUnorderedList')} style={tbBtn}><RiListUnordered /></button>
-                      <button type="button" onClick={() => execCmd('insertOrderedList')} style={tbBtn}><RiListOrdered /></button>
-                      <button type="button" onClick={() => {
-                        const url = prompt('Enter link URL (e.g. https://open.spotify.com):')
-                        if (url) execCmd('createLink', url)
-                      }} style={tbBtn}><RiLink /></button>
+                  {/* 1. Artist Profile Photo & AI Portrait Studio */}
+                  <div style={{ background: '#0a0d1a', border: `1px solid ${accent}44`, borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ color: '#fff', fontSize: '0.95rem' }}>1. Official Artist Profile Portrait</strong>
+                      <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Featured in Bio Header & EPK PDF</span>
                     </div>
-                  )}
 
-                  {htmlMode ? (
-                    <textarea
-                      value={formData.bio || ''}
-                      onChange={e => updateField('bio', e.target.value)}
-                      style={{ width: '100%', height: '340px', padding: '14px', background: '#05070e', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#34d399', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: 1.6 }}
-                    />
-                  ) : (
-                    <div
-                      ref={editorRef}
-                      contentEditable
-                      onInput={() => {
-                        if (editorRef.current) updateField('bio', editorRef.current.innerHTML)
-                      }}
-                      style={{ minHeight: '340px', padding: '18px', background: '#0a0d18', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '0 0 3px 3px', color: '#e2e8f0', fontSize: '0.92rem', lineHeight: 1.7, outline: 'none' }}
-                    />
-                  )}
+                    <div style={{ display: 'flex', gap: '18px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <img
+                        src={formData.profilePhoto || formData.heroImageUrl || 'https://picsum.photos/seed/producer_portrait/600/800'}
+                        alt="Profile Preview"
+                        style={{ width: '90px', height: '110px', objectFit: 'cover', borderRadius: '3px', border: `1px solid ${accent}66`, boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}
+                      />
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            value={formData.profilePhoto || ''}
+                            onChange={e => updateField('profilePhoto', e.target.value)}
+                            placeholder="Profile image URL (https://...)"
+                            style={{ flex: 1, padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                          />
+                          <div>
+                            <input
+                              id="bio-profile-upload"
+                              type="file"
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              onChange={e => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  const reader = new FileReader()
+                                  reader.onload = ev => {
+                                    updateField('profilePhoto', ev.target.result)
+                                    showStatus('Custom bio portrait uploaded!', 'success')
+                                  }
+                                  reader.readAsDataURL(file)
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor="bio-profile-upload"
+                              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '9px 14px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <RiUploadFill size={14} /> Upload
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* AI Portrait Prompting */}
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input
+                            type="text"
+                            value={bioProfilePrompt}
+                            onChange={e => setBioProfilePrompt(e.target.value)}
+                            placeholder="AI Portrait prompt: e.g. High fashion cinematic studio portrait of music producer..."
+                            style={{ flex: 1, padding: '7px 10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.8rem' }}
+                          />
+                          <button
+                            type="button"
+                            disabled={bioProfileGenerating}
+                            onClick={() => handleGenerateBioProfileArt(bioProfilePrompt)}
+                            style={{ background: bioProfileGenerating ? 'rgba(34,211,238,0.2)' : `linear-gradient(135deg, ${accent}, #8b5cf6)`, color: '#000', border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 900, fontSize: '0.78rem', cursor: bioProfileGenerating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+                          >
+                            <RiSparklingFill size={12} /> {bioProfileGenerating ? 'Generating...' : '✨ AI Portrait'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Main Narrative Biography */}
+                  <div style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ color: '#fff', fontSize: '0.95rem' }}>2. Narrative Artist Biography</strong>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={handleGenerateAiBio}
+                          disabled={aiBioGenerating}
+                          style={{ background: 'rgba(139, 92, 246, 0.2)', border: '1px solid #8b5cf6', color: '#c084fc', padding: '6px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: aiBioGenerating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <RiSparklingFill /> {aiBioGenerating ? 'Generating...' : '✨ Generate AI Sync Bio'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setHtmlMode(!htmlMode)}
+                          style={{ background: htmlMode ? accent : 'rgba(255,255,255,0.06)', color: htmlMode ? '#000' : '#cbd5e1', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '3px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <RiCodeBoxFill /> {htmlMode ? 'Visual Mode' : 'HTML Code'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {!htmlMode && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '8px 10px', background: '#05070e', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px 3px 0 0', borderBottom: 'none' }}>
+                        <button type="button" onClick={() => execCmd('bold')} style={tbBtn}><RiBold /></button>
+                        <button type="button" onClick={() => execCmd('italic')} style={tbBtn}><RiItalic /></button>
+                        <button type="button" onClick={() => execCmd('underline')} style={tbBtn}><RiUnderline /></button>
+                        <button type="button" onClick={() => execCmd('strikeThrough')} style={tbBtn}><RiStrikethrough /></button>
+                        <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
+                        <button type="button" onClick={() => execCmd('formatBlock', '<h2>')} style={tbBtn}><RiH2 /></button>
+                        <button type="button" onClick={() => execCmd('formatBlock', '<h3>')} style={tbBtn}><RiH3 /></button>
+                        <button type="button" onClick={() => execCmd('formatBlock', '<p>')} style={tbBtn}>P</button>
+                        <button type="button" onClick={() => execCmd('formatBlock', '<blockquote>')} style={tbBtn}><RiDoubleQuotesL /></button>
+                        <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
+                        <button type="button" onClick={() => execCmd('insertUnorderedList')} style={tbBtn}><RiListUnordered /></button>
+                        <button type="button" onClick={() => execCmd('insertOrderedList')} style={tbBtn}><RiListOrdered /></button>
+                        <button type="button" onClick={() => {
+                          const url = prompt('Enter link URL (e.g. https://open.spotify.com):')
+                          if (url) execCmd('createLink', url)
+                        }} style={tbBtn}><RiLink /></button>
+                      </div>
+                    )}
+
+                    {htmlMode ? (
+                      <textarea
+                        value={formData.bio || ''}
+                        onChange={e => updateField('bio', e.target.value)}
+                        style={{ width: '100%', height: '280px', padding: '14px', background: '#05070e', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#34d399', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: 1.6 }}
+                      />
+                    ) : (
+                      <div
+                        ref={editorRef}
+                        contentEditable
+                        onInput={() => {
+                          if (editorRef.current) updateField('bio', editorRef.current.innerHTML)
+                        }}
+                        style={{ minHeight: '280px', padding: '18px', background: '#0a0d18', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '0 0 3px 3px', color: '#e2e8f0', fontSize: '0.92rem', lineHeight: 1.7, outline: 'none' }}
+                      />
+                    )}
+                  </div>
+
+                  {/* 3. Featured Press Review Quote & Outlet */}
+                  <div style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <strong style={{ color: '#fff', fontSize: '0.95rem' }}>3. Featured Press Review & Editorial Quote</strong>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
+                          Press Quote Excerpt
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.pressQuote || ''}
+                          onChange={e => updateField('pressQuote', e.target.value)}
+                          placeholder='e.g. "A singular sonic architect redefining modern electronic master ownership."'
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
+                          Publication / Outlet Name
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.pressOutlet || ''}
+                          onChange={e => updateField('pressOutlet', e.target.value)}
+                          placeholder="e.g. Billboard Magazine / Pitchfork"
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Accolades & Studio Protocol Specifications */}
+                  <div style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <strong style={{ color: '#fff', fontSize: '0.95rem' }}>4. Accolades & Studio Protocol Specifications</strong>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
+                          Primary Creative Pathway
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.creatorPathway || 'Performing Artist & Multitrack Producer'}
+                          onChange={e => updateField('creatorPathway', e.target.value)}
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
+                          Verified Intermaven Creator ID
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.creatorId || 'IMC-2026-904'}
+                          onChange={e => updateField('creatorId', e.target.value)}
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
+                          Studio & Audio Specifications
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.studioSpecs || '24-Bit / 96kHz Lossless Broadcast Masters'}
+                          onChange={e => updateField('studioSpecs', e.target.value)}
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
+                          Studio Subtext
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.studioSubtext || 'High-resolution audio for streaming & physical editions'}
+                          onChange={e => updateField('studioSubtext', e.target.value)}
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5. Direct Representation & Worldwide Touring Booking */}
+                  <div style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <strong style={{ color: '#fff', fontSize: '0.95rem' }}>5. Direct Representation & Booking Contacts</strong>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
+                          Direct Booking Email
+                        </label>
+                        <input
+                          type="email"
+                          value={formData.bookingEmail || 'booking@tunemavens.com'}
+                          onChange={e => updateField('bookingEmail', e.target.value)}
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>
+                          Booking & Tour Inquiries Subtext
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.bookingSubtext || 'Worldwide touring & festival inquiries'}
+                          onChange={e => updateField('bookingSubtext', e.target.value)}
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 

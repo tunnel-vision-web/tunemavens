@@ -340,9 +340,10 @@ Standardized horizontal container alignment for pages.
 ```
 
 ### B. Page Header Banner (`.page-header-banner`)
-Standardized banner layout for sub-pages.
-- **Height:** `320px` banner with dynamic backdrops.
-- **Overlay:** Dual-gradient overlay fading from transparent (top) to dark background (bottom).
+Standardized banner layout for sub-pages and Creator Web World headers.
+- **Height:** `320px` banner with dynamic backdrops (`260px` in Creator Web Worlds).
+- **Luminance Boost:** `filter: brightness(1.4)` (+40% luminance boost; hover `brightness(1.55)`). Ensures rich vividness of photography while keeping text contrast crisp.
+- **Overlay:** Dual-gradient overlay fading from transparent/semi-dark to dark background (`rgba(6, 8, 19, 0.25)` to `rgba(6, 8, 19, 0.55)`).
 - **Styling:**
   ```css
   .page-header-banner {
@@ -356,12 +357,18 @@ Standardized banner layout for sub-pages.
     justify-content: center;
     margin-bottom: 40px;
     overflow: hidden;
+    filter: brightness(1.4); /* +40% luminance boost */
+    transition: filter 0.3s ease;
+  }
+
+  .page-header-banner:hover {
+    filter: brightness(1.55);
   }
   
   .page-header-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(180deg, rgba(6, 8, 19, 0.4) 0%, rgba(6, 8, 19, 0.85) 100%);
+    background: linear-gradient(180deg, rgba(6, 8, 19, 0.25) 0%, rgba(6, 8, 19, 0.55) 100%);
     z-index: 1;
   }
   

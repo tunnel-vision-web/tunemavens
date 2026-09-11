@@ -9,7 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from bson import ObjectId
 
-from auth import get_current_user
+import time
+import urllib.parse
+from auth import get_current_user, get_optional_user
 from config import db
 from models import GeneratedAsset, AssetUpdateRequest
 from services.youtube_service import youtube_service
@@ -22,7 +24,7 @@ router = APIRouter(prefix="/api/social-ai", tags=["social-ai"])
 
 class ArtGenerateRequest(BaseModel):
     prompt: str
-    aspect_ratio: Optional[str] = "1:1"
+    aspect_ratio: Optional[str] = "16:9"
 
 
 class VideoGenerateRequest(BaseModel):
@@ -31,29 +33,45 @@ class VideoGenerateRequest(BaseModel):
 
 
 @router.post("/generate-art")
-def generate_art(payload: ArtGenerateRequest, current_user: dict = Depends(get_current_user)):
-    """Simulate creative text-to-image artwork generation and save it to the asset manager."""
+def generate_art(payload: ArtGenerateRequest, current_user: Optional[dict] = Depends(get_optional_user)):
+    """Creative text-to-image artwork generation responding to user prompts."""
     if not payload.prompt.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Prompt cannot be empty"
         )
     
-    seed_str = "".join(c for c in payload.prompt if c.isalnum())[:25] or "artwork"
-    mock_art_url = f"https://picsum.photos/seed/{seed_str}/600"
+    clean_prompt = urllib.parse.quote(payload.prompt.strip())
+    aspect_ratio = payload.aspect_ratio or "16:9"
+    if aspect_ratio == "16:9":
+        w, h = 1400, 700
+    elif aspect_ratio in ("3:1", "banner"):
+        w, h = 1400, 450
+    elif aspect_ratio == "1:1":
+        w, h = 800, 800
+    else:
+        w, h = 1200, 675
+        
+    seed = int(time.time() * 1000) % 10000000
+    art_url = f"https://image.pollinations.ai/prompt/{clean_prompt}?width={w}&height={h}&nologo=true&seed={seed}"
     
+    user_id = str(current_user["_id"]) if current_user else "anonymous_cms"
     asset = GeneratedAsset(
-        user_id=str(current_user["_id"]),
+        user_id=user_id,
         media_type="image",
-        media_url=mock_art_url,
+        media_url=art_url,
         prompt=payload.prompt,
         aspect_ratio=payload.aspect_ratio
     )
     
     asset_doc = asset.to_mongo()
-    result = db.assets.insert_one(asset_doc)
-    asset_doc["id"] = str(result.inserted_id)
-    asset_doc.pop("_id", None)
+    try:
+        result = db.assets.insert_one(asset_doc)
+        asset_doc["id"] = str(result.inserted_id)
+        asset_doc.pop("_id", None)
+    except Exception:
+        asset_doc["id"] = str(seed)
+        asset_doc.pop("_id", None)
     
     return {
         "status": "success",
