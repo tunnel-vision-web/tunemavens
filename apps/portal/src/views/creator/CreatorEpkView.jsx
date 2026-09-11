@@ -2858,7 +2858,7 @@ Direct Management Contact: mgmt@intermaven.io`
               </div>
             )
           })()}
-            {/* Hero Music Player - Positioned 20px below HERO Titles */}
+            {/* Hero Music Player - Positioned 40px below HERO Titles */}
             {(() => {
               const currentTrack = tracks[playlistIndex] || tracks[0] || activeTrack
               return (
@@ -2873,7 +2873,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   gap: '12px',
                   maxWidth: '560px',
                   width: '92%',
-                  margin: '20px auto 0',
+                  margin: '40px auto 0',
                   boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
                   textAlign: 'left',
                   position: 'relative',
