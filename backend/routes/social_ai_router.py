@@ -44,13 +44,17 @@ def generate_art(payload: ArtGenerateRequest, current_user: Optional[dict] = Dep
     clean_prompt = urllib.parse.quote(payload.prompt.strip())
     aspect_ratio = payload.aspect_ratio or "16:9"
     if aspect_ratio == "16:9":
-        w, h = 1400, 700
-    elif aspect_ratio in ("3:1", "banner"):
-        w, h = 1400, 450
+        w, h = 1920, 1080
+    elif aspect_ratio in ("3:1", "banner", "header"):
+        w, h = 1920, 640
     elif aspect_ratio == "1:1":
-        w, h = 800, 800
+        w, h = 1024, 1024
+    elif aspect_ratio in ("4:5", "portrait"):
+        w, h = 1080, 1350
+    elif aspect_ratio == "9:16":
+        w, h = 1080, 1920
     else:
-        w, h = 1200, 675
+        w, h = 1920, 1080
         
     seed = int(time.time() * 1000) % 10000000
     art_url = f"https://image.pollinations.ai/prompt/{clean_prompt}?width={w}&height={h}&nologo=true&seed={seed}"

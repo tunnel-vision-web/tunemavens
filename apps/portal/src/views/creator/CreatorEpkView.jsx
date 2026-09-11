@@ -25,16 +25,16 @@ import { persistAppActivation } from '../../lib/activatedApps.js'
 
 // 20 Pre-populated Theme Templates Specification
 const DEFAULT_PAGE_HEADERS = {
-  discography: 'https://picsum.photos/seed/discography_banner/1400/450',
-  bio: 'https://picsum.photos/seed/bio_banner/1400/450',
-  shows: 'https://picsum.photos/seed/shows_banner/1400/450',
-  store: 'https://picsum.photos/seed/store_banner/1400/450',
-  media: 'https://picsum.photos/seed/media_banner/1400/450',
-  press: 'https://picsum.photos/seed/press_banner/1400/450',
-  contact: 'https://picsum.photos/seed/contact_banner/1400/450',
-  pricing: 'https://picsum.photos/seed/pricing_banner/1400/450',
-  'event-detail': 'https://picsum.photos/seed/shows_banner/1400/450',
-  'album-detail': 'https://picsum.photos/seed/discography_banner/1400/450'
+  discography: 'https://picsum.photos/seed/discography_banner/1920/640',
+  bio: 'https://picsum.photos/seed/bio_banner/1920/640',
+  shows: 'https://picsum.photos/seed/shows_banner/1920/640',
+  store: 'https://picsum.photos/seed/store_banner/1920/640',
+  media: 'https://picsum.photos/seed/media_banner/1920/640',
+  press: 'https://picsum.photos/seed/press_banner/1920/640',
+  contact: 'https://picsum.photos/seed/contact_banner/1920/640',
+  pricing: 'https://picsum.photos/seed/pricing_banner/1920/640',
+  'event-detail': 'https://picsum.photos/seed/shows_banner/1920/640',
+  'album-detail': 'https://picsum.photos/seed/discography_banner/1920/640'
 }
 
 export const EPK_THEMES = [
@@ -2775,7 +2775,7 @@ Direct Management Contact: mgmt@intermaven.io`
 
       {/* ================= 2. HERO CAROUSEL ================= */}
       {activeTab === 'home' && (
-        <section style={{ position: 'relative', height: '520px', backgroundImage: `url(${currentSlide?.img || heroSlide1})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '80px 32px 48px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
+        <section style={{ position: 'relative', minHeight: '660px', height: 'clamp(620px, 68vh, 800px)', backgroundImage: `url(${currentSlide?.img || heroSlide1})`, backgroundSize: 'cover', backgroundPosition: 'center 28%', backgroundRepeat: 'no-repeat', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '90px 32px 56px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
           <div style={{ position: 'absolute', inset: 0, background: isLight ? 'linear-gradient(to top, rgba(248,250,252,0.95) 0%, rgba(248,250,252,0.50) 60%, rgba(248,250,252,0.7) 100%)' : 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.40) 60%, rgba(4,6,14,0.65) 100%)' }} />
 
           {/* HERO Arrows Constrained to Content Width (e.g. 1280px / 960px) */}

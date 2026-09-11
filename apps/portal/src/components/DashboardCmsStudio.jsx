@@ -25,14 +25,14 @@ const CMS_TABS = [
 ]
 
 const BANNER_PAGES = [
-  { key: 'discography', label: 'Music & Discography', defaultPrompt: 'Cinematic atmospheric music studio with analog mixing console, neon glow, 16:9 stage banner', defaultImg: 'https://picsum.photos/seed/discography_banner/1400/450' },
-  { key: 'bio', label: 'Biography & Story', defaultPrompt: 'Editorial artist portrait in moody acoustic venue, cinematic shadows, high fashion lighting, 16:9 banner', defaultImg: 'https://picsum.photos/seed/bio_banner/1400/450' },
-  { key: 'shows', label: 'Tour & Live Shows', defaultPrompt: 'Massive festival crowd cheering at dusk with laser lights and pyrotechnics, 16:9 concert banner', defaultImg: 'https://picsum.photos/seed/shows_banner/1400/450' },
-  { key: 'store', label: 'Store & Merchandise', defaultPrompt: 'Minimalist high-end streetwear and vinyl boutique showroom, cybernetic lighting, 16:9 store banner', defaultImg: 'https://picsum.photos/seed/store_banner/1400/450' },
-  { key: 'media', label: 'Videos & 4K Reel', defaultPrompt: 'Cinema film production stage with 4k cameras and anamorphic lens flares, 16:9 wide banner', defaultImg: 'https://picsum.photos/seed/media_banner/1400/450' },
-  { key: 'press', label: 'Press Kit & EPK', defaultPrompt: 'Monochrome architectural studio loft with Billboard magazine aesthetics, 16:9 executive banner', defaultImg: 'https://picsum.photos/seed/press_banner/1400/450' },
-  { key: 'contact', label: 'Booking & Inquiries', defaultPrompt: 'Luxury executive artist management lounge with world tour skyline view, 16:9 contact banner', defaultImg: 'https://picsum.photos/seed/contact_banner/1400/450' },
-  { key: 'pricing', label: 'Fan VIP & Top-Ups', defaultPrompt: 'Futuristic glowing VIP lounge with golden particle streams, 16:9 VIP experience banner', defaultImg: 'https://picsum.photos/seed/pricing_banner/1400/450' }
+  { key: 'discography', label: 'Music & Discography', defaultPrompt: 'Cinematic atmospheric music studio with analog mixing console, neon glow, 16:9 stage banner', defaultImg: 'https://picsum.photos/seed/discography_banner/1920/640' },
+  { key: 'bio', label: 'Biography & Story', defaultPrompt: 'Editorial artist portrait in moody acoustic venue, cinematic shadows, high fashion lighting, 16:9 banner', defaultImg: 'https://picsum.photos/seed/bio_banner/1920/640' },
+  { key: 'shows', label: 'Tour & Live Shows', defaultPrompt: 'Massive festival crowd cheering at dusk with laser lights and pyrotechnics, 16:9 concert banner', defaultImg: 'https://picsum.photos/seed/shows_banner/1920/640' },
+  { key: 'store', label: 'Store & Merchandise', defaultPrompt: 'Minimalist high-end streetwear and vinyl boutique showroom, cybernetic lighting, 16:9 store banner', defaultImg: 'https://picsum.photos/seed/store_banner/1920/640' },
+  { key: 'media', label: 'Videos & 4K Reel', defaultPrompt: 'Cinema film production stage with 4k cameras and anamorphic lens flares, 16:9 wide banner', defaultImg: 'https://picsum.photos/seed/media_banner/1920/640' },
+  { key: 'press', label: 'Press Kit & EPK', defaultPrompt: 'Monochrome architectural studio loft with Billboard magazine aesthetics, 16:9 executive banner', defaultImg: 'https://picsum.photos/seed/press_banner/1920/640' },
+  { key: 'contact', label: 'Booking & Inquiries', defaultPrompt: 'Luxury executive artist management lounge with world tour skyline view, 16:9 contact banner', defaultImg: 'https://picsum.photos/seed/contact_banner/1920/640' },
+  { key: 'pricing', label: 'Fan VIP & Top-Ups', defaultPrompt: 'Futuristic glowing VIP lounge with golden particle streams, 16:9 VIP experience banner', defaultImg: 'https://picsum.photos/seed/pricing_banner/1920/640' }
 ]
 
 const DEFAULT_TRACKS = [
@@ -257,8 +257,8 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
       } catch (_) {}
 
       if (!generatedUrl) {
-        const cleanPrompt = encodeURIComponent(`${prompt}, cinematic lighting, photorealistic, 4k, 16:9 widescreen`)
-        generatedUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=700&nologo=true&seed=${Date.now()}`
+        const cleanPrompt = encodeURIComponent(`${prompt}, 16:9 widescreen, cinematic lighting, photorealistic, 4k master composition`)
+        generatedUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1920&height=1080&nologo=true&seed=${Date.now()}`
       }
       const currentImages = Array.isArray(formData.heroImages) ? [...formData.heroImages] : []
       const newImages = [generatedUrl, ...currentImages]
@@ -271,7 +271,7 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
       autoSaveEpk(updated)
       showStatus('Hero slide artwork generated with AI and synced!', 'success')
     } catch {
-      const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1400&height=700&nologo=true&seed=${Date.now()}`
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', 16:9 widescreen') }?width=1920&height=1080&nologo=true&seed=${Date.now()}`
       const currentImages = Array.isArray(formData.heroImages) ? [...formData.heroImages] : []
       const updated = {
         ...formData,
@@ -325,8 +325,8 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
       } catch (_) {}
 
       if (!generatedUrl) {
-        const cleanPrompt = encodeURIComponent(`${effectivePrompt}, cinematic lighting, photorealistic, 4k, 16:9 widescreen`)
-        generatedUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=700&nologo=true&seed=${Date.now()}`
+        const cleanPrompt = encodeURIComponent(`${effectivePrompt}, 16:9 widescreen, cinematic lighting, photorealistic, 4k master composition`)
+        generatedUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1920&height=1080&nologo=true&seed=${Date.now()}`
       }
 
       const slides = getInitialHeroSlides().map(s => ({ ...s }))
@@ -351,8 +351,8 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
       autoSaveEpk(updated)
       showStatus(`Slide ${slideIndex + 1} artwork generated from prompt: "${effectivePrompt.slice(0, 40)}..."!`, 'success')
     } catch {
-      const cleanPrompt = encodeURIComponent(`${effectivePrompt || 'music stage neon'}`)
-      const fallbackUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=700&nologo=true&seed=${Date.now()}`
+      const cleanPrompt = encodeURIComponent(`${effectivePrompt || 'music stage neon'}, 16:9 widescreen`)
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1920&height=1080&nologo=true&seed=${Date.now()}`
       const slides = getInitialHeroSlides().map(s => ({ ...s }))
       if (slides[slideIndex]) {
         slides[slideIndex] = { ...slides[slideIndex], img: fallbackUrl }
@@ -743,8 +743,8 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
 
       // Prompt-driven AI engine so image accurately reflects user prompt
       if (!bannerUrl) {
-        const cleanPrompt = encodeURIComponent(`${effectivePrompt}, 16:9 widescreen, cinematic lighting, 4k ultra detailed`)
-        bannerUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=450&nologo=true&seed=${Date.now()}`
+        const cleanPrompt = encodeURIComponent(`${effectivePrompt}, ultrawide cinematic banner, stage lighting, 4k ultra detailed`)
+        bannerUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1920&height=640&nologo=true&seed=${Date.now()}`
       }
 
       const updated = {
@@ -759,8 +759,8 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
       setStatusMsg(`✨ Generated new AI header banner matching: "${effectivePrompt.slice(0, 45)}..."!`)
       setStatusType('success')
     } catch (err) {
-      const cleanPrompt = encodeURIComponent(`${effectivePrompt || pageLabel} banner`)
-      const fallbackUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1400&height=450&nologo=true&seed=${Date.now()}`
+      const cleanPrompt = encodeURIComponent(`${effectivePrompt || pageLabel} banner, ultrawide cinematic 4k`)
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1920&height=640&nologo=true&seed=${Date.now()}`
       const updated = {
         ...formData,
         pageHeaders: {
@@ -1546,12 +1546,12 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                         <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>16:9 Cinematic Widescreen</span>
                       </div>
 
-                      {/* Live Image Preview */}
-                      <div style={{ position: 'relative', width: '100%', height: '220px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)' }}>
+                      {/* Live Image Preview with true 16:9 proportion */}
+                      <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', maxHeight: '440px', minHeight: '260px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)', background: '#02040a' }}>
                         <img
-                          src={activeSlide.img || 'https://picsum.photos/seed/slide_ph/1200/600'}
+                          src={activeSlide.img || 'https://picsum.photos/seed/slide_ph/1600/900'}
                           alt={`Slide ${activeSlideIdx + 1}`}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 28%' }}
                         />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)' }} />
                         <div style={{ position: 'absolute', bottom: '14px', left: '16px', right: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>

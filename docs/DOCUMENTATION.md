@@ -934,3 +934,28 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
   - `.page-header-overlay` lightened to `linear-gradient(180deg, rgba(6, 8, 19, 0.25) 0%, rgba(6, 8, 19, 0.55) 100%)`.
 - **CMS Studio Header Preview (`DashboardCmsStudio.jsx`):**
   - Added `filter: 'brightness(1.4)'` and soft overlay in the Page Header Banners preview drawer.
+
+## §9.24 — AI Hero Image Dimensions, True 16:9 Aspect Ratio & Responsive Scaling Protocol
+
+### 9.24.1 Dimension Standardization & Root-Cause Remediation (`backend/routes/social_ai_router.py`, `epk_router.py`, `cms_router.py`)
+- **Root Cause & Mathematical Diagnosis:** Previously, the default aspect ratio for hero images in `social_ai_router.py`, `epk_router.py`, and `cms_router.py` was defined with query parameters `width=1400&height=700`. Mathematically, $1400 / 700 = 2.0$ (a 2:1 panoramic ratio), whereas standard widescreen photography and display viewports adhere to $16:9 = 1.7778$. When AI generation models received prompts asking for 16:9 artwork while the generation parameters requested 2:1 dimensions, the resulting images suffered vertical compression (~12.5% squashing), forcing human subjects and instruments into squeezed proportions.
+- **True 16:9 Resolution (1920x1080):** Standardized all hero generation and default template endpoints to `width=1920&height=1080` ($16:9$, 1.7778).
+- **True 3:1 Banner Resolution (1920x640):** Standardized ribbon subpage headers and banner generation to `width=1920&height=640` ($3:1$, 3.0), replacing old $1400 \times 450$ values.
+- **Supported Social AI Aspect Ratios:**
+  - `16:9`: `1920x1080` (Hero banners, video reels, YouTube thumbnails)
+  - `3:1` / `banner` / `header`: `1920x640` (Ultra-wide subpage headers)
+  - `1:1`: `1024x1024` (Square album covers, avatars, Instagram feed)
+  - `4:5` / `portrait`: `1080x1350` (Instagram portrait posts)
+  - `9:16`: `1080x1920` (TikTok, IG Reels, YouTube Shorts)
+
+### 9.24.2 Responsive CSS Hero Container Proportions (`CreatorEpkView.jsx` & `DashboardCmsStudio.jsx`)
+- **Hero Carousel Viewport Optimization (`CreatorEpkView.jsx`):**
+  - Upgraded the hero banner container from a rigid `height: '520px'` (which caused severe top-and-bottom cropping of faces on widescreen monitors) to `minHeight: '660px', height: 'clamp(620px, 68vh, 800px)'`.
+  - Configured `backgroundPosition: 'center 28%'` and `backgroundSize: 'cover'`, ensuring focal points (artists' heads, stage lighting, studio consoles) remain fully visible and naturally proportioned across viewports.
+- **Studio Slide Live Preview Proportions (`DashboardCmsStudio.jsx`):**
+  - Replaced the fixed `220px` height strip with dynamic `aspectRatio: '16/9', maxHeight: '440px', minHeight: '260px'`, `objectFit: 'cover'`, and `objectPosition: 'center 28%'` so the editor preview renders true 16:9 photography identically to the live public page.
+
+### 9.24.3 Database Migration for Active Artist Records
+- Executed atomic migration across `db.epks` and `db.cms_layouts` to upgrade all existing stored Pollinations URLs from `width=1400&height=700` to `width=1920&height=1080`.
+- Active artist catalogs (including `ndufo` / `kip`) now serve crisp, distortion-free 16:9 widescreen imagery on all slides.
+
