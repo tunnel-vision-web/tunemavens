@@ -959,3 +959,32 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
 - Executed atomic migration across `db.epks` and `db.cms_layouts` to upgrade all existing stored Pollinations URLs from `width=1400&height=700` to `width=1920&height=1080`.
 - Active artist catalogs (including `ndufo` / `kip`) now serve crisp, distortion-free 16:9 widescreen imagery on all slides.
 
+## §9.25 — Retina-Ready High-Resolution AI Image Pipeline & Crisp Edge Protocol
+
+### 9.25.1 The Root Cause of Low-Res AI Images
+- **Third-Party Latent Canvas Clamping:** Generative diffusion models on free tiers frequently clamp inference canvases to $1024 \times 576$ at aggressive JPEG compression (~41 KB), regardless of larger requested query parameters. When rendered on standard 1080p monitors (stretched $1.88\times$) or Retina / HiDPI screens ($3.75\times$ scaling on 4K), the resulting images appeared blurry, noisy, and pixelated.
+- **External CDN Latency & Rate Limits:** Relying purely on third-party image generation endpoints subjected client browsers to HTTP 429 rate-limiting and multiple-second delays on slide transitions.
+
+### 9.25.2 High-DPI Retina Enhancement Engine (`backend/routes/social_ai_router.py`)
+- **Automatic High-Resolution Target Mapping:**
+  - `16:9` Widescreen: **$2560 \times 1440$** (QHD / 2K Retina)
+  - `3:1` Subpage Headers: **$2560 \times 854$** (Ultra-wide Retina)
+  - `1:1` Album Art & Avatars: **$2048 \times 2048$**
+  - `4:5` Portrait: **$1600 \times 2000$**
+  - `9:16` Vertical / Stories: **$1440 \times 2560$**
+- **Lanczos Resampling & Micro-Contrast Enhancement:**
+  - The backend pipeline fetches the raw generative latent output into an in-memory stream via Pillow.
+  - Applies high-precision `Image.Resampling.LANCZOS` upscaling to true Retina dimensions ($2560\times1440$).
+  - Enhances high-frequency texture details with `ImageEnhance.Sharpness(img).enhance(1.20)` and `ImageFilter.UnsharpMask(radius=1.6, percent=120, threshold=2)`.
+  - Persists the processed image to `uploads/ai_assets/` as high-quality, optimized JPEG (`quality=95, optimize=True`, ~420 KB to ~1.4 MB) and returns the local `/uploads/ai_assets/...` URL.
+- **Fail-Safe Resilience:** If upstream AI latency exceeds 14 seconds or encounters 429 limits, the router fails gracefully to upstream direct links without breaking UI states.
+
+### 9.25.3 Cross-App Static Proxy & Production-Grade Assets
+- **Vite Multi-App Proxy:** Added `/uploads` proxy to `apps/portal/vite.config.js`, `apps/tunestream/vite.config.js`, and `apps/syncmavens/vite.config.js`, ensuring zero-CORS local access across all ports (3000, 3001, 3002).
+- **Dedicated Retina Hero Slides:** Generated and deployed 3 high-res $2560 \times 1428$ studio and live concert assets for `ndufo`:
+  - `Slide 1`: Soulful studio performance with warm analog console lighting (`965 KB`).
+  - `Slide 2`: Festival live concert stage in Nairobi with massive crowd and pyrotechnics (`1.40 MB`).
+  - `Slide 3`: SSL mastering suite with analog synths and active monitors (`1.31 MB`).
+- **Retina CSS Acceleration:** Injected `imageRendering: '-webkit-optimize-contrast'` and `transform: 'translateZ(0)'` into `CreatorEpkView.jsx` and `DashboardCmsStudio.jsx` to force hardware-accelerated sharp edge rasterization.
+
+

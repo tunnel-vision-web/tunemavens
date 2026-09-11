@@ -2775,7 +2775,7 @@ Direct Management Contact: mgmt@intermaven.io`
 
       {/* ================= 2. HERO CAROUSEL ================= */}
       {activeTab === 'home' && (
-        <section style={{ position: 'relative', minHeight: '660px', height: 'clamp(620px, 68vh, 800px)', backgroundImage: `url(${currentSlide?.img || heroSlide1})`, backgroundSize: 'cover', backgroundPosition: 'center 28%', backgroundRepeat: 'no-repeat', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '90px 32px 56px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
+        <section style={{ position: 'relative', minHeight: '660px', height: 'clamp(620px, 68vh, 800px)', backgroundImage: `url(${currentSlide?.img || heroSlide1})`, backgroundSize: 'cover', backgroundPosition: 'center 28%', backgroundRepeat: 'no-repeat', imageRendering: '-webkit-optimize-contrast', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '90px 32px 56px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
           <div style={{ position: 'absolute', inset: 0, background: isLight ? 'linear-gradient(to top, rgba(248,250,252,0.95) 0%, rgba(248,250,252,0.50) 60%, rgba(248,250,252,0.7) 100%)' : 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.40) 60%, rgba(4,6,14,0.65) 100%)' }} />
 
           {/* HERO Arrows Constrained to Content Width (e.g. 1280px / 960px) */}

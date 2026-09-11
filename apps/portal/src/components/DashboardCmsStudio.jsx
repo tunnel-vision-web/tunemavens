@@ -1551,7 +1551,7 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                         <img
                           src={activeSlide.img || 'https://picsum.photos/seed/slide_ph/1600/900'}
                           alt={`Slide ${activeSlideIdx + 1}`}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 28%' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 28%', imageRendering: '-webkit-optimize-contrast', transform: 'translateZ(0)' }}
                         />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)' }} />
                         <div style={{ position: 'absolute', bottom: '14px', left: '16px', right: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>

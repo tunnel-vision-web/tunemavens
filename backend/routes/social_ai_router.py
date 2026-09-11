@@ -9,8 +9,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from bson import ObjectId
 
+import os
+import io
 import time
 import urllib.parse
+import urllib.request
+from PIL import Image, ImageFilter, ImageEnhance
 from auth import get_current_user, get_optional_user
 from config import db
 from models import GeneratedAsset, AssetUpdateRequest
@@ -20,6 +24,16 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/social-ai", tags=["social-ai"])
 
+RETINA_DIMENSIONS = {
+    "16:9": (2560, 1440),
+    "3:1": (2560, 854),
+    "banner": (2560, 854),
+    "header": (2560, 854),
+    "1:1": (2048, 2048),
+    "4:5": (1600, 2000),
+    "portrait": (1600, 2000),
+    "9:16": (1440, 2560),
+}
 
 
 class ArtGenerateRequest(BaseModel):
@@ -34,36 +48,66 @@ class VideoGenerateRequest(BaseModel):
 
 @router.post("/generate-art")
 def generate_art(payload: ArtGenerateRequest, current_user: Optional[dict] = Depends(get_optional_user)):
-    """Creative text-to-image artwork generation responding to user prompts."""
-    if not payload.prompt.strip():
+    """Creative text-to-image artwork generation responding to user prompts with Retina-ready crispness."""
+    raw_prompt = payload.prompt.strip()
+    if not raw_prompt:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Prompt cannot be empty"
         )
     
-    clean_prompt = urllib.parse.quote(payload.prompt.strip())
     aspect_ratio = payload.aspect_ratio or "16:9"
-    if aspect_ratio == "16:9":
-        w, h = 1920, 1080
-    elif aspect_ratio in ("3:1", "banner", "header"):
-        w, h = 1920, 640
-    elif aspect_ratio == "1:1":
-        w, h = 1024, 1024
-    elif aspect_ratio in ("4:5", "portrait"):
-        w, h = 1080, 1350
-    elif aspect_ratio == "9:16":
-        w, h = 1080, 1920
-    else:
-        w, h = 1920, 1080
-        
+    target_w, target_h = RETINA_DIMENSIONS.get(aspect_ratio, (2560, 1440))
+    
+    # Enrich prompt with professional photography & high-fidelity tokens for crisp realism
+    enriched_prompt = f"{raw_prompt}, photorealistic, 8k ultra detailed, crisp focus, studio lighting, masterpiece"
+    clean_prompt = urllib.parse.quote(enriched_prompt)
+    
     seed = int(time.time() * 1000) % 10000000
-    art_url = f"https://image.pollinations.ai/prompt/{clean_prompt}?width={w}&height={h}&nologo=true&seed={seed}"
+    generator_url = f"https://image.pollinations.ai/prompt/{clean_prompt}?width={target_w}&height={target_h}&nologo=true&seed={seed}"
+    
+    media_url = generator_url
+    
+    # Retina Enhancement Pipeline: Download, Lanczos upscale to true Retina 2K, and apply unsharp mask
+    try:
+        req = urllib.request.Request(
+            generator_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=14) as resp:
+            data = resp.read()
+            if data and len(data) > 2048:
+                img = Image.open(io.BytesIO(data))
+                # Ensure true Retina dimensions with Lanczos resampling
+                if img.size != (target_w, target_h):
+                    img = img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+                
+                # Apply crisp micro-contrast and unsharp masking for Retina screens
+                enhancer = ImageEnhance.Sharpness(img)
+                crisp = enhancer.enhance(1.20)
+                crisp = crisp.filter(ImageFilter.UnsharpMask(radius=1.6, percent=120, threshold=2))
+                
+                # Save locally to static uploads directory
+                uploads_dir = os.environ.get("LOCAL_UPLOADS_DIR", "uploads")
+                ai_dir = os.path.join(uploads_dir, "ai_assets")
+                os.makedirs(ai_dir, exist_ok=True)
+                
+                filename = f"retina_art_{seed}_{target_w}x{target_h}.jpg"
+                filepath = os.path.join(ai_dir, filename)
+                crisp.save(filepath, format="JPEG", quality=95, optimize=True)
+                
+                media_url = f"/uploads/ai_assets/{filename}"
+                logger.info(f"Generated Retina-ready crisp artwork ({target_w}x{target_h}) saved to {media_url}")
+    except Exception as exc:
+        logger.warning(f"Retina local upscaling fallback (serving upstream URL): {exc}")
     
     user_id = str(current_user["_id"]) if current_user else "anonymous_cms"
     asset = GeneratedAsset(
         user_id=user_id,
         media_type="image",
-        media_url=art_url,
+        media_url=media_url,
         prompt=payload.prompt,
         aspect_ratio=payload.aspect_ratio
     )

@@ -233,8 +233,8 @@ def get_epk_cms(subdomain: str, response: Response):
                 "updated_at": epk_doc.get("updated_at", datetime.now(timezone.utc))
             }
         # Return fallback default structure
-        default_hero = "https://image.pollinations.ai/prompt/Young%20African%20lady%20singing%20soulfully%20in%20a%20studio%20in%20Nairobi.%20Nairobi%20skyline%20shows%20through%20the%20window?width=1920&height=1080&nologo=true&seed=3044680"
-        default_hero_2 = "https://image.pollinations.ai/prompt/Young%20African%20lady%20singing%20in%20front%20of%20a%20crowd%20of%20hundreds%20in%20an%20outdoor%20concert%20in%20Nairobi.%20The%20skyline%20is%20visible%20in%20the%20background%20and%20she%20is%20backed%20by%20a%20full%20band?width=1920&height=1080&nologo=true&seed=3153304"
+        default_hero = "/heroes/ndufo_hero_slide1_retina.jpg"
+        default_hero_2 = "/heroes/ndufo_hero_slide2_retina.jpg"
         return {
             "layout_id": layout_id,
             "subdomain": clean_subdomain,
@@ -261,7 +261,7 @@ def get_epk_cms(subdomain: str, response: Response):
 
     res_data = dict(doc.get("data", {}))
     if not res_data.get("heroImageUrl"):
-        res_data["heroImageUrl"] = "https://image.pollinations.ai/prompt/Young%20African%20lady%20singing%20soulfully%20in%20a%20studio%20in%20Nairobi.%20Nairobi%20skyline%20shows%20through%20the%20window?width=1920&height=1080&nologo=true&seed=3044680"
+        res_data["heroImageUrl"] = "/heroes/ndufo_hero_slide1_retina.jpg"
 
     return {
         "layout_id": layout_id,
