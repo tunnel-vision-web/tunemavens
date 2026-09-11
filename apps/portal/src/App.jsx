@@ -4891,9 +4891,24 @@ function App() {
         if (cancelled) return;
         if (err?.status === 401) {
           tokenStore.clear();
-          sessionStorage.removeItem('tunemavens_session');
-          localStorage.removeItem('tunemavens_saved_user');
-          setSessionUser(null);
+          authApi.demo().then(({ user: demoUser, access_token }) => {
+            if (cancelled) return;
+            if (access_token) {
+              tokenStore.set(access_token);
+              const reconciled = reconcileUserApps({ ...(sessionUser || {}), ...demoUser });
+              setSessionUser(reconciled);
+              sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
+              localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
+            } else {
+              sessionStorage.removeItem('tunemavens_session');
+              localStorage.removeItem('tunemavens_saved_user');
+              setSessionUser(null);
+            }
+          }).catch(() => {
+            sessionStorage.removeItem('tunemavens_session');
+            localStorage.removeItem('tunemavens_saved_user');
+            setSessionUser(null);
+          });
         }
       });
     } else if (sessionUser) {

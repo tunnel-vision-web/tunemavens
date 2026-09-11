@@ -31,7 +31,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    if (dismissed || !tokenStore.get()) return;
+    if (dismissed || !tokenStore.get() || !sessionUser) return;
     let cancelled = false;
     Promise.all([
       dealsApi.publishing.list({ active_only: true }).catch(() => []),
@@ -42,7 +42,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
       setDistDeals(Array.isArray(d) ? d : []);
     });
     return () => { cancelled = true; };
-  }, [dismissed]);
+  }, [dismissed, sessionUser]);
 
   if (dismissed) return null;
   if (sessionUser?.role === 'consumer' || sessionUser?.role === 'admin') return null;
