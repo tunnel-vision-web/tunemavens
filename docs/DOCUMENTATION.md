@@ -987,4 +987,14 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
   - `Slide 3`: SSL mastering suite with analog synths and active monitors (`1.31 MB`).
 - **Retina CSS Acceleration:** Injected `imageRendering: '-webkit-optimize-contrast'` and `transform: 'translateZ(0)'` into `CreatorEpkView.jsx` and `DashboardCmsStudio.jsx` to force hardware-accelerated sharp edge rasterization.
 
+## §9.26 — Hero Section Layout: Titles Positioned 20px Above Music Player (`CreatorEpkView.jsx`)
+
+### 9.26.1 Vertical Alignment & Optical Composition
+- **Unobstructed Hero Focal Point:** The hero carousel container layout was adjusted from `justifyContent: 'center'` to `justifyContent: 'flex-end'` with `padding: '90px 32px 48px'`. This moves the typography hierarchy (`hero-title-1`, `hero-title-2`, `hero-title-3`) into the lower third of the viewport, ensuring that artists' faces, stage lights, and focal points in the 16:9 photography remain completely unobstructed.
+- **Strict 20px Vertical Spacing:**
+  - Removed artificial height clamp on `.hero-titles-wrapper` (`min-height: auto;`, previously `155px`) to eliminate phantom vertical padding below the text.
+  - Adjusted the Hero Music Player top margin from `82px` to **`20px`** (`margin: '20px auto 0'`).
+  - The hero typography now sits gracefully and exactly **20px** directly above the glassmorphic player card across all desktop and mobile viewports.
+
+
 
