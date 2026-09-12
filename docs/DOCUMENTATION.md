@@ -996,6 +996,52 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
   - Adjusted the Hero Music Player top margin to **`40px`** (`margin: '40px auto 0'`).
   - The hero typography sits gracefully with generous breathing room exactly **40px** directly above the glassmorphic player card across all desktop and mobile viewports.
 
+## §9.27 — Uncapped Audio Streaming & Butter-Smooth 60fps Time Scrubber (`GlobalAudioPlayer.jsx` / `App.jsx`)
+
+### 9.27.1 Uncapped Audio Streaming Architecture
+- **Removal of 30-Second Preview Gate:** Previous demo versions imposed an artificial 30-second cutoff on the persistent bottom audio player. This restriction has been completely eliminated in `GlobalAudioPlayer`, allowing full-length track streaming, uninterrupted album listening, and continuous playback across all pages.
+- **Audio Stream Endpoints:** Audio streaming integrates directly with `/api/stream/track/{isrc}` with HTTP 206 Partial Content range header support, supporting seamless scrubbing and instant buffering.
+
+### 9.27.2 Butter-Smooth 60fps Time Scrubber
+- **High-Frequency Animation Loop:** Rather than relying on low-frequency (250ms) `timeupdate` events which cause visual stepping, the time scrubber combines high-precision HTML5 `audio.currentTime` with `requestAnimationFrame` and CSS linear transitions (`transition: width 0.1s linear`).
+- **Interactive Scrubbing:** Click and drag interactions immediately recalculate progress percentages and seek the audio buffer seamlessly without audio pops or desynchronization.
+
+## §9.28 — Dedicated Album & Track Editing Suite (`managerSubView === 'album-edit'`)
+
+### 9.28.1 Sub-View Architecture & Direct Ingress
+- **Album Ingress:** Users can navigate directly into the Album Editor by clicking either the album cover artwork thumbnail in the Catalogue table or the dedicated **Edit** action button.
+- **Dedicated Sub-View State:** Controlled via `managerSubView === 'album-edit'`, rendering a focused, full-width management suite with back navigation (`← Back to Catalogue`).
+
+### 9.28.2 Constituent Track Management & Inline Preview Player
+- **Interactive Tracklist Table:** Displays all tracks belonging to the selected album with Track Number, Title, ISRC, Duration, and Action controls.
+- **Inline Audio Playback:** Each track row features an interactive inline play/pause button that streams the audio directly in context or syncs with the Global Audio Player.
+- **Inline Track Metadata Editing:** Modal or inline edit states allow updating track title, ISRC, duration, and metadata with live persistence to MongoDB via `PUT /api/catalog/tracks/{isrc}`.
+- **Track Deletion with Safe Re-Indexing:** Deleting a track triggers confirmation and executes `DELETE /api/catalog/tracks/{isrc}`, re-indexing track numbers automatically.
+
+## §9.29 — Catalogue Management Ingestion Collapsible Sidebar & Design System Standardization
+
+### 9.29.1 Collapsible Ingestion Sidebar
+- **Expandable/Collapsible Control:** The Catalogue Ingestion Sidebar (which contains Single/Album Ingest, Bulk CSV Upload, and Wizard triggers) features a responsive toggle button using `<RiMenuFoldLine />` and `<RiMenuUnfoldLine />`.
+- **Maximized Data Table View:** When collapsed, the Catalogue tracks and albums table expands to utilize 100% of the available workspace width, significantly improving legibility of long ISRCs, UPCs, and credit splits.
+
+### 9.29.2 Design System Standardization: 3px Radius & Flat Remix Icons
+- **Strict 3px Border Radius:** In accordance with the TuneMavens tech-forward design aesthetic, all interactive buttons, action controls, badges, and input fields across the catalogue, CMS, and CRM panels are standardized to `borderRadius: '3px'`.
+- **Flat Remix Icons (`react-icons/ri`):** Standardized all iconography across the application to flat, vector Remix Icons, eliminating inconsistent icon families and legacy gradient effects.
+
+## §9.30 — Smart CRM Multi-Service Architecture & Port 8001 Backend Unification (`SmartCrmStudioPanel.jsx`)
+
+### 9.30.1 Elimination of `ERR_CONNECTION_REFUSED` on Port 8080
+- **Context:** `SmartCrmStudioPanel.jsx` previously attempted speculative calls to `http://localhost:8080/api/crm/contacts` by default. In local and single-server deployments, the backend runs exclusively on port 8001, resulting in browser network console errors (`net::ERR_CONNECTION_REFUSED`).
+- **Conditional External Sync:** The external Intermaven CRM integration is now strictly conditional on `import.meta.env.VITE_INTERMAVEN_CRM_URL`. If the environment variable is not defined, speculative calls to port 8080 are skipped cleanly.
+- **Unified Port 8001 Pipeline:** All CRM contact retrieval, inbound lead creation, and omnichannel broadcast campaigns operate seamlessly through the primary backend on **Port 8001**:
+  - `GET /api/crm/contacts?creator_username={subdomain}` — Unified contacts list (leads + verified creator supporters).
+  - `POST /api/crm/leads` — Inbound VIP fan and booking lead ingestion.
+  - `POST /api/crm/campaigns` — Omnichannel broadcast dispatcher (WhatsApp, SMS, Email).
+
+### 9.30.2 Browser Extension `contentscript.js` Clarification
+- **MetaMask / Web3 Extension Noise:** Browser console messages referencing `contentscript.js:14083 MaxListenersExceededWarning` and `ObjectMultiplex - orphaned data for stream "app-init-liveness"` originate from third-party Web3 browser extensions injecting content scripts across all browser tabs. These warnings are isolated to the extension sandbox and do not impact TuneMavens stability or performance.
+
+
 
 
 

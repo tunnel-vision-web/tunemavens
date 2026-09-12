@@ -134,7 +134,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
     }
   }
 
-  // Load Contacts from Intermaven Central CRM (8080), TuneMavens API (8001) & Local Storage
+  // Load Contacts from TuneMavens API (8001), optional external CRM & Local Storage
   const loadContacts = async () => {
     setLoading(true)
     setSyncing(true)
@@ -162,25 +162,26 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
         }
       })
 
-      // 1. Fetch from Intermaven Central CRM on Port 8080 (filtered by creator if tagged)
-      try {
-        const res8080 = await fetch('http://localhost:8080/api/crm/contacts')
-        if (res8080.ok) {
-          const data8080 = await res8080.json()
-          if (Array.isArray(data8080.contacts)) {
-            data8080.contacts.forEach(contact => {
-              if (!contact.creator_username || contact.creator_username === selectedSubdomain) {
-                const norm = normalizeContact(contact, 'Intermaven Central CRM (8080)')
-                if (norm.email && !seenEmails.has(norm.email.toLowerCase())) {
-                  seenEmails.add(norm.email.toLowerCase())
-                  combined.push(norm)
+      // 1. Fetch from optional external Intermaven Central CRM if configured
+      const externalCrmUrl = import.meta.env?.VITE_INTERMAVEN_CRM_URL
+      if (externalCrmUrl) {
+        try {
+          const resExt = await fetch(`${externalCrmUrl.replace(/\/$/, '')}/api/crm/contacts`)
+          if (resExt.ok) {
+            const dataExt = await resExt.json()
+            if (Array.isArray(dataExt.contacts)) {
+              dataExt.contacts.forEach(contact => {
+                if (!contact.creator_username || contact.creator_username === selectedSubdomain) {
+                  const norm = normalizeContact(contact, 'Intermaven Central CRM')
+                  if (norm.email && !seenEmails.has(norm.email.toLowerCase())) {
+                    seenEmails.add(norm.email.toLowerCase())
+                    combined.push(norm)
+                  }
                 }
-              }
-            })
+              })
+            }
           }
-        }
-      } catch (err8080) {
-        console.warn('Intermaven 8080 CRM fetch warning:', err8080)
+        } catch (_) {}
       }
 
       // 2. Fetch from TuneMavens Backend CRM on Port 8001
@@ -348,20 +349,23 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
       })
     } catch (_) {}
 
-    try {
-      await fetch('http://localhost:8080/api/crm/contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: leadPayload.name,
-          email: leadPayload.email,
-          channel: (leadPayload.preferred_comm_method || 'email').toUpperCase(),
-          doubleOptIn: true,
-          source: `TuneMavens Creator EPK (@${selectedSubdomain})`,
-          status: 'Subscribed'
+    const externalCrmUrl = import.meta.env?.VITE_INTERMAVEN_CRM_URL
+    if (externalCrmUrl) {
+      try {
+        await fetch(`${externalCrmUrl.replace(/\/$/, '')}/api/crm/contacts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: leadPayload.name,
+            email: leadPayload.email,
+            channel: (leadPayload.preferred_comm_method || 'email').toUpperCase(),
+            doubleOptIn: true,
+            source: `TuneMavens Creator EPK (@${selectedSubdomain})`,
+            status: 'Subscribed'
+          })
         })
-      })
-    } catch (_) {}
+      } catch (_) {}
+    }
 
     setContacts([leadPayload, ...contacts])
     setAddLeadModalOpen(false)
@@ -447,7 +451,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
               </span>
             </div>
             <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '2px' }}>
-              Centralized Agency CRM Hub (Port 8080 & 8001) · Accessible by Content Owners & System Admin
+              Centralized Agency CRM Hub (Port 8001) · Accessible by Content Owners & System Admin
             </div>
           </div>
         </div>

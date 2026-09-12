@@ -9,7 +9,7 @@ import { INTERMAVEN_PLATFORM_APPS } from './intermavenPlatformApps.js';
 // AppMarketplacePanel. Kept short here; the marketplace itself owns the
 // long descriptions.
 const TUNEMAVENS_APPS = [
-  { slug: 'catalog-porting', name: 'Catalog Porting', icon: RiDatabase2Fill, accent: '#22d3ee', tab: 'catalog' },
+  { slug: 'catalog-porting', name: 'Catalogue', icon: RiDatabase2Fill, accent: '#22d3ee', tab: 'catalog' },
   { slug: 'epk-builder', name: 'EPK Builder', icon: RiDiscFill, accent: '#22d3ee', tab: 'epk-builder' },
   { slug: 'split-cascade', name: 'Split Cascade', icon: RiCoinsFill, accent: '#a78bfa', tab: 'splits' },
   { slug: 'publishing-election', name: 'Publishing Election', icon: RiBookOpenFill, accent: '#22d3ee', tab: 'publishing-election' },

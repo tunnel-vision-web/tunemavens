@@ -78,16 +78,122 @@ const DEFAULT_TRACKS = [
   }
 ]
 
-export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: initialTracks, onSwitchToWizard }) {
+const DEFAULT_VIDEOS_CMS = [
+  {
+    id: 300,
+    type: 'video',
+    title: 'Machero',
+    url: 'https://www.youtube.com/watch?v=2y3NvAVU2xE',
+    youtubeUrl: 'https://www.youtube.com/embed/2y3NvAVU2xE',
+    thumbnail: 'https://img.youtube.com/vi/2y3NvAVU2xE/hqdefault.jpg',
+    views: '850K views',
+    category: 'Official Video'
+  },
+  {
+    id: 301,
+    type: 'video',
+    title: 'Ndufo — Nairobi Cyberwave (Official 4K Music Video)',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340',
+    views: '1.2M views',
+    category: 'Official Video'
+  },
+  {
+    id: 303,
+    type: 'video',
+    title: 'Live at SyncMavens Vault (Full Concert 4K)',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    thumbnail: 'https://picsum.photos/seed/yt_vid2/600/340',
+    views: '840K views',
+    category: 'Live Concert'
+  },
+  {
+    id: 305,
+    type: 'video',
+    title: 'Inside the Synthesizer Soundscapes',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340',
+    views: '320K views',
+    category: 'Behind the Scenes'
+  },
+  {
+    id: 307,
+    type: 'video',
+    title: 'Ndufo — Rift Valley Sunset (Acoustic Session 4K)',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    thumbnail: 'https://picsum.photos/seed/yt_vid4/600/340',
+    views: '620K views',
+    category: 'Studio Session'
+  },
+  {
+    id: 309,
+    type: 'video',
+    title: 'Ndufo — Afro-Synth Cascade (Live at O2)',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    thumbnail: 'https://picsum.photos/seed/yt_vid5/600/340',
+    views: '490K views',
+    category: 'Live Concert'
+  }
+]
+
+export const mergeWithCanonicalVideos = (videosList, artistName = 'Ndufo') => {
+  const list = Array.isArray(videosList) ? [...videosList] : []
+  if (list.length === 0) return DEFAULT_VIDEOS_CMS
+
+  const existingTitles = new Set(list.map(v => (v.title || '').toLowerCase().trim()))
+  const existingIds = new Set(list.map(v => v.id))
+
+  const missingCanonicals = DEFAULT_VIDEOS_CMS.filter(cfv => {
+    const titleLower = cfv.title.toLowerCase()
+    const hasTitle = Array.from(existingTitles).some(et => 
+      (et.includes('machero') && titleLower.includes('machero')) ||
+      (et.includes('cyberwave') && titleLower.includes('cyberwave')) ||
+      (et.includes('syncmavens vault') && titleLower.includes('syncmavens vault')) ||
+      (et.includes('synthesizer soundscapes') && titleLower.includes('synthesizer soundscapes')) ||
+      (et.includes('rift valley sunset') && titleLower.includes('rift valley sunset')) ||
+      (et.includes('afro-synth') && titleLower.includes('afro-synth'))
+    )
+    return !existingIds.has(cfv.id) && !hasTitle
+  })
+
+  return [...list, ...missingCanonicals]
+}
+
+const getYouTubeThumbnail = (rawUrl) => {
+  if (!rawUrl) return null
+  const ytMatch = String(rawUrl).match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/)
+  if (ytMatch && ytMatch[1]) {
+    return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`
+  }
+  return null
+}
+
+export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: initialTracks, initialTab = 'music', onSwitchToWizard }) {
   const [activeSubdomain, setActiveSubdomain] = useState(() => {
     return (epk?.subdomain && epk.subdomain !== 'aisha' ? epk.subdomain : null) || localStorage.getItem('last_saved_epk_subdomain') || 'ndufo'
   })
-  const [activeTab, setActiveTab] = useState('brand')
+  const [activeTab, setActiveTab] = useState(initialTab || 'music')
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab])
+
   const [formData, setFormData] = useState({})
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
   const [statusType, setStatusType] = useState('success')
+
+  const activeVideos = React.useMemo(() => {
+    return mergeWithCanonicalVideos(formData.videos, formData.artist_name || activeSubdomain)
+  }, [formData.videos, formData.artist_name, activeSubdomain])
 
   const showStatus = (msg, type = 'success') => {
     setStatusMsg(msg)
@@ -547,24 +653,53 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
           }
         } catch (_) {}
 
+        // Authoritative Catalogue Data Fetch (Tracks & Ingested Albums)
+        try {
+          const catRes = await fetch(`/api/catalog/tracks?subdomain=${clean}`)
+          if (catRes.ok) {
+            const catData = await catRes.json()
+            if (Array.isArray(catData.tracks) && catData.tracks.length > 0) {
+              profileData.tracks = catData.tracks
+            }
+          }
+        } catch (_) {}
+
+        try {
+          const albRes = await fetch(`/api/catalog/albums?subdomain=${clean}`)
+          if (albRes.ok) {
+            const albData = await albRes.json()
+            if (Array.isArray(albData.albums) && albData.albums.length > 0) {
+              profileData.albums = albData.albums
+            }
+          }
+        } catch (_) {}
+
         if (profileData) {
-          const tracks = Array.isArray(profileData.tracks) && profileData.tracks.length > 0 
-            ? profileData.tracks 
-            : DEFAULT_TRACKS
-          
-          const tracksWithCovers = tracks.map((t, idx) => ({
+          const rawTracks = (Array.isArray(profileData.tracks) && profileData.tracks.length > 0)
+            ? profileData.tracks
+            : (Array.isArray(initialTracks) && initialTracks.length > 0 ? initialTracks : DEFAULT_TRACKS)
+
+          const tracksWithCovers = rawTracks.map((t, idx) => ({
             ...t,
             coverArt: t.coverArt || `https://picsum.photos/seed/${encodeURIComponent(t.title || 'track_' + idx)}/600/600`
           }))
 
+          const fullVideos = mergeWithCanonicalVideos(profileData.videos, profileData.artist_name || clean)
+
           const merged = {
             ...profileData,
-            tracks: tracksWithCovers
+            tracks: tracksWithCovers,
+            albums: Array.isArray(profileData.albums) ? profileData.albums : [],
+            videos: fullVideos
           }
           setFormData(merged)
           if (typeof setEpk === 'function') {
             setEpk(merged)
           }
+          try {
+            localStorage.setItem(`epk_public_${clean}`, JSON.stringify(merged))
+            localStorage.setItem(`epk_${clean}`, JSON.stringify(merged))
+          } catch (_) {}
         }
       } catch (err) {
         console.warn('Failed to load profile for CMS studio:', err)
@@ -1036,9 +1171,9 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
               gap: '6px',
               transition: 'all 0.2s ease'
             }}
-            title="Switch to EPK Wizard View"
+            title="Switch to Catalogue Wizard View"
           >
-            <span>🧙‍♂️</span> Switch to Wizard View
+            <span>🧙‍♂️</span> Switch to Catalogue Wizard
           </button>
 
           <button
@@ -2089,8 +2224,12 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                       <button
                         type="button"
                         onClick={() => {
-                          setDiscographyWizardOpen(true)
-                          setDiscographyWizardStep(1)
+                          if (typeof onSwitchToWizard === 'function') {
+                            onSwitchToWizard();
+                          } else {
+                            setDiscographyWizardOpen(true)
+                            setDiscographyWizardStep(1)
+                          }
                         }}
                         style={{
                           background: accent,
@@ -2106,7 +2245,7 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                           gap: '6px'
                         }}
                       >
-                        <RiSparklingFill /> Launch Discography Wizard
+                        <RiSparklingFill /> Open Catalogue Ingestion Wizard
                       </button>
                       <button
                         type="button"
@@ -2343,31 +2482,76 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                   {/* Sub-Tab 2: Studio Albums & Collections */}
                   {discographySubTab === 'albums' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '18px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-                        <img
-                          src={formData.heroImages?.[0] || 'https://picsum.photos/seed/album_deluxe/400/400'}
-                          alt="Album"
-                          style={{ width: '130px', height: '130px', borderRadius: '4px', objectFit: 'cover', border: `1px solid ${accent}40` }}
-                        />
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <strong style={{ fontSize: '1.05rem', color: '#fff' }}>Echoes from the Future (Deluxe Edition)</strong>
-                            <span style={{ fontSize: '0.72rem', background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '2px 8px', borderRadius: '3px', fontWeight: 800 }}>
-                              ● OFFICIAL LP
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                            Release Date: <strong style={{ color: '#cbd5e1' }}>AUG 14, 2026</strong> · 8 Full Tracks · 24-Bit / 96kHz Lossless Masters
-                          </div>
-                          <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4 }}>
-                            Production: Executive Produced by Ndufo & Aura Labs. Synthesizers: Moog One, Sequential Prophet-6, Eurorack Modular.
-                          </div>
-                          <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '0.8rem' }}>
-                            <span>Digital LP Price: <strong style={{ color: '#00f0ff' }}>$9.99 / 50 Credits</strong></span>
-                            <span>Publisher: <strong style={{ color: '#cbd5e1' }}>Intermaven Songs (ASCAP)</strong></span>
-                          </div>
-                        </div>
-                      </div>
+                      {(() => {
+                        const albumList = (Array.isArray(formData.albums) && formData.albums.length > 0)
+                          ? formData.albums
+                          : [
+                              {
+                                id: 'def-1',
+                                title: 'Echoes from the Future (Deluxe Edition)',
+                                type: 'Album',
+                                year: '2026',
+                                genre: 'Afro-Futurism / Electronic',
+                                tracksCount: 8,
+                                cover: formData.heroImages?.[0] || 'https://picsum.photos/seed/album_deluxe/400/400',
+                                priceCredits: 50
+                              }
+                            ];
+
+                        return albumList.map((alb, aIdx) => {
+                          const matchingTracks = (formData.tracks || []).filter(t => 
+                            (t.release && alb.title && t.release.toLowerCase().trim() === alb.title.toLowerCase().trim()) ||
+                            (alb.isrcs && alb.isrcs.includes(t.isrc))
+                          );
+                          const count = alb.tracksCount || matchingTracks.length || 1;
+
+                          return (
+                            <div key={alb.id || aIdx} style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '18px', display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <img
+                                src={alb.cover || alb.coverArt || `https://picsum.photos/seed/${encodeURIComponent(alb.title)}/400/400`}
+                                alt={alb.title}
+                                style={{ width: '130px', height: '130px', borderRadius: '4px', objectFit: 'cover', border: `1px solid ${accent}40`, flexShrink: 0 }}
+                              />
+                              <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                                  <strong style={{ fontSize: '1.1rem', color: '#fff' }}>{alb.title}</strong>
+                                  <span style={{ fontSize: '0.72rem', background: 'rgba(0,240,255,0.15)', color: accent, padding: '3px 10px', borderRadius: '3px', fontWeight: 900, textTransform: 'uppercase' }}>
+                                    ● {alb.type || 'ALBUM'}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+                                  Release Year: <strong style={{ color: '#cbd5e1' }}>{alb.year || '2026'}</strong> · <strong style={{ color: accent }}>{count} Full Master Track(s)</strong> · Genre: <strong style={{ color: '#cbd5e1' }}>{alb.genre || 'Afro-House'}</strong> · 24-Bit / 96kHz Lossless Masters
+                                </div>
+                                {matchingTracks.length > 0 && (
+                                  <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4 }}>
+                                    Tracks: {matchingTracks.map(t => t.title).slice(0, 5).join(', ')}{matchingTracks.length > 5 ? ` +${matchingTracks.length - 5} more` : ''}
+                                  </div>
+                                )}
+                                <div style={{ display: 'flex', gap: '16px', marginTop: '4px', fontSize: '0.82rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                  <span>Digital Price: <strong style={{ color: '#00f0ff' }}>${((alb.priceCredits || 50) * 0.199).toFixed(2)} / {alb.priceCredits || 50} Credits</strong></span>
+                                  <span>Primary ISRC: <strong style={{ color: '#cbd5e1' }}>{alb.isrc || 'KE-TM1-26-00042'}</strong></span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setDiscographySubTab('tracks')}
+                                    style={{
+                                      background: 'rgba(255,255,255,0.06)',
+                                      border: `1px solid ${accent}44`,
+                                      color: accent,
+                                      fontSize: '0.75rem',
+                                      padding: '3px 10px',
+                                      borderRadius: '3px',
+                                      cursor: 'pointer',
+                                      fontWeight: 800
+                                    }}
+                                  >
+                                    View Tracks in Manager
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   )}
 
@@ -2460,89 +2644,198 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
               )}
 
               {activeTab === 'media' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '850px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '900px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
-                      <h3 style={{ margin: '0 0 6px', fontSize: '1.2rem', fontWeight: 900, color: '#fff' }}>
-                        Multi-Video Reel & Streaming Manager
-                      </h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#fff' }}>
+                          Multi-Video Reel & 4K Streaming Catalog
+                        </h3>
+                        <span style={{ background: `${accent}22`, border: `1px solid ${accent}55`, color: accent, padding: '2px 8px', borderRadius: '3px', fontSize: '0.72rem', fontWeight: 800 }}>
+                          {activeVideos.length} Active Videos
+                        </span>
+                      </div>
                       <p style={{ margin: 0, fontSize: '0.82rem', color: '#94a3b8' }}>
-                        Configure YouTube, Vimeo, and direct MP4 video streams displayed on your live EPK reel.
+                        Configure YouTube, Vimeo, and direct MP4 video streams displayed on your live EPK reel and media gallery.
                       </p>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => {
-                        const current = Array.isArray(formData.videos) ? [...formData.videos] : [
-                          { id: 301, title: 'Nairobi Cyberdome Live Set (4K)', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/video1/800/450', category: 'Live Concert' }
-                        ]
-                        updateField('videos', [
-                          ...current,
-                          {
-                            id: Date.now(),
-                            title: `New Video Reel #${current.length + 1}`,
-                            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-                            thumbnail: `https://picsum.photos/seed/reel_${Date.now()}/800/450`,
-                            category: 'Official Video'
-                          }
-                        ])
-                        showStatus('New video slot added to media reel!', 'success')
+                        const newId = Date.now()
+                        const newVideo = {
+                          id: newId,
+                          type: 'video',
+                          title: `New Video #${activeVideos.length + 1}`,
+                          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                          youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                          thumbnail: `https://picsum.photos/seed/video_${newId}/600/340`,
+                          views: '100K views',
+                          category: 'Official Video'
+                        }
+                        const next = [...activeVideos, newVideo]
+                        updateField('videos', next)
+                        showStatus('New video slot added to media reel! Click "Publish Live EPK" to push live.', 'success')
                       }}
-                      style={{ background: accent, color: '#000', border: 'none', padding: '8px 16px', borderRadius: '3px', fontWeight: 900, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      style={{ background: accent, color: '#000', border: 'none', padding: '9px 18px', borderRadius: '3px', fontWeight: 900, fontSize: '0.84rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
-                      <RiAddLine size={16} /> Add Video
+                      <RiAddLine size={16} /> Add Video Stream
                     </button>
                   </div>
 
                   {/* Multi-Video Collection List */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {(Array.isArray(formData.videos) && formData.videos.length > 0
-                      ? formData.videos
-                      : [
-                          { id: 301, title: 'Nairobi Cyberdome Live Set (4K)', url: formData.videoUrl || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/video1/800/450', category: 'Live Concert' },
-                          { id: 302, title: 'Rift Valley Acoustic Session', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/video2/800/450', category: 'Studio Session' }
-                        ]
-                    ).map((vItem, vIdx) => (
-                      <div key={vItem.id || vIdx} style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '4px', display: 'grid', gridTemplateColumns: '120px 1fr auto', gap: '16px', alignItems: 'center' }}>
-                        <img src={vItem.thumbnail} alt={vItem.title} style={{ width: '120px', height: '68px', objectFit: 'cover', borderRadius: '3px', border: `1px solid ${accent}33` }} />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <input
-                            type="text"
-                            value={vItem.title}
-                            onChange={e => {
-                              const next = [...(formData.videos || [])]
-                              next[vIdx] = { ...vItem, title: e.target.value }
-                              updateField('videos', next)
-                            }}
-                            placeholder="Video Title"
-                            style={{ padding: '8px 10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem', fontWeight: 800 }}
-                          />
-                          <input
-                            type="text"
-                            value={vItem.url}
-                            onChange={e => {
-                              const next = [...(formData.videos || [])]
-                              next[vIdx] = { ...vItem, url: e.target.value }
-                              updateField('videos', next)
-                            }}
-                            placeholder="YouTube / Vimeo / MP4 URL"
-                            style={{ padding: '6px 10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#cbd5e1', fontSize: '0.78rem' }}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const next = (formData.videos || []).filter((_, i) => i !== vIdx)
-                            updateField('videos', next)
-                            showStatus('Video removed.', 'success')
+                    {activeVideos.map((vItem, vIdx) => {
+                      const displayThumb = vItem.thumbnail || getYouTubeThumbnail(vItem.url) || 'https://picsum.photos/seed/vid/600/340'
+                      return (
+                        <div 
+                          key={vItem.id || vIdx} 
+                          style={{ 
+                            background: '#0a0d1a', 
+                            border: '1px solid rgba(255,255,255,0.1)', 
+                            padding: '18px', 
+                            borderRadius: '4px', 
+                            display: 'grid', 
+                            gridTemplateColumns: '140px 1fr auto', 
+                            gap: '18px', 
+                            alignItems: 'start' 
                           }}
-                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px' }}
                         >
-                          <RiDeleteBin6Line size={18} />
-                        </button>
-                      </div>
-                    ))}
+                          {/* Thumbnail preview with category & order tag */}
+                          <div style={{ position: 'relative', width: '140px' }}>
+                            <img 
+                              src={displayThumb} 
+                              alt={vItem.title} 
+                              style={{ width: '140px', height: '80px', objectFit: 'cover', borderRadius: '3px', border: `1px solid ${accent}44`, display: 'block' }} 
+                            />
+                            <div style={{ position: 'absolute', top: '4px', left: '4px', background: 'rgba(0,0,0,0.8)', color: accent, fontSize: '0.68rem', fontWeight: 900, padding: '2px 6px', borderRadius: '2px', border: `1px solid ${accent}33` }}>
+                              #{vIdx + 1}
+                            </div>
+                            {vItem.category && (
+                              <div style={{ position: 'absolute', bottom: '4px', left: '4px', right: '4px', background: 'rgba(0,0,0,0.75)', color: '#cbd5e1', fontSize: '0.62rem', fontWeight: 700, padding: '2px 4px', borderRadius: '2px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {vItem.category}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Video Form Fields */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {/* Title */}
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Video Title
+                              </label>
+                              <input
+                                type="text"
+                                value={vItem.title || ''}
+                                onChange={e => {
+                                  const next = [...activeVideos]
+                                  next[vIdx] = { ...vItem, title: e.target.value }
+                                  updateField('videos', next)
+                                }}
+                                placeholder="Video Title (e.g. Artist — Official 4K Music Video)"
+                                style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.88rem', fontWeight: 800 }}
+                              />
+                            </div>
+
+                            {/* Stream URL */}
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Video Stream URL (YouTube, Vimeo, or MP4)
+                              </label>
+                              <input
+                                type="text"
+                                value={vItem.url || vItem.youtubeUrl || ''}
+                                onChange={e => {
+                                  const newUrl = e.target.value
+                                  const autoThumb = getYouTubeThumbnail(newUrl)
+                                  const next = [...activeVideos]
+                                  next[vIdx] = { 
+                                    ...vItem, 
+                                    url: newUrl,
+                                    thumbnail: autoThumb || vItem.thumbnail || ''
+                                  }
+                                  updateField('videos', next)
+                                }}
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                style={{ width: '100%', boxSizing: 'border-box', padding: '7px 10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#cbd5e1', fontSize: '0.8rem', fontFamily: 'monospace' }}
+                              />
+                            </div>
+
+                            {/* Two Columns: Category & Views Badge */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                  Category / Type
+                                </label>
+                                <select
+                                  value={vItem.category || 'Official Video'}
+                                  onChange={e => {
+                                    const next = [...activeVideos]
+                                    next[vIdx] = { ...vItem, category: e.target.value }
+                                    updateField('videos', next)
+                                  }}
+                                  style={{ width: '100%', boxSizing: 'border-box', padding: '7px 10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.8rem', fontWeight: 700 }}
+                                >
+                                  <option value="Official Video">Official Video</option>
+                                  <option value="Live Concert">Live Concert</option>
+                                  <option value="Behind the Scenes">Behind the Scenes</option>
+                                  <option value="Studio Session">Studio Session</option>
+                                  <option value="Acoustic Session">Acoustic Session</option>
+                                  <option value="Teaser / Trailer">Teaser / Trailer</option>
+                                  <option value="Interview">Interview</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                  Views / Badge Label
+                                </label>
+                                <input
+                                  type="text"
+                                  value={vItem.views || ''}
+                                  onChange={e => {
+                                    const next = [...activeVideos]
+                                    next[vIdx] = { ...vItem, views: e.target.value }
+                                    updateField('videos', next)
+                                  }}
+                                  placeholder="e.g. 1.2M views, 4K Concert"
+                                  style={{ width: '100%', boxSizing: 'border-box', padding: '7px 10px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.8rem' }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons: Preview & Delete */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                            {(vItem.url || vItem.youtubeUrl) && (
+                              <a
+                                href={vItem.url || vItem.youtubeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: accent, padding: '6px 10px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+                                title="Open video in new tab"
+                              >
+                                <RiExternalLinkLine size={14} /> Preview
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = activeVideos.filter((_, i) => i !== vIdx)
+                                updateField('videos', next)
+                                showStatus('Video removed from reel.', 'success')
+                              }}
+                              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', cursor: 'pointer', padding: '6px 10px', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 700 }}
+                              title="Delete this video"
+                            >
+                              <RiDeleteBin6Line size={14} /> Delete
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}

@@ -18,7 +18,7 @@ from routes import (
     deals_router, users_router, sso_router, payments_router,
     ticketing_router, storefront_router, distro_router, stream_router,
     match_router, social_ai_router, crm_router, cms_router, seo_router,
-    djpool_router, storage_router, epk_router
+    djpool_router, storage_router, epk_router, catalog_router
 )
 from routes.admin_router import seed_domain_mappings_if_empty
 
@@ -83,6 +83,7 @@ app.include_router(seo_router)
 app.include_router(djpool_router)
 app.include_router(storage_router)
 app.include_router(epk_router)
+app.include_router(catalog_router)
 
 
 @app.exception_handler(RequestValidationError)

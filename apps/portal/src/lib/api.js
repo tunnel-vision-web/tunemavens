@@ -192,3 +192,34 @@ export const djPoolApi = {
   listClearances: () => request('/api/djpool/clearance'),
   approveClearance: (requestId, status) => request(`/api/djpool/clearance/${requestId}/approve`, { method: 'POST', body: { status } }),
 };
+
+// --- Storage & Media Vault ---
+export const storageApi = {
+  uploadFile: async (file, mediaType = 'audio') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('media_type', mediaType);
+    const token = tokenStore.get();
+    const res = await fetch(`${BASE}/api/storage/upload`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Upload failed');
+    }
+    return res.json();
+  },
+  listAssets: (mediaType = '') => request(`/api/storage/assets${mediaType ? `?media_type=${mediaType}` : ''}`),
+  deleteAsset: (id) => request(`/api/storage/assets/${id}`, { method: 'DELETE' }),
+};
+
+// --- Catalogue & Artwork Management ---
+export const catalogApi = {
+  updateAlbumArtwork: (payload) => request('/api/catalog/albums/artwork', { method: 'POST', body: payload }),
+  updateTrackAudio: (identifier, audioUrl, durationSeconds) => request(`/api/catalog/tracks/${encodeURIComponent(identifier)}/audio`, {
+    method: 'PUT',
+    body: { audio_url: audioUrl, duration_seconds: durationSeconds },
+  }),
+};

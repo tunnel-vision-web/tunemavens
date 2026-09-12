@@ -1253,7 +1253,7 @@ export default function RegisterView({ onLogin }) {
               style={{ flex: 2, padding: '10px', fontSize: '13px', fontWeight: '700', borderRadius: '4px', cursor: 'pointer' }}
             >
               {step === steps.length - 1 ? 'Complete Register' 
-                : (currentStepName === 'Discography Ingest' ? 'Skip Catalog Porting' 
+                : (currentStepName === 'Discography Ingest' ? 'Skip Catalogue Ingest' 
                 : (currentStepName === 'Roster Ingest' ? 'Skip Roster Ingest' : 'Next Step'))}
             </button>
           </div>

@@ -817,15 +817,85 @@ export function CreatorEpkView(props = {}) {
   const [newCommentText, setNewCommentText] = useState('')
   const [mediaSearch, setMediaSearch] = useState('')
 
-  // Full Discography Collection
-  const albums = [
+  // Full Discography Collection (Dynamically merged from epkData.albums, tracks releases, and default albums)
+  const defaultMockAlbums = [
     { id: 401, title: 'Nairobi Cyberwave (Deluxe LP)', year: '2026', type: 'Album', tracksCount: 12, cover: 'https://picsum.photos/seed/album1_epk/400', streams: '3.4M', isrc: 'KE-TM1-26-00042', priceCredits: 50 },
     { id: 402, title: 'Rift Valley Soundscapes', year: '2026', type: 'Album', tracksCount: 10, cover: 'https://picsum.photos/seed/album2_epk/400', streams: '1.8M', isrc: 'KE-TM1-26-00043', priceCredits: 50 },
     { id: 403, title: 'Afro-Synth Cascade', year: '2025', type: 'Single', tracksCount: 2, cover: 'https://picsum.photos/seed/album3_epk/400', streams: '940K', isrc: 'KE-TM1-26-00044', priceCredits: 40 },
     { id: 404, title: 'Midnight Mara Starlight', year: '2025', type: 'EP', tracksCount: 5, cover: 'https://picsum.photos/seed/album4_epk/400', streams: '2.1M', isrc: 'KE-TM1-26-00045', priceCredits: 45 },
     { id: 405, title: 'Mombasa Neon Nights', year: '2024', type: 'Album', tracksCount: 14, cover: 'https://picsum.photos/seed/album5_epk/400', streams: '4.2M', isrc: 'KE-TM1-24-00010', priceCredits: 50 },
     { id: 406, title: 'Savannah Electric Remixes (MP3)', year: '2024', type: 'Remix EP', tracksCount: 6, cover: 'https://picsum.photos/seed/album6_epk/400', streams: '1.1M', isrc: 'KE-TM1-24-00011', priceCredits: 40 }
-  ]
+  ];
+
+  const albums = React.useMemo(() => {
+    const list = [];
+    const seenTitles = new Set();
+
+    // 1. Ingested & Synced albums from backend epkData.albums (e.g. 'Carbon Dating Pt 1')
+    if (Array.isArray(epkData?.albums)) {
+      epkData.albums.forEach(alb => {
+        const titleKey = (alb.title || '').toLowerCase().trim();
+        if (titleKey && !seenTitles.has(titleKey)) {
+          seenTitles.add(titleKey);
+          list.push({
+            id: alb.id || `alb-${list.length + 1}`,
+            title: alb.title,
+            year: String(alb.year || '2026'),
+            type: alb.type || 'Album',
+            tracksCount: alb.tracksCount || (alb.isrcs ? alb.isrcs.length : 1),
+            cover: alb.cover || alb.coverArt || `https://picsum.photos/seed/${encodeURIComponent(alb.title)}/400`,
+            streams: alb.streams || 'Master Audio',
+            isrc: alb.isrc || 'KE-TM1-26-00042',
+            isrcs: alb.isrcs || [],
+            priceCredits: alb.priceCredits || 50
+          });
+        }
+      });
+    }
+
+    // 2. Discover from tracks (grouping by release)
+    if (Array.isArray(tracks)) {
+      const releaseGroups = {};
+      tracks.forEach(t => {
+        const rel = (t.release || '').trim();
+        if (rel && !['singles', 'single', 'unknown'].includes(rel.toLowerCase())) {
+          const key = rel.toLowerCase();
+          if (!releaseGroups[key]) releaseGroups[key] = [];
+          releaseGroups[key].push(t);
+        }
+      });
+
+      Object.entries(releaseGroups).forEach(([key, trks]) => {
+        if (!seenTitles.has(key)) {
+          seenTitles.add(key);
+          const firstTrack = trks[0];
+          list.push({
+            id: `rel-${list.length + 1}`,
+            title: firstTrack.release,
+            year: String(firstTrack.year || '2026'),
+            type: firstTrack.releaseType || (trks.length >= 8 ? 'Album' : (trks.length >= 3 ? 'EP' : 'Single')),
+            tracksCount: trks.length,
+            cover: firstTrack.coverArt || firstTrack.cover || `https://picsum.photos/seed/${encodeURIComponent(firstTrack.release)}/400`,
+            streams: firstTrack.streams || 'Master Audio',
+            isrc: firstTrack.isrc || 'KE-TM1-26-00042',
+            isrcs: trks.map(t => t.isrc),
+            priceCredits: 50
+          });
+        }
+      });
+    }
+
+    // 3. Fallback default albums to keep discography full
+    defaultMockAlbums.forEach(defAlb => {
+      const key = defAlb.title.toLowerCase().trim();
+      if (!seenTitles.has(key)) {
+        seenTitles.add(key);
+        list.push(defAlb);
+      }
+    });
+
+    return list;
+  }, [epkData?.albums, tracks]);
 
 
 
@@ -1012,19 +1082,96 @@ export function CreatorEpkView(props = {}) {
   ]
 
 
-  // Media Items with Backend Configured YouTube Video Streaming URLs
-  const mediaItems = [
-    { id: 301, type: 'video', title: `${artistName} — Nairobi Cyberwave (Official 4K Music Video)`, youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340', views: '1.2M views' },
-    { id: 302, type: 'gallery', title: 'Live at Nairobi Cyberdome Stage Highlight', thumbnail: 'https://picsum.photos/seed/gal1/600/340', views: 'Photo Gallery' },
-    { id: 303, type: 'video', title: 'Live at SyncMavens Vault (Full Concert 4K)', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid2/600/340', views: '840K views' },
-    { id: 304, type: 'gallery', title: 'Behind the Scenes: Recording MP3 Singles at Intermaven Studio', thumbnail: 'https://picsum.photos/seed/gal2/600/340', views: 'Photo Gallery' },
-    { id: 305, type: 'video', title: 'Inside the Synthesizer Soundscapes', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340', views: '320K views' },
-    { id: 306, type: 'gallery', title: 'London O2 Backstage Session', thumbnail: 'https://picsum.photos/seed/gal3/600/340', views: 'Photo Gallery' },
-    { id: 307, type: 'video', title: `${artistName} — Rift Valley Sunset (Acoustic Session 4K)`, youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid4/600/340', views: '620K views' },
-    { id: 308, type: 'gallery', title: 'Modular Synthesizer Rig & Live Sound Plot', thumbnail: 'https://picsum.photos/seed/gal4/600/340', views: 'Photo Gallery' },
-    { id: 309, type: 'video', title: `${artistName} — Afro-Synth Cascade (Live at O2)`, youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid5/600/340', views: '490K views' },
-    { id: 310, type: 'gallery', title: 'World Tour Soundcheck & VIP Meet and Greet', thumbnail: 'https://picsum.photos/seed/gal5/600/340', views: 'Photo Gallery' }
+  // Helper to extract YouTube video ID and build clean embed URL
+  const toEmbedUrl = (rawUrl) => {
+    if (!rawUrl) return ''
+    const str = String(rawUrl).trim()
+    if (str.includes('/embed/')) return str
+    const ytMatch = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/)
+    if (ytMatch && ytMatch[1]) {
+      return `https://www.youtube.com/embed/${ytMatch[1]}`
+    }
+    const vimeoMatch = str.match(/(?:vimeo\.com\/)(\d+)/)
+    if (vimeoMatch && vimeoMatch[1]) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`
+    }
+    return str
+  }
+
+  const getYouTubeThumbnail = (rawUrl) => {
+    if (!rawUrl) return null
+    const ytMatch = String(rawUrl).match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/)
+    if (ytMatch && ytMatch[1]) {
+      return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`
+    }
+    return null
+  }
+
+  const CANONICAL_EPK_VIDEOS = [
+    { id: 300, type: 'video', title: 'Machero', url: 'https://www.youtube.com/watch?v=2y3NvAVU2xE', youtubeUrl: 'https://www.youtube.com/embed/2y3NvAVU2xE', thumbnail: 'https://img.youtube.com/vi/2y3NvAVU2xE/hqdefault.jpg', views: '850K views', category: 'Official Video' },
+    { id: 301, type: 'video', title: `${artistName} — Nairobi Cyberwave (Official 4K Music Video)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340', views: '1.2M views', category: 'Official Video' },
+    { id: 303, type: 'video', title: 'Live at SyncMavens Vault (Full Concert 4K)', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid2/600/340', views: '840K views', category: 'Live Concert' },
+    { id: 305, type: 'video', title: 'Inside the Synthesizer Soundscapes', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340', views: '320K views', category: 'Behind the Scenes' },
+    { id: 307, type: 'video', title: `${artistName} — Rift Valley Sunset (Acoustic Session 4K)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid4/600/340', views: '620K views', category: 'Studio Session' },
+    { id: 309, type: 'video', title: `${artistName} — Afro-Synth Cascade (Live at O2)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid5/600/340', views: '490K views', category: 'Live Concert' }
   ]
+
+  // Dynamic Media Items synchronized with Backend CMS Studio & MongoDB
+  const mediaItems = React.useMemo(() => {
+    const list = Array.isArray(epkData?.videos) ? epkData.videos : []
+    let rawVideos = list
+    if (rawVideos.length === 0) {
+      rawVideos = CANONICAL_EPK_VIDEOS
+    } else {
+      const existingTitles = new Set(rawVideos.map(v => (v.title || '').toLowerCase().trim()))
+      const existingIds = new Set(rawVideos.map(v => v.id))
+      const missing = CANONICAL_EPK_VIDEOS.filter(cfv => {
+        const titleLower = cfv.title.toLowerCase()
+        const hasTitle = Array.from(existingTitles).some(et => 
+          (et.includes('machero') && titleLower.includes('machero')) ||
+          (et.includes('cyberwave') && titleLower.includes('cyberwave')) ||
+          (et.includes('syncmavens vault') && titleLower.includes('syncmavens vault')) ||
+          (et.includes('synthesizer soundscapes') && titleLower.includes('synthesizer soundscapes')) ||
+          (et.includes('rift valley sunset') && titleLower.includes('rift valley sunset')) ||
+          (et.includes('afro-synth') && titleLower.includes('afro-synth'))
+        )
+        return !existingIds.has(cfv.id) && !hasTitle
+      })
+      rawVideos = [...rawVideos, ...missing]
+    }
+
+    const processedVideos = rawVideos.map((v, idx) => {
+      const directUrl = v.url || v.youtubeUrl || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+      const embed = toEmbedUrl(directUrl) || v.youtubeUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      const autoThumb = getYouTubeThumbnail(directUrl) || v.thumbnail || `https://picsum.photos/seed/yt_vid${idx + 1}/600/340`
+      return {
+        id: v.id || (300 + idx),
+        type: 'video',
+        title: v.title || `${artistName} — Video #${idx + 1}`,
+        url: directUrl,
+        youtubeUrl: embed,
+        thumbnail: autoThumb,
+        views: v.views || `${(Math.max(1, (idx + 1) * 230))}K views`,
+        category: v.category || 'Official Video'
+      }
+    })
+
+    const galleryItems = [
+      { id: 401, type: 'gallery', title: 'Live at Nairobi Cyberdome Stage Highlight', thumbnail: 'https://picsum.photos/seed/gal1/600/340', views: 'Photo Gallery' },
+      { id: 402, type: 'gallery', title: 'Behind the Scenes: Recording MP3 Singles at Intermaven Studio', thumbnail: 'https://picsum.photos/seed/gal2/600/340', views: 'Photo Gallery' },
+      { id: 403, type: 'gallery', title: 'London O2 Backstage Session', thumbnail: 'https://picsum.photos/seed/gal3/600/340', views: 'Photo Gallery' },
+      { id: 404, type: 'gallery', title: 'Modular Synthesizer Rig & Live Sound Plot', thumbnail: 'https://picsum.photos/seed/gal4/600/340', views: 'Photo Gallery' },
+      { id: 405, type: 'gallery', title: 'World Tour Soundcheck & VIP Meet and Greet', thumbnail: 'https://picsum.photos/seed/gal5/600/340', views: 'Photo Gallery' }
+    ]
+
+    const combined = []
+    const maxLen = Math.max(processedVideos.length, galleryItems.length)
+    for (let i = 0; i < maxLen; i++) {
+      if (i < processedVideos.length) combined.push(processedVideos[i])
+      if (i < galleryItems.length) combined.push(galleryItems[i])
+    }
+    return combined
+  }, [epkData?.videos, artistName])
 
   const videoCarouselItems = mediaItems.filter(m => m.type === 'video')
   const safeVideoIndex = (landingVideoIndex >= 0 && landingVideoIndex < videoCarouselItems.length) ? landingVideoIndex : 0
@@ -1789,32 +1936,52 @@ Direct Management Contact: mgmt@intermaven.io`
   const [selectedPractitionerRole, setSelectedPractitionerRole] = useState('producer')
 
   // Album Dedicated Audio Player & 30s Free Preview State
+  const albumAudioRef = useRef(null)
+  const epkAudioRef = useRef(null)
   const [albumAudioPlaying, setAlbumAudioPlaying] = useState(false)
   const [albumAudioCurrentTrack, setAlbumAudioCurrentTrack] = useState(null)
   const [albumAudioProgress, setAlbumAudioProgress] = useState(0) // seconds
   const [albumAudioUnlocked, setAlbumAudioUnlocked] = useState(false) // whether full stream is paid with credits
 
-  // 30s Preview Timer Effect
+  // Sync albumAudioRef playback with albumAudioPlaying
   useEffect(() => {
-    let interval = null
+    const audio = albumAudioRef.current
+    if (!audio) return
     if (albumAudioPlaying) {
-      interval = setInterval(() => {
-        setAlbumAudioProgress(prev => {
-          if (!albumAudioUnlocked && prev >= 30) {
-            setAlbumAudioPlaying(false)
-            showToast('30-Second Preview ended. Unlock full lossless master stream for 1 TM Credit!')
-            return 30
-          }
-          if (prev >= 240) {
-            setAlbumAudioPlaying(false)
-            return 0
-          }
-          return prev + 1
-        })
-      }, 1000)
+      audio.play().catch(e => console.warn('Album audio play error:', e))
+    } else {
+      audio.pause()
     }
-    return () => clearInterval(interval)
-  }, [albumAudioPlaying, albumAudioUnlocked])
+  }, [albumAudioPlaying])
+
+  // Sync epkAudioRef with isPlaying
+  useEffect(() => {
+    const audio = epkAudioRef.current
+    if (!audio) return
+    if (isPlaying) {
+      if (currentTrack && (!audio.src || audio.src === '')) {
+        audio.src = currentTrack.audioUrl || currentTrack.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
+        audio.load()
+      }
+      audio.play().catch(e => console.warn('EPK audio play error:', e))
+    } else {
+      audio.pause()
+    }
+  }, [isPlaying])
+
+  // Sync epkAudioRef source when currentTrack changes
+  useEffect(() => {
+    const audio = epkAudioRef.current
+    if (!audio || !currentTrack) return
+    const src = currentTrack.audioUrl || currentTrack.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
+    if (audio.src !== src) {
+      audio.src = src
+      audio.load()
+      if (isPlaying) {
+        audio.play().catch(e => console.warn('EPK track play error:', e))
+      }
+    }
+  }, [currentTrack])
 
   // (fanPlaylists and fanPurchasedLibrary declared above)
   const [playlistModalOpen, setPlaylistModalOpen] = useState(false)
@@ -1961,7 +2128,39 @@ Direct Management Contact: mgmt@intermaven.io`
     setAlbumAudioProgress(0)
     setAlbumAudioPlaying(true)
     setAlbumAudioUnlocked(false)
+    const audio = albumAudioRef.current
+    if (audio) {
+      const src = trk.audioUrl || trk.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(trk.isrc || trk.title || 'preview')}`
+      if (audio.src !== src) {
+        audio.src = src
+        audio.load()
+      }
+      audio.currentTime = 0
+      audio.play().catch(e => console.warn('Album track play error:', e))
+    }
     showToast(`▶ Streaming: ${trk.title} (30-Sec Free Preview)`)
+  }
+
+  // Toggle Album Master Audio Play / Pause
+  const handleToggleAlbumAudio = (albTracks = []) => {
+    const audio = albumAudioRef.current
+    if (!audio) return
+    if (albumAudioPlaying) {
+      audio.pause()
+      setAlbumAudioPlaying(false)
+    } else {
+      const trk = albumAudioCurrentTrack || albTracks[0]
+      if (trk) {
+        if (!albumAudioCurrentTrack) setAlbumAudioCurrentTrack(trk)
+        const src = trk.audioUrl || trk.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(trk.isrc || trk.title || 'preview')}`
+        if (audio.src !== src) {
+          audio.src = src
+          audio.load()
+        }
+      }
+      audio.play().catch(e => console.warn('Album audio play error:', e))
+      setAlbumAudioPlaying(true)
+    }
   }
 
   // Unlock Full Lossless Master Stream for 1 TM Credit
@@ -1970,6 +2169,10 @@ Direct Management Contact: mgmt@intermaven.io`
       setUserCredits(prev => prev - 1)
       setAlbumAudioUnlocked(true)
       setAlbumAudioPlaying(true)
+      const audio = albumAudioRef.current
+      if (audio) {
+        audio.play().catch(e => console.warn('Resume full stream error:', e))
+      }
       showToast('⚡ Full 24-Bit Lossless Master stream unlocked! (1 TM Credit consumed)')
     } else {
       setQuickTopUpModalOpen(true)
@@ -2225,6 +2428,38 @@ Direct Management Contact: mgmt@intermaven.io`
       flexDirection: 'column',
       position: 'relative'
     }}>
+      {/* TuneStream Audio Engines */}
+      <audio
+        ref={epkAudioRef}
+        id="epk-live-audio"
+        onTimeUpdate={() => {
+          if (epkAudioRef.current) {
+            setPlaybackProgress(Math.floor(epkAudioRef.current.currentTime))
+          }
+        }}
+        onEnded={handleTrackAdvance}
+        style={{ display: 'none' }}
+      />
+      <audio
+        ref={albumAudioRef}
+        id="album-preview-audio"
+        onTimeUpdate={() => {
+          if (albumAudioRef.current) {
+            const curr = Math.floor(albumAudioRef.current.currentTime)
+            setAlbumAudioProgress(curr)
+            if (!albumAudioUnlocked && curr >= 30) {
+              albumAudioRef.current.pause()
+              setAlbumAudioPlaying(false)
+              showToast('30-Second Preview ended. Unlock full lossless master stream for 1 TM Credit!')
+            }
+          }
+        }}
+        onEnded={() => {
+          setAlbumAudioPlaying(false)
+          setAlbumAudioProgress(0)
+        }}
+        style={{ display: 'none' }}
+      />
 
       {/* Animation & Mobile Responsive Media Styles */}
       <style>{`
@@ -5090,8 +5325,25 @@ Direct Management Contact: mgmt@intermaven.io`
             {(() => {
               const alb = selectedAlbumDetail || albums[0]
 
-              // Tracklist for this album
-              const albumTracks = [
+              // Tracklist for this album - match real tracks from catalogue first!
+              const matchedTracks = tracks.filter(t => {
+                const rel = (t.release || '').toLowerCase().trim();
+                const albTitle = (alb.title || '').toLowerCase().trim();
+                return rel === albTitle || (Array.isArray(alb.isrcs) && alb.isrcs.includes(t.isrc));
+              });
+
+              const albumTracks = matchedTracks.length > 0 ? matchedTracks.map((t, idx) => ({
+                num: idx + 1,
+                title: t.title,
+                dur: t.duration || '3:30',
+                isrc: t.isrc || `${alb.isrc}-${String(idx + 1).padStart(2, '0')}`,
+                bpm: 124 + (idx % 8),
+                key: ['Am', 'Dm', 'Em', 'F#m', 'Bm', 'Gm', 'C#m', 'Fm'][idx % 8],
+                streams: t.streams || '100K',
+                priceCredits: t.priceCredits || 50,
+                audioUrl: t.audioUrl || t.fileUrl,
+                coverArt: t.coverArt || alb.cover
+              })) : [
                 { num: 1, title: `${alb.title} (Master Intro)`, dur: '2:14', isrc: `${alb.isrc}-01`, bpm: 124, key: 'F#m', streams: '820K', priceCredits: 25 },
                 { num: 2, title: 'Nairobi Cyberwave (Full Vocal Mix)', dur: '3:45', isrc: `${alb.isrc}-02`, bpm: 126, key: 'Am', streams: '3.4M', priceCredits: 50 },
                 { num: 3, title: 'Sunset over Rift Valley', dur: '4:12', isrc: `${alb.isrc}-03`, bpm: 118, key: 'Dm', streams: '1.8M', priceCredits: 40 },
@@ -5101,7 +5353,7 @@ Direct Management Contact: mgmt@intermaven.io`
                 { num: 7, title: 'Kilifi Sunset Harmonies', dur: '3:55', isrc: `${alb.isrc}-07`, bpm: 115, key: 'C#m', streams: '890K', priceCredits: 40 },
                 { num: 8, title: 'Urban Safari Resonance', dur: '4:48', isrc: `${alb.isrc}-08`, bpm: 130, key: 'Am', streams: '1.2M', priceCredits: 45 },
                 { num: 9, title: 'Intermaven Horizon (Outro)', dur: '2:40', isrc: `${alb.isrc}-09`, bpm: 110, key: 'Fm', streams: '530K', priceCredits: 25 }
-              ]
+              ];
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', background: isLight ? '#ffffff' : selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
@@ -5232,7 +5484,7 @@ Direct Management Contact: mgmt@intermaven.io`
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <button
                               type="button"
-                              onClick={() => setAlbumAudioPlaying(!albumAudioPlaying)}
+                              onClick={() => handleToggleAlbumAudio(albumTracks)}
                               style={{ width: '42px', height: '42px', borderRadius: '50%', background: effectiveAccent, color: '#000', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                             >
                               {albumAudioPlaying ? <RiPauseFill size={20} /> : <RiPlayFill size={20} />}
@@ -5275,7 +5527,18 @@ Direct Management Contact: mgmt@intermaven.io`
                           <span style={{ fontSize: '0.74rem', color: '#94a3b8', minWidth: '32px' }}>
                             {Math.floor(albumAudioProgress / 60)}:{String(albumAudioProgress % 60).padStart(2, '0')}
                           </span>
-                          <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden', cursor: 'pointer' }}>
+                          <div 
+                            style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden', cursor: 'pointer' }}
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const clickX = e.clientX - rect.left
+                              const pct = Math.max(0, Math.min(1, clickX / rect.width))
+                              const maxSec = !albumAudioUnlocked ? 30 : 240
+                              const newSec = Math.floor(pct * maxSec)
+                              setAlbumAudioProgress(newSec)
+                              if (albumAudioRef.current) albumAudioRef.current.currentTime = newSec
+                            }}
+                          >
                             <div style={{ width: `${(albumAudioProgress / (!albumAudioUnlocked ? 30 : 240)) * 100}%`, height: '100%', background: effectiveAccent, transition: 'width 0.2s linear' }} />
                           </div>
                           <span style={{ fontSize: '0.74rem', color: '#94a3b8', minWidth: '32px' }}>

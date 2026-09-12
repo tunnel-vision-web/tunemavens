@@ -263,6 +263,10 @@ def get_epk_cms(subdomain: str, response: Response):
     if not res_data.get("heroImageUrl"):
         res_data["heroImageUrl"] = "/heroes/ndufo_hero_slide1_retina.jpg"
 
+    if not res_data.get("videos") or not len(res_data["videos"]):
+        from routes.epk_router import get_default_videos
+        res_data["videos"] = get_default_videos(res_data.get("artist_name") or clean_subdomain.capitalize())
+
     return {
         "layout_id": layout_id,
         "subdomain": clean_subdomain,

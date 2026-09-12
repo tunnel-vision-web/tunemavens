@@ -80,3 +80,6 @@ credentials.json
 *.key
 .credentials
 
+# Local media uploads (keep pre-bundled heroes and ai_assets)
+backend/uploads/audio/
+backend/uploads/artwork/

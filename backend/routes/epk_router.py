@@ -48,6 +48,62 @@ class EPKProfileModel(BaseModel):
     pressQuote: Optional[str] = None
     bio: Optional[str] = None
     customSections: Optional[List[Dict[str, Any]]] = None
+    videos: Optional[List[Dict[str, Any]]] = None
+
+
+def get_default_videos(artist_name: str = "Ndufo") -> List[Dict[str, Any]]:
+    return [
+        {
+            "id": 301,
+            "type": "video",
+            "title": f"{artist_name} — Nairobi Cyberwave (Official 4K Music Video)",
+            "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "youtubeUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "thumbnail": "https://picsum.photos/seed/yt_vid1/600/340",
+            "views": "1.2M views",
+            "category": "Official Video"
+        },
+        {
+            "id": 303,
+            "type": "video",
+            "title": "Live at SyncMavens Vault (Full Concert 4K)",
+            "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "youtubeUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "thumbnail": "https://picsum.photos/seed/yt_vid2/600/340",
+            "views": "840K views",
+            "category": "Live Concert"
+        },
+        {
+            "id": 305,
+            "type": "video",
+            "title": "Inside the Synthesizer Soundscapes",
+            "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "youtubeUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "thumbnail": "https://picsum.photos/seed/yt_vid3/600/340",
+            "views": "320K views",
+            "category": "Behind the Scenes"
+        },
+        {
+            "id": 307,
+            "type": "video",
+            "title": f"{artist_name} — Rift Valley Sunset (Acoustic Session 4K)",
+            "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "youtubeUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "thumbnail": "https://picsum.photos/seed/yt_vid4/600/340",
+            "views": "620K views",
+            "category": "Studio Session"
+        },
+        {
+            "id": 309,
+            "type": "video",
+            "title": f"{artist_name} — Afro-Synth Cascade (Live at O2)",
+            "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "youtubeUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "thumbnail": "https://picsum.photos/seed/yt_vid5/600/340",
+            "views": "490K views",
+            "category": "Live Concert"
+        }
+    ]
 
 
 @router.get("/me", response_model=Dict[str, Any])
@@ -173,6 +229,7 @@ def get_public_epk(subdomain: str, response: Response):
                     "title3": "Exclusive VIP Vault Access"
                 }
             ],
+            "videos": get_default_videos(clean_subdomain.capitalize()),
             "is_default": True
         }
 
@@ -196,7 +253,8 @@ def get_public_epk(subdomain: str, response: Response):
         priority_keys = [
             "heroImageUrl", "heroImages", "heroSlides", "heroImage", "hero_image",
             "pageHeaders", "headerImageUrl", "headerImages",
-            "heroAnimStyle", "heroTitle1", "heroTitle2", "heroTitle3"
+            "heroAnimStyle", "heroTitle1", "heroTitle2", "heroTitle3",
+            "videos", "albums", "releases"
         ]
         for pk in priority_keys:
             if pk in cms_data and cms_data[pk]:
@@ -248,6 +306,24 @@ def get_public_epk(subdomain: str, response: Response):
                 "title3": "Exclusive VIP Vault Access"
             }
         ]
+
+    # Ensure videos are never empty and reflect full EPK media collection
+    if not merged.get("videos") or not len(merged["videos"]):
+        merged["videos"] = get_default_videos(merged.get("artist_name") or clean_subdomain.capitalize())
+
+    # Ensure tracks and albums are synchronized from catalogue
+    if not merged.get("albums") or not len(merged["albums"]):
+        try:
+            from routes.catalog_router import build_creator_albums
+            tracks = merged.get("tracks") or []
+            if not tracks:
+                cat_doc = db.catalog_tracks.find_one({"subdomain": clean_subdomain})
+                tracks = cat_doc.get("tracks", []) if cat_doc else []
+                if tracks:
+                    merged["tracks"] = tracks
+            merged["albums"] = build_creator_albums(clean_subdomain, tracks)
+        except Exception:
+            pass
 
     if "_id" not in merged:
         merged["_id"] = clean_subdomain

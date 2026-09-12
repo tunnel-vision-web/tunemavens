@@ -19,7 +19,11 @@ import React, { useState, useEffect, useRef } from 'react'
 import { 
   HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams
 } from 'react-router-dom'
-import { RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill } from 'react-icons/ri'
+import { 
+  RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill,
+  RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
+  RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine
+} from 'react-icons/ri'
 
 // Local assets
 import logoImg from './assets/logo.png'
@@ -108,12 +112,12 @@ import CreatorEpkView, { EPK_THEMES } from './views/creator/CreatorEpkView.jsx'
 import EpkWizard from './components/EpkWizard.jsx'
 import DashboardCmsStudio from './components/DashboardCmsStudio.jsx'
 import SmartCrmStudioPanel from './components/SmartCrmStudioPanel.jsx'
-
-
-
-
-
-
+import CatalogueWizard from './components/CatalogueWizard.jsx'
+import {
+  OnboardingStripe, OnboardingWizardModal, RecommendationHero,
+  PublishingElectionPanel, DistributionElectionPanel, ContractDrawer,
+  AppMarketplacePanel, PanelHeader,
+} from './components/phase3.jsx'
 
 // ================= Dashboard Apps View =================
 // ================= Dashboard Apps Sub-Components =================
@@ -335,6 +339,120 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
 
 
 
+// Collapsed sidebar navigation items icon representations & descriptions
+const NAV_ITEM_DESCRIPTIONS = {
+  home: {
+    title: 'Overview',
+    desc: 'Platform analytics, stream counts, revenue summaries, and workspace stats',
+    category: 'Dashboard'
+  },
+  catalog: {
+    title: 'Catalogue',
+    desc: 'Central track & album catalogue, metadata manager, ISRCs, audio previews & release ingestion',
+    category: 'Catalog & IP'
+  },
+  'epk-builder': {
+    title: 'EPK Builder',
+    desc: 'Interactive Electronic Press Kit studio, theme visualizer, hero customizer & live player showcase',
+    category: 'Catalog & IP'
+  },
+  splits: {
+    title: 'Split Cascade',
+    desc: 'Automated royalty splits ledger, collaborator percentages, and transparent payouts',
+    category: 'Royalty Ledgers'
+  },
+  djpool: {
+    title: 'DJ Pool MVP',
+    desc: 'Promotional record pool for club and radio DJs, lossless downloads, and feedback tracking',
+    category: 'Pools & Sync'
+  },
+  sync: {
+    title: 'Sync Marketplace',
+    desc: 'Pitch catalog tracks to TV shows, feature films, video games, and commercial sync briefs',
+    category: 'Pools & Sync'
+  },
+  escrow: {
+    title: 'Escrow Contracts',
+    desc: 'Smart contract escrow agreements for milestone-based production, mixing & collab payments',
+    category: 'Royalty Ledgers'
+  },
+  'publishing-election': {
+    title: 'Publishing Election',
+    desc: 'Global publishing administration election, PRO registration, and composition royalties',
+    category: 'Royalty Ledgers'
+  },
+  'distribution-election': {
+    title: 'Distribution Election',
+    desc: 'Global digital distribution deals to Spotify, Apple Music, TikTok, and YouTube Music',
+    category: 'Royalty Ledgers'
+  },
+  'app-marketplace': {
+    title: 'App Marketplace',
+    desc: 'Discover and activate Intermaven network apps, creator companion modules & monetization tools',
+    category: 'Apps & Marketplace'
+  },
+  'social-ai': {
+    title: 'Social AI Studio',
+    desc: 'AI marketing suite for promotional copy, social captions, marketing strategy, and release artwork',
+    category: 'Creator Tools'
+  },
+  crm: {
+    title: 'Smart CRM',
+    desc: 'Fan relationship management, VIP subscriber lists, direct email blasts & live engagement',
+    category: 'Creator Tools'
+  },
+  cms: {
+    title: 'CMS Layouts',
+    desc: 'Mother-CMS visual website editor, banner customizer, typography, and version rollbacks',
+    category: 'Admin'
+  },
+  'domain-mappings': {
+    title: 'Domain Mappings',
+    desc: 'Custom domains and subdomains routing across the Intermaven creator network',
+    category: 'Admin'
+  },
+  'promoted-acts': {
+    title: 'Promoted Acts',
+    desc: 'Platform-wide artist spotlights, trending acts curation, and featured talent showcases',
+    category: 'Admin'
+  },
+  profile: {
+    title: 'Profile Settings',
+    desc: 'Account security, artist brand identity, connected wallets, and workspace preferences',
+    category: 'Account'
+  },
+  library: {
+    title: 'My Library',
+    desc: 'TuneStream personal saved collection, playlists, downloaded stems, and favorite releases',
+    category: 'TuneStream'
+  },
+  tips: {
+    title: 'Tips & Purchases',
+    desc: 'Fan micropayments, direct tips ledger, digital merch purchases, and supporter badges',
+    category: 'TuneStream'
+  },
+  'stream-controls': {
+    title: 'Player & Devices',
+    desc: 'TuneStream lossless audio player configuration, bit-depth controls & streaming device routing',
+    category: 'TuneStream'
+  },
+  'pos-inventory': {
+    title: 'POS Inventory',
+    desc: 'TunePay physical merch inventory, vinyl & CD stock control, and tour sales management',
+    category: 'TunePay'
+  },
+  'pos-settlement': {
+    title: 'POS Settlement',
+    desc: 'Real-time sales reconciliation, mobile cashouts, M-Pesa settlements, and digital receipts',
+    category: 'TunePay'
+  },
+  'pos-devices': {
+    title: 'POS Devices',
+    desc: 'Manage connected mobile card readers, contactless terminals, and merchant hardware',
+    category: 'TunePay'
+  }
+};
+
 // ================= Creator / Admin Dashboard View =================
 function DashboardView({ 
   sessionUser, 
@@ -359,9 +477,47 @@ function DashboardView({
   const [userCredits, setUserCredits] = useState(sessionUser?.credits || 600);
   const [payoutBalance, setPayoutBalance] = useState(4235.80);
   const [collapsed, setCollapsed] = useState(false);
+  const [hoveredNavItem, setHoveredNavItem] = useState(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardAnswers, setWizardAnswers] = useState(null);
   const [activeModalApp, setActiveModalApp] = useState(null);
+  const [cmsInitialTab, setCmsInitialTab] = useState('music');
+
+  // TuneStream Global Audio Player State
+  const [globalTrack, setGlobalTrack] = useState(null);
+  const [globalPlaying, setGlobalPlaying] = useState(false);
+  const [globalProgress, setGlobalProgress] = useState(0);
+  const [isUndocked, setIsUndocked] = useState(false);
+  const [playerPos, setPlayerPos] = useState({ x: 40, y: 120 });
+  const [playlistQueue, setPlaylistQueue] = useState([]);
+
+  const handlePlayGlobalTrack = (t, queue = null) => {
+    if (!t) return;
+    setGlobalTrack(t);
+    setGlobalPlaying(true);
+    setGlobalProgress(0);
+    if (Array.isArray(queue) && queue.length > 0) {
+      setPlaylistQueue(queue);
+    } else if (playlistQueue.length === 0 && Array.isArray(catalogTracks) && catalogTracks.length > 0) {
+      setPlaylistQueue(catalogTracks);
+    }
+    const audioEl = document.getElementById('tunestream-global-audio');
+    if (audioEl) {
+      const src = t.audioUrl || t.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(t.isrc || t.title || 'preview')}`;
+      if (audioEl.src !== src) {
+        audioEl.src = src;
+        audioEl.load();
+      }
+      audioEl.play().catch(e => console.warn('Direct audio play deferred:', e));
+    }
+  };
+
+  // Automatically collapse sidebar when Catalogue or EPK Builder are clicked / active
+  useEffect(() => {
+    if (['catalog', 'epk-builder'].includes(activeTab)) {
+      setCollapsed(true);
+    }
+  }, [activeTab]);
 
   // Fetch onboarding on mount so the OnboardingStripe knows whether the wizard
   // has been completed.
@@ -409,8 +565,9 @@ function DashboardView({
       case 'home':
         return (
           <DashboardHome 
-            sessionUser={sessionUser} 
-            userCredits={userCredits} 
+            sessionUser={sessionUser}
+            tracks={catalogTracks}
+            userCredits={userCredits}
             payoutBalance={payoutBalance}
             setUserCredits={setUserCredits}
             setActiveTab={setActiveTab}
@@ -418,25 +575,34 @@ function DashboardView({
         );
       case 'catalog':
         return (
-          <CatalogPortingPanel 
+          <CataloguePanel 
             setActiveTab={setActiveTab} 
             tracks={catalogTracks} 
-            setTracks={setCatalogTracks} 
+            setTracks={setCatalogTracks}
+            sessionUser={sessionUser}
+            creatorEpk={creatorEpk}
+            collapsed={collapsed}
+            onToggleSidebar={() => setCollapsed(!collapsed)}
+            onPlayTrack={handlePlayGlobalTrack}
           />
         );
       case 'splits':
         return (
           <SplitCascadePanel 
-            payoutBalance={payoutBalance} 
-            setPayoutBalance={setPayoutBalance} 
+            sessionUser={sessionUser} 
+            tracks={catalogTracks}
             ledgerRows={ledgerRows}
             setLedgerRows={setLedgerRows}
+            payoutBalance={payoutBalance}
+            setPayoutBalance={setPayoutBalance}
           />
         );
       case 'djpool':
-        return <DjPoolPanel />;
+        return <DjPoolPanel sessionUser={sessionUser} />;
       case 'sync':
-        return <SyncLicensingPanel />;
+        return <SyncBriefMatchPanel sessionUser={sessionUser} tracks={catalogTracks} />;
+      case 'mastering':
+        return <MasteringUploadPanel sessionUser={sessionUser} />;
       case 'escrow':
         return (
           <EscrowContractsPanel 
@@ -444,6 +610,7 @@ function DashboardView({
             setPayoutBalance={setPayoutBalance} 
           />
         );
+      case 'settings':
       case 'profile':
         return (
           <ProfileSettingsPanel 
@@ -472,11 +639,17 @@ function DashboardView({
       case 'distribution-election':
         return <DistributionElectionPanel sessionUser={sessionUser} />;
       case 'social-ai':
-        return <SocialAiPanel setActiveTab={setActiveTab} />;
+        return (
+          <SocialAiPanel 
+            setActiveTab={setActiveTab} 
+            sessionUser={sessionUser}
+            onPlayTrack={handlePlayGlobalTrack}
+          />
+        );
       case 'crm':
         return <CrmPanel sessionUser={sessionUser} />;
       case 'cms':
-        return <CmsPanel sessionUser={sessionUser} epk={creatorEpk} setEpk={setCreatorEpk} tracks={catalogTracks} onSwitchToWizard={() => setActiveTab('epk-builder')} />;
+        return <CmsPanel sessionUser={sessionUser} epk={creatorEpk} setEpk={setCreatorEpk} tracks={catalogTracks} initialTab={cmsInitialTab} onSwitchToWizard={() => setActiveTab('catalog')} />;
       case 'epk-builder':
         return <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} sessionUser={sessionUser} setActiveTab={setActiveTab} />;
       case 'app-marketplace':
@@ -491,7 +664,7 @@ function DashboardView({
     
     const allItems = {
       home: { id: 'home', label: 'Overview', icon: RiBarChartFill, category: 'Dashboard' },
-      catalog: { id: 'catalog', label: 'Catalog Porting', icon: RiDatabase2Fill, category: 'Catalog & IP' },
+      catalog: { id: 'catalog', label: 'Catalogue', icon: RiDatabase2Fill, category: 'Catalog & IP' },
       'epk-builder': { id: 'epk-builder', label: 'EPK Builder', icon: RiDiscFill, category: 'Catalog & IP' },
       splits: { id: 'splits', label: 'Split Cascade', icon: RiCoinsFill, category: 'Royalty Ledgers' },
       djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
@@ -580,7 +753,11 @@ function DashboardView({
     <div className="dashboard-container">
       {/* Sidebar Navigation */}
       <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
-        <div className="dashboard-sidebar-scroll" data-testid="dashboard-sidebar-scroll">
+        <div 
+          className="dashboard-sidebar-scroll" 
+          data-testid="dashboard-sidebar-scroll"
+          onScroll={() => setHoveredNavItem(null)}
+        >
           <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
             <Link to="/" title="Back to TuneMavens public site" data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
               {collapsed ? (
@@ -592,10 +769,26 @@ function DashboardView({
           </div>
 
           <button 
-            onClick={() => setCollapsed(!collapsed)} 
+            onClick={() => {
+              setCollapsed(!collapsed);
+              setHoveredNavItem(null);
+            }} 
+            onMouseEnter={(e) => {
+              if (collapsed) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setHoveredNavItem({
+                  id: 'collapse-toggle',
+                  title: 'Expand Sidebar',
+                  category: 'Navigation',
+                  desc: 'Expand sidebar to display full module names and labels',
+                  rect
+                });
+              }
+            }}
+            onMouseLeave={() => setHoveredNavItem(null)}
             className="dashboard-nav-item collapse-toggle-btn"
             style={{ border: 'none', background: 'transparent', padding: '6px', justifyContent: 'center', width: '100%', marginBottom: '16px', color: '#94a3b8' }}
-            title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            title={!collapsed ? "Collapse Sidebar" : undefined}
           >
             {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
           </button>
@@ -614,6 +807,9 @@ function DashboardView({
                     <li key={item.id}>
                       <button 
                         onClick={() => {
+                          if (['catalog', 'epk-builder'].includes(item.id)) {
+                            setCollapsed(true);
+                          }
                           if (item.id === 'crm') {
                             const activeSub = localStorage.getItem('last_saved_epk_subdomain') || 'ndufo';
                             try {
@@ -646,8 +842,23 @@ function DashboardView({
                             setActiveTab(item.id);
                           }
                         }} 
+                        onMouseEnter={(e) => {
+                          if (collapsed) {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const descObj = NAV_ITEM_DESCRIPTIONS[item.id] || {};
+                            setHoveredNavItem({
+                              id: item.id,
+                              title: descObj.title || item.label,
+                              category: descObj.category || item.category,
+                              desc: descObj.desc || `Manage ${item.label.toLowerCase()} in your workspace`,
+                              isActive: activeTab === item.id,
+                              rect
+                            });
+                          }
+                        }}
+                        onMouseLeave={() => setHoveredNavItem(null)}
                         className={`dashboard-nav-item ${activeTab === item.id && !['crm', 'cms'].includes(item.id) ? 'active' : ''}`}
-                        title={item.label}
+                        title={!collapsed ? item.label : undefined}
                       >
                         <Icon size={16} />
                         {!collapsed && item.label}
@@ -665,7 +876,20 @@ function DashboardView({
                 to="/" 
                 className="dashboard-nav-item"
                 style={{ textDecoration: 'none' }}
-                title="Back to Home Site"
+                onMouseEnter={(e) => {
+                  if (collapsed) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setHoveredNavItem({
+                      id: 'back-to-site',
+                      title: 'Back to Home Site',
+                      category: 'Navigation',
+                      desc: 'Exit dashboard and return to TuneMavens public landing page',
+                      rect
+                    });
+                  }
+                }}
+                onMouseLeave={() => setHoveredNavItem(null)}
+                title={!collapsed ? "Back to Home Site" : undefined}
               >
                 <RiArrowLeftFill size={16} />
                 {!collapsed && "Back to Home Site"}
@@ -700,7 +924,7 @@ function DashboardView({
                   title="Sandbox Toggle: Click to toggle Admin/Creator role"
                   style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', display: 'inline-block', marginTop: '2px' }}
                 >
-                  ⚙️ {sessionUser.role || 'creator'}
+                  ⚙️  {sessionUser.role || 'creator'}
                 </span>
               </div>
             )}
@@ -709,7 +933,20 @@ function DashboardView({
             onClick={onLogout} 
             className="dashboard-nav-item" 
             style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px' }}
-            title="Log Out"
+            onMouseEnter={(e) => {
+              if (collapsed) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setHoveredNavItem({
+                  id: 'logout',
+                  title: 'Log Out',
+                  category: 'Account',
+                  desc: 'Securely sign out of your TuneMavens account session',
+                  rect
+                });
+              }
+            }}
+            onMouseLeave={() => setHoveredNavItem(null)}
+            title={!collapsed ? "Log Out" : undefined}
           >
             <RiCloseFill size={14} />
             {!collapsed && "Log Out"}
@@ -778,7 +1015,7 @@ function DashboardView({
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              animation: 'modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+              animation: 'modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
             {/* Modal Header */}
@@ -786,22 +1023,18 @@ function DashboardView({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '16px 24px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-              background: 'rgba(15, 23, 42, 0.4)'
+              padding: '14px 20px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              background: '#0d1122'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ 
-                  display: 'inline-block', 
-                  width: '8px', 
-                  height: '8px', 
-                  borderRadius: '50%', 
-                  background: 'var(--cyan)',
-                  boxShadow: '0 0 8px var(--cyan)'
-                }} />
-                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#fff', letterSpacing: '0.5px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22d3ee' }} />
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', letterSpacing: '0.5px' }}>
                   {activeModalApp.title}
-                </h3>
+                </span>
+                <span style={{ fontSize: '11px', color: '#64748b', background: 'rgba(255, 255, 255, 0.05)', padding: '2px 8px', borderRadius: '12px' }}>
+                  Standalone App Window
+                </span>
               </div>
               <button 
                 onClick={() => setActiveModalApp(null)}
@@ -868,6 +1101,67 @@ function DashboardView({
           `}</style>
         </div>
       )}
+
+      {/* Collapsed Sidebar Hover Tooltip */}
+      {collapsed && hoveredNavItem && (
+        <div 
+          className="sidebar-collapsed-tooltip"
+          style={{
+            top: `${hoveredNavItem.rect.top + hoveredNavItem.rect.height / 2}px`,
+            left: `${hoveredNavItem.rect.right + 12}px`,
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', gap: '8px' }}>
+            <span style={{ 
+              fontSize: '9px', 
+              fontWeight: 800, 
+              letterSpacing: '0.8px', 
+              textTransform: 'uppercase', 
+              color: '#22d3ee', 
+              background: 'rgba(34, 211, 238, 0.12)', 
+              padding: '2px 6px', 
+              borderRadius: '3px',
+              border: '1px solid rgba(34, 211, 238, 0.25)'
+            }}>
+              {hoveredNavItem.category}
+            </span>
+            {hoveredNavItem.isActive && (
+              <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+                ACTIVE
+              </span>
+            )}
+          </div>
+
+          <div style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc', marginBottom: '4px', letterSpacing: '-0.2px' }}>
+            {hoveredNavItem.title}
+          </div>
+
+          <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.45, fontWeight: 400 }}>
+            {hoveredNavItem.desc}
+          </div>
+        </div>
+      )}
+
+      {/* Global TuneStream Audio Player */}
+      <GlobalAudioPlayer
+        globalTrack={globalTrack}
+        setGlobalTrack={setGlobalTrack}
+        globalPlaying={globalPlaying}
+        setGlobalPlaying={setGlobalPlaying}
+        globalProgress={globalProgress}
+        setGlobalProgress={setGlobalProgress}
+        isUndocked={isUndocked}
+        setIsUndocked={setIsUndocked}
+        playerPos={playerPos}
+        setPlayerPos={setPlayerPos}
+        catalogTracks={catalogTracks}
+        playlistQueue={playlistQueue}
+        setPlaylistQueue={setPlaylistQueue}
+        userCredits={userCredits}
+        setUserCredits={setUserCredits}
+      />
     </div>
   );
 }
@@ -876,12 +1170,7 @@ function DashboardView({
 // Shows the user what's still missing in their setup. Status derives live from
 // what's actually in Mongo (publishing_deals, distribution_deals, users.apps),
 // so the stripe shrinks naturally as the user completes each step.
-// Phase 3 dashboard components (extracted for maintainability).
-import {
-  OnboardingStripe, OnboardingWizardModal, RecommendationHero,
-  PublishingElectionPanel, DistributionElectionPanel, ContractDrawer,
-  AppMarketplacePanel, PanelHeader,
-} from './components/phase3.jsx'
+// Phase 3 dashboard components are imported at top of file.
 
 
 
@@ -977,11 +1266,11 @@ function DashboardSearchBar({ value, onChange, placeholder = "Search..." }) {
           background: '#0a0f1d',
           border: '1px solid rgba(255,255,255,0.08)',
           color: '#fff',
-          borderRadius: '4px'
+          borderRadius: '3px'
         }}
       />
-      <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4, fontSize: '13px', pointerEvents: 'none' }}>
-        🔍
+      <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+        <RiSearchLine size={14} color="var(--cyan)" />
       </span>
     </div>
   );
@@ -1009,7 +1298,7 @@ function DashboardPagination({ currentPage, totalItems, pageSize, onPageChange }
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
           className="plan-btn outline"
-          style={{ padding: '4px 8px', fontSize: '11px', height: '26px', borderRadius: '4px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.4 : 1 }}
+          style={{ padding: '4px 8px', fontSize: '11px', height: '26px', borderRadius: '3px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.4 : 1 }}
         >
           Prev
         </button>
@@ -1018,7 +1307,7 @@ function DashboardPagination({ currentPage, totalItems, pageSize, onPageChange }
             key={p}
             onClick={() => onPageChange(p)}
             className={p === currentPage ? 'btn-primary' : 'plan-btn outline'}
-            style={{ padding: '4px 8px', fontSize: '11px', height: '26px', minWidth: '26px', borderRadius: '4px', cursor: 'pointer' }}
+            style={{ padding: '4px 8px', fontSize: '11px', height: '26px', minWidth: '26px', borderRadius: '3px', cursor: 'pointer' }}
           >
             {p}
           </button>
@@ -1027,7 +1316,7 @@ function DashboardPagination({ currentPage, totalItems, pageSize, onPageChange }
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
           className="plan-btn outline"
-          style={{ padding: '4px 8px', fontSize: '11px', height: '26px', borderRadius: '4px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.4 : 1 }}
+          style={{ padding: '4px 8px', fontSize: '11px', height: '26px', borderRadius: '3px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.4 : 1 }}
         >
           Next
         </button>
@@ -2040,6 +2329,17 @@ function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab }) {
   );
 }
 
+// Backward-compatible hoisted panel aliases
+function OverviewPanel(props) {
+  return <DashboardHome {...props} />;
+}
+function SplitsCascadePanel(props) {
+  return <SplitCascadePanel {...props} />;
+}
+function SyncMarketplacePanel(props) {
+  return <SyncLicensingPanel {...props} />;
+}
+
 // ================= SUB-PANEL: Overview Home =================
 function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits, setActiveTab }) {
   const [recentActivities, setRecentActivities] = useState([
@@ -2389,8 +2689,22 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
   );
 }
 
-// ================= SUB-PANEL: Catalog & Porting (Phase 4) =================
-function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
+// ================= SUB-PANEL: Catalogue Management & Ingestion Wizard =================
+function CataloguePanel({ 
+  setActiveTab, 
+  tracks, 
+  setTracks, 
+  sessionUser, 
+  creatorEpk, 
+  collapsed, 
+  onToggleSidebar, 
+  onPlayTrack 
+}) {
+  const [viewMode, setViewMode] = useState('manager'); // 'wizard' | 'manager'
+  const [managerSubView, setManagerSubView] = useState('collections'); // 'collections' | 'table'
+  const [releaseTypeFilter, setReleaseTypeFilter] = useState('all'); // 'all' | 'album' | 'ep' | 'single'
+  const [expandedReleaseTitle, setExpandedReleaseTitle] = useState(null);
+  
   const [selectedPreset, setSelectedPreset] = useState('standard');
   const [loading, setLoading] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
@@ -2403,7 +2717,7 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
 
   // Single Track Uploader Form States
   const [newTitle, setNewTitle] = useState('');
-  const [newArtist, setNewArtist] = useState('');
+  const [newArtist, setNewArtist] = useState(sessionUser?.artist_name || sessionUser?.name || 'Ndufo');
   const [newGenre, setNewGenre] = useState('Afro-House');
   const [newIsrc, setNewIsrc] = useState('');
   const [newArtistSplit, setNewArtistSplit] = useState(50);
@@ -2417,568 +2731,2726 @@ function CatalogPortingPanel({ setActiveTab, tracks, setTracks }) {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const fileInputRef = useRef(null);
 
-  // Inline editing states
-  const [editingIsrc, setEditingIsrc] = useState(null);
+  // Edit Track State
+  const [editingTrack, setEditingTrack] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editArtist, setEditArtist] = useState('');
+  const [editRelease, setEditRelease] = useState('');
   const [editGenre, setEditGenre] = useState('');
   const [editSplit, setEditSplit] = useState('');
   const [editCoverBg, setEditCoverBg] = useState('');
   const [editCoverText, setEditCoverText] = useState('');
   const [editFeatured, setEditFeatured] = useState(false);
 
+  // Delete Track Modal State
+  const [deletingTrack, setDeletingTrack] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // EDIT ALBUM ARTWORK & TRACKS STATE
+  const [editingAlbum, setEditingAlbum] = useState(null);
+  const [editingAlbumTracks, setEditingAlbumTracks] = useState([]);
+  const [ingestSidebarCollapsed, setIngestSidebarCollapsed] = useState(false);
+  const [editingAlbumModal, setEditingAlbumModal] = useState(null);
+  const [artworkModalTab, setArtworkModalTab] = useState('upload'); // 'upload' | 'ai' | 'gradient'
+  const [previewArtworkUrl, setPreviewArtworkUrl] = useState('');
+  const [previewCoverBg, setPreviewCoverBg] = useState('');
+  const [previewCoverText, setPreviewCoverText] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [generatingAiArt, setGeneratingAiArt] = useState(false);
+  const [savingArtwork, setSavingArtwork] = useState(false);
+  const artworkFileInputRef = useRef(null);
+
+  // Group Tracks into Releases / Albums / EPs / Singles
+  const getReleases = (trackList) => {
+    const map = new Map();
+    trackList.forEach(t => {
+      const relName = (t.release && t.release.trim()) ? t.release.trim() : 'Standalone Singles';
+      if (!map.has(relName)) {
+        map.set(relName, {
+          title: relName,
+          artist: t.artist || sessionUser?.artist_name || 'Ndufo',
+          tracks: [],
+          genre: t.genre || 'Afro-House',
+          year: t.year || '2024',
+          coverArt: t.coverArt || t.album_art_url || '',
+          coverBg: t.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+          coverText: t.coverText || relName.slice(0, 10),
+          releaseType: t.releaseType || ''
+        });
+      }
+      const rel = map.get(relName);
+      rel.tracks.push(t);
+      if ((t.coverArt || t.album_art_url) && !rel.coverArt) {
+        rel.coverArt = t.coverArt || t.album_art_url;
+      }
+      if (t.releaseType && !rel.releaseType) {
+        rel.releaseType = t.releaseType;
+      }
+    });
+
+    return Array.from(map.values()).map(r => {
+      let deducedType = r.releaseType;
+      if (!deducedType) {
+        const lower = r.title.toLowerCase();
+        if (r.tracks.length >= 7 || lower.includes('album') || lower.includes('dating')) {
+          deducedType = 'Album';
+        } else if (r.tracks.length >= 3 || lower.includes('ep')) {
+          deducedType = 'EP';
+        } else {
+          deducedType = 'Single';
+        }
+      }
+      return { ...r, releaseType: deducedType };
+    });
+  };
+
+  const releases = getReleases(tracks);
+
+  // Open Dedicated Album Editing Page (All Tracks & Artwork)
+  const openAlbumEditor = (rel) => {
+    setEditingAlbum({
+      title: rel.title,
+      artist: rel.artist || sessionUser?.artist_name || 'Ndufo',
+      genre: rel.genre || 'Afro-House',
+      year: rel.year || '2026',
+      releaseType: rel.releaseType || 'Album',
+      coverArt: rel.coverArt || rel.album_art_url || '',
+      coverBg: rel.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+      coverText: rel.coverText || rel.title
+    });
+    setPreviewArtworkUrl(rel.coverArt || rel.album_art_url || '');
+    setPreviewCoverBg(rel.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
+    setPreviewCoverText(rel.coverText || rel.title || '');
+    setAiPrompt(`Professional studio album artwork for "${rel.title}" by ${rel.artist || 'Ndufo'}, vivid, modern, high quality music cover art, 8k render`);
+    setArtworkModalTab('upload');
+    const relTracks = tracks.filter(t => {
+      const tRel = (t.release && t.release.trim()) ? t.release.trim() : 'Standalone Singles';
+      return tRel.toLowerCase() === rel.title.toLowerCase();
+    });
+    setEditingAlbumTracks(relTracks.length > 0 ? relTracks : [...rel.tracks]);
+    setManagerSubView('album-edit');
+  };
+
+  const openArtworkModal = (rel) => {
+    openAlbumEditor(rel);
+  };
+
+  // Upload Custom Artwork Handler
+  const handleArtworkFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('media_type', 'image');
+      formData.append('folder', 'artwork');
+      const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
+      const res = await fetch('http://localhost:8001/api/storage/upload', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const uploadedUrl = data.url || data.asset?.media_url || '';
+        if (uploadedUrl) {
+          setPreviewArtworkUrl(uploadedUrl);
+        } else {
+          const reader = new FileReader();
+          reader.onload = (ev) => setPreviewArtworkUrl(ev.target.result || '');
+          reader.readAsDataURL(file);
+        }
+      } else {
+        const reader = new FileReader();
+        reader.onload = (ev) => setPreviewArtworkUrl(ev.target.result || '');
+        reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      console.warn('Upload API fallback to data URL:', err);
+      const reader = new FileReader();
+      reader.onload = (ev) => setPreviewArtworkUrl(ev.target.result || '');
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Generate AI Artwork Handler
+  const handleGenerateAiArtwork = async () => {
+    if (!aiPrompt.trim()) return;
+    setGeneratingAiArt(true);
+    try {
+      const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
+      const res = await fetch('http://localhost:8001/api/social-ai/generate-art', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ prompt: aiPrompt.trim(), aspect_ratio: '1:1' })
+      });
+      const data = await res.json();
+      if (res.ok && (data?.asset?.media_url || data?.url)) {
+        setPreviewArtworkUrl(data.asset?.media_url || data.url);
+      } else {
+        alert(data.detail || 'AI artwork generation failed.');
+      }
+    } catch (err) {
+      alert('AI artwork generation error: ' + (err.message || 'Unknown error'));
+    } finally {
+      setGeneratingAiArt(false);
+    }
+  };
+
+  // Save Album Artwork Handler (updates backend releases, tracks, and local state)
+  const handleSaveAlbumArtwork = async () => {
+    if (!editingAlbumModal) return;
+    setSavingArtwork(true);
+    try {
+      const sub = sessionUser?.username || 'ndufo';
+      const effectiveArt = previewArtworkUrl || editingAlbumModal.coverArt || '';
+      const payload = {
+        albumTitle: editingAlbumModal.title,
+        release_title: editingAlbumModal.title,
+        artworkUrl: effectiveArt,
+        artwork_url: effectiveArt,
+        bg_gradient: previewCoverBg || '',
+        cover_text: previewCoverText || editingAlbumModal.title || '',
+        subdomain: sub
+      };
+
+      const res = await fetch('http://localhost:8001/api/catalog/albums/artwork', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server responded with status ${res.status}`);
+      }
+
+      // Update all matching tracks locally
+      const updated = tracks.map(t => {
+        const tRel = (t.release && t.release.trim()) ? t.release.trim() : 'Standalone Singles';
+        if (tRel === editingAlbumModal.title) {
+          return {
+            ...t,
+            coverArt: effectiveArt || t.coverArt,
+            coverBg: previewCoverBg || t.coverBg,
+            coverText: previewCoverText || t.coverText,
+            album_art_url: effectiveArt || t.album_art_url
+          };
+        }
+        return t;
+      });
+
+      setTracks(updated);
+      try {
+        localStorage.setItem('catalog_tracks', JSON.stringify(updated));
+      } catch (_) {}
+
+      setEditingAlbumModal(null);
+      alert(`Artwork successfully updated for "${editingAlbumModal.title}"! All matching tracks and albums have been updated.`);
+    } catch (err) {
+      alert('Failed to save album artwork: ' + err.message);
+    } finally {
+      setSavingArtwork(false);
+    }
+  };
+
+  // Full Album & Tracks Save Handler
+  const handleSaveAlbumEditor = async () => {
+    if (!editingAlbum) return;
+    setSavingArtwork(true);
+    try {
+      const sub = sessionUser?.username || 'ndufo';
+      const effectiveArt = previewArtworkUrl || editingAlbum.coverArt || '';
+      
+      // 1. Update album artwork in backend
+      const payload = {
+        albumTitle: editingAlbum.title,
+        release_title: editingAlbum.title,
+        artworkUrl: effectiveArt,
+        artwork_url: effectiveArt,
+        bg_gradient: previewCoverBg || '',
+        cover_text: previewCoverText || editingAlbum.title || '',
+        subdomain: sub
+      };
+
+      try {
+        await fetch('http://localhost:8001/api/catalog/albums/artwork', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn('Backend artwork update warning:', err);
+      }
+
+      // 2. Map updated album tracks
+      const updatedAlbumTracksMap = new Map();
+      editingAlbumTracks.forEach(t => {
+        updatedAlbumTracksMap.set(t.isrc, {
+          ...t,
+          release: editingAlbum.title,
+          releaseType: editingAlbum.releaseType,
+          year: editingAlbum.year,
+          coverArt: effectiveArt || t.coverArt,
+          coverBg: previewCoverBg || t.coverBg,
+          coverText: previewCoverText || t.coverText,
+          album_art_url: effectiveArt || t.album_art_url
+        });
+      });
+
+      // Update full tracks list
+      let updatedList = tracks.map(t => {
+        if (updatedAlbumTracksMap.has(t.isrc)) {
+          return updatedAlbumTracksMap.get(t.isrc);
+        }
+        const tRel = (t.release && t.release.trim()) ? t.release.trim() : 'Standalone Singles';
+        if (tRel.toLowerCase() === editingAlbum.title.toLowerCase()) {
+          return {
+            ...t,
+            release: editingAlbum.title,
+            releaseType: editingAlbum.releaseType,
+            coverArt: effectiveArt || t.coverArt,
+            coverBg: previewCoverBg || t.coverBg,
+            coverText: previewCoverText || t.coverText,
+            album_art_url: effectiveArt || t.album_art_url
+          };
+        }
+        return t;
+      });
+
+      // Add any newly created tracks that were added inside the editor
+      editingAlbumTracks.forEach(t => {
+        if (!updatedList.some(existing => existing.isrc === t.isrc)) {
+          updatedList = [{
+            ...t,
+            release: editingAlbum.title,
+            releaseType: editingAlbum.releaseType,
+            year: editingAlbum.year,
+            coverArt: effectiveArt,
+            coverBg: previewCoverBg,
+            coverText: previewCoverText,
+            album_art_url: effectiveArt
+          }, ...updatedList];
+        }
+      });
+
+      setTracks(updatedList);
+      try {
+        localStorage.setItem('catalog_tracks', JSON.stringify(updatedList));
+      } catch (_) {}
+
+      // Push individual track updates to backend
+      for (const t of editingAlbumTracks) {
+        try {
+          await fetch(`http://localhost:8001/api/catalog/tracks/${encodeURIComponent(t.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...t,
+              release: editingAlbum.title,
+              releaseType: editingAlbum.releaseType,
+              coverArt: effectiveArt || t.coverArt,
+              coverBg: previewCoverBg || t.coverBg,
+              album_art_url: effectiveArt || t.album_art_url
+            })
+          });
+        } catch (e) {
+          console.warn('Track update warning:', e);
+        }
+      }
+
+      alert(`Successfully saved all changes for "${editingAlbum.title}"! All tracks and artwork have been updated.`);
+      setManagerSubView('collections');
+    } catch (err) {
+      alert('Failed to save album changes: ' + (err.message || 'Unknown error'));
+    } finally {
+      setSavingArtwork(false);
+    }
+  };
+
+  const handleAddTrackToEditingAlbum = () => {
+    if (!editingAlbum) return;
+    const seq = 1000 + tracks.length + editingAlbumTracks.length + 1;
+    const newTrk = {
+      id: Date.now(),
+      isrc: `KE-TM1-26-${String(seq).padStart(5, '0')}`,
+      title: `Track ${editingAlbumTracks.length + 1}`,
+      artist: editingAlbum.artist || sessionUser?.artist_name || 'Ndufo',
+      release: editingAlbum.title,
+      releaseType: editingAlbum.releaseType || 'Album',
+      year: editingAlbum.year || '2026',
+      genre: editingAlbum.genre || 'Afro-House',
+      duration: '3:30',
+      split: 'Artist (60%) / Producer (25%) / Label (15%)',
+      status: 'valid',
+      coverArt: previewArtworkUrl || editingAlbum.coverArt,
+      coverBg: previewCoverBg || editingAlbum.coverBg,
+      coverText: previewCoverText || editingAlbum.coverText,
+      syncCleared: true,
+      isFeatured: false
+    };
+    setEditingAlbumTracks(prev => [...prev, newTrk]);
+  };
+
+  const handleDeleteTrackFromAlbum = (indexToDelete) => {
+    setEditingAlbumTracks(prev => prev.filter((_, idx) => idx !== indexToDelete));
+  };
+
+  const handleUpdateAlbumTrack = (index, field, value) => {
+    setEditingAlbumTracks(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+
+  // Preset gradient choices
+  const gradientPresets = [
+    { name: 'Neon Cyber', bg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)' },
+    { name: 'Sunset Glow', bg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' },
+    { name: 'Emerald Wave', bg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)' },
+    { name: 'Hot Magenta', bg: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)' },
+    { name: 'Midnight Onyx', bg: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' },
+    { name: 'Electric Royal', bg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }
+  ];
+
+  // Filtering Logic
+  const filteredReleases = releases.filter(r => {
+    const matchesType = releaseTypeFilter === 'all' || r.releaseType.toLowerCase() === releaseTypeFilter.toLowerCase();
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !searchQuery ||
+      r.title.toLowerCase().includes(q) ||
+      r.artist.toLowerCase().includes(q) ||
+      r.genre.toLowerCase().includes(q) ||
+      r.tracks.some(t => t.title.toLowerCase().includes(q));
+    return matchesType && matchesSearch;
+  });
+
+  const filteredTracks = tracks.filter(t => {
+    if (releaseTypeFilter !== 'all') {
+      const relObj = releases.find(r => r.title === ((t.release && t.release.trim()) ? t.release.trim() : 'Standalone Singles'));
+      const relType = (relObj ? relObj.releaseType : (t.releaseType || 'Single')).toLowerCase();
+      if (relType !== releaseTypeFilter.toLowerCase()) return false;
+    }
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (t.title || '').toLowerCase().includes(q) ||
+      (t.artist || '').toLowerCase().includes(q) ||
+      (t.isrc || '').toLowerCase().includes(q) ||
+      (t.release || '').toLowerCase().includes(q) ||
+      (t.genre || '').toLowerCase().includes(q)
+    );
+  });
+
+  const paginatedTracks = filteredTracks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalItems = filteredTracks.length;
+
   const startEdit = (tr) => {
-    setEditingIsrc(tr.isrc);
-    setEditTitle(tr.title);
-    setEditArtist(tr.artist);
-    setEditGenre(tr.genre);
-    setEditSplit(tr.split);
+    setEditingTrack(tr);
+    setEditTitle(tr.title || '');
+    setEditArtist(tr.artist || sessionUser?.artist_name || 'Ndufo');
+    setEditRelease(tr.release || 'Standalone Master');
+    setEditGenre(tr.genre || 'Afro-House');
+    setEditSplit(tr.split || 'Artist (60%) / Producer (25%) / Label (15%)');
     setEditCoverBg(tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
-    setEditCoverText(tr.coverText || 'Art');
+    setEditCoverText(tr.coverText || tr.title?.slice(0, 8) || 'Art');
     setEditFeatured(tr.isFeatured || false);
   };
 
-  const saveEdit = (isrc) => {
+  const saveEdit = async () => {
+    if (!editingTrack) return;
     if (!editTitle.trim() || !editArtist.trim()) {
       alert('Title and Artist fields cannot be empty.');
       return;
     }
-    setTracks(prev => prev.map(t => {
-      if (t.isrc === isrc) {
-        return {
-          ...t,
-          title: editTitle,
-          artist: editArtist,
-          genre: editGenre,
-          split: editSplit,
-          coverBg: editCoverBg,
-          coverText: editCoverText,
-          isFeatured: editFeatured
-        };
-      }
-      return t;
-    }));
-    setEditingIsrc(null);
+
+    const updatedTrack = {
+      ...editingTrack,
+      title: editTitle.trim(),
+      artist: editArtist.trim(),
+      release: editRelease.trim(),
+      genre: editGenre,
+      split: editSplit.trim(),
+      coverBg: editCoverBg,
+      coverText: editCoverText,
+      isFeatured: editFeatured
+    };
+
+    const updatedList = tracks.map(t => t.isrc === editingTrack.isrc ? updatedTrack : t);
+    setTracks(updatedList);
+    try {
+      localStorage.setItem('catalog_tracks', JSON.stringify(updatedList));
+    } catch (_) {}
+
+    const sub = sessionUser?.username || 'ndufo';
+    try {
+      await fetch(`http://localhost:8001/api/catalog/tracks/${encodeURIComponent(editingTrack.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTrack)
+      });
+    } catch (e) {
+      console.warn('Backend track update warning:', e);
+    }
+
+    setEditingTrack(null);
   };
 
-  const cancelEdit = () => {
-    setEditingIsrc(null);
+  const confirmDeleteTrack = async () => {
+    if (!deletingTrack) return;
+    setIsDeleting(true);
+    const targetIsrc = deletingTrack.isrc;
+
+    const updatedList = tracks.filter(t => t.isrc !== targetIsrc);
+    setTracks(updatedList);
+    try {
+      localStorage.setItem('catalog_tracks', JSON.stringify(updatedList));
+    } catch (_) {}
+
+    const sub = sessionUser?.username || 'ndufo';
+    try {
+      await fetch(`http://localhost:8001/api/catalog/tracks/${encodeURIComponent(targetIsrc)}?subdomain=${encodeURIComponent(sub)}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {
+      console.warn('Backend track delete warning:', e);
+    } finally {
+      setIsDeleting(false);
+      setDeletingTrack(null);
+    }
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
+  // Drag and Drop files
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragOver(true); };
+  const handleDragLeave = () => { setIsDragOver(false); };
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      processFiles(files);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(Array.from(e.dataTransfer.files));
     }
   };
-
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      processFiles(files);
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(Array.from(e.target.files));
     }
   };
 
-  const processFiles = (files) => {
+  const handleFiles = async (files) => {
     setLoading(true);
-    setValidationResult(null);
-    setErrors([]);
-    
-    // Simulate parsing metadata files
-    setTimeout(() => {
-      setLoading(false);
-      setValidationResult('pass');
-      const newTracksList = files.map((file, index) => {
-        const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
-        const words = cleanName.split(" ");
-        const title = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-        const isrcNum = 45682 + index + tracks.length;
-        // Generate random gradients for new ingested files
-        const grads = [
-          'linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%)',
-          'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
-          'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-          'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)'
-        ];
-        const coverBg = grads[Math.floor(Math.random() * grads.length)];
-        const coverText = title.split(' ')[0] || 'Single';
-        return {
-          isrc: `US-123-${isrcNum}`,
-          title: title || 'Ingested Audio Track',
-          artist: 'Aisha Okoro',
-          split: 'Artist (60%) / Producer (40%)',
-          genre: 'Amapiano',
-          status: 'valid',
-          coverBg,
-          coverText
-        };
-      });
-      
-      setTracks(prev => [...newTracksList, ...prev]);
-      setUploadedFiles(prev => [...files.map(f => f.name), ...prev]);
-      setCurrentPage(1);
-      alert(`Successfully ingested ${files.length} audio file(s) into your catalog!`);
-    }, 1200);
-  };
+    const grads = [
+      'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+      'linear-gradient(135deg, #ec4899 0%, #3b82f6 100%)',
+      'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+      'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)'
+    ];
 
-  const handleValidate = () => {
-    setLoading(true);
-    setValidationResult(null);
-    setErrors([]);
+    const newTracksList = files.map((file, index) => {
+      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+      const words = cleanName.split(" ").filter(Boolean);
+      const title = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") || 'Master Cue';
+      const seq = 1000 + tracks.length + index + 1;
+      const coverBg = grads[Math.floor(Math.random() * grads.length)];
+      const coverText = title.split(' ')[0] || 'Single';
 
-    setTimeout(() => {
-      setLoading(false);
-      if (selectedPreset === 'standard') {
-        setValidationResult('pass');
-        const standardTracks = [
-          { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid', coverBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', coverText: 'Midnight' },
-          { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid', coverBg: 'linear-gradient(135deg, #ec4899 0%, #3b82f6 100%)', coverText: 'Shadows' },
-          { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', coverText: 'Sunset' },
-          { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe' }
-        ];
-        // Merge without duplicate ISRCs
-        setTracks(prev => {
-          const existingIsrcs = prev.map(t => t.isrc);
-          const filteredNew = standardTracks.filter(t => !existingIsrcs.includes(t.isrc));
-          return [...filteredNew, ...prev];
+      return {
+        id: Date.now() + index,
+        isrc: `KE-TM1-26-${String(seq).padStart(5, '0')}`,
+        title: title,
+        artist: sessionUser?.artist_name || sessionUser?.name || 'Ndufo',
+        release: 'Direct Master Ingest',
+        releaseType: 'Single',
+        year: '2026',
+        split: 'Artist (60%) / Producer (25%) / Label (15%)',
+        publishingSplit: 'Writer (50%) / Publisher (50%)',
+        distributionSplit: 'Artist (60%) / Producer (25%) / Label (15%)',
+        genre: 'Afro-House',
+        duration: '3:30',
+        status: 'valid',
+        syncCleared: true,
+        isFeatured: index === 0,
+        coverBg,
+        coverText
+      };
+    });
+
+    const mergedTracks = [...newTracksList, ...tracks];
+    setTracks(mergedTracks);
+    setUploadedFiles(prev => [...files.map(f => f.name), ...prev]);
+    setCurrentPage(1);
+
+    try {
+      localStorage.setItem('catalog_tracks', JSON.stringify(mergedTracks));
+    } catch (_) {}
+
+    const sub = sessionUser?.username || 'ndufo';
+    for (const tr of newTracksList) {
+      try {
+        await fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tr)
         });
-        setCurrentPage(1);
-      } else {
-        setValidationResult('fail');
-        setErrors([
-          "Row 3: ISRC 'US- sunset-80' format invalid. Must match standard format (XX-XXX-XX-XXXXX).",
-          "Row 2: Primary artist field cannot be blank for 'Neon Shadows'.",
-          "Row 4: Split configuration total must sum to 100%. Currently sums to 80%."
-        ]);
-      }
-    }, 1200);
+      } catch (err) {}
+    }
+
+    setLoading(false);
+    alert(`Successfully ingested ${files.length} audio file(s) into your catalogue!`);
   };
 
-  const handleAddTrack = (e) => {
+  const handleValidate = async () => {
+    setLoading(true);
+    setValidationResult(null);
+    setErrors([]);
+
+    if (selectedPreset === 'standard') {
+      setValidationResult('pass');
+      const standardTracks = [
+        { id: Date.now() + 1, isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid', coverBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', coverText: 'Midnight', isFeatured: true },
+        { id: Date.now() + 2, isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid', coverBg: 'linear-gradient(135deg, #ec4899 0%, #3b82f6 100%)', coverText: 'Shadows', isFeatured: false },
+        { id: Date.now() + 3, isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', coverText: 'Sunset', isFeatured: true },
+        { id: Date.now() + 4, isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe', isFeatured: false }
+      ];
+      const existingIsrcs = tracks.map(t => t.isrc);
+      const filteredNew = standardTracks.filter(t => !existingIsrcs.includes(t.isrc));
+      const updatedList = [...filteredNew, ...tracks];
+      setTracks(updatedList);
+      try {
+        localStorage.setItem('catalog_tracks', JSON.stringify(updatedList));
+      } catch (_) {}
+
+      const sub = sessionUser?.username || 'ndufo';
+      for (const tr of filteredNew) {
+        try {
+          await fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tr)
+          });
+        } catch (_) {}
+      }
+      setCurrentPage(1);
+    } else {
+      setValidationResult('fail');
+      setErrors([
+        "Row 3: ISRC 'US- sunset-80' format invalid. Must match standard format (XX-XXX-XX-XXXXX).",
+        "Row 2: Primary artist field cannot be blank for 'Neon Shadows'.",
+        "Row 4: Split configuration total must sum to 100%. Currently sums to 80%."
+      ]);
+    }
+    setLoading(false);
+  };
+
+  const handleAddTrack = async (e) => {
     e.preventDefault();
     if (!newTitle || !newArtist || !newIsrc) {
       alert('Title, Artist, and ISRC are required.');
       return;
     }
-    
-    const sum = Number(newArtistSplit) + Number(newProducerSplit) + Number(newLabelSplit);
-    if (sum !== 100) {
-      alert(`Split configuration total must sum to 100%. Currently sums to ${sum}%.`);
-      return;
-    }
 
     const newTrack = {
-      isrc: newIsrc,
-      title: newTitle,
-      artist: newArtist,
+      id: Date.now(),
+      isrc: newIsrc.trim(),
+      title: newTitle.trim(),
+      artist: newArtist.trim(),
+      release: 'Standalone Master',
       split: `Artist (${newArtistSplit}%) / Producer (${newProducerSplit}%) / Label (${newLabelSplit}%)`,
+      publishingSplit: 'Writer (50%) / Publisher (50%)',
+      distributionSplit: `Artist (${newArtistSplit}%) / Producer (${newProducerSplit}%) / Label (${newLabelSplit}%)`,
       genre: newGenre,
       status: 'valid',
       coverBg: newCoverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-      coverText: newCoverText || 'Art'
+      coverText: newCoverText || 'Art',
+      syncCleared: true,
+      isFeatured: false
     };
 
-    setTracks(prev => [newTrack, ...prev]);
+    const updatedList = [newTrack, ...tracks];
+    setTracks(updatedList);
+    try {
+      localStorage.setItem('catalog_tracks', JSON.stringify(updatedList));
+    } catch (_) {}
+
+    const sub = sessionUser?.username || 'ndufo';
+    try {
+      await fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTrack)
+      });
+    } catch (err) {}
+
     setNewTitle('');
-    setNewArtist('');
     setNewIsrc('');
-    setNewCoverBg('linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
     setNewCoverText('New Release');
     setCurrentPage(1);
-    alert('Track manually added to catalog successfully!');
+    alert('Track manually added to catalogue successfully!');
   };
-
-  // Search filter
-  const filteredTracks = tracks.filter(t => 
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.isrc.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.genre.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Pagination slice
-  const paginatedTracks = filteredTracks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const totalItems = filteredTracks.length;
 
   return (
     <div>
-      <div className="dashboard-panel-header">
-        <h2>Catalogue & Ingestion Center</h2>
-        <p>Upload audio files, import CSV release sheets, or manually catalog tracks with split ownership definitions.</p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* CSV Bulk Ingest */}
-          <div className="dashboard-card">
-            <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff' }}>CSV Metadata Ingestion</h3>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>Select Preset Metadata CSV</label>
-              <select 
-                value={selectedPreset} 
-                onChange={(e) => setSelectedPreset(e.target.value)}
-                className="form-control"
-                style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '12px', padding: '6px' }}
-              >
-                <option value="standard">Release_Metadata_Standard.csv (Correct)</option>
-                <option value="corrupted">Release_Metadata_Invalid.csv (Has Errors)</option>
-              </select>
-            </div>
-
-            <button 
-              onClick={handleValidate} 
-              disabled={loading}
-              className="btn-primary" 
-              style={{ width: '100%', padding: '8px', fontSize: '12px', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              {loading ? 'Running Schema Checks...' : 'Validate and Ingest CSV'}
-            </button>
-
-            {validationResult && (
-              <div style={{ marginTop: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 'bold' }}>Schema Status:</span>
-                  <span className={`badge-status ${validationResult === 'pass' ? 'success' : 'error'}`}>
-                    {validationResult === 'pass' ? 'SCHEMA PASSED' : 'SCHEMA FAILED'}
-                  </span>
-                </div>
-                {errors.length > 0 && (
-                  <div style={{ marginTop: '10px', padding: '8px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', borderRadius: '4px' }}>
-                    <h5 style={{ fontSize: '10px', color: '#ef4444', margin: '0 0 4px 0', fontWeight: 'bold' }}>Errors:</h5>
-                    <ul style={{ paddingLeft: '12px', margin: 0 }}>
-                      {errors.map((err, i) => (
-                        <li key={i} style={{ fontSize: '10px', color: '#cbd5e1', marginBottom: '2px' }}>{err}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Multiple File Drag & Drop */}
-          <div className="dashboard-card">
-            <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '12px', color: '#fff' }}>Audio Ingestion (Multi-file)</h3>
-            <div 
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              style={{ 
-                border: isDragOver ? '2px dashed var(--green)' : '1px dashed rgba(255,255,255,0.15)',
-                padding: '24px 14px', 
-                borderRadius: '6px', 
-                textAlign: 'center', 
-                background: isDragOver ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.01)',
+      {/* Top Header Bar with Mode Toggles and Sidebar Collapse */}
+      <div style={{
+        background: '#0a0f1d',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '6px',
+        padding: '14px 20px',
+        marginBottom: '20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '14px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Sidebar Collapse Toggle Button within Catalogue Manager */}
+          {onToggleSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#cbd5e1',
+                padding: '7px 12px',
+                borderRadius: '3px',
+                fontWeight: 700,
+                fontSize: '12px',
                 cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
                 transition: 'all 0.2s ease'
               }}
+              title={collapsed ? "Expand sidebar navigation" : "Collapse sidebar navigation"}
             >
-              <input 
-                type="file" 
-                multiple 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                style={{ display: 'none' }} 
-              />
-              <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px' }}>📜</span>
-              <span style={{ fontSize: '12px', color: '#fff', fontWeight: '600' }}>Drag & Drop Audio Files Here</span>
-              <span style={{ fontSize: '10px', color: 'var(--mu)', display: 'block', marginTop: '4px' }}>Or click to select multiple WAV, MP3, or FLAC files</span>
+              {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
+              <span>{collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}</span>
+            </button>
+          )}
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RiDiscLine size={20} color="var(--cyan)" />
+              <h2 style={{ fontSize: '18px', fontWeight: 900, color: '#fff', margin: 0 }}>
+                Catalogue Manager
+              </h2>
+              <span style={{
+                background: 'rgba(0, 240, 255, 0.15)',
+                color: '#00f0ff',
+                fontSize: '11px',
+                fontWeight: 800,
+                padding: '2px 8px',
+                borderRadius: '3px'
+              }}>
+                {tracks.length} Tracks • {releases.length} Releases
+              </span>
             </div>
-
-            {uploadedFiles.length > 0 && (
-              <div style={{ marginTop: '12px', maxHeight: '100px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '4px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--mu)', fontWeight: 'bold' }}>Uploaded Ingests:</span>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '4px 0 0 0', fontSize: '10px', color: '#cbd5e1' }}>
-                  {uploadedFiles.map((fn, idx) => (
-                    <li key={idx} style={{ marginBottom: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>✓ {fn}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* Manual Single Track Ingest */}
-          <div className="dashboard-card">
-            <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff' }}>Add Track Manually</h3>
-            <form onSubmit={handleAddTrack} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <input type="text" placeholder="Track Title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
-              <input type="text" placeholder="Artist" value={newArtist} onChange={(e) => setNewArtist(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
-              <input type="text" placeholder="ISRC (e.g. US-123-45688)" value={newIsrc} onChange={(e) => setNewIsrc(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }} required />
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                <input type="text" placeholder="Art Label (e.g. Midnight)" value={newCoverText} onChange={(e) => setNewCoverText(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '5px' }} />
-                <input type="text" placeholder="Art Background CSS" value={newCoverBg} onChange={(e) => setNewCoverBg(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '5px' }} />
-              </div>
-
-              <select value={newGenre} onChange={(e) => setNewGenre(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px' }}>
-                <option value="Afro-House">Afro-House</option>
-                <option value="Deep-House">Deep-House</option>
-                <option value="Amapiano">Amapiano</option>
-                <option value="Afrobeats">Afrobeats</option>
-              </select>
-
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', marginTop: '4px' }}>
-                <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Revenue Split Allocations (%)</span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                  <div>
-                    <label style={{ fontSize: '9px', color: 'var(--mu)' }}>Artist</label>
-                    <input type="number" min="0" max="100" value={newArtistSplit} onChange={(e) => setNewArtistSplit(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '9px', color: 'var(--mu)' }}>Producer</label>
-                    <input type="number" min="0" max="100" value={newProducerSplit} onChange={(e) => setNewProducerSplit(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '9px', color: 'var(--mu)' }}>Label</label>
-                    <input type="number" min="0" max="100" value={newLabelSplit} onChange={(e) => setNewLabelSplit(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '4px' }} />
-                  </div>
-                </div>
-              </div>
-
-              <button type="submit" className="btn-primary" style={{ padding: '8px', fontSize: '12px', marginTop: '6px' }}>Catalog Track</button>
-            </form>
+            <p style={{ margin: '3px 0 0', fontSize: '11.5px', color: '#94a3b8' }}>
+              Select between albums, EPs, and singles, manage cover artwork, and stream full releases.
+            </p>
           </div>
         </div>
 
-        {/* Catalog previews */}
-        <div className="dashboard-card" style={{ minHeight: '400px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0 }}>Roster Catalogue Overview</h3>
-            <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search catalogue tracks..." />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Wizard vs Manager Switcher */}
+          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.5)', padding: '3px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <button
+              type="button"
+              onClick={() => setViewMode('wizard')}
+              style={{
+                background: viewMode === 'wizard' ? '#00f0ff' : 'transparent',
+                color: viewMode === 'wizard' ? '#000' : '#cbd5e1',
+                border: 'none',
+                padding: '7px 14px',
+                borderRadius: '3px',
+                fontWeight: 800,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiMagicLine size={14} />
+              <span>Ingestion Wizard</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('manager')}
+              style={{
+                background: viewMode === 'manager' ? '#00f0ff' : 'transparent',
+                color: viewMode === 'manager' ? '#000' : '#cbd5e1',
+                border: 'none',
+                padding: '7px 14px',
+                borderRadius: '3px',
+                fontWeight: 800,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiFileList3Line size={14} />
+              <span>Catalogue ({tracks.length})</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* RENDER EITHER WIZARD OR MANAGER */}
+      {viewMode === 'wizard' ? (
+        <CatalogueWizard
+          onSwitchToManager={() => setViewMode('manager')}
+          onIngestComplete={(newTracks) => {
+            setTracks(newTracks);
+            setViewMode('manager');
+          }}
+          sessionUser={sessionUser}
+          creatorEpk={creatorEpk}
+          existingTracksCount={tracks.length}
+        />
+      ) : (
+        /* MANAGER VIEW */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Release Type Filter Pills & Sub-View Switcher Bar */}
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '6px',
+            padding: '12px 18px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            {/* Release Type Filter Pills */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: '4px' }}>
+                Filter By:
+              </span>
+              {[
+                { id: 'all', label: `All Releases (${releases.length})` },
+                { id: 'album', label: `Albums (${releases.filter(r => r.releaseType === 'Album').length})` },
+                { id: 'ep', label: `EPs (${releases.filter(r => r.releaseType === 'EP').length})` },
+                { id: 'single', label: `Singles (${releases.filter(r => r.releaseType === 'Single').length})` }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => { setReleaseTypeFilter(f.id); setCurrentPage(1); }}
+                  style={{
+                    background: releaseTypeFilter === f.id ? '#00f0ff' : 'rgba(255,255,255,0.05)',
+                    color: releaseTypeFilter === f.id ? '#000' : '#cbd5e1',
+                    border: releaseTypeFilter === f.id ? 'none' : '1px solid rgba(255,255,255,0.12)',
+                    padding: '5px 14px',
+                    borderRadius: '3px',
+                    fontWeight: 700,
+                    fontSize: '11.5px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sub-view switcher: Collections vs Table */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', background: 'rgba(0,0,0,0.4)', padding: '2px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <button
+                  type="button"
+                  onClick={() => setManagerSubView('collections')}
+                  style={{
+                    background: managerSubView === 'collections' ? 'rgba(0,240,255,0.2)' : 'transparent',
+                    color: managerSubView === 'collections' ? '#00f0ff' : '#94a3b8',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '3px',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  <RiFolderMusicLine size={13} />
+                  <span>Albums & Collections</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManagerSubView('table')}
+                  style={{
+                    background: managerSubView === 'table' ? 'rgba(0,240,255,0.2)' : 'transparent',
+                    color: managerSubView === 'table' ? '#00f0ff' : '#94a3b8',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '3px',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  <RiTableLine size={13} />
+                  <span>All Tracks Table</span>
+                </button>
+              </div>
+
+              <DashboardSearchBar 
+                value={searchQuery} 
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
+                placeholder="Search releases & tracks..." 
+              />
+            </div>
           </div>
 
-          {filteredTracks.length === 0 ? (
-            <div style={{ padding: '80px 0', textAlign: 'center', color: '#64748b' }}>
-              <RiDatabase2Fill size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
-              <p style={{ margin: 0, fontSize: '13px' }}>No matching tracks found in your catalogue.</p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="dashboard-table" style={{ fontSize: '12.5px' }}>
-                <thead>
-                  <tr>
-                    <th>Art</th>
-                    <th>Featured</th>
-                    <th>ISRC</th>
-                    <th>Title</th>
-                    <th>Artist</th>
-                    <th>Genre</th>
-                    <th>Split Structures</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedTracks.map((tr, idx) => {
-                    const isEditing = editingIsrc === tr.isrc;
-                    return (
-                      <tr key={idx}>
-                        {isEditing ? (
-                          <>
-                            <td>
-                              <input 
-                                type="text" 
-                                value={editCoverText} 
-                                onChange={(e) => setEditCoverText(e.target.value)} 
-                                className="form-control" 
-                                style={{ fontSize: '10px', padding: '2px', width: '56px', marginBottom: '2px' }} 
-                                placeholder="Text"
-                              />
-                              <input 
-                                type="text" 
-                                value={editCoverBg} 
-                                onChange={(e) => setEditCoverBg(e.target.value)} 
-                                className="form-control" 
-                                style={{ fontSize: '10px', padding: '2px', width: '56px' }} 
-                                placeholder="Bg CSS"
-                              />
-                            </td>
-                            <td>
-                              <input 
-                                type="checkbox" 
-                                checked={editFeatured} 
-                                onChange={(e) => setEditFeatured(e.target.checked)} 
-                                style={{ cursor: 'pointer' }}
-                              />
-                            </td>
-                            <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
-                            <td>
-                              <input 
-                                type="text" 
-                                value={editTitle} 
-                                onChange={(e) => setEditTitle(e.target.value)} 
-                                className="form-control" 
-                                style={{ fontSize: '12px', padding: '4px', width: '100%' }} 
-                              />
-                            </td>
-                            <td>
-                              <input 
-                                type="text" 
-                                value={editArtist} 
-                                onChange={(e) => setEditArtist(e.target.value)} 
-                                className="form-control" 
-                                style={{ fontSize: '12px', padding: '4px', width: '100%' }} 
-                              />
-                            </td>
-                            <td>
-                              <select 
-                                value={editGenre} 
-                                onChange={(e) => setEditGenre(e.target.value)} 
-                                className="form-control" 
-                                style={{ fontSize: '11px', padding: '4px', width: '100%', background: '#0a0f1d', color: '#fff', border: '1px solid rgba(255,255,255,0.08)' }}
+          {/* SUB-VIEW 0: DEDICATED ALBUM & TRACKS EDIT VIEW */}
+          {managerSubView === 'album-edit' && editingAlbum ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Top Navigation & Action Bar */}
+              <div style={{
+                background: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(0, 240, 255, 0.25)',
+                borderRadius: '6px',
+                padding: '14px 20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setManagerSubView('collections')}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#cbd5e1',
+                      padding: '7px 14px',
+                      borderRadius: '3px',
+                      fontWeight: 700,
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <RiArrowLeftLine size={14} />
+                    <span>Back to Catalogue</span>
+                  </button>
+
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#fff' }}>
+                        Editing Album: <span style={{ color: '#00f0ff' }}>{editingAlbum.title}</span>
+                      </h3>
+                      <span style={{
+                        background: 'rgba(0, 240, 255, 0.15)',
+                        color: '#00f0ff',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        padding: '2px 8px',
+                        borderRadius: '3px',
+                        textTransform: 'uppercase'
+                      }}>
+                        {editingAlbum.releaseType || 'Album'}
+                      </span>
+                    </div>
+                    <p style={{ margin: '2px 0 0', fontSize: '11.5px', color: '#94a3b8' }}>
+                      Modify track titles, audio playback cues, ISRCs, artist credits, revenue splits, and 1:1 cover artwork.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* Stream Album Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingAlbumTracks.length > 0 && typeof onPlayTrack === 'function') {
+                        onPlayTrack(editingAlbumTracks[0], editingAlbumTracks);
+                      }
+                    }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      borderRadius: '3px',
+                      fontWeight: 700,
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    title="Stream this album from beginning to end"
+                  >
+                    <RiPlayFill size={14} color="var(--cyan)" />
+                    <span>Stream Album</span>
+                  </button>
+
+                  {/* Save Changes Button */}
+                  <button
+                    type="button"
+                    disabled={savingArtwork}
+                    onClick={handleSaveAlbumEditor}
+                    style={{
+                      background: '#00f0ff',
+                      color: '#000',
+                      border: 'none',
+                      padding: '8px 18px',
+                      borderRadius: '3px',
+                      fontWeight: 800,
+                      fontSize: '12px',
+                      cursor: savingArtwork ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      opacity: savingArtwork ? 0.7 : 1,
+                      boxShadow: '0 2px 10px rgba(0, 240, 255, 0.4)'
+                    }}
+                  >
+                    <RiSaveLine size={14} />
+                    <span>{savingArtwork ? 'Saving Changes...' : 'Save All Changes'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Two Column Layout: Left Artwork & Release Details, Right Tracklist Editor */}
+              <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '24px', alignItems: 'start' }}>
+                
+                {/* LEFT: Artwork & Album Info */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Artwork Preview Card */}
+                  <div className="dashboard-card" style={{ padding: '18px', borderRadius: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{
+                      width: '260px',
+                      height: '260px',
+                      borderRadius: '3px',
+                      overflow: 'hidden',
+                      background: previewCoverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative'
+                    }}>
+                      {previewArtworkUrl ? (
+                        <img
+                          src={previewArtworkUrl}
+                          alt="Album Artwork Preview"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div style={{ textAlign: 'center', padding: '20px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+                          <RiDiscLine size={48} style={{ opacity: 0.8, marginBottom: '8px' }} />
+                          <div style={{ fontSize: '18px', fontWeight: 900 }}>{previewCoverText || editingAlbum.title}</div>
+                          <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '4px' }}>{editingAlbum.artist}</div>
+                        </div>
+                      )}
+
+                      {/* Quick Play Overlay on Artwork */}
+                      {editingAlbumTracks.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (typeof onPlayTrack === 'function') {
+                              onPlayTrack(editingAlbumTracks[0], editingAlbumTracks);
+                            }
+                          }}
+                          style={{
+                            position: 'absolute',
+                            bottom: '12px',
+                            right: '12px',
+                            width: '42px',
+                            height: '42px',
+                            borderRadius: '3px',
+                            background: '#00f0ff',
+                            color: '#000',
+                            border: 'none',
+                            fontSize: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 15px rgba(0,240,255,0.5)'
+                          }}
+                          title="Stream Album"
+                        >
+                          <RiPlayFill size={18} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Artwork Tab Switcher */}
+                    <div style={{ display: 'flex', width: '100%', marginTop: '14px', background: 'rgba(0,0,0,0.4)', padding: '2px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <button
+                        type="button"
+                        onClick={() => setArtworkModalTab('upload')}
+                        style={{
+                          flex: 1,
+                          background: artworkModalTab === 'upload' ? 'rgba(0,240,255,0.2)' : 'transparent',
+                          color: artworkModalTab === 'upload' ? '#00f0ff' : '#94a3b8',
+                          border: 'none',
+                          padding: '6px 8px',
+                          borderRadius: '3px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <RiUploadCloud2Line size={13} />
+                        <span>Upload</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setArtworkModalTab('ai')}
+                        style={{
+                          flex: 1,
+                          background: artworkModalTab === 'ai' ? 'rgba(0,240,255,0.2)' : 'transparent',
+                          color: artworkModalTab === 'ai' ? '#00f0ff' : '#94a3b8',
+                          border: 'none',
+                          padding: '6px 8px',
+                          borderRadius: '3px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <RiSparklingLine size={13} />
+                        <span>Social AI</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setArtworkModalTab('gradient')}
+                        style={{
+                          flex: 1,
+                          background: artworkModalTab === 'gradient' ? 'rgba(0,240,255,0.2)' : 'transparent',
+                          color: artworkModalTab === 'gradient' ? '#00f0ff' : '#94a3b8',
+                          border: 'none',
+                          padding: '6px 8px',
+                          borderRadius: '3px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <RiPaletteLine size={13} />
+                        <span>Themes</span>
+                      </button>
+                    </div>
+
+                    {/* Tab 1: Upload File */}
+                    {artworkModalTab === 'upload' && (
+                      <div style={{ width: '100%', marginTop: '12px' }}>
+                        <input
+                          type="file"
+                          ref={artworkFileInputRef}
+                          onChange={handleArtworkFileUpload}
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => artworkFileInputRef.current?.click()}
+                          style={{
+                            width: '100%',
+                            padding: '12px',
+                            border: '1px dashed rgba(0, 240, 255, 0.4)',
+                            background: 'rgba(0, 240, 255, 0.05)',
+                            borderRadius: '3px',
+                            color: '#00f0ff',
+                            fontSize: '11.5px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <RiImageAddLine size={15} />
+                          <span>Choose Artwork File (PNG, JPG, WebP)</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Tab 2: Social AI Artwork Generator */}
+                    {artworkModalTab === 'ai' && (
+                      <div style={{ width: '100%', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <textarea
+                          value={aiPrompt}
+                          onChange={(e) => setAiPrompt(e.target.value)}
+                          rows={2}
+                          className="form-control"
+                          placeholder="Describe your desired cover artwork style..."
+                          style={{ fontSize: '11px', padding: '8px', borderRadius: '3px' }}
+                        />
+                        <button
+                          type="button"
+                          disabled={generatingAiArt}
+                          onClick={handleGenerateAiArtwork}
+                          style={{
+                            width: '100%',
+                            background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '3px',
+                            padding: '8px',
+                            fontSize: '11.5px',
+                            fontWeight: 700,
+                            cursor: generatingAiArt ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            opacity: generatingAiArt ? 0.7 : 1
+                          }}
+                        >
+                          <RiSparklingLine size={14} />
+                          <span>{generatingAiArt ? 'Generating with AI...' : 'Generate AI Cover (1:1)'}</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Tab 3: Themes / Gradients */}
+                    {artworkModalTab === 'gradient' && (
+                      <div style={{ width: '100%', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <input
+                          type="text"
+                          value={previewCoverText}
+                          onChange={(e) => setPreviewCoverText(e.target.value)}
+                          placeholder="Cover text label (e.g. Midnight)"
+                          className="form-control"
+                          style={{ fontSize: '11px', padding: '6px', borderRadius: '3px' }}
+                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                          {gradientPresets.map(preset => (
+                            <button
+                              key={preset.name}
+                              type="button"
+                              onClick={() => {
+                                setPreviewCoverBg(preset.bg);
+                                setPreviewArtworkUrl('');
+                              }}
+                              style={{
+                                background: preset.bg,
+                                border: previewCoverBg === preset.bg ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '3px',
+                                height: '28px',
+                                color: '#fff',
+                                fontSize: '9px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                textShadow: '0 1px 4px rgba(0,0,0,0.8)'
+                              }}
+                            >
+                              {preset.name.split(' ')[0]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Album Metadata Card */}
+                  <div className="dashboard-card" style={{ padding: '16px', borderRadius: '6px' }}>
+                    <h4 style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 800, color: '#fff' }}>
+                      Release Information
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div>
+                        <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Album / Release Title</label>
+                        <input
+                          type="text"
+                          value={editingAlbum.title}
+                          onChange={(e) => setEditingAlbum({ ...editingAlbum, title: e.target.value })}
+                          className="form-control"
+                          style={{ fontSize: '12px', padding: '7px', borderRadius: '3px' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Primary Artist</label>
+                        <input
+                          type="text"
+                          value={editingAlbum.artist}
+                          onChange={(e) => setEditingAlbum({ ...editingAlbum, artist: e.target.value })}
+                          className="form-control"
+                          style={{ fontSize: '12px', padding: '7px', borderRadius: '3px' }}
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Release Type</label>
+                          <select
+                            value={editingAlbum.releaseType || 'Album'}
+                            onChange={(e) => setEditingAlbum({ ...editingAlbum, releaseType: e.target.value })}
+                            className="form-control"
+                            style={{ fontSize: '12px', padding: '7px', borderRadius: '3px' }}
+                          >
+                            <option value="Album">Album</option>
+                            <option value="EP">EP</option>
+                            <option value="Single">Single</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Release Year</label>
+                          <input
+                            type="text"
+                            value={editingAlbum.year || '2026'}
+                            onChange={(e) => setEditingAlbum({ ...editingAlbum, year: e.target.value })}
+                            className="form-control"
+                            style={{ fontSize: '12px', padding: '7px', borderRadius: '3px' }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Primary Genre</label>
+                        <input
+                          type="text"
+                          value={editingAlbum.genre || 'Afro-House'}
+                          onChange={(e) => setEditingAlbum({ ...editingAlbum, genre: e.target.value })}
+                          className="form-control"
+                          style={{ fontSize: '12px', padding: '7px', borderRadius: '3px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT: Album Tracks Editor with Inline Audio Playback */}
+                <div className="dashboard-card" style={{ padding: '20px', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#fff' }}>
+                        Album Tracklist ({editingAlbumTracks.length} Tracks)
+                      </h4>
+                      <p style={{ margin: '2px 0 0', fontSize: '11.5px', color: '#94a3b8' }}>
+                        Click the play button to preview any track directly. Edit titles, ISRCs, artists, and splits.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddTrackToEditingAlbum}
+                      style={{
+                        background: 'rgba(0, 240, 255, 0.1)',
+                        border: '1px solid rgba(0, 240, 255, 0.3)',
+                        color: '#00f0ff',
+                        padding: '7px 12px',
+                        borderRadius: '3px',
+                        fontWeight: 700,
+                        fontSize: '11.5px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <RiAddLine size={14} />
+                      <span>Add Track to Album</span>
+                    </button>
+                  </div>
+
+                  {/* Tracks List */}
+                  {editingAlbumTracks.length === 0 ? (
+                    <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748b' }}>
+                      <RiMusic2Line size={32} style={{ marginBottom: '8px', opacity: 0.4 }} />
+                      <p style={{ margin: 0, fontSize: '13px' }}>No tracks currently in this album.</p>
+                      <button
+                        type="button"
+                        onClick={handleAddTrackToEditingAlbum}
+                        className="btn-primary"
+                        style={{ marginTop: '12px', padding: '6px 14px', fontSize: '11.5px', borderRadius: '3px' }}
+                      >
+                        Add First Track
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {editingAlbumTracks.map((trk, idx) => (
+                        <div
+                          key={trk.isrc || idx}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '3px',
+                            padding: '12px 14px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px',
+                            transition: 'border-color 0.15s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                              {/* Inline Audio Play Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (typeof onPlayTrack === 'function') {
+                                    onPlayTrack(trk, editingAlbumTracks);
+                                  }
+                                }}
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '3px',
+                                  background: '#00f0ff',
+                                  color: '#000',
+                                  border: 'none',
+                                  fontSize: '13px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxShadow: '0 2px 8px rgba(0, 240, 255, 0.3)',
+                                  flexShrink: 0
+                                }}
+                                title={`Play "${trk.title}"`}
                               >
-                                <option value="Afro-House">Afro-House</option>
-                                <option value="Deep-House">Deep-House</option>
-                                <option value="Amapiano">Amapiano</option>
-                                <option value="Afrobeats">Afrobeats</option>
-                              </select>
-                            </td>
-                            <td>
-                              <input 
-                                type="text" 
-                                value={editSplit} 
-                                onChange={(e) => setEditSplit(e.target.value)} 
-                                className="form-control" 
-                                style={{ fontSize: '12px', padding: '4px', width: '100%' }} 
-                              />
-                            </td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                                <button 
-                                  className="plan-btn cyan" 
-                                  style={{ padding: '2px 8px', fontSize: '11px', height: '26px', borderRadius: '3px', cursor: 'pointer', border: 'none', background: 'var(--cyan)', color: '#000', fontWeight: 'bold' }}
-                                  onClick={() => saveEdit(tr.isrc)}
-                                >
-                                  Save
-                                </button>
-                                <button 
-                                  className="plan-btn outline" 
-                                  style={{ padding: '2px 8px', fontSize: '11px', height: '26px', borderRadius: '3px', cursor: 'pointer' }}
-                                  onClick={cancelEdit}
-                                >
-                                  Cancel
-                                </button>
+                                <RiPlayFill size={15} />
+                              </button>
+
+                              <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 800, width: '20px' }}>
+                                {idx + 1}.
+                              </span>
+
+                              {/* Title Input */}
+                              <div style={{ flex: 1, minWidth: '160px' }}>
+                                <input
+                                  type="text"
+                                  value={trk.title}
+                                  onChange={(e) => handleUpdateAlbumTrack(idx, 'title', e.target.value)}
+                                  placeholder="Track Title"
+                                  className="form-control"
+                                  style={{ fontSize: '12.5px', fontWeight: 700, color: '#fff', padding: '6px 10px', borderRadius: '3px' }}
+                                />
                               </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td>
-                              <div style={{
-                                width: '38px',
-                                height: '38px',
-                                borderRadius: '4px',
-                                background: tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {/* ISRC Input */}
+                              <input
+                                type="text"
+                                value={trk.isrc}
+                                onChange={(e) => handleUpdateAlbumTrack(idx, 'isrc', e.target.value)}
+                                placeholder="ISRC"
+                                className="form-control"
+                                style={{ width: '150px', fontSize: '11px', fontFamily: 'monospace', color: 'var(--cyan)', padding: '6px 8px', borderRadius: '3px' }}
+                                title="ISRC Code"
+                              />
+
+                              {/* Duration Input */}
+                              <input
+                                type="text"
+                                value={trk.duration || '3:30'}
+                                onChange={(e) => handleUpdateAlbumTrack(idx, 'duration', e.target.value)}
+                                placeholder="Duration"
+                                className="form-control"
+                                style={{ width: '60px', fontSize: '11px', textAlign: 'center', padding: '6px 4px', borderRadius: '3px' }}
+                                title="Track Duration"
+                              />
+
+                              {/* Delete Track Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTrackFromAlbum(idx)}
+                                style={{
+                                  background: 'rgba(239, 68, 68, 0.1)',
+                                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                                  color: '#ef4444',
+                                  width: '30px',
+                                  height: '30px',
+                                  borderRadius: '3px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                                title="Remove track from this album"
+                              >
+                                <RiDeleteBin6Line size={13} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Secondary Track Row: Artist, Genre, Splits */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 2fr', gap: '8px' }}>
+                            <input
+                              type="text"
+                              value={trk.artist}
+                              onChange={(e) => handleUpdateAlbumTrack(idx, 'artist', e.target.value)}
+                              placeholder="Artist / Feature"
+                              className="form-control"
+                              style={{ fontSize: '11px', padding: '5px 8px', borderRadius: '3px' }}
+                            />
+                            <select
+                              value={trk.genre || 'Afro-House'}
+                              onChange={(e) => handleUpdateAlbumTrack(idx, 'genre', e.target.value)}
+                              className="form-control"
+                              style={{ fontSize: '11px', padding: '5px 8px', borderRadius: '3px' }}
+                            >
+                              <option value="Afro-House">Afro-House</option>
+                              <option value="Deep-House">Deep-House</option>
+                              <option value="Amapiano">Amapiano</option>
+                              <option value="Afrobeats">Afrobeats</option>
+                            </select>
+                            <input
+                              type="text"
+                              value={trk.split || 'Artist (60%) / Producer (25%) / Label (15%)'}
+                              onChange={(e) => handleUpdateAlbumTrack(idx, 'split', e.target.value)}
+                              placeholder="Publishing & Master Splits"
+                              className="form-control"
+                              style={{ fontSize: '11px', padding: '5px 8px', borderRadius: '3px' }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : managerSubView === 'collections' ? (
+            /* SUB-VIEW 1: ALBUMS & COLLECTIONS VIEW */
+            <div>
+              {filteredReleases.length === 0 ? (
+                <div className="dashboard-card" style={{ padding: '60px 20px', textAlign: 'center', color: '#64748b' }}>
+                  <RiDatabase2Fill size={40} style={{ marginBottom: '12px', opacity: 0.3 }} />
+                  <h4 style={{ color: '#fff', margin: '0 0 6px' }}>No Releases Found</h4>
+                  <p style={{ margin: 0, fontSize: '13px' }}>Try switching release filters or use the Ingestion Wizard to add your first album.</p>
+                  <button 
+                    type="button" 
+                    onClick={() => setViewMode('wizard')} 
+                    className="btn-primary" 
+                    style={{ marginTop: '16px', padding: '8px 16px', fontSize: '12px', borderRadius: '3px' }}
+                  >
+                    Launch Ingestion Wizard
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '20px' }}>
+                  {filteredReleases.map((rel) => {
+                    const isExpanded = expandedReleaseTitle === rel.title;
+                    const typeColor = rel.releaseType === 'Album' ? '#00f0ff' : rel.releaseType === 'EP' ? '#a855f7' : '#f59e0b';
+
+                    return (
+                      <div
+                        key={rel.title}
+                        className="glass-panel"
+                        style={{
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          background: 'rgba(15, 23, 42, 0.5)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                        }}
+                      >
+                        {/* Artwork Cover Surface - Clicking brings up dedicated Album & Track Editing Page */}
+                        <div 
+                          onClick={() => openAlbumEditor(rel)}
+                          style={{
+                            position: 'relative',
+                            width: '100%',
+                            height: '240px',
+                            background: rel.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                            cursor: 'pointer'
+                          }}
+                          title={`Click artwork to edit "${rel.title}" tracks & cover artwork`}
+                        >
+                          {rel.coverArt ? (
+                            <img
+                              src={rel.coverArt}
+                              alt={rel.title}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div style={{
+                              textAlign: 'center',
+                              padding: '20px',
+                              color: '#fff',
+                              textShadow: '0 2px 10px rgba(0,0,0,0.7)'
+                            }}>
+                              <RiDiscLine size={40} color="#00f0ff" style={{ marginBottom: '8px' }} />
+                              <div style={{ fontSize: '18px', fontWeight: 900 }}>{rel.coverText || rel.title}</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8 }}>{rel.artist}</div>
+                            </div>
+                          )}
+
+                          {/* Release Type Badge */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            left: '10px',
+                            background: 'rgba(0,0,0,0.75)',
+                            color: typeColor,
+                            border: `1px solid ${typeColor}`,
+                            padding: '3px 8px',
+                            borderRadius: '3px',
+                            fontSize: '10px',
+                            fontWeight: 900,
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                          }}>
+                            {rel.releaseType}
+                          </div>
+
+                          {/* Track count badge */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            background: 'rgba(0,0,0,0.75)',
+                            color: '#fff',
+                            padding: '3px 8px',
+                            borderRadius: '3px',
+                            fontSize: '10px',
+                            fontWeight: 700
+                          }}>
+                            {rel.tracks.length} Track{rel.tracks.length > 1 ? 's' : ''}
+                          </div>
+
+                          {/* Quick stream overlay button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (rel.tracks.length > 0 && typeof onPlayTrack === 'function') {
+                                onPlayTrack(rel.tracks[0], rel.tracks);
+                              }
+                            }}
+                            style={{
+                              position: 'absolute',
+                              bottom: '12px',
+                              right: '12px',
+                              width: '44px',
+                              height: '44px',
+                              borderRadius: '3px',
+                              background: '#00f0ff',
+                              color: '#000',
+                              border: 'none',
+                              fontSize: '18px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 15px rgba(0,240,255,0.4)',
+                              transition: 'transform 0.15s ease'
+                            }}
+                            title={`Stream "${rel.title}"`}
+                          >
+                            <RiPlayFill size={20} />
+                          </button>
+                        </div>
+
+                        {/* Release Metadata */}
+                        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, justifyContent: 'space-between' }}>
+                          <div>
+                            <h3 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 800, color: '#fff' }}>
+                              {rel.title}
+                            </h3>
+                            <p style={{ margin: '0 0 6px', fontSize: '12px', color: '#94a3b8' }}>
+                              {rel.artist}
+                            </p>
+                            <div style={{ display: 'flex', gap: '6px', fontSize: '10.5px', color: '#64748b' }}>
+                              <span>{rel.genre}</span>
+                              <span>•</span>
+                              <span>{rel.year}</span>
+                              <span>•</span>
+                              <span style={{ color: 'var(--green)' }}>Sync Cleared</span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                              {/* Edit Album & Tracks Button */}
+                              <button
+                                type="button"
+                                onClick={() => openAlbumEditor(rel)}
+                                style={{
+                                  background: 'rgba(0, 240, 255, 0.1)',
+                                  border: '1px solid rgba(0, 240, 255, 0.3)',
+                                  color: '#00f0ff',
+                                  padding: '7px 10px',
+                                  borderRadius: '3px',
+                                  fontWeight: 700,
+                                  fontSize: '11px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '5px'
+                                }}
+                                title="Edit album tracks, metadata, and custom artwork"
+                              >
+                                <RiEditLine size={13} />
+                                <span>Edit</span>
+                              </button>
+
+                              {/* Stream Album Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (rel.tracks.length > 0 && typeof onPlayTrack === 'function') {
+                                    onPlayTrack(rel.tracks[0], rel.tracks);
+                                  }
+                                }}
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.08)',
+                                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                                  color: '#fff',
+                                  padding: '7px 10px',
+                                  borderRadius: '3px',
+                                  fontWeight: 700,
+                                  fontSize: '11px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '5px'
+                                }}
+                              >
+                                <RiPlayFill size={13} color="var(--cyan)" />
+                                <span>Stream Album</span>
+                              </button>
+                            </div>
+
+                            {/* View Tracks Toggle Button */}
+                            <button
+                              type="button"
+                              onClick={() => setExpandedReleaseTitle(isExpanded ? null : rel.title)}
+                              style={{
+                                background: isExpanded ? 'rgba(255,255,255,0.1)' : 'transparent',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                color: '#cbd5e1',
+                                padding: '6px',
+                                borderRadius: '3px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                width: '100%',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '8px',
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                overflow: 'hidden',
-                                textAlign: 'center',
-                                padding: '2px',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}>
-                                {tr.coverText || 'Art'}
+                                gap: '4px'
+                              }}
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <RiArrowUpSLine size={14} />
+                                  <span>Hide Tracklist</span>
+                                </>
+                              ) : (
+                                <>
+                                  <RiArrowDownSLine size={14} />
+                                  <span>View Tracklist ({rel.tracks.length})</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          {/* Expanded Tracklist Preview Accordion */}
+                          {isExpanded && (
+                            <div style={{
+                              marginTop: '8px',
+                              background: 'rgba(0,0,0,0.3)',
+                              borderRadius: '3px',
+                              padding: '8px',
+                              maxHeight: '180px',
+                              overflowY: 'auto'
+                            }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {rel.tracks.map((t, idx) => (
+                                  <div
+                                    key={t.isrc || idx}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      padding: '4px 6px',
+                                      borderRadius: '3px',
+                                      background: 'rgba(255,255,255,0.02)',
+                                      fontSize: '11px'
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                                      <span style={{ color: '#64748b', fontSize: '10px', width: '16px' }}>{idx + 1}.</span>
+                                      <span style={{ color: '#fff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {t.title}
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <span style={{ color: '#64748b', fontSize: '10px' }}>{t.duration || '3:30'}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (typeof onPlayTrack === 'function') onPlayTrack(t, rel.tracks);
+                                        }}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          color: 'var(--cyan)',
+                                          cursor: 'pointer',
+                                          fontSize: '12px',
+                                          padding: '2px 4px',
+                                          borderRadius: '3px',
+                                          display: 'flex',
+                                          alignItems: 'center'
+                                        }}
+                                        title={`Play "${t.title}"`}
+                                      >
+                                        <RiPlayFill size={13} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            </td>
-                            <td>
-                              <button 
-                                onClick={() => {
-                                  setTracks(prev => prev.map(t => t.isrc === tr.isrc ? { ...t, isFeatured: !t.isFeatured } : t))
-                                }}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  fontSize: '14px',
-                                  opacity: tr.isFeatured ? 1 : 0.25,
-                                  transition: 'opacity 0.2s ease',
-                                  outline: 'none'
-                                }}
-                                title={tr.isFeatured ? "Unmark as featured" : "Mark as featured"}
-                              >
-                                â­
-                              </button>
-                            </td>
-                            <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
-                            <td style={{ fontWeight: '700', color: '#fff' }}>{tr.title}</td>
-                            <td>{tr.artist}</td>
-                            <td>
-                              <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                                {tr.genre}
-                              </span>
-                            </td>
-                            <td style={{ fontSize: '11px', color: '#cbd5e1' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                <div>{tr.split}</div>
-                                <div style={{ width: '100px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', display: 'flex', overflow: 'hidden' }}>
-                                  <div style={{ width: '50%', background: 'var(--green)' }} />
-                                  <div style={{ width: '30%', background: 'var(--cyan)' }} />
-                                  <div style={{ width: '20%', background: 'var(--purple)' }} />
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                                <button 
-                                  className="plan-btn outline" 
-                                  style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer', color: 'var(--cyan)', borderColor: 'rgba(34, 211, 238, 0.3)' }}
-                                  onClick={() => startEdit(tr)}
-                                  title="Edit track metadata inline"
-                                >
-                                  ✏️ Edit
-                                </button>
-                                <button 
-                                  className="plan-btn outline" 
-                                  style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
-                                  onClick={() => setActiveTab('splits')}
-                                  title="Go to Royalty splits ledger"
-                                >
-                                  💸 Splits
-                                </button>
-                                <button 
-                                  className="plan-btn outline" 
-                                  style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer' }}
-                                  onClick={() => setActiveTab('sync')}
-                                  title="Go to Sync brief matching"
-                                >
-                                  🎬 Sync
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        )}
-                      </tr>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* SUB-VIEW 2: FULL TRACKS TABLE VIEW */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Ingestion Sidebar Collapse/Expand Toggle Bar */}
+              <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setIngestSidebarCollapsed(!ingestSidebarCollapsed)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#cbd5e1',
+                    padding: '6px 12px',
+                    borderRadius: '3px',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title={ingestSidebarCollapsed ? "Show Ingestion Sidebar" : "Collapse Ingestion Sidebar"}
+                >
+                  {ingestSidebarCollapsed ? <RiMenuUnfoldLine size={14} color="var(--cyan)" /> : <RiMenuFoldLine size={14} color="var(--cyan)" />}
+                  <span>{ingestSidebarCollapsed ? 'Show Ingestion Tools' : 'Collapse Ingestion Sidebar'}</span>
+                </button>
+              </div>
 
-              <DashboardPagination 
-                currentPage={currentPage} 
-                totalItems={totalItems} 
-                pageSize={pageSize} 
-                onPageChange={(page) => setCurrentPage(page)} 
-              />
+              <div style={{ display: 'grid', gridTemplateColumns: ingestSidebarCollapsed ? '1fr' : '320px 1fr', gap: '24px', alignItems: 'start' }}>
+                {/* Collapsible Ingestion Sidebar */}
+                {!ingestSidebarCollapsed && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Quick Ingest Card */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(255, 0, 127, 0.08) 100%)',
+                      border: '1px solid rgba(0, 240, 255, 0.3)',
+                      borderRadius: '6px',
+                      padding: '16px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ marginBottom: '6px' }}>
+                        <RiMagicLine size={26} color="var(--cyan)" />
+                      </div>
+                      <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: 800, margin: '0 0 6px' }}>
+                        Album & EP Ingestion Wizard
+                      </h4>
+                      <p style={{ color: '#94a3b8', fontSize: '11px', margin: '0 0 12px' }}>
+                        Step-by-step assistant for full projects, publishing splits, and distribution.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('wizard')}
+                        style={{
+                          background: '#00f0ff',
+                          color: '#000',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '3px',
+                          fontWeight: 800,
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          width: '100%'
+                        }}
+                      >
+                        Launch Release Wizard
+                      </button>
+                    </div>
+
+                    {/* Multiple File Drag & Drop */}
+                    <div className="dashboard-card">
+                      <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '12px', color: '#fff' }}>Audio Ingestion (Multi-file)</h3>
+                      <div 
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ 
+                          border: isDragOver ? '2px dashed #00f0ff' : '1px dashed rgba(255,255,255,0.15)',
+                          padding: '24px 14px', 
+                          borderRadius: '6px', 
+                          textAlign: 'center', 
+                          background: isDragOver ? 'rgba(0, 240, 255, 0.04)' : 'rgba(255,255,255,0.01)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <input 
+                          type="file" 
+                          multiple 
+                          ref={fileInputRef} 
+                          onChange={handleFileChange} 
+                          accept="audio/*,.wav,.mp3,.flac,.aiff"
+                          style={{ display: 'none' }} 
+                        />
+                        <span style={{ display: 'block', marginBottom: '8px' }}>
+                          <RiUploadCloud2Line size={28} color="var(--cyan)" />
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#fff', fontWeight: '600' }}>Drag & Drop Audio Files Here</span>
+                        <span style={{ fontSize: '10px', color: 'var(--mu)', display: 'block', marginTop: '4px' }}>WAV, MP3, or FLAC files (Stored in Asset Vault)</span>
+                      </div>
+
+                      {uploadedFiles.length > 0 && (
+                        <div style={{ marginTop: '12px', maxHeight: '100px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '3px' }}>
+                          <span style={{ fontSize: '10px', color: 'var(--mu)', fontWeight: 'bold' }}>Uploaded Ingests:</span>
+                          <ul style={{ listStyle: 'none', padding: 0, margin: '4px 0 0 0', fontSize: '10px', color: '#cbd5e1' }}>
+                            {uploadedFiles.map((fn, idx) => (
+                              <li key={idx} style={{ marginBottom: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>✓ {fn}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Manual Single Track Ingest */}
+                    <div className="dashboard-card">
+                      <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff' }}>Add Track Manually</h3>
+                      <form onSubmit={handleAddTrack} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <input type="text" placeholder="Track Title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px', borderRadius: '3px' }} required />
+                        <input type="text" placeholder="Artist" value={newArtist} onChange={(e) => setNewArtist(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px', borderRadius: '3px' }} required />
+                        <input type="text" placeholder="ISRC (e.g. KE-TM1-26-00049)" value={newIsrc} onChange={(e) => setNewIsrc(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px', borderRadius: '3px' }} required />
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                          <input type="text" placeholder="Art Label" value={newCoverText} onChange={(e) => setNewCoverText(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '5px', borderRadius: '3px' }} />
+                          <input type="text" placeholder="Art Gradient CSS" value={newCoverBg} onChange={(e) => setNewCoverBg(e.target.value)} className="form-control" style={{ fontSize: '11px', padding: '5px', borderRadius: '3px' }} />
+                        </div>
+
+                        <select value={newGenre} onChange={(e) => setNewGenre(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px', borderRadius: '3px' }}>
+                          <option value="Afro-House">Afro-House</option>
+                          <option value="Deep-House">Deep-House</option>
+                          <option value="Amapiano">Amapiano</option>
+                          <option value="Afrobeats">Afrobeats</option>
+                        </select>
+
+                        <button type="submit" className="btn-primary" style={{ padding: '8px', fontSize: '12px', marginTop: '6px', borderRadius: '3px' }}>Catalog Track</button>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {/* Roster Table */}
+                <div className="dashboard-card" style={{ minHeight: '400px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0 }}>
+                      Roster Catalogue Overview ({filteredTracks.length})
+                    </h3>
+                    <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search catalogue tracks..." />
+                  </div>
+
+                  {filteredTracks.length === 0 ? (
+                    <div style={{ padding: '80px 0', textAlign: 'center', color: '#64748b' }}>
+                      <RiDatabase2Fill size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
+                      <p style={{ margin: 0, fontSize: '13px' }}>No matching tracks found in your catalogue.</p>
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="dashboard-table" style={{ fontSize: '12.5px' }}>
+                        <thead>
+                          <tr>
+                            <th>Play / Art</th>
+                            <th>Featured</th>
+                            <th>ISRC</th>
+                            <th>Title</th>
+                            <th>Artist & Release</th>
+                            <th>Genre</th>
+                            <th>Splits</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedTracks.map((tr, idx) => (
+                            <tr key={tr.isrc || idx}>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (typeof onPlayTrack === 'function') onPlayTrack(tr, tracks);
+                                    }}
+                                    style={{
+                                      width: '26px',
+                                      height: '26px',
+                                      borderRadius: '3px',
+                                      background: '#00f0ff',
+                                      color: '#000',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      fontSize: '11px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      boxShadow: '0 2px 8px rgba(0,240,255,0.3)'
+                                    }}
+                                    title={`Play ${tr.title}`}
+                                  >
+                                    <RiPlayFill size={13} />
+                                  </button>
+                                  <div style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '3px',
+                                    background: (tr.coverArt || tr.album_art_url) ? `url(${tr.coverArt || tr.album_art_url}) center/cover no-repeat` : (tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)'),
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '8px',
+                                    color: '#fff',
+                                    fontWeight: 'bold',
+                                    overflow: 'hidden'
+                                  }}>
+                                    {!tr.coverArt && !tr.album_art_url && (tr.coverText || 'Art')}
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = tracks.map(t => t.isrc === tr.isrc ? { ...t, isFeatured: !t.isFeatured } : t);
+                                    setTracks(updated);
+                                    try { localStorage.setItem('catalog_tracks', JSON.stringify(updated)); } catch (_) {}
+                                  }}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    opacity: tr.isFeatured ? 1 : 0.4,
+                                    transition: 'opacity 0.2s ease',
+                                    outline: 'none',
+                                    borderRadius: '3px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '2px'
+                                  }}
+                                  title={tr.isFeatured ? "Unmark as featured" : "Mark as featured"}
+                                >
+                                  {tr.isFeatured ? (
+                                    <RiStarFill size={15} color="#f59e0b" />
+                                  ) : (
+                                    <RiStarLine size={15} color="#64748b" />
+                                  )}
+                                </button>
+                              </td>
+                              <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
+                              <td style={{ fontWeight: '700', color: '#fff' }}>{tr.title}</td>
+                              <td>
+                                <div>{tr.artist}</div>
+                                <span style={{ fontSize: '10px', color: '#94a3b8' }}>{tr.release || 'Standalone Master'}</span>
+                              </td>
+                              <td>
+                                <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                  {tr.genre}
+                                </span>
+                              </td>
+                              <td style={{ fontSize: '11px', color: '#cbd5e1' }}>
+                                <div>{tr.split || 'Artist (60%) / Producer (25%) / Label (15%)'}</div>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                                  {/* Edit Album Artwork & Tracks action directly on track */}
+                                  <button
+                                    type="button"
+                                    className="plan-btn outline"
+                                    style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer', color: '#00f0ff', borderColor: 'rgba(0, 240, 255, 0.3)', display: 'flex', alignItems: 'center', gap: '3px' }}
+                                    onClick={() => {
+                                      const relName = (tr.release && tr.release.trim()) ? tr.release.trim() : 'Standalone Singles';
+                                      const parentRel = releases.find(r => r.title.toLowerCase() === relName.toLowerCase()) || {
+                                        title: relName,
+                                        artist: tr.artist,
+                                        coverArt: tr.coverArt || tr.album_art_url,
+                                        coverBg: tr.coverBg,
+                                        coverText: tr.coverText || tr.title,
+                                        releaseType: tr.releaseType || 'Single',
+                                        tracks: [tr]
+                                      };
+                                      openAlbumEditor(parentRel);
+                                    }}
+                                    title="Edit album, tracks, and artwork"
+                                  >
+                                    <RiEditLine size={11} />
+                                    <span>Edit</span>
+                                  </button>
+                                  <button 
+                                    type="button"
+                                    className="plan-btn outline" 
+                                    style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer', color: 'var(--cyan)', borderColor: 'rgba(34, 211, 238, 0.3)', display: 'flex', alignItems: 'center', gap: '3px' }}
+                                    onClick={() => startEdit(tr)}
+                                    title="Edit track metadata"
+                                  >
+                                    <RiEditLine size={11} />
+                                    <span>Track</span>
+                                  </button>
+                                  <button 
+                                    type="button"
+                                    className="plan-btn outline" 
+                                    style={{ padding: '2px 6px', fontSize: '10px', height: '22px', borderRadius: '3px', cursor: 'pointer', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '3px' }}
+                                    onClick={() => setDeletingTrack(tr)}
+                                    title="Permanently delete track"
+                                  >
+                                    <RiDeleteBin6Line size={11} />
+                                    <span>Delete</span>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+
+                      <DashboardPagination 
+                        currentPage={currentPage} 
+                        totalItems={totalItems} 
+                        pageSize={pageSize} 
+                        onPageChange={(page) => setCurrentPage(page)} 
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* ================= EDIT ALBUM ARTWORK MODAL ================= */}
+      {editingAlbumModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#0d1326',
+            border: '1px solid rgba(0, 240, 255, 0.4)',
+            borderRadius: '10px',
+            padding: '28px',
+            width: '100%',
+            maxWidth: '680px',
+            boxShadow: '0 15px 50px rgba(0,0,0,0.9)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px'
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <RiPaletteLine size={20} color="var(--cyan)" />
+                  <h3 style={{ fontSize: '18px', fontWeight: 900, color: '#fff', margin: 0 }}>
+                    Edit Album Artwork: <span style={{ color: '#00f0ff' }}>{editingAlbumModal.title}</span>
+                  </h3>
+                </div>
+                <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
+                  Apply new high-resolution cover artwork across all {editingAlbumModal.tracks?.length || ''} tracks and stream players.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingAlbumModal(null)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', padding: '4px', borderRadius: '3px' }}
+              >
+                <RiCloseLine size={20} />
+              </button>
+            </div>
+
+            {/* Modal Content: Preview on Left, Selector on Right */}
+            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '22px', alignItems: 'start' }}>
+              {/* Artwork Preview Box */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '220px',
+                  height: '220px',
+                  borderRadius: '3px',
+                  overflow: 'hidden',
+                  background: previewCoverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative'
+                }}>
+                  {previewArtworkUrl ? (
+                    <img
+                      src={previewArtworkUrl}
+                      alt="Album Artwork Preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '16px', color: '#fff' }}>
+                      <RiDiscLine size={36} color="var(--cyan)" style={{ marginBottom: '6px' }} />
+                      <div style={{ fontSize: '14px', fontWeight: 900 }}>{previewCoverText || editingAlbumModal.title}</div>
+                      <div style={{ fontSize: '11px', opacity: 0.8 }}>{editingAlbumModal.artist}</div>
+                    </div>
+                  )}
+
+                  <span style={{
+                    position: 'absolute',
+                    bottom: '8px',
+                    left: '8px',
+                    background: 'rgba(0,0,0,0.7)',
+                    color: '#00f0ff',
+                    fontSize: '9px',
+                    fontWeight: 800,
+                    padding: '2px 6px',
+                    borderRadius: '3px'
+                  }}>
+                    LIVE PREVIEW
+                  </span>
+                </div>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>Square Aspect Ratio (1:1)</span>
+              </div>
+
+              {/* Artwork Controls */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* Mode Selector Tabs */}
+                <div style={{ display: 'flex', background: 'rgba(0,0,0,0.4)', padding: '3px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  {[
+                    { id: 'upload', label: 'Upload File', icon: RiUploadCloud2Line },
+                    { id: 'ai', label: 'Social AI Studio', icon: RiSparklingLine },
+                    { id: 'gradient', label: 'EPK & Themes', icon: RiPaletteLine }
+                  ].map(tab => {
+                    const TabIcon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setArtworkModalTab(tab.id)}
+                        style={{
+                          flex: 1,
+                          background: artworkModalTab === tab.id ? '#00f0ff' : 'transparent',
+                          color: artworkModalTab === tab.id ? '#000' : '#cbd5e1',
+                          border: 'none',
+                          padding: '6px 10px',
+                          borderRadius: '3px',
+                          fontWeight: 700,
+                          fontSize: '11.5px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <TabIcon size={14} />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tab 1: Upload File */}
+                {artworkModalTab === 'upload' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div
+                      onClick={() => artworkFileInputRef.current?.click()}
+                      style={{
+                        border: '1.5px dashed rgba(0, 240, 255, 0.4)',
+                        borderRadius: '3px',
+                        padding: '24px 16px',
+                        textAlign: 'center',
+                        background: 'rgba(0, 240, 255, 0.03)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <input
+                        type="file"
+                        ref={artworkFileInputRef}
+                        onChange={handleArtworkFileUpload}
+                        accept="image/png,image/jpeg,image/webp,image/jpg"
+                        style={{ display: 'none' }}
+                      />
+                      <div style={{ marginBottom: '8px' }}>
+                        <RiImageAddLine size={30} color="var(--cyan)" />
+                      </div>
+                      <span style={{ color: '#fff', fontSize: '13px', fontWeight: 700, display: 'block' }}>
+                        Click to Choose Artwork Image
+                      </span>
+                      <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', marginTop: '4px' }}>
+                        High-res PNG, JPG, or WEBP (Saved to Asset Vault)
+                      </span>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                        Or Paste Image URL directly:
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://images.example.com/artwork.jpg"
+                        value={previewArtworkUrl}
+                        onChange={(e) => setPreviewArtworkUrl(e.target.value)}
+                        className="form-control"
+                        style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2: AI Generation Studio */}
+                {artworkModalTab === 'ai' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div>
+                      <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                        AI Art Generation Prompt:
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        style={{
+                          width: '100%',
+                          background: '#0a0f1d',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          padding: '8px',
+                          fontSize: '12px',
+                          borderRadius: '3px',
+                          resize: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleGenerateAiArtwork}
+                      disabled={generatingAiArt || !aiPrompt.trim()}
+                      className="btn-primary"
+                      style={{
+                        padding: '10px',
+                        fontSize: '12px',
+                        borderRadius: '3px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <RiSparklingLine size={15} />
+                      <span>{generatingAiArt ? 'Generating Artwork with AI...' : 'Generate Artwork with Social AI'}</span>
+                    </button>
+                    <span style={{ fontSize: '10.5px', color: '#64748b' }}>
+                      Generates 1:1 square master artwork and saves directly to your Creative Asset Vault.
+                    </span>
+                  </div>
+                )}
+
+                {/* Tab 3: EPK Colors & Gradients */}
+                {artworkModalTab === 'gradient' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {creatorEpk && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const c1 = creatorEpk.accentColor || '#00f0ff';
+                          const c2 = creatorEpk.secondaryColor || '#8b5cf6';
+                          setPreviewCoverBg(`linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`);
+                          setPreviewArtworkUrl('');
+                        }}
+                        style={{
+                          background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          padding: '8px 12px',
+                          borderRadius: '3px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        <RiPaletteLine size={14} color="var(--cyan)" />
+                        <span>Apply Artist EPK Theme Colors ({creatorEpk.accentColor || '#00f0ff'})</span>
+                      </button>
+                    )}
+
+                    <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginTop: '4px' }}>
+                      Or Pick a Dynamic Gradient Preset:
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                      {gradientPresets.map(preset => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() => {
+                            setPreviewCoverBg(preset.bg);
+                            setPreviewArtworkUrl('');
+                          }}
+                          style={{
+                            background: preset.bg,
+                            border: previewCoverBg === preset.bg ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '3px',
+                            height: '40px',
+                            cursor: 'pointer',
+                            color: '#fff',
+                            fontSize: '10px',
+                            fontWeight: 800,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textShadow: '0 1px 3px rgba(0,0,0,0.8)'
+                          }}
+                        >
+                          {preset.name}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{ marginTop: '6px' }}>
+                      <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                        Overlay Artwork Label:
+                      </label>
+                      <input
+                        type="text"
+                        value={previewCoverText}
+                        onChange={(e) => setPreviewCoverText(e.target.value)}
+                        className="form-control"
+                        style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '6px', fontSize: '12px', borderRadius: '3px' }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+              <button
+                type="button"
+                onClick={() => setEditingAlbumModal(null)}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  padding: '9px 18px',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '12px'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAlbumArtwork}
+                disabled={savingArtwork}
+                style={{
+                  background: '#00f0ff',
+                  border: 'none',
+                  color: '#000',
+                  fontWeight: 800,
+                  padding: '9px 24px',
+                  borderRadius: '3px',
+                  cursor: savingArtwork ? 'wait' : 'pointer',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 15px rgba(0,240,255,0.4)'
+                }}
+              >
+                <RiSaveLine size={15} />
+                <span>{savingArtwork ? 'Saving Album Artwork...' : 'Save Album Artwork Across Catalogue'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT TRACK MODAL */}
+      {editingTrack && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#0d1326',
+            border: '1px solid rgba(0, 240, 255, 0.3)',
+            borderRadius: '6px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '520px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
+          }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 900, color: '#fff', margin: '0 0 16px' }}>
+              Edit Track Metadata: <span style={{ color: '#00f0ff' }}>{editingTrack.isrc}</span>
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Track Title</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  className="form-control"
+                  style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Artist</label>
+                <input
+                  type="text"
+                  value={editArtist}
+                  onChange={e => setEditArtist(e.target.value)}
+                  className="form-control"
+                  style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Release / Album</label>
+                  <input
+                    type="text"
+                    value={editRelease}
+                    onChange={e => setEditRelease(e.target.value)}
+                    className="form-control"
+                    style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Genre</label>
+                  <input
+                    type="text"
+                    value={editGenre}
+                    onChange={e => setEditGenre(e.target.value)}
+                    className="form-control"
+                    style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Revenue Split Definition</label>
+                <input
+                  type="text"
+                  value={editSplit}
+                  onChange={e => setEditSplit(e.target.value)}
+                  className="form-control"
+                  style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                <input
+                  type="checkbox"
+                  id="editFeatured"
+                  checked={editFeatured}
+                  onChange={e => setEditFeatured(e.target.checked)}
+                  style={{ accentColor: '#00f0ff' }}
+                />
+                <label htmlFor="editFeatured" style={{ fontSize: '12px', color: '#fff', cursor: 'pointer' }}>
+                  Mark as Featured Track (Starred in TuneStream Player)
+                </label>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+              <button
+                type="button"
+                onClick={() => setEditingTrack(null)}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  padding: '8px 16px',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveEdit}
+                style={{
+                  background: '#00f0ff',
+                  border: 'none',
+                  color: '#000',
+                  fontWeight: 800,
+                  padding: '8px 20px',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deletingTrack && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#1a0d13',
+            border: '1px solid #ef4444',
+            borderRadius: '6px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '440px',
+            textAlign: 'center',
+            boxShadow: '0 10px 40px rgba(239, 68, 68, 0.2)'
+          }}>
+            <div style={{
+              width: '54px',
+              height: '54px',
+              borderRadius: '3px',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1.5px solid #ef4444',
+              color: '#ef4444',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              fontSize: '24px'
+            }}>
+              <RiDeleteBin6Line size={24} color="#ef4444" />
+            </div>
+
+            <h3 style={{ fontSize: '18px', fontWeight: 900, color: '#fff', margin: '0 0 8px' }}>
+              Delete Audio Track?
+            </h3>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 20px', lineHeight: 1.5 }}>
+              Are you sure you want to permanently delete <strong>"{deletingTrack.title}"</strong> ({deletingTrack.isrc})? This track will be removed from your catalogue and audio player.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setDeletingTrack(null)}
+                disabled={isDeleting}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  padding: '10px 18px',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '13px'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteTrack}
+                disabled={isDeleting}
+                style={{
+                  background: '#ef4444',
+                  border: 'none',
+                  color: '#fff',
+                  padding: '10px 22px',
+                  borderRadius: '3px',
+                  cursor: isDeleting ? 'wait' : 'pointer',
+                  fontWeight: 800,
+                  fontSize: '13px'
+                }}
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete Track'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -3971,13 +6443,50 @@ function GlobalAudioPlayer({
   setIsUndocked,
   playerPos,
   setPlayerPos,
-  catalogTracks
+  catalogTracks = [],
+  playlistQueue = [],
+  setPlaylistQueue,
+  userCredits = 600,
+  setUserCredits
 }) {
+  const audioRef = useRef(null);
+  const [duration, setDuration] = useState(180);
+  const [volume, setVolume] = useState(0.85);
+  const [isMuted, setIsMuted] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isRepeat, setIsRepeat] = useState('off'); // 'off' | 'track' | 'queue'
+  const [showQueueDrawer, setShowQueueDrawer] = useState(false);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
 
-  // Dragging handlers
+  // Unlocked tracks cache
+  const [unlockedTracks, setUnlockedTracks] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('tm_unlocked_tracks') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  const isTrackUnlocked = Boolean(
+    globalTrack && (
+      unlockedTracks.includes(globalTrack.isrc) ||
+      globalTrack.isPurchased ||
+      globalTrack.unlocked ||
+      globalTrack.isrc === 'KE-TM1-UNLOCKED'
+    )
+  );
+
+  // Active Playlist Queue
+  const effectiveQueue = (playlistQueue && playlistQueue.length > 0)
+    ? playlistQueue
+    : (catalogTracks && catalogTracks.length > 0 ? catalogTracks : (globalTrack ? [globalTrack] : []));
+
+  const currentTrackIndex = effectiveQueue.findIndex(t => t.isrc === globalTrack?.isrc);
+
+  // Dragging handlers for undocked player
   const handleMouseDown = (e) => {
     if (e.target.closest('.drag-handle')) {
       setDragging(true);
@@ -4011,409 +6520,1082 @@ function GlobalAudioPlayer({
     };
   }, [dragging, dragOffset, setPlayerPos]);
 
-  if (!globalTrack) return null;
+  // Resolve streaming audio source URL
+  const getAudioUrl = (track) => {
+    if (!track) return '';
+    if (track.audioUrl) return track.audioUrl;
+    if (track.fileUrl) return track.fileUrl;
+    const id = track.isrc || track.id || track._id || 'preview';
+    return `http://localhost:8001/api/stream/track/${encodeURIComponent(id)}`;
+  };
 
-  // Filter featured tracks
-  const featuredTracks = catalogTracks.filter(t => t.isFeatured);
-  const playPool = featuredTracks.length > 0 ? featuredTracks : catalogTracks;
+  // Sync audio element source when globalTrack changes
+  useEffect(() => {
+    if (!audioRef.current || !globalTrack) return;
+    const targetSrc = getAudioUrl(globalTrack);
+    if (audioRef.current.src !== targetSrc) {
+      audioRef.current.src = targetSrc;
+      audioRef.current.load();
+      if (globalPlaying) {
+        audioRef.current.play().catch((err) => console.warn('Audio play deferred:', err));
+      }
+    }
+  }, [globalTrack]);
+
+  // Sync play / pause state
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (globalPlaying) {
+      audioRef.current.play().catch((err) => {
+        console.warn('Playback error:', err);
+      });
+    } else {
+      audioRef.current.pause();
+    }
+  }, [globalPlaying]);
+
+  // Smooth 60fps time tracker using requestAnimationFrame for non-choppy progress
+  useEffect(() => {
+    let animId;
+    const updateProgress = () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        setGlobalProgress(audioRef.current.currentTime);
+      }
+      animId = requestAnimationFrame(updateProgress);
+    };
+    if (globalPlaying) {
+      animId = requestAnimationFrame(updateProgress);
+    }
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [globalPlaying]);
+
+  // Sync volume & mute
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
+  const togglePlay = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (globalPlaying) {
+      audio.pause();
+      setGlobalPlaying(false);
+    } else {
+      audio.play().catch(err => console.warn('Play error:', err));
+      setGlobalPlaying(true);
+    }
+  };
 
   const handleNext = () => {
-    if (playPool.length <= 1) return;
-    const currentIdx = playPool.findIndex(t => t.isrc === globalTrack.isrc);
-    const nextIdx = (currentIdx + 1) % playPool.length;
-    setGlobalTrack(playPool[nextIdx]);
+    if (!globalTrack || effectiveQueue.length === 0) return;
+    if (isRepeat === 'track') {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        setGlobalProgress(0);
+        audioRef.current.play().catch(() => {});
+        setGlobalPlaying(true);
+      }
+      return;
+    }
+    if (effectiveQueue.length === 1) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        setGlobalProgress(0);
+        audioRef.current.play().catch(() => {});
+      }
+      return;
+    }
+    let nextIdx;
+    if (isShuffle) {
+      nextIdx = Math.floor(Math.random() * effectiveQueue.length);
+    } else {
+      const currentIdx = effectiveQueue.findIndex(t => t.isrc === globalTrack.isrc);
+      nextIdx = (currentIdx + 1) % effectiveQueue.length;
+    }
+    const nextTrk = effectiveQueue[nextIdx];
+    setGlobalTrack(nextTrk);
     setGlobalProgress(0);
+    setGlobalPlaying(true);
   };
 
   const handlePrev = () => {
-    if (playPool.length <= 1) return;
-    const currentIdx = playPool.findIndex(t => t.isrc === globalTrack.isrc);
-    const prevIdx = (currentIdx - 1 + playPool.length) % playPool.length;
-    setGlobalTrack(playPool[prevIdx]);
+    if (!globalTrack || effectiveQueue.length === 0) return;
+    if (globalProgress > 3 && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      setGlobalProgress(0);
+      return;
+    }
+    const currentIdx = effectiveQueue.findIndex(t => t.isrc === globalTrack.isrc);
+    const prevIdx = (currentIdx - 1 + effectiveQueue.length) % effectiveQueue.length;
+    const prevTrk = effectiveQueue[prevIdx];
+    setGlobalTrack(prevTrk);
     setGlobalProgress(0);
+    setGlobalPlaying(true);
+  };
+
+  const handleSeek = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, clickX / rect.width));
+    const newTime = pct * (duration || 180);
+    setGlobalProgress(newTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
   };
 
   const formatTime = (secs) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
+    const sFloor = Math.floor(secs || 0);
+    const m = Math.floor(sFloor / 60);
+    const s = Math.floor(sFloor % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Minimized state rendering
-  if (isMinimized) {
-    if (isUndocked) {
-      // Minimized Floating player
-      return (
-        <div 
-          className="drag-handle"
-          onMouseDown={handleMouseDown}
-          style={{
-            position: 'fixed',
-            left: `${playerPos.x}px`,
-            top: `${playerPos.y}px`,
-            width: '230px',
-            height: '46px',
-            background: 'rgba(10, 15, 30, 0.7)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: '23px',
-            border: '1px solid rgba(255,255,255,0.15)',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 8px 0 16px',
-            color: '#fff',
-            cursor: 'move',
-            userSelect: 'none'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-            <span style={{ fontSize: '12px', animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }}>💽</span>
-            <span style={{ fontSize: '11px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80px' }}>
-              {globalTrack.title}
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <button 
-              onClick={(e) => { e.stopPropagation(); setGlobalPlaying(!globalPlaying); }}
-              style={{ background: 'none', border: 'none', color: 'var(--cyan)', cursor: 'pointer', fontSize: '11px', padding: '4px' }}
-            >
-              {globalPlaying ? 'â¸' : '▶'}
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); setIsMinimized(false); }}
-              style={{
-                background: 'rgba(255,255,255,0.1)',
-                border: 'none',
-                borderRadius: '10px',
-                color: '#fff',
-                fontSize: '8px',
-                cursor: 'pointer',
-                padding: '2px 6px',
-                fontWeight: 'bold'
-              }}
-              title="Expand player"
-            >
-              Expand ▲
-            </button>
-          </div>
-        </div>
-      );
-    } else {
-      // Minimized Bottom player (centered pill overlay)
-      return (
-        <div 
-          style={{
-            position: 'fixed',
-            bottom: '16px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            height: '42px',
-            padding: '0 10px 0 16px',
-            background: 'rgba(7, 14, 27, 0.7)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: '21px',
-            border: '1px solid rgba(255,255,255,0.12)',
-            boxShadow: '0 8px 20px rgba(0,0,0,0.5)',
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            color: '#fff'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
-            <span style={{ animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }}>💽</span>
-            <strong style={{ color: '#fff' }}>{globalTrack.title}</strong>
-            <span style={{ color: 'var(--mu)' }}>•</span>
-            <span style={{ color: 'var(--mu)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button 
-              onClick={() => setGlobalPlaying(!globalPlaying)}
-              style={{ background: 'none', border: 'none', color: 'var(--cyan)', cursor: 'pointer', fontSize: '11px' }}
-            >
-              {globalPlaying ? 'â¸' : '▶'}
-            </button>
-            <button 
-              onClick={() => setIsMinimized(false)}
-              style={{
-                background: 'var(--cyan)',
-                border: 'none',
-                borderRadius: '11px',
-                color: '#000',
-                fontSize: '8px',
-                cursor: 'pointer',
-                padding: '3px 8px',
-                fontWeight: 'bold'
-              }}
-              title="Expand player"
-            >
-              Expand ▲
-            </button>
-          </div>
-        </div>
-      );
+  // Credit Unlock Handlers
+  const handleUnlockStream = () => {
+    const cost = 5;
+    if (userCredits < cost) {
+      alert(`Insufficient credits! You need ${cost} credits (current balance: ${userCredits}). Please top up your credits.`);
+      return;
     }
-  }
+    if (typeof setUserCredits === 'function') {
+      setUserCredits(prev => Math.max(0, prev - cost));
+    }
+    const updated = [...unlockedTracks, globalTrack.isrc];
+    setUnlockedTracks(updated);
+    try {
+      localStorage.setItem('tm_unlocked_tracks', JSON.stringify(updated));
+    } catch {}
+    setShowUnlockModal(false);
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.warn('Play error:', e));
+      setGlobalPlaying(true);
+    }
+  };
 
-  // Expanded views
-  if (isUndocked) {
-    return (
-      <div 
-        style={{
-          position: 'fixed',
-          left: `${playerPos.x}px`,
-          top: `${playerPos.y}px`,
-          width: '330px',
-          height: '280px',
-          background: 'rgba(10, 15, 30, 0.7)',
-          backdropFilter: 'blur(16px)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-          zIndex: 99999,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          transition: dragging ? 'none' : 'box-shadow 0.2s ease',
-          color: '#fff'
-        }}
-      >
-        <div 
-          className="drag-handle"
-          onMouseDown={handleMouseDown}
-          style={{
-            padding: '8px 12px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            cursor: 'move',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            userSelect: 'none'
-          }}
-        >
-          <span>🎵 TuneStream Mini Player</span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button 
-              onClick={() => setIsMinimized(true)}
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: 'none',
-                borderRadius: '3px',
-                color: '#fff',
-                fontSize: '10px',
-                cursor: 'pointer',
-                padding: '2px 6px'
-              }}
-              title="Minimize player"
-            >
-              ➖ Min
-            </button>
-            <button 
-              onClick={() => setIsUndocked(false)}
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: 'none',
-                borderRadius: '3px',
-                color: '#fff',
-                fontSize: '10px',
-                cursor: 'pointer',
-                padding: '2px 6px'
-              }}
-              title="Dock to bottom"
-            >
-              â¬‡ Dock
-            </button>
-          </div>
-        </div>
+  const handlePurchaseTrack = () => {
+    const cost = globalTrack.priceCredits || 50;
+    if (userCredits < cost) {
+      alert(`Insufficient credits! You need ${cost} credits (current balance: ${userCredits}). Please top up your credits.`);
+      return;
+    }
+    if (typeof setUserCredits === 'function') {
+      setUserCredits(prev => Math.max(0, prev - cost));
+    }
+    const updated = [...unlockedTracks, globalTrack.isrc];
+    setUnlockedTracks(updated);
+    try {
+      localStorage.setItem('tm_unlocked_tracks', JSON.stringify(updated));
+    } catch {}
+    setShowUnlockModal(false);
+    alert(`Successfully purchased "${globalTrack.title}"! Master track audio unlocked.`);
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.warn('Play error:', e));
+      setGlobalPlaying(true);
+    }
+  };
 
-        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '4px',
-              background: globalTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '9px',
-              fontWeight: 'bold',
-              color: '#fff',
-              flexShrink: 0,
-              boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
-              textAlign: 'center',
-              overflow: 'hidden',
-              padding: '4px'
-            }}>
-              {globalTrack.coverText || 'Art'}
-            </div>
-            <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
-              <h4 style={{ margin: '0 0 2px 0', fontSize: '13.5px', fontWeight: 'bold', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.title}</h4>
-              <p style={{ margin: 0, fontSize: '11px', color: 'var(--mu)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</p>
-              <span style={{ fontSize: '9px', color: 'var(--cyan)', background: 'rgba(34,211,238,0.06)', padding: '2px 4px', borderRadius: '3px', display: 'inline-block', marginTop: '4px' }}>
-                {featuredTracks.length > 0 ? 'â˜… Featured Playlist' : 'All Catalogue'}
-              </span>
-            </div>
-          </div>
+  const handleTopUpCredits = () => {
+    if (typeof setUserCredits === 'function') {
+      setUserCredits(prev => prev + 250);
+    }
+    alert('Top-Up Successful! +250 Credits added to your sandbox account.');
+  };
 
-          <div>
-            <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', position: 'relative', cursor: 'pointer' }} onClick={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const clickX = e.clientX - rect.left;
-              const percentage = clickX / rect.width;
-              setGlobalProgress(Math.floor(percentage * 180));
-            }}>
-              <div style={{ width: `${(globalProgress / 180) * 100}%`, height: '100%', background: 'var(--cyan)', borderRadius: '2px', boxShadow: '0 0 6px var(--cyan)' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--mu)', marginTop: '4px' }}>
-              <span>{formatTime(globalProgress)}</span>
-              <span>3:00</span>
-            </div>
-          </div>
+  const handleReplayPreview = () => {
+    setShowUnlockModal(false);
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      setGlobalProgress(0);
+      audioRef.current.play().catch(e => console.warn('Play error:', e));
+      setGlobalPlaying(true);
+    }
+  };
 
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginBottom: '4px' }}>
-            <button 
-              className="plan-btn outline"
-              onClick={handlePrev}
-              style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              â®
-            </button>
-            <button 
-              onClick={() => setGlobalPlaying(!globalPlaying)}
-              className="btn-primary"
-              style={{ width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', cursor: 'pointer', border: 'none' }}
-            >
-              {globalPlaying ? 'â¸' : '▶'}
-            </button>
-            <button 
-              className="plan-btn outline"
-              onClick={handleNext}
-              style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              â­
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const audioTag = (
+    <audio
+      id="tunestream-global-audio"
+      ref={audioRef}
+      onTimeUpdate={() => {
+        if (audioRef.current) {
+          if (audioRef.current.duration && !isNaN(audioRef.current.duration)) {
+            setDuration(Math.floor(audioRef.current.duration));
+          }
+        }
+      }}
+      onLoadedMetadata={() => {
+        if (audioRef.current && audioRef.current.duration && !isNaN(audioRef.current.duration)) {
+          setDuration(Math.floor(audioRef.current.duration));
+        }
+      }}
+      onEnded={handleNext}
+      style={{ display: 'none' }}
+    />
+  );
 
-  return (
+  if (!globalTrack) return audioTag;
+
+  // Render Credit Unlock Modal
+  const unlockModal = showUnlockModal && (
     <div 
       style={{
         position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '76px',
-        background: 'rgba(7, 14, 27, 0.7)',
-        backdropFilter: 'blur(12px)',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        zIndex: 99999,
+        inset: 0,
+        background: 'rgba(5, 8, 18, 0.85)',
+        backdropFilter: 'blur(16px)',
+        zIndex: 100000,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        color: '#fff'
+        justifyContent: 'center',
+        padding: '20px'
       }}
+      onClick={() => setShowUnlockModal(false)}
     >
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', width: '30%', minWidth: '180px' }}>
+      <div 
+        style={{
+          width: '100%',
+          maxWidth: '440px',
+          background: 'rgba(13, 20, 36, 0.95)',
+          border: '1px solid rgba(0, 240, 255, 0.3)',
+          borderRadius: '3px',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(0,240,255,0.15)',
+          padding: '28px',
+          color: '#fff',
+          textAlign: 'center',
+          position: 'relative'
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button 
+          onClick={() => setShowUnlockModal(false)}
+          style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#94a3b8', fontSize: '18px', cursor: 'pointer', borderRadius: '3px' }}
+        >
+          <RiCloseLine size={20} />
+        </button>
+
         <div style={{
-          width: '42px',
-          height: '42px',
-          borderRadius: '4px',
+          width: '72px',
+          height: '72px',
+          borderRadius: '3px',
+          margin: '0 auto 16px',
           background: globalTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '8px',
-          fontWeight: 'bold',
-          color: '#fff',
           overflow: 'hidden',
-          padding: '2px',
-          textAlign: 'center',
-          boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
+          boxShadow: '0 8px 20px rgba(0,0,0,0.5)'
         }}>
-          {globalTrack.coverText || 'Art'}
+          {(globalTrack.coverArt || globalTrack.album_art_url) ? (
+            <img src={globalTrack.coverArt || globalTrack.album_art_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{globalTrack.coverText || 'Art'}</span>
+          )}
         </div>
-        <div style={{ textAlign: 'left', overflow: 'hidden' }}>
-          <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.title}</h4>
-          <p style={{ margin: 0, fontSize: '11px', color: 'var(--mu)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</p>
+
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f0ff', border: '1px solid rgba(0, 240, 255, 0.3)', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: 'bold', marginBottom: '10px' }}>
+          <RiDiscLine size={14} /> Full Master Track Access
+        </div>
+
+        <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>
+          {globalTrack.title}
+        </h3>
+        <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--mu)' }}>
+          {globalTrack.artist} • {globalTrack.release || 'Release'}
+        </p>
+
+        <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '3px', padding: '12px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '2px' }}>Your Credit Balance</div>
+          <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--cyan)' }}>
+            {userCredits} Credits
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button
+            onClick={handleUnlockStream}
+            style={{
+              background: 'linear-gradient(135deg, #00f0ff 0%, #0284c7 100%)',
+              color: '#000',
+              border: 'none',
+              borderRadius: '3px',
+              padding: '12px',
+              fontSize: '13.5px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 14px rgba(0,240,255,0.3)'
+            }}
+          >
+            <span>Unlock Master Stream</span>
+            <span style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 8px', borderRadius: '3px', fontSize: '11px' }}>5 Credits</span>
+          </button>
+
+          <button
+            onClick={handlePurchaseTrack}
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#fff',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '3px',
+              padding: '11px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+          >
+            <span>Purchase Master Track (Download & Sync)</span>
+            <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '3px', fontSize: '11px' }}>{globalTrack.priceCredits || 50} Credits</span>
+          </button>
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+            <button
+              onClick={handleTopUpCredits}
+              style={{
+                flex: 1,
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: '#10b981',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                borderRadius: '3px',
+                padding: '9px',
+                fontSize: '11.5px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              Top Up (+250)
+            </button>
+            <button
+              onClick={handleReplayPreview}
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.05)',
+                color: '#cbd5e1',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '3px',
+                padding: '9px',
+                fontSize: '11.5px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Replay Track
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Render Playlist Queue Slide-out Drawer
+  const queueDrawer = showQueueDrawer && (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: isUndocked ? `${playerPos.y + 300}px` : '80px',
+        right: isUndocked ? 'auto' : '24px',
+        left: isUndocked ? `${playerPos.x}px` : 'auto',
+        width: '360px',
+        maxHeight: '380px',
+        background: 'rgba(9, 14, 28, 0.95)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(0, 240, 255, 0.3)',
+        borderRadius: '3px',
+        boxShadow: '0 16px 40px rgba(0,0,0,0.8)',
+        zIndex: 99998,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        color: '#fff'
+      }}
+    >
+      <div style={{
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <RiPlayList2Line size={14} color="var(--cyan)" />
+          <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Up Next Queue</span>
+          <span style={{ background: 'rgba(0,240,255,0.15)', color: 'var(--cyan)', padding: '2px 6px', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold' }}>
+            {effectiveQueue.length} Tracks
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={() => setIsShuffle(!isShuffle)}
+            style={{ background: 'none', border: 'none', color: isShuffle ? '#00f0ff' : '#64748b', fontSize: '14px', cursor: 'pointer', borderRadius: '3px', display: 'flex', alignItems: 'center', padding: '3px' }}
+            title="Toggle Shuffle"
+          >
+            <RiShuffleLine size={14} />
+          </button>
+          <button
+            onClick={() => setIsRepeat(isRepeat === 'off' ? 'queue' : isRepeat === 'queue' ? 'track' : 'off')}
+            style={{ background: 'none', border: 'none', color: isRepeat !== 'off' ? '#00f0ff' : '#64748b', fontSize: '14px', cursor: 'pointer', borderRadius: '3px', display: 'flex', alignItems: 'center', padding: '3px' }}
+            title={`Repeat: ${isRepeat}`}
+          >
+            {isRepeat === 'track' ? <RiRepeatOneLine size={14} /> : <RiRepeat2Line size={14} />}
+          </button>
+          <button
+            onClick={() => setShowQueueDrawer(false)}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '16px', cursor: 'pointer', padding: '0 4px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}
+          >
+            <RiCloseLine size={16} />
+          </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', width: '40%', maxWidth: '500px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button 
-            onClick={handlePrev}
-            style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: '15px' }}
-            title="Previous track"
+      <div style={{ overflowY: 'auto', flex: 1, padding: '8px' }}>
+        {effectiveQueue.map((trk, idx) => {
+          const isPlayingThis = globalTrack?.isrc === trk.isrc;
+          const trkUnlocked = unlockedTracks.includes(trk.isrc);
+          return (
+            <div
+              key={trk.isrc || idx}
+              onClick={() => {
+                setGlobalTrack(trk);
+                setGlobalProgress(0);
+                setGlobalPlaying(true);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 10px',
+                borderRadius: '3px',
+                background: isPlayingThis ? 'rgba(0, 240, 255, 0.12)' : 'transparent',
+                border: isPlayingThis ? '1px solid rgba(0, 240, 255, 0.3)' : '1px solid transparent',
+                cursor: 'pointer',
+                marginBottom: '4px',
+                transition: 'background 0.15s'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                <span style={{ fontSize: '11px', color: isPlayingThis ? '#00f0ff' : '#64748b', width: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                  {isPlayingThis ? <RiPlayFill size={12} /> : `${idx + 1}`}
+                </span>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '3px',
+                  background: trk.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                  overflow: 'hidden',
+                  flexShrink: 0
+                }}>
+                  {(trk.coverArt || trk.album_art_url) && (
+                    <img src={trk.coverArt || trk.album_art_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  )}
+                </div>
+                <div style={{ minWidth: 0, textAlign: 'left' }}>
+                  <div style={{ fontSize: '12px', fontWeight: isPlayingThis ? 'bold' : '500', color: isPlayingThis ? '#00f0ff' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px' }}>
+                    {trk.title}
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--mu)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px' }}>
+                    {trk.artist}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '10px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '1px 5px', borderRadius: '3px', fontWeight: 'bold' }}>
+                  Stream
+                </span>
+                <span style={{ fontSize: '10px', color: '#64748b' }}>
+                  {trk.duration || '3:30'}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // Minimized state rendering
+  if (isMinimized) {
+    if (isUndocked) {
+      return (
+        <>
+          {audioTag}
+          {unlockModal}
+          {queueDrawer}
+          <div 
+            className="drag-handle"
+            onMouseDown={handleMouseDown}
+            style={{
+              position: 'fixed',
+              left: `${playerPos.x}px`,
+              top: `${playerPos.y}px`,
+              width: '260px',
+              height: '46px',
+              background: 'rgba(10, 15, 30, 0.88)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: '3px',
+              border: '1px solid rgba(0,240,255,0.3)',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0 10px 0 14px',
+              color: '#fff',
+              cursor: 'move',
+              userSelect: 'none'
+            }}
           >
-            â®
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+              <RiDiscLine size={16} color="var(--cyan)" style={{ animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }} />
+              <span style={{ fontSize: '11px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }}>
+                {globalTrack.title}
+              </span>
+              <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 'bold' }}>
+                HD
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button 
+                onClick={togglePlay}
+                style={{ background: 'none', border: 'none', color: '#00f0ff', cursor: 'pointer', fontSize: '14px', padding: '4px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}
+              >
+                {globalPlaying ? <RiPauseFill size={15} /> : <RiPlayFill size={15} />}
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsMinimized(false); }}
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: 'none',
+                  borderRadius: '3px',
+                  color: '#fff',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  padding: '3px 7px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+                title="Expand player"
+              >
+                <RiArrowUpSLine size={13} />
+              </button>
+            </div>
+          </div>
+        </>
+      );
+    } else {
+      return (
+        <>
+          {audioTag}
+          {unlockModal}
+          {queueDrawer}
+          <div 
+            style={{
+              position: 'fixed',
+              bottom: '16px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              height: '44px',
+              padding: '0 12px 0 16px',
+              background: 'rgba(7, 14, 27, 0.88)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: '3px',
+              border: '1px solid rgba(0,240,255,0.3)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              color: '#fff'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px' }}>
+              <RiDiscLine size={15} color="var(--cyan)" style={{ animation: globalPlaying ? 'spin 4s linear infinite' : 'none', display: 'inline-block' }} />
+              <strong style={{ color: '#fff' }}>{globalTrack.title}</strong>
+              <span style={{ color: 'var(--mu)' }}>•</span>
+              <span style={{ color: 'var(--mu)', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{globalTrack.artist}</span>
+              <span style={{ fontSize: '9px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '1px 5px', borderRadius: '3px', fontWeight: 'bold' }}>
+                Playing
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button 
+                onClick={togglePlay}
+                style={{ background: 'none', border: 'none', color: '#00f0ff', cursor: 'pointer', fontSize: '15px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}
+              >
+                {globalPlaying ? <RiPauseFill size={15} /> : <RiPlayFill size={15} />}
+              </button>
+              <button 
+                onClick={() => setIsMinimized(false)}
+                style={{
+                  background: '#00f0ff',
+                  border: 'none',
+                  borderRadius: '3px',
+                  color: '#000',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+                title="Expand player"
+              >
+                <span>Expand</span>
+                <RiArrowUpSLine size={13} />
+              </button>
+            </div>
+          </div>
+        </>
+      );
+    }
+  }
+
+  // Expanded Floating Player
+  if (isUndocked) {
+    return (
+      <>
+        {audioTag}
+        {unlockModal}
+        {queueDrawer}
+        <div 
+          style={{
+            position: 'fixed',
+            left: `${playerPos.x}px`,
+            top: `${playerPos.y}px`,
+            width: '350px',
+            height: '315px',
+            background: 'rgba(10, 15, 30, 0.9)',
+            backdropFilter: 'blur(16px)',
+            borderRadius: '3px',
+            border: '1px solid rgba(0,240,255,0.3)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.7)',
+            zIndex: 99999,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            transition: dragging ? 'none' : 'box-shadow 0.2s ease',
+            color: '#fff'
+          }}
+        >
+          <div 
+            className="drag-handle"
+            onMouseDown={handleMouseDown}
+            style={{
+              padding: '8px 12px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              cursor: 'move',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              userSelect: 'none'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <RiDiscLine size={14} color="var(--cyan)" />
+              <span>TuneStream Live Player</span>
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button 
+                onClick={() => setShowQueueDrawer(!showQueueDrawer)}
+                style={{
+                  background: showQueueDrawer ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.06)',
+                  border: 'none',
+                  borderRadius: '3px',
+                  color: showQueueDrawer ? '#00f0ff' : '#fff',
+                  fontSize: '10px',
+                  cursor: 'pointer',
+                  padding: '3px 7px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Toggle Queue"
+              >
+                <RiPlayList2Line size={12} />
+                <span>Queue ({effectiveQueue.length})</span>
+              </button>
+              <button 
+                onClick={() => setIsMinimized(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: 'none',
+                  borderRadius: '3px',
+                  color: '#fff',
+                  fontSize: '10px',
+                  cursor: 'pointer',
+                  padding: '3px 7px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+                title="Minimize player"
+              >
+                <RiSubtractLine size={12} />
+                <span>Min</span>
+              </button>
+              <button 
+                onClick={() => setIsUndocked(false)}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: 'none',
+                  borderRadius: '3px',
+                  color: '#fff',
+                  fontSize: '10px',
+                  cursor: 'pointer',
+                  padding: '3px 7px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+                title="Dock to bottom"
+              >
+                <RiArrowDownSLine size={12} />
+                <span>Dock</span>
+              </button>
+            </div>
+          </div>
+
+          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '3px',
+                background: globalTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '9px',
+                fontWeight: 'bold',
+                color: '#fff',
+                flexShrink: 0,
+                boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+                overflow: 'hidden'
+              }}>
+                {(globalTrack.coverArt || globalTrack.album_art_url) ? (
+                  <img src={globalTrack.coverArt || globalTrack.album_art_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span>{globalTrack.coverText || 'Art'}</span>
+                )}
+              </div>
+
+              <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+                <h4 style={{ margin: '0 0 2px 0', fontSize: '13.5px', fontWeight: 'bold', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {globalTrack.title}
+                </h4>
+                <p style={{ margin: 0, fontSize: '11px', color: 'var(--mu)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {globalTrack.artist}
+                </p>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '9px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '3px', fontWeight: 'bold' }}>
+                    Full Stream
+                  </span>
+                  <span style={{ fontSize: '9px', color: 'var(--cyan)' }}>
+                    Track {currentTrackIndex >= 0 ? currentTrackIndex + 1 : 1}/{effectiveQueue.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div 
+                style={{ width: '100%', height: '5px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', position: 'relative', cursor: 'pointer' }}
+                onClick={handleSeek}
+              >
+                <div style={{ 
+                  width: `${Math.min(100, ((globalProgress || 0) / (duration || 180)) * 100)}%`, 
+                  height: '100%', 
+                  background: '#00f0ff', 
+                  borderRadius: '3px', 
+                  boxShadow: '0 0 8px #00f0ff',
+                  transition: 'width 0.05s linear'
+                }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--mu)', marginTop: '4px' }}>
+                <span>{formatTime(globalProgress)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button
+                  onClick={() => setIsMuted(!isMuted)}
+                  style={{ background: 'none', border: 'none', color: isMuted ? '#ef4444' : '#00f0ff', cursor: 'pointer', fontSize: '14px', borderRadius: '3px', display: 'flex', alignItems: 'center', padding: '2px' }}
+                >
+                  {isMuted ? <RiVolumeMuteFill size={14} /> : <RiVolumeUpFill size={14} />}
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => { setVolume(parseFloat(e.target.value)); if (isMuted) setIsMuted(false); }}
+                  style={{ width: '45px', height: '3px', accentColor: '#00f0ff', cursor: 'pointer' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+                <button 
+                  className="plan-btn outline"
+                  onClick={handlePrev}
+                  style={{ width: '30px', height: '30px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.15)' }}
+                >
+                  <RiSkipBackFill size={14} />
+                </button>
+                <button 
+                  onClick={togglePlay}
+                  className="btn-primary"
+                  style={{ width: '38px', height: '38px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', cursor: 'pointer', border: 'none', boxShadow: '0 4px 12px rgba(0,240,255,0.3)' }}
+                >
+                  {globalPlaying ? <RiPauseFill size={17} /> : <RiPlayFill size={17} />}
+                </button>
+                <button 
+                  className="plan-btn outline"
+                  onClick={handleNext}
+                  style={{ width: '30px', height: '30px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.15)' }}
+                >
+                  <RiSkipForwardFill size={14} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={() => setIsShuffle(!isShuffle)}
+                  style={{ background: 'none', border: 'none', color: isShuffle ? '#00f0ff' : '#64748b', fontSize: '14px', cursor: 'pointer', borderRadius: '3px', display: 'flex', alignItems: 'center', padding: '2px' }}
+                  title="Shuffle"
+                >
+                  <RiShuffleLine size={14} />
+                </button>
+                <button
+                  onClick={() => setIsRepeat(isRepeat === 'off' ? 'queue' : isRepeat === 'queue' ? 'track' : 'off')}
+                  style={{ background: 'none', border: 'none', color: isRepeat !== 'off' ? '#00f0ff' : '#64748b', fontSize: '14px', cursor: 'pointer', borderRadius: '3px', display: 'flex', alignItems: 'center', padding: '2px' }}
+                  title={`Repeat: ${isRepeat}`}
+                >
+                  {isRepeat === 'track' ? <RiRepeatOneLine size={14} /> : <RiRepeat2Line size={14} />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Docked Bottom Player
+  return (
+    <>
+      {audioTag}
+      {unlockModal}
+      {queueDrawer}
+      <div 
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '76px',
+          background: 'rgba(7, 14, 27, 0.92)',
+          backdropFilter: 'blur(16px)',
+          borderTop: '1px solid rgba(0, 240, 255, 0.25)',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 24px',
+          color: '#fff'
+        }}
+      >
+
+      {/* Left: Track Information & Cover Art */}
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', width: '28%', minWidth: '180px' }}>
+        <div style={{
+          width: '46px',
+          height: '46px',
+          borderRadius: '3px',
+          background: globalTrack.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          flexShrink: 0
+        }}>
+          {(globalTrack.coverArt || globalTrack.album_art_url) ? (
+            <img src={globalTrack.coverArt || globalTrack.album_art_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#fff', textAlign: 'center', padding: '2px' }}>
+              {globalTrack.coverText || 'Art'}
+            </span>
+          )}
+        </div>
+        <div style={{ textAlign: 'left', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {globalTrack.title}
+            </h4>
+            <span style={{ fontSize: '9px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '1px 5px', borderRadius: '3px', fontWeight: 'bold' }}>
+              Master Stream
+            </span>
+          </div>
+          <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--mu)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {globalTrack.artist} • {globalTrack.release || 'Catalogue'}
+          </p>
+        </div>
+      </div>
+
+      {/* Center: Controls, Scrubber & Playlist Navigation */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', width: '44%', maxWidth: '520px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            onClick={() => setIsShuffle(!isShuffle)}
+            style={{ background: 'none', border: 'none', color: isShuffle ? '#00f0ff' : 'var(--mu)', cursor: 'pointer', fontSize: '15px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}
+            title="Toggle Shuffle"
+          >
+            <RiShuffleLine size={15} />
           </button>
           <button 
-            onClick={() => setGlobalPlaying(!globalPlaying)}
-            className="btn-primary"
-            style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', border: 'none', cursor: 'pointer' }}
+            onClick={handlePrev}
+            style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: '16px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}
+            title="Previous track"
           >
-            {globalPlaying ? 'â¸' : '▶'}
+            <RiSkipBackFill size={16} />
+          </button>
+          <button 
+            onClick={togglePlay}
+            className="btn-primary"
+            style={{ width: '38px', height: '38px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', border: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,240,255,0.4)' }}
+          >
+            {globalPlaying ? <RiPauseFill size={18} /> : <RiPlayFill size={18} />}
           </button>
           <button 
             onClick={handleNext}
-            style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: '15px' }}
+            style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: '16px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}
             title="Next track"
           >
-            â­
+            <RiSkipForwardFill size={16} />
+          </button>
+          <button
+            onClick={() => setIsRepeat(isRepeat === 'off' ? 'queue' : isRepeat === 'queue' ? 'track' : 'off')}
+            style={{ background: 'none', border: 'none', color: isRepeat !== 'off' ? '#00f0ff' : 'var(--mu)', cursor: 'pointer', fontSize: '15px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}
+            title={`Repeat: ${isRepeat}`}
+          >
+            {isRepeat === 'track' ? <RiRepeatOneLine size={15} /> : <RiRepeat2Line size={15} />}
           </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
-          <span style={{ fontSize: '9px', color: 'var(--mu)' }}>{formatTime(globalProgress)}</span>
-          <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', position: 'relative', cursor: 'pointer' }} onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const percentage = clickX / rect.width;
-            setGlobalProgress(Math.floor(percentage * 180));
-          }}>
-            <div style={{ width: `${(globalProgress / 180) * 100}%`, height: '100%', background: 'var(--cyan)', borderRadius: '2px' }} />
+          <span style={{ fontSize: '10px', color: 'var(--mu)', minWidth: '32px', textAlign: 'right' }}>
+            {formatTime(globalProgress)}
+          </span>
+          <div 
+            style={{ flex: 1, height: '5px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', position: 'relative', cursor: 'pointer' }}
+            onClick={handleSeek}
+          >
+            <div style={{ 
+              width: `${Math.min(100, ((globalProgress || 0) / (duration || 180)) * 100)}%`, 
+              height: '100%', 
+              background: '#00f0ff', 
+              borderRadius: '3px', 
+              boxShadow: '0 0 6px #00f0ff',
+              transition: 'width 0.05s linear'
+            }} />
           </div>
-          <span style={{ fontSize: '9px', color: 'var(--mu)' }}>3:00</span>
+          <span style={{ fontSize: '10px', color: 'var(--mu)', minWidth: '32px' }}>
+            {formatTime(duration)}
+          </span>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '30%', justifyContent: 'flex-end' }}>
-        {featuredTracks.length > 0 && (
-          <span style={{ fontSize: '9px', color: 'var(--green)', border: '1px solid rgba(16,185,129,0.3)', padding: '2px 6px', borderRadius: '10px', background: 'rgba(16,185,129,0.05)', fontWeight: 'bold' }}>
-            â˜… Featured List ({featuredTracks.length})
+      {/* Right: Volume & Queue & Minimize / Undock */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '28%', justifyContent: 'flex-end' }}>
+        {/* Playlist Queue Button */}
+        <button
+          onClick={() => setShowQueueDrawer(!showQueueDrawer)}
+          style={{
+            background: showQueueDrawer ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${showQueueDrawer ? '#00f0ff' : 'rgba(255,255,255,0.12)'}`,
+            borderRadius: '3px',
+            color: showQueueDrawer ? '#00f0ff' : '#cbd5e1',
+            padding: '5px 9px',
+            fontSize: '11px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontWeight: '600'
+          }}
+          title="Open Playlist Queue"
+        >
+          <RiPlayList2Line size={13} />
+          <span>Queue</span>
+          <span style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 5px', borderRadius: '3px', fontSize: '9px' }}>
+            {effectiveQueue.length}
           </span>
-        )}
+        </button>
+
+        {/* Volume controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            style={{ background: 'none', border: 'none', color: isMuted ? '#ef4444' : '#00f0ff', cursor: 'pointer', fontSize: '15px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}
+            title={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? <RiVolumeMuteFill size={15} /> : <RiVolumeUpFill size={15} />}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={isMuted ? 0 : volume}
+            onChange={(e) => {
+              setVolume(parseFloat(e.target.value));
+              if (isMuted) setIsMuted(false);
+            }}
+            style={{ width: '55px', height: '3px', accentColor: '#00f0ff', cursor: 'pointer' }}
+            title={`Volume: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
+          />
+        </div>
+
         <button 
           className="plan-btn outline"
           onClick={() => setIsMinimized(true)}
-          style={{ padding: '4px 10px', fontSize: '11px', height: '28px', borderRadius: '4px', cursor: 'pointer' }}
+          style={{ padding: '4px 8px', fontSize: '11px', height: '28px', borderRadius: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
           title="Minimize player"
         >
-          ➖ Minimize
+          <RiSubtractLine size={12} />
+          <span>Min</span>
         </button>
         <button 
           className="plan-btn outline"
           onClick={() => setIsUndocked(true)}
-          style={{ padding: '4px 10px', fontSize: '11px', height: '28px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+          style={{ padding: '4px 8px', fontSize: '11px', height: '28px', borderRadius: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
           title="Undock into mini floating player"
         >
-          ↗ Undock
+          <RiExternalLinkLine size={12} />
+          <span>Undock</span>
         </button>
       </div>
     </div>
+    </>
   );
 }
 
@@ -4776,12 +7958,42 @@ function App() {
     }
   });
 
-  const [catalogTracks, setCatalogTracks] = useState([
-    { isrc: 'US-123-45678', title: 'Midnight Grooves', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (30%) / Label (20%)', genre: 'Afro-House', status: 'valid', coverBg: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', coverText: 'Midnight', isFeatured: true },
-    { isrc: 'US-123-45679', title: 'Neon Shadows', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Deep-House', status: 'valid', coverBg: 'linear-gradient(135deg, #ec4899 0%, #3b82f6 100%)', coverText: 'Shadows', isFeatured: false },
-    { isrc: 'US-123-45680', title: 'Nairobi Sunset', artist: 'Aisha Okoro', split: 'Artist (40%) / Label (60%)', genre: 'Amapiano', status: 'valid', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', coverText: 'Sunset', isFeatured: true },
-    { isrc: 'US-123-45681', title: 'Kilimanjaro Vibe', artist: 'Aisha Okoro', split: 'Artist (50%) / Producer (50%)', genre: 'Afrobeats', status: 'valid', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', coverText: 'Vibe', isFeatured: false }
-  ]);
+  const [catalogTracks, setCatalogTracks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('catalog_tracks');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return [
+      { id: 1, isrc: 'KE-TM1-26-00042', title: 'Nairobi Cyberwave (Master)', artist: 'Ndufo', release: 'Neon Safari EP', releaseType: 'EP', year: '2026', genre: 'Afro-House', duration: '3:45', streams: '3.4M', priceCredits: 50, coverArt: 'https://picsum.photos/seed/cyberwave_cover/600/600', coverText: 'Cyberwave', coverBg: 'linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)', status: 'valid', isFeatured: true, split: 'Artist (60%) / Producer (25%) / Label (15%)' },
+      { id: 2, isrc: 'KE-TM1-26-00043', title: 'Sunset over Rift Valley', artist: 'Ndufo', release: 'Singles 2026', releaseType: 'Single', year: '2026', genre: 'Amapiano', duration: '4:12', streams: '1.8M', priceCredits: 50, coverArt: 'https://picsum.photos/seed/riftvalley_cover/600/600', coverText: 'Sunset', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', status: 'valid', isFeatured: false, split: 'Artist (60%) / Producer (25%) / Label (15%)' },
+      { id: 3, isrc: 'KE-TM1-26-00044', title: 'Afro-Synth Cascade', artist: 'Ndufo', release: 'Mainstage Dubs', releaseType: 'Single', year: '2026', genre: 'Afro-House', duration: '3:18', streams: '940K', priceCredits: 40, coverArt: 'https://picsum.photos/seed/afrosynth_cover/600/600', coverText: 'Cascade', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', status: 'valid', isFeatured: false, split: 'Artist (50%) / Producer (50%)' },
+      { id: 4, isrc: 'KE-TM1-26-00045', title: 'Midnight Mara Starlight', artist: 'Ndufo', release: 'EP 2025', releaseType: 'EP', year: '2025', genre: 'Deep-House', duration: '5:02', streams: '2.1M', priceCredits: 60, coverArt: 'https://picsum.photos/seed/mara_cover/600/600', coverText: 'Midnight', coverBg: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)', status: 'valid', isFeatured: true, split: 'Artist (70%) / Producer (30%)' }
+    ];
+  });
+
+  // Persistent catalogue track synchronization from backend API
+  useEffect(() => {
+    const sub = sessionUser?.username || 'ndufo';
+    fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data.tracks) && data.tracks.length > 0) {
+          setCatalogTracks(data.tracks);
+          localStorage.setItem('catalog_tracks', JSON.stringify(data.tracks));
+        }
+      })
+      .catch(err => console.warn('Catalogue sync fallback to local cache:', err));
+  }, [sessionUser?.username]);
+
+  // Keep localStorage updated whenever catalogTracks changes
+  useEffect(() => {
+    if (Array.isArray(catalogTracks) && catalogTracks.length > 0) {
+      localStorage.setItem('catalog_tracks', JSON.stringify(catalogTracks));
+    }
+  }, [catalogTracks]);
 
   const [creatorEpk, setCreatorEpk] = useState(() => {
     try {
@@ -4834,7 +8046,7 @@ function App() {
 
   const [globalTrack, setGlobalTrack] = useState(null);
   const [globalPlaying, setGlobalPlaying] = useState(false);
-  const [globalProgress, setGlobalProgress] = useState(12);
+  const [globalProgress, setGlobalProgress] = useState(0);
   const [isUndocked, setIsUndocked] = useState(false);
   const [playerPos, setPlayerPos] = useState({ x: window.innerWidth - 380, y: window.innerHeight - 380 });
 
@@ -4843,16 +8055,6 @@ function App() {
       setGlobalTrack(catalogTracks[0]);
     }
   }, [catalogTracks, globalTrack]);
-
-  useEffect(() => {
-    let interval;
-    if (globalPlaying) {
-      interval = setInterval(() => {
-        setGlobalProgress(prev => (prev >= 180 ? 0 : prev + 1));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [globalPlaying]);
 
   const handleLogin = (user) => {
     const reconciled = reconcileUserApps(user);
@@ -4970,7 +8172,7 @@ function App() {
 }
 
 // ================= Track D: Social AI Panel =================
-function SocialAiPanel({ setActiveTab }) {
+function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
   const [prompt, setPrompt] = React.useState('');
   const [mediaType, setMediaType] = React.useState('image'); // 'image' | 'video'
   const [aspectRatio, setAspectRatio] = React.useState('1:1');
@@ -4980,8 +8182,11 @@ function SocialAiPanel({ setActiveTab }) {
   
   // Asset Manager & Porting States
   const [assets, setAssets] = React.useState([]);
+  const [assetFilter, setAssetFilter] = React.useState('all'); // 'all' | 'image' | 'video' | 'audio'
   const [editingAssetId, setEditingAssetId] = React.useState(null);
   const [editingPrompt, setEditingPrompt] = React.useState('');
+  const [uploadingMedia, setUploadingMedia] = React.useState(false);
+  const mediaFileInputRef = React.useRef(null);
   
   // Recommendations & Integration states
   const [onboarding, setOnboarding] = React.useState(null);
@@ -4995,6 +8200,43 @@ function SocialAiPanel({ setActiveTab }) {
       setAssets(list);
     } catch (err) {
       console.error('Failed to load assets', err);
+    }
+  };
+
+  const handleMediaFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingMedia(true);
+    try {
+      let mType = 'image';
+      const lower = file.name.toLowerCase();
+      if (lower.endsWith('.mp3') || lower.endsWith('.wav') || lower.endsWith('.flac') || lower.endsWith('.ogg') || lower.endsWith('.m4a') || lower.endsWith('.aac')) {
+        mType = 'audio';
+      } else if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
+        mType = 'video';
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('media_type', mType);
+      const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
+      const res = await fetch('http://localhost:8001/api/storage/upload', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData
+      });
+      if (res.ok) {
+        await loadAssets();
+        setAssetFilter(mType);
+        alert(`Media file "${file.name}" (${mType.toUpperCase()}) successfully uploaded and stored in your Creative Asset Vault!`);
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        alert(errJson.detail || 'Media upload failed');
+      }
+    } catch (err) {
+      alert('Upload error: ' + err.message);
+    } finally {
+      setUploadingMedia(false);
     }
   };
 
@@ -5307,71 +8549,38 @@ function SocialAiPanel({ setActiveTab }) {
       </form>
 
       {result && (
-        <div className="glass-panel" style={{ marginTop: '32px', padding: '24px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
-          <h4 style={{ color: '#fff', marginBottom: '16px', fontWeight: 'bold' }}>Generation Output</h4>
-          {result.media_type === 'image' ? (
-            <div style={{ position: 'relative', display: 'inline-block', margin: '0 auto' }}>
-              <img 
-                src={result.media_url} 
-                alt={result.prompt} 
-                style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: '400px', 
-                  borderRadius: result.aspect_ratio === 'profile' ? '50%' : '4px', 
-                  border: result.aspect_ratio === 'profile' ? '4px solid var(--cyan)' : 'none',
-                  boxShadow: '0 8px 30px rgba(0,0,0,0.5)', 
-                  display: 'block', 
-                  margin: '0 auto' 
-                }} 
-              />
-              {result.aspect_ratio === 'profile' && (
-                <div style={{ 
-                  position: 'absolute', 
-                  top: 0, 
-                  left: 0, 
-                  right: 0, 
-                  bottom: 0, 
-                  borderRadius: '50%', 
-                  border: '2px dashed rgba(255,255,255,0.6)', 
-                  pointerEvents: 'none' 
-                }} />
-              )}
-            </div>
-          ) : (
-            <video 
-              src={result.media_url} 
-              controls 
-              autoPlay 
-              loop
-              style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '4px', boxShadow: '0 8px 30px rgba(0,0,0,0.5)', display: 'block', margin: '0 auto' }} 
-            />
-          )}
-          <p style={{ color: '#94a3b8', fontSize: '13px', marginTop: '16px', fontStyle: 'italic' }}>
-            Prompt: "{result.prompt}"
-          </p>
-          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+        <div style={{ marginTop: '30px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
+          <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', marginBottom: '14px' }}>✨ Generation Result</h4>
+          <div style={{ maxWidth: '400px', margin: '0 auto', overflow: 'hidden', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: '#000' }}>
+            {result.media_type === 'image' ? (
+              <img src={result.media_url} alt={result.prompt} style={{ width: '100%', display: 'block' }} />
+            ) : (
+              <video src={result.media_url} controls autoPlay loop style={{ width: '100%', display: 'block' }} />
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '14px', flexWrap: 'wrap' }}>
             <button 
               type="button" 
               onClick={() => handlePortAsset(result, 'epk')}
               className="btn-secondary" 
-              style={{ fontSize: '11.5px', padding: '6px 14px', background: 'rgba(139, 92, 246, 0.2)', color: '#fff', border: '1px solid var(--purple)' }}
+              style={{ fontSize: '11.5px', padding: '6px 14px' }}
             >
-              🚀 Send to EPK Builder
+              🎨 Set as EPK Cover
             </button>
             <button 
               type="button" 
               onClick={() => handlePortAsset(result, 'cms')}
               className="btn-secondary" 
-              style={{ fontSize: '11.5px', padding: '6px 14px', background: 'rgba(6, 182, 212, 0.2)', color: '#fff', border: '1px solid var(--cyan)' }}
+              style={{ fontSize: '11.5px', padding: '6px 14px' }}
             >
-              💻 Send to CMS Layouts
+              🌐 Set as CMS Hero
             </button>
             {result.media_type === 'image' && (
               <button 
                 type="button" 
                 onClick={() => handlePortAsset(result, 'sync')}
                 className="btn-secondary" 
-                style={{ fontSize: '11.5px', padding: '6px 14px', background: 'rgba(16, 185, 129, 0.2)', color: '#fff', border: '1px solid #10b981' }}
+                style={{ fontSize: '11.5px', padding: '6px 14px' }}
               >
                 🎵 Send to Sync Pitch
               </button>
@@ -5380,20 +8589,88 @@ function SocialAiPanel({ setActiveTab }) {
         </div>
       )}
 
-      {/* Asset Manager Grid */}
+      {/* ================= SAVED CREATIVE ASSET MANAGER ================= */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '40px', paddingTop: '32px' }}>
-        <div className="dashboard-card-header" style={{ marginBottom: '20px', padding: 0 }}>
-          <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: '800', margin: 0 }}>📜¦ Saved Creative Asset Manager</h4>
-          <p style={{ color: '#94a3b8', fontSize: '12px', margin: '4px 0 0' }}>Manage, reference, edit captions, delete, or port previously generated visual assets.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '14px' }}>
+          <div>
+            <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: '800', margin: 0 }}>
+              📜 Saved Creative Asset Manager
+            </h4>
+            <p style={{ color: '#94a3b8', fontSize: '12px', margin: '4px 0 0' }}>
+              Manage, stream, reference, and port your visual artwork, audio files, and promo videos.
+            </p>
+          </div>
+
+          {/* Upload Media / Audio Button */}
+          <div>
+            <input
+              type="file"
+              ref={mediaFileInputRef}
+              onChange={handleMediaFileUpload}
+              accept="audio/*,image/*,video/*"
+              style={{ display: 'none' }}
+            />
+            <button
+              type="button"
+              onClick={() => mediaFileInputRef.current?.click()}
+              disabled={uploadingMedia}
+              style={{
+                background: '#00f0ff',
+                color: '#000',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 16px',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 10px rgba(0,240,255,0.3)'
+              }}
+            >
+              {uploadingMedia ? '⏳ Uploading Media...' : '🎵 Upload Audio / Media File'}
+            </button>
+          </div>
         </div>
 
-        {assets.length === 0 ? (
+        {/* Media Type Filter Pills */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: `All Assets (${assets.length})` },
+            { id: 'image', label: `Images (${assets.filter(a => a.media_type === 'image').length})` },
+            { id: 'video', label: `Videos (${assets.filter(a => a.media_type === 'video').length})` },
+            { id: 'audio', label: `Audio Stems & Files (${assets.filter(a => a.media_type === 'audio').length})` }
+          ].map(f => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setAssetFilter(f.id)}
+              style={{
+                background: assetFilter === f.id ? '#00f0ff' : 'rgba(255,255,255,0.05)',
+                color: assetFilter === f.id ? '#000' : '#cbd5e1',
+                border: assetFilter === f.id ? 'none' : '1px solid rgba(255,255,255,0.12)',
+                padding: '5px 14px',
+                borderRadius: '20px',
+                fontWeight: 700,
+                fontSize: '11px',
+                cursor: 'pointer'
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {filteredAssets.length === 0 ? (
           <div style={{ padding: '30px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '6px' }}>
-            <span style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>No previously generated assets found in cloud vault. Describe your vision above to generate assets.</span>
+            <span style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>
+              No {assetFilter !== 'all' ? assetFilter : ''} assets found in cloud vault. Use the generator above or click "Upload Audio / Media File" to store content.
+            </span>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
-            {assets.map((asset) => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+            {filteredAssets.map((asset) => (
               <div 
                 key={asset.id} 
                 className="glass-panel" 
@@ -5414,7 +8691,7 @@ function SocialAiPanel({ setActiveTab }) {
                       alt={asset.prompt} 
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                     />
-                  ) : (
+                  ) : asset.media_type === 'video' ? (
                     <video 
                       src={asset.media_url} 
                       controls
@@ -5422,7 +8699,24 @@ function SocialAiPanel({ setActiveTab }) {
                       preload="metadata"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                     />
+                  ) : (
+                    /* Audio file media surface */
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(135deg, #091224 0%, #1e1b4b 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '12px',
+                      gap: '8px'
+                    }}>
+                      <div style={{ fontSize: '28px' }}>🎵</div>
+                      <audio controls src={asset.media_url} style={{ width: '92%', height: '34px' }} />
+                    </div>
                   )}
+
                   <span style={{ position: 'absolute', top: '8px', right: '8px', fontSize: '9px', fontWeight: 'bold', background: 'rgba(0,0,0,0.7)', color: 'var(--cyan)', padding: '2px 6px', borderRadius: '3px', textTransform: 'uppercase' }}>
                     {asset.media_type}
                   </span>
@@ -5461,36 +8755,72 @@ function SocialAiPanel({ setActiveTab }) {
                     ) : (
                       <>
                         <p style={{ color: '#e2e8f0', fontSize: '12px', margin: '0 0 6px 0', lineHeight: '1.4', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
-                          "{asset.prompt}"
+                          "{asset.original_filename || asset.prompt}"
                         </p>
-                        <span style={{ color: '#64748b', fontSize: '9.5px' }}>
-                          {new Date(asset.created_at).toLocaleDateString()}
-                        </span>
+                        <div style={{ display: 'flex', gap: '8px', fontSize: '9.5px', color: '#64748b' }}>
+                          <span>{new Date(asset.created_at).toLocaleDateString()}</span>
+                          {asset.duration && <span>• {Math.round(asset.duration)}s</span>}
+                          {asset.file_size && <span>• {Math.round(asset.file_size / 1024)} KB</span>}
+                        </div>
                       </>
                     )}
                   </div>
 
                   {editingAssetId !== asset.id && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
-                      {/* Port Actions */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
-                        <button 
-                          type="button" 
-                          onClick={() => handlePortAsset(asset, 'epk')}
-                          className="btn-secondary" 
-                          style={{ fontSize: '9.5px', padding: '4px' }}
-                        >
-                          EPK Cover
-                        </button>
-                        <button 
-                          type="button" 
-                          onClick={() => handlePortAsset(asset, 'cms')}
-                          className="btn-secondary" 
-                          style={{ fontSize: '9.5px', padding: '4px' }}
-                        >
-                          CMS Hero
-                        </button>
-                      </div>
+                      {/* Port or Stream Actions */}
+                      {asset.media_type === 'audio' ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (typeof onPlayTrack === 'function') {
+                                onPlayTrack({
+                                  title: asset.original_filename || asset.prompt || 'Creator Audio Stem',
+                                  artist: sessionUser?.artist_name || 'Ndufo',
+                                  audioUrl: asset.media_url,
+                                  coverBg: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+                                  coverText: 'AUDIO'
+                                });
+                              }
+                            }}
+                            className="btn-primary"
+                            style={{ fontSize: '9.5px', padding: '5px' }}
+                          >
+                            ▶ Stream
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard?.writeText(asset.media_url);
+                              alert('Audio streaming URL copied to clipboard!');
+                            }}
+                            className="btn-secondary"
+                            style={{ fontSize: '9.5px', padding: '5px' }}
+                          >
+                            📋 Copy Link
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                          <button 
+                            type="button" 
+                            onClick={() => handlePortAsset(asset, 'epk')}
+                            className="btn-secondary" 
+                            style={{ fontSize: '9.5px', padding: '4px' }}
+                          >
+                            EPK Cover
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => handlePortAsset(asset, 'cms')}
+                            className="btn-secondary" 
+                            style={{ fontSize: '9.5px', padding: '4px' }}
+                          >
+                            CMS Hero
+                          </button>
+                        </div>
+                      )}
 
                       {asset.media_type === 'image' && (
                         <button 
@@ -5510,14 +8840,14 @@ function SocialAiPanel({ setActiveTab }) {
                           onClick={() => { setEditingAssetId(asset.id); setEditingPrompt(asset.prompt); }}
                           style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#cbd5e1', fontSize: '10px', padding: '4px', cursor: 'pointer' }}
                         >
-                          ✏️ Edit
+                          ✏️ Edit
                         </button>
                         <button 
                           type="button" 
                           onClick={() => handleDeleteAsset(asset.id)}
                           style={{ flex: 1, background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '3px', color: '#ef4444', fontSize: '10px', padding: '4px', cursor: 'pointer' }}
                         >
-                          🗑️ Delete
+                          🗑️ Delete
                         </button>
                       </div>
                     </div>
@@ -5542,13 +8872,14 @@ function CrmPanel({ sessionUser }) {
 }
 
 // ================= Track D: CMS Layouts & Rollbacks Panel =================
-function CmsPanel({ sessionUser, epk, setEpk, tracks, onSwitchToWizard }) {
+function CmsPanel({ sessionUser, epk, setEpk, tracks, initialTab = 'music', onSwitchToWizard }) {
   return (
     <DashboardCmsStudio 
       sessionUser={sessionUser}
       epk={epk}
       setEpk={setEpk}
       tracks={tracks}
+      initialTab={initialTab}
       onSwitchToWizard={onSwitchToWizard}
     />
   );

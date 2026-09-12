@@ -545,3 +545,33 @@ All system alerts, affirmative confirmations, and floating toasts follow our **a
 - **High-Contrast Tag Badges:** Solid color indicator pill (`SUCCESS`, `ALERT`, `UPDATE`) with `#000` text for maximum legibility.
 - **Ambient Glow Shadow:** `box-shadow: 0 12px 36px rgba(0,0,0,0.85), 0 0 16px rgba(0, 240, 255, 0.32)`.
 - **High-Contrast Text:** Pure white (`#ffffff`) message content ensuring clear readability against dark background layers.
+
+---
+
+## 14. Flat Design & 3px Border Radius Standardization
+
+To reinforce our precision-engineered, tech-forward aesthetic:
+
+### A. Strict 3px Border Radius
+- **Universal Interactive Controls:** All buttons, action icons, input fields, dropdown toggles, and status badges across the Catalogue Management, Mother-CMS, and CRM panels strictly enforce:
+  ```css
+  border-radius: 3px;
+  ```
+- **Rationale:** Standardizing on sharp 3px corners eliminates visual clash between disparate UI components, creating a cohesive, military-grade DAW/software feel.
+
+### B. Flat Iconography System (`react-icons/ri`)
+- **Single Source of Truth:** All icons across the portal and dashboard leverage Remix Icons (`react-icons/ri`).
+- **Elimination of Gradients on Icons:** All icons render in flat, high-contrast monochrome or accent colors (`#fff`, `#00f0ff`, `#94a3b8`, `#10b981`), avoiding busy radial fills or non-vector bitmaps.
+
+---
+
+## 15. Audio Streaming & 60fps Scrubber Architecture
+
+### A. Full-Length Uncapped Playback
+- Free from artificial preview cutoffs on global players; playback persists throughout view transitions.
+- Leverages HTTP 206 partial content streaming for instant seek and resume without re-downloading entire assets.
+
+### B. High-Precision 60fps Scrubber Synchronization
+- Combines HTML5 `audio.currentTime` with `requestAnimationFrame` for buttery-smooth visual tracking.
+- Audio progress bars utilize smooth linear CSS interpolation (`transition: width 0.1s linear`), preventing jagged jumping.
+

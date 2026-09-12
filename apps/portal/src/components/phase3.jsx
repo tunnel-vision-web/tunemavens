@@ -1287,7 +1287,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
   // is paired with the dashboard tab it unlocks so we can route directly.
   const role = sessionUser?.role || 'creator';
   const catalogue = [
-    { slug: 'catalog-porting', name: 'Catalog Porting', desc: 'Bring your back-catalogue in via CSV or DDEX, validate metadata, and stage releases.', icon: RiDatabase2Fill, accent: 'var(--cyan)', tab: 'catalog', roles: ['creator', 'label', 'admin'] },
+    { slug: 'catalog-porting', name: 'Catalogue', desc: 'Manage your music catalogue, ingest new releases via wizard, validate metadata, and stage releases.', icon: RiDatabase2Fill, accent: 'var(--cyan)', tab: 'catalog', roles: ['creator', 'label', 'admin'] },
     { slug: 'split-cascade', name: 'Split Cascade', desc: 'See exactly how every dollar flows through writer / producer / publisher splits.', icon: RiCoinsFill, accent: 'var(--purple)', tab: 'splits', roles: ['creator', 'label', 'admin'] },
     { slug: 'publishing-election', name: 'Publishing Election', desc: 'Lock in your publishing tier  -  standard admin or full-service co-pub.', icon: RiBookOpenFill, accent: 'var(--cyan)', tab: 'publishing-election', roles: ['creator', 'label', 'admin'] },
     { slug: 'distribution-election', name: 'Distribution Election', desc: 'Choose how your music reaches DSPs and how revenue splits.', icon: RiGlobalFill, accent: 'var(--purple)', tab: 'distribution-election', roles: ['creator', 'label', 'admin'] },
