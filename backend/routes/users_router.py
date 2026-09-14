@@ -16,10 +16,19 @@ from pydantic import BaseModel
 
 from auth import get_current_user
 from config import db
-from models import ActivityEvent, OnboardingResponse, Recommendation
+from models import ActivityEvent, OnboardingResponse, Recommendation, UserPublic
 from services.recommendation_engine import recommend
 
 router = APIRouter(prefix="/api/users", tags=["users"])
+
+
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    brand_name: Optional[str] = None
+    country: Optional[str] = None
+    bio: Optional[str] = None
+    artist_name: Optional[str] = None
 
 
 # Curated allow-list of dashboard apps a creator can activate. Kept here so the
@@ -193,4 +202,36 @@ async def get_my_recommendations(
         already_activated=current_user.get("apps", []) or [],
         limit=max(1, min(limit, 12)),
     )
+
+
+# ======================================================================
+# Profile persistence & settings
+# ======================================================================
+@router.get("/me", response_model=UserPublic)
+def get_my_profile(current_user: dict = Depends(get_current_user)):
+    from routes.auth_router import _to_public
+    return _to_public(current_user)
+
+
+@router.put("/me", response_model=UserPublic)
+def update_my_profile(
+    payload: UserProfileUpdate,
+    current_user: dict = Depends(get_current_user),
+):
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if updates:
+        if "email" in updates and updates["email"] != current_user.get("email"):
+            existing = db.users.find_one({"email": updates["email"], "_id": {"$ne": ObjectId(str(current_user["_id"]))}})
+            if existing:
+                raise HTTPException(status_code=409, detail="Email already registered to another account")
+        db.users.update_one(
+            {"_id": ObjectId(str(current_user["_id"]))},
+            {"$set": updates},
+        )
+        updated = db.users.find_one({"_id": ObjectId(str(current_user["_id"]))})
+    else:
+        updated = current_user
+
+    from routes.auth_router import _to_public
+    return _to_public(updated)
 

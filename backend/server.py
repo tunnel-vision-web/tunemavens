@@ -44,6 +44,14 @@ uploads_dir = os.environ.get("LOCAL_UPLOADS_DIR", "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
+headers_dir = os.path.join(uploads_dir, "headers")
+os.makedirs(headers_dir, exist_ok=True)
+app.mount("/headers", StaticFiles(directory=headers_dir), name="headers")
+
+heroes_dir = os.path.join(uploads_dir, "heroes")
+os.makedirs(heroes_dir, exist_ok=True)
+app.mount("/heroes", StaticFiles(directory=heroes_dir), name="heroes")
+
 ENV = os.environ.get("ENV", "development")
 cors_origins = CORS_ORIGINS
 if ENV == "production" and "*" in cors_origins:

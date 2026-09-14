@@ -165,6 +165,7 @@ def save_my_epk(payload: EPKProfileModel, current_user: dict = Depends(get_curre
     return saved or data
 
 
+@router.get("/{subdomain}", response_model=Dict[str, Any])
 @router.get("/public/{subdomain}", response_model=Dict[str, Any])
 def get_public_epk(subdomain: str, response: Response):
     """Public endpoint to fetch published EPK profile by subdomain or artist username.

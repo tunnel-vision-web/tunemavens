@@ -96,14 +96,16 @@ def generate_art(payload: ArtGenerateRequest, current_user: Optional[dict] = Dep
                 
                 filename = f"retina_art_{seed}_{target_w}x{target_h}.jpg"
                 filepath = os.path.join(ai_dir, filename)
-                crisp.save(filepath, format="JPEG", quality=95, optimize=True)
+                crisp.save(filepath, format="JPEG", quality=95, optimize=True, dpi=(96, 96))
                 
                 media_url = f"/uploads/ai_assets/{filename}"
-                logger.info(f"Generated Retina-ready crisp artwork ({target_w}x{target_h}) saved to {media_url}")
+                logger.info(f"Generated 96 DPI Retina-ready crisp artwork ({target_w}x{target_h}) saved to {media_url}")
     except Exception as exc:
         logger.warning(f"Retina local upscaling fallback (serving upstream URL): {exc}")
     
     user_id = str(current_user["_id"]) if current_user else "anonymous_cms"
+    subdomain = current_user.get("brand_name") or current_user.get("name") or "ndufo" if current_user else "ndufo"
+    
     asset = GeneratedAsset(
         user_id=user_id,
         media_type="image",
@@ -113,6 +115,13 @@ def generate_art(payload: ArtGenerateRequest, current_user: Optional[dict] = Dep
     )
     
     asset_doc = asset.to_mongo()
+    asset_doc["subdomain"] = str(subdomain).lower()
+    asset_doc["title"] = f"AI Artwork: {payload.prompt[:32]}"
+    asset_doc["filename"] = filename if 'filename' in locals() else f"ai_{seed}.jpg"
+    asset_doc["content_type"] = "image/jpeg"
+    asset_doc["is_ai"] = True
+    asset_doc["dpi"] = 96
+    
     try:
         result = db.assets.insert_one(asset_doc)
         asset_doc["id"] = str(result.inserted_id)
@@ -274,4 +283,14 @@ def get_youtube_channel(channel_id: str):
 def get_youtube_featured():
     """Fetches featured creator video showcases for Wall of Fame profiles."""
     return {"showcase": youtube_service.get_featured_showcase()}
+
+
+@router.get("/video-stats")
+@router.get("/youtube/stats")
+def get_video_statistics(url: Optional[str] = None, video_id: Optional[str] = None):
+    """Fetches live real-time YouTube video view counts and metadata directly from the hosting platform."""
+    target = url or video_id
+    if not target:
+        raise HTTPException(status_code=400, detail="Either 'url' or 'video_id' parameter is required.")
+    return youtube_service.get_video_stats(target)
 

@@ -262,7 +262,7 @@ export default function LiveEpkCmsStudio({
             type="button"
             onClick={handleSaveAndPublish}
             disabled={saving}
-            style={{ background: `linear-gradient(135deg, ${accent}, #8b5cf6)`, border: 'none', color: '#000', padding: '7px 15px', borderRadius: '3px', fontWeight: 900, fontSize: '0.82rem', cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: `0 0 12px ${accent}66` }}
+            style={{ background: accent || '#00f0ff', border: 'none', color: '#000', padding: '7px 15px', borderRadius: '3px', fontWeight: 900, fontSize: '0.82rem', cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <RiSave3Fill /> {saving ? 'Publishing...' : 'Save & Publish'}
           </button>

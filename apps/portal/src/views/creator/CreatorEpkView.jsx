@@ -25,7 +25,7 @@ import { persistAppActivation } from '../../lib/activatedApps.js'
 
 // 20 Pre-populated Theme Templates Specification
 const DEFAULT_PAGE_HEADERS = {
-  discography: 'https://picsum.photos/seed/discography_banner/1920/640',
+  discography: '/headers/discography_retina_header.jpg',
   bio: 'https://picsum.photos/seed/bio_banner/1920/640',
   shows: 'https://picsum.photos/seed/shows_banner/1920/640',
   store: 'https://picsum.photos/seed/store_banner/1920/640',
@@ -34,7 +34,7 @@ const DEFAULT_PAGE_HEADERS = {
   contact: 'https://picsum.photos/seed/contact_banner/1920/640',
   pricing: 'https://picsum.photos/seed/pricing_banner/1920/640',
   'event-detail': 'https://picsum.photos/seed/shows_banner/1920/640',
-  'album-detail': 'https://picsum.photos/seed/discography_banner/1920/640'
+  'album-detail': '/headers/discography_retina_header.jpg'
 }
 
 export const EPK_THEMES = [
@@ -432,6 +432,25 @@ export function CreatorEpkView(props = {}) {
 
   // Landing Page Video Carousel Index State
   const [landingVideoIndex, setLandingVideoIndex] = useState(0)
+
+  // Live YouTube Video Stats (actual views fetched from YouTube Data / public stream)
+  const [liveYtStats, setLiveYtStats] = useState({})
+  useEffect(() => {
+    const rawVideos = Array.isArray(epkData?.videos) ? epkData.videos : []
+    rawVideos.forEach(v => {
+      const u = v.url || v.youtubeUrl
+      if (u && (u.includes('youtube.com') || u.includes('youtu.be'))) {
+        fetch(`/api/social-ai/video-stats?url=${encodeURIComponent(u)}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data?.views_formatted) {
+              setLiveYtStats(prev => ({ ...prev, [u]: data.views_formatted }))
+            }
+          })
+          .catch(err => console.warn('Failed to fetch YouTube stats for', u, err))
+      }
+    })
+  }, [epkData?.videos])
 
   // Fan Session State
   const [fanUser, setFanUser] = useState(() => {
@@ -1151,7 +1170,7 @@ export function CreatorEpkView(props = {}) {
         url: directUrl,
         youtubeUrl: embed,
         thumbnail: autoThumb,
-        views: v.views || `${(Math.max(1, (idx + 1) * 230))}K views`,
+        views: liveYtStats[directUrl] || liveYtStats[v.url] || liveYtStats[v.youtubeUrl] || v.views || `${(Math.max(1, (idx + 1) * 230))}K views`,
         category: v.category || 'Official Video'
       }
     })
@@ -1171,7 +1190,7 @@ export function CreatorEpkView(props = {}) {
       if (i < galleryItems.length) combined.push(galleryItems[i])
     }
     return combined
-  }, [epkData?.videos, artistName])
+  }, [epkData?.videos, artistName, liveYtStats])
 
   const videoCarouselItems = mediaItems.filter(m => m.type === 'video')
   const safeVideoIndex = (landingVideoIndex >= 0 && landingVideoIndex < videoCarouselItems.length) ? landingVideoIndex : 0
@@ -3294,7 +3313,9 @@ Direct Management Contact: mgmt@intermaven.io`
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               filter: 'brightness(1.4)',
-              transform: 'scale(1.02)'
+              transform: 'scale(1.02) translateZ(0)',
+              imageRendering: '-webkit-optimize-contrast',
+              WebkitBackfaceVisibility: 'hidden'
             }}
           />
           {/* Lightened gradient overlay ensuring 40% more luminance while keeping text legible */}
@@ -8189,7 +8210,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             type="button"
                             onClick={handleSaveFanProfile}
                             style={{
-                              background: `linear-gradient(135deg, ${effectiveAccent}, #8b5cf6)`,
+                              background: effectiveAccent || '#00f0ff',
                               color: '#000',
                               border: 'none',
                               padding: '10px 18px',

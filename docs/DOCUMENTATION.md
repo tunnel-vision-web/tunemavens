@@ -1041,6 +1041,47 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
 ### 9.30.2 Browser Extension `contentscript.js` Clarification
 - **MetaMask / Web3 Extension Noise:** Browser console messages referencing `contentscript.js:14083 MaxListenersExceededWarning` and `ObjectMultiplex - orphaned data for stream "app-init-liveness"` originate from third-party Web3 browser extensions injecting content scripts across all browser tabs. These warnings are isolated to the extension sandbox and do not impact TuneMavens stability or performance.
 
+---
+
+## §9.31 — Comprehensive Release Operations, Storage Quotas, Audio Gate, and Monetization Controls
+
+### 9.31.1 Catalogue Ingestion Wizard & Roster Security Isolation
+- **Inline Artist Creation:** The Step 1 Ingestion Wizard dropdown includes a persistent `+ Add New Artist...` option along with an inline quick-add button, allowing creators, managers, and labels to register new artists without leaving the wizard.
+- **Roster Ownership Isolation:** Backend endpoint `GET /api/catalog/artists` strictly filters artists by ownership (`owner_id == user_id` or `subdomain == username` or `is_default == True`). Non-admin users can only view and manage artists within their assigned roster. Admins automatically receive global visibility across all platform artists.
+- **Header & Breadcrumb Navigation:** Within any track editing modal or dedicated album view (`managerSubView === 'album-edit'`), clicking "Catalogue" or the breadcrumb link returns the user directly to the catalogue overview collection page.
+- **Admin-Gated Genre Registry:** Access to the "Manage Genres" action button and `GenreManagerModal` is strictly restricted to platform administrators (`sessionUser?.role === 'admin'`).
+- **Admin Cross-Catalogue Aggregation & Top Sorting:** Administrators have a toggle to switch between a single artist roster and the "Entire Platform Catalogue" (`GET /api/catalog/tracks?all=true`). A top sorting bar allows sorting releases and tracks by Title (A-Z, Z-A), Artist (A-Z, Z-A), Streams (Highest First), and Year (Newest First).
+- **Bulk Catalogue Ingest Studio (`BulkCatalogueIngestModal.jsx`):** High-volume ingestion tool supporting CSV/Excel tabular parsing, raw text pasting (TSV/CSV), and audio multi-file drag-and-drop. Features batch artist, genre, release, and pricing overrides, validation, sequential ISRC generation, and 1-click batch ingestion (`POST /api/catalog/bulk-ingest`).
+
+### 9.31.2 Persistent User Settings Across Sessions & Logins
+- **MongoDB Persistence:** Profile settings (Full Name, Email Address, Brand/Label Name, Region/Country, Creator Bio) are stored and updated in `db.users` via `PUT /api/users/me` and retrieved via `GET /api/users/me`.
+- **Cross-Session Hydration:** Settings are synchronized with `sessionStorage` and `localStorage`, ensuring all profile updates persist across logout, browser restarts, and subsequent logins.
+
+### 9.31.3 EPK Builder Wizard State Synchronization & Flat Visual Standards
+- **Step Data Retention:** Fixed draft state restoration across wizard steps 1–8. Artist settings and user selections are preserved across step transitions without data loss.
+- **Action Renaming:** CMS Studio top button is renamed to `'Wizard'` pointing directly to the EPK Builder workflow (`#/epk-builder`).
+- **Strict Flat Styling:** Replaced all gradient buttons and indicators with flat solid colors (`#00f0ff`, `#8b5cf6`, `#10b981`, `#ef4444`) with high-contrast text and flat vector Remix Icons.
+
+### 9.31.4 Media Storage Quotas & Credit Top-Up System
+- **Allotted Starter Quotas:** All accounts receive a baseline 500 MB storage quota. `GET /api/storage/quota` calculates real-time storage usage (`used_mb`, `quota_mb`, `pct_used`, and available credits).
+- **Visual Storage Bar:** `CmsAssetsStudio.jsx` displays a real-time storage usage indicator with color-coded progress warnings (cyan <75%, amber >75%, red >90%).
+- **Credit Top-Up Modal:** Users can expand storage capacity instantly using their credits via `POST /api/storage/top-up`:
+  - **Starter Pack:** +500 MB for 50 credits
+  - **Pro Pack:** +1 GB (1,000 MB) for 90 credits (Recommended)
+  - **Studio Pack:** +5 GB (5,000 MB) for 350 credits
+
+### 9.31.5 AI Art Prompt Style Presets (`AiArtPromptModal.jsx`)
+- **Aesthetic Style Presets:** In addition to freeform text prompting, users can select from curated styles: Retro 80s Synthwave, Cartoon/Anime, Modern Editorial, Cyberpunk Neon, Afro-Futurism, 3D Render/Octane, Oil Painting, and Studio Photography.
+- **Flat UI Standards:** All buttons within the prompt studio utilize flat solid styling (`#00f0ff`).
+
+### 9.31.6 Audio Playback 30-Second Limit & Creator Monetization
+- **30-Second Preview Gate:** For unpurchased and non-unlocked master tracks, `GlobalAudioPlayer` enforces a strict 30-second preview limit in both the high-frequency animation loop and audio time updates, clamping seeking and opening the Credit Unlock / Purchase modal.
+- **Creator Consumption Choices:** In the track editing suite and ingestion wizard, creators can define how their music is consumed:
+  - `Stream & Download` (Full access)
+  - `Stream Only` (Audio streaming only, downloads disabled)
+  - `Download Only` (Purchases and licensing only)
+- **Custom Creator Pricing:** Creators set their own stream unlock and master download rates, with platform-recommended baselines (50 credits / ~$0.99 for stream unlock; 150 credits / ~$2.99 for master download).
+
 
 
 

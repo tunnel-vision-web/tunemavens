@@ -6,14 +6,19 @@ import {
   RiAddLine, RiDeleteBin6Line, RiImageAddFill, RiCodeBoxFill,
   RiBold, RiItalic, RiUnderline, RiStrikethrough, RiH2, RiH3,
   RiListUnordered, RiListOrdered, RiDoubleQuotesL, RiLink, RiCheckFill,
-    RiUploadFill, RiRefreshLine, RiPlayFill, RiDiscFill, RiArrowRightSLine, RiPriceTag3Fill, RiArrowLeftSLine, RiCheckLine, RiFolderUploadFill, RiImageFill, RiVideoAddFill, RiDatabase2Fill
+  RiUploadFill, RiRefreshLine, RiPlayFill, RiDiscFill, RiArrowRightSLine, RiPriceTag3Fill, RiArrowLeftSLine, RiCheckLine, RiFolderUploadFill, RiImageFill, RiVideoAddFill, RiDatabase2Fill
 } from 'react-icons/ri'
 import { EPK_THEMES } from '../views/creator/CreatorEpkView'
+import CmsAssetsStudio from './CmsAssetsStudio.jsx'
+import MediaAssetPickerModal from './MediaAssetPickerModal.jsx'
+import AiArtPromptModal from './AiArtPromptModal.jsx'
+import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from '../lib/genres.js'
 
 const CMS_TABS = [
   { id: 'brand',   label: 'Brand & Identity', icon: RiPaletteFill },
   { id: 'hero',    label: 'Hero Carousel',   icon: RiLayoutMasonryFill },
   { id: 'banners', label: 'Page Header Banners', icon: RiImageAddFill },
+  { id: 'assets',  label: 'Assets',          icon: RiFolderUploadFill },
   { id: 'bio',     label: 'Rich Bio',         icon: RiFileTextFill },
   { id: 'music',   label: 'Discography', icon: RiDiscFill },
   { id: 'media',   label: 'Videos & Reel',   icon: RiMovieFill },
@@ -25,7 +30,7 @@ const CMS_TABS = [
 ]
 
 const BANNER_PAGES = [
-  { key: 'discography', label: 'Music & Discography', defaultPrompt: 'Cinematic atmospheric music studio with analog mixing console, neon glow, 16:9 stage banner', defaultImg: 'https://picsum.photos/seed/discography_banner/1920/640' },
+  { key: 'discography', label: 'Music & Discography', defaultPrompt: 'Cinematic atmospheric music studio with analog mixing console, neon glow, 16:9 stage banner', defaultImg: '/headers/discography_retina_header.jpg' },
   { key: 'bio', label: 'Biography & Story', defaultPrompt: 'Editorial artist portrait in moody acoustic venue, cinematic shadows, high fashion lighting, 16:9 banner', defaultImg: 'https://picsum.photos/seed/bio_banner/1920/640' },
   { key: 'shows', label: 'Tour & Live Shows', defaultPrompt: 'Massive festival crowd cheering at dusk with laser lights and pyrotechnics, 16:9 concert banner', defaultImg: 'https://picsum.photos/seed/shows_banner/1920/640' },
   { key: 'store', label: 'Store & Merchandise', defaultPrompt: 'Minimalist high-end streetwear and vinyl boutique showroom, cybernetic lighting, 16:9 store banner', defaultImg: 'https://picsum.photos/seed/store_banner/1920/640' },
@@ -190,6 +195,36 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
   const [saving, setSaving] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
   const [statusType, setStatusType] = useState('success')
+
+  // AI Prompt Dialogue Modal State
+  const [aiModalOpen, setAiModalOpen] = useState(false)
+  const [aiModalConfig, setAiModalConfig] = useState({
+    title: 'Generate AI Artwork',
+    defaultPrompt: '',
+    aspectRatio: '1:1',
+    onSuccess: null
+  })
+
+  // Universal Media Asset Picker Modal State
+  const [pickerModalOpen, setPickerModalOpen] = useState(false)
+  const [pickerModalConfig, setPickerModalConfig] = useState({
+    title: 'Select Media Asset',
+    filterType: 'all',
+    onSelect: null
+  })
+
+  // Canonical Authoritative Genres
+  const [canonicalGenres, setCanonicalGenres] = useState(DEFAULT_CANONICAL_GENRES)
+  useEffect(() => {
+    loadAuthoritativeGenres().then(g => {
+      if (Array.isArray(g) && g.length > 0) setCanonicalGenres(g)
+    })
+    const handleGenreUpdate = (e) => {
+      if (e.detail?.genres) setCanonicalGenres(e.detail.genres)
+    }
+    window.addEventListener('tunemavens-genres-updated', handleGenreUpdate)
+    return () => window.removeEventListener('tunemavens-genres-updated', handleGenreUpdate)
+  }, [])
 
   const activeVideos = React.useMemo(() => {
     return mergeWithCanonicalVideos(formData.videos, formData.artist_name || activeSubdomain)
@@ -1171,9 +1206,9 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
               gap: '6px',
               transition: 'all 0.2s ease'
             }}
-            title="Switch to Catalogue Wizard View"
+            title="Launch EPK Wizard"
           >
-            <span>🧙‍♂️</span> Switch to Catalogue Wizard
+            <span>🧙‍♂️</span> Wizard
           </button>
 
           <button
@@ -1770,7 +1805,7 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                             disabled={heroAiGenerating}
                             onClick={() => handleGenerateHeroArtForSlide(activeSlideIdx, heroAiPrompt)}
                             style={{
-                              background: heroAiGenerating ? 'rgba(34,211,238,0.2)' : `linear-gradient(135deg, ${accent}, #8b5cf6)`,
+                              background: heroAiGenerating ? 'rgba(34,211,238,0.2)' : accent,
                               color: '#000',
                               border: 'none',
                               padding: '9px 16px',
@@ -1861,7 +1896,52 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
 
                               <button
                                 type="button"
-                                onClick={() => handleGeneratePageHeader(bp.key, bp.label, bannerPrompts[bp.key] || bp.defaultPrompt)}
+                                onClick={() => {
+                                  setPickerModalConfig({
+                                    title: `Select Header Banner: ${bp.label}`,
+                                    filterType: 'image',
+                                    onSelect: (asset) => {
+                                      const next = { ...(formData.pageHeaders || {}) };
+                                      next[bp.key] = asset.media_url;
+                                      updateField('pageHeaders', next);
+                                      showStatus(`Header banner selected for ${bp.label}!`, 'success');
+                                    }
+                                  });
+                                  setPickerModalOpen(true);
+                                }}
+                                style={{
+                                  background: 'rgba(255,255,255,0.06)',
+                                  border: '1px solid rgba(255,255,255,0.15)',
+                                  color: '#cbd5e1',
+                                  padding: '6px 12px',
+                                  borderRadius: '3px',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px'
+                                }}
+                              >
+                                <RiFolderUploadFill size={14} /> Assets Library
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAiModalConfig({
+                                    title: `Generate AI Header Banner: ${bp.label}`,
+                                    defaultPrompt: bannerPrompts[bp.key] || bp.defaultPrompt,
+                                    aspectRatio: '16:9',
+                                    onSuccess: (url) => {
+                                      const next = { ...(formData.pageHeaders || {}) };
+                                      next[bp.key] = url;
+                                      updateField('pageHeaders', next);
+                                      showStatus(`AI Banner generated for ${bp.label}!`, 'success');
+                                    }
+                                  });
+                                  setAiModalOpen(true);
+                                }}
                                 disabled={isGenerating}
                                 style={{
                                   background: isGenerating ? 'rgba(34,211,238,0.2)' : `linear-gradient(135deg, ${accent}, #8b5cf6)`,
@@ -1950,6 +2030,15 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                 </div>
               )}
 
+              {activeTab === 'assets' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <CmsAssetsStudio
+                    subdomain={activeSubdomain}
+                    sessionUser={sessionUser}
+                  />
+                </div>
+              )}
+
               {activeTab === 'bio' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '840px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -2025,7 +2114,7 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                             type="button"
                             disabled={bioProfileGenerating}
                             onClick={() => handleGenerateBioProfileArt(bioProfilePrompt)}
-                            style={{ background: bioProfileGenerating ? 'rgba(34,211,238,0.2)' : `linear-gradient(135deg, ${accent}, #8b5cf6)`, color: '#000', border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 900, fontSize: '0.78rem', cursor: bioProfileGenerating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+                            style={{ background: bioProfileGenerating ? 'rgba(34,211,238,0.2)' : accent, color: '#000', border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 900, fontSize: '0.78rem', cursor: bioProfileGenerating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
                           >
                             <RiSparklingFill size={12} /> {bioProfileGenerating ? 'Generating...' : '✨ AI Portrait'}
                           </button>
@@ -2364,29 +2453,77 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                                 )}
                               </div>
 
-                              <button
-                                type="button"
-                                onClick={() => handleGenerateTrackCover(track.id, track.title)}
-                                disabled={isGeneratingThis}
-                                title="Generate custom album cover for this single using AI"
-                                style={{
-                                  background: '#8b5cf6',
-                                  border: 'none',
-                                  color: '#fff',
-                                  padding: '5px 8px',
-                                  borderRadius: '3px',
-                                  fontWeight: 800,
-                                  fontSize: '0.72rem',
-                                  cursor: isGeneratingThis ? 'wait' : 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  width: '110px',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                <RiSparklingFill /> AI Cover
-                              </button>
+                              <div style={{ display: 'flex', gap: '4px', width: '110px' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAiModalConfig({
+                                      title: `Generate AI Cover: ${track.title}`,
+                                      defaultPrompt: `Afro-futuristic electronic album cover art for track "${track.title}", vivid neon holographic lighting, studio mastering aesthetic, vinyl sleeve texture, 8k crisp resolution`,
+                                      aspectRatio: '1:1',
+                                      onSuccess: (url) => {
+                                        const next = [...(formData.tracks || DEFAULT_TRACKS)]
+                                        next[idx].coverArt = url
+                                        updateField('tracks', next)
+                                        showStatus(`AI Cover applied for ${track.title}!`, 'success')
+                                      }
+                                    })
+                                    setAiModalOpen(true)
+                                  }}
+                                  disabled={isGeneratingThis}
+                                  title="Prompt AI for custom cover artwork"
+                                  style={{
+                                    flex: 1,
+                                    background: '#8b5cf6',
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '5px 6px',
+                                    borderRadius: '3px',
+                                    fontWeight: 800,
+                                    fontSize: '0.72rem',
+                                    cursor: isGeneratingThis ? 'wait' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '3px',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  <RiSparklingFill /> AI
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPickerModalConfig({
+                                      title: `Select Artwork for ${track.title}`,
+                                      filterType: 'image',
+                                      onSelect: (asset) => {
+                                        const next = [...(formData.tracks || DEFAULT_TRACKS)]
+                                        next[idx].coverArt = asset.media_url
+                                        updateField('tracks', next)
+                                        showStatus(`Selected asset for ${track.title}`, 'success')
+                                      }
+                                    })
+                                    setPickerModalOpen(true)
+                                  }}
+                                  title="Browse Media Library Assets or Upload"
+                                  style={{
+                                    background: 'rgba(255,255,255,0.08)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    color: '#cbd5e1',
+                                    padding: '5px 6px',
+                                    borderRadius: '3px',
+                                    fontWeight: 700,
+                                    fontSize: '0.7rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '2px',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  <RiFolderUploadFill /> Assets
+                                </button>
+                              </div>
                             </div>
 
                             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 1fr', gap: '12px', minWidth: '320px' }}>
@@ -2789,9 +2926,48 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                               </div>
 
                               <div>
-                                <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                  Views / Badge Label
-                                </label>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                  <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                                    Views / Badge Label
+                                  </label>
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const vidUrl = vItem.url || vItem.youtubeUrl;
+                                      if (!vidUrl) return;
+                                      try {
+                                        const res = await fetch(`/api/social-ai/video-stats?url=${encodeURIComponent(vidUrl)}`);
+                                        if (res.ok) {
+                                          const stats = await res.json();
+                                          if (stats.views_formatted) {
+                                            const next = [...activeVideos];
+                                            next[vIdx] = { ...vItem, views: stats.views_formatted, youtube_stats: stats };
+                                            updateField('videos', next);
+                                            showStatus(`Live YouTube views fetched: ${stats.views_formatted}!`, 'success');
+                                          }
+                                        }
+                                      } catch (err) {
+                                        console.warn('Failed to fetch live YouTube stats:', err);
+                                      }
+                                    }}
+                                    title="Fetch actual live view count directly from YouTube"
+                                    style={{
+                                      background: 'rgba(239, 68, 68, 0.15)',
+                                      border: '1px solid rgba(239, 68, 68, 0.4)',
+                                      color: '#f87171',
+                                      padding: '2px 7px',
+                                      borderRadius: '2px',
+                                      fontSize: '0.66rem',
+                                      fontWeight: 800,
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                  >
+                                    <RiRefreshLine size={11} /> Live YouTube Views
+                                  </button>
+                                </div>
                                 <input
                                   type="text"
                                   value={vItem.views || ''}
@@ -3779,13 +3955,15 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px', fontWeight: 700 }}>Primary Genre / Style</label>
-                  <input
-                    type="text"
-                    value={discographyWizardData.genre || ''}
+                  <select
+                    value={discographyWizardData.genre || 'Afro-fusion'}
                     onChange={e => setDiscographyWizardData({ ...discographyWizardData, genre: e.target.value })}
-                    placeholder="Afro-Futurism, Amapiano, Deep House"
                     style={{ width: '100%', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.85rem' }}
-                  />
+                  >
+                    {canonicalGenres.map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <div>
@@ -4782,6 +4960,37 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
           </div>
         </div>
       )}
+
+      {/* AI Art Prompt Dialogue Modal */}
+      <AiArtPromptModal
+        isOpen={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        title={aiModalConfig.title}
+        defaultPrompt={aiModalConfig.defaultPrompt}
+        aspectRatio={aiModalConfig.aspectRatio}
+        subdomain={activeSubdomain}
+        onSuccess={(mediaUrl, prompt) => {
+          if (typeof aiModalConfig.onSuccess === 'function') {
+            aiModalConfig.onSuccess(mediaUrl, prompt)
+          }
+          setAiModalOpen(false)
+        }}
+      />
+
+      {/* Universal Media Asset Picker Modal */}
+      <MediaAssetPickerModal
+        isOpen={pickerModalOpen}
+        onClose={() => setPickerModalOpen(false)}
+        title={pickerModalConfig.title}
+        subdomain={activeSubdomain}
+        filterType={pickerModalConfig.filterType}
+        onSelect={(asset) => {
+          if (typeof pickerModalConfig.onSelect === 'function') {
+            pickerModalConfig.onSelect(asset)
+          }
+          setPickerModalOpen(false)
+        }}
+      />
 
     </div>
   )

@@ -22,7 +22,8 @@ import {
 import { 
   RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill,
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
-  RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine
+  RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine,
+  RiPriceTag3Fill
 } from 'react-icons/ri'
 
 // Local assets
@@ -113,6 +114,9 @@ import EpkWizard from './components/EpkWizard.jsx'
 import DashboardCmsStudio from './components/DashboardCmsStudio.jsx'
 import SmartCrmStudioPanel from './components/SmartCrmStudioPanel.jsx'
 import CatalogueWizard from './components/CatalogueWizard.jsx'
+import ArtistRosterSelector from './components/ArtistRosterSelector.jsx'
+import GenreManagerModal from './components/GenreManagerModal.jsx'
+import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from './lib/genres.js'
 import {
   OnboardingStripe, OnboardingWizardModal, RecommendationHero,
   PublishingElectionPanel, DistributionElectionPanel, ContractDrawer,
@@ -483,6 +487,56 @@ function DashboardView({
   const [activeModalApp, setActiveModalApp] = useState(null);
   const [cmsInitialTab, setCmsInitialTab] = useState('music');
 
+  // Multi-Artist Roster Management State for Labels, Publishers, and Catalogue Owners
+  const [activeArtist, setActiveArtist] = useState(() => {
+    return {
+      id: creatorEpk?.subdomain || 'ndufo',
+      name: creatorEpk?.artist_name || 'Ndufo',
+      subdomain: creatorEpk?.subdomain || 'ndufo',
+      role: 'Primary Artist'
+    };
+  });
+
+  const handleSwitchArtist = async (artist) => {
+    if (!artist) return;
+    setActiveArtist(artist);
+    const sub = (artist.subdomain || artist.id || 'ndufo').toLowerCase();
+
+    // 1. Fetch catalog tracks for this artist
+    try {
+      const res = await fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.tracks || []);
+        if (list.length > 0) {
+          setCatalogTracks(list);
+        } else if (sub !== 'ndufo') {
+          setCatalogTracks([]);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to switch catalog tracks for artist:', err);
+    }
+
+    // 2. Fetch or update EPK layout for this artist
+    try {
+      const epkRes = await fetch(`http://localhost:8001/api/epk/${encodeURIComponent(sub)}`);
+      if (epkRes.ok) {
+        const epkData = await epkRes.json();
+        setCreatorEpk({ subdomain: sub, artist_name: artist.name, ...epkData });
+      } else {
+        setCreatorEpk(prev => ({
+          ...prev,
+          subdomain: sub,
+          artist_name: artist.name,
+          themeGenre: artist.genre || prev?.themeGenre
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to fetch EPK for artist:', err);
+    }
+  };
+
   // TuneStream Global Audio Player State
   const [globalTrack, setGlobalTrack] = useState(null);
   const [globalPlaying, setGlobalPlaying] = useState(false);
@@ -584,6 +638,8 @@ function DashboardView({
             collapsed={collapsed}
             onToggleSidebar={() => setCollapsed(!collapsed)}
             onPlayTrack={handlePlayGlobalTrack}
+            activeArtist={activeArtist}
+            onSelectArtist={handleSwitchArtist}
           />
         );
       case 'splits':
@@ -651,7 +707,17 @@ function DashboardView({
       case 'cms':
         return <CmsPanel sessionUser={sessionUser} epk={creatorEpk} setEpk={setCreatorEpk} tracks={catalogTracks} initialTab={cmsInitialTab} onSwitchToWizard={() => setActiveTab('catalog')} />;
       case 'epk-builder':
-        return <EPKBuilderPanel tracks={catalogTracks} epk={creatorEpk} setEpk={setCreatorEpk} sessionUser={sessionUser} setActiveTab={setActiveTab} />;
+        return (
+          <EPKBuilderPanel
+            tracks={catalogTracks}
+            epk={creatorEpk}
+            setEpk={setCreatorEpk}
+            sessionUser={sessionUser}
+            setActiveTab={setActiveTab}
+            activeArtist={activeArtist}
+            onSelectArtist={handleSwitchArtist}
+          />
+        );
       case 'app-marketplace':
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       default:
@@ -2148,21 +2214,55 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
   const [bio, setBio] = useState(sessionUser?.bio || 'Independent creator on the TuneMavens and Intermaven network.');
   const [saving, setSaving] = useState(false);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      onUpdateUser({
-        ...sessionUser,
-        name,
-        email,
-        brand_name: brandName,
-        country,
-        bio
+    const payload = {
+      name: name.trim(),
+      email: email.trim(),
+      brand_name: brandName.trim(),
+      country,
+      bio: bio.trim()
+    };
+
+    try {
+      const token = localStorage.getItem('tunemavens_token');
+      const res = await fetch('/api/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
       });
-      alert('Profile settings updated successfully!');
-    }, 1000);
+
+      let updatedUserData = { ...sessionUser, ...payload };
+      if (res.ok) {
+        const data = await res.json();
+        updatedUserData = { ...sessionUser, ...data };
+      }
+
+      // Persist across sessions so settings survive logout/login
+      sessionStorage.setItem('tunemavens_session', JSON.stringify(updatedUserData));
+      localStorage.setItem('tunemavens_saved_user', JSON.stringify(updatedUserData));
+      localStorage.setItem('tunemavens_user', JSON.stringify(updatedUserData));
+
+      if (typeof onUpdateUser === 'function') {
+        onUpdateUser(updatedUserData);
+      }
+      alert('Profile settings saved and persisted successfully across sessions!');
+    } catch (err) {
+      console.warn('Backend user profile update error:', err);
+      const fallbackData = { ...sessionUser, ...payload };
+      sessionStorage.setItem('tunemavens_session', JSON.stringify(fallbackData));
+      localStorage.setItem('tunemavens_saved_user', JSON.stringify(fallbackData));
+      if (typeof onUpdateUser === 'function') {
+        onUpdateUser(fallbackData);
+      }
+      alert('Profile settings saved locally.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -2248,13 +2348,13 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
 }
 
 // ================= SUB-PANEL: EPK Builder (Wizard) =================
-function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab }) {
+function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab, activeArtist, onSelectArtist }) {
   const [portedAsset, setPortedAsset] = useState(() => sessionStorage.getItem('ported_asset_url'));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Header row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <div>
           <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>
             Intermaven Creator Web World Builder
@@ -2263,7 +2363,23 @@ function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab }) {
             Build your full Electronic Press Kit &amp; standalone creator site, step by step.
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <ArtistRosterSelector
+            activeSubdomain={activeArtist?.subdomain || epk?.subdomain || 'ndufo'}
+            onSelectArtist={(artist) => {
+              if (typeof onSelectArtist === 'function') {
+                onSelectArtist(artist);
+              } else if (typeof setEpk === 'function') {
+                setEpk(prev => ({
+                  ...prev,
+                  subdomain: artist.subdomain,
+                  artist_name: artist.name,
+                  themeGenre: artist.genre || prev?.themeGenre
+                }));
+              }
+            }}
+            compact={true}
+          />
           <button
             type="button"
             onClick={() => {
@@ -2698,7 +2814,9 @@ function CataloguePanel({
   creatorEpk, 
   collapsed, 
   onToggleSidebar, 
-  onPlayTrack 
+  onPlayTrack,
+  activeArtist,
+  onSelectArtist
 }) {
   const [viewMode, setViewMode] = useState('manager'); // 'wizard' | 'manager'
   const [managerSubView, setManagerSubView] = useState('collections'); // 'collections' | 'table'
@@ -2710,6 +2828,21 @@ function CataloguePanel({
   const [validationResult, setValidationResult] = useState(null);
   const [errors, setErrors] = useState([]);
 
+  // Multi-Genre Registry Admin Modal and Cache
+  const [showGenreManager, setShowGenreManager] = useState(false);
+  const [genres, setGenres] = useState(DEFAULT_CANONICAL_GENRES);
+
+  useEffect(() => {
+    loadAuthoritativeGenres().then(g => {
+      if (Array.isArray(g) && g.length > 0) setGenres(g);
+    });
+    const handleGenreUpdate = (e) => {
+      if (e.detail?.genres) setGenres(e.detail.genres);
+    };
+    window.addEventListener('tunemavens-genres-updated', handleGenreUpdate);
+    return () => window.removeEventListener('tunemavens-genres-updated', handleGenreUpdate);
+  }, []);
+
   // Search and Pagination States
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -2717,8 +2850,8 @@ function CataloguePanel({
 
   // Single Track Uploader Form States
   const [newTitle, setNewTitle] = useState('');
-  const [newArtist, setNewArtist] = useState(sessionUser?.artist_name || sessionUser?.name || 'Ndufo');
-  const [newGenre, setNewGenre] = useState('Afro-House');
+  const [newArtist, setNewArtist] = useState(activeArtist?.name || sessionUser?.artist_name || sessionUser?.name || 'Ndufo');
+  const [newGenre, setNewGenre] = useState('Afro-fusion');
   const [newIsrc, setNewIsrc] = useState('');
   const [newArtistSplit, setNewArtistSplit] = useState(50);
   const [newProducerSplit, setNewProducerSplit] = useState(30);
@@ -2741,6 +2874,38 @@ function CataloguePanel({
   const [editCoverBg, setEditCoverBg] = useState('');
   const [editCoverText, setEditCoverText] = useState('');
   const [editFeatured, setEditFeatured] = useState(false);
+  const [editConsumptionType, setEditConsumptionType] = useState('both'); // 'stream' | 'download' | 'both'
+  const [editStreamPriceCredits, setEditStreamPriceCredits] = useState(50);
+  const [editDownloadPriceCredits, setEditDownloadPriceCredits] = useState(150);
+
+  // Admin Entire Catalogue View & Top Sorting States
+  const [viewAllCatalogue, setViewAllCatalogue] = useState(false);
+  const [sortBy, setSortBy] = useState('default'); // 'default' | 'title_asc' | 'title_desc' | 'artist_asc' | 'artist_desc' | 'streams_desc' | 'year_desc'
+
+  const handleToggleAllCatalogue = async () => {
+    const next = !viewAllCatalogue;
+    setViewAllCatalogue(next);
+    try {
+      if (next) {
+        const res = await fetch('/api/catalog/tracks?all=true');
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : (data.tracks || []);
+          setTracks(list);
+        }
+      } else {
+        const sub = (activeArtist?.subdomain || sessionUser?.username || 'ndufo').toLowerCase();
+        const res = await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : (data.tracks || []);
+          setTracks(list);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to toggle entire catalogue:', err);
+    }
+  };
 
   // Delete Track Modal State
   const [deletingTrack, setDeletingTrack] = useState(null);
@@ -3118,7 +3283,7 @@ function CataloguePanel({
     { name: 'Electric Royal', bg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }
   ];
 
-  // Filtering Logic
+  // Filtering & Sorting Logic
   const filteredReleases = releases.filter(r => {
     const matchesType = releaseTypeFilter === 'all' || r.releaseType.toLowerCase() === releaseTypeFilter.toLowerCase();
     const q = searchQuery.toLowerCase();
@@ -3128,6 +3293,18 @@ function CataloguePanel({
       r.genre.toLowerCase().includes(q) ||
       r.tracks.some(t => t.title.toLowerCase().includes(q));
     return matchesType && matchesSearch;
+  }).sort((a, b) => {
+    if (sortBy === 'title_asc') return (a.title || '').localeCompare(b.title || '');
+    if (sortBy === 'title_desc') return (b.title || '').localeCompare(a.title || '');
+    if (sortBy === 'artist_asc') return (a.artist || '').localeCompare(b.artist || '');
+    if (sortBy === 'artist_desc') return (b.artist || '').localeCompare(a.artist || '');
+    if (sortBy === 'year_desc') return String(b.year || '').localeCompare(String(a.year || ''));
+    if (sortBy === 'streams_desc') {
+      const aS = a.tracks.reduce((sum, t) => sum + (parseInt(String(t.streams || '').replace(/\D/g, '')) || 0), 0);
+      const bS = b.tracks.reduce((sum, t) => sum + (parseInt(String(t.streams || '').replace(/\D/g, '')) || 0), 0);
+      return bS - aS;
+    }
+    return 0;
   });
 
   const filteredTracks = tracks.filter(t => {
@@ -3145,6 +3322,18 @@ function CataloguePanel({
       (t.release || '').toLowerCase().includes(q) ||
       (t.genre || '').toLowerCase().includes(q)
     );
+  }).sort((a, b) => {
+    if (sortBy === 'title_asc') return (a.title || '').localeCompare(b.title || '');
+    if (sortBy === 'title_desc') return (b.title || '').localeCompare(a.title || '');
+    if (sortBy === 'artist_asc') return (a.artist || '').localeCompare(b.artist || '');
+    if (sortBy === 'artist_desc') return (b.artist || '').localeCompare(a.artist || '');
+    if (sortBy === 'year_desc') return String(b.year || '').localeCompare(String(a.year || ''));
+    if (sortBy === 'streams_desc') {
+      const aS = parseInt(String(a.streams || '').replace(/\D/g, '')) || 0;
+      const bS = parseInt(String(b.streams || '').replace(/\D/g, '')) || 0;
+      return bS - aS;
+    }
+    return 0;
   });
 
   const paginatedTracks = filteredTracks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -3160,6 +3349,9 @@ function CataloguePanel({
     setEditCoverBg(tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
     setEditCoverText(tr.coverText || tr.title?.slice(0, 8) || 'Art');
     setEditFeatured(tr.isFeatured || false);
+    setEditConsumptionType(tr.consumptionType || 'both');
+    setEditStreamPriceCredits(tr.streamPriceCredits ?? (tr.priceCredits || 50));
+    setEditDownloadPriceCredits(tr.downloadPriceCredits ?? 150);
   };
 
   const saveEdit = async () => {
@@ -3178,7 +3370,11 @@ function CataloguePanel({
       split: editSplit.trim(),
       coverBg: editCoverBg,
       coverText: editCoverText,
-      isFeatured: editFeatured
+      isFeatured: editFeatured,
+      consumptionType: editConsumptionType,
+      streamPriceCredits: Number(editStreamPriceCredits) || 50,
+      downloadPriceCredits: Number(editDownloadPriceCredits) || 150,
+      priceCredits: Number(editStreamPriceCredits) || 50
     };
 
     const updatedList = tracks.map(t => t.isrc === editingTrack.isrc ? updatedTrack : t);
@@ -3438,7 +3634,13 @@ function CataloguePanel({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <RiDiscLine size={20} color="var(--cyan)" />
-              <h2 style={{ fontSize: '18px', fontWeight: 900, color: '#fff', margin: 0 }}>
+              <h2
+                onClick={() => { setManagerSubView('collections'); setEditingAlbum(null); setEditingTrack(null); setViewMode('manager'); }}
+                title="Click to return to Catalogue Overview"
+                style={{ fontSize: '18px', fontWeight: 900, color: '#fff', margin: 0, cursor: 'pointer', transition: 'color 0.15s ease' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#00f0ff'}
+                onMouseLeave={e => e.currentTarget.style.color = '#fff'}
+              >
                 Catalogue Manager
               </h2>
               <span style={{
@@ -3452,13 +3654,87 @@ function CataloguePanel({
                 {tracks.length} Tracks • {releases.length} Releases
               </span>
             </div>
-            <p style={{ margin: '3px 0 0', fontSize: '11.5px', color: '#94a3b8' }}>
-              Select between albums, EPs, and singles, manage cover artwork, and stream full releases.
-            </p>
+            {/* Breadcrumb Navigation when inside track or album entry */}
+            {(managerSubView === 'album-edit' || editingTrack) ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', marginTop: '3px', color: '#94a3b8' }}>
+                <span
+                  onClick={() => { setManagerSubView('collections'); setEditingAlbum(null); setEditingTrack(null); setViewMode('manager'); }}
+                  style={{ color: '#00f0ff', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline' }}
+                  title="Return to Catalogue Overview"
+                >
+                  Catalogue Overview
+                </span>
+                <span>/</span>
+                <span style={{ color: '#fff', fontWeight: 700 }}>
+                  {editingAlbum ? editingAlbum.title : (editingTrack ? editingTrack.title : 'Entry Details')}
+                </span>
+              </div>
+            ) : (
+              <p style={{ margin: '3px 0 0', fontSize: '11.5px', color: '#94a3b8' }}>
+                Select between albums, EPs, and singles, manage cover artwork, and stream full releases.
+              </p>
+            )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {/* Multi-Artist Roster Selector for Labels, Publishers & Managers */}
+          <ArtistRosterSelector
+            activeSubdomain={activeArtist?.subdomain || creatorEpk?.subdomain || 'ndufo'}
+            onSelectArtist={onSelectArtist}
+            compact={true}
+          />
+
+          {/* Admin All Platform Artists Cross-Catalogue Toggle */}
+          {sessionUser?.role === 'admin' && (
+            <button
+              type="button"
+              onClick={handleToggleAllCatalogue}
+              style={{
+                background: viewAllCatalogue ? '#00f0ff' : 'rgba(255,255,255,0.06)',
+                color: viewAllCatalogue ? '#000' : '#cbd5e1',
+                border: viewAllCatalogue ? 'none' : '1px solid rgba(255,255,255,0.18)',
+                padding: '7px 12px',
+                borderRadius: '3px',
+                fontWeight: 800,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title={viewAllCatalogue ? "Switch to single artist roster view" : "View all platform artists across entire catalogue"}
+            >
+              <RiDatabase2Fill size={14} />
+              <span>{viewAllCatalogue ? 'Entire Catalogue (All Artists)' : 'View Entire Catalogue'}</span>
+            </button>
+          )}
+
+          {/* Manage Genres Admin Action Button - Strictly Gated to Admin */}
+          {sessionUser?.role === 'admin' && (
+            <button
+              type="button"
+              onClick={() => setShowGenreManager(true)}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.18)',
+                color: '#cbd5e1',
+                padding: '7px 12px',
+                borderRadius: '3px',
+                fontWeight: 700,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Add, edit, and delete authoritative genres (Admin Only)"
+            >
+              <RiPriceTag3Fill size={14} style={{ color: '#00f0ff' }} />
+              <span>Manage Genres</span>
+            </button>
+          )}
+
           {/* Wizard vs Manager Switcher */}
           <div style={{ display: 'flex', background: 'rgba(0,0,0,0.5)', padding: '3px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <button
@@ -3608,6 +3884,35 @@ function CataloguePanel({
                   <RiTableLine size={13} />
                   <span>All Tracks Table</span>
                 </button>
+              </div>
+
+              {/* Top Sorting Selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={e => { setSortBy(e.target.value); setCurrentPage(1); }}
+                  style={{
+                    background: '#04060d',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#00f0ff',
+                    padding: '6px 10px',
+                    borderRadius: '3px',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                  title="Sort catalogue releases and tracks"
+                >
+                  <option value="default">Default Order</option>
+                  <option value="title_asc">Title (A-Z)</option>
+                  <option value="title_desc">Title (Z-A)</option>
+                  <option value="artist_asc">Artist (A-Z)</option>
+                  <option value="artist_desc">Artist (Z-A)</option>
+                  <option value="streams_desc">Streams (Highest First)</option>
+                  <option value="year_desc">Year (Newest First)</option>
+                </select>
               </div>
 
               <DashboardSearchBar 
@@ -4683,10 +4988,9 @@ function CataloguePanel({
                         </div>
 
                         <select value={newGenre} onChange={(e) => setNewGenre(e.target.value)} className="form-control" style={{ fontSize: '12px', padding: '6px', borderRadius: '3px' }}>
-                          <option value="Afro-House">Afro-House</option>
-                          <option value="Deep-House">Deep-House</option>
-                          <option value="Amapiano">Amapiano</option>
-                          <option value="Afrobeats">Afrobeats</option>
+                          {genres.map(g => (
+                            <option key={g} value={g}>{g}</option>
+                          ))}
                         </select>
 
                         <button type="submit" className="btn-primary" style={{ padding: '8px', fontSize: '12px', marginTop: '6px', borderRadius: '3px' }}>Catalog Track</button>
@@ -5252,9 +5556,22 @@ function CataloguePanel({
             borderRadius: '6px',
             padding: '24px',
             width: '100%',
-            maxWidth: '520px',
+            maxWidth: '540px',
             boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
           }}>
+            {/* Top Breadcrumb Navigation */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginBottom: '8px', color: '#94a3b8' }}>
+              <span
+                onClick={() => { setEditingTrack(null); setManagerSubView('collections'); setEditingAlbum(null); }}
+                style={{ color: '#00f0ff', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline' }}
+                title="Return to Catalogue Overview"
+              >
+                Catalogue Overview
+              </span>
+              <span>/</span>
+              <span style={{ color: '#fff' }}>Track Entry: {editingTrack.isrc}</span>
+            </div>
+
             <h3 style={{ fontSize: '16px', fontWeight: 900, color: '#fff', margin: '0 0 16px' }}>
               Edit Track Metadata: <span style={{ color: '#00f0ff' }}>{editingTrack.isrc}</span>
             </h3>
@@ -5295,13 +5612,16 @@ function CataloguePanel({
                 </div>
                 <div>
                   <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Genre</label>
-                  <input
-                    type="text"
-                    value={editGenre}
+                  <select
+                    value={editGenre || 'Afro-fusion'}
                     onChange={e => setEditGenre(e.target.value)}
                     className="form-control"
                     style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
-                  />
+                  >
+                    {genres.map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -5315,6 +5635,62 @@ function CataloguePanel({
                   style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
                 />
               </div>
+
+              {/* Consumption Mode & Pricing Controls */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                    Consumption Mode
+                  </label>
+                  <select
+                    value={editConsumptionType}
+                    onChange={e => setEditConsumptionType(e.target.value)}
+                    className="form-control"
+                    style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#00f0ff', padding: '8px', fontSize: '12px', borderRadius: '3px', fontWeight: 700 }}
+                  >
+                    <option value="both">Stream &amp; Download</option>
+                    <option value="stream">Stream Only</option>
+                    <option value="download">Download Only</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                    Stream Rate (Credits)
+                  </label>
+                  <input
+                    type="number"
+                    value={editStreamPriceCredits}
+                    onChange={e => setEditStreamPriceCredits(e.target.value)}
+                    min="0"
+                    placeholder="50"
+                    className="form-control"
+                    style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
+                  />
+                  <span style={{ fontSize: '9.5px', color: '#64748b' }}>
+                    Baseline: 50 credits (~$0.99)
+                  </span>
+                </div>
+              </div>
+
+              {editConsumptionType !== 'stream' && (
+                <div>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                    Master Download Price (Credits)
+                  </label>
+                  <input
+                    type="number"
+                    value={editDownloadPriceCredits}
+                    onChange={e => setEditDownloadPriceCredits(e.target.value)}
+                    min="0"
+                    placeholder="150"
+                    className="form-control"
+                    style={{ width: '100%', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', fontSize: '12px', borderRadius: '3px' }}
+                  />
+                  <span style={{ fontSize: '9.5px', color: '#64748b' }}>
+                    Baseline: 150 credits (~$2.99) • Creator can customize freely
+                  </span>
+                </div>
+              )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                 <input
@@ -5451,6 +5827,12 @@ function CataloguePanel({
           </div>
         </div>
       )}
+
+      {/* Admin Genre Registry Management Modal - Strictly Gated to Admin */}
+      <GenreManagerModal
+        isOpen={showGenreManager && sessionUser?.role === 'admin'}
+        onClose={() => setShowGenreManager(false)}
+      />
     </div>
   );
 }
@@ -6559,7 +6941,15 @@ function GlobalAudioPlayer({
     let animId;
     const updateProgress = () => {
       if (audioRef.current && !audioRef.current.paused) {
-        setGlobalProgress(audioRef.current.currentTime);
+        const cur = audioRef.current.currentTime;
+        setGlobalProgress(cur);
+        // 30-Second Preview Limit for Unlocked/Non-Purchased Tracks
+        if (!isTrackUnlocked && cur >= 30) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 30;
+          setGlobalPlaying(false);
+          setShowUnlockModal(true);
+        }
       }
       animId = requestAnimationFrame(updateProgress);
     };
@@ -6569,7 +6959,7 @@ function GlobalAudioPlayer({
     return () => {
       if (animId) cancelAnimationFrame(animId);
     };
-  }, [globalPlaying]);
+  }, [globalPlaying, isTrackUnlocked]);
 
   // Sync volume & mute
   useEffect(() => {
@@ -6643,6 +7033,16 @@ function GlobalAudioPlayer({
     const clickX = e.clientX - rect.left;
     const pct = Math.max(0, Math.min(1, clickX / rect.width));
     const newTime = pct * (duration || 180);
+    if (!isTrackUnlocked && newTime >= 30) {
+      setGlobalProgress(30);
+      if (audioRef.current) {
+        audioRef.current.currentTime = 30;
+        audioRef.current.pause();
+      }
+      setGlobalPlaying(false);
+      setShowUnlockModal(true);
+      return;
+    }
     setGlobalProgress(newTime);
     if (audioRef.current) {
       audioRef.current.currentTime = newTime;
@@ -6725,6 +7125,12 @@ function GlobalAudioPlayer({
         if (audioRef.current) {
           if (audioRef.current.duration && !isNaN(audioRef.current.duration)) {
             setDuration(Math.floor(audioRef.current.duration));
+          }
+          if (!isTrackUnlocked && audioRef.current.currentTime >= 30) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 30;
+            setGlobalPlaying(false);
+            setShowUnlockModal(true);
           }
         }
       }}
@@ -6819,7 +7225,7 @@ function GlobalAudioPlayer({
           <button
             onClick={handleUnlockStream}
             style={{
-              background: 'linear-gradient(135deg, #00f0ff 0%, #0284c7 100%)',
+              background: '#00f0ff',
               color: '#000',
               border: 'none',
               borderRadius: '3px',
@@ -6830,8 +7236,7 @@ function GlobalAudioPlayer({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 14px rgba(0,240,255,0.3)'
+              gap: '8px'
             }}
           >
             <span>Unlock Master Stream</span>

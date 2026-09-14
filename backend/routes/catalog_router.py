@@ -3,18 +3,137 @@
 Handles persistent track management, wizard-based album/EP/mixtape ingestions,
 metadata editing, track deletion, and synchronization across db.epks and db.cms_layouts.
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timezone
 import logging
 import re
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Depends
 from pydantic import BaseModel, Field
 
 from config import db
+from auth import get_optional_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/catalog", tags=["Catalogue"])
+
+
+DEFAULT_GENRES = [
+    "Afro-fusion",
+    "Afrobeats",
+    "Afro-House",
+    "Amapiano",
+    "Gengetone",
+    "Bongo Flava",
+    "Highlife",
+    "Soukous",
+    "Benga",
+    "Kizomba",
+    "Coupe Decale",
+    "Mbalax",
+    "Fuji",
+    "Juju",
+    "Taarab",
+    "Afro-Pop",
+    "Afro-Soul",
+    "Dancehall",
+    "Reggae",
+    "Soca",
+    "Deep-House",
+    "Tech-House",
+    "Electronic",
+    "Synthwave",
+    "Hip-Hop",
+    "R&B / Soul",
+    "Jazz Fusion",
+    "Pop",
+    "Gospel",
+    "Ambient",
+    "Latin / Reggaeton",
+    "Neo-Soul",
+    "Drill",
+    "Afro-Tech",
+    "Gqom"
+]
+
+DEFAULT_ARTISTS = [
+    {
+        "id": "art_ndufo",
+        "subdomain": "ndufo",
+        "name": "Ndufo",
+        "role": "Primary Artist / Producer",
+        "genre": "Afro-House",
+        "bio": "Pioneering Kenyan Afro-futurist soundscapes, live synthesizer improvisations, and deep Afro-House beats.",
+        "avatar": "/heroes/ndufo_hero_slide1_retina.jpg",
+        "is_default": True
+    },
+    {
+        "id": "art_aisha",
+        "subdomain": "aisha",
+        "name": "Aisha Wanjiku",
+        "role": "Singer-Songwriter / Afro-Soul",
+        "genre": "Afro-fusion",
+        "bio": "Soulful Nairobi acoustic melodies blended with traditional Swahili poetry and contemporary Afro-pop rhythms.",
+        "avatar": "https://picsum.photos/seed/aisha_avatar/400/400",
+        "is_default": False
+    },
+    {
+        "id": "art_brian",
+        "subdomain": "brian-omondi",
+        "name": "Brian Omondi",
+        "role": "Multi-instrumentalist / Producer",
+        "genre": "Amapiano",
+        "bio": "High-energy Amapiano log drum architect and live sync composition specialist.",
+        "avatar": "https://picsum.photos/seed/brian_avatar/400/400",
+        "is_default": False
+    },
+    {
+        "id": "art_khalid",
+        "subdomain": "khalid",
+        "name": "Khalid Waves",
+        "role": "Electronic / DJ",
+        "genre": "Deep-House",
+        "bio": "Coastal ambient deep house producer crafting sunset anthems from Mombasa to the world.",
+        "avatar": "https://picsum.photos/seed/khalid_avatar/400/400",
+        "is_default": False
+    }
+]
+
+
+def seed_genres_if_empty():
+    """Seeds authoritative African and World genres if not present."""
+    try:
+        existing = db.genres.count_documents({})
+        if existing == 0:
+            docs = [
+                {
+                    "name": g,
+                    "category": "African & World" if any(k in g.lower() for k in ["afro", "amapiano", "gengetone", "bongo", "highlife", "soukous", "benga", "kizomba", "coupe", "mbalax", "fuji", "juju", "taarab", "gqom"]) else "Global",
+                    "created_at": datetime.now(timezone.utc)
+                }
+                for g in DEFAULT_GENRES
+            ]
+            db.genres.insert_many(docs)
+            logger.info(f"Seeded {len(docs)} default genres.")
+    except Exception as e:
+        logger.warning(f"Failed to seed genres: {e}")
+
+
+def seed_artists_if_empty():
+    """Seeds default roster artists for labels, publishers, and managers."""
+    try:
+        existing = db.artists.count_documents({})
+        if existing == 0:
+            docs = [{**a, "created_at": datetime.now(timezone.utc)} for a in DEFAULT_ARTISTS]
+            db.artists.insert_many(docs)
+            logger.info(f"Seeded {len(docs)} default roster artists.")
+    except Exception as e:
+        logger.warning(f"Failed to seed artists: {e}")
+
+
+# Initialize seeds on module import
+seed_genres_if_empty()
+seed_artists_if_empty()
 
 
 def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any]]:
@@ -143,6 +262,9 @@ class TrackModel(BaseModel):
     distributionSplit: Optional[str] = None
     split: Optional[str] = None
     syncCleared: Optional[bool] = True
+    consumptionType: Optional[str] = "both"  # "stream_only" | "download_only" | "both"
+    streamPriceCredits: Optional[int] = 50
+    downloadPriceCredits: Optional[int] = 150
 
 
 class WizardIngestPayload(BaseModel):
@@ -317,8 +439,32 @@ def _sync_tracks_to_all_collections(subdomain: str, tracks: List[Dict[str, Any]]
 
 
 @router.get("/tracks", response_model=Dict[str, Any])
-def get_catalog_tracks(subdomain: str = Query("ndufo")):
-    """Retrieve full catalog tracks for an artist, ensuring persistent storage."""
+def get_catalog_tracks(
+    subdomain: str = Query("ndufo"),
+    all: bool = Query(False),
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Retrieve catalog tracks for an artist, or full platform catalogue when all=True."""
+    if all or subdomain == "all":
+        all_tracks = []
+        seen_isrcs = set()
+        for doc in db.catalog_tracks.find({}):
+            for t in doc.get("tracks", []):
+                isrc = t.get("isrc")
+                if isrc and isrc not in seen_isrcs:
+                    seen_isrcs.add(isrc)
+                    all_tracks.append(t)
+                elif not isrc:
+                    all_tracks.append(t)
+        if not all_tracks:
+            # Seed from default artists if empty
+            for artist in DEFAULT_ARTISTS:
+                for t in get_default_catalog_tracks(artist["name"]):
+                    if t.get("isrc") not in seen_isrcs:
+                        seen_isrcs.add(t.get("isrc"))
+                        all_tracks.append(t)
+        return {"subdomain": "all", "count": len(all_tracks), "tracks": all_tracks}
+
     clean = subdomain.lower().strip().replace(" ", "")
 
     # Check dedicated catalog_tracks collection
@@ -668,5 +814,370 @@ def update_track_audio(identifier: str, payload: UpdateTrackAudioPayload):
         "message": f"Attached audio to track '{target_track.get('title')}'.",
         "track": target_track,
         "tracks": updated_tracks
+    }
+
+
+# ================= GENRE MANAGEMENT ENDPOINTS (GLOBAL & ADMIN CRUD) =================
+
+class GenrePayload(BaseModel):
+    name: str
+    category: Optional[str] = "African & World"
+    description: Optional[str] = ""
+
+
+class GenreUpdatePayload(BaseModel):
+    new_name: str
+    category: Optional[str] = "African & World"
+    description: Optional[str] = ""
+
+
+@router.get("/genres", response_model=Dict[str, Any])
+def get_genres():
+    """Retrieve the authoritative list of genres (including extensive African and World genres)."""
+    seed_genres_if_empty()
+    cursor = db.genres.find({}).sort("name", 1)
+    docs = []
+    for d in cursor:
+        d["id"] = str(d.get("_id", d.get("name")))
+        d.pop("_id", None)
+        docs.append(d)
+
+    genre_names = [d["name"] for d in docs]
+    # Ensure Afro-fusion is in the list
+    if "Afro-fusion" not in genre_names:
+        afro_doc = {"name": "Afro-fusion", "category": "African & World", "created_at": datetime.now(timezone.utc)}
+        db.genres.insert_one(afro_doc)
+        genre_names.insert(0, "Afro-fusion")
+        docs.insert(0, afro_doc)
+
+    return {
+        "status": "success",
+        "count": len(genre_names),
+        "genres": genre_names,
+        "genres_detail": docs
+    }
+
+
+@router.post("/genres", response_model=Dict[str, Any])
+def add_genre(payload: GenrePayload):
+    """Admin / Catalogue Manager: Add a new genre to the authoritative catalogue."""
+    clean_name = payload.name.strip()
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Genre name cannot be empty.")
+
+    existing = db.genres.find_one({"name": {"$regex": f"^{re.escape(clean_name)}$", "$options": "i"}})
+    if existing:
+        return {
+            "status": "exists",
+            "message": f"Genre '{clean_name}' already exists.",
+            "genres": [d["name"] for d in db.genres.find({}).sort("name", 1)]
+        }
+
+    new_doc = {
+        "name": clean_name,
+        "category": payload.category or "African & World",
+        "description": payload.description or "",
+        "created_at": datetime.now(timezone.utc)
+    }
+    db.genres.insert_one(new_doc)
+    logger.info(f"Added new genre '{clean_name}' to system catalogue.")
+
+    all_genres = [d["name"] for d in db.genres.find({}).sort("name", 1)]
+    return {
+        "status": "success",
+        "message": f"Successfully added genre '{clean_name}'.",
+        "genres": all_genres
+    }
+
+
+@router.put("/genres/{genre_name}", response_model=Dict[str, Any])
+def update_genre(genre_name: str, payload: GenreUpdatePayload):
+    """Admin / Catalogue Manager: Edit or rename a genre."""
+    clean_old = genre_name.strip()
+    clean_new = payload.new_name.strip()
+    if not clean_new:
+        raise HTTPException(status_code=400, detail="New genre name cannot be empty.")
+
+    res = db.genres.update_one(
+        {"name": {"$regex": f"^{re.escape(clean_old)}$", "$options": "i"}},
+        {"$set": {"name": clean_new, "category": payload.category, "updated_at": datetime.now(timezone.utc)}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail=f"Genre '{clean_old}' not found.")
+
+    all_genres = [d["name"] for d in db.genres.find({}).sort("name", 1)]
+    return {
+        "status": "success",
+        "message": f"Updated genre '{clean_old}' to '{clean_new}'.",
+        "genres": all_genres
+    }
+
+
+@router.delete("/genres/{genre_name}", response_model=Dict[str, Any])
+def delete_genre(genre_name: str):
+    """Admin / Catalogue Manager: Remove a genre from the system."""
+    clean = genre_name.strip()
+    res = db.genres.delete_one({"name": {"$regex": f"^{re.escape(clean)}$", "$options": "i"}})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail=f"Genre '{clean}' not found.")
+
+    all_genres = [d["name"] for d in db.genres.find({}).sort("name", 1)]
+    return {
+        "status": "success",
+        "message": f"Deleted genre '{clean}'.",
+        "genres": all_genres
+    }
+
+
+# ================= MULTI-ARTIST ROSTER MANAGEMENT (FOR LABELS, PUBLISHERS, MANAGERS) =================
+
+class ArtistPayload(BaseModel):
+    id: Optional[str] = None
+    subdomain: str
+    name: str
+    role: Optional[str] = "Primary Artist"
+    genre: Optional[str] = "Afro-fusion"
+    bio: Optional[str] = ""
+    avatar: Optional[str] = ""
+    is_default: Optional[bool] = False
+    owner_id: Optional[str] = None
+
+
+@router.get("/artists", response_model=Dict[str, Any])
+def get_artists_roster(
+    all: bool = Query(False),
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Retrieve roster artists managed by labels, publishers, or managers. Restricts to current user's roster unless admin."""
+    seed_artists_if_empty()
+    query = {}
+    if current_user and current_user.get("role") != "admin" and not all:
+        user_id = str(current_user.get("_id", ""))
+        user_sub = (current_user.get("username") or current_user.get("subdomain") or "").lower()
+        query = {
+            "$or": [
+                {"owner_id": user_id},
+                {"subdomain": user_sub},
+                {"is_default": True}
+            ]
+        }
+    cursor = db.artists.find(query).sort("created_at", 1)
+    artists = []
+    for doc in cursor:
+        doc["id"] = str(doc.get("id") or doc.get("_id"))
+        doc.pop("_id", None)
+        artists.append(doc)
+
+    return {
+        "status": "success",
+        "count": len(artists),
+        "artists": artists
+    }
+
+
+@router.post("/artists", response_model=Dict[str, Any])
+def create_or_add_artist(
+    payload: ArtistPayload,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Add a new artist under a label, publisher, manager or catalogue owner account."""
+    clean_sub = re.sub(r"[^a-zA-Z0-9_-]", "", payload.subdomain.lower().strip())
+    if not clean_sub:
+        clean_sub = re.sub(r"[^a-zA-Z0-9_-]", "-", payload.name.lower().strip())
+
+    artist_id = f"art_{clean_sub}"
+    now = datetime.now(timezone.utc)
+    owner_id = payload.owner_id or (str(current_user["_id"]) if current_user and "_id" in current_user else "default_owner")
+
+    artist_doc = {
+        "id": artist_id,
+        "subdomain": clean_sub,
+        "name": payload.name.strip(),
+        "role": payload.role or "Primary Artist",
+        "genre": payload.genre or "Afro-fusion",
+        "bio": payload.bio or f"Official artist profile for {payload.name}.",
+        "avatar": payload.avatar or f"https://picsum.photos/seed/{clean_sub}_avatar/400/400",
+        "is_default": payload.is_default or False,
+        "owner_id": owner_id,
+        "updated_at": now
+    }
+
+    db.artists.update_one(
+        {"$or": [{"subdomain": clean_sub}, {"id": artist_id}]},
+        {"$set": artist_doc, "$setOnInsert": {"created_at": now}},
+        upsert=True
+    )
+
+    # Initialize default catalog tracks for this artist if not present
+    existing_tracks = db.catalog_tracks.find_one({"subdomain": clean_sub})
+    if not existing_tracks or not existing_tracks.get("tracks"):
+        init_tracks = get_default_catalog_tracks(payload.name.strip())
+        _sync_tracks_to_all_collections(clean_sub, init_tracks)
+
+    cursor = db.artists.find({}).sort("created_at", 1)
+    all_artists = []
+    for d in cursor:
+        d["id"] = str(d.get("id") or d.get("_id"))
+        d.pop("_id", None)
+        all_artists.append(d)
+
+    return {
+        "status": "success",
+        "message": f"Successfully created artist '{payload.name}' ({clean_sub}).",
+        "artist": artist_doc,
+        "artists": all_artists
+    }
+
+
+@router.put("/artists/{artist_id}", response_model=Dict[str, Any])
+def update_artist_profile(artist_id: str, payload: ArtistPayload):
+    """Edit an existing artist profile in the roster."""
+    clean_sub = re.sub(r"[^a-zA-Z0-9_-]", "", payload.subdomain.lower().strip())
+    now = datetime.now(timezone.utc)
+
+    update_fields = {
+        "name": payload.name.strip(),
+        "role": payload.role or "Primary Artist",
+        "genre": payload.genre or "Afro-fusion",
+        "bio": payload.bio,
+        "avatar": payload.avatar,
+        "updated_at": now
+    }
+    if clean_sub:
+        update_fields["subdomain"] = clean_sub
+
+    res = db.artists.update_one(
+        {"$or": [{"id": artist_id}, {"subdomain": artist_id.replace("art_", "")}]},
+        {"$set": update_fields}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail=f"Artist '{artist_id}' not found.")
+
+    cursor = db.artists.find({}).sort("created_at", 1)
+    all_artists = []
+    for d in cursor:
+        d["id"] = str(d.get("id") or d.get("_id"))
+        d.pop("_id", None)
+        all_artists.append(d)
+
+    return {
+        "status": "success",
+        "message": f"Updated artist '{payload.name}'.",
+        "artists": all_artists
+    }
+
+
+@router.delete("/artists/{artist_id}", response_model=Dict[str, Any])
+def delete_artist_profile(artist_id: str):
+    """Delete an artist profile from the roster."""
+    clean_sub = artist_id.replace("art_", "").lower().strip()
+    if clean_sub == "ndufo":
+        raise HTTPException(status_code=400, detail="Cannot delete default system artist 'ndufo'.")
+
+    res = db.artists.delete_one({"$or": [{"id": artist_id}, {"subdomain": clean_sub}]})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail=f"Artist '{artist_id}' not found.")
+
+    cursor = db.artists.find({}).sort("created_at", 1)
+    all_artists = []
+    for d in cursor:
+        d["id"] = str(d.get("id") or d.get("_id"))
+        d.pop("_id", None)
+        all_artists.append(d)
+
+    return {
+        "status": "success",
+        "message": f"Deleted artist '{artist_id}'.",
+        "artists": all_artists
+    }
+
+
+class BulkIngestPayload(BaseModel):
+    subdomain: Optional[str] = "ndufo"
+    tracks: List[Dict[str, Any]]
+    commonArtist: Optional[str] = None
+    commonGenre: Optional[str] = None
+    commonRelease: Optional[str] = None
+
+
+@router.post("/bulk-ingest", response_model=Dict[str, Any])
+def bulk_ingest_catalog(
+    payload: Union[BulkIngestPayload, List[Dict[str, Any]]],
+    subdomain: Optional[str] = Query(None),
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Bulk ingest multiple tracks into catalogue for labels, publishers, managers, or large catalogue owners."""
+    if isinstance(payload, list):
+        clean = (subdomain or "ndufo").lower().strip().replace(" ", "")
+        incoming_tracks = payload
+        common_artist = None
+        common_genre = None
+        common_release = None
+    else:
+        clean = (subdomain or payload.subdomain or "ndufo").lower().strip().replace(" ", "")
+        incoming_tracks = payload.tracks
+        common_artist = payload.commonArtist
+        common_genre = payload.commonGenre
+        common_release = payload.commonRelease
+
+    if not incoming_tracks:
+        raise HTTPException(status_code=400, detail="No tracks provided for bulk ingestion.")
+
+    existing_res = get_catalog_tracks(subdomain=clean)
+    existing_tracks = list(existing_res.get("tracks", []))
+    existing_isrcs = {t.get("isrc") for t in existing_tracks if t.get("isrc")}
+
+    ingested = []
+    base_seq = 60000 + len(existing_tracks)
+    for idx, t in enumerate(incoming_tracks):
+        isrc = t.get("isrc") or f"KE-TM1-26-{base_seq + idx}"
+        title = t.get("title") or f"Master Track {idx + 1}"
+        artist = t.get("artist") or common_artist or "Ndufo"
+        genre = t.get("genre") or common_genre or "Afro-fusion"
+        release = t.get("release") or common_release or "Bulk Ingest Master"
+        release_type = t.get("releaseType") or ("Album" if len(incoming_tracks) >= 6 else "Single")
+        
+        track_doc = {
+            "id": t.get("id") or int(datetime.now().timestamp() * 1000) + idx,
+            "isrc": isrc,
+            "title": title,
+            "artist": artist,
+            "release": release,
+            "releaseType": release_type,
+            "year": str(t.get("year") or datetime.now().year),
+            "genre": genre,
+            "duration": t.get("duration") or "3:30",
+            "streams": t.get("streams") or "0",
+            "priceCredits": int(t.get("priceCredits") or 50),
+            "coverArt": t.get("coverArt") or f"https://picsum.photos/seed/{abs(hash(title))}/600/600",
+            "coverBg": t.get("coverBg") or "linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)",
+            "coverText": t.get("coverText") or title.split(" ")[0],
+            "audioUrl": t.get("audioUrl"),
+            "fileUrl": t.get("fileUrl"),
+            "status": "valid",
+            "isFeatured": idx == 0,
+            "consumptionType": t.get("consumptionType") or "both",
+            "streamPriceCredits": int(t.get("streamPriceCredits") or 50),
+            "downloadPriceCredits": int(t.get("downloadPriceCredits") or 150),
+            "publishingSplit": t.get("publishingSplit") or "Writer (50%) / Publisher (50%)",
+            "distributionSplit": t.get("distributionSplit") or "Artist (60%) / Producer (25%) / Label (15%)",
+            "split": t.get("split") or "Artist (60%) / Producer (25%) / Label (15%)",
+            "syncCleared": True
+        }
+        ingested.append(track_doc)
+        if isrc in existing_isrcs:
+            existing_tracks = [track_doc if x.get("isrc") == isrc else x for x in existing_tracks]
+        else:
+            existing_tracks.insert(0, track_doc)
+            existing_isrcs.add(isrc)
+
+    _sync_tracks_to_all_collections(clean, existing_tracks)
+    return {
+        "status": "success",
+        "subdomain": clean,
+        "count": len(ingested),
+        "total_tracks": len(existing_tracks),
+        "tracks": existing_tracks,
+        "message": f"Successfully bulk-ingested {len(ingested)} tracks."
     }
 

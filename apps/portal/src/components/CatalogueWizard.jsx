@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   RiDiscFill, RiMusic2Fill, RiFileTextFill, RiUploadFill,
   RiDeleteBin6Line, RiAddLine, RiCheckFill, RiSparklingFill,
@@ -7,12 +7,10 @@ import {
   RiCheckboxCircleFill, RiAlertFill, RiFolderUploadFill, RiSettings3Fill,
   RiImageAddFill, RiMagicFill, RiPaletteFill, RiCloseLine, RiRefreshLine
 } from 'react-icons/ri';
+import { DEFAULT_CANONICAL_GENRES, fetchGenres, getCachedGenres } from '../lib/genres.js';
+import BulkCatalogueIngestModal from './BulkCatalogueIngestModal';
 
-const GENRES = [
-  'Afro-House', 'Amapiano', 'Deep-House', 'Afrobeats',
-  'Electronic', 'Synthwave', 'Hip-Hop', 'R&B / Soul',
-  'Pop', 'Ambient', 'Dancehall', 'Jazz Fusion'
-];
+const GENRES = DEFAULT_CANONICAL_GENRES;
 
 const PRO_LIST = [
   'BMI', 'ASCAP', 'SESAC', 'PRS for Music',
@@ -25,11 +23,11 @@ const PRODUCER_ROLES = [
 ];
 
 const DEFAULT_COVER_PRESETS = [
-  { name: 'Neon Cyber', bg: 'linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)', text: 'CYBER' },
-  { name: 'Rift Sunset', bg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', text: 'SUNSET' },
-  { name: 'Emerald Vibe', bg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', text: 'EMERALD' },
-  { name: 'Deep Amethyst', bg: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)', text: 'AMETHYST' },
-  { name: 'Midnight Onyx', bg: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', text: 'MIDNIGHT' }
+  { name: 'Neon Cyber', bg: '#00f0ff', text: 'CYBER' },
+  { name: 'Rift Sunset', bg: '#f59e0b', text: 'SUNSET' },
+  { name: 'Emerald Vibe', bg: '#10b981', text: 'EMERALD' },
+  { name: 'Deep Amethyst', bg: '#8b5cf6', text: 'AMETHYST' },
+  { name: 'Midnight Onyx', bg: '#1e293b', text: 'MIDNIGHT' }
 ];
 
 export default function CatalogueWizard({
@@ -52,11 +50,58 @@ export default function CatalogueWizard({
     sessionUser?.artist_name || sessionUser?.name || 'Ndufo'
   );
   const [releaseYear, setReleaseYear] = useState(new Date().getFullYear().toString());
-  const [genre, setGenre] = useState('Afro-House');
+  const [genre, setGenre] = useState('Afro-fusion');
+  const [availableGenres, setAvailableGenres] = useState(getCachedGenres());
+  const [rosterArtists, setRosterArtists] = useState([]);
   const [coverArtUrl, setCoverArtUrl] = useState('');
   const [selectedPresetCover, setSelectedPresetCover] = useState(DEFAULT_COVER_PRESETS[0]);
   const [labelName, setLabelName] = useState('TuneMavens Roster');
   const [catalogNumber, setCatalogNumber] = useState(`TM-${new Date().getFullYear()}-001`);
+
+  // Add artist modal & custom fields
+  const [showAddArtistModal, setShowAddArtistModal] = useState(false);
+  const [newArtistName, setNewArtistName] = useState('');
+  const [newArtistGenre, setNewArtistGenre] = useState('Afro-fusion');
+  const [newArtistRole, setNewArtistRole] = useState('Primary Artist');
+  const [isAddingArtist, setIsAddingArtist] = useState(false);
+
+  // Consumption & Monetization pricing
+  const [consumptionType, setConsumptionType] = useState('both');
+  const [streamPriceCredits, setStreamPriceCredits] = useState(50);
+  const [downloadPriceCredits, setDownloadPriceCredits] = useState(150);
+
+  // Bulk Ingestion Modal state
+  const [showBulkModal, setShowBulkModal] = useState(false);
+
+  useEffect(() => {
+    fetchGenres().then(g => setAvailableGenres(g));
+    const handleGenres = (e) => {
+      if (Array.isArray(e.detail)) setAvailableGenres(e.detail);
+    };
+    window.addEventListener('tunemavens-genres-updated', handleGenres);
+
+    fetch('/api/catalog/artists')
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d.artists)) setRosterArtists(d.artists);
+      })
+      .catch(() => {});
+
+    const handleArtists = () => {
+      fetch('/api/catalog/artists')
+        .then(r => r.json())
+        .then(d => {
+          if (Array.isArray(d.artists)) setRosterArtists(d.artists);
+        })
+        .catch(() => {});
+    };
+    window.addEventListener('tunemavens-artists-updated', handleArtists);
+
+    return () => {
+      window.removeEventListener('tunemavens-genres-updated', handleGenres);
+      window.removeEventListener('tunemavens-artists-updated', handleArtists);
+    };
+  }, []);
 
   // Artwork Studio State: 'gradient' (EPK Subtle Gradient) | 'upload' | 'ai'
   const [artworkMode, setArtworkMode] = useState('gradient');
@@ -450,7 +495,10 @@ export default function CatalogueWizard({
       genre: genre,
       duration: t.duration || '3:30',
       streams: '0',
-      priceCredits: 50,
+      priceCredits: Number(streamPriceCredits) || 50,
+      consumptionType,
+      streamPriceCredits: Number(streamPriceCredits) || 50,
+      downloadPriceCredits: Number(downloadPriceCredits) || 150,
       audioUrl: t.audioUrl || '',
       fileUrl: t.fileUrl || t.audioUrl || '',
       coverArt: effectiveCover,
@@ -476,6 +524,9 @@ export default function CatalogueWizard({
         primaryArtist: primaryArtist,
         year: releaseYear,
         genre: genre,
+        consumptionType,
+        streamPriceCredits: Number(streamPriceCredits) || 50,
+        downloadPriceCredits: Number(downloadPriceCredits) || 150,
         coverArt: effectiveCover,
         coverBg: subtleEpkGradient,
         coverText: releaseTitle.slice(0, 8) || 'Release',
@@ -711,13 +762,11 @@ export default function CatalogueWizard({
           ].map((s) => {
             const isActive = currentStep === s.num;
             const isDone = currentStep > s.num;
-
             return (
               <div
                 key={s.num}
-                onClick={() => {
-                  if (isDone) setCurrentStep(s.num);
-                }}
+                onClick={() => setCurrentStep(s.num)}
+                title={`Jump to Step ${s.num}: ${s.title}`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -730,7 +779,7 @@ export default function CatalogueWizard({
                     : isDone
                     ? '1px solid rgba(34, 197, 94, 0.3)'
                     : '1px solid rgba(255,255,255,0.05)',
-                  cursor: isDone ? 'pointer' : 'default',
+                  cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
               >
@@ -738,29 +787,32 @@ export default function CatalogueWizard({
                   width: '28px',
                   height: '28px',
                   borderRadius: '50%',
-                  background: isDone ? '#22c55e' : isActive ? '#00f0ff' : 'rgba(255,255,255,0.1)',
-                  color: isActive || isDone ? '#000' : '#94a3b8',
-                  fontWeight: 900,
-                  fontSize: '12px',
+                  background: isDone
+                    ? '#22c55e'
+                    : isActive
+                    ? '#00f0ff'
+                    : 'rgba(255,255,255,0.1)',
+                  color: isDone || isActive ? '#000' : '#fff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  fontWeight: 900,
+                  fontSize: '13px',
                   flexShrink: 0
                 }}>
-                  {isDone ? '✓' : s.num}
+                  {isDone ? <RiCheckFill /> : s.num}
                 </div>
-                <div style={{ overflow: 'hidden' }}>
+                <div>
                   <div style={{
                     fontSize: '12px',
                     fontWeight: 800,
-                    color: isActive ? '#fff' : isDone ? '#22c55e' : '#94a3b8',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden'
+                    color: isActive ? '#00f0ff' : isDone ? '#fff' : '#94a3b8'
                   }}>
                     {s.title}
                   </div>
-                  <div style={{ fontSize: '10px', color: '#64748b' }}>{s.desc}</div>
+                  <div style={{ fontSize: '10px', color: '#64748b' }}>
+                    {s.desc}
+                  </div>
                 </div>
               </div>
             );
@@ -768,28 +820,29 @@ export default function CatalogueWizard({
         </div>
       </div>
 
-      {/* ERROR ALERT BANNER */}
+      {/* ERROR BANNER */}
       {errorMsg && (
         <div style={{
-          background: 'rgba(239, 68, 68, 0.12)',
+          background: 'rgba(239, 68, 68, 0.15)',
           border: '1px solid #ef4444',
           borderRadius: '6px',
           padding: '12px 16px',
-          color: '#fca5a5',
-          fontSize: '13px',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '10px',
+          color: '#ef4444',
+          fontSize: '13px',
+          fontWeight: 700
         }}>
-          <RiAlertFill size={18} style={{ color: '#ef4444', flexShrink: 0 }} />
+          <RiAlertFill size={18} />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* ================= STEP 1: RELEASE DETAILS ================= */}
+      {/* STEP 1: RELEASE & PROJECT METADATA */}
       {currentStep === 1 && (
         <div style={{
-          background: '#0a0f1d',
+          background: '#090d1a',
           border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: '6px',
           padding: '24px',
@@ -797,26 +850,48 @@ export default function CatalogueWizard({
           flexDirection: 'column',
           gap: '24px'
         }}>
-          <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 900, color: '#fff', margin: '0 0 6px' }}>
-              Step 1: Release & Project Information
-            </h3>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
-              Specify the release type, title, and metadata for your upcoming music package.
-            </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: '0 0 4px 0' }}>
+                Step 1: Release &amp; Project Classification
+              </h3>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
+                Define the format, title, primary artist, and release metadata for this project.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowBulkModal(true)}
+              style={{
+                background: 'rgba(0, 240, 255, 0.1)',
+                border: '1px solid #00f0ff',
+                color: '#00f0ff',
+                padding: '7px 14px',
+                borderRadius: '3px',
+                fontSize: '11.5px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Open Bulk Ingestion Studio for multi-track catalogues"
+            >
+              <span>⚡</span> Bulk Ingestion Studio
+            </button>
           </div>
 
-          {/* Project Type Selector */}
+          {/* Release Type Selector */}
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 800, color: '#cbd5e1', display: 'block', marginBottom: '8px' }}>
-              Release Format / Project Type
+            <label style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: '8px' }}>
+              Release Format *
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
               {[
-                { id: 'Album', label: 'Album (LP)', desc: '8+ Master Tracks', icon: '💿' },
-                { id: 'EP', label: 'EP (Extended Play)', desc: '3 - 7 Tracks', icon: '🎵' },
-                { id: 'Mixtape', label: 'Mixtape / Street Tape', desc: 'Promotional / Street', icon: '📼' },
-                { id: 'Single', label: 'Single / Standalone', desc: '1 - 2 Tracks', icon: '⚡' }
+                { id: 'Album', label: 'Studio Album', icon: '💿', desc: '8+ Master Tracks' },
+                { id: 'EP', label: 'Extended Play (EP)', icon: '🎵', desc: '4 - 7 Master Tracks' },
+                { id: 'Single', label: 'Master Single', icon: '🔥', desc: '1 - 3 Master Tracks' },
+                { id: 'Mixtape', label: 'DJ / Live Mixtape', icon: '📼', desc: 'Continuous mix or tape' }
               ].map(opt => {
                 const isSelected = releaseType === opt.id;
                 return (
@@ -824,19 +899,19 @@ export default function CatalogueWizard({
                     key={opt.id}
                     onClick={() => setReleaseType(opt.id)}
                     style={{
-                      padding: '14px',
+                      padding: '12px 14px',
                       borderRadius: '6px',
                       background: isSelected ? 'rgba(0, 240, 255, 0.12)' : 'rgba(255,255,255,0.02)',
-                      border: isSelected ? '2px solid #00f0ff' : '1px solid rgba(255,255,255,0.08)',
+                      border: isSelected ? '1.5px solid #00f0ff' : '1px solid rgba(255,255,255,0.08)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{opt.icon}</div>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: isSelected ? '#00f0ff' : '#fff' }}>
+                    <div style={{ fontSize: '18px', marginBottom: '4px' }}>{opt.icon}</div>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: isSelected ? '#00f0ff' : '#fff' }}>
                       {opt.label}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>{opt.desc}</div>
+                    <div style={{ fontSize: '10px', color: '#64748b' }}>{opt.desc}</div>
                   </div>
                 );
               })}
@@ -868,25 +943,91 @@ export default function CatalogueWizard({
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: '6px' }}>
-                Primary Artist Name *
-              </label>
-              <input
-                type="text"
-                value={primaryArtist}
-                onChange={e => setPrimaryArtist(e.target.value)}
-                placeholder="e.g. Ndufo"
-                className="form-control"
-                style={{
-                  width: '100%',
-                  background: '#0d1326',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: '#fff',
-                  fontSize: '13px',
-                  padding: '10px 12px',
-                  borderRadius: '4px'
-                }}
-              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1', display: 'block' }}>
+                  Primary Artist Name *
+                </label>
+                {rosterArtists.length > 0 && (
+                  <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 700 }}>
+                    Select from roster or add new
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type="text"
+                  list="roster-artists-list"
+                  value={primaryArtist}
+                  onChange={e => setPrimaryArtist(e.target.value)}
+                  placeholder="e.g. Ndufo, Aisha Wanjiku"
+                  className="form-control"
+                  style={{
+                    flex: 1,
+                    background: '#0d1326',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#fff',
+                    fontSize: '13px',
+                    padding: '10px 12px',
+                    borderRadius: '4px'
+                  }}
+                />
+                <select
+                  value={primaryArtist}
+                  onChange={e => {
+                    if (e.target.value === '__ADD_NEW_ARTIST__') {
+                      setShowAddArtistModal(true);
+                    } else if (e.target.value) {
+                      setPrimaryArtist(e.target.value);
+                      const matched = rosterArtists.find(a => a.name === e.target.value);
+                      if (matched?.genre) setGenre(matched.genre);
+                    }
+                  }}
+                  style={{
+                    background: '#04060d',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#22d3ee',
+                    fontSize: '12px',
+                    padding: '8px 10px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 700
+                  }}
+                  title="Quick pick from roster artists or add new"
+                >
+                  <option value="">Roster Artists...</option>
+                  <option value="__ADD_NEW_ARTIST__" style={{ color: '#00f0ff', fontWeight: 800 }}>
+                    + Add New Artist...
+                  </option>
+                  {rosterArtists.map(a => (
+                    <option key={a.id || a.subdomain} value={a.name}>
+                      {a.name} ({a.genre || 'Afro-fusion'})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowAddArtistModal(true)}
+                  style={{
+                    background: '#00f0ff',
+                    color: '#000',
+                    border: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    fontSize: '11.5px',
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                  title="Add a new artist directly to your roster"
+                >
+                  + Add Artist
+                </button>
+              </div>
+              <datalist id="roster-artists-list">
+                {rosterArtists.map(a => (
+                  <option key={a.id || a.subdomain} value={a.name} />
+                ))}
+              </datalist>
             </div>
 
             <div>
@@ -907,7 +1048,7 @@ export default function CatalogueWizard({
                   borderRadius: '4px'
                 }}
               >
-                {GENRES.map(g => (
+                {availableGenres.map(g => (
                   <option key={g} value={g}>{g}</option>
                 ))}
               </select>
@@ -932,6 +1073,70 @@ export default function CatalogueWizard({
                   borderRadius: '4px'
                 }}
               />
+            </div>
+
+            {/* Creator Consumption Choice & Custom Pricing */}
+            <div style={{
+              gridColumn: '1 / -1',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '4px',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>
+                  Content Consumption &amp; Creator Pricing
+                </label>
+                <span style={{ fontSize: '11px', color: '#00f0ff', fontWeight: 700 }}>
+                  Customize how fans and supervisors consume this release with your own rates
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px', fontWeight: 700 }}>
+                    Consumption Access Mode
+                  </label>
+                  <select
+                    value={consumptionType}
+                    onChange={e => setConsumptionType(e.target.value)}
+                    style={{ width: '100%', background: '#0d1326', border: '1px solid rgba(255,255,255,0.15)', color: '#00f0ff', padding: '8px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 700 }}
+                  >
+                    <option value="both">Both (Stream &amp; Download)</option>
+                    <option value="stream_only">Stream Only</option>
+                    <option value="download_only">Download Only</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px', fontWeight: 700 }}>
+                    Stream Price (Recommended: 50 Credits / $0.99)
+                  </label>
+                  <input
+                    type="number"
+                    value={streamPriceCredits}
+                    onChange={e => setStreamPriceCredits(Number(e.target.value))}
+                    className="form-control"
+                    style={{ width: '100%', background: '#0d1326', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px 10px', borderRadius: '4px', fontSize: '12px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px', fontWeight: 700 }}>
+                    Download / Master Price (Recommended: 150 Credits / $2.99)
+                  </label>
+                  <input
+                    type="number"
+                    value={downloadPriceCredits}
+                    onChange={e => setDownloadPriceCredits(Number(e.target.value))}
+                    className="form-control"
+                    style={{ width: '100%', background: '#0d1326', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px 10px', borderRadius: '4px', fontSize: '12px' }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2389,18 +2594,17 @@ export default function CatalogueWizard({
             onClick={handleFinalIngest}
             disabled={isSubmitting}
             style={{
-              background: 'linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)',
+              background: '#00f0ff',
               color: '#000',
               border: 'none',
               padding: '12px 28px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               fontWeight: 900,
               fontSize: '14px',
               cursor: isSubmitting ? 'wait' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              boxShadow: '0 6px 20px rgba(0, 240, 255, 0.45)',
               opacity: isSubmitting ? 0.7 : 1
             }}
           >
@@ -2409,6 +2613,149 @@ export default function CatalogueWizard({
           </button>
         )}
       </div>
+
+      {/* Add New Artist to Roster Modal */}
+      {showAddArtistModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(12px)',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#0a0f1d',
+            border: '1px solid #00f0ff',
+            borderRadius: '4px',
+            padding: '24px',
+            maxWidth: '440px',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '14px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.9)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ margin: 0, color: '#fff', fontSize: '15px', fontWeight: 900 }}>
+                + Add New Artist to Roster
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowAddArtistModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '18px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px', fontWeight: 700 }}>
+                Artist Full Name *
+              </label>
+              <input
+                type="text"
+                value={newArtistName}
+                onChange={e => setNewArtistName(e.target.value)}
+                placeholder="e.g. Sauti Wave"
+                className="form-control"
+                style={{ width: '100%', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px 10px', borderRadius: '3px', fontSize: '12.5px' }}
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px', fontWeight: 700 }}>
+                Primary Genre
+              </label>
+              <select
+                value={newArtistGenre}
+                onChange={e => setNewArtistGenre(e.target.value)}
+                style={{ width: '100%', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px 10px', borderRadius: '3px', fontSize: '12px' }}
+              >
+                {availableGenres.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px', fontWeight: 700 }}>
+                Role
+              </label>
+              <input
+                type="text"
+                value={newArtistRole}
+                onChange={e => setNewArtistRole(e.target.value)}
+                placeholder="Primary Artist / Producer"
+                className="form-control"
+                style={{ width: '100%', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px 10px', borderRadius: '3px', fontSize: '12px' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setShowAddArtistModal(false)}
+                style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#cbd5e1', padding: '8px', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!newArtistName.trim() || isAddingArtist}
+                onClick={async () => {
+                  if (!newArtistName.trim()) return;
+                  setIsAddingArtist(true);
+                  try {
+                    const cleanSub = newArtistName.toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/^-+|-+$/g, '');
+                    const res = await fetch('/api/catalog/artists', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        name: newArtistName.trim(),
+                        subdomain: cleanSub || 'new-artist',
+                        genre: newArtistGenre,
+                        role: newArtistRole
+                      })
+                    });
+                    if (res.ok) {
+                      const d = await res.json();
+                      if (Array.isArray(d.artists)) setRosterArtists(d.artists);
+                      setPrimaryArtist(newArtistName.trim());
+                      setGenre(newArtistGenre);
+                      setShowAddArtistModal(false);
+                      setNewArtistName('');
+                      window.dispatchEvent(new CustomEvent('tunemavens-artists-updated', { detail: d.artists }));
+                    }
+                  } catch (err) {
+                    alert(`Failed to add artist: ${err.message}`);
+                  } finally {
+                    setIsAddingArtist(false);
+                  }
+                }}
+                style={{ flex: 1, background: '#00f0ff', color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontSize: '12px', fontWeight: 900, cursor: 'pointer' }}
+              >
+                {isAddingArtist ? 'Saving...' : 'Add to Roster'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Catalogue Ingestion Modal */}
+      <BulkCatalogueIngestModal
+        isOpen={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        activeSubdomain={sessionUser?.username || 'ndufo'}
+        rosterArtists={rosterArtists}
+        onIngestSuccess={(newTracks) => {
+          if (typeof onIngestComplete === 'function') {
+            onIngestComplete(newTracks);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -77,6 +77,14 @@ npm run dev
 - **Strict 1280px Content Constraint:** All page content below the hero section across TuneMavens (`.container`, `.landing-content-split`, interior pages, and EPK views) is strictly bound to `max-width: 1280px; margin: 0 auto;`.
 - **Typography & Theme:** Sansation typeface with flat dark ink backgrounds and neon accents (`--cyan: #22d3ee`, `--purple: #8b5cf6`, `--amber: #f59e0b`).
 
+### 7. Release Operations, Storage Quotas & Creator Monetization
+- **Roster Ownership Isolation & Security:** Non-admin creators/managers only view artists in their roster (`owner_id`/`subdomain`). Platform Admins can toggle between single-artist view and "Entire Platform Catalogue" (`GET /api/catalog/tracks?all=true`) with top sorting (Title, Artist, Streams, Year, Date).
+- **Bulk Ingestion Studio (`BulkCatalogueIngestModal.jsx`):** Multi-track tabular import via CSV/Excel, raw text paste, or audio drop with batch artist/genre assignment, sequential ISRC generation, and 1-click batch ingestion (`POST /api/catalog/bulk-ingest`).
+- **Media Storage Quotas & Credit Top-Up:** 500 MB base starter quota with dynamic progress tracking (`CmsAssetsStudio.jsx`) and credit top-up packages (+500 MB for 50 credits, +1 GB for 90 credits, +5 GB for 350 credits).
+- **Audio Playback 30-Second Limit:** Non-purchased / uncredited tracks are restricted to 30-second previews, pausing automatically and prompting credit unlock.
+- **Creator Consumption & Custom Pricing:** Creators choose how music is consumed (`Stream Only`, `Download Only`, `Both`) and define custom stream/download pricing with recommended baselines.
+- **Persistent User Settings:** User profile metadata (name, email, brand, country, bio) persists to MongoDB via `PUT /api/users/me` across logins and logouts.
+
 ---
 
 ## 🛠️ Build & Verification

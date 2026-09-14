@@ -217,7 +217,7 @@ const STEP_META = [
   { label:'Publish', Icon:RiEyeFill      },
 ]
 
-function StepIndicator({ current, canPreview, onPreview, onSave, savingDraft, lastSavedTime }) {
+function StepIndicator({ current, canPreview, onPreview, onSelectStep, onSave, savingDraft, lastSavedTime }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:0, marginBottom:28, overflowX:'auto', paddingBottom:4 }}>
       {STEP_META.map(({ label, Icon }, i) => {
@@ -226,14 +226,46 @@ function StepIndicator({ current, canPreview, onPreview, onSave, savingDraft, la
         const active = step === current
         return (
           <React.Fragment key={step}>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', flexShrink:0 }}>
-              <div style={{ width:30, height:30, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, transition:'all 0.2s', background:done?C.cyan:active?C.purple:'rgba(255,255,255,0.05)', border:active?`2px solid ${C.purple}`:done?`2px solid ${C.cyan}`:`1px solid ${C.border}`, color:done?'#000':active?'#fff':C.muted, boxShadow:active?`0 0 12px ${C.purple}66`:done?`0 0 8px ${C.cyan}44`:'none' }}>
-                {done ? <RiCheckFill size={13} /> : <Icon size={13} />}
+            <button
+              type="button"
+              onClick={() => onSelectStep && onSelectStep(step)}
+              title={`Click to jump to Step ${step}: ${label}`}
+              style={{
+                display:'flex',
+                flexDirection:'column',
+                alignItems:'center',
+                flexShrink:0,
+                background:'none',
+                border:'none',
+                cursor:'pointer',
+                padding:0,
+                outline:'none'
+              }}
+            >
+              <div style={{
+                width:32,
+                height:32,
+                borderRadius:'50%',
+                display:'flex',
+                alignItems:'center',
+                justifyContent:'center',
+                fontSize:13,
+                fontWeight:700,
+                transition:'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                background:done?C.cyan:active?C.purple:'rgba(255,255,255,0.05)',
+                border:active?`2px solid ${C.purple}`:done?`2px solid ${C.cyan}`:`1px solid ${C.border}`,
+                color:done?'#000':active?'#fff':C.muted,
+                boxShadow:active?`0 0 14px ${C.purple}88`:done?`0 0 8px ${C.cyan}44`:'none',
+                transform:active?'scale(1.1)':'scale(1)'
+              }}>
+                {done ? <RiCheckFill size={14} /> : <Icon size={14} />}
               </div>
-              <span style={{ fontSize:9.5, color:active?C.cyan:done?C.sub:C.muted, marginTop:4, fontWeight:active?700:400, letterSpacing:'0.04em', textTransform:'uppercase' }}>{label}</span>
-            </div>
+              <span style={{ fontSize:9.5, color:active?C.cyan:done?C.sub:C.muted, marginTop:5, fontWeight:active?800:500, letterSpacing:'0.04em', textTransform:'uppercase' }}>
+                {step}. {label}
+              </span>
+            </button>
             {i < STEP_META.length - 1 && (
-              <div style={{ flex:1, height:2, background:step<current?`linear-gradient(90deg,${C.cyan},${C.purple})`:C.border, margin:'0 4px', marginBottom:20, minWidth:14, borderRadius:2 }} />
+              <div style={{ flex:1, height:2, background:step<current?C.cyan:C.border, margin:'0 4px', marginBottom:20, minWidth:14, borderRadius:2 }} />
             )}
           </React.Fragment>
         )
@@ -1807,7 +1839,7 @@ function Step7Content({ data, onChange, tracks, sessionUser }) {
             type="button"
             onClick={() => handleUpdateEcosystemUnderstanding()}
             disabled={aiGenTitles}
-            style={{ background:`linear-gradient(135deg, ${C.cyan}, ${C.purple})`, color:'#000', border:'none', padding:'9px 18px', borderRadius:4, fontWeight:900, fontSize:12, cursor:'pointer', whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:6 }}
+            style={{ background: C.cyan, color:'#000', border:'none', padding:'9px 18px', borderRadius:4, fontWeight:900, fontSize:12, cursor:'pointer', whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:6 }}
           >
             <RiSparklingFill size={14} /> {aiGenTitles ? 'Updating Understanding...' : '✨ Update AI Understanding & Switch Titles'}
           </button>
@@ -1981,7 +2013,7 @@ function Step7Content({ data, onChange, tracks, sessionUser }) {
                 type="button"
                 onClick={genHeroImages}
                 disabled={aiGenImg}
-                style={{ background:`linear-gradient(135deg, ${C.cyan}, ${C.purple})`, color:'#000', border:'none', padding:'6px 14px', borderRadius:4, fontWeight:900, fontSize:11.5, cursor:'pointer', whiteSpace:'nowrap', marginLeft:4 }}
+                style={{ background: C.cyan, color:'#000', border:'none', padding:'6px 14px', borderRadius:4, fontWeight:900, fontSize:11.5, cursor:'pointer', whiteSpace:'nowrap', marginLeft:4 }}
               >
                 {aiGenImg ? `Applying (${imageQty})...` : `Apply Curated (${imageQty})`}
               </button>
@@ -2295,42 +2327,43 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
     }
   })
 
-  // Sync state if epk loads asynchronously
+  // Sync state when epk or active artist changes
   React.useEffect(() => {
     if (epk && typeof epk === 'object') {
-      const activeSub = (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || ''
-      if (epk.subdomain === 'aisha' && activeSub && activeSub !== 'aisha') {
-        return
-      }
-      setData(prev => ({
-        ...prev,
-        artist_name: epk.artist_name ?? prev.artist_name,
-        subdomain: epk.subdomain ?? prev.subdomain,
-        customDomain: epk.customDomain ?? prev.customDomain,
-        layoutWidth: epk.layoutWidth ?? prev.layoutWidth,
-        layoutVariant: epk.layoutVariant ?? prev.layoutVariant,
-        headline: epk.headline ?? prev.headline,
-        bio: epk.bio ?? prev.bio,
-        themeMode: epk.themeMode ?? prev.themeMode,
-        themeBg: epk.themeBg ?? prev.themeBg,
-        logoUrl: epk.logoUrl ?? prev.logoUrl,
-        heroImageUrl: epk.heroImageUrl ?? prev.heroImageUrl,
-        heroImages: epk.heroImages ?? prev.heroImages,
-        accentColor: epk.accentColor ?? prev.accentColor,
-        secondaryColor: epk.secondaryColor ?? prev.secondaryColor,
-        fontFamily: epk.fontFamily ?? prev.fontFamily,
-        menuItems: epk.menuItems ?? prev.menuItems,
-        featuredTrackIsrc: epk.featuredTrackIsrc ?? prev.featuredTrackIsrc,
-        pressOutlet: epk.pressOutlet ?? prev.pressOutlet,
-        pressQuote: epk.pressQuote ?? prev.pressQuote,
-        youtubeVideoUrl: epk.youtubeVideoUrl ?? prev.youtubeVideoUrl,
-        spotify: epk.spotify ?? prev.spotify,
-        soundcloud: epk.soundcloud ?? prev.soundcloud,
-        instagram: epk.instagram ?? prev.instagram,
-        bookingEmail: epk.bookingEmail ?? prev.bookingEmail,
-      }))
+      setData(prev => {
+        const isDifferentArtist = epk.subdomain && prev.subdomain && epk.subdomain !== prev.subdomain;
+        return {
+          ...prev,
+          artist_name: epk.artist_name || epk.name || (isDifferentArtist ? epk.artist_name : prev.artist_name),
+          siteName: epk.artist_name || epk.name || prev.siteName,
+          subdomain: epk.subdomain || prev.subdomain,
+          customDomain: epk.customDomain ?? (isDifferentArtist ? '' : prev.customDomain),
+          layoutWidth: epk.layoutWidth || prev.layoutWidth,
+          layoutVariant: epk.layoutVariant || prev.layoutVariant,
+          headline: epk.headline || (isDifferentArtist ? '' : prev.headline),
+          tagline: epk.headline || prev.tagline,
+          bio: epk.bio || (isDifferentArtist ? '' : prev.bio),
+          themeMode: epk.themeMode || prev.themeMode,
+          themeBg: epk.themeBg || prev.themeBg,
+          logoUrl: epk.logoUrl || (isDifferentArtist ? '' : prev.logoUrl),
+          heroImageUrl: epk.heroImageUrl || (isDifferentArtist ? '' : prev.heroImageUrl),
+          heroImages: (epk.heroImages && epk.heroImages.length > 0) ? epk.heroImages : (isDifferentArtist ? [] : prev.heroImages),
+          accentColor: epk.accentColor || prev.accentColor,
+          secondaryColor: epk.secondaryColor || prev.secondaryColor,
+          fontFamily: epk.fontFamily || prev.fontFamily,
+          menuItems: epk.menuItems || prev.menuItems,
+          featuredTrackIsrc: epk.featuredTrackIsrc ?? (isDifferentArtist ? '' : prev.featuredTrackIsrc),
+          pressOutlet: epk.pressOutlet || (isDifferentArtist ? '' : prev.pressOutlet),
+          pressQuote: epk.pressQuote || (isDifferentArtist ? '' : prev.pressQuote),
+          youtubeVideoUrl: epk.youtubeVideoUrl || (isDifferentArtist ? '' : prev.youtubeVideoUrl),
+          spotify: epk.spotify || (isDifferentArtist ? '' : prev.spotify),
+          soundcloud: epk.soundcloud || (isDifferentArtist ? '' : prev.soundcloud),
+          instagram: epk.instagram || (isDifferentArtist ? '' : prev.instagram),
+          bookingEmail: epk.bookingEmail || (isDifferentArtist ? '' : prev.bookingEmail),
+        };
+      });
     }
-  }, [epk])
+  }, [epk?.subdomain, epk?.artist_name, epk?.headline, epk?.bio]);
 
   const TOTAL = 8
   const [isSubdomainAvailable, setIsSubdomainAvailable] = useState(true)
@@ -2339,38 +2372,50 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
   const [saveToast, setSaveToast] = useState(false)
   const [resumedNotice, setResumedNotice] = useState(false)
 
-  // Restore draft on mount
+  // Restore draft on mount only if matching artist subdomain or non-empty
   useEffect(() => {
     try {
-      const draft = localStorage.getItem('epk_wizard_draft')
+      const sub = data.subdomain || 'ndufo';
+      const draft = localStorage.getItem(`epk_wizard_draft_${sub}`) || localStorage.getItem('epk_wizard_draft');
       if (draft) {
-        const parsed = JSON.parse(draft)
-        if (parsed?.data) {
-          setData(prev => ({ ...prev, ...parsed.data }))
+        const parsed = JSON.parse(draft);
+        if (parsed?.data && (!parsed.data.subdomain || parsed.data.subdomain === sub)) {
+          setData(prev => {
+            const merged = { ...prev };
+            Object.keys(parsed.data).forEach(k => {
+              if (parsed.data[k] !== undefined && parsed.data[k] !== null && parsed.data[k] !== '') {
+                merged[k] = parsed.data[k];
+              }
+            });
+            return merged;
+          });
           if (parsed.step && parsed.step > 1 && parsed.step <= TOTAL) {
-            setStep(parsed.step)
+            setStep(parsed.step);
           }
           if (parsed.savedAt) {
-            setLastSavedTime(new Date(parsed.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
-            setResumedNotice(true)
+            setLastSavedTime(new Date(parsed.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            setResumedNotice(true);
           }
         }
       }
     } catch {}
-  }, [])
+  }, []);
 
   // Auto-save on data or step update
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        localStorage.setItem('epk_wizard_draft', JSON.stringify({
+        const sub = data.subdomain || 'ndufo';
+        const payload = JSON.stringify({
           data,
           step,
           savedAt: Date.now()
-        }))
+        });
+        localStorage.setItem(`epk_wizard_draft_${sub}`, payload);
+        localStorage.setItem('epk_wizard_draft', payload);
       } catch {}
-    }, 500)
-    return () => clearTimeout(timer)
+    }, 500);
+    return () => clearTimeout(timer);
   }, [data, step])
 
   const handleSaveProgress = async () => {
@@ -2514,6 +2559,7 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
         current={step}
         canPreview={canPreview}
         onPreview={() => setStep(8)}
+        onSelectStep={setStep}
         onSave={handleSaveProgress}
         savingDraft={savingDraft}
         lastSavedTime={lastSavedTime}
