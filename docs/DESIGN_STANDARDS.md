@@ -178,6 +178,12 @@ To preserve visual clarity, tactile predictability, and modern cyber minimalism:
 - Gradient fills (`linear-gradient`) on `<button>` elements or `.btn` classes are strictly prohibited.
 - Subtle contrast is achieved via solid hover color shifts (`var(--btn-hover)`), 1px solid accent borders, and neon ambient box shadows, rather than multi-color gradient fills.
 
+### E. Strict Lightning Icon Ban Platformwide
+To maintain a clean, professional, and consistent visual identity:
+- **Zero Lightning Icons:** Lightning icons (`⚡`, `RiFlash*`, `FaBolt`, `HiLightningBolt`, etc.) are **strictly prohibited** across all applications, views, modals, and components on the platform.
+- Never use lightning bolts for buttons, badges, headlines, toast notifications, payment methods, or action triggers.
+- Use cohesive flat Remix Icons (`RiSparklingFill`, `RiMusic2Fill`, `RiShieldCheckFill`, `RiCheckFill`, `RiBankCardFill`, `RiUploadCloud2Fill`) or clean semantic text.
+
 ---
 
 ## 5. Header & Sticky Behaviors

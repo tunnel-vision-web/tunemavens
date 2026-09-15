@@ -1280,7 +1280,7 @@ export function CreatorEpkView(props = {}) {
       localStorage.setItem(crmKey, JSON.stringify(updatedFans))
 
       // Send to backend CRM leads endpoint
-      fetch('http://localhost:8001/api/crm/leads', {
+      fetch('/api/crm/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1979,7 +1979,7 @@ Direct Management Contact: mgmt@intermaven.io`
     if (!audio) return
     if (isPlaying) {
       if (currentTrack && (!audio.src || audio.src === '')) {
-        audio.src = currentTrack.audioUrl || currentTrack.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
+        audio.src = currentTrack.audioUrl || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
         audio.load()
       }
       audio.play().catch(e => console.warn('EPK audio play error:', e))
@@ -1992,7 +1992,7 @@ Direct Management Contact: mgmt@intermaven.io`
   useEffect(() => {
     const audio = epkAudioRef.current
     if (!audio || !currentTrack) return
-    const src = currentTrack.audioUrl || currentTrack.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
+    const src = currentTrack.audioUrl || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
     if (audio.src !== src) {
       audio.src = src
       audio.load()
@@ -2149,7 +2149,7 @@ Direct Management Contact: mgmt@intermaven.io`
     setAlbumAudioUnlocked(false)
     const audio = albumAudioRef.current
     if (audio) {
-      const src = trk.audioUrl || trk.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(trk.isrc || trk.title || 'preview')}`
+      const src = trk.audioUrl || trk.fileUrl || `/api/stream/track/${encodeURIComponent(trk.isrc || trk.title || 'preview')}`
       if (audio.src !== src) {
         audio.src = src
         audio.load()
@@ -2171,7 +2171,7 @@ Direct Management Contact: mgmt@intermaven.io`
       const trk = albumAudioCurrentTrack || albTracks[0]
       if (trk) {
         if (!albumAudioCurrentTrack) setAlbumAudioCurrentTrack(trk)
-        const src = trk.audioUrl || trk.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(trk.isrc || trk.title || 'preview')}`
+        const src = trk.audioUrl || trk.fileUrl || `/api/stream/track/${encodeURIComponent(trk.isrc || trk.title || 'preview')}`
         if (audio.src !== src) {
           audio.src = src
           audio.load()
@@ -2192,7 +2192,7 @@ Direct Management Contact: mgmt@intermaven.io`
       if (audio) {
         audio.play().catch(e => console.warn('Resume full stream error:', e))
       }
-      showToast('⚡ Full 24-Bit Lossless Master stream unlocked! (1 TM Credit consumed)')
+      showToast('Full 24-Bit Lossless Master stream unlocked! (1 TM Credit consumed)')
     } else {
       setQuickTopUpModalOpen(true)
       showToast('⚠️ Insufficient credits to unlock stream. Please top up your balance.')
@@ -5460,7 +5460,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             gap: '8px'
                           }}
                         >
-                          ⚡ Buy Full Digital MP3 Album (100 Credits)
+                          Buy Full Digital MP3 Album (100 Credits)
                         </button>
                         <button
                           type="button"
@@ -5674,7 +5674,7 @@ Direct Management Contact: mgmt@intermaven.io`
                                 gap: '6px'
                               }}
                             >
-                              ⚡ Buy MP3 Single ({trk.priceCredits} Credits)
+                              Buy MP3 Single ({trk.priceCredits} Credits)
                             </button>
                           </div>
                         </div>
@@ -6053,7 +6053,7 @@ Direct Management Contact: mgmt@intermaven.io`
               /* Post Stems Purchase Download Hub */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '2rem' }}>⚡</span>
+                  <RiMusic2Fill size={28} color={effectiveAccent} />
                   <div>
                     <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900, color: effectiveAccent }}>
                       Stems Unlocked & Ready for Download
@@ -8285,7 +8285,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       </h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {[
-                          '⚡ Instant Tour Pre-Sale Alerts & VIP Pass Holds',
+                          'Instant Tour Pre-Sale Alerts & VIP Pass Holds',
                           '🎵 Unreleased Digital MP3 Singles & Lossless Releases',
                           '👕 Exclusive Fan Club Merchandise Flash Sales',
                           '🎙️ Creator Behind-The-Scenes & Monthly Livestream Q&A'
@@ -8949,7 +8949,7 @@ Direct Management Contact: mgmt@intermaven.io`
                 letterSpacing: '0.04em',
                 flexShrink: 0
               }}>
-                ⚡ TuneStream
+                TuneStream
               </span>
             </div>
 

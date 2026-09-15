@@ -224,6 +224,17 @@ def update_my_profile(
             existing = db.users.find_one({"email": updates["email"], "_id": {"$ne": ObjectId(str(current_user["_id"]))}})
             if existing:
                 raise HTTPException(status_code=409, detail="Email already registered to another account")
+        
+        if "name" in updates and updates["name"]:
+            parts = updates["name"].strip().split()
+            updates["first_name"] = parts[0]
+            updates["last_name"] = " ".join(parts[1:]) if len(parts) > 1 else ""
+        
+        if "brand_name" in updates:
+            updates["company"] = updates["brand_name"]
+
+        updates["updated_at"] = datetime.now(timezone.utc)
+
         db.users.update_one(
             {"_id": ObjectId(str(current_user["_id"]))},
             {"$set": updates},

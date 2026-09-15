@@ -30,13 +30,17 @@ export default function AiArtPromptModal({
   onClose,
   onApply,
   onApplyArtwork,
+  onSuccess,
   initialPrompt = '',
+  defaultPrompt = '',
   title = 'AI Artwork Creation Studio',
   contextTitle = 'Master Release',
   defaultAspectRatio = '1:1'
 }) {
+  const effectiveInitial = defaultPrompt || initialPrompt || '';
   const [prompt, setPrompt] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('none');
+  const [stylesList, setStylesList] = useState(IMAGE_STYLES);
   const [aspectRatio, setAspectRatio] = useState(defaultAspectRatio);
   const [generating, setGenerating] = useState(false);
   const [generatedResult, setGeneratedResult] = useState(null);
@@ -44,12 +48,25 @@ export default function AiArtPromptModal({
 
   useEffect(() => {
     if (isOpen) {
-      setPrompt(initialPrompt || `High-fashion album cover for "${contextTitle}", Afro-futurist aesthetic, vibrant lighting, crisp detail`);
+      fetch('/api/social-ai/styles')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && Array.isArray(data.styles) && data.styles.length > 0) {
+            setStylesList(data.styles);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPrompt(effectiveInitial || `High-fashion album cover for "${contextTitle}", Afro-futurist aesthetic, vibrant lighting, crisp detail`);
       setAspectRatio(defaultAspectRatio);
       setGeneratedResult(null);
       setErrorMsg(null);
     }
-  }, [isOpen, initialPrompt, contextTitle, defaultAspectRatio]);
+  }, [isOpen, effectiveInitial, contextTitle, defaultAspectRatio]);
 
   if (!isOpen) return null;
 
@@ -69,9 +86,9 @@ export default function AiArtPromptModal({
 
     let effectivePrompt = prompt.trim();
     if (selectedStyle && selectedStyle !== 'none') {
-      const styleObj = IMAGE_STYLES.find(s => s.id === selectedStyle);
+      const styleObj = stylesList.find(s => s.id === selectedStyle);
       if (styleObj) {
-        effectivePrompt = `${effectivePrompt}, style: ${styleObj.label} (${styleObj.desc})`;
+        effectivePrompt = `${effectivePrompt}, style: ${styleObj.label} (${styleObj.prompt_suffix || styleObj.desc})`;
       }
     }
 
@@ -100,24 +117,30 @@ export default function AiArtPromptModal({
   };
 
   const handleConfirmApply = () => {
-    if (generatedResult && typeof onApply === 'function') {
-      onApply(generatedResult.media_url, generatedResult);
+    const url = generatedResult?.media_url;
+    if (url) {
+      if (typeof onApply === 'function') onApply(url, generatedResult);
+      if (typeof onApplyArtwork === 'function') onApplyArtwork(url, generatedResult);
+      if (typeof onSuccess === 'function') onSuccess(url, prompt);
       onClose();
     }
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0,0,0,0.88)',
-      backdropFilter: 'blur(10px)',
-      zIndex: 999999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.88)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 999999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
+      }}
+    >
       <div style={{
         background: '#0c101d',
         border: '1px solid rgba(255,255,255,0.12)',
@@ -234,7 +257,7 @@ export default function AiArtPromptModal({
                 cursor: 'pointer'
               }}
             >
-              {IMAGE_STYLES.map(st => (
+              {stylesList.map(st => (
                 <option key={st.id} value={st.id} style={{ background: '#0c101d', color: '#fff' }}>
                   {st.label} {st.desc ? `— ${st.desc}` : ''}
                 </option>

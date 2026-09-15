@@ -1111,7 +1111,7 @@ export default function RegisterView({ onLogin }) {
                   { id: 'debit_card', label: 'Card', icon: '💳' },
                   { id: 'mobile_money', label: 'Mobile', icon: '📱' },
                   { id: 'paypal', label: 'PayPal', icon: '🅿️' },
-                  { id: 'stripe', label: 'Stripe', icon: '⚡' }
+                  { id: 'stripe', label: 'Stripe', icon: '💳' }
                 ].map(m => (
                   <div
                     key={m.id}

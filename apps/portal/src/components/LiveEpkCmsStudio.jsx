@@ -242,7 +242,7 @@ export default function LiveEpkCmsStudio({
             borderRadius: '3px',
             letterSpacing: '0.5px'
           }}>
-            ⚡ MOTHER-CMS
+            MOTHER-CMS
           </div>
           <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>
             Live EPK Studio: <span style={{ color: accent }}>{formData.artist_name || artistSlug}</span>
@@ -509,7 +509,7 @@ export default function LiveEpkCmsStudio({
                     cursor: 'pointer'
                   }}
                 >
-                  <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#fff', marginBottom: '4px' }}>⚡ Option 1: Synergy Cascade</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#fff', marginBottom: '4px' }}>Option 1: Synergy Cascade</div>
                   <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Staggered right-to-left entrance with drop shadows matching Synergy Sugar.</div>
                 </div>
 

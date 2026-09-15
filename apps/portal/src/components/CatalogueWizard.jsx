@@ -5,7 +5,7 @@ import {
   RiArrowRightLine, RiArrowLeftLine, RiShieldCheckFill,
   RiCoinsFill, RiGlobalFill, RiUserVoiceFill, RiEqualizerFill,
   RiCheckboxCircleFill, RiAlertFill, RiFolderUploadFill, RiSettings3Fill,
-  RiImageAddFill, RiMagicFill, RiPaletteFill, RiCloseLine, RiRefreshLine
+  RiImageAddFill, RiMagicFill, RiPaletteFill, RiCloseLine, RiRefreshLine, RiUploadCloud2Fill
 } from 'react-icons/ri';
 import { DEFAULT_CANONICAL_GENRES, fetchGenres, getCachedGenres } from '../lib/genres.js';
 import BulkCatalogueIngestModal from './BulkCatalogueIngestModal';
@@ -174,7 +174,7 @@ export default function CatalogueWizard({
     setAiError(null);
     setErrorMsg(null);
     try {
-      const resp = await fetch('http://localhost:8001/api/social-ai/generate-art', {
+      const resp = await fetch('/api/social-ai/generate-art', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -184,7 +184,7 @@ export default function CatalogueWizard({
       });
       if (resp.ok) {
         const data = await resp.json();
-        const url = data.media_url ? (data.media_url.startsWith('http') ? data.media_url : `http://localhost:8001${data.media_url}`) : null;
+        const url = data.media_url ? (data.media_url.startsWith('http') ? data.media_url : `${data.media_url}`) : null;
         if (url) {
           setCoverArtUrl(url);
           setArtworkMode('ai');
@@ -468,7 +468,7 @@ export default function CatalogueWizard({
           formData.append('title', t.title);
           formData.append('subdomain', sessionUser?.username || 'ndufo');
 
-          const uploadRes = await fetch('http://localhost:8001/api/storage/upload', {
+          const uploadRes = await fetch('/api/storage/upload', {
             method: 'POST',
             body: formData
           });
@@ -547,7 +547,7 @@ export default function CatalogueWizard({
     };
 
     try {
-      const resp = await fetch('http://localhost:8001/api/catalog/wizard-ingest', {
+      const resp = await fetch('/api/catalog/wizard-ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -877,7 +877,8 @@ export default function CatalogueWizard({
               }}
               title="Open Bulk Ingestion Studio for multi-track catalogues"
             >
-              <span>⚡</span> Bulk Ingestion Studio
+              <RiUploadCloud2Fill size={14} />
+              <span>Bulk Ingestion Studio</span>
             </button>
           </div>
 
@@ -2616,17 +2617,20 @@ export default function CatalogueWizard({
 
       {/* Add New Artist to Roster Modal */}
       {showAddArtistModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(12px)',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px'
-        }}>
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddArtistModal(false); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(12px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
           <div style={{
             background: '#0a0f1d',
             border: '1px solid #00f0ff',

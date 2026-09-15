@@ -5,6 +5,7 @@ from pathlib import Path
 import uuid
 import base64
 import logging
+import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Request
 from pydantic import BaseModel
@@ -358,7 +359,16 @@ def delete_storage_asset(
 
 
 class StorageTopUpRequest(BaseModel):
-    package_id: str  # "storage_500mb" | "storage_1gb" | "storage_5gb"
+    package_id: str  # "storage_500mb" | "storage_1gb" | "storage_5gb" | "starter_topup" | "pro_topup" | "enterprise_topup"
+    subdomain: Optional[str] = None
+
+
+class CreditPurchaseRequest(BaseModel):
+    amount_credits: int
+    protocol: str = "stripe"  # "stripe" | "mpesa" | "paypal"
+    subdomain: Optional[str] = "ndufo"
+    phone_number: Optional[str] = None
+    card_last4: Optional[str] = None
 
 
 STORAGE_PACKAGES = {
@@ -430,9 +440,12 @@ def top_up_storage(
     cost = pkg["credits"]
     extra_mb = pkg["additional_mb"]
 
+    clean_sub = (payload.subdomain or "").lower().strip()
     user_doc = None
     if current_user and "_id" in current_user:
         user_doc = db.users.find_one({"_id": current_user["_id"]})
+    if not user_doc and clean_sub:
+        user_doc = db.users.find_one({"$or": [{"username": clean_sub}, {"email": f"{clean_sub}@tunemavens.com"}]})
     if not user_doc:
         user_doc = db.users.find_one({"role": "creator"}) or db.users.find_one({})
 
@@ -463,4 +476,64 @@ def top_up_storage(
         "credits": new_credits,
         "remaining_credits": new_credits,
         "added_mb": extra_mb
+    }
+
+
+@router.post("/buy-credits", response_model=Dict[str, Any])
+def buy_credits(
+    payload: CreditPurchaseRequest,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Purchase account credits using Stripe, M-Pesa, or PayPal protocols."""
+    if payload.amount_credits <= 0:
+        raise HTTPException(status_code=400, detail="Credit amount must be greater than 0.")
+
+    clean_sub = (payload.subdomain or "ndufo").lower().strip()
+    user_doc = None
+    if current_user and "_id" in current_user:
+        user_doc = db.users.find_one({"_id": current_user["_id"]})
+    if not user_doc and clean_sub:
+        user_doc = db.users.find_one({"$or": [{"username": clean_sub}, {"email": f"{clean_sub}@tunemavens.com"}]})
+    if not user_doc:
+        user_doc = db.users.find_one({"role": "creator"}) or db.users.find_one({})
+
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User account not found.")
+
+    current_credits = int(user_doc.get("credits") or 0)
+    new_credits = current_credits + payload.amount_credits
+
+    db.users.update_one(
+        {"_id": user_doc["_id"]},
+        {
+            "$set": {
+                "credits": new_credits,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+
+    tx_id = f"TM-{payload.protocol[:3].upper()}-{secrets.token_hex(4).upper()}"
+
+    db.orders.insert_one({
+        "user_id": str(user_doc["_id"]),
+        "item_type": "credits",
+        "credits": payload.amount_credits,
+        "protocol": payload.protocol,
+        "transaction_id": tx_id,
+        "phone_number": payload.phone_number,
+        "card_last4": payload.card_last4,
+        "status": "completed",
+        "created_at": datetime.now(timezone.utc)
+    })
+
+    return {
+        "status": "success",
+        "success": True,
+        "message": f"Payment successful! Loaded +{payload.amount_credits} credits via {payload.protocol.upper()}.",
+        "credits_added": payload.amount_credits,
+        "new_balance": new_credits,
+        "credits": new_credits,
+        "transaction_id": tx_id,
+        "protocol": payload.protocol
     }

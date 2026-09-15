@@ -294,3 +294,151 @@ def get_video_statistics(url: Optional[str] = None, video_id: Optional[str] = No
         raise HTTPException(status_code=400, detail="Either 'url' or 'video_id' parameter is required.")
     return youtube_service.get_video_stats(target)
 
+
+# ── AI Prompt Styles Management (Admin & CMS Overview) ──────────────────────
+
+DEFAULT_AI_STYLES = [
+    {
+        "id": "none",
+        "label": "None / Custom Prompt Style",
+        "desc": "Use prompt as typed without extra styling modifiers",
+        "prompt_suffix": "",
+        "is_default": True
+    },
+    {
+        "id": "afro_futurism",
+        "label": "Afro-Futurism",
+        "desc": "Cosmic African cyber-tribal aesthetics, golden accents, luminescent patterns",
+        "prompt_suffix": "cosmic Afro-futurist aesthetic, glowing African fractal patterns, warm metallic gold and neon accents, 8k masterpiece",
+        "is_default": True
+    },
+    {
+        "id": "retro_synth",
+        "label": "Retro 80s Synthwave",
+        "desc": "Chrome grid, neon magenta & cyan lasers, nostalgic VHS analog glow",
+        "prompt_suffix": "retro synthwave aesthetic, 1980s neon grid horizon, cyan and magenta lasers, analog VHS warmth, chrome reflections",
+        "is_default": True
+    },
+    {
+        "id": "modern_editorial",
+        "label": "Modern Editorial",
+        "desc": "Clean high-fashion minimalism, architectural studio lighting, crisp contrast",
+        "prompt_suffix": "clean high-fashion editorial, architectural studio lighting, minimalist composition, crisp contrast, 8k crisp details",
+        "is_default": True
+    },
+    {
+        "id": "cyberpunk",
+        "label": "Cyberpunk Neon",
+        "desc": "Dark futuristic megacity, rain reflections, glowing holographic signage",
+        "prompt_suffix": "dark cyberpunk megacity, neon holographic reflections, rain-slicked asphalt, dramatic volumetric fog",
+        "is_default": True
+    },
+    {
+        "id": "cartoon_anime",
+        "label": "Cartoon / Anime",
+        "desc": "Vibrant comic cel-shading, dynamic bold linework, stylized character art",
+        "prompt_suffix": "vibrant Japanese anime illustration, dynamic cel-shading, expressive linework, saturated color palette",
+        "is_default": True
+    },
+    {
+        "id": "octane_3d",
+        "label": "3D Render / Octane",
+        "desc": "Hyper-detailed 3D modeling, volumetric ray-tracing, glossy metallic surfaces",
+        "prompt_suffix": "Octane render 3D masterpiece, ray-traced ambient occlusion, glossy iridescent materials, depth of field",
+        "is_default": True
+    },
+    {
+        "id": "oil_painting",
+        "label": "Oil Painting / Impressionist",
+        "desc": "Rich impasto textures, expressive artistic palette knife and canvas brushwork",
+        "prompt_suffix": "traditional textured oil painting on linen canvas, impasto palette knife strokes, expressive fine art masterpiece",
+        "is_default": True
+    },
+    {
+        "id": "studio_photo",
+        "label": "Studio Photography",
+        "desc": "8k ultra-sharp DSLR portrait, shallow depth of field, softbox rim lighting",
+        "prompt_suffix": "Hasselblad medium format studio photograph, 8k ultra-sharp portrait, shallow depth of field, softbox rim lighting",
+        "is_default": True
+    }
+]
+
+
+class AiStyleModel(BaseModel):
+    id: Optional[str] = None
+    label: str
+    desc: str
+    prompt_suffix: Optional[str] = ""
+    is_default: Optional[bool] = False
+
+
+@router.get("/styles")
+def get_ai_styles():
+    """Retrieve all available AI image styles from MongoDB db.ai_styles."""
+    try:
+        for s in DEFAULT_AI_STYLES:
+            db.ai_styles.update_one({"id": s["id"]}, {"$setOnInsert": s}, upsert=True)
+        styles = list(db.ai_styles.find({}, {"_id": 0}))
+        return {"status": "success", "styles": styles}
+    except Exception as e:
+        logger.warning(f"Failed to query ai_styles from DB, returning defaults: {e}")
+        return {"status": "fallback", "styles": DEFAULT_AI_STYLES}
+
+
+@router.post("/styles")
+def create_ai_style(payload: AiStyleModel, current_user: Optional[dict] = Depends(get_optional_user)):
+    """Admin / Creator endpoint to create a new AI prompt style."""
+    clean_label = payload.label.strip()
+    if not clean_label:
+        raise HTTPException(status_code=400, detail="Style label cannot be empty.")
+    
+    style_id = (payload.id or clean_label.lower().replace(" ", "_").replace("-", "_")).strip()
+    doc = {
+        "id": style_id,
+        "label": clean_label,
+        "desc": payload.desc.strip(),
+        "prompt_suffix": (payload.prompt_suffix or "").strip(),
+        "is_default": False,
+        "created_at": time.time(),
+        "updated_at": time.time()
+    }
+    try:
+        db.ai_styles.update_one({"id": style_id}, {"$set": doc}, upsert=True)
+        return {"status": "success", "style": doc, "message": f"Style '{clean_label}' saved successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error saving style: {e}")
+
+
+@router.put("/styles/{style_id}")
+def update_ai_style(style_id: str, payload: AiStyleModel, current_user: Optional[dict] = Depends(get_optional_user)):
+    """Admin / Creator endpoint to edit an existing AI prompt style."""
+    clean_id = style_id.strip()
+    existing = db.ai_styles.find_one({"id": clean_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Style not found.")
+    
+    updates = {
+        "label": payload.label.strip(),
+        "desc": payload.desc.strip(),
+        "prompt_suffix": (payload.prompt_suffix or "").strip(),
+        "updated_at": time.time()
+    }
+    db.ai_styles.update_one({"id": clean_id}, {"$set": updates})
+    updated_doc = {**existing, **updates}
+    if "_id" in updated_doc:
+        del updated_doc["_id"]
+    return {"status": "success", "style": updated_doc, "message": f"Style '{clean_id}' updated successfully."}
+
+
+@router.delete("/styles/{style_id}")
+def delete_ai_style(style_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
+    """Admin / Creator endpoint to remove a custom AI style."""
+    clean_id = style_id.strip()
+    if clean_id == "none":
+        raise HTTPException(status_code=400, detail="Cannot delete default 'none' style.")
+    res = db.ai_styles.delete_one({"id": clean_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Style not found.")
+    return {"status": "success", "message": f"Style '{clean_id}' deleted."}
+
+

@@ -441,13 +441,16 @@ def _sync_tracks_to_all_collections(subdomain: str, tracks: List[Dict[str, Any]]
 @router.get("/tracks", response_model=Dict[str, Any])
 def get_catalog_tracks(
     subdomain: str = Query("ndufo"),
-    all: bool = Query(False),
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=500),
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Retrieve catalog tracks for an artist, or full platform catalogue when all=True."""
     if all or subdomain == "all":
         all_tracks = []
         seen_isrcs = set()
+
+        # 1. Pull from db.catalog_tracks
         for doc in db.catalog_tracks.find({}):
             for t in doc.get("tracks", []):
                 isrc = t.get("isrc")
@@ -456,6 +459,26 @@ def get_catalog_tracks(
                     all_tracks.append(t)
                 elif not isrc:
                     all_tracks.append(t)
+
+        # 2. Pull from db.epks for any creators not in catalog_tracks
+        for epk in db.epks.find({}):
+            for t in epk.get("tracks", []):
+                isrc = t.get("isrc")
+                if isrc and isrc not in seen_isrcs:
+                    seen_isrcs.add(isrc)
+                    all_tracks.append(t)
+                elif not isrc:
+                    all_tracks.append(t)
+
+        # 3. Pull from db.cms_layouts
+        for cms in db.cms_layouts.find({}):
+            tracks = (cms.get("data") or {}).get("tracks", [])
+            for t in tracks:
+                isrc = t.get("isrc")
+                if isrc and isrc not in seen_isrcs:
+                    seen_isrcs.add(isrc)
+                    all_tracks.append(t)
+
         if not all_tracks:
             # Seed from default artists if empty
             for artist in DEFAULT_ARTISTS:
@@ -463,7 +486,21 @@ def get_catalog_tracks(
                     if t.get("isrc") not in seen_isrcs:
                         seen_isrcs.add(t.get("isrc"))
                         all_tracks.append(t)
-        return {"subdomain": "all", "count": len(all_tracks), "tracks": all_tracks}
+
+        total_count = len(all_tracks)
+        # Apply pagination if limit < total_count
+        start = (page - 1) * limit
+        end = start + limit
+        paginated = all_tracks[start:end] if limit else all_tracks
+
+        return {
+            "subdomain": "all",
+            "count": total_count,
+            "page": page,
+            "limit": limit,
+            "totalPages": max(1, (total_count + limit - 1) // limit),
+            "tracks": paginated
+        }
 
     clean = subdomain.lower().strip().replace(" ", "")
 
@@ -1132,7 +1169,33 @@ def bulk_ingest_catalog(
     for idx, t in enumerate(incoming_tracks):
         isrc = t.get("isrc") or f"KE-TM1-26-{base_seq + idx}"
         title = t.get("title") or f"Master Track {idx + 1}"
-        artist = t.get("artist") or common_artist or "Ndufo"
+        raw_artist = t.get("artist") or common_artist or "Ndufo"
+        primary_artist = t.get("primaryArtist") or raw_artist
+        
+        # Parse featured artists
+        raw_featured = t.get("featuredArtists") or t.get("featured_artists") or []
+        if isinstance(raw_featured, str):
+            featured_artists = [a.strip() for a in raw_featured.split(",") if a.strip()]
+        elif isinstance(raw_featured, list):
+            featured_artists = [str(a).strip() for a in raw_featured if str(a).strip()]
+        else:
+            featured_artists = []
+
+        # Parse collaborators
+        raw_collab = t.get("collaborators") or []
+        if isinstance(raw_collab, str):
+            collaborators = [c.strip() for c in raw_collab.split(",") if c.strip()]
+        elif isinstance(raw_collab, list):
+            collaborators = [str(c).strip() for c in raw_collab if str(c).strip()]
+        else:
+            collaborators = []
+
+        # Construct unified artist display string if features exist and not already in raw_artist
+        if featured_artists and "feat" not in raw_artist.lower():
+            artist = f"{primary_artist} feat. {', '.join(featured_artists)}"
+        else:
+            artist = raw_artist
+
         genre = t.get("genre") or common_genre or "Afro-fusion"
         release = t.get("release") or common_release or "Bulk Ingest Master"
         release_type = t.get("releaseType") or ("Album" if len(incoming_tracks) >= 6 else "Single")
@@ -1142,6 +1205,9 @@ def bulk_ingest_catalog(
             "isrc": isrc,
             "title": title,
             "artist": artist,
+            "primaryArtist": primary_artist,
+            "featuredArtists": featured_artists,
+            "collaborators": collaborators,
             "release": release,
             "releaseType": release_type,
             "year": str(t.get("year") or datetime.now().year),

@@ -4,7 +4,8 @@ import {
   RiSparklingFill, RiDeleteBin6Line, RiUploadCloud2Line, RiSearchLine,
   RiCheckLine, RiFileCopyLine, RiRefreshLine, RiArrowUpDownLine,
   RiEyeLine, RiPlayFill, RiExternalLinkLine, RiShieldCheckFill, RiInformationLine,
-  RiHardDrive2Fill, RiCoinsLine, RiAddCircleLine, RiCloseLine
+  RiHardDrive2Fill, RiCoinsLine, RiAddCircleLine, RiCloseLine,
+  RiBankCardLine, RiSmartphoneLine, RiPaypalFill, RiArrowRightSLine, RiArrowLeftSLine
 } from 'react-icons/ri';
 
 export default function CmsAssetsStudio({
@@ -28,6 +29,16 @@ export default function CmsAssetsStudio({
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [topUpMsg, setTopUpMsg] = useState(null);
+
+  // In-Modal Credit Top-Up & Payment Protocol States
+  const [modalSubTab, setModalSubTab] = useState('packs'); // 'packs' | 'buy-credits'
+  const [creditPackAmount, setCreditPackAmount] = useState(100);
+  const [paymentProtocol, setPaymentProtocol] = useState('stripe'); // 'stripe' | 'mpesa' | 'paypal'
+  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
+  const [cardExp, setCardExp] = useState('12/28');
+  const [cardCvc, setCardCvc] = useState('888');
+  const [mpesaPhone, setMpesaPhone] = useState('+254 712 345 678');
+  const [buyingCredits, setBuyingCredits] = useState(false);
 
   const fileInputRef = useRef(null);
   const replaceInputRef = useRef(null);
@@ -95,6 +106,46 @@ export default function CmsAssetsStudio({
       setTopUpMsg({ type: 'error', text: err.message || 'Network error topping up storage.' });
     } finally {
       setTopUpLoading(false);
+    }
+  };
+
+  const handlePurchaseCredits = async () => {
+    setBuyingCredits(true);
+    setTopUpMsg(null);
+    try {
+      const token = localStorage.getItem('tunemavens_token');
+      const res = await fetch('/api/storage/buy-credits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          amount_credits: Number(creditPackAmount),
+          protocol: paymentProtocol,
+          subdomain,
+          phone_number: paymentProtocol === 'mpesa' ? mpesaPhone : undefined,
+          card_last4: paymentProtocol === 'stripe' ? (cardNumber.replace(/\s+/g, '').slice(-4) || '4242') : undefined
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTopUpMsg({
+          type: 'success',
+          text: `Success! Loaded +${data.credits_added} credits via ${data.protocol.toUpperCase()} (Ref: ${data.transaction_id}). Your balance is now ${data.new_balance} credits!`
+        });
+        await loadQuota();
+        setTimeout(() => {
+          setModalSubTab('packs');
+        }, 1500);
+      } else {
+        setTopUpMsg({ type: 'error', text: data.detail || data.message || 'Credit purchase failed. Please check payment details.' });
+      }
+    } catch (err) {
+      setTopUpMsg({ type: 'error', text: err.message || 'Network error purchasing credits.' });
+    } finally {
+      setBuyingCredits(false);
     }
   };
 
@@ -681,23 +732,26 @@ export default function CmsAssetsStudio({
 
       {/* Top-Up Storage Quota Modal */}
       {showTopUpModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(8px)',
-          zIndex: 999999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px'
-        }}>
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowTopUpModal(false); setTopUpMsg(null); } }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
           <div style={{
             background: '#0c101d',
             border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: '6px',
             width: '100%',
-            maxWidth: '520px',
+            maxWidth: '560px',
             boxShadow: '0 25px 60px rgba(0,0,0,0.9)',
             overflow: 'hidden'
           }}>
@@ -732,6 +786,58 @@ export default function CmsAssetsStudio({
               </button>
             </div>
 
+            {/* Modal Sub-Tabs */}
+            <div style={{
+              display: 'flex',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(0,0,0,0.2)'
+            }}>
+              <button
+                type="button"
+                onClick={() => { setModalSubTab('packs'); setTopUpMsg(null); }}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: modalSubTab === 'packs' ? 'rgba(139, 92, 246, 0.12)' : 'transparent',
+                  border: 'none',
+                  borderBottom: modalSubTab === 'packs' ? '2px solid #8b5cf6' : '2px solid transparent',
+                  color: modalSubTab === 'packs' ? '#fff' : '#94a3b8',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <RiHardDrive2Fill size={16} />
+                <span>Storage Packs</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setModalSubTab('buy-credits'); setTopUpMsg(null); }}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: modalSubTab === 'buy-credits' ? 'rgba(0, 240, 255, 0.12)' : 'transparent',
+                  border: 'none',
+                  borderBottom: modalSubTab === 'buy-credits' ? '2px solid #00f0ff' : '2px solid transparent',
+                  color: modalSubTab === 'buy-credits' ? '#00f0ff' : '#94a3b8',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <RiCoinsLine size={16} />
+                <span>Top-Up Credits & Payments</span>
+              </button>
+            </div>
+
             {/* Modal Body */}
             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Credit Balance Badge */}
@@ -749,7 +855,7 @@ export default function CmsAssetsStudio({
                   <span>Available Balance: {quota?.credits ?? (sessionUser?.credits || 0)} Credits</span>
                 </div>
                 <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                  Current Quota: <strong>{quota?.quota_mb || 500} MB</strong>
+                  Current Quota: <strong>{quota?.quota_mb || 500} MB</strong> ({quota?.pct_used || 0}% used)
                 </div>
               </div>
 
@@ -767,63 +873,310 @@ export default function CmsAssetsStudio({
                 </div>
               )}
 
-              {/* Storage Packages List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {[
-                  { id: 'starter_topup', title: '+500 MB Storage Pack', credits: 50, desc: 'Adds 500 MB to your storage allotment permanently' },
-                  { id: 'pro_topup', title: '+1 GB (1,000 MB) Pro Pack', credits: 90, desc: 'Best Value • Great for high-res WAV stems & 4K video clips', popular: true },
-                  { id: 'enterprise_topup', title: '+5 GB (5,000 MB) Studio Pack', credits: 350, desc: 'Heavy catalog capacity for complete label discographies' }
-                ].map(pkg => (
-                  <div
-                    key={pkg.id}
-                    style={{
-                      background: pkg.popular ? 'rgba(139, 92, 246, 0.08)' : 'rgba(255,255,255,0.03)',
-                      border: pkg.popular ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '4px',
-                      padding: '12px 16px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{pkg.title}</span>
-                        {pkg.popular && (
-                          <span style={{ fontSize: '10px', background: '#8b5cf6', color: '#fff', padding: '1px 6px', borderRadius: '2px', fontWeight: 800 }}>
-                            RECOMMENDED
-                          </span>
+              {modalSubTab === 'packs' ? (
+                /* TAB 1: Storage Packages List */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {[
+                    { id: 'starter_topup', title: '+500 MB Storage Pack', credits: 50, desc: 'Adds 500 MB to your storage allotment permanently' },
+                    { id: 'pro_topup', title: '+1 GB (1,000 MB) Pro Pack', credits: 90, desc: 'Best Value • Great for high-res WAV stems & 4K video clips', popular: true },
+                    { id: 'enterprise_topup', title: '+5 GB (5,000 MB) Studio Pack', credits: 350, desc: 'Heavy catalog capacity for complete label discographies' }
+                  ].map(pkg => {
+                    const currentBalance = quota?.credits ?? (sessionUser?.credits || 0);
+                    const canAfford = currentBalance >= pkg.credits;
+                    const shortfall = pkg.credits - currentBalance;
+
+                    return (
+                      <div
+                        key={pkg.id}
+                        style={{
+                          background: pkg.popular ? 'rgba(139, 92, 246, 0.08)' : 'rgba(255,255,255,0.03)',
+                          border: pkg.popular ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '4px',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '12px'
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{pkg.title}</span>
+                            {pkg.popular && (
+                              <span style={{ fontSize: '10px', background: '#8b5cf6', color: '#fff', padding: '1px 6px', borderRadius: '2px', fontWeight: 800 }}>
+                                RECOMMENDED
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>
+                            {pkg.desc}
+                          </div>
+                          {!canAfford && (
+                            <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px', fontWeight: 700 }}>
+                              Short by {shortfall} credits
+                            </div>
+                          )}
+                        </div>
+
+                        {canAfford ? (
+                          <button
+                            type="button"
+                            disabled={topUpLoading}
+                            onClick={() => handleTopUpStorage(pkg.id)}
+                            style={{
+                              background: pkg.popular ? '#00f0ff' : '#8b5cf6',
+                              color: pkg.popular ? '#000' : '#fff',
+                              border: 'none',
+                              borderRadius: '3px',
+                              padding: '8px 14px',
+                              fontWeight: 800,
+                              fontSize: '12px',
+                              cursor: topUpLoading ? 'wait' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <RiAddCircleLine size={14} />
+                            {pkg.credits} Credits
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCreditPackAmount(shortfall > 50 ? shortfall : 50);
+                              setModalSubTab('buy-credits');
+                              setTopUpMsg(null);
+                            }}
+                            style={{
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              border: '1px solid #f59e0b',
+                              color: '#f59e0b',
+                              borderRadius: '3px',
+                              padding: '8px 14px',
+                              fontWeight: 800,
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <RiCoinsLine size={14} />
+                            Top Up Credits
+                          </button>
                         )}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>
-                        {pkg.desc}
+                    );
+                  })}
+                </div>
+              ) : (
+                /* TAB 2: Top-Up Credits & Payments */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
+                    Purchase network credits to activate storage packs, run AI image generation prompts, and pitch sync placements.
+                  </p>
+
+                  {/* Preset Packs Selector */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                    {[
+                      { credits: 50, price: 5, label: 'Starter Pack' },
+                      { credits: 100, price: 10, label: 'Popular', highlight: true },
+                      { credits: 350, price: 30, label: 'Studio Pack' }
+                    ].map(cp => {
+                      const isSelected = Number(creditPackAmount) === cp.credits;
+                      return (
+                        <div
+                          key={cp.credits}
+                          onClick={() => setCreditPackAmount(cp.credits)}
+                          style={{
+                            background: isSelected ? 'rgba(0, 240, 255, 0.12)' : 'rgba(255,255,255,0.03)',
+                            border: isSelected ? '2px solid #00f0ff' : '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '4px',
+                            padding: '10px 8px',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ fontSize: '10px', textTransform: 'uppercase', color: cp.highlight ? '#00f0ff' : '#94a3b8', fontWeight: 800 }}>
+                            {cp.label}
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: 900, color: '#fff', margin: '4px 0 2px' }}>
+                            {cp.credits} Cr
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
+                            ${cp.price}.00 USD
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Amount Input */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Custom Credits:</span>
+                    <input
+                      type="number"
+                      min="10"
+                      step="10"
+                      value={creditPackAmount}
+                      onChange={(e) => setCreditPackAmount(Math.max(10, parseInt(e.target.value) || 10))}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        borderBottom: '1px solid rgba(255,255,255,0.2)',
+                        color: '#00f0ff',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        width: '80px',
+                        textAlign: 'center',
+                        outline: 'none'
+                      }}
+                    />
+                    <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
+                      ≈ ${(Number(creditPackAmount) * 0.1).toFixed(2)} USD
+                    </span>
+                  </div>
+
+                  {/* Payment Protocol Selector */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: '0.5px' }}>
+                      Select Payment Protocol
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                      {[
+                        { id: 'stripe', label: 'Credit Card', icon: <RiBankCardLine size={16} /> },
+                        { id: 'mpesa', label: 'M-Pesa STK', icon: <RiSmartphoneLine size={16} /> },
+                        { id: 'paypal', label: 'PayPal', icon: <RiPaypalFill size={16} /> }
+                      ].map(proto => {
+                        const isChosen = paymentProtocol === proto.id;
+                        return (
+                          <button
+                            key={proto.id}
+                            type="button"
+                            onClick={() => setPaymentProtocol(proto.id)}
+                            style={{
+                              background: isChosen ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255,255,255,0.03)',
+                              border: isChosen ? '1px solid #00f0ff' : '1px solid rgba(255,255,255,0.1)',
+                              color: isChosen ? '#00f0ff' : '#cbd5e1',
+                              padding: '8px 10px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            {proto.icon}
+                            <span>{proto.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Payment Protocol Fields */}
+                  {paymentProtocol === 'stripe' && (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div>
+                        <label style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Card Number</label>
+                        <input
+                          type="text"
+                          value={cardNumber}
+                          onChange={(e) => setCardNumber(e.target.value)}
+                          placeholder="4242 •••• •••• 4242"
+                          style={{ width: '100%', padding: '8px 10px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '12px', marginTop: '2px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div>
+                          <label style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Expiry</label>
+                          <input
+                            type="text"
+                            value={cardExp}
+                            onChange={(e) => setCardExp(e.target.value)}
+                            placeholder="MM/YY"
+                            style={{ width: '100%', padding: '8px 10px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '12px', marginTop: '2px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>CVC / CVV</label>
+                          <input
+                            type="text"
+                            value={cardCvc}
+                            onChange={(e) => setCardCvc(e.target.value)}
+                            placeholder="CVC"
+                            style={{ width: '100%', padding: '8px 10px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '12px', marginTop: '2px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontSize: '11px', marginTop: '2px' }}>
+                        <RiShieldCheckFill size={14} />
+                        <span>256-Bit SSL Encrypted & PCI DSS Level 1 Certified</span>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      disabled={topUpLoading}
-                      onClick={() => handleTopUpStorage(pkg.id)}
-                      style={{
-                        background: pkg.popular ? '#00f0ff' : '#8b5cf6',
-                        color: pkg.popular ? '#000' : '#fff',
-                        border: 'none',
-                        borderRadius: '3px',
-                        padding: '7px 14px',
-                        fontWeight: 800,
-                        fontSize: '12px',
-                        cursor: topUpLoading ? 'wait' : 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      <RiAddCircleLine size={14} />
-                      {pkg.credits} Credits
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  )}
+
+                  {paymentProtocol === 'mpesa' && (
+                    <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '12px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <label style={{ fontSize: '10px', color: '#10b981', textTransform: 'uppercase', fontWeight: 700 }}>M-Pesa Mobile Number</label>
+                      <input
+                        type="text"
+                        value={mpesaPhone}
+                        onChange={(e) => setMpesaPhone(e.target.value)}
+                        placeholder="+254 712 345 678"
+                        style={{ width: '100%', padding: '8px 10px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '3px', color: '#fff', fontSize: '12px', marginTop: '2px', boxSizing: 'border-box' }}
+                      />
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        An STK Push prompt will be dispatched instantly to your phone. Enter your M-Pesa PIN to complete checkout.
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentProtocol === 'paypal' && (
+                    <div style={{ background: 'rgba(0, 112, 186, 0.08)', padding: '12px', borderRadius: '4px', border: '1px solid rgba(0, 112, 186, 0.3)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <RiPaypalFill color="#0070ba" size={18} />
+                        <span>Instant PayPal Checkout</span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        One-click authorization using your linked PayPal wallet or debit card. No manual card entry required.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Purchase Action Button */}
+                  <button
+                    type="button"
+                    disabled={buyingCredits}
+                    onClick={handlePurchaseCredits}
+                    style={{
+                      background: 'linear-gradient(135deg, #00f0ff 0%, #3b82f6 100%)',
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '12px 18px',
+                      fontWeight: 800,
+                      fontSize: '13px',
+                      cursor: buyingCredits ? 'wait' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 14px rgba(0, 240, 255, 0.3)'
+                    }}
+                  >
+                    <RiCoinsLine size={16} />
+                    {buyingCredits ? 'Processing Payment...' : `Authorize & Add ${creditPackAmount} Credits ($${(Number(creditPackAmount) * 0.1).toFixed(2)} USD)`}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
@@ -832,8 +1185,34 @@ export default function CmsAssetsStudio({
               borderTop: '1px solid rgba(255,255,255,0.08)',
               background: 'rgba(255,255,255,0.02)',
               display: 'flex',
-              justifyContent: 'flex-end'
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
+              {modalSubTab === 'buy-credits' ? (
+                <button
+                  type="button"
+                  onClick={() => { setModalSubTab('packs'); setTopUpMsg(null); }}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#cbd5e1',
+                    borderRadius: '3px',
+                    padding: '6px 14px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <RiArrowLeftSLine size={16} />
+                  Back to Storage Packs
+                </button>
+              ) : (
+                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                  TuneMavens Multi-Cloud Asset Engine
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => { setShowTopUpModal(false); setTopUpMsg(null); }}

@@ -261,7 +261,7 @@ export default function MpesaPosTerminal({ goBack }) {
           <div className="glass-panel" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 'var(--r)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', minHeight: '180px' }}>
             {status === 'idle' && (
               <>
-                <div style={{ fontSize: '36px', marginBottom: '8px', animation: 'bounce 2s infinite' }}>⚡</div>
+                <div style={{ fontSize: '36px', marginBottom: '8px', animation: 'bounce 2s infinite' }}>📱</div>
                 <h4 style={{ fontSize: '13px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>Terminal Idle</h4>
                 <p style={{ fontSize: '11px', color: 'var(--mu)', margin: 0 }}>Ready to receive. Enter details and click push to prompt target device.</p>
               </>

@@ -78,12 +78,14 @@ npm run dev
 - **Typography & Theme:** Sansation typeface with flat dark ink backgrounds and neon accents (`--cyan: #22d3ee`, `--purple: #8b5cf6`, `--amber: #f59e0b`).
 
 ### 7. Release Operations, Storage Quotas & Creator Monetization
-- **Roster Ownership Isolation & Security:** Non-admin creators/managers only view artists in their roster (`owner_id`/`subdomain`). Platform Admins can toggle between single-artist view and "Entire Platform Catalogue" (`GET /api/catalog/tracks?all=true`) with top sorting (Title, Artist, Streams, Year, Date).
-- **Bulk Ingestion Studio (`BulkCatalogueIngestModal.jsx`):** Multi-track tabular import via CSV/Excel, raw text paste, or audio drop with batch artist/genre assignment, sequential ISRC generation, and 1-click batch ingestion (`POST /api/catalog/bulk-ingest`).
-- **Media Storage Quotas & Credit Top-Up:** 500 MB base starter quota with dynamic progress tracking (`CmsAssetsStudio.jsx`) and credit top-up packages (+500 MB for 50 credits, +1 GB for 90 credits, +5 GB for 350 credits).
-- **Audio Playback 30-Second Limit:** Non-purchased / uncredited tracks are restricted to 30-second previews, pausing automatically and prompting credit unlock.
-- **Creator Consumption & Custom Pricing:** Creators choose how music is consumed (`Stream Only`, `Download Only`, `Both`) and define custom stream/download pricing with recommended baselines.
-- **Persistent User Settings:** User profile metadata (name, email, brand, country, bio) persists to MongoDB via `PUT /api/users/me` across logins and logouts.
+- **Roster Ownership Isolation & Cross-Catalogue Access:** Non-admin creators/managers view and manage their assigned rosters. The "Entire Platform Catalogue" view is open for comprehensive cross-creator catalogue exploration with sorting (Title, Artist, Streams, Year, Date) and dedicated grid pagination controls (6, 12, 24 items per page).
+- **Bulk Ingestion Studio 4-Step Verification Wizard (`BulkCatalogueIngestModal.jsx`):** 4-step guided verification workflow (Input Source -> Batch Multi-Artist Config -> Interactive Verification Grid with audio stem preview player -> Destination Preview & Ingest) supporting primary artists, featured artists, and collaborators with automatic display name formatting.
+- **EPK Builder Wizard Live Data Preselection (`EpkWizard.jsx`):** Automatically rehydrates live creator metadata from MongoDB across all 8 wizard steps on launch, preventing data loss and providing seamless in-place editing.
+- **Media Storage Quotas & In-Modal Multi-Protocol Purchases (`CmsAssetsStudio.jsx`):** 500 MB base quota with real-time storage tracking, package upgrades (+500 MB, +1 GB, +5 GB), and an integrated credit top-up tab supporting Stripe Card, M-Pesa STK Push, and PayPal payments without exiting the modal.
+- **AI Prompt Styles Studio (`DashboardCmsStudio.jsx` & `AiArtPromptModal.jsx`):** MongoDB-persisted styles (`db.ai_styles`) managed via the CMS Overview tab, providing live CRUD capabilities and dynamically powering artwork generation prompts across the platform.
+- **Zero Lightning Icons & Universal Backdrop Modal Dismiss:** Complete elimination of lightning/flash icons in accordance with design standards, and universal outside-click backdrop dismissal on all modal overlays.
+- **Persistent User Settings:** User profile metadata (name, email, brand, country, bio) persists to MongoDB via `PUT /api/users/me` across logins and reloads.
+
 
 ---
 

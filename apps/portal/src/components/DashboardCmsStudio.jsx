@@ -15,6 +15,7 @@ import AiArtPromptModal from './AiArtPromptModal.jsx'
 import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from '../lib/genres.js'
 
 const CMS_TABS = [
+  { id: 'overview', label: 'CMS Overview & AI Styles', icon: RiLayoutMasonryFill },
   { id: 'brand',   label: 'Brand & Identity', icon: RiPaletteFill },
   { id: 'hero',    label: 'Hero Carousel',   icon: RiLayoutMasonryFill },
   { id: 'banners', label: 'Page Header Banners', icon: RiImageAddFill },
@@ -236,6 +237,96 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
     setTimeout(() => {
       setStatusMsg('')
     }, 5000)
+  }
+
+  // AI Prompt Styles Management (CMS Overview & Admin)
+  const [aiStyles, setAiStyles] = useState([])
+  const [loadingStyles, setLoadingStyles] = useState(false)
+  const [editingStyleId, setEditingStyleId] = useState(null)
+  const [editStyleForm, setEditStyleForm] = useState({ label: '', desc: '', prompt_suffix: '' })
+  const [isAddingStyle, setIsAddingStyle] = useState(false)
+  const [newStyleForm, setNewStyleForm] = useState({ label: '', desc: '', prompt_suffix: '' })
+
+  const loadAiStyles = async () => {
+    setLoadingStyles(true)
+    try {
+      const res = await fetch('/api/social-ai/styles')
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.styles) setAiStyles(data.styles)
+      }
+    } catch (err) {
+      console.warn('Failed to load AI styles:', err)
+    } finally {
+      setLoadingStyles(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAiStyles()
+  }, [])
+
+  const handleCreateStyle = async () => {
+    if (!newStyleForm.label.trim()) {
+      showStatus('Style label cannot be empty', 'error')
+      return
+    }
+    try {
+      const res = await fetch('/api/social-ai/styles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStyleForm)
+      })
+      if (res.ok) {
+        showStatus(`Style "${newStyleForm.label}" created successfully!`, 'success')
+        setIsAddingStyle(false)
+        setNewStyleForm({ label: '', desc: '', prompt_suffix: '' })
+        loadAiStyles()
+      } else {
+        const err = await res.json()
+        showStatus(err.detail || 'Failed to create style', 'error')
+      }
+    } catch (err) {
+      showStatus(err.message, 'error')
+    }
+  }
+
+  const handleUpdateStyle = async (styleId) => {
+    try {
+      const res = await fetch(`/api/social-ai/styles/${encodeURIComponent(styleId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editStyleForm)
+      })
+      if (res.ok) {
+        showStatus(`Style "${styleId}" updated!`, 'success')
+        setEditingStyleId(null)
+        loadAiStyles()
+      } else {
+        const err = await res.json()
+        showStatus(err.detail || 'Failed to update style', 'error')
+      }
+    } catch (err) {
+      showStatus(err.message, 'error')
+    }
+  }
+
+  const handleDeleteStyle = async (styleId) => {
+    if (!confirm(`Are you sure you want to delete style "${styleId}"?`)) return
+    try {
+      const res = await fetch(`/api/social-ai/styles/${encodeURIComponent(styleId)}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        showStatus(`Style "${styleId}" removed!`, 'success')
+        loadAiStyles()
+      } else {
+        const err = await res.json()
+        showStatus(err.detail || 'Failed to delete style', 'error')
+      }
+    } catch (err) {
+      showStatus(err.message, 'error')
+    }
   }
 
   const autoSaveEpk = (updatedData) => {
@@ -1367,6 +1458,301 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
             </div>
           ) : (
             <>
+              {activeTab === 'overview' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '980px' }}>
+                  {/* Top Creator Live Overview Card */}
+                  <div style={{
+                    background: '#0a0d1a',
+                    border: '1px solid rgba(0, 240, 255, 0.3)',
+                    borderRadius: '6px',
+                    padding: '22px 26px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '6px', background: 'linear-gradient(135deg,#00f0ff,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: '18px' }}>
+                          {formData.artist_name ? formData.artist_name.charAt(0).toUpperCase() : 'C'}
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#fff' }}>
+                              {formData.artist_name || activeSubdomain.toUpperCase()} CMS Overview
+                            </h3>
+                            <span style={{ fontSize: '10px', background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '2px 8px', borderRadius: '3px', fontWeight: 800 }}>
+                              LIVE ACTIVE
+                            </span>
+                          </div>
+                          <p style={{ margin: '3px 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                            Subdomain: <strong style={{ color: '#00f0ff' }}>{activeSubdomain}.tunemavens.com</strong>
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href={`/#/epk/${activeSubdomain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            background: '#00f0ff',
+                            color: '#000',
+                            padding: '8px 16px',
+                            borderRadius: '4px',
+                            fontWeight: 800,
+                            fontSize: '12px',
+                            textDecoration: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <RiExternalLinkLine size={15} /> Launch Creator Web World
+                        </a>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Theme Mode</div>
+                        <div style={{ fontSize: '15px', fontWeight: 800, color: '#fff', marginTop: '4px', textTransform: 'capitalize' }}>{formData.themeMode || 'Dark'}</div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Accent Color</div>
+                        <div style={{ fontSize: '15px', fontWeight: 800, color: formData.accentColor || '#00f0ff', marginTop: '4px' }}>{formData.accentColor || '#00f0ff'}</div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Discography Cues</div>
+                        <div style={{ fontSize: '15px', fontWeight: 800, color: '#fff', marginTop: '4px' }}>{(formData.tracks || DEFAULT_TRACKS).length} Tracks</div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>4K Video Showcases</div>
+                        <div style={{ fontSize: '15px', fontWeight: 800, color: '#fff', marginTop: '4px' }}>{activeVideos.length} Videos</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI Prompt Styles Manager Section */}
+                  <div style={{
+                    background: '#0a0d1a',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    padding: '22px 26px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '18px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: '#fff' }}>
+                            AI Artwork &amp; Cover Styles Manager
+                          </h3>
+                          <span style={{ fontSize: '10px', background: 'rgba(139,92,246,0.15)', color: '#8b5cf6', padding: '2px 8px', borderRadius: '3px', fontWeight: 800 }}>
+                            Admin &amp; Creator Registry
+                          </span>
+                        </div>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                          Add and edit the curated AI artwork styles available across the TuneMavens platform and Cover Art prompt modals.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingStyle(!isAddingStyle)}
+                        style={{
+                          background: isAddingStyle ? 'rgba(255,255,255,0.1)' : '#8b5cf6',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '4px',
+                          fontWeight: 800,
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <RiAddLine size={16} />
+                        <span>{isAddingStyle ? 'Cancel' : 'Add New Style'}</span>
+                      </button>
+                    </div>
+
+                    {/* Add New Style Form */}
+                    {isAddingStyle && (
+                      <div style={{
+                        background: 'rgba(139,92,246,0.06)',
+                        border: '1px solid #8b5cf6',
+                        borderRadius: '6px',
+                        padding: '18px 20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px'
+                      }}>
+                        <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#fff' }}>
+                          Register New AI Style
+                        </h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 700, marginBottom: '4px' }}>Style Label (Display Name)</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Cyber-Gospel 80s"
+                              value={newStyleForm.label}
+                              onChange={e => setNewStyleForm(f => ({ ...f, label: e.target.value }))}
+                              style={{ width: '100%', background: '#050914', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '8px 12px', color: '#fff', fontSize: '12px' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 700, marginBottom: '4px' }}>Description (Hint)</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Warm analog organs, holographic choir lighting"
+                              value={newStyleForm.desc}
+                              onChange={e => setNewStyleForm(f => ({ ...f, desc: e.target.value }))}
+                              style={{ width: '100%', background: '#050914', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '8px 12px', color: '#fff', fontSize: '12px' }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 700, marginBottom: '4px' }}>Prompt Guidance Suffix (Appended to AI Prompts)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. warm golden studio lighting, 8k vinyl aesthetic, anamorphic lens, masterpiece"
+                            value={newStyleForm.prompt_suffix}
+                            onChange={e => setNewStyleForm(f => ({ ...f, prompt_suffix: e.target.value }))}
+                            style={{ width: '100%', background: '#050914', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', padding: '8px 12px', color: '#fff', fontSize: '12px' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            onClick={() => setIsAddingStyle(false)}
+                            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#94a3b8', padding: '6px 14px', borderRadius: '4px', fontSize: '11.5px', cursor: 'pointer' }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCreateStyle}
+                            style={{ background: '#00f0ff', color: '#000', border: 'none', padding: '6px 18px', borderRadius: '4px', fontWeight: 800, fontSize: '11.5px', cursor: 'pointer' }}
+                          >
+                            Save Style to Registry
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Styles List Table */}
+                    <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ background: 'rgba(255,255,255,0.04)', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                            <th style={{ padding: '10px 14px' }}>Style Name</th>
+                            <th style={{ padding: '10px 14px' }}>Identifier</th>
+                            <th style={{ padding: '10px 14px' }}>Description</th>
+                            <th style={{ padding: '10px 14px' }}>Prompt Guidance Suffix</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'right' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {aiStyles.map(st => {
+                            const isEditing = editingStyleId === st.id;
+                            return (
+                              <tr key={st.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', color: '#cbd5e1' }}>
+                                <td style={{ padding: '10px 14px', fontWeight: 700, color: '#fff' }}>
+                                  {isEditing ? (
+                                    <input
+                                      type="text"
+                                      value={editStyleForm.label}
+                                      onChange={e => setEditStyleForm(f => ({ ...f, label: e.target.value }))}
+                                      style={{ background: '#050914', border: '1px solid #00f0ff', borderRadius: '3px', padding: '4px 8px', color: '#fff', fontSize: '11.5px' }}
+                                    />
+                                  ) : (
+                                    <span>{st.label}</span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: '#00f0ff', fontSize: '11px' }}>
+                                  {st.id}
+                                </td>
+                                <td style={{ padding: '10px 14px', color: '#94a3b8', maxWidth: '240px' }}>
+                                  {isEditing ? (
+                                    <input
+                                      type="text"
+                                      value={editStyleForm.desc}
+                                      onChange={e => setEditStyleForm(f => ({ ...f, desc: e.target.value }))}
+                                      style={{ width: '100%', background: '#050914', border: '1px solid #00f0ff', borderRadius: '3px', padding: '4px 8px', color: '#fff', fontSize: '11.5px' }}
+                                    />
+                                  ) : (
+                                    <span>{st.desc}</span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '10px 14px', color: '#cbd5e1', maxWidth: '260px' }}>
+                                  {isEditing ? (
+                                    <input
+                                      type="text"
+                                      value={editStyleForm.prompt_suffix}
+                                      onChange={e => setEditStyleForm(f => ({ ...f, prompt_suffix: e.target.value }))}
+                                      style={{ width: '100%', background: '#050914', border: '1px solid #00f0ff', borderRadius: '3px', padding: '4px 8px', color: '#fff', fontSize: '11.5px' }}
+                                    />
+                                  ) : (
+                                    <span style={{ fontStyle: 'italic', fontSize: '11px' }}>{st.prompt_suffix || '(None)'}</span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                                  {isEditing ? (
+                                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateStyle(st.id)}
+                                        style={{ background: '#10b981', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '3px', fontWeight: 800, fontSize: '11px', cursor: 'pointer' }}
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingStyleId(null)}
+                                        style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#cbd5e1', padding: '4px 8px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditingStyleId(st.id);
+                                          setEditStyleForm({ label: st.label, desc: st.desc, prompt_suffix: st.prompt_suffix || '' });
+                                        }}
+                                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#00f0ff', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
+                                      >
+                                        Edit
+                                      </button>
+                                      {!st.is_default && st.id !== 'none' && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteStyle(st.id)}
+                                          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '4px 8px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}
+                                          title="Delete style"
+                                        >
+                                          <RiDeleteBin6Line size={12} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'brand' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '820px' }}>
                   <h3 style={{ margin: '0 0 6px', fontSize: '1.2rem', fontWeight: 900, color: '#fff' }}>

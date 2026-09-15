@@ -60,7 +60,13 @@ export default function ArtistRosterSelector({
     }
   };
 
-  const activeArtist = artists.find(
+  const activeArtist = (activeSubdomain === 'all') ? {
+    name: 'All Artists (Entire Catalogue)',
+    subdomain: 'all',
+    role: 'Entire Platform Catalogue',
+    genre: 'All Genres',
+    avatar: ''
+  } : (artists.find(
     a => (a.subdomain || '').toLowerCase() === (activeSubdomain || '').toLowerCase()
   ) || artists[0] || {
     name: 'Ndufo',
@@ -68,7 +74,7 @@ export default function ArtistRosterSelector({
     role: 'Primary Artist',
     genre: 'Afro-House',
     avatar: '/heroes/ndufo_hero_slide1_retina.jpg'
-  };
+  });
 
   const handleOpenAdd = () => {
     setFormName('');
@@ -288,6 +294,59 @@ export default function ArtistRosterSelector({
 
           {/* Artists List */}
           <div style={{ maxHeight: '240px', overflowY: 'auto', padding: '6px' }}>
+            {/* All Artists Option */}
+            <div
+              onClick={() => {
+                if (typeof onSelectArtist === 'function') {
+                  onSelectArtist({
+                    subdomain: 'all',
+                    name: 'All Artists (Entire Catalogue)',
+                    role: 'Full Platform Catalogue',
+                    genre: 'All Genres',
+                    avatar: ''
+                  });
+                }
+                setIsOpen(false);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 10px',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                background: activeSubdomain === 'all' ? 'rgba(0, 240, 255, 0.12)' : 'rgba(255,255,255,0.03)',
+                border: activeSubdomain === 'all' ? '1px solid #00f0ff' : '1px solid transparent',
+                marginBottom: '4px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '3px',
+                  background: '#00f0ff',
+                  color: '#000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 900,
+                  fontSize: '10px'
+                }}>
+                  ALL
+                </div>
+                <div>
+                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: activeSubdomain === 'all' ? '#00f0ff' : '#fff' }}>
+                    All Artists (Entire Catalogue)
+                  </div>
+                  <div style={{ fontSize: '9.5px', color: '#94a3b8' }}>
+                    Full platform discography across all creators
+                  </div>
+                </div>
+              </div>
+              {activeSubdomain === 'all' && <RiCheckLine size={15} color="#00f0ff" />}
+            </div>
+
             {filteredArtists.map(artist => {
               const isSelected = (artist.subdomain || '').toLowerCase() === (activeArtist.subdomain || '').toLowerCase();
               return (

@@ -80,17 +80,20 @@ export default function GenreManagerModal({ isOpen, onClose }) {
   );
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0,0,0,0.85)',
-      backdropFilter: 'blur(10px)',
-      zIndex: 99999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
+      }}
+    >
       <div style={{
         background: '#0c101d',
         border: '1px solid rgba(255,255,255,0.12)',

@@ -1077,10 +1077,33 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
 ### 9.31.6 Audio Playback 30-Second Limit & Creator Monetization
 - **30-Second Preview Gate:** For unpurchased and non-unlocked master tracks, `GlobalAudioPlayer` enforces a strict 30-second preview limit in both the high-frequency animation loop and audio time updates, clamping seeking and opening the Credit Unlock / Purchase modal.
 - **Creator Consumption Choices:** In the track editing suite and ingestion wizard, creators can define how their music is consumed:
-  - `Stream & Download` (Full access)
-  - `Stream Only` (Audio streaming only, downloads disabled)
-  - `Download Only` (Purchases and licensing only)
-- **Custom Creator Pricing:** Creators set their own stream unlock and master download rates, with platform-recommended baselines (50 credits / ~$0.99 for stream unlock; 150 credits / ~$2.99 for master download).
+### 9.31.7 Core Platform Architectural Upgrades & Operational Standards
+- **Zero Lightning Icons Platformwide:** Strictly banned and eliminated all lightning/flash symbols (`⚡`, `RiFlash*`, etc.) across all frontend apps and UI components in favor of precise, flat vector action icons (`RiSparklingFill`, `RiCoinsLine`, `RiAddCircleLine`, `RiRocketLine`). Formally codified in `docs/DESIGN_STANDARDS.md` §4.E.
+- **Backdrop Outside-Click Modal Dismiss:** Standardized all modals (`GenreManagerModal`, `BulkCatalogueIngestModal`, `AiArtPromptModal`, `MediaAssetPickerModal`, `GoogleFontsModal`, `CmsAssetsStudio` top-up modal, etc.) with backdrop-click auto-dismiss (`onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}`), guaranteeing smooth UX and zero trapped overlays.
+- **Bulk Ingestion Studio 4-Step Verification Wizard (`BulkCatalogueIngestModal.jsx`):**
+  - *Step 1: Ingestion Source:* TSV/CSV raw text parser, multi-file audio batch drag-and-drop, and downloadable template guide.
+  - *Step 2: Batch Multi-Artist Configuration:* Set default Primary Artist, Featured Artists (comma-separated), Collaborators/Producers, default Release Title, and Genre for entire batches.
+  - *Step 3: Interactive Verification & Audio Stem Preview:* Editable verification grid displaying Track Title, Primary Artist, Featured Artists, Release, and Duration, complete with an inline interactive audio player to preview audio files before ingestion.
+  - *Step 4: Summary & Ingest Dispatch:* Real-time destination preview across TuneMavens Portal, TuneStream, and SyncMavens sync registry with instant ingestion dispatch to `/api/catalog/bulk-ingest`.
+- **Catalogue Collections Pagination & Cross-Creator Discovery:**
+  - Added dedicated pagination controls and items-per-page selector (6, 12, 24 releases) to the Collections/Releases grid view, synchronized with existing tabular view pagination.
+  - Removed admin restrictions from the "Entire Catalogue (All Artists)" button, allowing all creators and managers to discover cross-roster catalogue releases without role friction.
+  - Replaced all hardcoded `http://localhost:8001` URLs with relative `/api/...` endpoints for seamless Vite dev and production reverse proxying.
+- **Live Creator EPK Data Preselection (`EpkWizard.jsx`):**
+  - Integrated `fetchLiveEpkForWizard` calling `/api/epk/{subdomain}` on wizard initialization and on active artist change.
+  - Pre-populates all 8 wizard steps (Basics, Story & Persona, Discography, Gallery & Video, Shows & Tour Dates, Store & Merch, Quotes & Press, Theme & Typography) with live MongoDB data, enabling rapid iterations without lost draft state.
+- **AI Prompt Styles Management in MongoDB & CMS Overview Tab:**
+  - Backed by MongoDB collection `db.ai_styles` and exposed via `/api/social-ai/styles` (GET, POST, PUT, DELETE) with 9 curated default aesthetic styles.
+  - Integrated into CMS Studio as a new "Overview" tab providing live creator asset counts, track statistics, and an AI Styles Studio for adding, modifying, and deleting prompt styles that instantly feed `AiArtPromptModal.jsx`.
+- **Assets Storage Quotas & In-Modal Multi-Protocol Credit Purchases (`CmsAssetsStudio.jsx`):**
+  - Storage top-up modal features dual tabs: `Storage Packs` and `Top-Up Credits & Payments`.
+  - When balance is insufficient for a storage tier, indicates exact credit shortfall and provides 1-click navigation to purchase credits.
+  - Supports three native payment protocols:
+    - **Stripe / Credit Card:** 256-bit SSL encrypted PCI DSS Level 1 certified checkout (Card, Exp, CVC).
+    - **M-Pesa Mobile Money:** Instant STK Push dispatch to Kenyan and East African mobile numbers with PIN authorization.
+    - **PayPal:** One-click instant checkout with PayPal wallet or linked bank account.
+  - Backed by `POST /api/storage/buy-credits`, updating user balance and orders log, allowing immediate storage pack activation in the same modal.
+
 
 
 

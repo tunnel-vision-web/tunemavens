@@ -502,15 +502,18 @@ function DashboardView({
     setActiveArtist(artist);
     const sub = (artist.subdomain || artist.id || 'ndufo').toLowerCase();
 
-    // 1. Fetch catalog tracks for this artist
+    // 1. Fetch catalog tracks for this artist or all platform tracks
     try {
-      const res = await fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`);
+      const url = (sub === 'all') 
+        ? '/api/catalog/tracks?all=true' 
+        : `/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`;
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.tracks || []);
         if (list.length > 0) {
           setCatalogTracks(list);
-        } else if (sub !== 'ndufo') {
+        } else if (sub !== 'ndufo' && sub !== 'all') {
           setCatalogTracks([]);
         }
       }
@@ -519,21 +522,23 @@ function DashboardView({
     }
 
     // 2. Fetch or update EPK layout for this artist
-    try {
-      const epkRes = await fetch(`http://localhost:8001/api/epk/${encodeURIComponent(sub)}`);
-      if (epkRes.ok) {
-        const epkData = await epkRes.json();
-        setCreatorEpk({ subdomain: sub, artist_name: artist.name, ...epkData });
-      } else {
-        setCreatorEpk(prev => ({
-          ...prev,
-          subdomain: sub,
-          artist_name: artist.name,
-          themeGenre: artist.genre || prev?.themeGenre
-        }));
+    if (sub !== 'all') {
+      try {
+        const epkRes = await fetch(`/api/epk/${encodeURIComponent(sub)}`);
+        if (epkRes.ok) {
+          const epkData = await epkRes.json();
+          setCreatorEpk({ subdomain: sub, artist_name: artist.name, ...epkData });
+        } else {
+          setCreatorEpk(prev => ({
+            ...prev,
+            subdomain: sub,
+            artist_name: artist.name,
+            themeGenre: artist.genre || prev?.themeGenre
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to fetch EPK for artist:', err);
       }
-    } catch (err) {
-      console.warn('Failed to fetch EPK for artist:', err);
     }
   };
 
@@ -557,7 +562,7 @@ function DashboardView({
     }
     const audioEl = document.getElementById('tunestream-global-audio');
     if (audioEl) {
-      const src = t.audioUrl || t.fileUrl || `http://localhost:8001/api/stream/track/${encodeURIComponent(t.isrc || t.title || 'preview')}`;
+      const src = t.audioUrl || t.fileUrl || `/api/stream/track/${encodeURIComponent(t.isrc || t.title || 'preview')}`;
       if (audioEl.src !== src) {
         audioEl.src = src;
         audioEl.load();
@@ -880,7 +885,7 @@ function DashboardView({
                             const activeSub = localStorage.getItem('last_saved_epk_subdomain') || 'ndufo';
                             try {
                               const localFans = JSON.parse(localStorage.getItem(`creator_crm_fans_${activeSub}`) || '[]');
-                              fetch(`http://localhost:8001/api/crm/contacts?creator_username=${activeSub}`)
+                              fetch(`/api/crm/contacts?creator_username=${activeSub}`)
                                 .then(r => r.json())
                                 .then(d => {
                                   const remoteContacts = d.contacts || [];
@@ -2213,6 +2218,55 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
   const [country, setCountry] = useState(sessionUser?.country || 'KE');
   const [bio, setBio] = useState(sessionUser?.bio || 'Independent creator on the TuneMavens and Intermaven network.');
   const [saving, setSaving] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  // Sync inputs whenever sessionUser updates
+  useEffect(() => {
+    if (sessionUser) {
+      if (sessionUser.name !== undefined) setName(sessionUser.name || '');
+      if (sessionUser.email !== undefined) setEmail(sessionUser.email || '');
+      if (sessionUser.brand_name !== undefined) setBrandName(sessionUser.brand_name || '');
+      if (sessionUser.country !== undefined) setCountry(sessionUser.country || 'KE');
+      if (sessionUser.bio !== undefined) setBio(sessionUser.bio || '');
+    }
+  }, [sessionUser?.name, sessionUser?.email, sessionUser?.brand_name, sessionUser?.country, sessionUser?.bio]);
+
+  // Query latest user profile from MongoDB on mount
+  useEffect(() => {
+    let active = true;
+    const fetchLatestProfile = async () => {
+      setLoadingProfile(true);
+      try {
+        const token = tokenStore?.get() || localStorage.getItem('tunemavens_token');
+        const res = await fetch('/api/users/me', {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          }
+        });
+        if (res.ok && active) {
+          const data = await res.json();
+          if (data && active) {
+            if (data.name) setName(data.name);
+            if (data.email) setEmail(data.email);
+            if (data.brand_name) setBrandName(data.brand_name);
+            if (data.country) setCountry(data.country);
+            if (data.bio) setBio(data.bio);
+            const merged = { ...(sessionUser || {}), ...data };
+            sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
+            localStorage.setItem('tunemavens_saved_user', JSON.stringify(merged));
+            if (typeof onUpdateUser === 'function') onUpdateUser(merged);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not refresh user profile from backend:', err);
+      } finally {
+        if (active) setLoadingProfile(false);
+      }
+    };
+    fetchLatestProfile();
+    return () => { active = false; };
+  }, []);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -2226,7 +2280,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
     };
 
     try {
-      const token = localStorage.getItem('tunemavens_token');
+      const token = tokenStore?.get() || localStorage.getItem('tunemavens_token');
       const res = await fetch('/api/users/me', {
         method: 'PUT',
         headers: {
@@ -2236,10 +2290,10 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
         body: JSON.stringify(payload)
       });
 
-      let updatedUserData = { ...sessionUser, ...payload };
+      let updatedUserData = { ...(sessionUser || {}), ...payload };
       if (res.ok) {
         const data = await res.json();
-        updatedUserData = { ...sessionUser, ...data };
+        updatedUserData = { ...(sessionUser || {}), ...data };
       }
 
       // Persist across sessions so settings survive logout/login
@@ -2253,7 +2307,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
       alert('Profile settings saved and persisted successfully across sessions!');
     } catch (err) {
       console.warn('Backend user profile update error:', err);
-      const fallbackData = { ...sessionUser, ...payload };
+      const fallbackData = { ...(sessionUser || {}), ...payload };
       sessionStorage.setItem('tunemavens_session', JSON.stringify(fallbackData));
       localStorage.setItem('tunemavens_saved_user', JSON.stringify(fallbackData));
       if (typeof onUpdateUser === 'function') {
@@ -2393,7 +2447,7 @@ function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab, activ
               fontSize: '11px',
               fontWeight: '800',
               color: '#0f172a',
-              background: 'linear-gradient(135deg, #22d3ee, #00f0ff)',
+              background: '#00f0ff',
               padding: '6px 12px',
               borderRadius: '3px',
               border: 'none',
@@ -2401,12 +2455,12 @@ function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab, activ
               display: 'inline-flex',
               alignItems: 'center',
               gap: '5px',
-              boxShadow: '0 2px 8px rgba(34,211,238,0.25)',
               transition: 'all 0.2s ease'
             }}
             title="Access Mother CMS Studio"
           >
-            <span>⚡</span> CMS Studio
+            <RiLayoutMasonryFill size={13} />
+            <span>CMS Studio</span>
           </button>
           {(() => {
             const activeSub = (epk?.subdomain && epk.subdomain !== 'aisha' ? epk.subdomain : null) || (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || 'ndufo';
@@ -2440,7 +2494,7 @@ function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab, activ
       )}
 
       {/* The wizard */}
-      <EpkWizard tracks={tracks} epk={epk} setEpk={setEpk} sessionUser={sessionUser} />
+      <EpkWizard tracks={tracks} epk={epk} setEpk={setEpk} sessionUser={sessionUser} activeArtist={activeArtist} />
     </div>
   );
 }
@@ -2847,6 +2901,8 @@ function CataloguePanel({
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
+  const [currentReleasesPage, setCurrentReleasesPage] = useState(1);
+  const [releasesPageSize, setReleasesPageSize] = useState(6);
 
   // Single Track Uploader Form States
   const [newTitle, setNewTitle] = useState('');
@@ -2878,13 +2934,30 @@ function CataloguePanel({
   const [editStreamPriceCredits, setEditStreamPriceCredits] = useState(50);
   const [editDownloadPriceCredits, setEditDownloadPriceCredits] = useState(150);
 
-  // Admin Entire Catalogue View & Top Sorting States
-  const [viewAllCatalogue, setViewAllCatalogue] = useState(false);
+  // Entire Catalogue (All Creators) View & Sorting States
+  const [viewAllCatalogue, setViewAllCatalogue] = useState(activeArtist?.subdomain === 'all');
   const [sortBy, setSortBy] = useState('default'); // 'default' | 'title_asc' | 'title_desc' | 'artist_asc' | 'artist_desc' | 'streams_desc' | 'year_desc'
+
+  useEffect(() => {
+    if (activeArtist?.subdomain === 'all') {
+      setViewAllCatalogue(true);
+      fetch('/api/catalog/tracks?all=true')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            const list = Array.isArray(data) ? data : (data.tracks || []);
+            setTracks(list);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [activeArtist?.subdomain]);
 
   const handleToggleAllCatalogue = async () => {
     const next = !viewAllCatalogue;
     setViewAllCatalogue(next);
+    setCurrentPage(1);
+    setCurrentReleasesPage(1);
     try {
       if (next) {
         const res = await fetch('/api/catalog/tracks?all=true');
@@ -2894,7 +2967,7 @@ function CataloguePanel({
           setTracks(list);
         }
       } else {
-        const sub = (activeArtist?.subdomain || sessionUser?.username || 'ndufo').toLowerCase();
+        const sub = (activeArtist?.subdomain && activeArtist.subdomain !== 'all' ? activeArtist.subdomain : (sessionUser?.username || 'ndufo')).toLowerCase();
         const res = await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`);
         if (res.ok) {
           const data = await res.json();
@@ -3010,7 +3083,7 @@ function CataloguePanel({
       formData.append('media_type', 'image');
       formData.append('folder', 'artwork');
       const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
-      const res = await fetch('http://localhost:8001/api/storage/upload', {
+      const res = await fetch('/api/storage/upload', {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData
@@ -3044,7 +3117,7 @@ function CataloguePanel({
     setGeneratingAiArt(true);
     try {
       const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
-      const res = await fetch('http://localhost:8001/api/social-ai/generate-art', {
+      const res = await fetch('/api/social-ai/generate-art', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -3082,7 +3155,7 @@ function CataloguePanel({
         subdomain: sub
       };
 
-      const res = await fetch('http://localhost:8001/api/catalog/albums/artwork', {
+      const res = await fetch('/api/catalog/albums/artwork', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -3142,7 +3215,7 @@ function CataloguePanel({
       };
 
       try {
-        await fetch('http://localhost:8001/api/catalog/albums/artwork', {
+        await fetch('/api/catalog/albums/artwork', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -3210,7 +3283,7 @@ function CataloguePanel({
       // Push individual track updates to backend
       for (const t of editingAlbumTracks) {
         try {
-          await fetch(`http://localhost:8001/api/catalog/tracks/${encodeURIComponent(t.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
+          await fetch(`/api/catalog/tracks/${encodeURIComponent(t.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -3307,6 +3380,9 @@ function CataloguePanel({
     return 0;
   });
 
+  const totalReleases = filteredReleases.length;
+  const paginatedReleases = filteredReleases.slice((currentReleasesPage - 1) * releasesPageSize, currentReleasesPage * releasesPageSize);
+
   const filteredTracks = tracks.filter(t => {
     if (releaseTypeFilter !== 'all') {
       const relObj = releases.find(r => r.title === ((t.release && t.release.trim()) ? t.release.trim() : 'Standalone Singles'));
@@ -3385,7 +3461,7 @@ function CataloguePanel({
 
     const sub = sessionUser?.username || 'ndufo';
     try {
-      await fetch(`http://localhost:8001/api/catalog/tracks/${encodeURIComponent(editingTrack.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
+      await fetch(`/api/catalog/tracks/${encodeURIComponent(editingTrack.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedTrack)
@@ -3410,7 +3486,7 @@ function CataloguePanel({
 
     const sub = sessionUser?.username || 'ndufo';
     try {
-      await fetch(`http://localhost:8001/api/catalog/tracks/${encodeURIComponent(targetIsrc)}?subdomain=${encodeURIComponent(sub)}`, {
+      await fetch(`/api/catalog/tracks/${encodeURIComponent(targetIsrc)}?subdomain=${encodeURIComponent(sub)}`, {
         method: 'DELETE'
       });
     } catch (e) {
@@ -3487,7 +3563,7 @@ function CataloguePanel({
     const sub = sessionUser?.username || 'ndufo';
     for (const tr of newTracksList) {
       try {
-        await fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+        await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(tr)
@@ -3523,7 +3599,7 @@ function CataloguePanel({
       const sub = sessionUser?.username || 'ndufo';
       for (const tr of filteredNew) {
         try {
-          await fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+          await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(tr)
@@ -3574,7 +3650,7 @@ function CataloguePanel({
 
     const sub = sessionUser?.username || 'ndufo';
     try {
-      await fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+      await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTrack)
@@ -3685,30 +3761,28 @@ function CataloguePanel({
             compact={true}
           />
 
-          {/* Admin All Platform Artists Cross-Catalogue Toggle */}
-          {sessionUser?.role === 'admin' && (
-            <button
-              type="button"
-              onClick={handleToggleAllCatalogue}
-              style={{
-                background: viewAllCatalogue ? '#00f0ff' : 'rgba(255,255,255,0.06)',
-                color: viewAllCatalogue ? '#000' : '#cbd5e1',
-                border: viewAllCatalogue ? 'none' : '1px solid rgba(255,255,255,0.18)',
-                padding: '7px 12px',
-                borderRadius: '3px',
-                fontWeight: 800,
-                fontSize: '12px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-              title={viewAllCatalogue ? "Switch to single artist roster view" : "View all platform artists across entire catalogue"}
-            >
-              <RiDatabase2Fill size={14} />
-              <span>{viewAllCatalogue ? 'Entire Catalogue (All Artists)' : 'View Entire Catalogue'}</span>
-            </button>
-          )}
+          {/* All Platform Artists Cross-Catalogue Toggle */}
+          <button
+            type="button"
+            onClick={handleToggleAllCatalogue}
+            style={{
+              background: viewAllCatalogue ? '#00f0ff' : 'rgba(255,255,255,0.06)',
+              color: viewAllCatalogue ? '#000' : '#cbd5e1',
+              border: viewAllCatalogue ? 'none' : '1px solid rgba(255,255,255,0.18)',
+              padding: '7px 12px',
+              borderRadius: '3px',
+              fontWeight: 800,
+              fontSize: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title={viewAllCatalogue ? "Switch to single artist roster view" : "View all platform artists across entire catalogue"}
+          >
+            <RiDatabase2Fill size={14} />
+            <span>{viewAllCatalogue ? 'Entire Catalogue (All Artists)' : 'View Entire Catalogue'}</span>
+          </button>
 
           {/* Manage Genres Admin Action Button - Strictly Gated to Admin */}
           {sessionUser?.role === 'admin' && (
@@ -4567,8 +4641,9 @@ function CataloguePanel({
                   </button>
                 </div>
               ) : (
+                <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '20px' }}>
-                  {filteredReleases.map((rel) => {
+                  {paginatedReleases.map((rel) => {
                     const isExpanded = expandedReleaseTitle === rel.title;
                     const typeColor = rel.releaseType === 'Album' ? '#00f0ff' : rel.releaseType === 'EP' ? '#a855f7' : '#f59e0b';
 
@@ -4858,6 +4933,45 @@ function CataloguePanel({
                     );
                   })}
                 </div>
+
+                {/* Collections / Releases Pagination Bar */}
+                {totalReleases > 0 && (
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '12px 18px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '12px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', color: '#94a3b8' }}>
+                      <span>Showing {(currentReleasesPage - 1) * releasesPageSize + 1}–{Math.min(currentReleasesPage * releasesPageSize, totalReleases)} of {totalReleases} releases</span>
+                      <span>•</span>
+                      <span>Per page:</span>
+                      <select
+                        value={releasesPageSize}
+                        onChange={e => { setReleasesPageSize(Number(e.target.value)); setCurrentReleasesPage(1); }}
+                        style={{ background: '#090d1a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '11px', padding: '3px 8px', cursor: 'pointer' }}
+                      >
+                        <option value={6}>6</option>
+                        <option value={12}>12</option>
+                        <option value={24}>24</option>
+                      </select>
+                    </div>
+
+                    <DashboardPagination 
+                      currentPage={currentReleasesPage} 
+                      totalItems={totalReleases} 
+                      pageSize={releasesPageSize} 
+                      onPageChange={(page) => setCurrentReleasesPage(page)} 
+                    />
+                  </div>
+                )}
+                </>
               )}
             </div>
           ) : (
@@ -6179,7 +6293,7 @@ function DjPoolPanel() {
     { value: 'fill_dancefloor', label: '🔍¥ Fills the Dancefloor' },
     { value: 'keep_crowd', label: '🎵 Keeps the Crowd Moving' },
     { value: 'room_cooler', label: 'â„ Too Slow for the Room' },
-    { value: 'peak_moment', label: '⚡ Peak Hour Banger' },
+    { value: 'peak_moment', label: '🔥 Peak Hour Banger' },
   ];
 
   const inputStyle = {
@@ -6908,7 +7022,7 @@ function GlobalAudioPlayer({
     if (track.audioUrl) return track.audioUrl;
     if (track.fileUrl) return track.fileUrl;
     const id = track.isrc || track.id || track._id || 'preview';
-    return `http://localhost:8001/api/stream/track/${encodeURIComponent(id)}`;
+    return `/api/stream/track/${encodeURIComponent(id)}`;
   };
 
   // Sync audio element source when globalTrack changes
@@ -8382,7 +8496,7 @@ function App() {
   // Persistent catalogue track synchronization from backend API
   useEffect(() => {
     const sub = sessionUser?.username || 'ndufo';
-    fetch(`http://localhost:8001/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`)
+    fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && Array.isArray(data.tracks) && data.tracks.length > 0) {
@@ -8502,7 +8616,7 @@ function App() {
             if (cancelled) return;
             if (access_token) {
               tokenStore.set(access_token);
-              const reconciled = reconcileUserApps({ ...(sessionUser || {}), ...demoUser });
+              const reconciled = reconcileUserApps({ ...demoUser, ...(sessionUser || {}) });
               setSessionUser(reconciled);
               sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
               localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
@@ -8523,7 +8637,7 @@ function App() {
         if (cancelled) return;
         if (access_token) {
           tokenStore.set(access_token);
-          const reconciled = reconcileUserApps({ ...sessionUser, ...user });
+          const reconciled = reconcileUserApps({ ...user, ...sessionUser });
           setSessionUser(reconciled);
           sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
           localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
@@ -8625,7 +8739,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
       formData.append('file', file);
       formData.append('media_type', mType);
       const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
-      const res = await fetch('http://localhost:8001/api/storage/upload', {
+      const res = await fetch('/api/storage/upload', {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData

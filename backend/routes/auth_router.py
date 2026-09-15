@@ -28,18 +28,31 @@ def _to_public(user: dict) -> UserPublic:
     if apps is None:
         role = user.get("role", "creator")
         apps = ["epk-builder", "catalog-porting"] if role in ("creator", "label", "admin") else []
+    
+    # Safe name resolution across legacy and Intermaven accounts
+    resolved_name = user.get("name")
+    if not resolved_name:
+        fn = user.get("first_name", "")
+        ln = user.get("last_name", "")
+        combo = f"{fn} {ln}".strip()
+        resolved_name = combo or user.get("username")
+
+    resolved_brand = user.get("brand_name") or user.get("brandName") or user.get("company")
+    resolved_country = user.get("country") or "KE"
+    resolved_bio = user.get("bio")
+
     return UserPublic(
         id=str(user["_id"]),
         email=user["email"],
-        name=user.get("name"),
+        name=resolved_name,
         role=user.get("role", "creator"),
         roles=user.get("roles", ["creator"]),
         pro_verified=user.get("pro_verified", False),
         plan=user.get("plan", "starter"),
         credits=user.get("credits", 0),
-        brand_name=user.get("brand_name"),
-        country=user.get("country"),
-        bio=user.get("bio"),
+        brand_name=resolved_brand,
+        country=resolved_country,
+        bio=resolved_bio,
         apps=apps,
         dashboard_layout=user.get("dashboard_layout"),
     )

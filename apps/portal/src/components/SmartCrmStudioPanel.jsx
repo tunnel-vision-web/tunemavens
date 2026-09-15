@@ -186,7 +186,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
 
       // 2. Fetch from TuneMavens Backend CRM on Port 8001
       try {
-        const res8001 = await fetch(`http://localhost:8001/api/crm/contacts?creator_username=${selectedSubdomain}`)
+        const res8001 = await fetch(`/api/crm/contacts?creator_username=${selectedSubdomain}`)
         if (res8001.ok) {
           const data8001 = await res8001.json()
           if (Array.isArray(data8001.contacts)) {
@@ -293,7 +293,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
     try {
       // Send to FastAPI CRM campaigns if available
       try {
-        await fetch('http://localhost:8001/api/crm/campaigns', {
+        await fetch('/api/crm/campaigns', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -342,7 +342,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
     }
 
     try {
-      await fetch('http://localhost:8001/api/crm/leads', {
+      await fetch('/api/crm/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(leadPayload)

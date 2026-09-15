@@ -324,7 +324,7 @@ export default function StreamView({
             {/* Support Cascade tip uploader */}
             {globalTrack && (
               <div className="dashboard-card" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff', textAlign: 'left' }}>⚡ Support Creator (Split Cascade Tip)</h3>
+                <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff', textAlign: 'left' }}>Support Creator (Split Cascade Tip)</h3>
                 
                 {sessionUser ? (
                   <form onSubmit={handleSendTip} style={{ textAlign: 'left' }}>

@@ -66,7 +66,10 @@ function GoogleFontsModal({ isOpen, onClose, onSelect, currentFont }) {
   })
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+    >
       <div style={{ background:'#0c101d', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, width:'100%', maxWidth:680, maxHeight:'85vh', display:'flex', flexDirection:'column', boxShadow:'0 25px 60px rgba(0,0,0,0.8)', overflow:'hidden' }}>
         {/* Modal Header */}
         <div style={{ padding:'18px 22px', borderBottom:'1px solid rgba(255,255,255,0.08)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -1412,7 +1415,7 @@ function PathwaySelectorModal({ isOpen, onClose, onSelect, currentPathId }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h3 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>⚡</span> Choose Your Music Creator Pathway
+              Choose Your Music Creator Pathway
             </h3>
             <p style={{ margin: 0, fontSize: 13, color: C.sub, maxWidth: 620 }}>
               Select the music business pathway that best describes your sound and commercial operations. This will auto-populate your site headline, music business bio, press quotes, and hero media.
@@ -2131,7 +2134,7 @@ function Step7Content({ data, onChange, tracks, sessionUser }) {
               onClick={handleAutoFixSocialLinks}
               style={{ background:C.cyan, border:'none', color:'#000', padding:'6px 14px', borderRadius:4, fontSize:11.5, fontWeight:900, cursor:'pointer', display:'flex', alignItems:'center', gap:5 }}
             >
-              <RiCheckFill size={14} /> ⚡ Auto-Fix & Re-Sync All 6 Accounts
+              <RiCheckFill size={14} /> Auto-Fix &amp; Re-Sync All 6 Accounts
             </button>
           </div>
         </div>
@@ -2286,12 +2289,12 @@ class EpkErrorBoundary extends React.Component {
 }
 
 // ── Main Wizard ─────────────────────────────────────────────────────────────
-function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
+function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser, activeArtist }) {
   const safeEpk = epk || {}
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
   const [data, setData] = useState(() => {
-    const activeSub = (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || 'ndufo'
+    const activeSub = activeArtist?.subdomain || (epk?.subdomain && epk.subdomain !== 'aisha' ? epk.subdomain : null) || (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || 'ndufo'
     let localData = null
     try {
       const cached = localStorage.getItem(`epk_public_${activeSub}`) || localStorage.getItem(`epk_${activeSub}`)
@@ -2299,9 +2302,9 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
     } catch (_) {}
     const base = localData || safeEpk
     return {
-      artist_name: base.artist_name || (activeSub === 'ndufo' ? 'Ndufo' : (sessionUser?.name || 'Ndufo')),
-      domainMode: base.domainMode || 'subdomain',
-      subdomain: (base.subdomain && base.subdomain !== 'aisha') ? base.subdomain : activeSub,
+      artist_name: base.artist_name || activeArtist?.name || (activeSub === 'ndufo' ? 'Ndufo' : (sessionUser?.name || 'Ndufo')),
+      domainMode: base.domainMode || (base.customDomain ? 'custom' : 'subdomain'),
+      subdomain: base.subdomain || activeSub,
       customDomain: base.customDomain || '',
       layoutWidth: base.layoutWidth || '1280px',
       layoutVariant: base.layoutVariant || 'logo-left',
@@ -2327,39 +2330,96 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser }) {
     }
   })
 
-  // Sync state when epk or active artist changes
+  // Live EPK Creator Data Preselection from MongoDB
+  const fetchLiveEpkForWizard = async (subdomainToFetch) => {
+    if (!subdomainToFetch) return;
+    try {
+      const res = await fetch(`/api/epk/${encodeURIComponent(subdomainToFetch)}`);
+      if (res.ok) {
+        const live = await res.json();
+        if (live && typeof live === 'object') {
+          setData(prev => {
+            return {
+              ...prev,
+              artist_name: live.artist_name || live.name || prev.artist_name,
+              siteName: live.artist_name || live.name || prev.siteName,
+              subdomain: live.subdomain || subdomainToFetch,
+              customDomain: live.customDomain || prev.customDomain || '',
+              domainMode: live.domainMode || (live.customDomain ? 'custom' : 'subdomain'),
+              layoutWidth: live.layoutWidth || prev.layoutWidth || '1280px',
+              layoutVariant: live.layoutVariant || prev.layoutVariant || 'logo-left',
+              logoUrl: live.logoUrl || prev.logoUrl || '',
+              accentColor: live.accentColor || prev.accentColor || '#00f0ff',
+              secondaryColor: live.secondaryColor || prev.secondaryColor || '#8b5cf6',
+              themeMode: live.themeMode || prev.themeMode || 'dark',
+              themeBg: live.themeBg || prev.themeBg || 'linear-gradient(135deg,#0f0c20,#1a0826)',
+              fontFamily: live.fontFamily || prev.fontFamily || 'Sansation, sans-serif',
+              menuItems: (Array.isArray(live.menuItems) && live.menuItems.length > 0) ? live.menuItems : (prev.menuItems || DEFAULT_MENU),
+              headline: live.headline || prev.headline || 'Official Creator Web World',
+              tagline: live.headline || prev.tagline,
+              bio: live.bio || prev.bio || '',
+              heroImageUrl: live.heroImageUrl || prev.heroImageUrl || '',
+              heroImages: (Array.isArray(live.heroImages) && live.heroImages.length > 0)
+                ? live.heroImages
+                : (live.heroImageUrl ? [live.heroImageUrl] : prev.heroImages),
+              featuredTrackIsrc: live.featuredTrackIsrc || prev.featuredTrackIsrc || '',
+              pressOutlet: live.pressOutlet || prev.pressOutlet || 'Billboard & SyncMavens',
+              pressQuote: live.pressQuote || prev.pressQuote || '',
+              youtubeVideoUrl: live.youtubeVideoUrl || prev.youtubeVideoUrl || '',
+              spotify: live.spotify || prev.spotify || '',
+              soundcloud: live.soundcloud || prev.soundcloud || '',
+              instagram: live.instagram || prev.instagram || '',
+              bookingEmail: live.bookingEmail || prev.bookingEmail || ''
+            };
+          });
+          if (typeof setEpk === 'function') {
+            setEpk(prev => ({ ...prev, ...live }));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Could not fetch live creator EPK data for wizard preselection:', err);
+    }
+  };
+
+  // Fetch live EPK data on mount or artist switch
+  const activeSub = activeArtist?.subdomain || epk?.subdomain || (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || 'ndufo';
+  useEffect(() => {
+    fetchLiveEpkForWizard(activeSub);
+  }, [activeSub]);
+
+  // Sync state when epk prop changes
   React.useEffect(() => {
-    if (epk && typeof epk === 'object') {
+    if (epk && typeof epk === 'object' && Object.keys(epk).length > 0) {
       setData(prev => {
-        const isDifferentArtist = epk.subdomain && prev.subdomain && epk.subdomain !== prev.subdomain;
         return {
           ...prev,
-          artist_name: epk.artist_name || epk.name || (isDifferentArtist ? epk.artist_name : prev.artist_name),
+          artist_name: epk.artist_name || epk.name || prev.artist_name,
           siteName: epk.artist_name || epk.name || prev.siteName,
           subdomain: epk.subdomain || prev.subdomain,
-          customDomain: epk.customDomain ?? (isDifferentArtist ? '' : prev.customDomain),
+          customDomain: epk.customDomain ?? prev.customDomain,
           layoutWidth: epk.layoutWidth || prev.layoutWidth,
           layoutVariant: epk.layoutVariant || prev.layoutVariant,
-          headline: epk.headline || (isDifferentArtist ? '' : prev.headline),
+          headline: epk.headline || prev.headline,
           tagline: epk.headline || prev.tagline,
-          bio: epk.bio || (isDifferentArtist ? '' : prev.bio),
+          bio: epk.bio || prev.bio,
           themeMode: epk.themeMode || prev.themeMode,
           themeBg: epk.themeBg || prev.themeBg,
-          logoUrl: epk.logoUrl || (isDifferentArtist ? '' : prev.logoUrl),
-          heroImageUrl: epk.heroImageUrl || (isDifferentArtist ? '' : prev.heroImageUrl),
-          heroImages: (epk.heroImages && epk.heroImages.length > 0) ? epk.heroImages : (isDifferentArtist ? [] : prev.heroImages),
+          logoUrl: epk.logoUrl || prev.logoUrl,
+          heroImageUrl: epk.heroImageUrl || prev.heroImageUrl,
+          heroImages: (epk.heroImages && epk.heroImages.length > 0) ? epk.heroImages : prev.heroImages,
           accentColor: epk.accentColor || prev.accentColor,
           secondaryColor: epk.secondaryColor || prev.secondaryColor,
           fontFamily: epk.fontFamily || prev.fontFamily,
           menuItems: epk.menuItems || prev.menuItems,
-          featuredTrackIsrc: epk.featuredTrackIsrc ?? (isDifferentArtist ? '' : prev.featuredTrackIsrc),
-          pressOutlet: epk.pressOutlet || (isDifferentArtist ? '' : prev.pressOutlet),
-          pressQuote: epk.pressQuote || (isDifferentArtist ? '' : prev.pressQuote),
-          youtubeVideoUrl: epk.youtubeVideoUrl || (isDifferentArtist ? '' : prev.youtubeVideoUrl),
-          spotify: epk.spotify || (isDifferentArtist ? '' : prev.spotify),
-          soundcloud: epk.soundcloud || (isDifferentArtist ? '' : prev.soundcloud),
-          instagram: epk.instagram || (isDifferentArtist ? '' : prev.instagram),
-          bookingEmail: epk.bookingEmail || (isDifferentArtist ? '' : prev.bookingEmail),
+          featuredTrackIsrc: epk.featuredTrackIsrc ?? prev.featuredTrackIsrc,
+          pressOutlet: epk.pressOutlet || prev.pressOutlet,
+          pressQuote: epk.pressQuote || prev.pressQuote,
+          youtubeVideoUrl: epk.youtubeVideoUrl || prev.youtubeVideoUrl,
+          spotify: epk.spotify || prev.spotify,
+          soundcloud: epk.soundcloud || prev.soundcloud,
+          instagram: epk.instagram || prev.instagram,
+          bookingEmail: epk.bookingEmail || prev.bookingEmail,
         };
       });
     }

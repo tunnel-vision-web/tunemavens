@@ -36,7 +36,7 @@ export default function SplitCascadeCarousel({ step, setStep }) {
     {
       title: "Step 3: Run the Split Cascade",
       desc: "The cascade engine divides the bulk receipts into respective collaborator balances.",
-      icon: "⚡",
+      icon: "💰",
       visual: <SplitCalculatorDemo />
     },
     {
