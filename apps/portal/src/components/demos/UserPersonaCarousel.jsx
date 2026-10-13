@@ -14,8 +14,8 @@ export default function UserPersonaCarousel() {
       subtitle: "Keep 100% of your licensing revenues. TuneMavens AI matches, pitches, and delivers audio catalogs directly to game developers and film music supervisors without a middleman.",
       persona: "Independent Songwriter",
       image: userSongwriterImg,
-      cta: "Start Free Pitching",
-      link: "/register",
+      cta: "Explore Creator Suite",
+      link: "/for/creator",
       painpoint: "Publishing Middlemen take 50% of revenue",
       solution: "Self-Publish & Pitch directly with Sync Brief AI"
     },
@@ -24,8 +24,8 @@ export default function UserPersonaCarousel() {
       subtitle: "Search and license high-fidelity tracks instantly. TuneMavens connects you directly to self-published songwriters with pre-cleared, AI-tagged audio assets ready for synchronization.",
       persona: "Music Supervisor",
       image: userSupervisorImg,
-      cta: "Browse Pre-Cleared Music",
-      link: "/tools",
+      cta: "Explore Supervisor Hub",
+      link: "/for/supervisor",
       painpoint: "Unclear split rights and untagged catalogs stall clearances",
       solution: "Instant search of verified, 100% pre-cleared sync tags"
     },
@@ -34,18 +34,18 @@ export default function UserPersonaCarousel() {
       subtitle: "Automate splits and catalog accounting in seconds. Our Split Cascade Ledger is built for modern record labels to ingest distributor statement CSV files, calculate cascading shares, and pay roster artists seamlessly.",
       persona: "Record Label Executive",
       image: userManagerImg,
-      cta: "Start Seamless Operations",
-      link: "/register",
+      cta: "Explore Label Console",
+      link: "/for/label",
       painpoint: "Manual spreadsheets cause payout errors and ingestion delays",
       solution: "Seamless CSV ledger ingestion and instant roster payouts"
     },
     {
       title: "Paying $150 per Track Just for Mastering?",
       subtitle: "Run unlimited mastering passes on our unified credits pool. Match loudness parameters (LUFS) for Apple Music and Spotify instantly without hiring studio engineers.",
-      persona: "DIY Recording Artist",
+      persona: "DIY Recording Artist & Producer",
       image: userProducerImg,
-      cta: "Start Free Mastering",
-      link: "/register",
+      cta: "Explore Producer Tools",
+      link: "/for/creator",
       painpoint: "High studio engineering costs per track",
       solution: "Unlimited reference mastering runs in seconds"
     }

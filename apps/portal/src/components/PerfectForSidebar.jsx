@@ -81,16 +81,16 @@ export const ROLE_LOGOS = {
 export const PERFECT_FOR_ROLES = [
   { key: 'creator', label: 'Creators', sub: 'Artists & Producers', href: '/for/creator', accent: 'var(--cyan)' },
   { key: 'label', label: 'Record Labels', sub: 'Catalog Management', href: '/for/label', accent: 'var(--purple)' },
-  { key: 'dj', label: 'DJs', sub: 'DJ Pool Engine', href: '/for/dj', accent: 'var(--cyan)' },
+  { key: 'dj', label: 'DJs', sub: 'DJ Pool Engine', href: '/for/dj', accent: '#14b8a6' },
   { key: 'media_house', label: 'Media Houses', sub: 'Broadcast & Playlisting', href: '/for/media-house', accent: 'var(--blue)' },
-  { key: 'supervisor', label: 'Music Supervisors', sub: 'SyncMavens Licensing', href: getServiceUrl('syncmavens'), isExternal: true, accent: 'var(--am)' },
-  { key: 'consumer', label: 'tunestream', sub: 'Everyday Listeners', href: '/native-apps/tunestream', accent: 'var(--gr)' },
+  { key: 'supervisor', label: 'Music Supervisors', sub: 'SyncMavens Licensing', href: '/for/supervisor', accent: 'var(--am)' },
+  { key: 'consumer', label: 'tunestream', sub: 'Everyday Listeners', href: '/for/consumer', accent: 'var(--gr)' },
   { key: 'corporate', label: 'Corporate', sub: 'Sponsorships & Ads', href: '/for/corporate', accent: '#ef4444' },
 ];
 
 const LANDING_ROUTE_PREFIXES = [
   { exact: '/' }, { exact: '/pricing' }, { exact: '/help' }, { exact: '/tools' }, { exact: '/apps' }, { exact: '/native-apps' },
-  { prefix: '/native-apps/' }, { prefix: '/for/' },
+  { prefix: '/native-apps/' }, { prefix: '/for/' }, { exact: '/for' },
 ];
 
 function shouldRenderOnPath(pathname) {
@@ -103,6 +103,15 @@ export function PerfectForSidebar() {
 
   const [isPaused, setIsPaused] = useState(false);
 
+  const isRoleActive = (role) => {
+    if (pathname === role.href) return true;
+    if (role.key === 'media_house' && pathname === '/for/media_house') return true;
+    if (role.key === 'consumer' && (pathname === '/native-apps/tunestream' || pathname === '/for/listener')) return true;
+    if (role.key === 'supervisor' && pathname === '/for/studio') return true;
+    if (role.key === 'label' && pathname === '/for/exec') return true;
+    return false;
+  };
+
   return (
     <section className="pf-carousel-section" aria-label="Perfect for" data-testid="perfect-for-sidebar">
       <div className="container">
@@ -114,7 +123,7 @@ export function PerfectForSidebar() {
         >
           <div className={`pf-carousel-track ${isPaused ? 'paused' : ''}`}>
             {PERFECT_FOR_ROLES.map((role) => {
-              const active = pathname === role.href;
+              const active = isRoleActive(role);
               const content = (
                 <>
                   <span className="pf-tile-logo">
@@ -153,7 +162,7 @@ export function PerfectForSidebar() {
             })}
             {/* Duplicate for seamless continuous horizontal scroll */}
             {PERFECT_FOR_ROLES.map((role) => {
-              const active = pathname === role.href;
+              const active = isRoleActive(role);
               const content = (
                 <>
                   <span className="pf-tile-logo">

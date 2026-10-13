@@ -23,7 +23,7 @@ import {
   RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill,
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
   RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine,
-  RiPriceTag3Fill
+  RiPriceTag3Fill, RiLayoutMasonryFill
 } from 'react-icons/ri'
 
 // Local assets
@@ -351,7 +351,7 @@ const NAV_ITEM_DESCRIPTIONS = {
     category: 'Dashboard'
   },
   catalog: {
-    title: 'Catalogue',
+    title: 'Catalogue Machine',
     desc: 'Central track & album catalogue, metadata manager, ISRCs, audio previews & release ingestion',
     category: 'Catalog & IP'
   },
@@ -735,7 +735,7 @@ function DashboardView({
     
     const allItems = {
       home: { id: 'home', label: 'Overview', icon: RiBarChartFill, category: 'Dashboard' },
-      catalog: { id: 'catalog', label: 'Catalogue', icon: RiDatabase2Fill, category: 'Catalog & IP' },
+      catalog: { id: 'catalog', label: 'Catalogue Machine', icon: RiDatabase2Fill, category: 'Catalog & IP' },
       'epk-builder': { id: 'epk-builder', label: 'EPK Builder', icon: RiDiscFill, category: 'Catalog & IP' },
       splits: { id: 'splits', label: 'Split Cascade', icon: RiCoinsFill, category: 'Royalty Ledgers' },
       djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
@@ -1423,7 +1423,11 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
     setError('');
     try {
       const list = await adminApi.domainMappings.list();
-      setMappings(list);
+      const normalized = (list || []).map(m => ({
+        ...m,
+        id: m.id || m._id || m.key,
+      }));
+      setMappings(normalized);
     } catch (e) {
       setError(e.data?.detail || e.message || 'Failed to load mappings');
     } finally {
@@ -1435,10 +1439,10 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
   const categories = ['all', 'native-app', 'dashboard-app', 'ai-tool', 'subdomain-portal'];
   const filtered = (filter === 'all' ? mappings : mappings.filter(m => m.category === filter))
     .filter(m => 
-      m.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.subdomain.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.key.toLowerCase().includes(searchQuery.toLowerCase())
+      (m.label || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (m.subdomain || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (m.path || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (m.key || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
   const paginatedMappings = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -1446,13 +1450,15 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
   const stage = (id, field, value) => setEdits(e => ({ ...e, [id]: { ...e[id], [field]: value } }));
 
   const saveRow = async (m) => {
-    const patch = edits[m.id];
+    const rowId = m.id || m._id || m.key;
+    const patch = edits[rowId];
     if (!patch) return;
-    setSavingId(m.id);
+    setSavingId(rowId);
     try {
-      const updated = await adminApi.domainMappings.update(m.id, patch);
-      setMappings(ms => ms.map(x => x.id === m.id ? updated : x));
-      setEdits(e => { const c = { ...e }; delete c[m.id]; return c; });
+      const updated = await adminApi.domainMappings.update(rowId, patch);
+      const norm = { ...updated, id: updated?.id || updated?._id || rowId };
+      setMappings(ms => ms.map(x => ((x.id === rowId || x._id === rowId || x.key === m.key) ? norm : x)));
+      setEdits(e => { const c = { ...e }; delete c[rowId]; return c; });
     } catch (e) {
       setError(e.data?.detail || e.message || 'Save failed');
     } finally {
@@ -1461,10 +1467,12 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
   };
 
   const toggleEnabled = async (m) => {
-    setSavingId(m.id);
+    const rowId = m.id || m._id || m.key;
+    setSavingId(rowId);
     try {
-      const updated = await adminApi.domainMappings.update(m.id, { enabled: !m.enabled });
-      setMappings(ms => ms.map(x => x.id === m.id ? updated : x));
+      const updated = await adminApi.domainMappings.update(rowId, { enabled: !m.enabled });
+      const norm = { ...updated, id: updated?.id || updated?._id || rowId };
+      setMappings(ms => ms.map(x => ((x.id === rowId || x._id === rowId || x.key === m.key) ? norm : x)));
     } catch (e) {
       setError(e.data?.detail || e.message || 'Toggle failed');
     } finally {
@@ -1473,10 +1481,11 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
   };
 
   const deleteRow = async (m) => {
+    const rowId = m.id || m._id || m.key;
     if (!window.confirm(`Delete mapping for "${m.label}"?`)) return;
     try {
-      await adminApi.domainMappings.remove(m.id);
-      setMappings(ms => ms.filter(x => x.id !== m.id));
+      await adminApi.domainMappings.remove(rowId);
+      setMappings(ms => ms.filter(x => (x.id !== rowId && x._id !== rowId && x.key !== m.key)));
     } catch (e) {
       setError(e.data?.detail || e.message || 'Delete failed');
     }
@@ -1489,7 +1498,8 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
     }
     try {
       const created = await adminApi.domainMappings.create(newMap);
-      setMappings(ms => [...ms, created]);
+      const norm = { ...created, id: created?.id || created?._id || created?.key || newMap.key };
+      setMappings(ms => [...ms, norm]);
       setNewMap({ key: '', label: '', category: 'dashboard-app', path: '', subdomain: '' });
       setShowAdd(false);
       setCurrentPage(1);
@@ -1597,16 +1607,17 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
             </thead>
             <tbody>
               {paginatedMappings.map(m => {
-                const stagedSubdomain = edits[m.id]?.subdomain ?? m.subdomain;
-                const stagedLabel = edits[m.id]?.label ?? m.label;
-                const dirty = edits[m.id] && Object.keys(edits[m.id]).length > 0;
+                const rowId = m.id || m._id || m.key;
+                const stagedSubdomain = edits[rowId]?.subdomain ?? m.subdomain;
+                const stagedLabel = edits[rowId]?.label ?? m.label;
+                const dirty = edits[rowId] && Object.keys(edits[rowId]).length > 0;
                 return (
-                  <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: m.enabled ? 1 : 0.55 }} data-testid={`mapping-row-${m.key}`}>
+                  <tr key={rowId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: m.enabled ? 1 : 0.55 }} data-testid={`mapping-row-${m.key}`}>
                     <td style={{ padding: '8px' }}>
                       <input
                         className="form-control"
                         value={stagedLabel}
-                        onChange={(e) => stage(m.id, 'label', e.target.value)}
+                        onChange={(e) => stage(rowId, 'label', e.target.value)}
                         style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#f1f5f9', fontSize: '12px', padding: '6px 10px', width: '100%' }}
                         data-testid={`mapping-label-${m.key}`}
                       />
@@ -1617,7 +1628,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
                       <input
                         className="form-control"
                         value={stagedSubdomain}
-                        onChange={(e) => stage(m.id, 'subdomain', e.target.value)}
+                        onChange={(e) => stage(rowId, 'subdomain', e.target.value)}
                         style={{ background: 'transparent', border: '1px solid rgba(34, 211, 238, 0.2)', color: 'var(--cyan)', fontSize: '12px', padding: '6px 10px', width: '100%', fontWeight: 700 }}
                         data-testid={`mapping-subdomain-${m.key}`}
                       />
@@ -1628,7 +1639,7 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
                     <td style={{ padding: '8px' }}>
                       <button
                         onClick={() => toggleEnabled(m)}
-                        disabled={savingId === m.id}
+                        disabled={savingId === rowId}
                         className={m.enabled ? 'btn-primary' : 'plan-btn outline'}
                         style={{ padding: '5px 10px', fontSize: '10px', fontWeight: 700 }}
                         data-testid={`mapping-toggle-${m.key}`}
@@ -1640,12 +1651,12 @@ function DomainMappingsPanel({ sessionUser, onUpdateUser }) {
                       {dirty && (
                         <button
                           onClick={() => saveRow(m)}
-                          disabled={savingId === m.id}
+                          disabled={savingId === rowId}
                           className="btn-primary"
                           style={{ padding: '5px 10px', fontSize: '10px', fontWeight: 700 }}
                           data-testid={`mapping-save-${m.key}`}
                         >
-                          {savingId === m.id ? '…' : 'Save'}
+                          {savingId === rowId ? '…' : 'Save'}
                         </button>
                       )}
                       <button
@@ -5117,7 +5128,7 @@ function CataloguePanel({
                 <div className="dashboard-card" style={{ minHeight: '400px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                     <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0 }}>
-                      Roster Catalogue Overview ({filteredTracks.length})
+                      Catalogue Machine Overview ({filteredTracks.length})
                     </h3>
                     <DashboardSearchBar value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Search catalogue tracks..." />
                   </div>

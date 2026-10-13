@@ -26,7 +26,7 @@ Our unified ecosystem caters to 7 canonical user roles across the music industry
 | User Persona | Key Motivations & Needs | Primary Platform Ingress | Key Ecosystem Features Used |
 |---|---|---|---|
 | **Creators** *(Artists, Producers, Songwriters)* | Catalog distribution, contract safety, sync licensing, AI marketing automation, direct fan monetization | `tunemavens.com` / `intermaven.io` | Split Cascade Engine, AI Recommendation Agent, Mother-EPK Builder, Sync Placement |
-| **Record Labels & A&R** | Roster ingestion, multi-file track management, catalog split tracking, automated royalty distribution | `tunemavens.com` (Label Console) | Catalogue Roster CSV Ingestion, Advance Recoupment Ledger, Multi-brand Subdomain Pages |
+| **Record Labels & A&R** | Roster ingestion, multi-file track management, catalog split tracking, automated royalty distribution | `tunemavens.com` (Label Console) | Catalogue Machine CSV Ingestion, Advance Recoupment Ledger, Multi-brand Subdomain Pages |
 | **Music Supervisors** *(Film, TV, Gaming)* | Rapid access to cleared, high-quality audio stems, transparent licensing splits, zero-friction brief matching | `syncmavens.com` | AI Sync Match Simulator, Interactive Brief Index, Stems Licensing Vault |
 | **DJs & Studio Engineers** | High-bitrate audio pools, studio mastering previews, track stems access | `djs.tunemavens.com` | DJ Pool Engine, Mastering Preview Testbed, Lossless Audio Ingestion |
 | **Media Houses & Agencies** | Programmatic content acquisition, bulk sync licensing, customized sub-brand portals | `media.tunemavens.com` | Media House Routing, Bulk Contract Subsystem, Corporate Billing |

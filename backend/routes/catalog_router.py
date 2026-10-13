@@ -441,12 +441,22 @@ def _sync_tracks_to_all_collections(subdomain: str, tracks: List[Dict[str, Any]]
 @router.get("/tracks", response_model=Dict[str, Any])
 def get_catalog_tracks(
     subdomain: str = Query("ndufo"),
+    all: bool = Query(False),
     page: int = Query(1, ge=1),
     limit: int = Query(100, ge=1, le=500),
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Retrieve catalog tracks for an artist, or full platform catalogue when all=True."""
-    if all or subdomain == "all":
+    clean_sub = subdomain if isinstance(subdomain, str) else getattr(subdomain, "default", "ndufo")
+    is_all = all if isinstance(all, bool) else (str(all).lower() in ("true", "1") if isinstance(all, str) else getattr(all, "default", False))
+    page_num = page if isinstance(page, int) and not isinstance(page, bool) else getattr(page, "default", 1)
+    limit_num = limit if isinstance(limit, int) and not isinstance(limit, bool) else getattr(limit, "default", 100)
+    if not isinstance(page_num, int):
+        page_num = 1
+    if not isinstance(limit_num, int):
+        limit_num = 100
+
+    if is_all or clean_sub == "all":
         all_tracks = []
         seen_isrcs = set()
 
@@ -489,20 +499,20 @@ def get_catalog_tracks(
 
         total_count = len(all_tracks)
         # Apply pagination if limit < total_count
-        start = (page - 1) * limit
-        end = start + limit
-        paginated = all_tracks[start:end] if limit else all_tracks
+        start = (page_num - 1) * limit_num
+        end = start + limit_num
+        paginated = all_tracks[start:end] if limit_num else all_tracks
 
         return {
             "subdomain": "all",
             "count": total_count,
-            "page": page,
-            "limit": limit,
-            "totalPages": max(1, (total_count + limit - 1) // limit),
+            "page": page_num,
+            "limit": limit_num,
+            "totalPages": max(1, (total_count + limit_num - 1) // limit_num),
             "tracks": paginated
         }
 
-    clean = subdomain.lower().strip().replace(" ", "")
+    clean = clean_sub.lower().strip().replace(" ", "")
 
     # Check dedicated catalog_tracks collection
     doc = db.catalog_tracks.find_one({"subdomain": clean})

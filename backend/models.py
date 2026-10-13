@@ -204,7 +204,8 @@ class CatalogueAcquisition(BaseDocument):
 # ======================================================================
 # Domain Mappings (admin-only) — maps in-app routes to public subdomains
 # ======================================================================
-class DomainMapping(BaseDocument):
+class DomainMapping(BaseModel):
+    id: Optional[str] = None
     key: str                       # unique stable id (e.g. 'native-app-tunemavens')
     label: str                     # human-readable name
     category: str                  # 'native-app' | 'dashboard-app' | 'ai-tool' | 'subdomain-portal'
@@ -214,6 +215,27 @@ class DomainMapping(BaseDocument):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_by: Optional[str] = None
+
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
+    @classmethod
+    def from_mongo(cls, doc: Optional[dict]):
+        if doc is None:
+            return None
+        d = dict(doc)
+        if "_id" in d:
+            d["id"] = str(d["_id"])
+        return cls.model_validate(d)
+
+    def to_mongo(self) -> dict:
+        data = self.model_dump(exclude_none=True)
+        if "id" in data:
+            val = data.pop("id")
+            if ObjectId.is_valid(val):
+                data["_id"] = ObjectId(val)
+            else:
+                data["_id"] = val
+        return data
 
 
 class DomainMappingUpdate(BaseModel):

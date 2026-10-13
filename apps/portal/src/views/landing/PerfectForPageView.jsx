@@ -42,7 +42,7 @@ export default function PerfectForPageView() {
       sub: 'DJ Pool Engine',
       href: '/for/dj',
       logo: ROLE_LOGOS['dj'],
-      accent: 'var(--cyan)',
+      accent: '#14b8a6',
       desc: 'The next-generation pool engine. Access lossless audio files, queue pools, and secure stem clearances for live sets.',
       preview: appsLedgerImg
     },
@@ -60,8 +60,9 @@ export default function PerfectForPageView() {
       key: 'supervisor',
       label: 'Music Supervisors',
       sub: 'SyncMavens Licensing',
-      href: getServiceUrl('syncmavens'),
-      isExternal: true,
+      href: '/for/supervisor',
+      externalUrl: getServiceUrl('syncmavens'),
+      externalLabel: 'Launch SyncMavens',
       logo: ROLE_LOGOS['supervisor'],
       accent: 'var(--am)',
       desc: 'Sync licensing and AI scene-tagging made simple. Search our curated catalog of watermarked tracks and find the perfect vibe for your film or TV project.',
@@ -71,7 +72,9 @@ export default function PerfectForPageView() {
       key: 'consumer',
       label: 'tunestream',
       sub: 'Everyday Listeners',
-      href: '/native-apps/tunestream',
+      href: '/for/consumer',
+      externalUrl: getServiceUrl('tunestream'),
+      externalLabel: 'Launch TuneStream',
       logo: ROLE_LOGOS['consumer'],
       accent: '#10b981',
       desc: 'Our consumer streaming app. Listen to your favorite tracks, support creators directly with direct-tipping, and sync your music offline.',
@@ -121,6 +124,17 @@ export default function PerfectForPageView() {
                   <Link to={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
                     Explore Seat
                   </Link>
+                )}
+                {role.externalUrl && (
+                  <a 
+                    href={role.externalUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn pf-card-cta" 
+                    style={{ '--pf-accent': role.accent, background: 'rgba(255,255,255,0.06)', border: `1px solid ${role.accent}`, color: role.accent }}
+                  >
+                    {role.externalLabel || 'Open Portal'} &rarr;
+                  </a>
                 )}
                 <button 
                   onClick={() => setPreviewImage(role.preview)} 
