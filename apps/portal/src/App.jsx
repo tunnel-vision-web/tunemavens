@@ -98,6 +98,7 @@ import PricingView from './views/landing/PricingView.jsx'
 import AboutView from './views/landing/AboutView.jsx'
 import HelpView from './views/landing/HelpView.jsx'
 import SupportPageView from './views/community/SupportPageView.jsx'
+import BlogPageView from './views/community/BlogPageView.jsx'
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx'
 import PublishingView from './views/landing/PublishingView.jsx'
 import DistributionView from './views/landing/DistributionView.jsx'
@@ -8666,7 +8667,11 @@ function AppContent({
           <Route path="/help" element={<HelpView sessionUser={sessionUser} />} />
           <Route path="/community/support" element={<SupportPageView sessionUser={sessionUser} catalogTracks={catalogTracks} />} />
           <Route path="/support" element={<SupportPageView sessionUser={sessionUser} catalogTracks={catalogTracks} />} />
-          <Route path="/community" element={<Navigate to="/community/support" replace />} />
+          <Route path="/community/blog" element={<BlogPageView sessionUser={sessionUser} />} />
+          <Route path="/community/blog/:slug" element={<BlogPageView sessionUser={sessionUser} />} />
+          <Route path="/blog" element={<Navigate to="/community/blog" replace />} />
+          <Route path="/blog/:slug" element={<BlogPageView sessionUser={sessionUser} />} />
+          <Route path="/community" element={<Navigate to="/community/blog" replace />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
 

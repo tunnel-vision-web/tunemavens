@@ -89,6 +89,7 @@ export default function Footer() {
                   <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
                   <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
                   <Link to="/help" className="footer-link">Support Desk</Link>
+                  <Link to="/community/blog" className="footer-link">Blog &amp; Articles</Link>
                 </div>
               </div>
             </div>
@@ -172,6 +173,7 @@ export default function Footer() {
                   <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
                   <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
                   <Link to="/help" className="footer-link">Support Desk</Link>
+                  <Link to="/community/blog" className="footer-link">Blog &amp; Articles</Link>
                 </div>
               </div>
             </div>

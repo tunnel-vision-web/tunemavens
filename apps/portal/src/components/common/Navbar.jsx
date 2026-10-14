@@ -331,7 +331,7 @@ export default function Navbar({ sessionUser }) {
         </li>
         <li className="dropdown-container" ref={dropdownRef}>
           <button 
-            className="nav-link dropdown-trigger" 
+            className={`nav-link dropdown-trigger ${isActive('/community/support') || isActive('/help') || isActive('/community/blog') || currentPath.startsWith('/community/blog') || currentPath.startsWith('/blog') ? 'active' : ''}`} 
             onClick={() => { setAppsDropdownOpen(false); setAboutDropdownOpen(false); setServicesDropdownOpen(false); setDropdownOpen(!dropdownOpen); }}
           >
             Support & Community
@@ -349,13 +349,17 @@ export default function Navbar({ sessionUser }) {
               </Link>
             </li>
             <li>
-              <a href="#forum" className="dropdown-link" onClick={() => { alert('TuneMavens Community Forum shares the Intermaven account profile and will launch in Phase 2.'); setDropdownOpen(false); setMobileOpen(false); }}>
-                <RiMessage2Fill size={16} /> Creator Forum
-              </a>
+              <Link 
+                to="/community/blog" 
+                className={`dropdown-link ${isActive('/community/blog') || isActive('/blog') || currentPath.startsWith('/community/blog') || currentPath.startsWith('/blog') ? 'active' : ''}`} 
+                onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}
+              >
+                <RiBookOpenFill size={16} /> Blog &amp; Articles
+              </Link>
             </li>
             <li>
-              <a href="#blog" className="dropdown-link" onClick={() => { alert('Creator stories and news blog coming soon.'); setDropdownOpen(false); setMobileOpen(false); }}>
-                <RiBookOpenFill size={16} /> Blog &amp; Articles
+              <a href="#forum" className="dropdown-link" onClick={() => { alert('TuneMavens Community Forum shares the Intermaven account profile and will launch in Phase 2.'); setDropdownOpen(false); setMobileOpen(false); }}>
+                <RiMessage2Fill size={16} /> Creator Forum
               </a>
             </li>
           </ul>

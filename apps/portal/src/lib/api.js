@@ -223,3 +223,29 @@ export const catalogApi = {
     body: { audio_url: audioUrl, duration_seconds: durationSeconds },
   }),
 };
+
+// --- Blog & Editorial Management ---
+export const blogApi = {
+  listArticles: (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.category && params.category !== 'all') searchParams.append('category', params.category);
+    if (params.search) searchParams.append('search', params.search);
+    if (params.tag) searchParams.append('tag', params.tag);
+    if (params.limit) searchParams.append('limit', params.limit);
+    if (params.skip) searchParams.append('skip', params.skip);
+    const qs = searchParams.toString();
+    return request(`/api/blog/articles${qs ? `?${qs}` : ''}`);
+  },
+  getArticle: (slug) => request(`/api/blog/articles/${encodeURIComponent(slug)}`),
+  addComment: (slug, payload) => request(`/api/blog/articles/${encodeURIComponent(slug)}/comments`, {
+    method: 'POST',
+    body: payload,
+  }),
+  likeComment: (commentId) => request(`/api/blog/comments/${encodeURIComponent(commentId)}/like`, {
+    method: 'POST',
+  }),
+  clapArticle: (slug) => request(`/api/blog/articles/${encodeURIComponent(slug)}/clap`, {
+    method: 'POST',
+  }),
+};
+

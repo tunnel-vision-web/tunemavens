@@ -1489,4 +1489,42 @@ Provides label managers and platform administrators with complete operational pa
 #### 9.37.7 Intermaven Smart CRM Synchronization
 All support ticket creation and resolution events automatically synchronize to the shared Intermaven Partner CRM (`/api/crm/leads`), creating tagged client contact profiles (`support_claim`, `royalty_dispute`, etc.) with full communication histories visible across the entire Intermaven partner network.
 
+---
+
+## §9.38 — TuneMavens Editorial & Creator Blog with Registered User Commenting
+
+### 9.38.1 Architecture & Editorial Scope
+The TuneMavens Editorial & Creator Blog (`/community/blog` and `/community/blog/:slug`, aliased to `/blog` and `/blog/:slug`) delivers comprehensive, in-depth music operations thought leadership, production masterclasses, and legal guides for independent creators, producers, managers, and music supervisors.
+
+#### Flagship Masterclass Articles:
+1. **The Algorithmic Split: Why Waterfall Accounting Is Replacing 50/50 Splits in 2026** (`waterfall-accounting-replacing-splits-2026`) — Detailed exploration of how transparent smart ledgers, recoupment cascades, and instant escrow eliminate the $400M black-box royalty crisis.
+2. **Inside the Supervisor's Room: What Really Makes a 30-Second Commercial Cue Irresistible** (`inside-the-supervisors-room-irresistible-commercial-cue`) — Frequency scooping around dialogue pockets (1.5 kHz – 4 kHz), commercial narrative arcs, clean button stops, and the necessity of stem deliveries for $25k+ brand buyouts.
+3. **The Mastering Loudness Wars Are Over: Target LUFS, True Peak, and Streaming Normalization Explained** (`mastering-loudness-wars-target-lufs-true-peak`) — The Loudness Penalty on Spotify/Apple Music, dynamic range retention, and the -1.0 dBTP intersample peak ceiling.
+4. **Creator Web Worlds vs. Link-in-Bio: Why Independent Artists Are Ditching One-Page Link Hubs** (`creator-web-worlds-vs-link-in-bio`) — Analysis of audience leakage through static link buttons, and how multi-page EPKs with Mother-CMS integration convert listeners into direct patrons.
+5. **Touring in the Age of Cashless & M-Pesa: How African Live Acts Are Eliminating Ticket Fraud** (`touring-cashless-mpesa-eliminating-ticket-fraud`) — Dynamic TOTP rolling QR passes, Safaricom Daraja STK push checkouts, and 2:30 AM post-encore smart escrow disbursements.
+6. **Mechanical Royalties vs. Performance Royalties: The Definitive 2026 Global Map** (`mechanical-vs-performance-royalties-2026-global-map`) — Delineating The MLC, mechanical rights agencies, and PROs (ASCAP, BMI, PRS, MCSK, SAMRO) so songwriters recover statutory digital mechanicals.
+7. **Building an Omnichannel Fan CRM: How to Generate 98% WhatsApp Open Rates for Album Drops** (`omnichannel-fan-crm-98-percent-whatsapp-open-rates`) — Overcoming 18% email open rates with high-velocity WhatsApp direct broadcasts and segmented patron cohorts.
+8. **AI in the Recording Studio: Collaborator or Threat? The Creator's Playbook for Ethical GenAI** (`ethical-ai-in-music-studio-creator-playbook`) — The U.S. Copyright Office human authorship standard, neural stem demixing, prompt styling in Mother-CMS, and legal protection of hybrid catalogs.
+
+### 9.38.2 Registered User Commenting Engine
+- **Authenticated Community Engagement:** Registered users signed in with their TuneMavens account (or Intermaven unified SSO) can post comments on any article. The system automatically links their registered display name, role badge (Creator, Producer, Music Supervisor, Label Exec), verified checkmark, and avatar.
+- **Unregistered Guest Gating:** Non-authenticated visitors can read all existing comments and upvote counters, but receive an inviting contextual gateway card: *"Join the Conversation: Only registered TuneMavens creators, producers, and industry supervisors can leave comments."* Direct buttons link to `/login` and `/register` modals.
+- **Interactive Feedback:** Comments support live upvoting/likes (`POST /api/blog/comments/{id}/like`), replies, and instant optimistic state updates for immediate visual response.
+
+### 9.38.3 Dual-Layer Persistence & Performance Architecture
+- **FastAPI Backend Router (`backend/routes/blog_router.py`):**
+  - `GET /api/blog/articles` — Category filtering, keyword search, pagination, and calculated comment counters.
+  - `GET /api/blog/articles/{slug}` — Full article body, view counter increment, related article recommendations, and sorted comment thread.
+  - `POST /api/blog/articles/{slug}/comments` — Enforces registered user credentials (`get_current_user` / `get_optional_user`). Rejects anonymous attempts with HTTP 401.
+  - `POST /api/blog/comments/{id}/like` — Comment upvote endpoint.
+  - `POST /api/blog/articles/{slug}/clap` — Article appreciation endpoint.
+  - `POST /api/blog/seed` — Seed helper for initial setup.
+- **Client Mirror (`apps/portal/src/data/blogArticles.js`):** Built-in client-side data mirror providing instantaneous zero-latency rendering, progressive enhancement, and resilient offline/sandbox functionality.
+
+### 9.38.4 Navigational Integration
+- **Support & Community Dropdown (`Navbar.jsx`):** Replaced the temporary alert placeholder under the "Support & Community" dropdown with a verified link to `<Link to="/community/blog"> <RiBookOpenFill size={16} /> Blog &amp; Articles </Link>`.
+- **Active Navigation Highlights:** Both desktop and mobile navbar states recognize `/community/blog`, `/blog`, and `/blog/:slug` as active routes.
+- **Footer Navigation (`Footer.jsx`):** Added `Blog & Articles` under the Community column across both TuneMavens and TuneStream footer views.
+- **Deep URL Routing (`App.jsx`):** Deep routes `/community/blog/:slug` and `/blog/:slug` load specific articles directly with reading progress indicator, category tags, author byline, and related recommendations.
+
 

@@ -89,6 +89,11 @@ npm run dev
 - **Zero Lightning Icons & Universal Backdrop Modal Dismiss:** Complete elimination of lightning/flash icons in accordance with design standards, and universal outside-click backdrop dismissal on all modal overlays.
 - **Persistent User Settings:** User profile metadata (name, email, brand, country, bio) persists to MongoDB via `PUT /api/users/me` across logins and reloads.
 
+### 8. Editorial & Creator Blog with Registered User Commenting
+- **Flagship Masterclass Series:** 8 in-depth editorial articles covering waterfall accounting vs. 50/50 splits, sync licensing commercial cue specs, mastering LUFS and true-peak compliance, creator web worlds vs. link-in-bio, cashless live touring & M-Pesa escrow, mechanical vs. performance royalties, omnichannel fan CRM, and ethical studio GenAI.
+- **Registered User Commenting & Community Discussions:** Authenticated commenting engine allowing registered creators, producers, and supervisors to participate with role badges, verified tags, and like counters. Unauthenticated guests view threads with an invitation gateway card to sign in.
+- **Strict 3px Border Radius Standard:** All article cards, comment boxes, input fields, category filters, and action buttons adhere strictly to the 3px border radius specification.
+- **Full Backend & Client Mirror Architecture:** Powered by FastAPI (`/api/blog/*`) with MongoDB persistence and full client-side mirror data (`blogArticles.js`) for zero-latency loading and offline resilience.
 
 ---
 
@@ -109,6 +114,7 @@ npm test
 
 ## 📚 Documentation Reference
 
-- **[docs/DOCUMENTATION.md](file:///c:/Users/judit/workspace/tunemaven/docs/DOCUMENTATION.md)** — Canonical technical reference (§9.1 to §9.20).
-- **[docs/DESIGN_STANDARDS.md](file:///c:/Users/judit/workspace/tunemaven/docs/DESIGN_STANDARDS.md)** — Design tokens, component specs, and styling protocols.
-- **[docs/ECOSYSTEM_ARCHITECTURE_AND_FLOWCHART.md](file:///c:/Users/judit/workspace/tunemaven/docs/ECOSYSTEM_ARCHITECTURE_AND_FLOWCHART.md)** — Complete ecosystem flow and microservices diagram.
+- **[docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)** — Canonical technical reference (§9.1 to §9.38).
+- **[docs/DESIGN_STANDARDS.md](docs/DESIGN_STANDARDS.md)** — Design tokens, component specs, and styling protocols.
+- **[docs/ECOSYSTEM_ARCHITECTURE_AND_FLOWCHART.md](docs/ECOSYSTEM_ARCHITECTURE_AND_FLOWCHART.md)** — Complete ecosystem flow and microservices diagram.
+
