@@ -72,15 +72,23 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, text-shadow 0.2s ease, filter 0.2s ease;
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 8px 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 0 1px rgba(0, 0, 0, 0.9);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
 }
 
 .nav-link:hover, .nav-link.active {
   color: var(--cyan);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 240, 255, 0.35);
+}
+
+.nav-link svg,
+.dropdown-trigger svg {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
 }
 
 .nav-ctas {
@@ -138,6 +146,7 @@
   border: none;
   color: var(--tx);
   cursor: pointer;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75));
 }
 
 /* Buttons */
@@ -151,6 +160,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .btn-secondary:hover {
@@ -1370,6 +1381,8 @@
   cursor: pointer;
   transition: background-color .18s ease, border-color .18s ease;
   font-family: 'Sansation', sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 .region-trigger:hover { 
