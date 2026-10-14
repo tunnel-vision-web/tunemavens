@@ -4,7 +4,7 @@ import {
   RiCheckLine, RiDeleteBin6Line, RiCloseLine, RiMailLine,
   RiExternalLinkFill, RiArrowRightLine, RiFolderMusicFill,
   RiEqualizerFill, RiGlobalFill, RiCoinsFill, RiPriceTag3Fill,
-  RiFlashlightFill
+  RiFlashlightFill, RiEditLine, RiLockFill, RiAlertFill
 } from 'react-icons/ri';
 import CreditReloadModal from '../common/CreditReloadModal.jsx';
 
@@ -138,8 +138,13 @@ export default function LabelTeamRosterPanel({
     return DEFAULT_LABEL_ROSTER_ARTISTS;
   });
 
+  // Authorization: Only authorized record label owners or platform administrators can modify team members
+  const isAuthorizedUser = sessionUser?.role === 'label' || sessionUser?.role === 'admin' || sessionUser?.is_label_admin === true || !sessionUser;
+
   // Modal dialog states
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showEditMemberModal, setShowEditMemberModal] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
   const [showArtistModal, setShowArtistModal] = useState(false);
   const [showReloadModal, setShowReloadModal] = useState(false);
   const [reloadReason, setReloadReason] = useState('Record Label Unified Credits Top-Up');
@@ -151,6 +156,14 @@ export default function LabelTeamRosterPanel({
   const [inviteRole, setInviteRole] = useState('A&R Director');
   const [inviteScope, setInviteScope] = useState('All Label Roster');
   const [inviteError, setInviteError] = useState('');
+
+  // Edit member form state
+  const [editMemberName, setEditMemberName] = useState('');
+  const [editMemberEmail, setEditMemberEmail] = useState('');
+  const [editMemberRole, setEditMemberRole] = useState('A&R Director');
+  const [editMemberScope, setEditMemberScope] = useState('All Label Roster');
+  const [editMemberStatus, setEditMemberStatus] = useState('Active');
+  const [editMemberError, setEditMemberError] = useState('');
 
   // Sign artist form state
   const [newArtistName, setNewArtistName] = useState('');
@@ -189,6 +202,10 @@ export default function LabelTeamRosterPanel({
   // Add new team member
   const handleInviteSubmit = (e) => {
     e.preventDefault();
+    if (!isAuthorizedUser) {
+      setInviteError('Unauthorized: Only authorized record label administrators can invite new team collaborators.');
+      return;
+    }
     if (!inviteName.trim() || !inviteEmail.trim()) {
       setInviteError('Please provide both full name and email address.');
       return;
@@ -221,9 +238,75 @@ export default function LabelTeamRosterPanel({
     setShowInviteModal(false);
   };
 
+  // Open edit modal for team member
+  const handleOpenEditMember = (member) => {
+    if (!isAuthorizedUser) {
+      alert('Unauthorized: You must have Record Label administrator authorization to edit team members.');
+      return;
+    }
+    setEditingMember(member);
+    setEditMemberName(member.name);
+    setEditMemberEmail(member.email);
+    setEditMemberRole(member.role);
+    setEditMemberScope(member.scope || 'All Label Roster');
+    setEditMemberStatus(member.status || 'Active');
+    setEditMemberError('');
+    setShowEditMemberModal(true);
+  };
+
+  // Save edited team member
+  const handleSaveMemberEdit = (e) => {
+    e.preventDefault();
+    if (!isAuthorizedUser) {
+      setEditMemberError('Unauthorized: You do not have permissions to modify team collaborators.');
+      return;
+    }
+    if (!editMemberName.trim() || !editMemberEmail.trim()) {
+      setEditMemberError('Please provide both full name and email address.');
+      return;
+    }
+    if (!editingMember) return;
+
+    setTeamMembers(prev => prev.map(m => {
+      if (m.id === editingMember.id) {
+        return {
+          ...m,
+          name: editMemberName.trim(),
+          email: editMemberEmail.trim(),
+          role: editMemberRole,
+          scope: editMemberScope,
+          status: editMemberStatus
+        };
+      }
+      return m;
+    }));
+
+    setShowEditMemberModal(false);
+    setEditingMember(null);
+  };
+
+  // Toggle member active/suspended status directly
+  const handleToggleMemberStatus = (memberId, memberName) => {
+    if (!isAuthorizedUser) {
+      alert('Unauthorized: Only authorized record label administrators can suspend or activate collaborator seats.');
+      return;
+    }
+    setTeamMembers(prev => prev.map(m => {
+      if (m.id === memberId) {
+        const nextStatus = m.status === 'Active' ? 'Suspended' : 'Active';
+        return { ...m, status: nextStatus };
+      }
+      return m;
+    }));
+  };
+
   // Remove team member
-  const handleRemoveMember = (memberId) => {
-    if (window.confirm('Remove this collaborator from your record label team? Their seat will be freed immediately.')) {
+  const handleRemoveMember = (memberId, memberName) => {
+    if (!isAuthorizedUser) {
+      alert('Unauthorized: Only authorized record label administrators can remove team collaborators.');
+      return;
+    }
+    if (window.confirm(`Remove ${memberName || 'this collaborator'} from your record label team? Their seat will be freed immediately.`)) {
       setTeamMembers(prev => prev.filter(m => m.id !== memberId));
     }
   };
@@ -557,7 +640,22 @@ export default function LabelTeamRosterPanel({
               Assign roles for A&amp;R directors, catalog managers, and royalty split accountants across your label catalog.
             </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: isAuthorizedUser ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${isAuthorizedUser ? '#10b981' : '#ef4444'}`,
+              color: isAuthorizedUser ? '#10b981' : '#ef4444',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 700
+            }}>
+              {isAuthorizedUser ? <RiShieldCheckFill size={13} /> : <RiLockFill size={13} />}
+              <span>{isAuthorizedUser ? 'Authorized Label Administrator' : 'Read-Only Collaborator Mode'}</span>
+            </span>
             <button
               type="button"
               onClick={() => {
@@ -672,30 +770,80 @@ export default function LabelTeamRosterPanel({
                       <span style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '4px',
-                        color: '#10b981',
-                        fontSize: '11.5px',
+                        gap: '6px',
+                        color: member.status === 'Active' ? '#10b981' : '#ef4444',
+                        background: member.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        border: `1px solid ${member.status === 'Active' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                        fontSize: '11px',
                         fontWeight: 700
                       }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
-                        {member.status}
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: member.status === 'Active' ? '#10b981' : '#ef4444' }} />
+                        {member.status || 'Active'}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveMember(member.id)}
-                        title="Remove collaborator"
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#ef4444',
-                          cursor: 'pointer',
-                          padding: '4px'
-                        }}
-                      >
-                        <RiDeleteBin6Line size={15} />
-                      </button>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditMember(member)}
+                          title="Edit collaborator details, role & scope"
+                          style={{
+                            background: '#1e293b',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            color: '#94a3b8',
+                            padding: '6px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          data-testid={`edit-label-member-${member.id}`}
+                        >
+                          <RiEditLine size={14} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleMemberStatus(member.id, member.name)}
+                          title={member.status === 'Active' ? 'Suspend collaborator access' : 'Activate collaborator access'}
+                          style={{
+                            background: member.status === 'Active' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                            border: `1px solid ${member.status === 'Active' ? '#ef4444' : '#10b981'}`,
+                            color: member.status === 'Active' ? '#ef4444' : '#10b981',
+                            padding: '5px 10px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                          data-testid={`toggle-status-label-member-${member.id}`}
+                        >
+                          {member.status === 'Active' ? 'Suspend' : 'Activate'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(member.id, member.name)}
+                          title="Revoke collaborator seat"
+                          style={{
+                            background: '#1e293b',
+                            border: '1px solid rgba(239,68,68,0.3)',
+                            color: '#ef4444',
+                            padding: '6px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          data-testid={`delete-label-member-${member.id}`}
+                        >
+                          <RiDeleteBin6Line size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -973,6 +1121,159 @@ export default function LabelTeamRosterPanel({
                   style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '4px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
                 >
                   Confirm &amp; Send Invite
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT TEAM COLLABORATOR */}
+      {showEditMemberModal && editingMember && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(5, 7, 18, 0.85)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 100005,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#090e24',
+            border: '1px solid rgba(14, 165, 233, 0.3)',
+            borderRadius: '8px',
+            maxWidth: '500px',
+            width: '100%',
+            padding: '24px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.9)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <RiEditLine size={18} style={{ color: '#0ea5e9' }} />
+                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#fff' }}>Edit Team Collaborator</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditMemberModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                <RiCloseLine size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0', lineHeight: 1.4 }}>
+              Update collaborator details, modify assigned operational role, alter roster scope, or suspend seat access.
+            </p>
+
+            {editMemberError && (
+              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '4px', fontSize: '12px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <RiAlertFill size={15} />
+                <span>{editMemberError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveMemberEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>
+                  Full Legal / Professional Name *
+                </label>
+                <input
+                  type="text"
+                  value={editMemberName}
+                  onChange={(e) => setEditMemberName(e.target.value)}
+                  className="form-control"
+                  style={{ width: '100%', padding: '10px 12px', fontSize: '13px', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>
+                  Work Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={editMemberEmail}
+                  onChange={(e) => setEditMemberEmail(e.target.value)}
+                  className="form-control"
+                  style={{ width: '100%', padding: '10px 12px', fontSize: '13px', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>
+                  Label Operational Role *
+                </label>
+                <select
+                  value={editMemberRole}
+                  onChange={(e) => setEditMemberRole(e.target.value)}
+                  className="form-control"
+                  style={{ width: '100%', padding: '10px 12px', fontSize: '13px', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                >
+                  <option value="A&R Director">A&amp;R Director (Artist Scouting &amp; Development)</option>
+                  <option value="Catalog & Metadata Manager">Catalog &amp; Metadata Manager (ISRC / DSP Delivery)</option>
+                  <option value="Royalty & Split Accountant">Royalty &amp; Split Accountant (Ledgers &amp; Recoupment)</option>
+                  <option value="Sync Licensing Coordinator">Sync Licensing Coordinator (Briefs &amp; Pitches)</option>
+                  <option value="Label General Manager">Label General Manager (Full Access)</option>
+                  <option value="Executive Producer">Executive Producer (Release Packaging)</option>
+                  <option value="A&R Scout">A&amp;R Scout (Talent Pool Review)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>
+                  Roster Artist Scope *
+                </label>
+                <select
+                  value={editMemberScope}
+                  onChange={(e) => setEditMemberScope(e.target.value)}
+                  className="form-control"
+                  style={{ width: '100%', padding: '10px 12px', fontSize: '13px', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                >
+                  <option value="All Label Roster">All Label Roster Artists (Full Catalog Access)</option>
+                  {rosterArtists.map(a => (
+                    <option key={a.subdomain} value={`Exclusive: ${a.name}`}>
+                      Assigned Exclusively: {a.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>
+                  Operational Status *
+                </label>
+                <select
+                  value={editMemberStatus}
+                  onChange={(e) => setEditMemberStatus(e.target.value)}
+                  className="form-control"
+                  style={{ width: '100%', padding: '10px 12px', fontSize: '13px', background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                >
+                  <option value="Active">Active (Credentials &amp; Access Enabled)</option>
+                  <option value="Suspended">Suspended (Access Temporarily Revoked)</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEditMemberModal(false)}
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#cbd5e1', padding: '8px 16px', borderRadius: '4px', fontSize: '12.5px', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '4px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Save Collaborator Changes
                 </button>
               </div>
             </form>

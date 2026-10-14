@@ -305,11 +305,18 @@ export default function AdminTeamRosterPanel({
   const [inviteScopes, setInviteScopes] = useState(PLATFORM_ADMIN_ROLES[0].defaultScopes);
   const [inviteError, setInviteError] = useState('');
 
+  // Authorization: Only authorized site administrators can manage, edit, suspend, or revoke admin team seats
+  const isAuthorizedAdmin = sessionUser?.role === 'admin' || sessionUser?.is_admin === true || !sessionUser;
+
   // Edit Form State
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editRole, setEditRole] = useState('');
+  const [editDepartment, setEditDepartment] = useState('');
   const [editClearance, setEditClearance] = useState('');
   const [editScopes, setEditScopes] = useState([]);
   const [editStatus, setEditStatus] = useState('Active');
+  const [editError, setEditError] = useState('');
 
   const currentTier = ADMIN_TIERS[currentTierKey] || ADMIN_TIERS.scale;
   const isEnterprise = currentTierKey === 'enterprise';
@@ -358,6 +365,10 @@ export default function AdminTeamRosterPanel({
   // Submit new admin team member
   const handleInviteSubmit = (e) => {
     e.preventDefault();
+    if (!isAuthorizedAdmin) {
+      setInviteError('Unauthorized: You must have Site Administrator authorization to invite new administrative operators.');
+      return;
+    }
     if (!inviteName.trim() || !inviteEmail.trim()) {
       setInviteError('Please provide both full legal name and platform email address.');
       return;
@@ -397,24 +408,43 @@ export default function AdminTeamRosterPanel({
 
   // Open edit modal
   const handleOpenEdit = (member) => {
+    if (!isAuthorizedAdmin) {
+      alert('Unauthorized: You must have authorized Site Administrator clearance to edit administrative operators.');
+      return;
+    }
     setSelectedMember(member);
+    setEditName(member.name);
+    setEditEmail(member.email);
     setEditRole(member.role);
+    setEditDepartment(member.department || 'Infrastructure & Core Ops');
     setEditClearance(member.clearance);
     setEditScopes(member.scopes || []);
-    setEditStatus(member.status);
+    setEditStatus(member.status || 'Active');
+    setEditError('');
     setShowEditModal(true);
   };
 
   // Save edit changes
   const handleSaveEdit = (e) => {
     e.preventDefault();
+    if (!isAuthorizedAdmin) {
+      setEditError('Unauthorized: You do not have permissions to modify administrative operators.');
+      return;
+    }
+    if (!editName.trim() || !editEmail.trim()) {
+      setEditError('Please provide both full legal name and platform email address.');
+      return;
+    }
     if (!selectedMember) return;
 
     setTeamMembers(prev => prev.map(m => {
       if (m.id === selectedMember.id) {
         return {
           ...m,
+          name: editName.trim(),
+          email: editEmail.trim(),
           role: editRole,
+          department: editDepartment,
           clearance: editClearance,
           scopes: editScopes,
           status: editStatus
@@ -428,7 +458,11 @@ export default function AdminTeamRosterPanel({
   };
 
   // Toggle member active/suspended status directly
-  const handleToggleMemberStatus = (memberId) => {
+  const handleToggleMemberStatus = (memberId, memberName) => {
+    if (!isAuthorizedAdmin) {
+      alert('Unauthorized: You must have authorized Site Administrator clearance to suspend or activate platform operators.');
+      return;
+    }
     setTeamMembers(prev => prev.map(m => {
       if (m.id === memberId) {
         const nextStatus = m.status === 'Active' ? 'Suspended' : 'Active';
@@ -440,6 +474,10 @@ export default function AdminTeamRosterPanel({
 
   // Remove admin member
   const handleRemoveMember = (memberId, memberName) => {
+    if (!isAuthorizedAdmin) {
+      alert('Unauthorized: You must have authorized Site Administrator clearance to revoke administrative seats.');
+      return;
+    }
     if (window.confirm(`Revoke administrative seat and platform credentials for ${memberName}? Their seat will be freed immediately.`)) {
       setTeamMembers(prev => prev.filter(m => m.id !== memberId));
     }
@@ -737,37 +775,55 @@ export default function AdminTeamRosterPanel({
           </select>
         </div>
 
-        {/* Invite New Admin Button */}
-        <button
-          type="button"
-          onClick={() => {
-            if (!isEnterprise && seatsUsed >= maxSeats) {
-              setReloadReason(`Admin seat capacity reached (${seatsUsed}/${maxSeats}). Reload unified credits to expand seat capacity.`);
-              setShowReloadModal(true);
-            } else {
-              setInviteError('');
-              setShowInviteModal(true);
-            }
-          }}
-          style={{
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px',
-            background: '#0ea5e9',
-            color: '#ffffff',
-            border: 'none',
-            padding: '9px 18px',
+            gap: '6px',
+            background: isAuthorizedAdmin ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+            border: `1px solid ${isAuthorizedAdmin ? '#10b981' : '#ef4444'}`,
+            color: isAuthorizedAdmin ? '#10b981' : '#ef4444',
+            padding: '7px 12px',
             borderRadius: '4px',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'opacity 0.15s ease'
-          }}
-          data-testid="invite-admin-modal-open"
-        >
-          <RiUserAddFill size={16} />
-          <span>+ Add Admin Team Member</span>
-        </button>
+            fontSize: '11px',
+            fontWeight: 700
+          }}>
+            {isAuthorizedAdmin ? <RiShieldCheckFill size={13} /> : <RiLockFill size={13} />}
+            <span>{isAuthorizedAdmin ? 'Authorized Site Administrator (Full Clearance)' : 'Read-Only Observability Mode'}</span>
+          </span>
+
+          {/* Invite New Admin Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!isEnterprise && seatsUsed >= maxSeats) {
+                setReloadReason(`Admin seat capacity reached (${seatsUsed}/${maxSeats}). Reload unified credits to expand seat capacity.`);
+                setShowReloadModal(true);
+              } else {
+                setInviteError('');
+                setShowInviteModal(true);
+              }
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#0ea5e9',
+              color: '#ffffff',
+              border: 'none',
+              padding: '9px 18px',
+              borderRadius: '4px',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'opacity 0.15s ease'
+            }}
+            data-testid="invite-admin-modal-open"
+          >
+            <RiUserAddFill size={16} />
+            <span>+ Add Admin Team Member</span>
+          </button>
+        </div>
       </div>
 
       {/* Department Filter Pills */}
@@ -986,7 +1042,7 @@ export default function AdminTeamRosterPanel({
 
                           <button
                             type="button"
-                            onClick={() => handleToggleMemberStatus(member.id)}
+                            onClick={() => handleToggleMemberStatus(member.id, member.name)}
                             title={member.status === 'Active' ? 'Suspend Access' : 'Activate Access'}
                             style={{
                               background: member.status === 'Active' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
@@ -1407,11 +1463,75 @@ export default function AdminTeamRosterPanel({
               </button>
             </div>
 
+            {editError && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid #ef4444',
+                color: '#ef4444',
+                padding: '10px 14px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <RiAlertFill size={16} />
+                <span>{editError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSaveEdit}>
+              {/* Full Name */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '6px' }}>
+                  Operator Full Legal Name *
+                </label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#0f172a',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '4px',
+                    padding: '9px 12px',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    outline: 'none'
+                  }}
+                  required
+                />
+              </div>
+
+              {/* Email Address */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '6px' }}>
+                  Platform Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#0f172a',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '4px',
+                    padding: '9px 12px',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    outline: 'none'
+                  }}
+                  required
+                />
+              </div>
+
               {/* Job Title */}
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '6px' }}>
-                  Operational Job Title
+                  Operational Job Title *
                 </label>
                 <input
                   type="text"
@@ -1429,6 +1549,31 @@ export default function AdminTeamRosterPanel({
                   }}
                   required
                 />
+              </div>
+
+              {/* Department */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '6px' }}>
+                  Functional Department *
+                </label>
+                <select
+                  value={editDepartment}
+                  onChange={(e) => setEditDepartment(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#0f172a',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '4px',
+                    padding: '9px 12px',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    outline: 'none'
+                  }}
+                >
+                  {allDepartments.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Clearance Level */}
