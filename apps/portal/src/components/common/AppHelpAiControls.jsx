@@ -20,6 +20,8 @@ import {
 
 import { HELP_ARTICLES, HELP_CATEGORIES } from '../../data/helpArticles.js'
 import ArticleContentRenderer from './ArticleContentRenderer.jsx'
+import InAppDocModal from './InAppDocModal.jsx'
+export { InAppDocModal }
 import {
   getRelevantDocLink,
   loadUserLifecycleMemory,
@@ -274,169 +276,15 @@ export default function AppHelpAiControls({
       {/* Mounted via createPortal to document.body, centered in viewport,          */}
       {/* closes on outside click or Esc, leaves user right in their app.           */}
       {/* ========================================================================= */}
-      {docModalOpen && createPortal(
-        <div
-          ref={docOverlayRef}
-          className="inapp-doc-overlay"
-          onClick={(e) => {
-            if (e.target === docOverlayRef.current) setDocModalOpen(false);
-          }}
-          role="dialog"
-          aria-modal="true"
-          data-testid="inapp-help-doc-overlay"
-        >
-          <div className="inapp-doc-dialog" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="inapp-doc-header">
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                  <span className="inapp-doc-category-badge">
-                    {activeDocArticle.category.toUpperCase()}
-                  </span>
-                  <span className="inapp-doc-meta">
-                    <RiTimeLine size={13} />
-                    {activeDocArticle.readingTime}
-                  </span>
-                  <span className="inapp-doc-app-context-badge">
-                    Context: {relevantDoc.appTitle}
-                  </span>
-                </div>
-                <h2 className="inapp-doc-title">
-                  {activeDocArticle.title}
-                </h2>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                <button
-                  type="button"
-                  className="inapp-doc-close-btn"
-                  onClick={() => setDocModalOpen(false)}
-                  title="Close guide and return to app (Esc)"
-                  data-testid="btn-close-inapp-doc"
-                >
-                  <RiCloseLine size={20} />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="inapp-doc-body">
-              {/* Excerpt callout */}
-              <div className="inapp-doc-excerpt">
-                "{activeDocArticle.excerpt}"
-              </div>
-
-              {/* Formatted Sections */}
-              {activeDocArticle.sections.map((sec, sIdx) => (
-                <div key={sIdx} className="inapp-doc-section">
-                  <h3>{sec.heading}</h3>
-                  <ArticleContentRenderer content={sec.content} />
-                </div>
-              ))}
-
-              {/* Bridge to AI Prompt Assistant */}
-              <div className="inapp-doc-ai-bridge">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div className="inapp-doc-ai-avatar">
-                    <RiSparklingLine size={20} />
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', fontWeight: 800 }}>
-                      Have questions about how this applies to your tracks?
-                    </h4>
-                    <p style={{ margin: '3px 0 0', fontSize: '12.5px', color: '#94a3b8' }}>
-                      Ask the TuneMavens AI Copilot with your full account history and catalog context.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="inapp-doc-ai-btn"
-                  onClick={() => handleAskAiAboutArticle(activeDocArticle)}
-                  data-testid="btn-doc-ask-ai-bridge"
-                >
-                  <RiSparklingLine size={15} />
-                  <span>Ask AI About This Article</span>
-                </button>
-              </div>
-
-              {/* Related Knowledge Base Guides */}
-              {relatedArticles.length > 0 && (
-                <div className="inapp-doc-related-strip">
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    Related Knowledge Guides:
-                  </span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-                    {relatedArticles.map(rel => (
-                      <button
-                        key={rel.id}
-                        type="button"
-                        className="inapp-doc-related-chip"
-                        onClick={() => {
-                          setSelectedDocArticleId(rel.id);
-                          setDocFeedbackGiven(false);
-                        }}
-                      >
-                        <RiBookOpenLine size={13} style={{ color: 'var(--cyan)' }} />
-                        <span>{rel.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="inapp-doc-footer">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '12.5px', color: '#64748b' }}>Was this article helpful?</span>
-                {docFeedbackGiven ? (
-                  <span style={{ fontSize: '12.5px', color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <RiCheckLine size={15} /> Thank you!
-                  </span>
-                ) : (
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button
-                      type="button"
-                      onClick={() => setDocFeedbackGiven(true)}
-                      className="inapp-doc-feedback-btn"
-                    >
-                      👍 Yes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDocFeedbackGiven(true)}
-                      className="inapp-doc-feedback-btn"
-                    >
-                      👎 No
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleCopyArticleLink(activeDocArticle.id)}
-                  style={{ background: 'none', border: 'none', color: copiedDocLink ? 'var(--cyan)' : '#94a3b8', fontSize: '12.5px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <RiShareLine size={15} />
-                  <span>{copiedDocLink ? 'Link Copied!' : 'Share Article'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="inapp-doc-done-btn"
-                  onClick={() => setDocModalOpen(false)}
-                >
-                  <RiArrowLeftLine size={14} />
-                  <span>Back to {relevantDoc.appTitle}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      <InAppDocModal
+        isOpen={docModalOpen}
+        onClose={() => setDocModalOpen(false)}
+        activeContext={activeContext}
+        initialArticleId={selectedDocArticleId || relevantDoc.articleId}
+        contextTitle={relevantDoc.appTitle}
+        sessionUser={sessionUser}
+        onAskAi={handleAskAiAboutArticle}
+      />
 
       {/* ========================================================================= */}
       {/* 2. AI ASSISTANT FULLSCREEN OVERLAY MODAL                                  */}

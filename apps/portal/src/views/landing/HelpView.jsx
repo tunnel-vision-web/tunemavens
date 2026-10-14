@@ -35,12 +35,14 @@ import { HELP_CATEGORIES, HELP_ARTICLES, FREQUENT_FAQS } from '../../data/helpAr
 import './HelpView.css'
 
 import ArticleContentRenderer from '../../components/common/ArticleContentRenderer.jsx'
+import InAppDocModal from '../../components/common/InAppDocModal.jsx'
 
 export default function HelpView({ sessionUser }) {
   const location = useLocation();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState(null);
+  const [showHelpDocModal, setShowHelpDocModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [faqOpenIndex, setFaqOpenIndex] = useState(0);
@@ -414,14 +416,7 @@ export default function HelpView({ sessionUser }) {
 
             <button
               type="button"
-              onClick={() => {
-                const el = document.getElementById('support-ticket-form-section');
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                  navigate('/community/support');
-                }
-              }}
+              onClick={() => setShowHelpDocModal(true)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -436,7 +431,7 @@ export default function HelpView({ sessionUser }) {
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
-              title="Get assistance or file a support claim"
+              title="Need help? View articles related to this section"
             >
               <RiCustomerService2Fill size={15} color="#0ea5e9" />
               Need Help?
@@ -490,10 +485,10 @@ export default function HelpView({ sessionUser }) {
               <div 
                 key={article.id} 
                 className="help-article-card"
-                onClick={() => { setSelectedArticle(article); setFeedbackGiven(false); }}
+                onClick={() => { setSelectedArticle(article); setShowHelpDocModal(true); setFeedbackGiven(false); }}
                 tabIndex={0}
                 role="button"
-                onKeyDown={(e) => { if (e.key === 'Enter') setSelectedArticle(article); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { setSelectedArticle(article); setShowHelpDocModal(true); } }}
               >
                 <div>
                   <div className="help-article-card-header">
@@ -851,146 +846,28 @@ export default function HelpView({ sessionUser }) {
 
       </div>
 
-      {/* Full-Featured In-Depth Article Reader Modal */}
-      {selectedArticle && createPortal(
-        <div 
-          className="help-modal-overlay" 
-          onClick={() => setSelectedArticle(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div 
-            className="help-modal-dialog" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="help-modal-header">
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                  <span className={`help-tag-badge ${getCategoryBadgeClass(selectedArticle.category)}`}>
-                    {selectedArticle.category.toUpperCase()}
-                  </span>
-                  <span className="help-read-time">
-                    <RiTimeLine size={13} />
-                    {selectedArticle.readingTime}
-                  </span>
-                </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', lineHeight: 1.3, margin: 0 }}>
-                  {selectedArticle.title}
-                </h2>
-              </div>
-              <button 
-                type="button" 
-                className="help-modal-close-btn"
-                onClick={() => setSelectedArticle(null)}
-                title="Close guide (Esc)"
-              >
-                <RiCloseLine size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="help-modal-body">
-              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '14px 18px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.06)', marginBottom: '28px', fontStyle: 'italic', color: '#94a3b8' }}>
-                "{selectedArticle.excerpt}"
-              </div>
-
-              {selectedArticle.sections.map((sec, sIdx) => (
-                <div key={sIdx} className="help-article-section">
-                  <h3>{sec.heading}</h3>
-                  <ArticleContentRenderer content={sec.content} />
-                </div>
-              ))}
-
-              {/* Related Platform Tool Callout */}
-              {selectedArticle.toolLink && (
-                <div 
-                  style={{ 
-                    marginTop: '36px', 
-                    padding: '20px 24px', 
-                    borderRadius: '8px', 
-                    background: 'radial-gradient(ellipse at top left, rgba(34, 211, 238, 0.1) 0%, transparent 70%)',
-                    border: '1px solid rgba(34, 211, 238, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '16px'
-                  }}
-                >
-                  <div>
-                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                      Ready to apply this knowledge?
-                    </span>
-                    <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '4px 0 0' }}>
-                      Put this into action directly inside TuneMavens
-                    </h4>
-                  </div>
-                  <Link 
-                    to={selectedArticle.toolLink.path} 
-                    className="btn-primary"
-                    style={{ padding: '8px 18px', borderRadius: '4px', textDecoration: 'none', fontWeight: 700, fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                    onClick={() => setSelectedArticle(null)}
-                  >
-                    <span>{selectedArticle.toolLink.label}</span>
-                    <RiExternalLinkLine size={14} />
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="help-modal-footer">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '13px', color: '#64748b' }}>Was this article helpful?</span>
-                {feedbackGiven ? (
-                  <span style={{ fontSize: '13px', color: 'var(--gr)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <RiCheckLine size={16} /> Thank you for your feedback!
-                  </span>
-                ) : (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                      type="button" 
-                      onClick={() => setFeedbackGiven(true)}
-                      style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
-                    >
-                      👍 Yes
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => setFeedbackGiven(true)}
-                      style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
-                    >
-                      👎 No
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleCopyArticleLink(selectedArticle.id)}
-                  style={{ background: 'none', border: 'none', color: copiedLink ? 'var(--cyan)' : '#94a3b8', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <RiShareLine size={16} />
-                  <span>{copiedLink ? 'Link Copied!' : 'Copy Direct Link'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  style={{ padding: '6px 14px', borderRadius: '4px', fontSize: '12px' }}
-                  onClick={() => setSelectedArticle(null)}
-                >
-                  Close Guide
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* In-App Contextual Documentation Modal */}
+      <InAppDocModal
+        isOpen={showHelpDocModal}
+        onClose={() => {
+          setShowHelpDocModal(false);
+          setSelectedArticle(null);
+        }}
+        initialArticleId={selectedArticle?.id}
+        category={activeCategory}
+        searchQuery={searchQuery}
+        contextTitle={
+          activeCategory !== 'all'
+            ? HELP_CATEGORIES.find(c => c.id === activeCategory)?.label
+            : (searchQuery ? `Search: "${searchQuery}"` : 'Help Center & Knowledge Base')
+        }
+        sessionUser={sessionUser}
+        onAskAi={(art) => {
+          setShowHelpDocModal(false);
+          setShowAiModal(true);
+          handleSendAiChat(`Explain how "${art.title}" applies to my tracks.`);
+        }}
+      />
 
       {/* Ask TuneSupport AI Interactive Assistant Modal */}
       {showAiModal && createPortal(

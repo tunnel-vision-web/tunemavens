@@ -30,6 +30,8 @@ import {
   RiExchangeDollarFill
 } from 'react-icons/ri';
 
+import InAppDocModal from '../common/InAppDocModal.jsx';
+
 const LOCAL_TICKETS_KEY = 'tunemavens_support_tickets';
 const LOCAL_CATALOG_KEY = 'tunemavens_catalog_tracks';
 
@@ -107,6 +109,65 @@ export default function SupportTicketsPanel({
   const [previewImage, setPreviewImage] = useState(null);
   const [refundModalTicket, setRefundModalTicket] = useState(null);
   const [refundAmount, setRefundAmount] = useState(100);
+
+  // Contextual Documentation Modal State
+  const [helpDocModalOpen, setHelpDocModalOpen] = useState(false);
+
+  // Determine which article to open based on the user's active issue or section
+  const getContextualHelpArticleId = () => {
+    if (selectedTicket) {
+      const cat = (selectedTicket.category || '').toLowerCase();
+      if (cat.includes('dispute') || cat.includes('split') || cat.includes('royalty')) {
+        return 'tuneledger-escrow-dispute-locks';
+      }
+      if (cat.includes('ddex') || cat.includes('distribution') || cat.includes('ingestion')) {
+        return 'tunesupport-ai-diagnosis-and-resolution';
+      }
+      if (cat.includes('sync') || cat.includes('placement')) {
+        return 'sync-licensing-masterclass';
+      }
+      if (cat.includes('audio') || cat.includes('stem') || cat.includes('master')) {
+        return 'masterlab-ai-mastering';
+      }
+      if (cat.includes('metadata') || cat.includes('isrc')) {
+        return 'music-metadata-isrc-iswc-ipi-upc';
+      }
+    }
+
+    if (activeTab === 'file') {
+      const cat = (formData.category || '').toLowerCase();
+      if (cat.includes('dispute') || cat.includes('split') || cat.includes('royalty')) {
+        return 'tuneledger-escrow-dispute-locks';
+      }
+      if (cat.includes('ddex') || cat.includes('distribution') || cat.includes('ingestion')) {
+        return 'tunesupport-ai-diagnosis-and-resolution';
+      }
+      if (cat.includes('sync') || cat.includes('placement')) {
+        return 'sync-licensing-masterclass';
+      }
+      if (cat.includes('audio') || cat.includes('stem') || cat.includes('master')) {
+        return 'masterlab-ai-mastering';
+      }
+      if (cat.includes('metadata') || cat.includes('isrc')) {
+        return 'music-metadata-isrc-iswc-ipi-upc';
+      }
+    }
+
+    return 'how-support-ticketing-works';
+  };
+
+  const getContextualHelpTitle = () => {
+    if (selectedTicket) {
+      return `Ticket #${selectedTicket.id} · ${selectedTicket.category}`;
+    }
+    if (activeTab === 'file') {
+      return `File a Claim · ${formData.category}`;
+    }
+    if (activeTab === 'admin-desk') {
+      return 'Operations Desk · Disputes & Escrow';
+    }
+    return 'Support & AI Claims Desk';
+  };
 
   // 1. Initial Load & Seeding
   const fetchTickets = async () => {
@@ -718,10 +779,11 @@ export default function SupportTicketsPanel({
             </button>
           </div>
 
-          {/* Top Right Quick Action Buttons */}
+          {/* Top Right Action Buttons */}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <Link
-              to="/help"
+            <button
+              type="button"
+              onClick={() => setHelpDocModalOpen(true)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -733,14 +795,13 @@ export default function SupportTicketsPanel({
                 color: '#fff',
                 fontWeight: 700,
                 fontSize: '12px',
-                textDecoration: 'none',
                 cursor: 'pointer'
               }}
-              title="Browse Knowledge Base & Help Articles"
+              title="Need help? View articles related to this claim or section"
             >
               <RiCustomerService2Fill size={14} color="#0ea5e9" />
               Need Help?
-            </Link>
+            </button>
 
             <button
               type="button"
@@ -2112,6 +2173,20 @@ export default function SupportTicketsPanel({
           </div>
         </div>
       )}
+
+      {/* In-App Contextual Documentation Modal */}
+      <InAppDocModal
+        isOpen={helpDocModalOpen}
+        onClose={() => setHelpDocModalOpen(false)}
+        initialArticleId={getContextualHelpArticleId()}
+        category="support"
+        contextTitle={getContextualHelpTitle()}
+        sessionUser={sessionUser}
+        onAskAi={(art) => {
+          setHelpDocModalOpen(false);
+          setActiveTab('my-tickets');
+        }}
+      />
 
     </div>
   );

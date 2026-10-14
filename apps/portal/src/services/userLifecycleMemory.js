@@ -244,6 +244,55 @@ export const APP_DOC_MAPPINGS = {
     fallbackArticleId: 'master-vs-composition-copyright',
     label: 'App Subscriptions & Credits Guide',
     appTitle: 'App Marketplace'
+  },
+  // Support, Claims, Disputes & Audits
+  'support': {
+    articleId: 'how-support-ticketing-works',
+    fallbackArticleId: 'tuneledger-escrow-dispute-locks',
+    label: 'Support Claims & Dispute Resolutions Guide',
+    appTitle: 'Support & AI Claims Desk'
+  },
+  'claims': {
+    articleId: 'how-support-ticketing-works',
+    fallbackArticleId: 'tuneledger-escrow-dispute-locks',
+    label: 'Filing Claims & Warranty Clearances',
+    appTitle: 'Support & AI Claims Desk'
+  },
+  'tickets': {
+    articleId: 'how-support-ticketing-works',
+    fallbackArticleId: 'tuneledger-escrow-dispute-locks',
+    label: 'Support Ticketing & Resolution Guide',
+    appTitle: 'Support & AI Claims Desk'
+  },
+  'audit': {
+    articleId: 'tuneledger-escrow-dispute-locks',
+    fallbackArticleId: 'studio-split-sheets-guide',
+    label: 'TuneLedger Audit Locks & Dispute Escrow',
+    appTitle: 'TuneLedger Audit Console'
+  },
+  'diagnostics': {
+    articleId: 'tunesupport-ai-diagnosis-and-resolution',
+    fallbackArticleId: 'unified-credits-support-and-refunds',
+    label: 'DDEX & Stems Health Diagnostics',
+    appTitle: 'DDEX Health & Diagnostics'
+  },
+  'disputes': {
+    articleId: 'tuneledger-escrow-dispute-locks',
+    fallbackArticleId: 'how-support-ticketing-works',
+    label: 'TuneLedger Escrow Dispute Locks',
+    appTitle: 'Dispute Resolution Console'
+  },
+  'community': {
+    articleId: 'how-support-ticketing-works',
+    fallbackArticleId: 'tuneledger-escrow-dispute-locks',
+    label: 'Community & Support Claims Desk',
+    appTitle: 'TuneMavens Community'
+  },
+  'help': {
+    articleId: 'how-support-ticketing-works',
+    fallbackArticleId: 'master-vs-composition-copyright',
+    label: 'TuneMavens Help & Industry Knowledge Base',
+    appTitle: 'Help Center'
   }
 };
 
