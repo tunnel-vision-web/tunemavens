@@ -12,6 +12,7 @@ export const HELP_CATEGORIES = [
   { id: 'services', label: 'TuneMavens Service Offering', icon: 'RiSparklingLine' },
   { id: 'royalties', label: 'Royalties & Payouts', icon: 'RiExchangeDollarLine' },
   { id: 'account', label: 'Credits & Security', icon: 'RiShieldCheckLine' },
+  { id: 'support', label: 'Support & AI Claims Desk', icon: 'RiCustomerService2Fill' },
 ];
 
 export const HELP_ARTICLES = [
@@ -702,10 +703,188 @@ We strongly encourage all users to enable **Two-Factor Authentication (2FA)** vi
 * **Corporate Brand Advertiser:** Access limited to advertising flights and campaign analytics.`
       }
     ]
+  },
+
+  // =========================================================================
+  // CATEGORY 6: SUPPORT & AI CLAIMS DESK (ATLANTA TV MOUNT PRO PARITY)
+  // =========================================================================
+  {
+    id: 'how-support-ticketing-works',
+    category: 'support',
+    title: 'How the TuneMavens Support & AI Claims Ticketing System Works',
+    readingTime: '5 min read',
+    excerpt: 'Complete walkthrough of filing claims, linking catalog ISRCs or Split Cascade TxIDs, auto-diagnostics, and tracking ticket lifecycles from submission to settlement.',
+    tags: ['Support Desk', 'Claims', 'Tickets', 'TuneSupport AI', 'TuneLedger', 'Escrow'],
+    popular: true,
+    toolLink: { label: 'Launch AI Claims Desk', path: '/community/support' },
+    sections: [
+      {
+        heading: 'Introduction: The Next-Gen Claims Infrastructure',
+        content: `Adapted from the rigorous service-guarantee and claims architecture of Atlanta TV Mount Pro, TuneMavens operates a dedicated **Support & Claims Desk** under Community. 
+
+Whether you are facing an unallocated co-producer split, a DSP DDEX ingestion rejection, a broadcast sync cue dispute, or a credit reload issue, the ticketing system provides **instant automated diagnosis, TuneLedger escrow dispute locks, and continuous real-time AI communication** from submission through full settlement.`
+      },
+      {
+        heading: 'Filing a Claim: Step-by-Step Protocol',
+        content: `Submitting a support ticket or claim requires only a few structured fields:
+1. **Your Name, Email, and Phone Number:** Used to authenticate your account and synchronize contact history across the Intermaven Partner CRM.
+2. **Reference ID (Auto-Matched):** Enter an **ISRC** (e.g. \`US-TM1-24-00109\`), a **Split Cascade Transaction ID** (e.g. \`SC-89241\`), a **Sync Brief ID** (e.g. \`SB-7721\`), or an **Invoice ID**. The intake engine automatically cross-references your active catalog and ledger records.
+3. **Category Selection:** Choose from six operational disciplines tailored to music production, distribution, and monetization.
+4. **Detailed Description:** Explain the discrepancy, unrecouped offset error, or missing stem issue.
+5. **Photo & Document Attachments (Max 3):** Upload signed split sheets, PRO cue sheets, DSP error logs, or payment receipts (up to 5MB each).`
+      },
+      {
+        heading: 'The Six Core Support Categories',
+        content: `| Category | Description | Automated Safeguard |
+| :--- | :--- | :--- |
+| **Royalty & Split Cascade Dispute** | Streaming allocation discrepancies, unrecouped deductions | **Instant TuneLedger Escrow Freeze:** Halts disbursements on the disputed cascade |
+| **DDEX Ingestion & Distribution Error** | DSP ingestion rejections, duration mismatches, missing stems | **Free Re-Dispatch:** Re-encodes container at zero credit charge |
+| **Sync Licensing & Placement Claim** | Broadcaster cue sheet duration offsets, stem delivery delays | **Sync Escrow Protection:** Holds supervisor funds until cue alignment |
+| **Unified Credits & Billing Issue** | POS merchant latency, duplicate Stripe charges, reload delay | **Instant Credit Deposit:** Authorizes 1-click credit rebates |
+| **Copyright & DMCA Notice** | Sample clearance claims, statutory safe harbor counter-notices | **Statutory Hold:** 14-day cure window with digital fingerprint audit |
+| **Account Access & Technical Error** | Studio tool anomalies, team seat permissions, API webhooks | **Concierge Triage:** Immediate supervisor priority queue routing |`
+      },
+      {
+        heading: 'Ticket Status Lifecycle',
+        content: `Every ticket progresses through transparent, verifiable lifecycle states:
+* **Pending Review:** Ticket created and logged in the CRM; automated TuneLedger dispute lock engaged if a split issue was reported.
+* **AI Diagnosed:** TuneSupport AI has completed forensic analysis, identified the root cause, and generated an executable settlement plan.
+* **Scheduled Repair:** Audio containers or metadata payloads have been flagged for free DSP re-delivery.
+* **Resolved:** Collaborator agreements verified, splits rebalanced, and dispute locks released.
+* **Refunded:** Unified credits credited directly to your platform wallet with full audit receipt.`
+      }
+    ]
+  },
+
+  {
+    id: 'tunesupport-ai-diagnosis-and-resolution',
+    category: 'support',
+    title: 'TuneSupport AI: Automated Diagnosis, Live Resolution & Real-Time Communication',
+    readingTime: '6 min read',
+    excerpt: 'Discover how TuneSupport AI powers instant root-cause analysis, 98%+ confidence scoring, continuous interactive chat, and 1-click automated dispute settlement.',
+    tags: ['TuneSupport AI', 'AI Diagnosis', 'Live Chat', 'Automated Settlement', 'Unified Credits'],
+    popular: true,
+    toolLink: { label: 'Open AI Live Chat Desk', path: '/community/support' },
+    sections: [
+      {
+        heading: 'Autonomous Diagnosis Upon Submission',
+        content: `Traditional support desks require waiting 48 to 72 hours for an agent to open a spreadsheet. **TuneSupport AI** eliminates this delay by running an **instant forensic diagnosis within milliseconds** of ticket creation.
+
+The AI engine analyzes:
+* The natural language description and sentiment of the complaint.
+* The matched ISRC metadata from the central catalog machine.
+* Transaction rules and participant percentages in the TuneLedger split database.
+* DSP error responses from the DDEX delivery log.
+
+It immediately returns an **AI Confidence Score (typically 92% to 99%)**, a concise **Root Cause Analysis**, and a **Recommended Settlement Action** visible to both creator and administrator.`
+      },
+      {
+        heading: 'The Interactive AI Live Chat Thread',
+        content: `Every ticket includes a dedicated, real-time conversational thread between the user and TuneSupport AI:
+* **Context-Aware Dialogue:** You can ask questions such as *"Why are my payouts frozen?"*, *"When will Spotify receive my corrected audio?"*, or *"How many credits am I owed for this delay?"*
+* **Policy-Grounded Reasoning:** TuneSupport AI understands the TuneMavens ecosystem rules: zero monthly fees, unified credits mechanics, DDEX ERN 4.3 standards, and TuneLedger escrow safeguards.
+* **Complete Audit Trail:** Every message, status change, and system action is permanently preserved as a verifiable audit record.`
+      },
+      {
+        heading: 'Executing 1-Click Automated AI Settlements',
+        content: `When TuneSupport AI identifies a confirmed discrepancy (such as a 10% unallocated producer split or a payment gateway delay), it generates an actionable settlement plan.
+
+With a single click on **"Accept AI Resolution & Release Holds"**:
+1. **Instant Wallet Credit:** Required compensation credits (e.g. +75 or +250 Unified Credits) are deposited directly into your balance in real time.
+2. **Escrow Dispute Lock Released:** The freeze on your Split Cascade in TuneLedger is safely lifted, and transactions update to \`✓ SETTLED\`.
+3. **Official Audit Certificate:** An itemized resolution receipt is generated with timestamp, settlement hash, and administrator sign-off.`
+      }
+    ]
+  },
+
+  {
+    id: 'tuneledger-escrow-dispute-locks',
+    category: 'support',
+    title: 'TuneLedger Escrow Dispute Locks: Protecting Royalties from Unlawful Payouts',
+    readingTime: '5 min read',
+    excerpt: 'Why and how TuneLedger automatically freezes split disbursements upon dispute filing, preventing revenue leakage while collaborator agreements are audited.',
+    tags: ['TuneLedger', 'Escrow', 'Dispute Locks', 'Split Cascade', 'Royalties'],
+    popular: true,
+    toolLink: { label: 'View Split Cascade Studio', path: '/dashboard?tab=splits' },
+    sections: [
+      {
+        heading: 'The Critical Need for Automated Payout Freezes',
+        content: `In legacy music distribution, when a producer or co-writer disputes their split percentage, platforms often continue disbursing payouts. By the time the dispute is reviewed months later, the money has already left the bank and is virtually impossible to claw back.
+
+Replicating Atlanta TV Mount Pro's escrow protection, **TuneLedger solves this permanently**:
+* The moment a ticket is filed categorized under **Royalty & Split Cascade Dispute**, the linked transaction is placed into an immediate **Dispute Lock**.
+* Outbound disbursements via **M-Pesa B2C** or **Stripe Express** are paused in escrow.
+* Neither party can withdraw the funds until split percentages are reconciled and verified.`
+      },
+      {
+        heading: 'Zero Cross-Collateralization: Isolated Track Protection',
+        content: `A fundamental pillar of TuneMavens is **Zero Cross-Collateralization**:
+* If track *A* has a split dispute and is locked in escrow, **tracks B, C, and D in your catalog continue generating and disbursing royalties normally**.
+* Legacy major label contracts frequently freeze an entire artist catalog over a single disputed song. TuneLedger isolates disputes strictly at the specific ISRC level.`
+      },
+      {
+        heading: 'Reconciling Splits and Releasing Funds',
+        content: `Once collaborators upload their signed split sheet or accept TuneSupport AI's reconciliation proposal:
+1. The participant percentages are updated in the Split Cascade Studio.
+2. The transaction status transitions from \`🔒 Frozen / Disputed\` to \`✓ SETTLED\`.
+3. The escrow balance is instantly disbursed according to the verified shares, and an immutable audit hash is appended to the ledger.`
+      }
+    ]
+  },
+
+  {
+    id: 'unified-credits-support-and-refunds',
+    category: 'support',
+    title: 'Unified Credits Engine: Zero Monthly Fees, Reload Safeguards & Instant Refunds',
+    readingTime: '4 min read',
+    excerpt: 'How the TuneMavens unified credits system operates without monthly charges, provides reload safeguards, and handles instant credit rebates for platform claims.',
+    tags: ['Unified Credits', 'Zero Monthly Fees', 'Refunds', 'Billing', 'POS Merch'],
+    popular: false,
+    toolLink: { label: 'Top-up Unified Credits', path: '/dashboard' },
+    sections: [
+      {
+        heading: 'The Zero-Monthly-Fee Platform Guarantee',
+        content: `Unlike traditional SaaS music platforms that trap creators in recurring \$20–\$100 monthly subscriptions whether they release music or not, TuneMavens operates on **100% Unified Credits with Zero Recurring Monthly Fees**.
+
+You load credits when you need them across all tools:
+* MasterLab AI audio mastering.
+* SyncMavens television & film brief pitching.
+* DDEX digital distribution to 150+ DSPs.
+* TunePay physical merch point-of-sale inventory.
+
+Because there are no recurring subscriptions, support claims regarding billing are never entangled in monthly renewal disputes.`
+      },
+      {
+        heading: 'Warranty Deliveries & Free DDEX Re-Ingestion',
+        content: `If a distribution delivery fails due to a partner DSP metadata format rejection, container checksum error, or audio frame discrepancy:
+* **You are never charged credits a second time.**
+* TuneSupport AI authorizes an immediate **Warranty Re-Dispatch at 0 credits**.
+* The corrected ERN 4.3 XML package and lossless FLAC stems are pushed directly to Spotify and Apple Music ingestion pipelines at platform expense.`
+      },
+      {
+        heading: 'Instant Live Wallet Refunds',
+        content: `When a refund or compensation is authorized (for example, a duplicate POS merchant terminal swipe or processing latency):
+* Credits are deposited into your wallet instantly via the platform's \`tunemavens-credits-reloaded\` event.
+* Your topbar credit counter updates immediately without requiring a browser refresh.
+* Full itemized transaction records appear in your Dashboard Settings ledger.`
+      }
+    ]
   }
 ];
 
 export const FREQUENT_FAQS = [
+  {
+    q: 'How does the Support & AI Claims Desk resolve disputes?',
+    a: 'When you submit a claim with an ISRC or Split Cascade TxID, TuneSupport AI performs an instant automated diagnosis, validates metadata against catalog records, and places an escrow freeze on disputed split payouts. You can chat with the AI in real time and execute automated settlements with 1 click.'
+  },
+  {
+    q: 'What happens to my royalties when a Split Cascade dispute is filed?',
+    a: 'Disputed payouts are automatically held in TuneLedger escrow to prevent unrecoverable distributions to third parties. Crucially, TuneMavens enforces zero cross-collateralization, meaning undisputed tracks in your catalog continue disbursing revenues normally.'
+  },
+  {
+    q: 'Are DDEX distribution corrections or re-dispatches charged credits?',
+    a: 'Never. If a digital service provider (DSP) rejects a delivery due to metadata duration offsets or container checksum errors, TuneSupport AI authorizes an automated warranty re-dispatch at zero credit cost.'
+  },
   {
     q: 'How do credit deductions work across different apps?',
     a: 'Credits are universally shared across your TuneMavens account. When you purchase a credit pack or receive monthly credits, they can be spent on any tool—including MasterLab AI mastering, SyncMavens brief pitching, domain renewals, or contract generation.'
@@ -731,3 +910,4 @@ export const FREQUENT_FAQS = [
     a: 'Yes! Registering an account is 100% free and includes 150 starter credits to test MasterLab mastering, explore the sync marketplace, and build your digital press kit.'
   }
 ];
+

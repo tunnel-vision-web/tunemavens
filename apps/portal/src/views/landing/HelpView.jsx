@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   RiSearchLine,
   RiCloseLine,
@@ -20,7 +20,11 @@ import {
   RiShareLine,
   RiCompassLine,
   RiHandHeartLine,
-  RiMoneyDollarCircleLine
+  RiMoneyDollarCircleLine,
+  RiRobot2Fill,
+  RiLifebuoyFill,
+  RiSendPlaneFill,
+  RiSparklingFill
 } from 'react-icons/ri'
 
 import PageHeader from '../../components/common/PageHeader.jsx'
@@ -52,6 +56,46 @@ export default function HelpView({ sessionUser }) {
   });
   const [ticketSubmitting, setTicketSubmitting] = useState(false);
   const [ticketSubmittedData, setTicketSubmittedData] = useState(null);
+
+  // Ask AI Modal & Live Chat State
+  const navigate = useNavigate();
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiChatInput, setAiChatInput] = useState('');
+  const [aiChatMessages, setAiChatMessages] = useState([
+    {
+      sender: 'ai',
+      text: "Hello! I am TuneSupport AI. 🤖 How can I assist you today? Ask me about how the support ticketing system works, Split Cascade dispute holds, DDEX distribution re-dispatch, or Unified Credits compensation."
+    }
+  ]);
+  const [aiChatSending, setAiChatSending] = useState(false);
+
+  const handleSendAiChat = (queryText) => {
+    const text = (queryText || aiChatInput || '').trim();
+    if (!text) return;
+
+    const userMsg = { sender: 'user', text };
+    setAiChatMessages(prev => [...prev, userMsg]);
+    setAiChatInput('');
+    setAiChatSending(true);
+
+    setTimeout(() => {
+      const q = text.toLowerCase();
+      let reply = '';
+      if (q.includes('dispute') || q.includes('split') || q.includes('freeze') || q.includes('hold') || q.includes('escrow')) {
+        reply = "When a claim is submitted with a Catalog Track ISRC or Split Cascade TxID under a royalty dispute, TuneLedger automatically engages an Escrow Dispute Lock. All payout disbursements on the disputed cascade are frozen instantly to safeguard against improper distributions. Crucially, TuneMavens enforces Zero Cross-Collateralization, so the rest of your catalog continues earning normally!";
+      } else if (q.includes('ticket') || q.includes('claim') || q.includes('how it works') || q.includes('file')) {
+        reply = "Filing a ticket at the Support & Claims Desk takes less than a minute. Enter your contact details, your ISRC or Split Cascade TxID (auto-matched by the platform), choose your category, describe the issue, and attach up to 3 evidence files (split sheets, cue sheets, error logs). TuneSupport AI immediately analyzes the root cause and provides a live communication thread.";
+      } else if (q.includes('refund') || q.includes('credit') || q.includes('fee') || q.includes('billing')) {
+        reply = "TuneMavens operates on 100% Unified Credits with Zero Recurring Monthly Fees. If an error occurs (such as a merchant POS duplicate charge or DSP processing latency), TuneSupport AI authorizes an instant 1-click credit refund directly deposited into your platform balance.";
+      } else if (q.includes('ddex') || q.includes('spotify') || q.includes('apple') || q.includes('distro')) {
+        reply = "If a partner DSP rejects a release due to an ERN 4.3 container checksum error or audio duration mismatch, TuneSupport AI flags the track for a free Warranty Re-Dispatch at zero credit cost.";
+      } else {
+        reply = `Thank you for asking about "${text}"! The TuneMavens Support & AI Claims Desk provides 24/7 automated diagnosis, escrow dispute locks, and live real-time communication. You can launch the full Support & Claims Desk to submit an official claim or view active tickets.`;
+      }
+      setAiChatMessages(prev => [...prev, { sender: 'ai', text: reply }]);
+      setAiChatSending(false);
+    }, 350);
+  };
 
   // Handle URL Query & Hash Deep-linking (e.g. /help?article=studio-split-sheets-guide or #/help#master-vs-composition-copyright)
   useEffect(() => {
@@ -355,15 +399,72 @@ export default function HelpView({ sessionUser }) {
               {searchQuery && ` matching "${searchQuery}"`}
             </p>
           </div>
-          {searchQuery && (
-            <button 
-              type="button" 
-              onClick={() => { setSearchQuery(''); setActiveCategory('all'); }} 
-              style={{ background: 'none', border: 'none', color: 'var(--cyan)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}
+
+          {/* Top Right Corner Action Buttons: Need Help & Ask AI */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {searchQuery && (
+              <button 
+                type="button" 
+                onClick={() => { setSearchQuery(''); setActiveCategory('all'); }} 
+                style={{ background: 'none', border: 'none', color: 'var(--cyan)', fontSize: '13px', cursor: 'pointer', fontWeight: 600, marginRight: '4px' }}
+              >
+                Reset Filters
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('support-ticket-form-section');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  navigate('/community/support');
+                }
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Get assistance or file a support claim"
             >
-              Reset Filters
+              <RiCustomerService2Fill size={15} color="#0ea5e9" />
+              Need Help?
             </button>
-          )}
+
+            <button
+              type="button"
+              onClick={() => setShowAiModal(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: '1px solid rgba(0, 240, 255, 0.4)',
+                background: 'rgba(0, 240, 255, 0.12)',
+                color: 'var(--cyan, #00f0ff)',
+                fontWeight: 700,
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Ask TuneSupport AI a question in real time"
+            >
+              <RiRobot2Fill size={15} />
+              Ask AI
+            </button>
+          </div>
         </div>
 
         {/* Articles Grid */}
@@ -604,7 +705,7 @@ export default function HelpView({ sessionUser }) {
           </p>
         </div>
 
-        <div className="help-ticket-card">
+        <div className="help-ticket-card" id="support-ticket-form-section">
           {ticketSubmittedData ? (
             <div style={{ textAlign: 'center', padding: '30px 20px' }}>
               <RiCheckboxCircleFill size={56} style={{ color: 'var(--cyan)', margin: '0 auto 16px' }} />
@@ -886,6 +987,263 @@ export default function HelpView({ sessionUser }) {
               </div>
             </div>
 
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Ask TuneSupport AI Interactive Assistant Modal */}
+      {showAiModal && createPortal(
+        <div 
+          className="help-modal-backdrop" 
+          onClick={() => setShowAiModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '20px'
+          }}
+        >
+          <div 
+            className="help-modal-card" 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#090e24',
+              border: '1px solid rgba(0, 240, 255, 0.3)',
+              borderRadius: '12px',
+              maxWidth: '680px',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: '85vh',
+              overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{
+              background: '#0d1536',
+              padding: '18px 24px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  background: 'rgba(0, 240, 255, 0.15)',
+                  color: 'var(--cyan, #00f0ff)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <RiRobot2Fill size={20} />
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fff' }}>
+                    TuneSupport AI Assistant
+                  </h4>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                    Instant answers for ticketing, dispute holds, DDEX &amp; credits
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAiModal(false)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+              >
+                <RiCloseLine size={20} />
+              </button>
+            </div>
+
+            {/* Quick Chips */}
+            <div style={{
+              padding: '12px 20px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+              display: 'flex',
+              gap: '8px',
+              overflowX: 'auto'
+            }}>
+              {[
+                'How does the AI dispute hold work?',
+                'How do I file a support claim?',
+                'Can I get a credit refund?',
+                'How are DDEX errors resolved?'
+              ].map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSendAiChat(chip)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#cbd5e1',
+                    borderRadius: '20px',
+                    padding: '5px 12px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+
+            {/* Message Body */}
+            <div style={{
+              flex: 1,
+              padding: '20px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              minHeight: '260px'
+            }}>
+              {aiChatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: msg.sender === 'ai' ? 'flex-start' : 'flex-end',
+                    maxWidth: '85%',
+                    alignSelf: msg.sender === 'ai' ? 'flex-start' : 'flex-end'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    marginBottom: '3px',
+                    fontSize: '10.5px',
+                    color: msg.sender === 'ai' ? 'var(--cyan)' : '#cbd5e1'
+                  }}>
+                    {msg.sender === 'ai' && <RiRobot2Fill size={12} />}
+                    <span style={{ fontWeight: 700 }}>{msg.sender === 'ai' ? 'TuneSupport AI' : 'You'}</span>
+                  </div>
+                  <div style={{
+                    background: msg.sender === 'ai' ? '#0d1536' : '#0ea5e9',
+                    color: '#fff',
+                    border: msg.sender === 'ai' ? '1px solid rgba(0, 240, 255, 0.25)' : 'none',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    fontSize: '12.5px',
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              {aiChatSending && (
+                <div style={{ color: 'var(--cyan)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RiTimeLine className="spin" size={14} /> TuneSupport AI is thinking...
+                </div>
+              )}
+            </div>
+
+            {/* Input Form */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleSendAiChat(); }}
+              style={{
+                padding: '12px 20px',
+                background: '#0d1536',
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                gap: '10px'
+              }}
+            >
+              <input
+                type="text"
+                value={aiChatInput}
+                onChange={(e) => setAiChatInput(e.target.value)}
+                placeholder="Ask TuneSupport AI anything about ticketing, escrow, or credits..."
+                style={{
+                  flex: 1,
+                  background: '#090e24',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '6px',
+                  padding: '9px 12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <button
+                type="submit"
+                disabled={aiChatSending || !aiChatInput.trim()}
+                style={{
+                  background: '#0ea5e9',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '9px 16px',
+                  fontWeight: 700,
+                  fontSize: '12.5px',
+                  cursor: aiChatSending || !aiChatInput.trim() ? 'not-allowed' : 'pointer',
+                  opacity: aiChatSending || !aiChatInput.trim() ? 0.6 : 1,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <RiSendPlaneFill size={14} /> Send
+              </button>
+            </form>
+
+            {/* Footer with Direct Link */}
+            <div style={{
+              padding: '12px 20px',
+              background: '#090e24',
+              borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '12px'
+            }}>
+              <span style={{ color: '#64748b' }}>
+                Need to file an official claim or dispute?
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAiModal(false);
+                  navigate('/community/support');
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--cyan)',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                Go to Support &amp; Claims Desk <RiArrowRightLine size={14} />
+              </button>
+            </div>
           </div>
         </div>,
         document.body

@@ -651,70 +651,124 @@ export default function SupportTicketsPanel({
           </p>
         </div>
 
-        {/* Tab Switching Buttons */}
-        <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.04)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <button
-            onClick={() => setActiveTab('file')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: 'none',
-              background: activeTab === 'file' ? '#0ea5e9' : 'transparent',
-              color: activeTab === 'file' ? '#fff' : '#94a3b8',
-              fontWeight: 700,
-              fontSize: '12.5px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <RiFileTextFill size={15} />
-            File a Claim / Ticket
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('my-tickets');
-              if (tickets.length > 0 && !selectedTicket) {
-                setSelectedTicket(tickets[0]);
-              }
-            }}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: 'none',
-              background: activeTab === 'my-tickets' ? '#0ea5e9' : 'transparent',
-              color: activeTab === 'my-tickets' ? '#fff' : '#94a3b8',
-              fontWeight: 700,
-              fontSize: '12.5px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <RiRobot2Fill size={15} />
-            Active Tickets &amp; AI Live Chat ({myTickets.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('admin-desk')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: 'none',
-              background: activeTab === 'admin-desk' ? '#0ea5e9' : 'transparent',
-              color: activeTab === 'admin-desk' ? '#fff' : '#94a3b8',
-              fontWeight: 700,
-              fontSize: '12.5px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <RiShieldCheckFill size={15} />
-            Platform Operations Desk
-          </button>
+        {/* Tab Switching Buttons & Quick Action Buttons */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '6px', background: 'rgba(255, 255, 255, 0.04)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <button
+              onClick={() => setActiveTab('file')}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '6px',
+                border: 'none',
+                background: activeTab === 'file' ? '#0ea5e9' : 'transparent',
+                color: activeTab === 'file' ? '#fff' : '#94a3b8',
+                fontWeight: 700,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiFileTextFill size={14} />
+              File a Claim / Ticket
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('my-tickets');
+                if (tickets.length > 0 && !selectedTicket) {
+                  setSelectedTicket(tickets[0]);
+                }
+              }}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '6px',
+                border: 'none',
+                background: activeTab === 'my-tickets' ? '#0ea5e9' : 'transparent',
+                color: activeTab === 'my-tickets' ? '#fff' : '#94a3b8',
+                fontWeight: 700,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiRobot2Fill size={14} />
+              Active Tickets ({myTickets.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('admin-desk')}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '6px',
+                border: 'none',
+                background: activeTab === 'admin-desk' ? '#0ea5e9' : 'transparent',
+                color: activeTab === 'admin-desk' ? '#fff' : '#94a3b8',
+                fontWeight: 700,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiShieldCheckFill size={14} />
+              Operations Desk
+            </button>
+          </div>
+
+          {/* Top Right Quick Action Buttons */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <Link
+              to="/help"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '12px',
+                textDecoration: 'none',
+                cursor: 'pointer'
+              }}
+              title="Browse Knowledge Base & Help Articles"
+            >
+              <RiCustomerService2Fill size={14} color="#0ea5e9" />
+              Need Help?
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('my-tickets');
+                if (tickets.length > 0) {
+                  setSelectedTicket(tickets[0]);
+                }
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '6px',
+                border: '1px solid rgba(0, 240, 255, 0.4)',
+                background: 'rgba(0, 240, 255, 0.12)',
+                color: 'var(--cyan, #00f0ff)',
+                fontWeight: 700,
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+              title="Launch TuneSupport AI Live Chat"
+            >
+              <RiRobot2Fill size={14} />
+              Ask AI
+            </button>
+          </div>
         </div>
       </div>
 
