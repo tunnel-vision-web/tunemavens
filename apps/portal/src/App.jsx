@@ -23,7 +23,8 @@ import {
   RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill,
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
   RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine,
-  RiPriceTag3Fill, RiLayoutMasonryFill, RiMegaphoneFill, RiUserSharedFill, RiTeamFill
+  RiPriceTag3Fill, RiLayoutMasonryFill, RiMegaphoneFill, RiUserSharedFill, RiTeamFill,
+  RiShieldCheckFill
 } from 'react-icons/ri'
 
 // Local assets
@@ -126,6 +127,7 @@ import {
   AppMarketplacePanel, PanelHeader,
 } from './components/phase3.jsx'
 import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx'
+import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx'
 import CreditReloadModal from './components/common/CreditReloadModal.jsx'
 
 // ================= Dashboard Apps View =================
@@ -931,7 +933,7 @@ function DashboardView({
     // Role-based permission guard ensuring users only access authorized apps
     const userRole = sessionUser?.role || 'creator';
     const roleAllowed = {
-      admin: ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team'],
+      admin: ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team'],
       corporate: ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings'],
       media_house: ['home', 'corporate-ads', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings'],
       media: ['home', 'corporate-ads', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings'],
@@ -1006,6 +1008,14 @@ function DashboardView({
             setActiveTab={setActiveTab}
             activeArtist={activeArtist}
             onSelectArtist={handleSwitchArtist}
+          />
+        );
+      case 'admin-team':
+        return (
+          <AdminTeamRosterPanel
+            sessionUser={sessionUser}
+            onUpdateUser={onUpdateUser}
+            setActiveTab={setActiveTab}
           />
         );
       case 'mastering':
@@ -1104,6 +1114,7 @@ function DashboardView({
       'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: RiApps2Fill, category: 'Apps & Marketplace' },
       'social-ai': { id: 'social-ai', label: 'Social AI Studio', icon: RiCpuFill, category: 'Creator Tools' },
       crm: { id: 'crm', label: 'Smart CRM', icon: RiMessage2Fill, category: 'Creator Tools' },
+      'admin-team': { id: 'admin-team', label: 'Site Admin Team & Seats', icon: RiShieldCheckFill, category: 'Admin' },
       cms: { id: 'cms', label: 'CMS Layouts', icon: RiFileTextFill, category: 'Admin' },
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: RiGlobalFill, category: 'Admin' },
       'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: RiStarFill, category: 'Admin' },
@@ -1113,7 +1124,7 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'label-team'];
+        visibleKeys = ['home', 'admin-team', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'label-team'];
         break;
       case 'corporate':
         visibleKeys = ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile'];
