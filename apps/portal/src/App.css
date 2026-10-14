@@ -40,12 +40,22 @@
   width: 218px; /* 15% smaller than 256px */
   height: auto;
   display: block;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, filter 0.3s ease;
   transform-origin: left center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
 
 .app-landing-wrapper.scrolled .logo-image {
   transform: scale(0.8);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.nav-logo-container img,
+.nav-logo-container-role img,
+.footer-logo-image,
+.sidebar-logo-link img,
+[data-testid="sidebar-logo-link"] img {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
 
 .nav-links {
