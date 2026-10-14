@@ -17,14 +17,14 @@ if (typeof window !== 'undefined') {
 import './App.css'
 import React, { useState, useEffect, useRef } from 'react'
 import { 
-  HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams
+  HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate
 } from 'react-router-dom'
 import { 
   RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill,
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
   RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine,
   RiPriceTag3Fill, RiLayoutMasonryFill, RiMegaphoneFill, RiUserSharedFill, RiTeamFill,
-  RiShieldCheckFill
+  RiShieldCheckFill, RiCustomerService2Fill
 } from 'react-icons/ri'
 
 // Local assets
@@ -97,6 +97,8 @@ import RoleLandingView from './views/landing/RoleLandingView.jsx'
 import PricingView from './views/landing/PricingView.jsx'
 import AboutView from './views/landing/AboutView.jsx'
 import HelpView from './views/landing/HelpView.jsx'
+import SupportPageView from './views/community/SupportPageView.jsx'
+import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx'
 import PublishingView from './views/landing/PublishingView.jsx'
 import DistributionView from './views/landing/DistributionView.jsx'
 import ToursView from './views/landing/ToursView.jsx'
@@ -680,6 +682,11 @@ const NAV_ITEM_DESCRIPTIONS = {
     desc: 'Account security, artist brand identity, connected wallets, and workspace preferences',
     category: 'Account'
   },
+  support: {
+    title: 'Support & AI Claims',
+    desc: 'Automated claim diagnosis, Split Cascade escrow holds, DDEX re-dispatch, and Unified Credits refunds',
+    category: 'Account'
+  },
   library: {
     title: 'My Library',
     desc: 'TuneStream personal saved collection, playlists, downloaded stems, and favorite releases',
@@ -1085,6 +1092,15 @@ function DashboardView({
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       case 'corporate-ads':
         return <CorporateAdsPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
+      case 'support':
+        return (
+          <SupportTicketsPanel 
+            sessionUser={sessionUser} 
+            catalogTracks={catalogTracks} 
+            onUpdateCredits={(newTotal) => setUserCredits(newTotal)}
+            embeddedInDashboard={true}
+          />
+        );
       default:
         return <div>Tab not found</div>;
     }
@@ -1103,6 +1119,7 @@ function DashboardView({
       'label-team': { id: 'label-team', label: 'Roster & Team Seats', icon: RiTeamFill, category: 'Label Administration' },
       escrow: { id: 'escrow', label: 'Escrow Contracts', icon: RiShieldFill, category: 'Royalty Ledgers' },
       profile: { id: 'profile', label: 'Profile Settings', icon: RiSettings3Fill, category: 'Account' },
+      support: { id: 'support', label: 'Support & AI Claims', icon: RiCustomerService2Fill, category: 'Account' },
       // Native-app user controls (full editing parity with the apps)
       library: { id: 'library', label: 'My Library', icon: RiMusicFill, category: 'tunestream' },
       tips: { id: 'tips', label: 'Tips & Purchases', icon: RiCoinsFill, category: 'tunestream' },
@@ -1125,31 +1142,31 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'admin-team', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'label-team'];
+        visibleKeys = ['home', 'admin-team', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
         break;
       case 'corporate':
-        visibleKeys = ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile'];
+        visibleKeys = ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'support'];
         break;
       case 'media_house':
       case 'media':
-        visibleKeys = ['home', 'corporate-ads', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile'];
+        visibleKeys = ['home', 'corporate-ads', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'label-team'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'label-team'];
         break;
       case 'dj':
-        visibleKeys = ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile'];
+        visibleKeys = ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'studio':
       case 'supervisor':
-        visibleKeys = ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile'];
+        visibleKeys = ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'consumer':
-        visibleKeys = ['home', 'library', 'tips', 'stream-controls', 'profile'];
+        visibleKeys = ['home', 'library', 'tips', 'stream-controls', 'profile', 'support'];
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'social-ai', 'crm', 'app-marketplace', 'profile'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
     }
 
@@ -8647,6 +8664,9 @@ function AppContent({
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/help" element={<HelpView sessionUser={sessionUser} />} />
+          <Route path="/community/support" element={<SupportPageView sessionUser={sessionUser} catalogTracks={catalogTracks} />} />
+          <Route path="/support" element={<SupportPageView sessionUser={sessionUser} catalogTracks={catalogTracks} />} />
+          <Route path="/community" element={<Navigate to="/community/support" replace />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
 
@@ -8732,7 +8752,7 @@ function AppContent({
                       <Link to="/native-apps/tunestream?view=explore" className="footer-link">Discover Artists</Link>
                       <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
                       <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
-                      <Link to="/help" className="footer-link">Support Desk</Link>
+                      <Link to="/community/support" className="footer-link">Support Desk &amp; Claims</Link>
                     </div>
                   </div>
                 </div>
@@ -8816,7 +8836,7 @@ function AppContent({
                       <Link to="/native-apps/tunestream?view=explore" className="footer-link">Discover Artists</Link>
                       <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
                       <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
-                      <Link to="/help" className="footer-link">Support Desk</Link>
+                      <Link to="/community/support" className="footer-link">Support Desk &amp; Claims</Link>
                     </div>
                   </div>
                 </div>

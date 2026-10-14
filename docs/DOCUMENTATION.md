@@ -1402,3 +1402,91 @@ To minimize cognitive load and deliver an effortless user experience, the Waterf
 4. **Studio-Level Section Navigation (`STUDIO_TABS`):**
    - Bidirectional section footers at the base of every tab enable creators to seamlessly transition between the *Interactive Waterfall Builder*, *TuneLedger Transactions*, *Split Sheets Vault*, *Statement Ingestion & CSV*, and *Royalty University*.
 
+---
+
+### 9.37 TuneMavens Support & AI Claims Desk Engine (Atlanta TV Mount Pro Parity)
+
+Adapted directly from the battle-tested support ticketing and warranty claims architecture of **Atlanta TV Mount Pro**, TuneMavens features an autonomous, AI-managed **Support & Claims Desk** residing permanently under **Community** (`/community/support`, `/support`, and the unified Dashboard).
+
+The system pairs continuous client-AI communication with deep cryptographic hooks into **TuneLedger Escrow**, automatically freezing disputed disbursements, running automated root-cause diagnoses, and executing 1-click settlements via the **Unified Credits Engine**.
+
+#### 9.37.1 Architectural Overview & Core Capabilities
+```
+[User Inbound Claim / Dispute]
+          │
+          ▼
+┌────────────────────────────────────────────────────────┐
+│  TuneSupport AI Diagnostic & Intake Engine             │
+│  - Parses Category, Description, & Evidence Attachments │
+│  - Auto-Matches ISRC, Split Cascade TxID, or Invoice    │
+│  - Computes AI Confidence Score (92% - 99%)            │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+             ┌─────────────┴─────────────┐
+             ▼                           ▼
+┌───────────────────────────┐ ┌───────────────────────────┐
+│ TuneLedger Escrow Lock    │ │ Intermaven Smart CRM Sync │
+│ - Freezes Split Cascade   │ │ - Registers Inbound Lead  │
+│   Payout Disbursements    │ │ - Attaches Claim Notes    │
+│ - Halts Outbound Leakage  │ │ - Synchronizes Status     │
+└────────────┬──────────────┘ └─────────────┬─────────────┘
+             │                              │
+             └─────────────┬────────────────┘
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│  Continuous AI Live Chat & Communication Thread        │
+│  - Real-Time Context-Aware Answers (TuneSupport AI)    │
+│  - Explains Payout Locks, DDEX Offsets, & Credit Rules │
+│  - Full Verifiable Audit Trail on Ticket Record        │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+             ┌─────────────┴─────────────┐
+             ▼                           ▼
+┌───────────────────────────┐ ┌───────────────────────────┐
+│ 1-Click AI Settlement     │ │ Platform Operations Desk  │
+│ - Instant Credit Refund   │ │ - Admin / Label Oversight │
+│ - Unfreezes TuneLedger    │ │ - Manual Asset Linking    │
+│ - Dispatches Certificate  │ │ - TQS / Quality Scoring   │
+└───────────────────────────┘ └───────────────────────────┘
+```
+
+#### 9.37.2 Ticket Lifecycle & Music-Domain Categories
+The claims engine categorizes issues across six music operations disciplines:
+1. **Royalty & Split Cascade Dispute:** Discrepancies in streaming distributions, unallocated writer cuts, or unrecouped recording advances.
+2. **DDEX Ingestion & Distribution Error:** DSP delivery rejections (e.g. Spotify, Apple Music), ERN 4.3 XML container duration mismatches, or missing lossless FLAC stems.
+3. **Sync Licensing & Placement Claim:** Broadcaster cue sheet duration discrepancies, delivery delays on sync stem packages, or music supervisor escrow disputes.
+4. **Unified Credits & Billing Issue:** Merchant POS webhook latency, payment gateway double-charges, or package reload reconciliation under the Zero-Monthly-Fee platform model.
+5. **Copyright & DMCA Notice:** Infringement notifications, unauthorized sample usage disputes, and statutory safe harbor counter-notices.
+6. **Account Access & Technical Error:** Studio tool malfunctions, team seat permission limits, and partner API webhook anomalies.
+
+#### 9.37.3 Automated TuneLedger Escrow Dispute Locks
+Replicating Atlanta TV Mount Pro's automated escrow safeguard for service bookings:
+- When a ticket is filed with a Catalog Track ISRC or Split Cascade TxID under a royalty dispute, **the cascade transaction is immediately locked in TuneLedger**.
+- Outbound automated disbursements (M-Pesa B2C / Stripe Express) are paused instantly, preventing unrecoverable funds from flowing to third parties while splits are disputed.
+- Visual dispute badges (`🔒 Payouts Frozen in TuneLedger`) appear across the ticket desk, catalog item, and Split Cascade Studio until officially resolved.
+
+#### 9.37.4 Continuous Interactive AI Communication Thread ("TuneSupport AI")
+Every ticket maintains a live, bidirectional conversational audit thread:
+- **Instant AI Greeting & Diagnosis:** As soon as the ticket is created, TuneSupport AI posts an initial root-cause breakdown, diagnostic confidence rating (e.g., 98.4%), and recommended action plan.
+- **Interactive User Dialogue:** The user can chat with TuneSupport AI in real time, asking questions regarding escrow lock duration, DDEX re-delivery status, or credit compensation.
+- **Knowledge-Grounded Responses:** TuneSupport AI's responses are dynamically synthesized using active platform state: catalog metadata, split percentages, ledger transaction balances, and ecosystem policies.
+
+#### 9.37.5 Automated Claim Settlement & Unified Credits Refund Engine
+- **1-Click Settlement:** Users or administrators can click **"Accept AI Resolution & Release Holds"** directly from the ticket view.
+- **Instant Credit Wallet Credit:** Refunded credits are deposited directly into the user's unified credits wallet, triggering the `tunemavens-credits-reloaded` event to update topbar balances live without page refresh.
+- **Dispute Lock Release:** The dispute lock in TuneLedger is automatically released, updating the transaction status to `✓ SETTLED` and generating a resolution audit voucher.
+
+#### 9.37.6 Platform Operations Desk (Admin & Label Triage Parity)
+Provides label managers and platform administrators with complete operational parity:
+- **Search & Filter Matrix:** Real-time search across client names, emails, phone numbers, ticket IDs (`ST-XXXXXX`), and catalog ISRCs.
+- **Status Filter Tabs:** `All`, `Pending Review`, `AI Diagnosed`, `Resolved`, `Refunded`.
+- **Quick-Action Modals:**
+  - *Link Now:* Connects orphaned tickets to catalog tracks, split cascade transactions, or reload invoices.
+  - *Issue Unified Credits Refund:* Configurable credit deposit modal with custom compensation reason.
+  - *Resolve Claim:* Formal settlement with technician/team quality scoring adjustments.
+  - *Attachment Inspector:* Fullscreen lightbox viewing for uploaded split sheet contracts, cue sheets, and error screenshots.
+
+#### 9.37.7 Intermaven Smart CRM Synchronization
+All support ticket creation and resolution events automatically synchronize to the shared Intermaven Partner CRM (`/api/crm/leads`), creating tagged client contact profiles (`support_claim`, `royalty_dispute`, etc.) with full communication histories visible across the entire Intermaven partner network.
+
+

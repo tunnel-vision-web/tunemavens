@@ -21,6 +21,7 @@ from .epk_router import router as epk_router
 from .catalog_router import router as catalog_router
 from .corporate_ads_router import router as corporate_ads_router
 from .role_tiers_router import router as role_tiers_router
+from .support_router import router as support_router
 
 __all__ = [
     "admin_router",
@@ -46,6 +47,8 @@ __all__ = [
     "catalog_router",
     "corporate_ads_router",
     "role_tiers_router",
+    "support_router",
 ]
+
 
 

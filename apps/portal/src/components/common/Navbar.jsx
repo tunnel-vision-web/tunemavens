@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { RiArrowDownSFill, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill } from 'react-icons/ri'
+import { RiArrowDownSFill, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill } from 'react-icons/ri'
 import { ROLE_LOGOS, getServiceUrl } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -339,8 +339,13 @@ export default function Navbar({ sessionUser }) {
           </button>
           <ul className={`dropdown-menu ${dropdownOpen ? 'open' : ''}`}>
             <li>
+              <Link to="/community/support" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
+                <RiCustomerService2Fill size={16} /> Support &amp; Claims Desk
+              </Link>
+            </li>
+            <li>
               <Link to="/help" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
-                <RiQuestionFill size={16} /> Help Center
+                <RiQuestionFill size={16} /> Help Center &amp; Guides
               </Link>
             </li>
             <li>
@@ -350,7 +355,7 @@ export default function Navbar({ sessionUser }) {
             </li>
             <li>
               <a href="#blog" className="dropdown-link" onClick={() => { alert('Creator stories and news blog coming soon.'); setDropdownOpen(false); setMobileOpen(false); }}>
-                <RiBookOpenFill size={16} /> Blog & Articles
+                <RiBookOpenFill size={16} /> Blog &amp; Articles
               </a>
             </li>
           </ul>

@@ -536,6 +536,61 @@ export default function HelpView({ sessionUser }) {
           </div>
         </div>
 
+        {/* Support & AI Claims Desk Callout Banner */}
+        <div style={{
+          background: '#0d1536',
+          border: '1px solid rgba(14, 165, 233, 0.3)',
+          borderRadius: '12px',
+          padding: '20px 24px',
+          marginBottom: '40px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '8px',
+              background: 'rgba(14, 165, 233, 0.15)',
+              color: '#0ea5e9',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <RiCustomerService2Fill size={24} />
+            </div>
+            <div>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 700, color: '#fff' }}>
+                TuneMavens AI Claims &amp; Dispute Desk
+              </h4>
+              <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>
+                Need instant automated diagnosis, Split Cascade escrow holds, DDEX re-dispatch, or unified credit refunds?
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/community/support"
+            style={{
+              background: '#0ea5e9',
+              color: '#fff',
+              textDecoration: 'none',
+              padding: '10px 20px',
+              borderRadius: '6px',
+              fontWeight: 700,
+              fontSize: '13px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            Launch AI Claims Desk <RiArrowRightLine size={16} />
+          </Link>
+        </div>
+
         {/* Support Ticket Submission Card */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <span style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
