@@ -3,6 +3,7 @@ import { RiCheckboxCircleFill, RiTeamFill, RiCloseFill } from 'react-icons/ri'
 import { useNavigate } from 'react-router-dom'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import CreditReloadModal from '../../components/common/CreditReloadModal.jsx'
 
 import headerPricingImg from '../../assets/images/header_pricing.png'
 import headerPricingWesternImg from '../../assets/images/header_pricing_western.png'
@@ -171,15 +172,27 @@ function CheckoutModal({ plan, onClose, formatPrice, currencyInfo, convertPrice 
 export default function PricingView() {
   const { formatPrice, convertPrice, currencyInfo } = useRegion();
   const navigate = useNavigate();
-  const [checkoutPlan, setCheckoutPlan] = useState(null);
+  const [showReloadModal, setShowReloadModal] = useState(false);
+  const [reloadReason, setReloadReason] = useState('TuneMavens Unified Platform Credits Top-Up');
+  const [suggestedPackage, setSuggestedPackage] = useState(null);
 
   const handleBuy = (plan) => {
     if (plan.price === 0) {
       navigate('/register');
-    } else if (plan.team) {
-      setCheckoutPlan(plan);
     } else {
-      setCheckoutPlan(plan);
+      setReloadReason(`Top-Up ${plan.name} (${plan.credits.toLocaleString()} Credits)`);
+      if (plan.credits >= 10000) {
+        setSuggestedPackage('enterprise-label-load');
+      } else if (plan.credits >= 3500) {
+        setSuggestedPackage('scale-label-load');
+      } else if (plan.credits >= 1000) {
+        setSuggestedPackage('indie-label-load');
+      } else if (plan.credits >= 500) {
+        setSuggestedPackage('pro-growth');
+      } else {
+        setSuggestedPackage('creator-starter');
+      }
+      setShowReloadModal(true);
     }
   };
 
@@ -237,7 +250,7 @@ export default function PricingView() {
               Looking for Business Ad Rates &amp; Tour Sponsorships?
             </h3>
             <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0, maxWidth: '640px' }}>
-              Broadcast 15s/30s unskippable audio spots on TuneStream, sponsor creator concert tours, and capture CRM leads starting at $499/mo (~$14.99 CPM).
+              Broadcast 15s/30s unskippable audio spots on TuneStream, sponsor creator concert tours, and capture CRM leads starting at 5,000 Unified Credits package ($499 one-time ad flight load, ~$14.99 CPM). Zero monthly charges.
             </p>
           </div>
           <button
@@ -261,16 +274,15 @@ export default function PricingView() {
         </div>
       </div>
 
-
-      {checkoutPlan && (
-        <CheckoutModal
-          plan={checkoutPlan}
-          onClose={() => setCheckoutPlan(null)}
-          formatPrice={formatPrice}
-          currencyInfo={currencyInfo}
-          convertPrice={convertPrice}
-        />
-      )}
+      <CreditReloadModal
+        isOpen={showReloadModal}
+        onClose={() => setShowReloadModal(false)}
+        reason={reloadReason}
+        suggestedPackageId={suggestedPackage}
+        onSuccess={(result) => {
+          setShowReloadModal(false);
+        }}
+      />
     </>
   );
 }

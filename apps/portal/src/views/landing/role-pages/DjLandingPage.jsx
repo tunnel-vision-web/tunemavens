@@ -27,16 +27,16 @@ import bookingLogo from '../../../assets/logos/tunebooking-logo.png'
 const FALLBACK_DJ_RATES = [
   {
     slug: 'dj-resident',
-    name: 'Club Resident',
+    name: 'Club Resident Load',
     tier_badge: 'Essential Pool',
     price_usd: 19.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 200,
-    key_metric: '50 Lossless Downloads/mo · Clean & Dirty Edits',
+    key_metric: '50 Lossless Downloads · Clean & Dirty Edits',
     features: [
       'Access curated record pools across Afrobeat, Amapiano, Hip Hop, and Dance',
       'Pre-analyzed tracks with verified BPM, musical key, and Rekordbox cue markers',
-      '50 high-speed track downloads per month with intro/outro extended edits',
+      '50 high-speed track downloads with intro/outro extended edits (non-expiring)',
       'Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor Pro',
       'Verified DJ identity badge on TuneStream and community forums'
     ],
@@ -45,18 +45,18 @@ const FALLBACK_DJ_RATES = [
   },
   {
     slug: 'dj-touring',
-    name: 'Touring Pro DJ',
+    name: 'Touring Pro DJ Load',
     tier_badge: 'Most Popular',
     price_usd: 49.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 600,
     key_metric: 'Unlimited Downloads · Stems & Exclusive Dubplates',
     features: [
-      'Unlimited monthly downloads of lossless WAV masters and separated remix stems',
+      'Lossless WAV masters and separated remix stems download pack',
       'Exclusive unreleased artist dubplates & early club test pressings before public release',
       'Digital proof clearance hashes protecting your venue and live streams from DMCA strikes',
       'Direct feedback loop: rate unreleased tracks to send data straight to record label A&Rs',
-      '600 monthly TM credits for high-priority dubplate requests',
+      '600 unified credits load for high-priority dubplate requests (zero monthly fees)',
       'Priority download queue bandwidth for weekend set preparation'
     ],
     is_popular: true,
@@ -64,10 +64,10 @@ const FALLBACK_DJ_RATES = [
   },
   {
     slug: 'dj-headliner',
-    name: 'Headline & Festival Curator',
+    name: 'Headline & Festival Curator Load',
     tier_badge: 'Taste-Maker',
     price_usd: 129.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 1800,
     key_metric: 'Direct Label Drop Inbox & Radio Mix Distribution',
     features: [
@@ -75,7 +75,7 @@ const FALLBACK_DJ_RATES = [
       'Host verified syndicated mix series & live DJ sessions on TuneStream Web Radio',
       'Monetize live DJ sets with direct listener tipping and listener tip splits',
       'VIP access to artist tour soundchecks and festival press rooms',
-      '1,800 monthly TM credits & personal artist liaison support'
+      '1,800 unified credits load & personal artist liaison support (zero monthly fees)'
     ],
     is_popular: false,
     cta: 'Apply for Headliner Tier'
@@ -109,7 +109,7 @@ export default function DjLandingPage() {
     tier_slug: 'dj-touring',
     dj_software: 'Pioneer Rekordbox',
     resident_city: 'Nairobi / Global Touring',
-    estimated_budget: '$49 / month (600 Credits)',
+    estimated_budget: '$49 one-time credit reload (600 Credits)',
     notes: ''
   });
 
@@ -259,7 +259,7 @@ export default function DjLandingPage() {
     setBookingForm(prev => ({
       ...prev,
       tier_slug: tier.slug,
-      estimated_budget: `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+      estimated_budget: `$${tier.price_usd?.toLocaleString()} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -653,12 +653,12 @@ export default function DjLandingPage() {
 
                 <div className="role-rate-price-box">
                   <span className="role-rate-price">${rate.price_usd?.toLocaleString()}</span>
-                  <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
+                  <span className="role-rate-period">one-time credit reload</span>
                 </div>
 
                 <div className="role-rate-submeta">
                   <span style={{ color: '#f59e0b', fontWeight: 700 }}>
-                    {rate.credits?.toLocaleString()} TM Credits/mo
+                    {rate.credits?.toLocaleString()} Non-Expiring TM Credits
                   </span>
                   <span style={{ color: '#64748b' }}>·</span>
                   <span style={{ color: accent, fontWeight: 600 }}>
@@ -904,14 +904,14 @@ export default function DjLandingPage() {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}` : '$49 / month'
+                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} one-time credit reload` : '$49 one-time credit reload'
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
-                        <option value="dj-resident">Club Resident — $19/mo (200 Credits) · 50 Downloads</option>
-                        <option value="dj-touring">Touring Pro DJ — $49/mo (600 Credits) · Unlimited WAV &amp; Stems</option>
-                        <option value="dj-headliner">Headliner &amp; Festival Curator — $129/mo (1,800 Credits) · Dubplates</option>
+                        <option value="dj-resident">Club Resident Load — $19 one-time (200 Credits) · 50 Downloads</option>
+                        <option value="dj-touring">Touring Pro DJ Load — $49 one-time (600 Credits) · Unlimited WAV &amp; Stems</option>
+                        <option value="dj-headliner">Headliner &amp; Festival Curator Load — $129 one-time (1,800 Credits) · Dubplates</option>
                       </select>
                     </div>
 

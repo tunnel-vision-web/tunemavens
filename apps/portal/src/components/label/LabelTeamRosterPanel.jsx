@@ -3,37 +3,45 @@ import {
   RiTeamFill, RiUserAddFill, RiDiscFill, RiShieldCheckFill,
   RiCheckLine, RiDeleteBin6Line, RiCloseLine, RiMailLine,
   RiExternalLinkFill, RiArrowRightLine, RiFolderMusicFill,
-  RiEqualizerFill, RiGlobalFill, RiCoinsFill, RiPriceTag3Fill
+  RiEqualizerFill, RiGlobalFill, RiCoinsFill, RiPriceTag3Fill,
+  RiFlashlightFill
 } from 'react-icons/ri';
+import CreditReloadModal from '../common/CreditReloadModal.jsx';
 
-// Label Tier Specifications as promised on /for/labels
+// Label Package Specifications  -  100% Unified Credits Model (Zero Monthly Charges)
 export const LABEL_TIERS = {
   indie: {
     id: 'indie',
-    name: 'Indie Label',
-    price: '$99/mo',
+    name: 'Indie Imprint Load',
+    price: '1,000 Credits',
+    priceUsd: '$99 one-time',
+    creditsAmount: 1000,
     maxSeats: 3,
     maxRoster: 5,
-    description: 'Perfect for boutique record labels managing up to 5 artist rosters with 3 collaborator seats.',
-    features: ['5 Artist Rosters', '3 Team Collaborator Seats', 'Automated Split Cascades', 'One-Stop Pre-Cleared Sync']
+    description: '1,000 unified credits load. Covers up to 5 signed artist rosters with 3 collaborator seats. Zero monthly fees.',
+    features: ['5 Artist Rosters', '3 Team Collaborator Seats', 'Automated Split Cascades', 'One-Stop Pre-Cleared Sync', 'Zero Monthly Charges']
   },
   scale: {
     id: 'scale',
-    name: 'Scale Label',
-    price: '$299/mo',
+    name: 'Scale Operations Load',
+    price: '3,500 Credits',
+    priceUsd: '$299 one-time',
+    creditsAmount: 3500,
     maxSeats: 10,
     maxRoster: 25,
-    description: 'Designed for scaling independent labels with up to 25 artist rosters and 10 collaborator seats.',
-    features: ['25 Artist Rosters', '10 Team Collaborator Seats', 'Accounting & ERP Webhooks', 'Priority Sync Placement']
+    description: '3,500 unified credits load. Designed for scaling independent labels with up to 25 artist rosters and 10 collaborator seats. Zero monthly fees.',
+    features: ['25 Artist Rosters', '10 Team Collaborator Seats', 'Accounting & ERP Webhooks', 'Priority Sync Placement', 'Zero Monthly Charges']
   },
   enterprise: {
     id: 'enterprise',
-    name: 'Enterprise Label',
-    price: '$799/mo',
+    name: 'Enterprise Conglomerate Load',
+    price: '10,000 Credits',
+    priceUsd: '$799 one-time',
+    creditsAmount: 10000,
     maxSeats: 9999,
     maxRoster: 9999,
-    description: 'Unlimited capacity for major catalogs, worldwide distributor imprints, and large multi-team operations.',
-    features: ['Unlimited Artist Rosters', 'Unlimited Team Seats', 'White-Glove DDEX Ingestion', 'Dedicated Sync Director']
+    description: '10,000 unified credits load. Unlimited capacity for major catalogs, worldwide distributor imprints, and large multi-team operations.',
+    features: ['Unlimited Artist Rosters', 'Unlimited Team Seats', 'White-Glove DDEX Ingestion', 'Dedicated Sync Director', 'Zero Monthly Charges']
   }
 };
 
@@ -133,6 +141,9 @@ export default function LabelTeamRosterPanel({
   // Modal dialog states
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showArtistModal, setShowArtistModal] = useState(false);
+  const [showReloadModal, setShowReloadModal] = useState(false);
+  const [reloadReason, setReloadReason] = useState('Record Label Unified Credits Top-Up');
+  const userCredits = Number(sessionUser?.credits ?? 1000);
 
   // Invite member form state
   const [inviteName, setInviteName] = useState('');
@@ -185,8 +196,11 @@ export default function LabelTeamRosterPanel({
 
     if (!isEnterprise && teamMembers.length >= currentTier.maxSeats) {
       setInviteError(
-        `Seat limit reached (${currentTier.maxSeats}/${currentTier.maxSeats}). Please upgrade your label plan to invite more team members.`
+        `Seat limit reached (${currentTier.maxSeats}/${currentTier.maxSeats}). Reload unified credits to upgrade your label package capacity.`
       );
+      setReloadReason(`Seat capacity reached (${currentTier.maxSeats}/${currentTier.maxSeats}). Reload unified credits to expand your team collaborator capacity.`);
+      setShowInviteModal(false);
+      setShowReloadModal(true);
       return;
     }
 
@@ -224,8 +238,11 @@ export default function LabelTeamRosterPanel({
 
     if (!isEnterprise && rosterArtists.length >= currentTier.maxRoster) {
       setArtistError(
-        `Artist roster capacity reached (${currentTier.maxRoster}/${currentTier.maxRoster}). Upgrade to Scale or Enterprise to sign more artists.`
+        `Artist roster capacity reached (${currentTier.maxRoster}/${currentTier.maxRoster}). Reload unified credits to expand your signed artist roster.`
       );
+      setReloadReason(`Roster limit reached (${currentTier.maxRoster}/${currentTier.maxRoster}). Reload unified credits to expand signed artist capacity.`);
+      setShowArtistModal(false);
+      setShowReloadModal(true);
       return;
     }
 
@@ -335,34 +352,63 @@ export default function LabelTeamRosterPanel({
             </div>
           </div>
 
-          {/* Quick Plan Switcher Simulator for Sandbox/Admin */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0b1126', padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, padding: '0 6px' }}>PLAN:</span>
-            {Object.keys(LABEL_TIERS).map(key => {
-              const tier = LABEL_TIERS[key];
-              const isSelected = currentTierKey === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleSwitchTier(key)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '3px',
-                    border: 'none',
-                    background: isSelected ? '#a855f7' : 'transparent',
-                    color: isSelected ? '#ffffff' : '#94a3b8',
-                    fontSize: '11.5px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                  data-testid={`plan-switch-${key}`}
-                >
-                  {tier.name.split(' ')[0]}
-                </button>
-              );
-            })}
+          {/* Quick Plan Actions: Reload Unified Credits & Plan Switcher */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setReloadReason('Record label unified credits reload for team seats and roster allocation');
+                setShowReloadModal(true);
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#10b981',
+                color: '#ffffff',
+                border: 'none',
+                padding: '7px 14px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'background 0.15s ease'
+              }}
+              data-testid="reload-credits-btn"
+            >
+              <RiCoinsFill size={15} />
+              <span>Reload Unified Credits</span>
+            </button>
+
+            {/* Quick Plan Switcher Simulator for Sandbox/Admin */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0b1126', padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, padding: '0 6px' }}>PLAN:</span>
+              {Object.keys(LABEL_TIERS).map(key => {
+                const tier = LABEL_TIERS[key];
+                const isSelected = currentTierKey === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleSwitchTier(key)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '3px',
+                      border: 'none',
+                      background: isSelected ? '#a855f7' : 'transparent',
+                      color: isSelected ? '#ffffff' : '#94a3b8',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    data-testid={`plan-switch-${key}`}
+                  >
+                    {tier.name.split(' ')[0]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -395,27 +441,40 @@ export default function LabelTeamRosterPanel({
               <button
                 type="button"
                 onClick={() => {
-                  setInviteError('');
-                  setShowInviteModal(true);
+                  if (!isEnterprise && seatsUsed >= maxSeats) {
+                    setReloadReason(`Seat capacity reached (${seatsUsed}/${maxSeats}). Reload unified credits to expand team seats.`);
+                    setShowReloadModal(true);
+                  } else {
+                    setInviteError('');
+                    setShowInviteModal(true);
+                  }
                 }}
-                disabled={!isEnterprise && seatsUsed >= maxSeats}
                 style={{
-                  background: (!isEnterprise && seatsUsed >= maxSeats) ? '#334155' : '#0284c7',
+                  background: (!isEnterprise && seatsUsed >= maxSeats) ? '#f59e0b' : '#0284c7',
                   color: '#ffffff',
                   border: 'none',
                   padding: '5px 12px',
                   borderRadius: '3px',
                   fontSize: '11.5px',
                   fontWeight: 700,
-                  cursor: (!isEnterprise && seatsUsed >= maxSeats) ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px'
                 }}
                 data-testid="invite-team-member-btn"
               >
-                <RiUserAddFill size={13} />
-                <span>+ Invite Team Member</span>
+                {(!isEnterprise && seatsUsed >= maxSeats) ? (
+                  <>
+                    <RiCoinsFill size={13} />
+                    <span>Reload for More Seats</span>
+                  </>
+                ) : (
+                  <>
+                    <RiUserAddFill size={13} />
+                    <span>+ Invite Team Member</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -447,27 +506,40 @@ export default function LabelTeamRosterPanel({
               <button
                 type="button"
                 onClick={() => {
-                  setArtistError('');
-                  setShowArtistModal(true);
+                  if (!isEnterprise && rosterUsed >= maxRoster) {
+                    setReloadReason(`Artist roster capacity reached (${rosterUsed}/${maxRoster}). Reload unified credits to expand artist slots.`);
+                    setShowReloadModal(true);
+                  } else {
+                    setArtistError('');
+                    setShowArtistModal(true);
+                  }
                 }}
-                disabled={!isEnterprise && rosterUsed >= maxRoster}
                 style={{
-                  background: (!isEnterprise && rosterUsed >= maxRoster) ? '#334155' : '#7c3aed',
+                  background: (!isEnterprise && rosterUsed >= maxRoster) ? '#f59e0b' : '#7c3aed',
                   color: '#ffffff',
                   border: 'none',
                   padding: '5px 12px',
                   borderRadius: '3px',
                   fontSize: '11.5px',
                   fontWeight: 700,
-                  cursor: (!isEnterprise && rosterUsed >= maxRoster) ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px'
                 }}
                 data-testid="sign-new-artist-btn"
               >
-                <RiDiscFill size={13} />
-                <span>+ Sign Artist to Roster</span>
+                {(!isEnterprise && rosterUsed >= maxRoster) ? (
+                  <>
+                    <RiCoinsFill size={13} />
+                    <span>Reload for More Slots</span>
+                  </>
+                ) : (
+                  <>
+                    <RiDiscFill size={13} />
+                    <span>+ Sign Artist to Roster</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -485,21 +557,53 @@ export default function LabelTeamRosterPanel({
               Assign roles for A&amp;R directors, catalog managers, and royalty split accountants across your label catalog.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowInviteModal(true)}
-            disabled={!isEnterprise && seatsUsed >= maxSeats}
-            className="btn-primary"
-            style={{
-              padding: '8px 16px',
-              fontSize: '12px',
-              fontWeight: 700,
-              background: '#0284c7',
-              border: 'none'
-            }}
-          >
-            + Invite Team Member
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setReloadReason('Label team seat and operations unified credits reload');
+                setShowReloadModal(true);
+              }}
+              style={{
+                padding: '8px 14px',
+                fontSize: '12px',
+                fontWeight: 700,
+                background: '#10b981',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '4px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              <RiCoinsFill size={14} />
+              <span>Reload Credits</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!isEnterprise && seatsUsed >= maxSeats) {
+                  setReloadReason(`Seat capacity reached (${seatsUsed}/${maxSeats}). Reload credits to expand team seats.`);
+                  setShowReloadModal(true);
+                } else {
+                  setShowInviteModal(true);
+                }
+              }}
+              className="btn-primary"
+              style={{
+                padding: '8px 16px',
+                fontSize: '12px',
+                fontWeight: 700,
+                background: (!isEnterprise && seatsUsed >= maxSeats) ? '#f59e0b' : '#0284c7',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {(!isEnterprise && seatsUsed >= maxSeats) ? 'Reload for Seats' : '+ Invite Team Member'}
+            </button>
+          </div>
         </div>
 
         {/* Members Table */}
@@ -1014,6 +1118,24 @@ export default function LabelTeamRosterPanel({
           </div>
         </div>
       )}
+
+      {/* Credit Reload Modal */}
+      <CreditReloadModal
+        isOpen={showReloadModal}
+        onClose={() => setShowReloadModal(false)}
+        sessionUser={sessionUser}
+        onUpdateUser={onUpdateUser}
+        reason={reloadReason}
+        suggestedPackageId={currentTierKey === 'enterprise' ? 'enterprise-label-load' : currentTierKey === 'indie' ? 'indie-label-load' : 'scale-label-load'}
+        onSuccess={(result) => {
+          if (onUpdateUser && sessionUser) {
+            onUpdateUser({
+              ...sessionUser,
+              credits: result?.balance ?? ((sessionUser?.credits || 0) + (result?.creditsAdded || 0))
+            });
+          }
+        }}
+      />
     </div>
   );
 }

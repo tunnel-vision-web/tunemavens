@@ -41,7 +41,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Spark / Indie Starter",
             "tier_badge": "Free Forever",
             "price_usd": 0.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 0,
             "key_metric": "85/15 Net Splits · 3 Master Tracks",
             "deliverables": [
@@ -64,7 +64,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Pro Creator Growth",
             "tier_badge": "Most Popular",
             "price_usd": 29.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 300,
             "key_metric": "90/10 Net Splits · Unlimited Catalog",
             "deliverables": [
@@ -77,7 +77,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "SyncMavens AI sync brief automatic pitch routing",
                 "Custom branded subdomain with customizable layout sections",
                 "Intermaven Smart CRM fan lead capture (WhatsApp, SMS, Email)",
-                "Social AI Studio promotional content generator & 300 monthly TM credits"
+                "Social AI Studio content generator & 300 unified credits load with zero monthly fees"
             ],
             "is_popular": True,
             "cta": "Get Pro Creator"
@@ -88,7 +88,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Studio Master & Touring",
             "tier_badge": "Full Independence",
             "price_usd": 99.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 1200,
             "key_metric": "100% Splits · TunePay POS Merch & Tour Ticketing",
             "deliverables": [
@@ -101,7 +101,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "Priority Sync Brief matching for TV commercials & Hollywood films",
                 "Automated Publishing & Distribution Election contract generation",
                 "Multi-tiered recoupment cascade for investor & producer advances",
-                "1,200 monthly TM credits for mastering, ads & stem distribution"
+                "1,200 unified credits load for mastering, ads & stem distribution with zero monthly fees"
             ],
             "is_popular": False,
             "cta": "Launch Studio Plan"
@@ -112,7 +112,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Label-Ready Enterprise",
             "tier_badge": "Managed Artist",
             "price_usd": 299.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 4000,
             "key_metric": "White-Glove Ingestion & Dedicated Sync Rep",
             "deliverables": [
@@ -125,7 +125,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "Custom apex domain SSL mapping (yourname.com)",
                 "Automated PRO cue sheet registration (ASCAP, BMI, SESAC, MCSK)",
                 "Co-branded sponsor banners on artist concert tour passes",
-                "4,000 monthly TM credits & 24/7 priority executive phone support"
+                "4,000 unified credits load & 24/7 priority executive phone support with zero monthly fees"
             ],
             "is_popular": False,
             "cta": "Book Artist Consultation"
@@ -138,7 +138,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Indie Imprint",
             "tier_badge": "Starter Roster",
             "price_usd": 99.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 1000,
             "key_metric": "Up to 10 Signed Artists · 100 Tracks",
             "deliverables": [
@@ -150,7 +150,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "Automated CSV statement parser (DistroKid, TuneCore, FUGA, Orchard)",
                 "Split Cascade net calculations with advance balance tracking",
                 "Pre-cleared label roster sync pitching on SyncMavens",
-                "1,000 monthly shared Network Credits for mastering & promotions",
+                "1,000 unified credits load with zero monthly recurring charges",
                 "Standard email & chat label support"
             ],
             "is_popular": False,
@@ -162,7 +162,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Scale Label Operations",
             "tier_badge": "Most Popular",
             "price_usd": 299.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 3500,
             "key_metric": "Up to 50 Signed Artists · 1,000 Tracks",
             "deliverables": [
@@ -175,7 +175,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "Role-based staff permissions (A&R, Legal, Head of Accounting)",
                 "TunePay live tour merch & festival ticket box-office settlement",
                 "Intermaven Smart CRM automated roster fan broadcasts (WhatsApp/SMS)",
-                "3,500 monthly TM credits & dedicated label success manager"
+                "3,500 unified credits load with zero monthly recurring charges"
             ],
             "is_popular": True,
             "cta": "Scale Label Operations"
@@ -186,7 +186,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Major / Conglomerate Enterprise",
             "tier_badge": "Unlimited Scale",
             "price_usd": 799.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 10000,
             "key_metric": "Unlimited Artists & Masters · Custom White-Label",
             "deliverables": [
@@ -195,11 +195,11 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             ],
             "features": [
                 "Unlimited roster size and unlimited catalog ingestion",
-                "Custom white-labeled artist portal for signing and monthly payouts",
+                "Custom white-labeled artist portal for signing and settlement",
                 "Direct bank rail & mobile money bulk payouts (M-Pesa B2C, ACH, SWIFT)",
                 "Full ERP & accounting API webhooks for QuickBooks / NetSuite sync",
                 "Priority Sync Brief placement exclusivity across SyncMavens network",
-                "10,000 monthly TM credits, custom SLA & 24/7 dedicated engineering support"
+                "10,000 unified credits load, custom SLA & 24/7 dedicated engineering support with zero monthly fees"
             ],
             "is_popular": False,
             "cta": "Request Enterprise Agreement"
@@ -212,7 +212,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Indie Supervisor Discovery",
             "tier_badge": "Free Search",
             "price_usd": 0.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 0,
             "key_metric": "Search 50,000+ Pre-Cleared Masters",
             "deliverables": [
@@ -235,7 +235,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Production Studio Pro",
             "tier_badge": "Most Popular",
             "price_usd": 149.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 1500,
             "key_metric": "Unlimited Brief Submissions · 94%+ AI Match",
             "deliverables": [
@@ -248,7 +248,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "1-click export of industry-standard cue sheets (ISRC, CAE, duration timestamps)",
                 "100% pre-cleared, indemnity-backed licensing terms for indie films & web series",
                 "Direct in-app escrow contract execution with split guarantee",
-                "1,500 monthly TM credits for custom composer queries"
+                "1,500 unified credits load for custom composer queries with zero monthly fees"
             ],
             "is_popular": True,
             "cta": "Activate Studio Pro"
@@ -259,7 +259,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Network & Studio Enterprise",
             "tier_badge": "Worldwide Clearance",
             "price_usd": 499.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 6000,
             "key_metric": "Full Worldwide Indemnification & Urgent Turnaround",
             "deliverables": [
@@ -272,7 +272,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "Custom original composition & sonic branding commissions with verified composers",
                 "Urgent sync turnaround guarantee (< 4 hours for breaking broadcast cuts)",
                 "Custom volume rate cards for television series & multi-territory ad campaigns",
-                "6,000 monthly TM credits & dedicated senior music rights supervisor"
+                "6,000 unified credits load & dedicated senior music rights supervisor with zero monthly fees"
             ],
             "is_popular": False,
             "cta": "Contact Sync Director"
@@ -285,9 +285,9 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Club Resident",
             "tier_badge": "Essential Pool",
             "price_usd": 19.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 200,
-            "key_metric": "50 Lossless Downloads/mo · Clean & Dirty Edits",
+            "key_metric": "50 Lossless Downloads · Clean & Dirty Edits",
             "deliverables": [
                 "Lossless WAV & 320kbps MP3s",
                 "Verified Club Cue Point Metadata"
@@ -295,7 +295,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "features": [
                 "Access curated record pools across Afrobeat, Amapiano, Hip Hop, and Dance",
                 "Pre-analyzed tracks with verified BPM, musical key, and Rekordbox cue markers",
-                "50 high-speed track downloads per month with intro/outro extended edits",
+                "50 high-speed track downloads with intro/outro extended edits (non-expiring)",
                 "Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor Pro",
                 "Verified DJ identity badge on TuneStream and community forums"
             ],
@@ -308,7 +308,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Touring Pro DJ",
             "tier_badge": "Most Popular",
             "price_usd": 49.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 600,
             "key_metric": "Unlimited Downloads · Stems & Exclusive Dubplates",
             "deliverables": [
@@ -316,11 +316,11 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "DMCA-Safe Performance Clearance Hashes"
             ],
             "features": [
-                "Unlimited monthly downloads of lossless WAV masters and separated remix stems",
+                "Lossless WAV masters and separated remix stems download pack",
                 "Exclusive unreleased artist dubplates & early club test pressings before public release",
                 "Digital proof clearance hashes protecting your venue and live streams from DMCA strikes",
                 "Direct feedback loop: rate unreleased tracks to send data straight to record label A&Rs",
-                "600 monthly TM credits for high-priority dubplate requests",
+                "600 unified credits load for high-priority dubplate requests (zero monthly fees)",
                 "Priority download queue bandwidth for weekend set preparation"
             ],
             "is_popular": True,
@@ -332,7 +332,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Headline & Festival Curator",
             "tier_badge": "Taste-Maker",
             "price_usd": 129.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 1800,
             "key_metric": "Direct Label Drop Inbox & Radio Mix Distribution",
             "deliverables": [
@@ -344,7 +344,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "Host verified syndicated mix series & live DJ sessions on TuneStream Web Radio",
                 "Monetize live DJ sets with direct listener tipping and listener tip splits",
                 "VIP access to artist tour soundchecks and festival press rooms",
-                "1,800 monthly TM credits & personal artist liaison support"
+                "1,800 unified credits load & personal artist liaison support (zero monthly fees)"
             ],
             "is_popular": False,
             "cta": "Apply for Headliner Tier"
@@ -357,9 +357,9 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Single Station / Regional",
             "tier_badge": "Compliance Starter",
             "price_usd": 199.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 2000,
-            "key_metric": "Up to 2 Broadcast Channels · 5,000 Playlogs/mo",
+            "key_metric": "Up to 2 Broadcast Channels · 5,000 Playlogs Load",
             "deliverables": [
                 "Automation Playlog CSV/XML Ingestion",
                 "Basic PRO Discrepancy Detection"
@@ -369,7 +369,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "Automated track recognition matching playlogs to verified ISRC & CAE metadata",
                 "Flag missing publishing shares and unregistered works before reporting",
                 "Standard statutory royalty report exports ready for local collection societies",
-                "2,000 monthly TM credits for catalog audio matching queries"
+                "2,000 unified credits load for catalog audio matching queries with zero monthly fees"
             ],
             "is_popular": False,
             "cta": "Connect Station"
@@ -380,9 +380,9 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Broadcaster Network Suite",
             "tier_badge": "Most Popular",
             "price_usd": 599.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 7500,
-            "key_metric": "Up to 10 Stations · 50,000 Playlogs/mo",
+            "key_metric": "Up to 10 Stations · 50,000 Playlogs Load",
             "deliverables": [
                 "1-Click PRO Formatted Exports (ASCAP, BMI, MCSK)",
                 "TuneStream Native Audio Ad Sync"
@@ -393,7 +393,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "1-click export formatted for ASCAP, BMI, SESAC, PRS, and MCSK compliance",
                 "Integration with Intermaven Corporate Ad network for native commercial insertion",
                 "Automated station affidavit logs and reconciliation audit trails",
-                "7,500 monthly TM credits & dedicated broadcast compliance engineer"
+                "7,500 unified credits load & dedicated broadcast compliance engineer with zero monthly fees"
             ],
             "is_popular": True,
             "cta": "Upgrade to Network Suite"
@@ -404,7 +404,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Enterprise Media Conglomerate",
             "tier_badge": "Statutory Fortress",
             "price_usd": 1499.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 20000,
             "key_metric": "Unlimited Stations · Real-Time Audio Fingerprinting",
             "deliverables": [
@@ -417,7 +417,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
                 "Real-time metadata repair with automated direct songwriter outreach",
                 "Ironclad statutory audit compliance defense against copyright fines",
                 "Custom ERP integration into station billing and traffic scheduling systems",
-                "20,000 monthly TM credits, custom SLA & 24/7 technical hotline"
+                "20,000 unified credits load, custom SLA & 24/7 technical hotline with zero monthly fees"
             ],
             "is_popular": False,
             "cta": "Consult Compliance Team"
@@ -430,7 +430,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Listener Free",
             "tier_badge": "Ad-Supported",
             "price_usd": 0.0,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 0,
             "key_metric": "High-Fidelity Audio Streaming",
             "deliverables": [
@@ -453,9 +453,9 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "TuneStream VIP Audiophile",
             "tier_badge": "Most Popular",
             "price_usd": 4.99,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 50,
-            "key_metric": "Ad-Free Lossless Audio · 50 Credits/mo",
+            "key_metric": "Ad-Free Lossless Audio · 50 Credits Load",
             "deliverables": [
                 "Zero Interstitial Ads",
                 "Uncompressed FLAC / Studio Playback"
@@ -463,7 +463,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "features": [
                 "100% ad-free playback with zero audio interstitial interruptions",
                 "Studio-quality 24-bit uncompressed FLAC audio streaming",
-                "50 monthly TM credits to tip artists, unlock singles, or purchase stems",
+                "50 unified credits load to tip artists, unlock singles, or purchase stems",
                 "Offline cache playback support across mobile and desktop browsers",
                 "Dynamic track lyrics, producer liner notes, and synthesizer gear specs",
                 "Support creators with higher royalty payouts per stream"
@@ -477,9 +477,9 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Patron of the Arts",
             "tier_badge": "Culture Builder",
             "price_usd": 14.99,
-            "billing_period": "month",
+            "billing_period": "one-time credit reload",
             "credits": 200,
-            "key_metric": "200 Credits/mo · VIP Concert Passes",
+            "key_metric": "200 Credits Load · VIP Concert Passes",
             "deliverables": [
                 "Creator Live World Exclusive Drops",
                 "Early Album Stream Access"
@@ -487,7 +487,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "features": [
                 "Exclusive verified Patron badge displayed on creator chats and live drops",
                 "Early listening access to unreleased album cuts 7 days before general public",
-                "200 monthly TM credits for concert tickets, vinyl merch, and digital passes",
+                "200 unified credits load for concert tickets, vinyl merch, and digital passes",
                 "Priority booking on artist live world tours with digital QR passes",
                 "Direct patron Q&A channels with favorite producers and vocalists",
                 "Direct contribution to independent creator development funds"

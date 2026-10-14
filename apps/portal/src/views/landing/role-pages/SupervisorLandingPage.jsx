@@ -31,7 +31,7 @@ const FALLBACK_SUPERVISOR_RATES = [
     name: 'Indie Supervisor Discovery',
     tier_badge: 'Free Search',
     price_usd: 0.0,
-    billing_period: 'month',
+    billing_period: 'free access',
     credits: 0,
     key_metric: 'Search 50,000+ Pre-Cleared Masters',
     features: [
@@ -46,10 +46,10 @@ const FALLBACK_SUPERVISOR_RATES = [
   },
   {
     slug: 'supervisor-production',
-    name: 'Production Studio Pro',
+    name: 'Production Studio Pro Load',
     tier_badge: 'Most Popular',
     price_usd: 149.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 1500,
     key_metric: 'Unlimited Brief Submissions · 94%+ AI Match',
     features: [
@@ -58,17 +58,17 @@ const FALLBACK_SUPERVISOR_RATES = [
       '1-click export of industry-standard cue sheets (ISRC, CAE, duration timestamps)',
       '100% pre-cleared, indemnity-backed licensing terms for indie films & web series',
       'Direct in-app escrow contract execution with split guarantee',
-      '1,500 monthly TM credits for custom composer queries'
+      '1,500 unified credits load for custom composer queries with zero monthly fees'
     ],
     is_popular: true,
     cta: 'Activate Studio Pro'
   },
   {
     slug: 'supervisor-broadcast',
-    name: 'Network & Studio Enterprise',
+    name: 'Network & Studio Enterprise Load',
     tier_badge: 'Worldwide Clearance',
     price_usd: 499.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 6000,
     key_metric: 'Full Worldwide Indemnification & Urgent Turnaround',
     features: [
@@ -77,7 +77,7 @@ const FALLBACK_SUPERVISOR_RATES = [
       'Custom original composition & sonic branding commissions with verified composers',
       'Urgent sync turnaround guarantee (< 4 hours for breaking broadcast cuts)',
       'Custom volume rate cards for television series & multi-territory ad campaigns',
-      '6,000 monthly TM credits & dedicated senior music rights supervisor'
+      '6,000 unified credits load & dedicated senior music rights supervisor with zero monthly fees'
     ],
     is_popular: false,
     cta: 'Contact Sync Director'
@@ -111,7 +111,7 @@ export default function SupervisorLandingPage() {
     contact_phone: '',
     tier_slug: 'supervisor-production',
     project_type: 'Film & Television',
-    estimated_budget: '$149 / month (1,500 Credits)',
+    estimated_budget: '$149 one-time credit reload (1,500 Credits)',
     notes: ''
   });
 
@@ -263,7 +263,7 @@ export default function SupervisorLandingPage() {
       tier_slug: tier.slug,
       estimated_budget: tier.price_usd === 0 
         ? 'Free Forever' 
-        : `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+        : `$${tier.price_usd?.toLocaleString()} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -627,10 +627,10 @@ export default function SupervisorLandingPage() {
         {/* ================= 6. COMMERCIAL SUPERVISOR & STUDIO RATES ================= */}
         <section id="supervisor-rates" style={{ scrollMarginTop: '100px', marginBottom: '72px' }}>
           <div className="role-section-header">
-            <span className="role-section-eyebrow">Transparent Supervisor Subscriptions</span>
-            <h3 className="role-section-title">Music Supervisor &amp; Studio Membership Tiers</h3>
+            <span className="role-section-eyebrow">Zero Monthly Charges · Unified Credits</span>
+            <h3 className="role-section-title">Music Supervisor &amp; Studio Credit Packages</h3>
             <p className="role-section-desc">
-              From free catalog auditioning for indie supervisors to enterprise broadcaster packages with worldwide commercial indemnification and urgent clearances.
+              From free catalog auditioning for indie supervisors to enterprise broadcaster packages. 100% usage-based unified credits with zero recurring monthly fees. Load credits relevant to your sync briefs and licenses with instant M-Pesa or Card reload.
             </p>
           </div>
 
@@ -653,12 +653,12 @@ export default function SupervisorLandingPage() {
                   <span className="role-rate-price">
                     {rate.price_usd === 0 ? '$0' : `$${rate.price_usd?.toLocaleString()}`}
                   </span>
-                  <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
+                  <span className="role-rate-period">{rate.price_usd === 0 ? 'free access' : 'one-time credit reload'}</span>
                 </div>
 
                 <div className="role-rate-submeta">
                   <span style={{ color: '#f59e0b', fontWeight: 700 }}>
-                    {rate.credits > 0 ? `${rate.credits?.toLocaleString()} TM Credits/mo` : 'Free Discovery'}
+                    {rate.credits > 0 ? `${rate.credits?.toLocaleString()} Non-Expiring TM Credits` : 'Free Discovery'}
                   </span>
                   <span style={{ color: '#64748b' }}>·</span>
                   <span style={{ color: accent, fontWeight: 600 }}>
@@ -904,14 +904,14 @@ export default function SupervisorLandingPage() {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}`) : '$149 / month'
+                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `$${found.price_usd?.toLocaleString()} one-time credit reload`) : '$149 one-time credit reload'
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
                         <option value="supervisor-discovery">Indie Discovery — $0 / Free · 50k+ Search</option>
-                        <option value="supervisor-production">Production Studio Pro — $149/mo (1,500 Credits) · Stems &amp; Cues</option>
-                        <option value="supervisor-broadcast">Network Enterprise — $499/mo · Worldwide Indemnity</option>
+                        <option value="supervisor-production">Production Studio Pro Load — $149 one-time (1,500 Credits) · Stems &amp; Cues</option>
+                        <option value="supervisor-broadcast">Network Enterprise Load — $499 one-time (6,000 Credits) · Worldwide Indemnity</option>
                       </select>
                     </div>
 

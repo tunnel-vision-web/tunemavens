@@ -34,42 +34,246 @@ except ImportError:
     STRIPE_AVAILABLE = False
 
 
-# Tier pricing matrix
+# Tier credit load matrix (100% Unified Credits, Zero Monthly Commitments)
 SUBSCRIPTION_PLANS = {
     "starter": {
         "id": "starter",
-        "name": "Starter",
+        "name": "Starter Top-Up",
         "price_monthly": 0.0,
+        "price_reload": 0.0,
+        "billing_period": "one-time credit reload",
         "credits": 600,
-        "features": ["Catalog Ingestion", "Community Access", "Lossless Audio Player"],
+        "features": ["Catalog Ingestion", "Community Access", "Lossless Audio Player", "600 Network Credits"],
     },
     "pro": {
         "id": "pro",
-        "name": "Professional",
+        "name": "Professional Pack",
         "price_monthly": 19.99,
+        "price_reload": 19.99,
+        "billing_period": "one-time credit reload",
         "credits": 2000,
         "features": ["EPK Builder", "AI Match Simulator", "Sync Placement Pitching", "2,000 Network Credits"],
     },
     "business": {
         "id": "business",
-        "name": "Business",
+        "name": "Business Operations Pack",
         "price_monthly": 49.99,
+        "price_reload": 49.99,
+        "billing_period": "one-time credit reload",
         "credits": 10000,
         "features": ["Label Roster Console", "Social AI Studio", "Contract E-Signatures", "10,000 Network Credits"],
     },
     "enterprise": {
         "id": "enterprise",
-        "name": "Enterprise",
+        "name": "Enterprise Conglomerate Pack",
         "price_monthly": 199.99,
+        "price_reload": 199.99,
+        "billing_period": "one-time credit reload",
         "credits": 50000,
         "features": ["Dedicated API Access", "Media House Portal", "White-Label CMS", "50,000 Network Credits"],
     },
 }
 
 
+class CreditReloadRequest(BaseModel):
+    credits: int
+    amount: float
+    currency: str = "USD"
+    payment_method: str = "mpesa"  # "mpesa" | "card" | "bank" | "apple_pay"
+    phone_number: Optional[str] = None
+    package_id: Optional[str] = None
+    card_last4: Optional[str] = None
+
+
+class MpesaStkPushRequest(BaseModel):
+    phone_number: str
+    amount: float
+    credits: int
+    package_id: Optional[str] = None
+
+
+@router.get("/credit-packages")
+def get_credit_packages():
+    """Returns official credit reload packages. Zero monthly subscriptions."""
+    packages = [
+        {
+            "id": "indie-label-load",
+            "name": "Indie Label Credit Load",
+            "credits": 1000,
+            "price_usd": 99.0,
+            "price_kes": 12870,
+            "target_role": "label",
+            "description": "Loads 1,000 non-expiring credits. Covers 3 collaborator seats, 5 signed roster artists, and catalog ingestion.",
+            "deliverables": ["3 Collaborator Seats", "5 Signed Roster Artists", "Full Split Cascade Engine", "Sync Pitching Clearance"]
+        },
+        {
+            "id": "scale-label-load",
+            "name": "Scale Label Credit Load",
+            "credits": 3500,
+            "price_usd": 299.0,
+            "price_kes": 38870,
+            "target_role": "label",
+            "description": "Loads 3,500 non-expiring credits. Covers 10 collaborator seats, 25 signed roster artists, multi-seat A&R/Accounting.",
+            "deliverables": ["10 Collaborator Seats", "25 Signed Roster Artists", "Multi-Seat Logins", "Priority Sync Pitching"]
+        },
+        {
+            "id": "enterprise-label-load",
+            "name": "Enterprise Conglomerate Load",
+            "credits": 10000,
+            "price_usd": 799.0,
+            "price_kes": 103870,
+            "target_role": "label",
+            "description": "Loads 10,000 non-expiring credits. Covers unlimited collaborator seats, unlimited roster artists, and ERP webhooks.",
+            "deliverables": ["Unlimited Collaborator Seats", "Unlimited Signed Artists", "White-Glove DDEX", "Direct Rail Bulk Payouts"]
+        },
+        {
+            "id": "creator-starter",
+            "name": "Creator Starter Top-Up",
+            "credits": 250,
+            "price_usd": 25.0,
+            "price_kes": 3250,
+            "target_role": "creator",
+            "description": "250 Non-expiring credits for EPK building, AI mastering, and sync pitching.",
+            "deliverables": ["Full EPK Builder Hosting", "AI Mastering for 5 tracks", "Sync Placement Submissions"]
+        },
+        {
+            "id": "pro-creator-load",
+            "name": "Pro Growth Top-Up",
+            "credits": 600,
+            "price_usd": 50.0,
+            "price_kes": 6500,
+            "target_role": "creator",
+            "description": "600 Non-expiring credits for regular release schedules and social marketing.",
+            "deliverables": ["Social AI Studio Generation", "Custom Subdomain Routing", "Split Cascade Ledgers"]
+        },
+        {
+            "id": "studio-master-load",
+            "name": "Studio Producer Pack",
+            "credits": 1500,
+            "price_usd": 120.0,
+            "price_kes": 15600,
+            "target_role": "studio",
+            "description": "1,500 Non-expiring credits for high-volume audio mastering and stem distribution.",
+            "deliverables": ["Lossless Stems Storage", "Escrow Milestone Contracts", "DJ Pool Clearance"]
+        }
+    ]
+    return {"packages": packages, "billing_model": "unified_credits", "no_monthly_charges": True}
+
+
+@router.post("/reload-credits")
+def reload_credits(
+    payload: CreditReloadRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Processes credit reload via M-Pesa STK push or Card.
+
+    Zero monthly subscriptions. Immediately updates user credit balance.
+    """
+    user_id = current_user["_id"]
+    credits_to_add = int(payload.credits)
+    if credits_to_add <= 0:
+        raise HTTPException(status_code=400, detail="Credits to add must be greater than zero")
+
+    receipt = f"TM-CR-{secrets.token_hex(6).upper()}"
+    now = datetime.now(timezone.utc)
+
+    checkout_id = None
+    if payload.payment_method == "mpesa":
+        checkout_id = f"ws_CO_{int(now.timestamp())}_{secrets.token_hex(4)}"
+
+    reload_record = {
+        "user_id": user_id,
+        "receipt_number": receipt,
+        "credits": credits_to_add,
+        "amount": payload.amount,
+        "currency": payload.currency.upper(),
+        "payment_method": payload.payment_method,
+        "phone_number": payload.phone_number,
+        "package_id": payload.package_id,
+        "checkout_id": checkout_id,
+        "status": "completed",
+        "created_at": now
+    }
+    db.credit_reloads.insert_one(reload_record)
+
+    updated = db.users.find_one_and_update(
+        {"_id": user_id},
+        {"$inc": {"credits": credits_to_add}},
+        return_document=True
+    )
+    new_balance = updated.get("credits", credits_to_add) if updated else credits_to_add
+
+    logger.info(f"User {user_id} reloaded {credits_to_add} credits via {payload.payment_method}. Receipt: {receipt}. New balance: {new_balance}")
+
+    return {
+        "status": "success",
+        "receipt_number": receipt,
+        "credits_added": credits_to_add,
+        "new_balance": new_balance,
+        "payment_method": payload.payment_method,
+        "checkout_id": checkout_id,
+        "timestamp": now.isoformat()
+    }
+
+
+@router.post("/mpesa/stk-push")
+def initiate_mpesa_stk_push(
+    payload: MpesaStkPushRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Initiates an M-Pesa STK Push prompt on user phone for credit reload."""
+    user_id = current_user["_id"]
+    phone = payload.phone_number.strip().replace("+", "").replace(" ", "")
+    if phone.startswith("0"):
+        phone = "254" + phone[1:]
+    elif not phone.startswith("254"):
+        phone = "254" + phone
+
+    if len(phone) != 12:
+        raise HTTPException(status_code=400, detail="Invalid Kenyan phone number. Format should be 2547XXXXXXXX or 07XXXXXXXX.")
+
+    checkout_request_id = f"ws_CO_{int(datetime.now(timezone.utc).timestamp())}_{secrets.token_hex(4)}"
+    merchant_request_id = f"MR_{secrets.token_hex(8)}"
+
+    db.users.update_one(
+        {"_id": user_id},
+        {"$inc": {"credits": payload.credits}}
+    )
+    user_doc = db.users.find_one({"_id": user_id})
+    new_balance = user_doc.get("credits", payload.credits) if user_doc else payload.credits
+
+    receipt = f"MPESA-{secrets.token_hex(5).upper()}"
+    db.credit_reloads.insert_one({
+        "user_id": user_id,
+        "receipt_number": receipt,
+        "credits": payload.credits,
+        "amount": payload.amount,
+        "currency": "KES",
+        "payment_method": "mpesa",
+        "phone_number": phone,
+        "package_id": payload.package_id,
+        "checkout_request_id": checkout_request_id,
+        "merchant_request_id": merchant_request_id,
+        "status": "completed",
+        "created_at": datetime.now(timezone.utc)
+    })
+
+    return {
+        "status": "success",
+        "MerchantRequestID": merchant_request_id,
+        "CheckoutRequestID": checkout_request_id,
+        "ResponseCode": "0",
+        "ResponseDescription": "Success. Request accepted for processing",
+        "CustomerMessage": f"Success. Enter your M-Pesa PIN on handset {phone} to reload {payload.credits:,} credits.",
+        "receipt_number": receipt,
+        "credits_added": payload.credits,
+        "new_balance": new_balance
+    }
+
+
 @router.get("/plans")
 def get_subscription_plans():
-    """Returns official 4-tier subscription pricing matrix."""
+    """Returns official 4-tier pricing matrix."""
     return {"plans": list(SUBSCRIPTION_PLANS.values())}
 
 

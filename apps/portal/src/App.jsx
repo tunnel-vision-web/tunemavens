@@ -126,6 +126,7 @@ import {
   AppMarketplacePanel, PanelHeader,
 } from './components/phase3.jsx'
 import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx'
+import CreditReloadModal from './components/common/CreditReloadModal.jsx'
 
 // ================= Dashboard Apps View =================
 // ================= Dashboard Apps Sub-Components =================
@@ -181,7 +182,7 @@ const PERSONA_ROLES = [
   { id: 'consumer', label: 'Consumer / Fan', shortLabel: 'Consumer', shortDesc: 'Player, Library & Tips', icon: RiHeadphoneFill, color: '#6366f1' },
 ];
 
-function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab }) {
+function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab, onOpenCreditReload }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const notifRef = useRef(null);
@@ -313,6 +314,46 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           </div>
         )}
 
+        {/* Unified Credits Badge & Reload Trigger on Topbar */}
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof onOpenCreditReload === 'function') {
+              onOpenCreditReload('Top-Up Unified Platform Credits');
+            }
+          }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: (sessionUser?.credits ?? 0) < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)',
+            border: (sessionUser?.credits ?? 0) < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)',
+            color: (sessionUser?.credits ?? 0) < 50 ? '#ef4444' : '#10b981',
+            padding: '5px 11px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+          title="Click to reload unified platform credits (Zero monthly charges)"
+          data-testid="topbar-unified-credits-btn"
+        >
+          <RiCoinsFill size={15} style={{ color: (sessionUser?.credits ?? 0) < 50 ? '#ef4444' : '#10b981' }} />
+          <span>{(sessionUser?.credits ?? 0).toLocaleString()} Credits</span>
+          <span style={{
+            fontSize: '10px',
+            background: (sessionUser?.credits ?? 0) < 50 ? '#ef4444' : '#10b981',
+            color: '#ffffff',
+            padding: '1px 5px',
+            borderRadius: '2px',
+            fontWeight: 800,
+            textTransform: 'uppercase'
+          }}>
+            Top Up
+          </span>
+        </button>
+
         {/* Task 3: prominent back-to-public-site button */}
         <Link
           to="/"
@@ -401,6 +442,37 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <div style={{ padding: '0 16px 12px 16px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccountOpen(false);
+                    if (typeof onOpenCreditReload === 'function') {
+                      onOpenCreditReload('Account Unified Credits Reload');
+                    }
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    width: '100%',
+                    padding: '7px 12px',
+                    background: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                  data-testid="topbar-dropdown-reload-credits-btn"
+                >
+                  <RiCoinsFill size={14} />
+                  <span>Reload Unified Credits</span>
+                </button>
               </div>
 
               <div className="topbar-dropdown-divider" />
@@ -676,6 +748,45 @@ function DashboardView({
     }
   }, [location.search]);
   const [userCredits, setUserCredits] = useState(sessionUser?.credits || 600);
+  const [showCreditReloadModal, setShowCreditReloadModal] = useState(false);
+  const [creditReloadReason, setCreditReloadReason] = useState('Top-up Unified Credits');
+  const [creditReloadSuggestedPkg, setCreditReloadSuggestedPkg] = useState(null);
+
+  const handleOpenCreditReload = (reasonText, suggestedPkg = null) => {
+    setCreditReloadReason(reasonText || 'Top-up Unified Credits');
+    setCreditReloadSuggestedPkg(suggestedPkg);
+    setShowCreditReloadModal(true);
+  };
+
+  useEffect(() => {
+    const handleGlobalPrompt = (e) => {
+      const detail = e?.detail || {};
+      handleOpenCreditReload(detail.reason || 'Unified platform credits reload', detail.suggestedPackageId);
+    };
+    window.addEventListener('tunemavens-prompt-credit-reload', handleGlobalPrompt);
+    return () => window.removeEventListener('tunemavens-prompt-credit-reload', handleGlobalPrompt);
+  }, []);
+
+  useEffect(() => {
+    const handleCreditsReloaded = (e) => {
+      const bal = e?.detail?.balance;
+      if (typeof bal === 'number') {
+        setUserCredits(bal);
+        if (onUpdateUser && sessionUser) {
+          onUpdateUser({ ...sessionUser, credits: bal });
+        }
+      }
+    };
+    window.addEventListener('tunemavens-credits-reloaded', handleCreditsReloaded);
+    return () => window.removeEventListener('tunemavens-credits-reloaded', handleCreditsReloaded);
+  }, [sessionUser, onUpdateUser]);
+
+  useEffect(() => {
+    if (typeof sessionUser?.credits === 'number') {
+      setUserCredits(sessionUser.credits);
+    }
+  }, [sessionUser?.credits]);
+
   const [payoutBalance, setPayoutBalance] = useState(4235.80);
   const [collapsed, setCollapsed] = useState(false);
   const [hoveredNavItem, setHoveredNavItem] = useState(null);
@@ -1280,8 +1391,56 @@ function DashboardView({
           setActiveTab={setActiveTab}
           onUpdateUser={onUpdateUser}
           activeTab={activeTab}
+          onOpenCreditReload={handleOpenCreditReload}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
+          {/* Low unified credits prompt banner */}
+          {(sessionUser?.credits ?? userCredits) < 50 && (
+            <div
+              style={{
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid #ef4444',
+                borderRadius: '6px',
+                padding: '10px 16px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}
+              data-testid="low-credits-alert-banner"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <RiCoinsFill size={18} style={{ color: '#ef4444' }} />
+                <div>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#fca5a5' }}>
+                    Low Credit Balance: {(sessionUser?.credits ?? userCredits)} Credits remaining.
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#cbd5e1', marginLeft: '6px' }}>
+                    Reload unified platform credits to unlock continuous AI mastering, stem downloads, and split cascades. Zero monthly fees.
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleOpenCreditReload('Low credit balance replenishment', 'creator-starter')}
+                style={{
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '6px 14px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+                data-testid="low-credits-reload-btn"
+              >
+                Reload Now
+              </button>
+            </div>
+          )}
           <OnboardingStripe sessionUser={sessionUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} />
           <div className="admin-app-wrapper" style={{ position: 'relative' }}>
             <div className="admin-app-header-bar" data-testid="admin-app-header-bar">
@@ -1495,6 +1654,26 @@ function DashboardView({
         setPlaylistQueue={setPlaylistQueue}
         userCredits={userCredits}
         setUserCredits={setUserCredits}
+      />
+
+      {/* Credit Reload Modal */}
+      <CreditReloadModal
+        isOpen={showCreditReloadModal}
+        onClose={() => setShowCreditReloadModal(false)}
+        sessionUser={sessionUser}
+        onUpdateUser={onUpdateUser}
+        reason={creditReloadReason}
+        suggestedPackageId={creditReloadSuggestedPkg}
+        onSuccess={(result) => {
+          const newBal = result?.balance ?? ((sessionUser?.credits || 0) + (result?.creditsAdded || 0));
+          setUserCredits(newBal);
+          if (onUpdateUser && sessionUser) {
+            onUpdateUser({
+              ...sessionUser,
+              credits: newBal
+            });
+          }
+        }}
       />
     </div>
   );

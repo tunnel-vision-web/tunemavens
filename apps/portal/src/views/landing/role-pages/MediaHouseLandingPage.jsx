@@ -26,47 +26,47 @@ import managementLogo from '../../../assets/logos/tunemanagement-logo.png'
 const FALLBACK_MEDIA_RATES = [
   {
     slug: 'media-station',
-    name: 'Single Station / Regional',
+    name: 'Single Station Load',
     tier_badge: 'Compliance Starter',
     price_usd: 199.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 2000,
-    key_metric: 'Up to 2 Broadcast Channels · 5,000 Playlogs/mo',
+    key_metric: 'Up to 2 Broadcast Channels · 5,000 Playlogs Load',
     features: [
       'Direct ingestion from broadcast software (RCS Zetta, Dalet, WideOrbit, Selector)',
       'Automated track recognition matching playlogs to verified ISRC & CAE metadata',
       'Flag missing publishing shares and unregistered works before reporting',
       'Standard statutory royalty report exports ready for local collection societies',
-      '2,000 monthly TM credits for catalog audio matching queries'
+      '2,000 unified credits load for catalog audio matching queries with zero monthly fees'
     ],
     is_popular: false,
     cta: 'Connect Station'
   },
   {
     slug: 'media-network',
-    name: 'Broadcaster Network Suite',
+    name: 'Broadcaster Network Suite Load',
     tier_badge: 'Most Popular',
     price_usd: 599.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 7500,
-    key_metric: 'Up to 10 Stations · 50,000 Playlogs/mo',
+    key_metric: 'Up to 10 Stations · 50,000 Playlogs Load',
     features: [
       'Manage up to 10 radio and television broadcast channels in a unified console',
       'AI discrepancy detection resolving 99% of unrecognized broadcast cue entries',
       '1-click export formatted for ASCAP, BMI, SESAC, PRS, and MCSK compliance',
       'Integration with Intermaven Corporate Ad network for native commercial insertion',
       'Automated station affidavit logs and reconciliation audit trails',
-      '7,500 monthly TM credits & dedicated broadcast compliance engineer'
+      '7,500 unified credits load & dedicated broadcast compliance engineer with zero monthly fees'
     ],
     is_popular: true,
     cta: 'Upgrade to Network Suite'
   },
   {
     slug: 'media-conglomerate',
-    name: 'Enterprise Media Conglomerate',
+    name: 'Enterprise Media Conglomerate Load',
     tier_badge: 'Statutory Fortress',
     price_usd: 1499.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 20000,
     key_metric: 'Unlimited Stations · Real-Time Audio Fingerprinting',
     features: [
@@ -75,7 +75,7 @@ const FALLBACK_MEDIA_RATES = [
       'Real-time metadata repair with automated direct songwriter outreach',
       'Ironclad statutory audit compliance defense against copyright fines',
       'Custom ERP integration into station billing and traffic scheduling systems',
-      '20,000 monthly TM credits, custom SLA & 24/7 technical hotline'
+      '20,000 unified credits load, custom SLA & 24/7 technical hotline with zero monthly fees'
     ],
     is_popular: false,
     cta: 'Consult Compliance Team'
@@ -109,7 +109,7 @@ export default function MediaHouseLandingPage() {
     tier_slug: 'media-network',
     channel_count: '3-10 Broadcast Channels',
     automation_software: 'RCS Zetta / WideOrbit',
-    estimated_budget: '$599 / month (7,500 Credits)',
+    estimated_budget: '$599 one-time credit reload (7,500 Credits)',
     notes: ''
   });
 
@@ -259,7 +259,7 @@ export default function MediaHouseLandingPage() {
     setBookingForm(prev => ({
       ...prev,
       tier_slug: tier.slug,
-      estimated_budget: `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+      estimated_budget: `$${tier.price_usd?.toLocaleString()} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -630,10 +630,10 @@ export default function MediaHouseLandingPage() {
         {/* ================= 6. COMMERCIAL MEDIA HOUSE RATES & PLANS ================= */}
         <section id="media-rates" style={{ scrollMarginTop: '100px', marginBottom: '72px' }}>
           <div className="role-section-header">
-            <span className="role-section-eyebrow">Transparent Broadcaster Subscriptions</span>
-            <h3 className="role-section-title">Broadcaster Compliance Plans &amp; Network Tiers</h3>
+            <span className="role-section-eyebrow">Zero Monthly Charges · Unified Credits</span>
+            <h3 className="role-section-title">Broadcaster Compliance Loads &amp; Network Packages</h3>
             <p className="role-section-desc">
-              From single regional radio stations automating monthly cue sheets to multinational media conglomerates managing dozens of TV and digital audio channels.
+              From single regional radio stations automating playlog cue sheets to multinational media conglomerates. 100% usage-based unified credits with zero recurring monthly fees. Load credits relevant to your compliance needs and reload anytime.
             </p>
           </div>
 
@@ -654,12 +654,12 @@ export default function MediaHouseLandingPage() {
 
                 <div className="role-rate-price-box">
                   <span className="role-rate-price">${rate.price_usd?.toLocaleString()}</span>
-                  <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
+                  <span className="role-rate-period">one-time credit reload</span>
                 </div>
 
                 <div className="role-rate-submeta">
                   <span style={{ color: '#f59e0b', fontWeight: 700 }}>
-                    {rate.credits?.toLocaleString()} TM Credits/mo
+                    {rate.credits?.toLocaleString()} Non-Expiring TM Credits
                   </span>
                   <span style={{ color: '#64748b' }}>·</span>
                   <span style={{ color: accent, fontWeight: 600 }}>
@@ -905,14 +905,14 @@ export default function MediaHouseLandingPage() {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}` : '$599 / month'
+                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} one-time credit reload` : '$599 one-time credit reload'
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
-                        <option value="media-station">Single Station — $199/mo (2,000 Credits) · 2 Channels</option>
-                        <option value="media-network">Broadcaster Network Suite — $599/mo (7,500 Credits) · 10 Stations</option>
-                        <option value="media-conglomerate">Enterprise Media Conglomerate — $1,499/mo · Unlimited Channels</option>
+                        <option value="media-station">Single Station Load — $199 one-time (2,000 Credits) · 2 Channels</option>
+                        <option value="media-network">Broadcaster Network Suite Load — $599 one-time (7,500 Credits) · 10 Stations</option>
+                        <option value="media-conglomerate">Enterprise Media Conglomerate Load — $1,499 one-time (20,000 Credits) · Unlimited Channels</option>
                       </select>
                     </div>
 

@@ -27,10 +27,10 @@ import distributeLogo from '../../../assets/logos/tuneexecs-logo.png'
 const FALLBACK_LABEL_RATES = [
   {
     slug: 'label-indie',
-    name: 'Indie Imprint',
+    name: 'Indie Imprint Load',
     tier_badge: 'Starter Roster',
     price_usd: 99.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 1000,
     key_metric: 'Up to 10 Signed Artists · 100 Tracks',
     features: [
@@ -38,7 +38,7 @@ const FALLBACK_LABEL_RATES = [
       'Automated CSV statement parser (DistroKid, TuneCore, FUGA, Orchard)',
       'Split Cascade net calculations with advance balance tracking',
       'Pre-cleared label roster sync pitching on SyncMavens',
-      '1,000 monthly shared Network Credits for mastering & promotions',
+      '1,000 unified credits load with zero monthly recurring charges',
       'Standard email & chat label support'
     ],
     is_popular: false,
@@ -46,10 +46,10 @@ const FALLBACK_LABEL_RATES = [
   },
   {
     slug: 'label-growth',
-    name: 'Scale Label Operations',
+    name: 'Scale Label Operations Load',
     tier_badge: 'Most Popular',
     price_usd: 299.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 3500,
     key_metric: 'Up to 50 Signed Artists · 1,000 Tracks',
     features: [
@@ -58,26 +58,26 @@ const FALLBACK_LABEL_RATES = [
       'Role-based staff permissions (A&R, Legal, Head of Accounting)',
       'TunePay live tour merch & festival ticket box-office settlement',
       'Intermaven Smart CRM automated roster fan broadcasts (WhatsApp/SMS)',
-      '3,500 monthly TM credits & dedicated label success manager'
+      '3,500 unified credits load with zero monthly recurring charges'
     ],
     is_popular: true,
     cta: 'Scale Label Operations'
   },
   {
     slug: 'label-enterprise',
-    name: 'Major / Conglomerate Enterprise',
+    name: 'Major / Conglomerate Enterprise Load',
     tier_badge: 'Unlimited Scale',
     price_usd: 799.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 10000,
     key_metric: 'Unlimited Artists & Masters · Custom White-Label',
     features: [
       'Unlimited roster size and unlimited catalog ingestion',
-      'Custom white-labeled artist portal for signing and monthly payouts',
+      'Custom white-labeled artist portal for signing and settlement',
       'Direct bank rail & mobile money bulk payouts (M-Pesa B2C, ACH, SWIFT)',
       'Full ERP & accounting API webhooks for QuickBooks / NetSuite sync',
       'Priority Sync Brief placement exclusivity across SyncMavens network',
-      '10,000 monthly TM credits, custom SLA & 24/7 dedicated engineering support'
+      '10,000 unified credits load, custom SLA & 24/7 dedicated engineering support'
     ],
     is_popular: false,
     cta: 'Request Enterprise Agreement'
@@ -111,7 +111,7 @@ export default function LabelLandingPage() {
     tier_slug: 'label-growth',
     roster_size: '10-50 Signed Artists',
     current_distributor: 'DistroKid / TuneCore',
-    estimated_budget: '$299 / month (3,500 Credits)',
+    estimated_budget: '$299 one-time credit reload (3,500 Credits)',
     notes: ''
   });
 
@@ -261,7 +261,7 @@ export default function LabelLandingPage() {
     setBookingForm(prev => ({
       ...prev,
       tier_slug: tier.slug,
-      estimated_budget: `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+      estimated_budget: `$${tier.price_usd?.toLocaleString()} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -632,10 +632,10 @@ export default function LabelLandingPage() {
         {/* ================= 6. COMMERCIAL RATES & SPONSORSHIP PACKAGES ================= */}
         <section id="label-rates" style={{ scrollMarginTop: '100px', marginBottom: '72px' }}>
           <div className="role-section-header">
-            <span className="role-section-eyebrow">Transparent Label Subscriptions</span>
-            <h3 className="role-section-title">Commercial Label Tiers &amp; Operations Plans</h3>
+            <span className="role-section-eyebrow">Zero Monthly Charges · Unified Credits</span>
+            <h3 className="role-section-title">Commercial Label Credit Loads &amp; Operations Packages</h3>
             <p className="role-section-desc">
-              From boutique indie imprints to enterprise label conglomerates. Transparent monthly or annual billing with unified TM credit flexibility and isolated roster accounting.
+              From boutique indie imprints to enterprise label conglomerates. 100% usage-based unified credits system with zero recurring monthly fees. Load credits relevant to your label operations and reload anytime with instant M-Pesa STK push or Card settlement.
             </p>
           </div>
 
@@ -656,12 +656,12 @@ export default function LabelLandingPage() {
 
                 <div className="role-rate-price-box">
                   <span className="role-rate-price">${rate.price_usd?.toLocaleString()}</span>
-                  <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
+                  <span className="role-rate-period">one-time credit reload</span>
                 </div>
 
                 <div className="role-rate-submeta">
                   <span style={{ color: '#f59e0b', fontWeight: 700 }}>
-                    {rate.credits?.toLocaleString()} TM Credits/mo
+                    {rate.credits?.toLocaleString()} Non-Expiring TM Credits
                   </span>
                   <span style={{ color: '#64748b' }}>·</span>
                   <span style={{ color: accent, fontWeight: 600 }}>
@@ -907,14 +907,14 @@ export default function LabelLandingPage() {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}` : '$299 / month'
+                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} one-time credit reload` : '$299 one-time credit reload'
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
-                        <option value="label-indie">Indie Imprint — $99/mo (1,000 Credits) · 10 Artists</option>
-                        <option value="label-growth">Scale Label — $299/mo (3,500 Credits) · 50 Artists</option>
-                        <option value="label-enterprise">Major Enterprise — $799/mo (10,000 Credits) · Unlimited</option>
+                        <option value="label-indie">Indie Imprint Load — $99 one-time (1,000 Credits) · 10 Artists</option>
+                        <option value="label-growth">Scale Label Load — $299 one-time (3,500 Credits) · 50 Artists</option>
+                        <option value="label-enterprise">Major Enterprise Load — $799 one-time (10,000 Credits) · Unlimited</option>
                       </select>
                     </div>
 

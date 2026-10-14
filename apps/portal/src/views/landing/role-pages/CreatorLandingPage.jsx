@@ -31,7 +31,7 @@ const FALLBACK_CREATOR_RATES = [
     name: 'Spark / Indie Starter',
     tier_badge: 'Free Forever',
     price_usd: 0.0,
-    billing_period: 'month',
+    billing_period: 'free access',
     credits: 0,
     key_metric: '85/15 Net Splits · 3 Master Tracks',
     features: [
@@ -46,10 +46,10 @@ const FALLBACK_CREATOR_RATES = [
   },
   {
     slug: 'creator-pro',
-    name: 'Pro Creator Growth',
+    name: 'Pro Creator Load',
     tier_badge: 'Most Popular',
     price_usd: 29.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 300,
     key_metric: '90/10 Net Splits · Unlimited Catalog',
     features: [
@@ -58,17 +58,17 @@ const FALLBACK_CREATOR_RATES = [
       'SyncMavens AI sync brief automatic pitch routing',
       'Custom branded subdomain with customizable layout sections',
       'Intermaven Smart CRM fan lead capture (WhatsApp, SMS, Email)',
-      'Social AI Studio promotional content generator & 300 monthly TM credits'
+      'Social AI Studio content generator & 300 unified credits load with zero monthly fees'
     ],
     is_popular: true,
     cta: 'Get Pro Creator'
   },
   {
     slug: 'creator-studio',
-    name: 'Studio Master & Touring',
+    name: 'Studio Master Load',
     tier_badge: 'Full Independence',
     price_usd: 99.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 1200,
     key_metric: '100% Splits · TunePay POS Merch & Tour Ticketing',
     features: [
@@ -77,17 +77,17 @@ const FALLBACK_CREATOR_RATES = [
       'Priority Sync Brief matching for TV commercials & Hollywood films',
       'Automated Publishing & Distribution Election contract generation',
       'Multi-tiered recoupment cascade for investor & producer advances',
-      '1,200 monthly TM credits for mastering, ads & stem distribution'
+      '1,200 unified credits load for mastering, ads & stem distribution with zero monthly fees'
     ],
     is_popular: false,
     cta: 'Launch Studio Plan'
   },
   {
     slug: 'creator-enterprise',
-    name: 'Label-Ready Enterprise',
+    name: 'Label-Ready Enterprise Load',
     tier_badge: 'Managed Artist',
     price_usd: 299.0,
-    billing_period: 'month',
+    billing_period: 'one-time credit reload',
     credits: 4000,
     key_metric: 'White-Glove Ingestion & Dedicated Sync Rep',
     features: [
@@ -96,7 +96,7 @@ const FALLBACK_CREATOR_RATES = [
       'Custom apex domain SSL mapping (yourname.com)',
       'Automated PRO cue sheet registration (ASCAP, BMI, SESAC, MCSK)',
       'Co-branded sponsor banners on artist concert tour passes',
-      '4,000 monthly TM credits & 24/7 priority executive phone support'
+      '4,000 unified credits load & 24/7 priority executive phone support with zero monthly fees'
     ],
     is_popular: false,
     cta: 'Book Artist Consultation'
@@ -131,7 +131,7 @@ export default function CreatorLandingPage() {
     tier_slug: 'creator-pro',
     genres: 'Afrobeats / Amapiano / Electronic',
     target_region: 'East Africa & Global Diaspora',
-    estimated_budget: '$29 / month (300 Credits)',
+    estimated_budget: '$29 one-time credit reload (300 Credits)',
     notes: ''
   });
 
@@ -283,7 +283,7 @@ export default function CreatorLandingPage() {
       tier_slug: tier.slug,
       estimated_budget: tier.price_usd === 0 
         ? 'Free Forever' 
-        : `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+        : `$${tier.price_usd?.toLocaleString()} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -684,12 +684,12 @@ export default function CreatorLandingPage() {
                   <span className="role-rate-price">
                     {rate.price_usd === 0 ? '$0' : `$${rate.price_usd?.toLocaleString()}`}
                   </span>
-                  <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
+                  <span className="role-rate-period">{rate.price_usd === 0 ? 'free access' : 'one-time credit reload'}</span>
                 </div>
 
                 <div className="role-rate-submeta">
                   <span style={{ color: '#f59e0b', fontWeight: 700 }}>
-                    {rate.credits > 0 ? `${rate.credits?.toLocaleString()} TM Credits/mo` : 'Ad-Supported Hosting'}
+                    {rate.credits > 0 ? `${rate.credits?.toLocaleString()} Non-Expiring TM Credits` : 'Ad-Supported Hosting'}
                   </span>
                   <span style={{ color: '#64748b' }}>·</span>
                   <span style={{ color: accent, fontWeight: 600 }}>
@@ -935,15 +935,15 @@ export default function CreatorLandingPage() {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}`) : '$29 / month'
+                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `$${found.price_usd?.toLocaleString()} one-time credit reload`) : '$29 one-time credit reload'
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
                         <option value="creator-starter">Spark / Indie — $0 / Free · 85/15 Splits</option>
-                        <option value="creator-pro">Pro Creator — $29/mo (300 Credits) · 90/10 Splits</option>
-                        <option value="creator-studio">Studio Master — $99/mo (1,200 Credits) · 100% Splits &amp; POS</option>
-                        <option value="creator-enterprise">Label-Ready Enterprise — $299/mo · White-Glove Sync</option>
+                        <option value="creator-pro">Pro Creator Load — $29 one-time (300 Credits) · 90/10 Splits</option>
+                        <option value="creator-studio">Studio Master Load — $99 one-time (1,200 Credits) · 100% Splits &amp; POS</option>
+                        <option value="creator-enterprise">Label-Ready Enterprise Load — $299 one-time (4,000 Credits) · White-Glove Sync</option>
                       </select>
                     </div>
 
