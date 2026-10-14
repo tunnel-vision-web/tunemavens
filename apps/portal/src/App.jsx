@@ -77,7 +77,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
 import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi } from './lib/api.js'
-import { reconcileUserApps, persistAppActivation, getStoredActivatedApps } from './lib/activatedApps.js'
+import { reconcileUserApps, persistAppActivation, getStoredActivatedApps, DEFAULT_ACTIVE_APPS_BY_ROLE, saveStoredActivatedApps, saveStoredDeactivatedApps } from './lib/activatedApps.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
 import { PerfectForSidebar, PERFECT_FOR_ROLES, ROLE_LOGOS, getIntermavenUrl } from './components/PerfectForSidebar.jsx'
@@ -168,12 +168,85 @@ import {
 
 
 
-// ================= Dashboard Topbar (notifications + account dropdown) =================
+// ================= Dashboard Topbar (notifications + account dropdown + admin persona switcher) =================
+const PERSONA_ROLES = [
+  { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
+  { id: 'creator', label: 'Creator / Artist', shortLabel: 'Creator', shortDesc: 'EPK, Catalog, Splits', icon: RiMicFill, color: '#22d3ee' },
+  { id: 'label', label: 'Record Label', shortLabel: 'Label', shortDesc: 'Roster, Rights, Splits & Sync', icon: RiDiscFill, color: '#a855f7' },
+  { id: 'supervisor', label: 'Music Supervisor', shortLabel: 'Supervisor', shortDesc: 'Sync Briefs & Escrow', icon: RiEqualizerFill, color: '#ec4899' },
+  { id: 'dj', label: 'DJ / Curator', shortLabel: 'DJ', shortDesc: 'DJ Pool & Library', icon: RiRadioFill, color: '#f59e0b' },
+  { id: 'media_house', label: 'Media House', shortLabel: 'Media House', shortDesc: 'Sync, Broadcast & Ads', icon: RiGlobalFill, color: '#10b981' },
+  { id: 'corporate', label: 'Corporate Brand', shortLabel: 'Corporate', shortDesc: 'Ad flights & Sponsorships', icon: RiMegaphoneFill, color: '#f97316' },
+  { id: 'consumer', label: 'Consumer / Fan', shortLabel: 'Consumer', shortDesc: 'Player, Library & Tips', icon: RiHeadphoneFill, color: '#6366f1' },
+];
+
 function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const notifRef = useRef(null);
   const accountRef = useRef(null);
+
+  // Determine if this user has admin verification privileges
+  const isAdminUser = Boolean(
+    sessionUser?.role === 'admin' ||
+    sessionUser?.is_admin === true ||
+    sessionUser?.original_role === 'admin' ||
+    sessionUser?.admin_sandbox === true ||
+    (typeof window !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true')
+  );
+
+  // If role is admin, ensure localStorage flag is set
+  useEffect(() => {
+    if (sessionUser?.role === 'admin') {
+      try {
+        localStorage.setItem('tunemavens_admin_verified', 'true');
+      } catch (_) {}
+    }
+  }, [sessionUser?.role]);
+
+  // Handler for admin to switch to any persona to verify apps and tools
+  const handleSwitchRole = async (targetRole) => {
+    try {
+      const targetApps = DEFAULT_ACTIVE_APPS_BY_ROLE[targetRole] || DEFAULT_ACTIVE_APPS_BY_ROLE.creator;
+
+      if (targetRole === 'admin') {
+        try {
+          await adminApi.becomeAdmin();
+        } catch (e) {
+          console.warn('API elevation warning:', e);
+        }
+      }
+
+      const updatedUser = {
+        ...sessionUser,
+        role: targetRole,
+        apps: [...targetApps],
+        is_admin: true,
+        original_role: sessionUser?.original_role || 'admin',
+        admin_sandbox: true,
+        simulated_role: targetRole !== 'admin' ? targetRole : null
+      };
+
+      try {
+        localStorage.setItem('tunemavens_admin_verified', 'true');
+        saveStoredDeactivatedApps(updatedUser, []);
+        saveStoredActivatedApps(updatedUser, targetApps);
+        sessionStorage.setItem('tunemavens_session', JSON.stringify(updatedUser));
+        localStorage.setItem('tunemavens_saved_user', JSON.stringify(updatedUser));
+      } catch (err) {
+        console.warn('Storage sync warning:', err);
+      }
+
+      if (onUpdateUser) onUpdateUser(updatedUser);
+      if (setActiveTab) setActiveTab('home');
+      setAccountOpen(false);
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to switch persona role:', err);
+    }
+  };
+
+  const currentRoleObj = PERSONA_ROLES.find(r => r.id === sessionUser?.role) || PERSONA_ROLES[1];
 
   // Placeholder notification feed  -  real live updates are on the roadmap.
   const [notifications, setNotifications] = useState([
@@ -206,6 +279,34 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
       </div>
 
       <div className="dashboard-topbar-actions">
+        {/* If simulating a non-admin role, show active persona indicator pill on topbar */}
+        {isAdminUser && sessionUser?.role !== 'admin' && (
+          <div
+            className="topbar-simulation-badge"
+            onClick={() => setAccountOpen(true)}
+            title="Simulating persona for admin verification. Click account dropdown to switch or reset."
+            data-testid="topbar-simulation-badge"
+          >
+            <span className="topbar-simulation-dot" />
+            <span className="topbar-simulation-text">
+              Verifying: <strong>{currentRoleObj.shortLabel}</strong>
+            </span>
+            <button
+              type="button"
+              className="topbar-quick-reset-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSwitchRole('admin');
+              }}
+              title="Reset to Administrator view"
+              data-testid="topbar-quick-reset-btn"
+            >
+              <RiShieldFill size={11} />
+              <span>Reset</span>
+            </button>
+          </div>
+        )}
+
         {/* Task 3: prominent back-to-public-site button */}
         <Link
           to="/"
@@ -278,63 +379,100 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
             <div className="topbar-dropdown topbar-dropdown-account" data-testid="topbar-account-dropdown">
               <div className="topbar-account-summary">
                 <div className="topbar-avatar large">{initial}</div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#f1f5f9' }}>{sessionUser?.name || 'TuneMavens User'}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{sessionUser?.email}</div>
-                  <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px' }}>
-                    {sessionUser?.role || 'creator'} · {sessionUser?.credits ?? 0} credits
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {sessionUser?.brand_name || sessionUser?.name || 'TuneMavens User'}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {sessionUser?.email}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                    <span className="topbar-role-badge">
+                      {sessionUser?.role || 'creator'}
+                    </span>
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>
+                      · {sessionUser?.credits ?? 0} credits
+                    </span>
                   </div>
                 </div>
               </div>
+
               <div className="topbar-dropdown-divider" />
+
+              {/* Admin Persona Role Switcher Section */}
+              {isAdminUser ? (
+                <div className="topbar-persona-section" data-testid="topbar-persona-switcher">
+                  <div className="topbar-persona-header">
+                    <div className="topbar-persona-title">
+                      <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
+                      <span>Switch Persona View</span>
+                    </div>
+                    {sessionUser?.role !== 'admin' && (
+                      <button
+                        type="button"
+                        className="topbar-reset-link"
+                        onClick={() => handleSwitchRole('admin')}
+                        title="Return to full Administrator role"
+                        data-testid="topbar-reset-to-admin-link"
+                      >
+                        Reset to Admin
+                      </button>
+                    )}
+                  </div>
+                  <div className="topbar-persona-sub">
+                    Verify visible apps, tools &amp; permissions for each user role:
+                  </div>
+
+                  <div className="topbar-role-grid">
+                    {PERSONA_ROLES.map((roleItem) => {
+                      const isActive = (sessionUser?.role || 'creator') === roleItem.id;
+                      const RoleIcon = roleItem.icon;
+                      return (
+                        <button
+                          key={roleItem.id}
+                          type="button"
+                          className={`topbar-role-tile ${isActive ? 'active' : ''}`}
+                          onClick={() => handleSwitchRole(roleItem.id)}
+                          title={`${roleItem.label}: ${roleItem.shortDesc}`}
+                          data-testid={`role-tile-${roleItem.id}`}
+                        >
+                          <div className="topbar-role-tile-top">
+                            <span className="topbar-role-icon" style={{ color: roleItem.color }}>
+                              <RoleIcon size={14} />
+                            </span>
+                            {isActive && <RiCheckboxCircleFill size={13} style={{ color: '#10b981', marginLeft: 'auto' }} />}
+                          </div>
+                          <div className="topbar-role-tile-name">{roleItem.shortLabel}</div>
+                          <div className="topbar-role-tile-desc">{roleItem.shortDesc}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <button
+                  className="topbar-menu-item"
+                  style={{ color: '#0ea5e9' }}
+                  onClick={() => handleSwitchRole('admin')}
+                  data-testid="topbar-menu-become-admin"
+                >
+                  <RiShieldFill size={14} />
+                  <span>Sandbox: Elevate to Admin (Unlock Role Switcher)</span>
+                </button>
+              )}
+
+              <div className="topbar-dropdown-divider" />
+
               <button
                 className="topbar-menu-item"
-                style={{ color: '#ef4444' }}
+                style={{ color: '#f97316' }}
                 onClick={() => {
                   setAccountOpen(false);
                   setActiveTab('corporate-ads');
                 }}
               >
                 <RiMegaphoneFill size={14} />
-                <span>Corporate Ads &amp; Flights</span>
-              </button>
-              <button
-                className="topbar-menu-item"
-                style={{ color: '#f59e0b' }}
-                onClick={() => {
-                  setAccountOpen(false);
-                  const newRole = sessionUser?.role === 'corporate' ? 'creator' : 'corporate';
-                  const merged = { ...sessionUser, role: newRole };
-                  if (onUpdateUser) onUpdateUser(merged);
-                  sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
-                  window.location.reload();
-                }}
-              >
-                <RiUserSharedFill size={14} />
-                <span>{sessionUser?.role === 'corporate' ? 'Role: Corporate (Switch to Creator)' : 'Sandbox: Switch to Corporate Brand'}</span>
-              </button>
-              <button
-                className="topbar-menu-item"
-                style={{ color: 'var(--cyan)' }}
-                onClick={async () => {
-                  setAccountOpen(false);
-                  const newRole = sessionUser?.role === 'admin' ? 'creator' : 'admin';
-                  try {
-                    if (newRole === 'admin') {
-                      await adminApi.becomeAdmin();
-                    }
-                  } catch (e) {
-                    console.warn('API elevation warning:', e);
-                  }
-                  const merged = { ...sessionUser, role: newRole };
-                  if (onUpdateUser) onUpdateUser(merged);
-                  sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
-                  window.location.reload();
-                }}
-                data-testid="topbar-menu-become-admin"
-              >
-                <RiShieldFill size={14} />
-                <span>{sessionUser?.role === 'admin' ? 'Sandbox: Demote to Creator' : 'Sandbox: Elevate to Admin'}</span>
+                <span>Corporate Ads &amp; Flight Rates</span>
               </button>
               <button
                 className="topbar-menu-item"
@@ -353,7 +491,9 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                 <RiExternalLinkFill size={14} />
                 <span>Visit Public Site</span>
               </Link>
+
               <div className="topbar-dropdown-divider" />
+
               <button
                 className="topbar-menu-item topbar-menu-item-danger"
                 onClick={() => { setAccountOpen(false); onLogout(); }}

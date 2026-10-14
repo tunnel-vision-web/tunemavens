@@ -6,7 +6,8 @@
   flex-direction: column;
   gap: 6px;
   align-items: flex-end;
-  z-index: 50;
+  position: relative;
+  z-index: 20; /* Keep firmly below sticky topbar (9999) and topbar dropdowns (100001) */
 }
 
 /* Floating variant for views without a fixed topbar */
@@ -14,7 +15,7 @@
   position: fixed;
   top: 18px;
   right: 24px;
-  z-index: 1050;
+  z-index: 800; /* Stays below topbar and dropdowns */
 }
 
 /* Base button styling */
