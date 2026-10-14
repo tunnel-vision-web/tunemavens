@@ -78,6 +78,13 @@ export const APP_DOC_MAPPINGS = {
     label: 'Corporate Ad Rates & Brand Flights Guide',
     appTitle: 'Corporate Advertising Console'
   },
+  // Record Label Administration & Team Seats
+  'label-team': {
+    articleId: 'account-security-and-team-roles',
+    fallbackArticleId: 'master-vs-composition-copyright',
+    label: 'Team Roles & Label Roster Management',
+    appTitle: 'Roster & Team Seats'
+  },
   // Distribution
   'distribution': {
     articleId: 'music-metadata-isrc-iswc-ipi-upc',

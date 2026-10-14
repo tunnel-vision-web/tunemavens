@@ -23,7 +23,7 @@ import {
   RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill,
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
   RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine,
-  RiPriceTag3Fill, RiLayoutMasonryFill, RiMegaphoneFill, RiUserSharedFill
+  RiPriceTag3Fill, RiLayoutMasonryFill, RiMegaphoneFill, RiUserSharedFill, RiTeamFill
 } from 'react-icons/ri'
 
 // Local assets
@@ -125,6 +125,7 @@ import {
   PublishingElectionPanel, DistributionElectionPanel, ContractDrawer,
   AppMarketplacePanel, PanelHeader,
 } from './components/phase3.jsx'
+import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx'
 
 // ================= Dashboard Apps View =================
 // ================= Dashboard Apps Sub-Components =================
@@ -229,6 +230,11 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
       try {
         localStorage.setItem('tunemavens_admin_verified', 'true');
+        if (targetRole === 'admin') {
+          localStorage.removeItem('tunemavens_active_persona');
+        } else {
+          localStorage.setItem('tunemavens_active_persona', targetRole);
+        }
         saveStoredDeactivatedApps(updatedUser, []);
         saveStoredActivatedApps(updatedUser, targetApps);
         sessionStorage.setItem('tunemavens_session', JSON.stringify(updatedUser));
@@ -544,6 +550,11 @@ const NAV_ITEM_DESCRIPTIONS = {
     desc: 'Pitch catalog tracks to TV shows, feature films, video games, and commercial sync briefs',
     category: 'Pools & Sync'
   },
+  'label-team': {
+    title: 'Roster & Team Seats',
+    desc: 'Manage signed artist roster, team collaborators, seats capacity, and permission roles',
+    category: 'Label Administration'
+  },
   escrow: {
     title: 'Escrow Contracts',
     desc: 'Smart contract escrow agreements for milestone-based production, mixing & collab payments',
@@ -809,11 +820,11 @@ function DashboardView({
     // Role-based permission guard ensuring users only access authorized apps
     const userRole = sessionUser?.role || 'creator';
     const roleAllowed = {
-      admin: ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings'],
+      admin: ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team'],
       corporate: ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings'],
       media_house: ['home', 'corporate-ads', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings'],
       media: ['home', 'corporate-ads', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings'],
-      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
+      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'label-team'],
       dj: ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
       studio: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
       supervisor: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
@@ -875,7 +886,17 @@ function DashboardView({
       case 'djpool':
         return <DjPoolPanel sessionUser={sessionUser} />;
       case 'sync':
-        return <SyncBriefMatchPanel sessionUser={sessionUser} tracks={catalogTracks} />;
+        return <SyncLicensingPanel sessionUser={sessionUser} tracks={catalogTracks} activeArtist={activeArtist} />;
+      case 'label-team':
+        return (
+          <LabelTeamRosterPanel
+            sessionUser={sessionUser}
+            onUpdateUser={onUpdateUser}
+            setActiveTab={setActiveTab}
+            activeArtist={activeArtist}
+            onSelectArtist={handleSwitchArtist}
+          />
+        );
       case 'mastering':
         return <MasteringUploadPanel sessionUser={sessionUser} />;
       case 'escrow':
@@ -891,6 +912,7 @@ function DashboardView({
           <ProfileSettingsPanel 
             sessionUser={sessionUser} 
             onUpdateUser={onUpdateUser} 
+            setActiveTab={setActiveTab}
           />
         );
       case 'library':
@@ -956,6 +978,7 @@ function DashboardView({
       splits: { id: 'splits', label: 'Split Cascade', icon: RiCoinsFill, category: 'Royalty Ledgers' },
       djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
       sync: { id: 'sync', label: 'Sync Marketplace', icon: RiGlobalFill, category: 'Pools & Sync' },
+      'label-team': { id: 'label-team', label: 'Roster & Team Seats', icon: RiTeamFill, category: 'Label Administration' },
       escrow: { id: 'escrow', label: 'Escrow Contracts', icon: RiShieldFill, category: 'Royalty Ledgers' },
       profile: { id: 'profile', label: 'Profile Settings', icon: RiSettings3Fill, category: 'Account' },
       // Native-app user controls (full editing parity with the apps)
@@ -979,7 +1002,7 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
+        visibleKeys = ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'label-team'];
         break;
       case 'corporate':
         visibleKeys = ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile'];
@@ -989,7 +1012,7 @@ function DashboardView({
         visibleKeys = ['home', 'corporate-ads', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'label-team'];
         break;
       case 'dj':
         visibleKeys = ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile'];
@@ -2462,7 +2485,7 @@ function PosDevicesPanel() {
 }
 
 // ================= SUB-PANEL: Admin / Creator Profile Settings =================
-function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
+function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
   const [name, setName] = useState(sessionUser?.name || '');
   const [email, setEmail] = useState(sessionUser?.email || '');
   const [brandName, setBrandName] = useState(sessionUser?.brand_name || '');
@@ -2503,7 +2526,12 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
             if (data.brand_name) setBrandName(data.brand_name);
             if (data.country) setCountry(data.country);
             if (data.bio) setBio(data.bio);
+            const activePersona = localStorage.getItem('tunemavens_active_persona');
             const merged = { ...(sessionUser || {}), ...data };
+            if (activePersona) {
+              merged.role = activePersona;
+              merged.admin_sandbox = true;
+            }
             sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
             localStorage.setItem('tunemavens_saved_user', JSON.stringify(merged));
             if (typeof onUpdateUser === 'function') onUpdateUser(merged);
@@ -2541,10 +2569,10 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
         body: JSON.stringify(payload)
       });
 
-      let updatedUserData = { ...(sessionUser || {}), ...payload };
-      if (res.ok) {
-        const data = await res.json();
-        updatedUserData = { ...(sessionUser || {}), ...data };
+      const activePersona = localStorage.getItem('tunemavens_active_persona');
+      if (activePersona) {
+        updatedUserData.role = activePersona;
+        updatedUserData.admin_sandbox = true;
       }
 
       // Persist across sessions so settings survive logout/login
@@ -2558,7 +2586,12 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
       alert('Profile settings saved and persisted successfully across sessions!');
     } catch (err) {
       console.warn('Backend user profile update error:', err);
+      const activePersona = localStorage.getItem('tunemavens_active_persona');
       const fallbackData = { ...(sessionUser || {}), ...payload };
+      if (activePersona) {
+        fallbackData.role = activePersona;
+        fallbackData.admin_sandbox = true;
+      }
       sessionStorage.setItem('tunemavens_session', JSON.stringify(fallbackData));
       localStorage.setItem('tunemavens_saved_user', JSON.stringify(fallbackData));
       if (typeof onUpdateUser === 'function') {
@@ -2648,6 +2681,38 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser }) {
           {saving ? 'Saving changes...' : 'Save Settings'}
         </button>
       </form>
+
+      {/* Record Label Team Collaborators & Roster Seats Link */}
+      {(sessionUser?.role === 'label' || sessionUser?.role === 'admin') && (
+        <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(0, 240, 255, 0.05)', border: '1px solid rgba(0, 240, 255, 0.2)', borderRadius: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>Record Label Team Collaborators &amp; Roster</h4>
+              <p style={{ fontSize: '11.5px', color: '#94a3b8', margin: 0 }}>
+                Manage signed artists, invite team members, assign seat permissions, and review package tier limits.
+              </p>
+            </div>
+            {setActiveTab && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('label-team')}
+                style={{
+                  background: '#00f0ff',
+                  color: '#000',
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                Manage Team Seats &amp; Roster
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2670,6 +2735,7 @@ function EPKBuilderPanel({ tracks, epk, setEpk, sessionUser, setActiveTab, activ
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <ArtistRosterSelector
+            sessionUser={sessionUser}
             activeSubdomain={activeArtist?.subdomain || epk?.subdomain || 'ndufo'}
             onSelectArtist={(artist) => {
               if (typeof onSelectArtist === 'function') {
@@ -3227,6 +3293,23 @@ function CataloguePanel({
   const [viewAllCatalogue, setViewAllCatalogue] = useState(activeArtist?.subdomain === 'all');
   const [sortBy, setSortBy] = useState('default'); // 'default' | 'title_asc' | 'title_desc' | 'artist_asc' | 'artist_desc' | 'streams_desc' | 'year_desc'
 
+  const filterTracksForLabelRoster = (trackList) => {
+    if (sessionUser?.role !== 'label') return trackList;
+    let rosterNames = ['Aisha Okoro', 'Brian Omondi', 'Ndufo'];
+    try {
+      const storedRoster = localStorage.getItem('tunemavens_label_roster');
+      if (storedRoster) {
+        const parsed = JSON.parse(storedRoster);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          rosterNames = parsed.map(p => p.name || p.artist_name || p.subdomain).filter(Boolean);
+        }
+      }
+    } catch (_) {}
+    return trackList.filter(t => 
+      rosterNames.some(rn => (t.artist || '').toLowerCase().includes(rn.toLowerCase()))
+    );
+  };
+
   useEffect(() => {
     if (activeArtist?.subdomain === 'all') {
       setViewAllCatalogue(true);
@@ -3235,12 +3318,12 @@ function CataloguePanel({
         .then(data => {
           if (data) {
             const list = Array.isArray(data) ? data : (data.tracks || []);
-            setTracks(list);
+            setTracks(filterTracksForLabelRoster(list));
           }
         })
         .catch(() => {});
     }
-  }, [activeArtist?.subdomain]);
+  }, [activeArtist?.subdomain, sessionUser?.role]);
 
   const handleToggleAllCatalogue = async () => {
     const next = !viewAllCatalogue;
@@ -3253,7 +3336,7 @@ function CataloguePanel({
         if (res.ok) {
           const data = await res.json();
           const list = Array.isArray(data) ? data : (data.tracks || []);
-          setTracks(list);
+          setTracks(filterTracksForLabelRoster(list));
         }
       } else {
         const sub = (activeArtist?.subdomain && activeArtist.subdomain !== 'all' ? activeArtist.subdomain : (sessionUser?.username || 'ndufo')).toLowerCase();
@@ -3261,7 +3344,7 @@ function CataloguePanel({
         if (res.ok) {
           const data = await res.json();
           const list = Array.isArray(data) ? data : (data.tracks || []);
-          setTracks(list);
+          setTracks(filterTracksForLabelRoster(list));
         }
       }
     } catch (err) {
@@ -4045,6 +4128,7 @@ function CataloguePanel({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           {/* Multi-Artist Roster Selector for Labels, Publishers & Managers */}
           <ArtistRosterSelector
+            sessionUser={sessionUser}
             activeSubdomain={activeArtist?.subdomain || creatorEpk?.subdomain || 'ndufo'}
             onSelectArtist={onSelectArtist}
             compact={true}
@@ -4067,10 +4151,12 @@ function CataloguePanel({
               alignItems: 'center',
               gap: '6px'
             }}
-            title={viewAllCatalogue ? "Switch to single artist roster view" : "View all platform artists across entire catalogue"}
+            title={viewAllCatalogue ? "Switch to single artist roster view" : "View roster catalogue"}
           >
             <RiDatabase2Fill size={14} />
-            <span>{viewAllCatalogue ? 'Entire Catalogue (All Artists)' : 'View Entire Catalogue'}</span>
+            <span>{viewAllCatalogue 
+              ? (sessionUser?.role === 'label' ? 'Label Roster Catalog' : 'Entire Catalogue (All Artists)') 
+              : (sessionUser?.role === 'label' ? 'View Label Roster Catalog' : 'View Entire Catalogue')}</span>
           </button>
 
           {/* Manage Genres Admin Action Button - Strictly Gated to Admin */}
@@ -6898,7 +6984,7 @@ function DjPoolPanel() {
 
 
 // ================= SUB-PANEL: Sync Licensing Marketplace (Phase 6) =================
-function SyncLicensingPanel() {
+function SyncLicensingPanel({ sessionUser, tracks: propTracks, activeArtist }) {
   const [activeMood, setActiveMood] = useState('all');
   const [playingTrack, setPlayingTrack] = useState(null);
   
@@ -6938,16 +7024,54 @@ function SyncLicensingPanel() {
     }, 1200);
   };
 
-  const tracks = [
+  const defaultTracks = [
     { id: 1, title: "Kilimanjaro Vibe", artist: "Aisha Okoro", moods: ["Afrobeats", "energetic", "sunset"] },
     { id: 2, title: "Nairobi Sunset", artist: "Aisha Okoro", moods: ["chill", "sunset", "Afrobeats"] },
     { id: 3, title: "Midnight Grooves", artist: "Aisha Okoro", moods: ["dark", "cinematic", "energetic"] },
-    { id: 4, title: "Neon Shadows", artist: "Aisha Okoro", moods: ["dark", "chill", "cinematic"] }
+    { id: 4, title: "Neon Shadows", artist: "Aisha Okoro", moods: ["dark", "chill", "cinematic"] },
+    { id: 5, title: "Nairobi Cyberwave (Master)", artist: "Ndufo", moods: ["energetic", "cinematic", "Afrobeats"] },
+    { id: 6, title: "Rift Valley Amapiano", artist: "Brian Omondi", moods: ["chill", "sunset"] }
   ];
 
+  const catalogMappedTracks = (Array.isArray(propTracks) && propTracks.length > 0)
+    ? propTracks.map((t, idx) => ({
+        id: t.id || t.isrc || idx + 10,
+        title: t.title,
+        artist: t.artist || 'Ndufo',
+        moods: [
+          (t.genre && t.genre.toLowerCase().includes('afro')) ? 'Afrobeats' : 'chill',
+          (idx % 2 === 0) ? 'energetic' : 'cinematic',
+          'sunset'
+        ]
+      }))
+    : defaultTracks;
+
+  let allAvailableTracks = catalogMappedTracks;
+
+  // If label role, strictly limit to artists in label roster
+  if (sessionUser?.role === 'label') {
+    let rosterNames = ['Aisha Okoro', 'Brian Omondi', 'Ndufo'];
+    try {
+      const storedRoster = localStorage.getItem('tunemavens_label_roster');
+      if (storedRoster) {
+        const parsed = JSON.parse(storedRoster);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          rosterNames = parsed.map(p => p.name || p.artist_name || p.subdomain).filter(Boolean);
+        }
+      }
+    } catch (_) {}
+    allAvailableTracks = allAvailableTracks.filter(t => 
+      rosterNames.some(rn => (t.artist || '').toLowerCase().includes(rn.toLowerCase()))
+    );
+  } else if (activeArtist && activeArtist.subdomain !== 'all') {
+    allAvailableTracks = allAvailableTracks.filter(t => 
+      (t.artist || '').toLowerCase().includes((activeArtist.name || '').toLowerCase())
+    );
+  }
+
   const filteredTracks = activeMood === 'all' 
-    ? tracks 
-    : tracks.filter(t => t.moods.includes(activeMood));
+    ? allAvailableTracks 
+    : allAvailableTracks.filter(t => t.moods.includes(activeMood));
 
   return (
     <div>
@@ -7131,6 +7255,10 @@ function SyncLicensingPanel() {
       `}</style>
     </div>
   );
+}
+
+function SyncBriefMatchPanel(props) {
+  return <SyncLicensingPanel {...props} />;
 }
 
 // ================= SUB-PANEL: Escrow Contracts (Phase 8) =================
@@ -8756,8 +8884,15 @@ function App() {
   const [sessionUser, setSessionUser] = useState(() => {
     try {
       const saved = sessionStorage.getItem('tunemavens_session') || localStorage.getItem('tunemavens_saved_user');
+      const activePersona = localStorage.getItem('tunemavens_active_persona');
       if (saved) {
         const parsed = JSON.parse(saved);
+        if (activePersona) {
+          parsed.role = activePersona;
+          parsed.apps = DEFAULT_ACTIVE_APPS_BY_ROLE[activePersona] || parsed.apps;
+          parsed.admin_sandbox = true;
+          parsed.simulated_role = activePersona !== 'admin' ? activePersona : null;
+        }
         return reconcileUserApps(parsed);
       }
       return null;
@@ -8865,7 +9000,16 @@ function App() {
   }, [catalogTracks, globalTrack]);
 
   const handleLogin = (user) => {
-    const reconciled = reconcileUserApps(user);
+    const activePersona = localStorage.getItem('tunemavens_active_persona');
+    const userToReconcile = (activePersona && (user.is_admin || user.role === 'admin' || localStorage.getItem('tunemavens_admin_verified') === 'true')) ? {
+      ...user,
+      role: activePersona,
+      apps: DEFAULT_ACTIVE_APPS_BY_ROLE[activePersona] || user.apps,
+      is_admin: true,
+      admin_sandbox: true,
+      simulated_role: activePersona !== 'admin' ? activePersona : null
+    } : user;
+    const reconciled = reconcileUserApps(userToReconcile);
     setSessionUser(reconciled);
     sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
     localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
@@ -8884,6 +9028,7 @@ function App() {
     setSessionUser(null);
     sessionStorage.removeItem('tunemavens_session');
     localStorage.removeItem('tunemavens_saved_user');
+    localStorage.removeItem('tunemavens_active_persona');
   };
 
   // Recognises your Intermaven session when you land on the TuneMavens app.
@@ -8893,7 +9038,16 @@ function App() {
     if (token) {
       authApi.me(token).then((user) => {
         if (cancelled) return;
-        const reconciled = reconcileUserApps(user);
+        const activePersona = localStorage.getItem('tunemavens_active_persona');
+        const userToReconcile = activePersona ? {
+          ...user,
+          role: activePersona,
+          apps: DEFAULT_ACTIVE_APPS_BY_ROLE[activePersona] || user.apps,
+          is_admin: user.is_admin || user.role === 'admin' || localStorage.getItem('tunemavens_admin_verified') === 'true',
+          admin_sandbox: true,
+          simulated_role: activePersona !== 'admin' ? activePersona : null
+        } : user;
+        const reconciled = reconcileUserApps(userToReconcile);
         setSessionUser(reconciled);
         sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
         localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
@@ -8905,7 +9059,17 @@ function App() {
             if (cancelled) return;
             if (access_token) {
               tokenStore.set(access_token);
-              const reconciled = reconcileUserApps({ ...demoUser, ...(sessionUser || {}) });
+              const activePersona = localStorage.getItem('tunemavens_active_persona');
+              const base = { ...demoUser, ...(sessionUser || {}) };
+              const userToReconcile = activePersona ? {
+                ...base,
+                role: activePersona,
+                apps: DEFAULT_ACTIVE_APPS_BY_ROLE[activePersona] || base.apps,
+                is_admin: true,
+                admin_sandbox: true,
+                simulated_role: activePersona !== 'admin' ? activePersona : null
+              } : base;
+              const reconciled = reconcileUserApps(userToReconcile);
               setSessionUser(reconciled);
               sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
               localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
@@ -8926,7 +9090,17 @@ function App() {
         if (cancelled) return;
         if (access_token) {
           tokenStore.set(access_token);
-          const reconciled = reconcileUserApps({ ...user, ...sessionUser });
+          const activePersona = localStorage.getItem('tunemavens_active_persona');
+          const base = { ...user, ...sessionUser };
+          const userToReconcile = activePersona ? {
+            ...base,
+            role: activePersona,
+            apps: DEFAULT_ACTIVE_APPS_BY_ROLE[activePersona] || base.apps,
+            is_admin: true,
+            admin_sandbox: true,
+            simulated_role: activePersona !== 'admin' ? activePersona : null
+          } : base;
+          const reconciled = reconcileUserApps(userToReconcile);
           setSessionUser(reconciled);
           sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
           localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));

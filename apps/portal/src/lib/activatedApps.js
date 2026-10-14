@@ -8,7 +8,7 @@ export const DEFAULT_ACTIVE_APPS = ['epk-builder', 'catalog-porting'];
 
 export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
   creator: ['epk-builder', 'catalog-porting', 'split-cascade'],
-  label: ['catalog-porting', 'split-cascade', 'publishing-election', 'distribution-election', 'sync-marketplace'],
+  label: ['catalog-porting', 'split-cascade', 'publishing-election', 'distribution-election', 'sync-marketplace', 'label-team'],
   dj: ['djpool', 'tunemavens-library'],
   studio: ['sync-marketplace', 'escrow-contracts'],
   supervisor: ['sync-marketplace', 'escrow-contracts'],
@@ -20,7 +20,7 @@ export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
     'epk-builder', 'catalog-porting', 'split-cascade', 'publishing-election',
     'distribution-election', 'djpool', 'sync-marketplace', 'escrow-contracts',
     'tunemavens-library', 'tunemavens-tips', 'tunepay-inventory', 'tunepay-settlement',
-    'tunepay-devices', 'corporate-ads'
+    'tunepay-devices', 'corporate-ads', 'label-team'
   ]
 };
 
