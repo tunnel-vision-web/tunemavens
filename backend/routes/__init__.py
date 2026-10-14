@@ -20,6 +20,7 @@ from .storage_router import router as storage_router
 from .epk_router import router as epk_router
 from .catalog_router import router as catalog_router
 from .corporate_ads_router import router as corporate_ads_router
+from .role_tiers_router import router as role_tiers_router
 
 __all__ = [
     "admin_router",
@@ -44,6 +45,7 @@ __all__ = [
     "epk_router",
     "catalog_router",
     "corporate_ads_router",
+    "role_tiers_router",
 ]
 
 

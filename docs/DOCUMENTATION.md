@@ -1155,6 +1155,60 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
   - AI Avatars & Badges (`.ai-avatar-badge`, `.inapp-doc-ai-avatar`): Solid flat `#7c3aed`.
   - Icon vectors: Solid flat colors (`#ffffff`, `var(--cyan)`, `#7c3aed`).
 
+### 9.33 Complete Commercial Persona Landing Pages, Tier Engines & User-Scoped Permissions
+
+#### 9.33.1 Omnichannel Persona Commercial Packages & Rate Cards
+Every persona gateway across the platform now features transparent rate cards, specifications panels, and interactive reservation modals matching the Corporate benchmark:
+- **Creator / Artist (`/for/creator` & `CreatorLandingPage.jsx`):**
+  - *Spark / Indie Starter:* $0 / Free (85/15 Net Splits, Uncapped Lossless Stream Hosting, direct fan tips).
+  - *Pro Creator Growth:* $29 / mo (90/10 Splits, Unlimited Masters & Stems, SyncMavens AI brief auto-pitching, custom subdomain, 300 TM Credits).
+  - *Studio Master & Touring:* $99 / mo (100% Royalty Take, TunePay Event Box-Office POS, automated publishing/distribution election contracts, 1,200 TM Credits).
+  - *Label-Ready Enterprise:* $299 / mo (White-glove catalog migration, dedicated agency sync licensing agent, custom apex domain SSL, 4,000 TM Credits).
+- **Record Label (`/for/labels` & `LabelLandingPage.jsx`):**
+  - *Indie Imprint:* $99 / mo (Up to 10 artists, 100 tracks, automated CSV statement parser, isolated roster accounts, 1,000 TM Credits).
+  - *Scale Label Operations:* $299 / mo (Up to 50 artists, 1,000 tracks, automated master recoupment cascades 90/10 to 50/50, multi-seat A&R/Accounting, TunePay festival ticketing settlements, 3,500 TM Credits).
+  - *Major Enterprise:* $799 / mo (Unlimited artists and catalog, white-label artist payout portal, direct mobile money bulk payouts, ERP API webhooks, 10,000 TM Credits).
+- **Music Supervisor / Studio (`/for/supervisors` & `SupervisorLandingPage.jsx`):**
+  - *Indie Discovery:* $0 / Free (Search 50k+ pre-cleared masters by BPM, mood, and instrumentation; watermarked stream previews).
+  - *Production Studio Pro:* $149 / mo (Unlimited scene briefs, 94%+ AI match scoring, instant multi-track stem downloads, 1-click PRO cue sheet generator, in-app escrow contracts, 1,500 TM Credits).
+  - *Network & Studio Enterprise:* $499 / mo (Full worldwide commercial indemnification, original score commissions, urgent <4-hour turnaround, 6,000 TM Credits).
+- **DJ / Curator (`/for/djs` & `DjLandingPage.jsx`):**
+  - *Club Resident:* $19 / mo (50 lossless WAV/320k downloads/mo, clean & dirty extended 8-bar intro edits, verified Rekordbox & Serato cues, 200 TM Credits).
+  - *Touring Pro DJ:* $49 / mo (Unlimited WAV downloads, isolated remix stems, unreleased artist dubplates, DMCA-safe performance clearance hashes, 600 TM Credits).
+  - *Headline & Festival Curator:* $129 / mo (Direct label promo drop inbox, syndicated TuneStream radio mix series, direct listener tipping, 1,800 TM Credits).
+- **Media House / Broadcaster (`/for/media` & `MediaHouseLandingPage.jsx`):**
+  - *Single Station / Regional:* $199 / mo (Up to 2 broadcast channels, 5,000 playlogs/mo, automated RCS Zetta/Dalet/WideOrbit ingestion, PRO discrepancy detection, 2,000 TM Credits).
+  - *Broadcaster Network Suite:* $599 / mo (Up to 10 stations, 50,000 playlogs/mo, 1-click formatted exports for ASCAP, BMI, SESAC, PRS, MCSK, native audio ad sync, 7,500 TM Credits).
+  - *Enterprise Media Conglomerate:* $1,499 / mo (Unlimited stations, continuous 24/7 acoustic fingerprinting, real-time metadata repair, statutory audit defense, 20,000 TM Credits).
+- **Music Enthusiast / Consumer (`/for/listeners` & `ConsumerLandingPage.jsx`):**
+  - *Listener Free:* $0 (High-fidelity web streaming, regional grassroots discovery, 1-tap mobile money direct creator tipping).
+  - *TuneStream VIP Audiophile:* $4.99 / mo (100% ad-free, 24-bit uncompressed FLAC streaming, 50 monthly TM credits for stems/singles, offline caching).
+  - *Patron of the Arts:* $14.99 / mo (Verified Patron badge, 7-day early album listening, 200 monthly TM credits for concert QR tickets & merch drops).
+
+#### 9.33.2 Unified Backend Tier Engine (`backend/routes/role_tiers_router.py`)
+- **Centralized MongoDB Storage (`db.role_tiers`):** Default seed structures populate all 19 persona tiers on boot with prices, credit allocations, key metrics, and deliverables.
+- **REST Endpoints & Direct Role Aliasing:**
+  - `GET /api/roles/packages` (with optional `?role=` query parameter).
+  - Direct routes: `GET /api/creator/packages`, `GET /api/label/packages`, `GET /api/supervisor/packages`, `GET /api/dj/packages`, `GET /api/media/packages`, `GET /api/consumer/packages`.
+  - Inbound reservations: `POST /api/roles/inquiries` and `POST /api/roles/{role}/inquiries`.
+  - Generates verifiable reference codes: `TM-CR-2026-XXXXXX` (Creator), `TM-LB-2026-XXXXXX` (Label), `TM-SV-2026-XXXXXX` (Supervisor), `TM-DJ-2026-XXXXXX` (DJ), `TM-MD-2026-XXXXXX` (Media), `TM-CS-2026-XXXXXX` (Consumer).
+- **Automatic Smart CRM Routing:** Inbound inquiries automatically insert a corresponding record into `db.crm_leads` with `source: tunemavens.com/#/for/{role}`, `creator_username: {role}_desk`, and formatted notes for instantaneous lead dispatch.
+
+#### 9.33.3 Strict User Scoping & Role-Based Dashboard Permissions
+- **Default Activated Apps by Role (`DEFAULT_ACTIVE_APPS_BY_ROLE` in `activatedApps.js`):**
+  - `creator`: `['epk-builder', 'catalog-porting', 'split-cascade']`
+  - `label`: `['catalog-porting', 'split-cascade', 'publishing-election', 'distribution-election', 'sync-marketplace']`
+  - `dj`: `['djpool', 'tunemavens-library']`
+  - `supervisor` / `studio`: `['sync-marketplace', 'escrow-contracts']`
+  - `media_house` / `media`: `['sync-marketplace', 'corporate-ads']`
+  - `consumer`: `['tunemavens-library', 'tunemavens-tips']`
+  - `corporate`: `['sync-marketplace', 'corporate-ads']`
+  - `admin`: Global access across all platform modules.
+- **Strict Menu & Route Guarding (`App.jsx`):**
+  - `getCategorizedMenu` strictly filters `visibleKeys` by `sessionUser.role`, ensuring personas only see their authorized apps.
+  - `renderActivePanel` checks `activeTab` against `roleAllowed[userRole]`. Any unauthorized tab navigation safely defaults back to `home`.
+- **User Scoping in Backend Routers:** Non-admin endpoints (`/api/roles/my-inquiries`, `/api/corporate/campaigns`) strictly filter by `user_id == current_user["_id"]` or `contact_email == current_user["email"]`. Admins retain global administrative visibility.
+
 
 
 

@@ -11,7 +11,9 @@ import {
   RiCheckFill, 
   RiBroadcastFill,
   RiFolderDownloadFill,
-  RiFileLine
+  RiFileLine,
+  RiCloseFill,
+  RiCheckboxCircleFill
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
@@ -21,8 +23,67 @@ import tunestreamHeader3Img from '../../../assets/images/tunestream_header_3.png
 import tourDashboardMockupImg from '../../../assets/images/tour_dashboard_mockup.png'
 import managementLogo from '../../../assets/logos/tunemanagement-logo.png'
 
+const FALLBACK_MEDIA_RATES = [
+  {
+    slug: 'media-station',
+    name: 'Single Station / Regional',
+    tier_badge: 'Compliance Starter',
+    price_usd: 199.0,
+    billing_period: 'month',
+    credits: 2000,
+    key_metric: 'Up to 2 Broadcast Channels · 5,000 Playlogs/mo',
+    features: [
+      'Direct ingestion from broadcast software (RCS Zetta, Dalet, WideOrbit, Selector)',
+      'Automated track recognition matching playlogs to verified ISRC & CAE metadata',
+      'Flag missing publishing shares and unregistered works before reporting',
+      'Standard statutory royalty report exports ready for local collection societies',
+      '2,000 monthly TM credits for catalog audio matching queries'
+    ],
+    is_popular: false,
+    cta: 'Connect Station'
+  },
+  {
+    slug: 'media-network',
+    name: 'Broadcaster Network Suite',
+    tier_badge: 'Most Popular',
+    price_usd: 599.0,
+    billing_period: 'month',
+    credits: 7500,
+    key_metric: 'Up to 10 Stations · 50,000 Playlogs/mo',
+    features: [
+      'Manage up to 10 radio and television broadcast channels in a unified console',
+      'AI discrepancy detection resolving 99% of unrecognized broadcast cue entries',
+      '1-click export formatted for ASCAP, BMI, SESAC, PRS, and MCSK compliance',
+      'Integration with Intermaven Corporate Ad network for native commercial insertion',
+      'Automated station affidavit logs and reconciliation audit trails',
+      '7,500 monthly TM credits & dedicated broadcast compliance engineer'
+    ],
+    is_popular: true,
+    cta: 'Upgrade to Network Suite'
+  },
+  {
+    slug: 'media-conglomerate',
+    name: 'Enterprise Media Conglomerate',
+    tier_badge: 'Statutory Fortress',
+    price_usd: 1499.0,
+    billing_period: 'month',
+    credits: 20000,
+    key_metric: 'Unlimited Stations · Real-Time Audio Fingerprinting',
+    features: [
+      'Unlimited radio, TV, and digital streaming broadcast channels',
+      'Continuous 24/7 acoustic fingerprinting and broadcast stream monitoring',
+      'Real-time metadata repair with automated direct songwriter outreach',
+      'Ironclad statutory audit compliance defense against copyright fines',
+      'Custom ERP integration into station billing and traffic scheduling systems',
+      '20,000 monthly TM credits, custom SLA & 24/7 technical hotline'
+    ],
+    is_popular: false,
+    cta: 'Consult Compliance Team'
+  }
+];
+
 export default function MediaHouseLandingPage() {
-  const accent = '#2563eb';
+  const accent = '#3b82f6';
 
   // ================= HERO Slide Carousel State =================
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -33,60 +94,92 @@ export default function MediaHouseLandingPage() {
   const progressRef = useRef(null);
   const timerRef = useRef(null);
 
+  // Live Rates & Booking Modal State
+  const [tierPackages, setTierPackages] = useState(FALLBACK_MEDIA_RATES);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [inquirySubmitting, setInquirySubmitting] = useState(false);
+  const [inquirySuccess, setInquirySuccess] = useState(null);
+
+  const [bookingForm, setBookingForm] = useState({
+    organization_name: '',
+    contact_name: '',
+    contact_email: '',
+    contact_phone: '',
+    tier_slug: 'media-network',
+    channel_count: '3-10 Broadcast Channels',
+    automation_software: 'RCS Zetta / WideOrbit',
+    estimated_budget: '$599 / month (7,500 Credits)',
+    notes: ''
+  });
+
   const SLIDE_DURATION = 12000; // 12s per slide
   const TRANSITION_OUT_MS = 240;
+
+  useEffect(() => {
+    fetch('/api/roles/media_house/packages')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setTierPackages(data);
+        }
+      })
+      .catch(err => {
+        console.warn('Using fallback media rates:', err);
+      });
+  }, []);
 
   const slides = [
     {
       badge: 'Automated Broadcast Compliance',
-      dot: '#2563eb',
+      dot: '#3b82f6',
       hLine1: 'Automate Broadcast Logs.',
       hLine2: '100% PRO Compliance.',
-      hLine2Color: '#2563eb',
+      hLine2Color: '#3b82f6',
       s: 'Convert station audio playlogs into standardized ASCAP, BMI, and PRS cue sheet reports. Eliminate manual logging and avoid regulatory fines.',
-      b1: 'Set Up Broadcaster Account',
-      b1link: '/register?role=media',
+      b1: 'Review Broadcaster Tiers',
+      b1link: '#media-rates',
       b2: 'Explore Playlog Formatter',
       b2link: '#compliance',
       image: headerImg
     },
     {
       badge: 'Licensing Discrepancy Auditing',
-      dot: '#2563eb',
+      dot: '#3b82f6',
       hLine1: 'Detect Licensing Conflicts.',
       hLine2: 'Real-Time Verification.',
-      hLine2Color: '#2563eb',
+      hLine2Color: '#3b82f6',
       s: 'Our neural audit engine parses on-air music logs against multi-label databases, flagging missing mechanical licenses and uncredited songwriters before airtime.',
       b1: 'Run Playlog Audit',
-      b1link: '/publishing',
-      b2: 'Review Audit Engine',
-      b2link: '#discrepancy',
+      b1link: '/register?role=media',
+      b2: 'Audit Engine Specs',
+      b2link: '#audit-engine',
       image: publishingMockupImg
     },
     {
-      badge: 'High-Throughput Audio CDN',
-      dot: '#2563eb',
-      hLine1: 'High-Throughput Ingest.',
-      hLine2: 'Broadcast 24-bit Audio.',
-      hLine2Color: '#2563eb',
-      s: 'Batch ingest high-volume audio packages with clean ID3 tags, BPM, loudness normalization, and verified stems ready for radio station playout systems.',
-      b1: 'Access Broadcast Portal',
-      b1link: '/register?role=media',
-      b2: 'Explore Audio Engine',
-      b2link: '#audio-cdn',
+      badge: 'Statutory PRO Exports',
+      dot: '#3b82f6',
+      hLine1: '1-Click Society Reports.',
+      hLine2: 'Full Metadata Precision.',
+      hLine2Color: '#3b82f6',
+      s: 'Export certified playlogs ready for ASCAP, BMI, SESAC, PRS, and MCSK with verified duration seconds, CAE/IPI numbers, and composer splits.',
+      b1: 'Try Formatter Demo',
+      b1link: '/tools',
+      b2: 'Supported PRO Formats',
+      b2link: '#pro-formats',
       image: tunestreamHeader3Img
     },
     {
-      badge: 'Performance Royalty Tracking',
-      dot: '#2563eb',
-      hLine1: 'Track Station Spin Counts.',
-      hLine2: 'Transparent Royalties.',
-      hLine2Color: '#2563eb',
-      s: 'Provide record labels and artists with verifiable airplay logs, supporting grassroots creator royalty distribution across terrestrial and internet radio.',
-      b1: 'Join Broadcaster Network',
+      badge: 'Unified Cross-Station Billing',
+      dot: '#3b82f6',
+      hLine1: 'Manage Multiple Channels.',
+      hLine2: 'Consolidated Ledgers.',
+      hLine2Color: '#3b82f6',
+      s: 'Centralize compliance across television, FM radio, and digital simulcast streams in a single dashboard with unified Intermaven Network Credits.',
+      b1: 'Set Up Media Network',
       b1link: '/register?role=media',
-      b2: 'Tour & Live Engine',
-      b2link: '/tours',
+      b2: 'Network Credit Pools',
+      b2link: '#credit-pools',
       image: tourDashboardMockupImg
     }
   ];
@@ -122,7 +215,6 @@ export default function MediaHouseLandingPage() {
     goToSlide((currentSlide + 1) % slideCount);
   };
 
-  // rAF progress bar and slide advancement triggering cascade on every slide
   useEffect(() => {
     const startTime = Date.now();
 
@@ -153,14 +245,74 @@ export default function MediaHouseLandingPage() {
     };
   }, [currentSlide, slideCount]);
 
+  const scrollToRates = (e) => {
+    if (e) e.preventDefault();
+    const el = document.getElementById('media-rates');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', '#media-rates');
+    }
+  };
+
+  const handleOpenBooking = (tier) => {
+    setSelectedTier(tier);
+    setBookingForm(prev => ({
+      ...prev,
+      tier_slug: tier.slug,
+      estimated_budget: `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+    }));
+    setInquirySuccess(null);
+    setModalOpen(true);
+  };
+
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+    setInquirySubmitting(true);
+    setInquirySuccess(null);
+
+    try {
+      const payload = {
+        role: 'media_house',
+        organization_name: bookingForm.organization_name,
+        contact_name: bookingForm.contact_name,
+        contact_email: bookingForm.contact_email,
+        contact_phone: bookingForm.contact_phone || undefined,
+        tier_slug: bookingForm.tier_slug,
+        tier_name: selectedTier?.name,
+        estimated_budget: bookingForm.estimated_budget,
+        catalog_or_audience_size: bookingForm.channel_count,
+        notes: `Automation Software: ${bookingForm.automation_software}. ${bookingForm.notes || ''}`
+      };
+
+      const res = await fetch('/api/roles/media_house/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInquirySuccess({
+          ref: data.reference_code,
+          msg: data.message
+        });
+      } else {
+        alert(data.detail || 'Unable to submit reservation. Please try again.');
+      }
+    } catch (err) {
+      alert('Network error. Please verify your connection.');
+    } finally {
+      setInquirySubmitting(false);
+    }
+  };
+
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
-        aria-label="Media House Hero Carousel"
+        aria-label="Media Houses & Broadcasters Hero Carousel"
       >
-        {/* Background cross-fade layers */}
         <div className="bgs">
           {slides.map((s, index) => (
             <div 
@@ -187,7 +339,6 @@ export default function MediaHouseLandingPage() {
           />
         </div>
 
-        {/* Hero Stage Content (Constricted to 1240px) */}
         <div className="hs role-hero-stage">
           <div 
             className="hcont"
@@ -196,22 +347,19 @@ export default function MediaHouseLandingPage() {
             onMouseLeave={() => setTitleHovered(false)}
             style={{ cursor: 'pointer' }}
           >
-            {/* Brand Logo Display */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
               <img 
                 src={managementLogo} 
-                alt="TuneManagement Brand Logo" 
+                alt="TuneManagement Logo" 
                 style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} 
               />
             </div>
 
-            {/* Breadcrumb indicator */}
             <div className="role-breadcrumb" style={{ justifyContent: 'center', marginBottom: '14px' }}>
-              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>Media Houses</span>
+              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>Media Houses &amp; Broadcasters</span>
             </div>
 
-            {/* Pulsing Pill Badge */}
-            <div className={`he hbadge ${slideState}`}>
+            <div className="he hbadge in">
               <span 
                 className="bdot" 
                 style={{ 
@@ -222,7 +370,6 @@ export default function MediaHouseLandingPage() {
               <span>{currentSlideData.badge}</span>
             </div>
             
-            {/* Staggered 2-Line Headline — Slides In One At A Time */}
             <h1 className="ht htitle">
               <span className={`ht-line ht-line-1 ${slideState}`}>{currentSlideData.hLine1}</span>
               <span 
@@ -233,20 +380,30 @@ export default function MediaHouseLandingPage() {
               </span>
             </h1>
             
-            {/* Subtitle */}
             <p className={`hp hsub ${slideState}`}>
               {currentSlideData.s}
             </p>
 
-            {/* Dual CTA Buttons (Strict Flat Colors Standard) */}
             <div className={`hb hbtns ${slideState}`}>
-              <Link 
-                to={currentSlideData.b1link} 
-                className="hbp"
-                style={{ background: currentSlideData.dot }}
-              >
-                {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
-              </Link>
+              {currentSlideData.b1link.startsWith('#') ? (
+                <a 
+                  href={currentSlideData.b1link} 
+                  className="hbp"
+                  style={{ background: currentSlideData.dot }}
+                  onClick={scrollToRates}
+                >
+                  {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
+                </a>
+              ) : (
+                <Link 
+                  to={currentSlideData.b1link} 
+                  className="hbp"
+                  style={{ background: currentSlideData.dot }}
+                >
+                  {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
+                </Link>
+              )}
+
               {currentSlideData.b2link.startsWith('#') ? (
                 <a 
                   href={currentSlideData.b2link} 
@@ -271,7 +428,6 @@ export default function MediaHouseLandingPage() {
           </div>
         </div>
 
-        {/* Side Arrows Navigation (Constricted to 1240px container) */}
         <div className={`sui-arrows ${slideState}`}>
           <button 
             type="button" 
@@ -291,7 +447,6 @@ export default function MediaHouseLandingPage() {
           </button>
         </div>
 
-        {/* Bottom Timer Progress Bar & Pagination Dots (Constricted to 1240px container) */}
         <div className={`sui-bottom ${slideState}`}>
           <div className="spr">
             <div 
@@ -321,82 +476,81 @@ export default function MediaHouseLandingPage() {
         </div>
       </section>
 
-      {/* ================= 2. Main Content (Strictly Constricted to 1240px) ================= */}
+      {/* ================= 2. Main Content ================= */}
       <div className="role-container">
-        {/* Stats Ribbon - Centered */}
         <section className="role-stats-ribbon" style={{ marginTop: '40px' }}>
           <div className="role-stat-item">
-            <span className="role-stat-value">100% PRO</span>
-            <span className="role-stat-label">ASCAP, BMI &amp; PRS Formatted Exports</span>
+            <span className="role-stat-value">100%</span>
+            <span className="role-stat-label">Statutory PRO Audit Compliance</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">&lt; 30s</span>
-            <span className="role-stat-label">Automation Playlog Ingest &amp; Parse Time</span>
+            <span className="role-stat-value">99.2%</span>
+            <span className="role-stat-label">Playlog Acoustic Fingerprint Accuracy</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">EBU R128</span>
-            <span className="role-stat-label">Automated Loudness Normalization Audits</span>
+            <span className="role-stat-value">1-Click</span>
+            <span className="role-stat-label">Automated Society Cue Sheet Exports</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">Multi-Station</span>
-            <span className="role-stat-label">Affiliate Syndication &amp; Sub-Network Routing</span>
+            <span className="role-stat-value">Zero</span>
+            <span className="role-stat-label">Copyright Infringement Penalty Exposure</span>
           </div>
         </section>
 
         {/* 3. Core Feature Pillars Grid */}
         <section id="compliance" style={{ scrollMarginTop: '100px' }}>
           <div className="role-section-header">
-            <span className="role-section-eyebrow">Broadcaster Infrastructure</span>
-            <h3 className="role-section-title">Engineered for Terrestrial, Satellite &amp; Digital Airwaves</h3>
+            <span className="role-section-eyebrow">Enterprise Station Software</span>
+            <h3 className="role-section-title">Automate Playlogs, Verify Shares &amp; Export Cues</h3>
             <p className="role-section-desc">
-              From automated station rotation playlogs to discrepancy detection, ensure broadcast compliance effortlessly.
+              From local radio stations to national broadcast networks, eliminate manual log reconciliations and ensure complete legal protection.
             </p>
           </div>
 
           <div className="role-pillars-grid">
-            <div className="role-pillar-card" id="discrepancy" style={{ scrollMarginTop: '100px' }}>
-              <div className="role-pillar-icon"><RiShieldCheckFill size={24} /></div>
-              <h4 className="role-pillar-title">AI Discrepancy Detector</h4>
+            <div className="role-pillar-card">
+              <div className="role-pillar-icon"><RiBroadcastFill size={24} /></div>
+              <h4 className="role-pillar-title">Playlog Automation Parser</h4>
               <p className="role-pillar-desc">
-                Drag-and-drop broadcast log dumps. Our AI audits track titles, durations, and ISRC codes against the global database to highlight unverified spins before submission.
+                Directly parse playlog exports from RCS Zetta, Dalet, WideOrbit, and Selector. Extract timestamps, track durations, and artist metadata automatically.
+              </p>
+            </div>
+
+            <div className="role-pillar-card" id="audit-engine" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiShieldCheckFill size={24} /></div>
+              <h4 className="role-pillar-title">Discrepancy Detection Engine</h4>
+              <p className="role-pillar-desc">
+                Flag uncredited songwriters, unregistered publishing shares, and missing mechanical clearance licenses before statutory reporting deadlines.
+              </p>
+            </div>
+
+            <div className="role-pillar-card" id="pro-formats" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiFilePaperFill size={24} /></div>
+              <h4 className="role-pillar-title">1-Click PRO Formatted Exports</h4>
+              <p className="role-pillar-desc">
+                Generate formatted submission reports pre-configured for collection societies including ASCAP, BMI, SESAC, PRS, and MCSK with verified CAE numbers.
               </p>
             </div>
 
             <div className="role-pillar-card">
               <div className="role-pillar-icon"><RiRadio2Fill size={24} /></div>
-              <h4 className="role-pillar-title">Station Queue Music Routing</h4>
+              <h4 className="role-pillar-title">Multi-Station Network Management</h4>
               <p className="role-pillar-desc">
-                Curate verified rotation playlists across multiple station branches, ensuring on-air DJs only broadcast pre-approved master recordings.
+                Monitor compliance across regional FM stations, digital streaming channels, and broadcast TV feeds in a centralized executive control panel.
               </p>
             </div>
 
-            <div className="role-pillar-card">
-              <div className="role-pillar-icon"><RiTimeFill size={24} /></div>
-              <h4 className="role-pillar-title">Timestamped Transmission Logs</h4>
-              <p className="role-pillar-desc">
-                Maintain immutable broadcast transmission logs with exact play duration down to the millisecond, safeguarding your broadcast license.
-              </p>
-            </div>
-
-            <div className="role-pillar-card" id="audio-cdn" style={{ scrollMarginTop: '100px' }}>
+            <div className="role-pillar-card" id="credit-pools" style={{ scrollMarginTop: '100px' }}>
               <div className="role-pillar-icon"><RiEqualizerFill size={24} /></div>
-              <h4 className="role-pillar-title">Loudness &amp; EQ Compliance</h4>
+              <h4 className="role-pillar-title">Unified Ad Ingress &amp; Credits</h4>
               <p className="role-pillar-desc">
-                Ensure station audio masters comply with EBU R128 and CALM Act television broadcast loudness regulations before going live on air.
+                Seamlessly insert verified audio interstitial spots from the Intermaven Corporate Ad network into commercial pods with automated affidavits.
               </p>
             </div>
 
             <div className="role-pillar-card">
               <div className="role-pillar-icon"><RiTv2Fill size={24} /></div>
-              <h4 className="role-pillar-title">Syndication &amp; Sub-Network Routing</h4>
-              <p className="role-pillar-desc">
-                Manage syndicated programming schedules and split royalty allocations across affiliate stations under a single master network dashboard.
-              </p>
-            </div>
-
-            <div className="role-pillar-card">
-              <div className="role-pillar-icon"><RiFilePaperFill size={24} /></div>
-              <h4 className="role-pillar-title">Instant PRO Report Formatter</h4>
+              <h4 className="role-pillar-title">Statutory Audit Fortress</h4>
               <p className="role-pillar-desc">
                 Convert station logs into audit-ready reports formatted precisely for statutory collection societies with CAE, ISWC, and duration totals.
               </p>
@@ -418,9 +572,14 @@ export default function MediaHouseLandingPage() {
               <li><RiCheckFill size={18} /> Direct export for ASCAP, BMI, SESAC, PRS, and MCSK</li>
               <li><RiCheckFill size={18} /> Unlimited monthly playlog audits on Business and Enterprise tiers</li>
             </ul>
-            <Link to="/register?role=media" className="role-btn-primary">
-              Set Up Broadcaster Network <RiArrowRightLine size={14} />
-            </Link>
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '20px' }}>
+              <Link to="/register?role=media" className="role-btn-primary">
+                Set Up Broadcaster Network <RiArrowRightLine size={14} />
+              </Link>
+              <a href="#media-rates" className="role-btn-secondary" onClick={scrollToRates}>
+                Review Broadcaster Plans
+              </a>
+            </div>
           </div>
           <div className="role-showcase-image-wrap">
             <img src={publishingMockupImg} alt="TuneMavens Broadcast Compliance and Publishing Dashboard" />
@@ -428,7 +587,7 @@ export default function MediaHouseLandingPage() {
         </section>
 
         {/* 5. 3-Step Guided Workflow Path */}
-        <section>
+        <section style={{ marginBottom: '64px' }}>
           <div className="role-section-header">
             <span className="role-section-eyebrow">Broadcaster Workflow</span>
             <h3 className="role-section-title">How Media Houses Automate Compliance</h3>
@@ -468,7 +627,113 @@ export default function MediaHouseLandingPage() {
           </div>
         </section>
 
-        {/* 6. Conversion CTA Banner */}
+        {/* ================= 6. COMMERCIAL MEDIA HOUSE RATES & PLANS ================= */}
+        <section id="media-rates" style={{ scrollMarginTop: '100px', marginBottom: '72px' }}>
+          <div className="role-section-header">
+            <span className="role-section-eyebrow">Transparent Broadcaster Subscriptions</span>
+            <h3 className="role-section-title">Broadcaster Compliance Plans &amp; Network Tiers</h3>
+            <p className="role-section-desc">
+              From single regional radio stations automating monthly cue sheets to multinational media conglomerates managing dozens of TV and digital audio channels.
+            </p>
+          </div>
+
+          <div className="role-rates-grid">
+            {tierPackages.map((rate) => (
+              <div 
+                key={rate.slug} 
+                className={`role-rate-card ${rate.is_popular ? 'featured' : ''}`}
+              >
+                {rate.is_popular && (
+                  <span className="role-featured-tag">
+                    Most Popular
+                  </span>
+                )}
+
+                <span className="role-rate-badge">{rate.tier_badge || 'Media Tier'}</span>
+                <h4 className="role-rate-title">{rate.name}</h4>
+
+                <div className="role-rate-price-box">
+                  <span className="role-rate-price">${rate.price_usd?.toLocaleString()}</span>
+                  <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
+                </div>
+
+                <div className="role-rate-submeta">
+                  <span style={{ color: '#f59e0b', fontWeight: 700 }}>
+                    {rate.credits?.toLocaleString()} TM Credits/mo
+                  </span>
+                  <span style={{ color: '#64748b' }}>·</span>
+                  <span style={{ color: accent, fontWeight: 600 }}>
+                    {rate.key_metric || 'Broadcaster Plan'}
+                  </span>
+                </div>
+
+                <div className="role-rate-reach">
+                  <strong style={{ color: '#fff' }}>{rate.key_metric}</strong>
+                </div>
+
+                <ul className="role-rate-features">
+                  {(rate.features || []).map((feature, i) => (
+                    <li key={i} className="role-rate-feature-item">
+                      <RiCheckFill size={16} color={accent} style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  className="role-btn-primary"
+                  onClick={() => handleOpenBooking(rate)}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    marginTop: 'auto'
+                  }}
+                >
+                  {rate.cta || 'Select Plan'} <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Technical Specs & Compliance Panel */}
+          <div className="role-specs-panel">
+            <h4 className="role-specs-title">
+              <RiShieldCheckFill size={20} color={accent} /> Statutory Compliance Specs &amp; Supported Broadcast Standards
+            </h4>
+            <div className="role-specs-grid">
+              <div className="role-spec-box">
+                <span className="role-spec-label">Automation Ingestion</span>
+                <div className="role-spec-value">
+                  Compatible with RCS Zetta, Dalet Radio Suite, WideOrbit Automation for Radio, and Enco DAD file formats.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Statutory Formats</span>
+                <div className="role-spec-value">
+                  Pre-configured export structures for ASCAP, BMI, SESAC, PRS for Music, MCSK, KAMP, and PRISK submission requirements.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Fingerprint Recognition</span>
+                <div className="role-spec-value">
+                  Acoustic fingerprint matching against 50M+ tracks with sub-second cue boundary detection and ISRC/ISWC resolution.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Audit Defensibility</span>
+                <div className="role-spec-value">
+                  Tamper-evident cryptographic log generation providing full statutory defense against audit penalties and licensing disputes.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 7. Conversion CTA Banner */}
         <section className="role-conversion-banner">
           <h3>Simplify Your Station's Music Compliance Today</h3>
           <p>
@@ -478,15 +743,239 @@ export default function MediaHouseLandingPage() {
             <Link to="/register?role=media" className="role-btn-primary">
               Register as a Media House <RiArrowRightLine size={15} />
             </Link>
-            <Link to="/publishing" className="role-btn-secondary">
-              View Publishing Standards
-            </Link>
+            <a href="#media-rates" className="role-btn-secondary" onClick={scrollToRates}>
+              Review Broadcaster Plans
+            </a>
           </div>
           <span className="role-trust-note">
             Multi-station network licensing · Enterprise SLAs available · Zero data lock-in
           </span>
         </section>
       </div>
+
+      {/* ================= 8. MEDIA HOUSE PLAN BOOKING & ONBOARDING MODAL ================= */}
+      {modalOpen && (
+        <div 
+          className="auth-modal-overlay-wrapper" 
+          onClick={(e) => { if (e.target.className === 'auth-modal-overlay-wrapper') setModalOpen(false); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(3,7,18,0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
+        >
+          <div 
+            className="auth-modal-card glass-panel" 
+            style={{ 
+              maxWidth: '560px', 
+              width: '100%', 
+              padding: '32px', 
+              borderRadius: '8px', 
+              border: `1px solid ${accent}`,
+              position: 'relative',
+              maxHeight: '92vh',
+              overflowY: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setModalOpen(false)} 
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+            >
+              <RiCloseFill size={22} />
+            </button>
+
+            {inquirySuccess ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <RiCheckboxCircleFill size={56} color="#22c55e" style={{ margin: '0 auto 16px', display: 'block' }} />
+                <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: '0 0 10px', fontFamily: 'Sansation, sans-serif' }}>
+                  Broadcaster Plan Reserved
+                </h3>
+                <div style={{
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                  padding: '14px',
+                  borderRadius: '4px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Tracking Reference Code
+                  </div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#22c55e', fontFamily: 'Space Grotesk, sans-serif', marginTop: '4px' }}>
+                    {inquirySuccess.ref}
+                  </div>
+                </div>
+                <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '24px' }}>
+                  {inquirySuccess.msg} Our broadcast engineering desk will contact you to coordinate playlog software ingestion.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button 
+                    onClick={() => setModalOpen(false)} 
+                    className="role-btn-primary"
+                  >
+                    Done
+                  </button>
+                  <Link 
+                    to="/register?role=media" 
+                    className="role-btn-secondary"
+                    onClick={() => setModalOpen(false)}
+                  >
+                    Complete Station Setup
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ textAlign: 'left', marginBottom: '20px' }}>
+                  <span style={{ fontSize: '11px', color: accent, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Broadcaster Plan Reservation
+                  </span>
+                  <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: '4px 0 6px', fontFamily: 'Sansation, sans-serif' }}>
+                    {selectedTier?.name || 'Broadcaster Compliance Plan'}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+                    Automate playlog ingestion, discrepancy detection, and 1-click PRO statutory cue sheet exports.
+                  </p>
+                </div>
+
+                <form onSubmit={handleInquirySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Station / Network Name *</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. Capital FM Network"
+                        value={bookingForm.organization_name}
+                        onChange={e => setBookingForm({ ...bookingForm, organization_name: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Contact Officer *</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. Grace Wanjiku"
+                        value={bookingForm.contact_name}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_name: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Business Email *</label>
+                      <input 
+                        type="email" 
+                        required
+                        placeholder="traffic@capitalfm.co.ke"
+                        value={bookingForm.contact_email}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_email: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Direct Phone / Mobile</label>
+                      <input 
+                        type="text" 
+                        placeholder="+254 700 000000"
+                        value={bookingForm.contact_phone}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_phone: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Selected Tier</label>
+                      <select
+                        value={bookingForm.tier_slug}
+                        onChange={e => {
+                          const slug = e.target.value;
+                          const found = tierPackages.find(r => r.slug === slug);
+                          setBookingForm({
+                            ...bookingForm,
+                            tier_slug: slug,
+                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}` : '$599 / month'
+                          });
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                      >
+                        <option value="media-station">Single Station — $199/mo (2,000 Credits) · 2 Channels</option>
+                        <option value="media-network">Broadcaster Network Suite — $599/mo (7,500 Credits) · 10 Stations</option>
+                        <option value="media-conglomerate">Enterprise Media Conglomerate — $1,499/mo · Unlimited Channels</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Channel Count</label>
+                      <select
+                        value={bookingForm.channel_count}
+                        onChange={e => setBookingForm({ ...bookingForm, channel_count: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                      >
+                        <option value="1-2 Stations">1-2 Stations / Feeds</option>
+                        <option value="3-10 Broadcast Channels">3-10 Broadcast Channels</option>
+                        <option value="10-25 Regional Stations">10-25 Regional Stations</option>
+                        <option value="25+ Enterprise Network">25+ Enterprise Network</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Station Automation Software</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. RCS Zetta, Dalet, WideOrbit, Selector, Enco DAD"
+                      value={bookingForm.automation_software}
+                      onChange={e => setBookingForm({ ...bookingForm, automation_software: e.target.value })}
+                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Compliance Notes / PRO Reporting Requirements</label>
+                    <textarea 
+                      rows={2}
+                      placeholder="e.g. Need quarterly ASCAP & MCSK playlog exports and real-time discrepancy detection..."
+                      value={bookingForm.notes}
+                      onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
+                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={inquirySubmitting}
+                    className="role-btn-primary"
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      justifyContent: 'center',
+                      marginTop: '6px'
+                    }}
+                  >
+                    {inquirySubmitting ? 'Registering Broadcaster Plan…' : 'Lock In Rate & Configure Compliance Suite'}
+                  </button>
+
+                  <p style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', margin: '4px 0 0' }}>
+                    Non-binding reservation · Engineer assigned within 24 hours · SOC-2 compliant data handling
+                  </p>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

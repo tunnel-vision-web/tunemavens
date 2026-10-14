@@ -518,3 +518,41 @@ class CorporateAdInquiry(BaseDocument):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+# ======================================================================
+# Role Tier Packages & Commercial Inquiries for all platform personas
+# ======================================================================
+class RoleTierPackage(BaseDocument):
+    role: str  # 'creator' | 'label' | 'supervisor' | 'dj' | 'media_house' | 'consumer' | 'corporate'
+    slug: str
+    name: str
+    tier_badge: str
+    price_usd: float
+    billing_period: str = "month"  # "month" | "year" | "one_time" | "30_days"
+    credits: int = 0
+    key_metric: Optional[str] = None
+    features: List[str] = Field(default_factory=list)
+    deliverables: List[str] = Field(default_factory=list)
+    is_popular: bool = False
+    cta: str = "Get Started"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class RoleInquiry(BaseDocument):
+    reference_code: str
+    role: str
+    organization_name: Optional[str] = None
+    contact_name: str
+    contact_email: str
+    contact_phone: Optional[str] = None
+    user_id: Optional[str] = None
+    tier_slug: str
+    tier_name: Optional[str] = None
+    estimated_budget: Optional[str] = None
+    target_region: Optional[str] = None
+    target_genre: Optional[str] = None
+    catalog_or_audience_size: Optional[str] = None
+    notes: Optional[str] = None
+    status: str = "pending"  # 'pending' | 'contacted' | 'booked' | 'active'
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+

@@ -6,6 +6,24 @@ const STORAGE_KEY_USER = 'tunemavens_saved_user';
 
 export const DEFAULT_ACTIVE_APPS = ['epk-builder', 'catalog-porting'];
 
+export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
+  creator: ['epk-builder', 'catalog-porting', 'split-cascade'],
+  label: ['catalog-porting', 'split-cascade', 'publishing-election', 'distribution-election', 'sync-marketplace'],
+  dj: ['djpool', 'tunemavens-library'],
+  studio: ['sync-marketplace', 'escrow-contracts'],
+  supervisor: ['sync-marketplace', 'escrow-contracts'],
+  media_house: ['sync-marketplace', 'corporate-ads'],
+  media: ['sync-marketplace', 'corporate-ads'],
+  corporate: ['sync-marketplace', 'corporate-ads'],
+  consumer: ['tunemavens-library', 'tunemavens-tips'],
+  admin: [
+    'epk-builder', 'catalog-porting', 'split-cascade', 'publishing-election',
+    'distribution-election', 'djpool', 'sync-marketplace', 'escrow-contracts',
+    'tunemavens-library', 'tunemavens-tips', 'tunepay-inventory', 'tunepay-settlement',
+    'tunepay-devices', 'corporate-ads'
+  ]
+};
+
 function getUserKey(user) {
   if (!user) return 'default';
   const id = user.id || user._id || user.email || 'default';
@@ -91,7 +109,7 @@ export function saveStoredDeactivatedApps(user = null, deactivated = []) {
 export function reconcileUserApps(user) {
   if (!user) return null;
   const role = user.role || 'creator';
-  const isCreatorOrAdmin = ['creator', 'label', 'admin'].includes(role);
+  const roleDefaults = DEFAULT_ACTIVE_APPS_BY_ROLE[role] || DEFAULT_ACTIVE_APPS_BY_ROLE.creator;
   const storedActive = getStoredActivatedApps(user);
   const storedDeactivated = getStoredDeactivatedApps(user);
   const backendApps = Array.isArray(user.apps) ? user.apps : [];
@@ -102,8 +120,8 @@ export function reconcileUserApps(user) {
     storedActive.forEach(a => mergedSet.add(a));
   } else if (backendApps.length > 0) {
     backendApps.forEach(a => mergedSet.add(a));
-  } else if (isCreatorOrAdmin) {
-    DEFAULT_ACTIVE_APPS.forEach(a => mergedSet.add(a));
+  } else {
+    roleDefaults.forEach(a => mergedSet.add(a));
   }
 
   // Include any backend apps as long as they weren't explicitly deactivated

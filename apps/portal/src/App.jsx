@@ -666,6 +666,34 @@ function DashboardView({
   if (!sessionUser) return null;
 
   const renderActivePanel = () => {
+    // Role-based permission guard ensuring users only access authorized apps
+    const userRole = sessionUser?.role || 'creator';
+    const roleAllowed = {
+      admin: ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings'],
+      corporate: ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings'],
+      media_house: ['home', 'corporate-ads', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings'],
+      media: ['home', 'corporate-ads', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings'],
+      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
+      dj: ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
+      studio: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
+      supervisor: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
+      consumer: ['home', 'library', 'tips', 'stream-controls', 'profile', 'settings'],
+      creator: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings']
+    };
+    const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
+    if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
+      return (
+        <DashboardHome 
+          sessionUser={sessionUser}
+          tracks={catalogTracks}
+          userCredits={userCredits}
+          payoutBalance={payoutBalance}
+          setUserCredits={setUserCredits}
+          setActiveTab={setActiveTab}
+        />
+      );
+    }
+
     switch (activeTab) {
       case 'home':
         return (
@@ -814,24 +842,28 @@ function DashboardView({
         visibleKeys = ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
         break;
       case 'corporate':
-        visibleKeys = ['home', 'corporate-ads', 'crm', 'app-marketplace', 'social-ai', 'sync', 'escrow', 'profile'];
+        visibleKeys = ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile'];
+        break;
+      case 'media_house':
+      case 'media':
+        visibleKeys = ['home', 'corporate-ads', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile'];
         break;
       case 'label':
-        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile'];
         break;
       case 'dj':
-        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'djpool', 'library', 'tips', 'profile'];
+        visibleKeys = ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile'];
         break;
       case 'studio':
       case 'supervisor':
-        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'sync', 'escrow', 'profile'];
+        visibleKeys = ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile'];
         break;
       case 'consumer':
         visibleKeys = ['home', 'library', 'tips', 'stream-controls', 'profile'];
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'corporate-ads', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'social-ai', 'crm', 'app-marketplace', 'profile'];
         break;
     }
 

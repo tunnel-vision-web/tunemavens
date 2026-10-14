@@ -12,7 +12,9 @@ import {
   RiPlayListFill,
   RiCompass3Fill,
   RiSpeedUpFill,
-  RiEqualizerFill
+  RiEqualizerFill,
+  RiCloseFill,
+  RiCheckboxCircleFill
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
@@ -21,6 +23,64 @@ import appsLedgerImg from '../../../assets/images/apps_ledger.png'
 import heroMusic4Img from '../../../assets/images/hero_music_4.png'
 import heroMusic3Img from '../../../assets/images/hero_music_3.png'
 import bookingLogo from '../../../assets/logos/tunebooking-logo.png'
+
+const FALLBACK_DJ_RATES = [
+  {
+    slug: 'dj-resident',
+    name: 'Club Resident',
+    tier_badge: 'Essential Pool',
+    price_usd: 19.0,
+    billing_period: 'month',
+    credits: 200,
+    key_metric: '50 Lossless Downloads/mo · Clean & Dirty Edits',
+    features: [
+      'Access curated record pools across Afrobeat, Amapiano, Hip Hop, and Dance',
+      'Pre-analyzed tracks with verified BPM, musical key, and Rekordbox cue markers',
+      '50 high-speed track downloads per month with intro/outro extended edits',
+      'Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor Pro',
+      'Verified DJ identity badge on TuneStream and community forums'
+    ],
+    is_popular: false,
+    cta: 'Join DJ Pool'
+  },
+  {
+    slug: 'dj-touring',
+    name: 'Touring Pro DJ',
+    tier_badge: 'Most Popular',
+    price_usd: 49.0,
+    billing_period: 'month',
+    credits: 600,
+    key_metric: 'Unlimited Downloads · Stems & Exclusive Dubplates',
+    features: [
+      'Unlimited monthly downloads of lossless WAV masters and separated remix stems',
+      'Exclusive unreleased artist dubplates & early club test pressings before public release',
+      'Digital proof clearance hashes protecting your venue and live streams from DMCA strikes',
+      'Direct feedback loop: rate unreleased tracks to send data straight to record label A&Rs',
+      '600 monthly TM credits for high-priority dubplate requests',
+      'Priority download queue bandwidth for weekend set preparation'
+    ],
+    is_popular: true,
+    cta: 'Go Touring Pro'
+  },
+  {
+    slug: 'dj-headliner',
+    name: 'Headline & Festival Curator',
+    tier_badge: 'Taste-Maker',
+    price_usd: 129.0,
+    billing_period: 'month',
+    credits: 1800,
+    key_metric: 'Direct Label Drop Inbox & Radio Mix Distribution',
+    features: [
+      'Personalized promo inbox where top labels send unreleased tracks directly for your sets',
+      'Host verified syndicated mix series & live DJ sessions on TuneStream Web Radio',
+      'Monetize live DJ sets with direct listener tipping and listener tip splits',
+      'VIP access to artist tour soundchecks and festival press rooms',
+      '1,800 monthly TM credits & personal artist liaison support'
+    ],
+    is_popular: false,
+    cta: 'Apply for Headliner Tier'
+  }
+];
 
 export default function DjLandingPage() {
   const accent = '#14b8a6';
@@ -34,8 +94,40 @@ export default function DjLandingPage() {
   const progressRef = useRef(null);
   const timerRef = useRef(null);
 
+  // Live Rates & Booking Modal State
+  const [tierPackages, setTierPackages] = useState(FALLBACK_DJ_RATES);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [inquirySubmitting, setInquirySubmitting] = useState(false);
+  const [inquirySuccess, setInquirySuccess] = useState(null);
+
+  const [bookingForm, setBookingForm] = useState({
+    organization_name: '',
+    contact_name: '',
+    contact_email: '',
+    contact_phone: '',
+    tier_slug: 'dj-touring',
+    dj_software: 'Pioneer Rekordbox',
+    resident_city: 'Nairobi / Global Touring',
+    estimated_budget: '$49 / month (600 Credits)',
+    notes: ''
+  });
+
   const SLIDE_DURATION = 12000; // 12s per slide
   const TRANSITION_OUT_MS = 240;
+
+  useEffect(() => {
+    fetch('/api/roles/dj/packages')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setTierPackages(data);
+        }
+      })
+      .catch(err => {
+        console.warn('Using fallback DJ rates:', err);
+      });
+  }, []);
 
   const slides = [
     {
@@ -45,8 +137,8 @@ export default function DjLandingPage() {
       hLine2: 'Zero Compression Loss.',
       hLine2Color: '#14b8a6',
       s: 'Pristine 24-bit WAV, FLAC, and 320kbps MP3 batch downloads packaged with verified Rekordbox ID3 tags, BPM detection, and high-res cover art.',
-      b1: 'Access DJ Record Pool',
-      b1link: '/register?role=dj',
+      b1: 'Review DJ Pool Plans',
+      b1link: '#dj-rates',
       b2: 'Explore Lossless Vault',
       b2link: '#pool-capabilities',
       image: headerImg
@@ -58,36 +150,36 @@ export default function DjLandingPage() {
       hLine2: '100% Legal Clearances.',
       hLine2Color: '#14b8a6',
       s: 'Secure verifiable digital drop hashes and stem clearance licenses directly from copyright holders. Spin live and stream sets without DMCA strikes.',
-      b1: 'Clear Stem Permissions',
+      b1: 'Clear Stems Live',
       b1link: '/register?role=dj',
-      b2: 'Review IP Engine',
-      b2link: '#stem-engine',
+      b2: 'Stem Clearance Protocol',
+      b2link: '#stem-clearance',
       image: appsLedgerImg
     },
     {
-      badge: 'Club & Festival Set Logging',
+      badge: 'Curated Extended DJ Edits',
       dot: '#14b8a6',
-      hLine1: 'Resident Venues to Mainstage.',
-      hLine2: 'Automated Set Cue Sheets.',
+      hLine1: 'Club-Tested Intros.',
+      hLine2: 'Quick Transition Outros.',
       hLine2Color: '#14b8a6',
-      s: 'Export verified set cue sheets and playlist logs for club promoters, festival organizers, and radio broadcasters to ensure artists receive performance royalties.',
-      b1: 'Join Verified DJ Roster',
-      b1link: '/register?role=dj',
-      b2: 'Explore DJ Apps',
-      b2link: '/apps',
+      s: 'Every track includes 8-bar drum intros, vocal-up cuts, and transition tools optimized for fast-paced club, festival, and radio broadcast performances.',
+      b1: 'Preview Club Edits',
+      b1link: '/tools',
+      b2: 'Edit Structure Specs',
+      b2link: '#edit-specs',
       image: heroMusic4Img
     },
     {
-      badge: 'Curated Dubplates & Extended Edits',
+      badge: 'Early Access Artist Drops',
       dot: '#14b8a6',
-      hLine1: 'Intro, Quick-Hit & Acapellas.',
-      hLine2: 'Built for Performance.',
+      hLine1: 'Exclusive Unreleased Cuts.',
+      hLine2: 'Test Track Reactions.',
       hLine2Color: '#14b8a6',
-      s: '8-bar intro edits, quick-hit transition drops, clean radio cuts, and isolated vocal dubplates delivered straight from verified independent labels and producers.',
-      b1: 'Get Started Free',
+      s: 'Receive private pre-release dubplates from verified producers. Provide dancefloor feedback and rate crowd response directly back to artists and labels.',
+      b1: 'Join Promo Roster',
       b1link: '/register?role=dj',
-      b2: 'View Audio Formats',
-      b2link: '#formats',
+      b2: 'Label Feedback Engine',
+      b2link: '#feedback-loop',
       image: heroMusic3Img
     }
   ];
@@ -123,7 +215,6 @@ export default function DjLandingPage() {
     goToSlide((currentSlide + 1) % slideCount);
   };
 
-  // rAF progress bar and slide advancement triggering cascade on every slide
   useEffect(() => {
     const startTime = Date.now();
 
@@ -154,14 +245,73 @@ export default function DjLandingPage() {
     };
   }, [currentSlide, slideCount]);
 
+  const scrollToRates = (e) => {
+    if (e) e.preventDefault();
+    const el = document.getElementById('dj-rates');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', '#dj-rates');
+    }
+  };
+
+  const handleOpenBooking = (tier) => {
+    setSelectedTier(tier);
+    setBookingForm(prev => ({
+      ...prev,
+      tier_slug: tier.slug,
+      estimated_budget: `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+    }));
+    setInquirySuccess(null);
+    setModalOpen(true);
+  };
+
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+    setInquirySubmitting(true);
+    setInquirySuccess(null);
+
+    try {
+      const payload = {
+        role: 'dj',
+        organization_name: bookingForm.organization_name || bookingForm.contact_name,
+        contact_name: bookingForm.contact_name,
+        contact_email: bookingForm.contact_email,
+        contact_phone: bookingForm.contact_phone || undefined,
+        tier_slug: bookingForm.tier_slug,
+        tier_name: selectedTier?.name,
+        estimated_budget: bookingForm.estimated_budget,
+        notes: `Software: ${bookingForm.dj_software} | Location: ${bookingForm.resident_city}. ${bookingForm.notes || ''}`
+      };
+
+      const res = await fetch('/api/roles/dj/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInquirySuccess({
+          ref: data.reference_code,
+          msg: data.message
+        });
+      } else {
+        alert(data.detail || 'Unable to submit reservation. Please try again.');
+      }
+    } catch (err) {
+      alert('Network error. Please verify your connection.');
+    } finally {
+      setInquirySubmitting(false);
+    }
+  };
+
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
-        aria-label="DJ Hero Carousel"
+        aria-label="DJs & Curators Hero Carousel"
       >
-        {/* Background cross-fade layers */}
         <div className="bgs">
           {slides.map((s, index) => (
             <div 
@@ -188,7 +338,6 @@ export default function DjLandingPage() {
           />
         </div>
 
-        {/* Hero Stage Content (Constricted to 1240px) */}
         <div className="hs role-hero-stage">
           <div 
             className="hcont"
@@ -197,22 +346,19 @@ export default function DjLandingPage() {
             onMouseLeave={() => setTitleHovered(false)}
             style={{ cursor: 'pointer' }}
           >
-            {/* Brand Logo Display */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
               <img 
                 src={bookingLogo} 
-                alt="TuneBooking Brand Logo" 
+                alt="TuneBooking Logo" 
                 style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} 
               />
             </div>
 
-            {/* Breadcrumb indicator */}
             <div className="role-breadcrumb" style={{ justifyContent: 'center', marginBottom: '14px' }}>
-              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>DJs</span>
+              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>DJs &amp; Curators</span>
             </div>
 
-            {/* Pulsing Pill Badge */}
-            <div className={`he hbadge ${slideState}`}>
+            <div className="he hbadge in">
               <span 
                 className="bdot" 
                 style={{ 
@@ -223,7 +369,6 @@ export default function DjLandingPage() {
               <span>{currentSlideData.badge}</span>
             </div>
             
-            {/* Staggered 2-Line Headline — Slides In One At A Time */}
             <h1 className="ht htitle">
               <span className={`ht-line ht-line-1 ${slideState}`}>{currentSlideData.hLine1}</span>
               <span 
@@ -234,20 +379,30 @@ export default function DjLandingPage() {
               </span>
             </h1>
             
-            {/* Subtitle */}
             <p className={`hp hsub ${slideState}`}>
               {currentSlideData.s}
             </p>
 
-            {/* Dual CTA Buttons (Strict Flat Colors Standard) */}
             <div className={`hb hbtns ${slideState}`}>
-              <Link 
-                to={currentSlideData.b1link} 
-                className="hbp"
-                style={{ background: currentSlideData.dot }}
-              >
-                {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
-              </Link>
+              {currentSlideData.b1link.startsWith('#') ? (
+                <a 
+                  href={currentSlideData.b1link} 
+                  className="hbp"
+                  style={{ background: currentSlideData.dot }}
+                  onClick={scrollToRates}
+                >
+                  {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
+                </a>
+              ) : (
+                <Link 
+                  to={currentSlideData.b1link} 
+                  className="hbp"
+                  style={{ background: currentSlideData.dot }}
+                >
+                  {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
+                </Link>
+              )}
+
               {currentSlideData.b2link.startsWith('#') ? (
                 <a 
                   href={currentSlideData.b2link} 
@@ -272,7 +427,6 @@ export default function DjLandingPage() {
           </div>
         </div>
 
-        {/* Side Arrows Navigation (Constricted to 1240px container) */}
         <div className={`sui-arrows ${slideState}`}>
           <button 
             type="button" 
@@ -292,7 +446,6 @@ export default function DjLandingPage() {
           </button>
         </div>
 
-        {/* Bottom Timer Progress Bar & Pagination Dots (Constricted to 1240px container) */}
         <div className={`sui-bottom ${slideState}`}>
           <div className="spr">
             <div 
@@ -322,81 +475,80 @@ export default function DjLandingPage() {
         </div>
       </section>
 
-      {/* ================= 2. Main Content (Strictly Constricted to 1240px) ================= */}
+      {/* ================= 2. Main Content ================= */}
       <div className="role-container">
-        {/* Stats Ribbon - Centered */}
         <section className="role-stats-ribbon" style={{ marginTop: '40px' }}>
           <div className="role-stat-item">
-            <span className="role-stat-value">FLAC / WAV</span>
-            <span className="role-stat-label">Lossless 24-bit Uncompressed Masters</span>
+            <span className="role-stat-value">320k / WAV</span>
+            <span className="role-stat-label">Lossless Audio Downloads</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">100% Cleared</span>
-            <span className="role-stat-label">Stem Remix IP Permissions with Proof Hashes</span>
+            <span className="role-stat-value">100%</span>
+            <span className="role-stat-label">DMCA-Safe Performance Rights</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">Instant</span>
-            <span className="role-stat-label">BPM, Key &amp; Waveform Transient Detection</span>
+            <span className="role-stat-value">8-Bar</span>
+            <span className="role-stat-label">Curated Extended DJ Intro Edits</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">Direct Link</span>
-            <span className="role-stat-label">BPM Supreme, Franchise &amp; TuneMavens Pools</span>
+            <span className="role-stat-value">VIP</span>
+            <span className="role-stat-label">Direct Label Promo Drop Inbox</span>
           </div>
         </section>
 
-        {/* 3. Core Feature Pillars Grid (All Icons Horizontally Centered in Content Box) */}
+        {/* 3. Core Feature Pillars Grid */}
         <section id="pool-capabilities" style={{ scrollMarginTop: '100px' }}>
           <div className="role-section-header">
-            <span className="role-section-eyebrow">DJ Pool Capabilities</span>
-            <h3 className="role-section-title">Engineered for Seamless Performance &amp; Track Curation</h3>
+            <span className="role-section-eyebrow">The Performance Pool</span>
+            <h3 className="role-section-title">Engineered for Club, Festival &amp; Radio Sets</h3>
             <p className="role-section-desc">
-              Get the cleanest versions of trending club anthems, intro edits, instrumentals, and acapellas directly from verified creators.
+              From uncompressed audio downloads to verifiable stem clearance certificates, take your mixing to the next level.
             </p>
           </div>
 
           <div className="role-pillars-grid">
             <div className="role-pillar-card">
-              <div className="role-pillar-icon"><RiFolderDownloadFill size={24} /></div>
-              <h4 className="role-pillar-title">TuneMavens Lossless Pool</h4>
-              <p className="role-pillar-desc">
-                Download pristine WAV and 320kbps MP3s directly into your USB flash drives or Rekordbox library with clean ID3 tags, album art, and accurate BPM markers.
-              </p>
-            </div>
-
-            <div className="role-pillar-card" id="stem-engine" style={{ scrollMarginTop: '100px' }}>
               <div className="role-pillar-icon"><RiSoundModuleFill size={24} /></div>
-              <h4 className="role-pillar-title">Stem Clearance Engine</h4>
+              <h4 className="role-pillar-title">Verified Rekordbox &amp; Serato Cues</h4>
               <p className="role-pillar-desc">
-                Clear remix permissions directly with copyright holders. Secure digital drop hashes and perform remixes at festivals without risking copyright strikes.
+                Every track comes pre-analyzed with accurate musical key (Camelot Wheel), BPM detection, and beat grid markers ready to drop onto your flash drive.
               </p>
             </div>
 
-            <div className="role-pillar-card" id="formats" style={{ scrollMarginTop: '100px' }}>
-              <div className="role-pillar-icon"><RiRadioFill size={24} /></div>
-              <h4 className="role-pillar-title">Intro, Quick-Hit &amp; Acapella Edits</h4>
+            <div className="role-pillar-card" id="stem-clearance" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiShieldCheckFill size={24} /></div>
+              <h4 className="role-pillar-title">Stem Performance Clearance</h4>
               <p className="role-pillar-desc">
-                Every release includes performance-ready DJ edits: 8-bar intro edits, quick-hit transitions, clean radio versions, and raw isolated acapellas.
+                Download isolated acapellas and instrumentals backed by legal stem clearance licenses, protecting live stream sets from copyright mutes.
+              </p>
+            </div>
+
+            <div className="role-pillar-card" id="edit-specs" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiDiscFill size={24} /></div>
+              <h4 className="role-pillar-title">Club Extended &amp; Transition Edits</h4>
+              <p className="role-pillar-desc">
+                Extended clean, dirty, instrumental, and transition edits (e.g. 100 to 128 BPM) created by seasoned resident DJs for seamless mixing.
               </p>
             </div>
 
             <div className="role-pillar-card">
-              <div className="role-pillar-icon"><RiPlayListFill size={24} /></div>
-              <h4 className="role-pillar-title">Automated Cue Sheet Logger</h4>
+              <div className="role-pillar-icon"><RiFolderDownloadFill size={24} /></div>
+              <h4 className="role-pillar-title">Batch Queue Downloads</h4>
               <p className="role-pillar-desc">
-                Export verified tracklists and set logs for radio broadcasters and festival compliance to ensure original creators receive proper performance royalties.
+                Build your weekend setlist and batch download 50+ lossless files in a single high-speed zip archive directly from our global CDN.
+              </p>
+            </div>
+
+            <div className="role-pillar-card" id="feedback-loop" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiRadioFill size={24} /></div>
+              <h4 className="role-pillar-title">Taste-Maker Feedback Loop</h4>
+              <p className="role-pillar-desc">
+                Rate unreleased test pressings and provide dancefloor reactions directly back to label A&amp;Rs, unlocking exclusive promotional crates.
               </p>
             </div>
 
             <div className="role-pillar-card">
               <div className="role-pillar-icon"><RiHeadphoneFill size={24} /></div>
-              <h4 className="role-pillar-title">DJ Ingest &amp; Download Console</h4>
-              <p className="role-pillar-desc">
-                Track your mix download stats, downloaded stem clearances, and format distribution (MP3 vs WAV) in your personalized DJ dashboard.
-              </p>
-            </div>
-
-            <div className="role-pillar-card">
-              <div className="role-pillar-icon"><RiShieldCheckFill size={24} /></div>
               <h4 className="role-pillar-title">Direct Artist Drops &amp; Dubplates</h4>
               <p className="role-pillar-desc">
                 Connect directly with trending producers to receive exclusive promotional dubplates and unreleased club mixes before global commercial releases.
@@ -405,7 +557,7 @@ export default function DjLandingPage() {
           </div>
         </section>
 
-        {/* 4. Showcase Section (Constricted to 1240px) */}
+        {/* 4. Showcase Section */}
         <section className="role-showcase-panel">
           <div className="role-showcase-content">
             <span className="role-section-eyebrow">Performance Studio</span>
@@ -419,17 +571,22 @@ export default function DjLandingPage() {
               <li><RiCheckFill size={18} /> Synchronized feedback ratings direct to record labels and artists</li>
               <li><RiCheckFill size={18} /> Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor</li>
             </ul>
-            <Link to="/register?role=dj" className="role-btn-primary">
-              Join the Verified DJ Roster <RiArrowRightLine size={14} />
-            </Link>
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '20px' }}>
+              <Link to="/register?role=dj" className="role-btn-primary">
+                Join the Verified DJ Roster <RiArrowRightLine size={14} />
+              </Link>
+              <a href="#dj-rates" className="role-btn-secondary" onClick={scrollToRates}>
+                Review DJ Pool Plans
+              </a>
+            </div>
           </div>
           <div className="role-showcase-image-wrap">
             <img src={appsLedgerImg} alt="TuneMavens DJ Pool and Stem Clearance Engine" />
           </div>
         </section>
 
-        {/* 5. 3-Step Guided Workflow Path (All Icons Horizontally Centered in Content Box) */}
-        <section>
+        {/* 5. 3-Step Guided Workflow Path */}
+        <section style={{ marginBottom: '64px' }}>
           <div className="role-section-header">
             <span className="role-section-eyebrow">DJ Fast-Track</span>
             <h3 className="role-section-title">From Resident Venue to Global Club Sets</h3>
@@ -469,7 +626,113 @@ export default function DjLandingPage() {
           </div>
         </section>
 
-        {/* 6. Conversion CTA Banner (Constricted to 1240px) */}
+        {/* ================= 6. COMMERCIAL DJ RATES & TIERS ================= */}
+        <section id="dj-rates" style={{ scrollMarginTop: '100px', marginBottom: '72px' }}>
+          <div className="role-section-header">
+            <span className="role-section-eyebrow">Transparent DJ Pool Subscriptions</span>
+            <h3 className="role-section-title">Record Pool Tiers &amp; Curator Memberships</h3>
+            <p className="role-section-desc">
+              From resident club DJs needing high-speed batch downloads to headline festival taste-makers premiering exclusive unreleased dubplates.
+            </p>
+          </div>
+
+          <div className="role-rates-grid">
+            {tierPackages.map((rate) => (
+              <div 
+                key={rate.slug} 
+                className={`role-rate-card ${rate.is_popular ? 'featured' : ''}`}
+              >
+                {rate.is_popular && (
+                  <span className="role-featured-tag">
+                    Most Popular
+                  </span>
+                )}
+
+                <span className="role-rate-badge">{rate.tier_badge || 'DJ Tier'}</span>
+                <h4 className="role-rate-title">{rate.name}</h4>
+
+                <div className="role-rate-price-box">
+                  <span className="role-rate-price">${rate.price_usd?.toLocaleString()}</span>
+                  <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
+                </div>
+
+                <div className="role-rate-submeta">
+                  <span style={{ color: '#f59e0b', fontWeight: 700 }}>
+                    {rate.credits?.toLocaleString()} TM Credits/mo
+                  </span>
+                  <span style={{ color: '#64748b' }}>·</span>
+                  <span style={{ color: accent, fontWeight: 600 }}>
+                    {rate.key_metric || 'DJ Pool Access'}
+                  </span>
+                </div>
+
+                <div className="role-rate-reach">
+                  <strong style={{ color: '#fff' }}>{rate.key_metric}</strong>
+                </div>
+
+                <ul className="role-rate-features">
+                  {(rate.features || []).map((feature, i) => (
+                    <li key={i} className="role-rate-feature-item">
+                      <RiCheckFill size={16} color={accent} style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  className="role-btn-primary"
+                  onClick={() => handleOpenBooking(rate)}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    marginTop: 'auto'
+                  }}
+                >
+                  {rate.cta || 'Join Pool'} <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Technical Specs & Compliance Panel */}
+          <div className="role-specs-panel">
+            <h4 className="role-specs-title">
+              <RiShieldCheckFill size={20} color={accent} /> DJ Pool Technical Standards &amp; Clearance Verification
+            </h4>
+            <div className="role-specs-grid">
+              <div className="role-spec-box">
+                <span className="role-spec-label">Audio Formats</span>
+                <div className="role-spec-value">
+                  Pristine 24-bit WAV &amp; 320kbps CBR MP3 with pre-analyzed Rekordbox ID3 cues, musical key, and BPM metadata.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Edit Formats</span>
+                <div className="role-spec-value">
+                  Extended Club Mix (8-bar intro/outro), Radio Edit, Instrumental, and Vocal Acapella stem packages.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Performance Indemnity</span>
+                <div className="role-spec-value">
+                  Authorized promotional performance licenses protecting resident venues, clubs, and live streams from DMCA strikes.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Software Compatibility</span>
+                <div className="role-spec-value">
+                  Fully certified for Pioneer Rekordbox (Export &amp; Performance mode), Serato DJ Pro, Traktor Pro 3, and VirtualDJ.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 7. Conversion CTA Banner */}
         <section className="role-conversion-banner">
           <h3>Upgrade Your DJ Record Pool Today</h3>
           <p>
@@ -479,15 +742,240 @@ export default function DjLandingPage() {
             <Link to="/register?role=dj" className="role-btn-primary">
               Register Free as a DJ <RiArrowRightLine size={15} />
             </Link>
-            <Link to="/tools" className="role-btn-secondary">
-              Explore Music Operations Engine
-            </Link>
+            <a href="#dj-rates" className="role-btn-secondary" onClick={scrollToRates}>
+              Review DJ Pool Plans
+            </a>
           </div>
           <span className="role-trust-note">
             Free onboarding tier · Rekordbox &amp; Serato ready · High-speed global CDN downloads
           </span>
         </section>
       </div>
+
+      {/* ================= 8. DJ PLAN BOOKING & ONBOARDING MODAL ================= */}
+      {modalOpen && (
+        <div 
+          className="auth-modal-overlay-wrapper" 
+          onClick={(e) => { if (e.target.className === 'auth-modal-overlay-wrapper') setModalOpen(false); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(3,7,18,0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
+        >
+          <div 
+            className="auth-modal-card glass-panel" 
+            style={{ 
+              maxWidth: '560px', 
+              width: '100%', 
+              padding: '32px', 
+              borderRadius: '8px', 
+              border: `1px solid ${accent}`,
+              position: 'relative',
+              maxHeight: '92vh',
+              overflowY: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setModalOpen(false)} 
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+            >
+              <RiCloseFill size={22} />
+            </button>
+
+            {inquirySuccess ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <RiCheckboxCircleFill size={56} color="#22c55e" style={{ margin: '0 auto 16px', display: 'block' }} />
+                <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: '0 0 10px', fontFamily: 'Sansation, sans-serif' }}>
+                  DJ Pool Membership Logged
+                </h3>
+                <div style={{
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                  padding: '14px',
+                  borderRadius: '4px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Tracking Reference Code
+                  </div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#22c55e', fontFamily: 'Space Grotesk, sans-serif', marginTop: '4px' }}>
+                    {inquirySuccess.ref}
+                  </div>
+                </div>
+                <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '24px' }}>
+                  {inquirySuccess.msg} Your pool profile has been registered and credentials routed to Intermaven Smart CRM.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button 
+                    onClick={() => setModalOpen(false)} 
+                    className="role-btn-primary"
+                  >
+                    Done
+                  </button>
+                  <Link 
+                    to="/register?role=dj" 
+                    className="role-btn-secondary"
+                    onClick={() => setModalOpen(false)}
+                  >
+                    Complete DJ Profile
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ textAlign: 'left', marginBottom: '20px' }}>
+                  <span style={{ fontSize: '11px', color: accent, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    DJ Pool Plan Reservation
+                  </span>
+                  <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: '4px 0 6px', fontFamily: 'Sansation, sans-serif' }}>
+                    {selectedTier?.name || 'DJ Record Pool Plan'}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+                    Lock in your DJ pool membership and get instant access to lossless WAV downloads and stem clearances.
+                  </p>
+                </div>
+
+                <form onSubmit={handleInquirySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>DJ / Stage Name *</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. DJ Joe Mfalme"
+                        value={bookingForm.organization_name}
+                        onChange={e => setBookingForm({ ...bookingForm, organization_name: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Contact Person *</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. Joseph Mwangi"
+                        value={bookingForm.contact_name}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_name: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Email Address *</label>
+                      <input 
+                        type="email" 
+                        required
+                        placeholder="dj@club.com"
+                        value={bookingForm.contact_email}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_email: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Phone / WhatsApp</label>
+                      <input 
+                        type="text" 
+                        placeholder="+254 700 000000"
+                        value={bookingForm.contact_phone}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_phone: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Selected Tier</label>
+                      <select
+                        value={bookingForm.tier_slug}
+                        onChange={e => {
+                          const slug = e.target.value;
+                          const found = tierPackages.find(r => r.slug === slug);
+                          setBookingForm({
+                            ...bookingForm,
+                            tier_slug: slug,
+                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}` : '$49 / month'
+                          });
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                      >
+                        <option value="dj-resident">Club Resident — $19/mo (200 Credits) · 50 Downloads</option>
+                        <option value="dj-touring">Touring Pro DJ — $49/mo (600 Credits) · Unlimited WAV &amp; Stems</option>
+                        <option value="dj-headliner">Headliner &amp; Festival Curator — $129/mo (1,800 Credits) · Dubplates</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Primary DJ Software</label>
+                      <select
+                        value={bookingForm.dj_software}
+                        onChange={e => setBookingForm({ ...bookingForm, dj_software: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                      >
+                        <option value="Pioneer Rekordbox">Pioneer Rekordbox</option>
+                        <option value="Serato DJ Pro">Serato DJ Pro</option>
+                        <option value="Traktor Pro">Native Instruments Traktor</option>
+                        <option value="Engine DJ">Denon Engine DJ</option>
+                        <option value="VirtualDJ">VirtualDJ</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Resident Clubs / City / Touring Territories</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Alchemist Bar (Nairobi), Konka (Johannesburg), London Club Circuit"
+                      value={bookingForm.resident_city}
+                      onChange={e => setBookingForm({ ...bookingForm, resident_city: e.target.value })}
+                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Preferred Genres &amp; Dubplate Notes</label>
+                    <textarea 
+                      rows={2}
+                      placeholder="e.g. Focus on 3-step Afro-House, private school Amapiano, and unreleased club bootlegs..."
+                      value={bookingForm.notes}
+                      onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
+                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={inquirySubmitting}
+                    className="role-btn-primary"
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      justifyContent: 'center',
+                      marginTop: '6px'
+                    }}
+                  >
+                    {inquirySubmitting ? 'Registering DJ Plan…' : 'Lock In DJ Rate & Unlock Performance Pool'}
+                  </button>
+
+                  <p style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', margin: '4px 0 0' }}>
+                    Instant activation · 100% legal performance clearances · Global high-speed CDN
+                  </p>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

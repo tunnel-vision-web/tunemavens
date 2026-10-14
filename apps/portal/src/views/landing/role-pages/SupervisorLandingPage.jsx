@@ -12,7 +12,9 @@ import {
   RiExternalLinkLine,
   RiCompass3Fill,
   RiSoundModuleFill,
-  RiFileList3Line
+  RiFileList3Line,
+  RiCloseFill,
+  RiCheckboxCircleFill
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
@@ -23,8 +25,67 @@ import appsSyncImg from '../../../assets/images/apps_sync.png'
 import heroMusic4Img from '../../../assets/images/hero_music_4.png'
 import syncLogo from '../../../assets/logos/syncmavens-logo.png'
 
+const FALLBACK_SUPERVISOR_RATES = [
+  {
+    slug: 'supervisor-discovery',
+    name: 'Indie Supervisor Discovery',
+    tier_badge: 'Free Search',
+    price_usd: 0.0,
+    billing_period: 'month',
+    credits: 0,
+    key_metric: 'Search 50,000+ Pre-Cleared Masters',
+    features: [
+      'Search 50k+ tracks by mood, tempo (BPM), instrumentation, and territory',
+      'Listen to secure, watermarked preview streams in studio cutting rooms',
+      'Direct contact access to rights owners and verified master holders',
+      'Create and share private audition playlists with directors and editors',
+      'Standard sync inquiry submission'
+    ],
+    is_popular: false,
+    cta: 'Explore Catalog Free'
+  },
+  {
+    slug: 'supervisor-production',
+    name: 'Production Studio Pro',
+    tier_badge: 'Most Popular',
+    price_usd: 149.0,
+    billing_period: 'month',
+    credits: 1500,
+    key_metric: 'Unlimited Brief Submissions · 94%+ AI Match',
+    features: [
+      'Unlimited scene brief uploads with 94%+ AI match scoring against master audio',
+      'Instant download of separated stems (drums, bass, melodies, vocals) for sync edits',
+      '1-click export of industry-standard cue sheets (ISRC, CAE, duration timestamps)',
+      '100% pre-cleared, indemnity-backed licensing terms for indie films & web series',
+      'Direct in-app escrow contract execution with split guarantee',
+      '1,500 monthly TM credits for custom composer queries'
+    ],
+    is_popular: true,
+    cta: 'Activate Studio Pro'
+  },
+  {
+    slug: 'supervisor-broadcast',
+    name: 'Network & Studio Enterprise',
+    tier_badge: 'Worldwide Clearance',
+    price_usd: 499.0,
+    billing_period: 'month',
+    credits: 6000,
+    key_metric: 'Full Worldwide Indemnification & Urgent Turnaround',
+    features: [
+      'Full worldwide theatrical, national broadcast, and streaming SVOD clearances',
+      'Ironclad legal indemnification with zero residual union royalty exposure',
+      'Custom original composition & sonic branding commissions with verified composers',
+      'Urgent sync turnaround guarantee (< 4 hours for breaking broadcast cuts)',
+      'Custom volume rate cards for television series & multi-territory ad campaigns',
+      '6,000 monthly TM credits & dedicated senior music rights supervisor'
+    ],
+    is_popular: false,
+    cta: 'Contact Sync Director'
+  }
+];
+
 export default function SupervisorLandingPage() {
-  const accent = '#f59e0b';
+  const accent = '#10b981';
   const syncMavensUrl = getServiceUrl('syncmavens');
 
   // ================= HERO Slide Carousel State =================
@@ -36,60 +97,91 @@ export default function SupervisorLandingPage() {
   const progressRef = useRef(null);
   const timerRef = useRef(null);
 
+  // Live Rates & Booking Modal State
+  const [tierPackages, setTierPackages] = useState(FALLBACK_SUPERVISOR_RATES);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [inquirySubmitting, setInquirySubmitting] = useState(false);
+  const [inquirySuccess, setInquirySuccess] = useState(null);
+
+  const [bookingForm, setBookingForm] = useState({
+    organization_name: '',
+    contact_name: '',
+    contact_email: '',
+    contact_phone: '',
+    tier_slug: 'supervisor-production',
+    project_type: 'Film & Television',
+    estimated_budget: '$149 / month (1,500 Credits)',
+    notes: ''
+  });
+
   const SLIDE_DURATION = 12000; // 12s per slide
   const TRANSITION_OUT_MS = 240;
+
+  useEffect(() => {
+    fetch('/api/roles/supervisor/packages')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setTierPackages(data);
+        }
+      })
+      .catch(err => {
+        console.warn('Using fallback supervisor rates:', err);
+      });
+  }, []);
 
   const slides = [
     {
       badge: 'AI Scene Script Tagging',
-      dot: '#f59e0b',
+      dot: '#10b981',
       hLine1: 'Pitches That Hit.',
       hLine2: 'Get Licensed for Screen.',
-      hLine2Color: '#f59e0b',
+      hLine2Color: '#10b981',
       s: 'Translate natural language script notes and director cues into precise sonic tags: BPM, mood, era, and instrumentation. Discover the right sound in seconds.',
-      b1: 'Create Supervisor Account',
-      b1link: '/register?role=studio',
+      b1: 'Review Licensing Tiers',
+      b1link: '#supervisor-rates',
       b2: 'Launch SyncMavens Platform',
       b2link: syncMavensUrl,
       image: syncHeaderImg
     },
     {
       badge: '100% Pre-Cleared Catalogs',
-      dot: '#f59e0b',
+      dot: '#10b981',
       hLine1: 'Zero Legal Red Tape.',
       hLine2: 'Instant Escrow Contracting.',
-      hLine2Color: '#f59e0b',
-      s: 'Every catalog release carries verified master and publishing rights certificates. Secure one-stop sync clearance without stalled production deadlines.',
+      hLine2Color: '#10b981',
+      s: 'Both master and publishing shares are 100% verified and indemnified upfront. Execute sync agreements and escrow payouts in a single click.',
       b1: 'Browse Pre-Cleared Vault',
       b1link: '/register?role=studio',
-      b2: 'Review Clearance Engine',
-      b2link: '#pre-cleared',
+      b2: 'How Escrow Protects You',
+      b2link: '#escrow-safety',
       image: userSupervisorImg
     },
     {
-      badge: 'Multi-Stem Audition Console',
-      dot: '#f59e0b',
-      hLine1: 'Audition Isolated Stems.',
-      hLine2: '60 FPS Fluid Waveforms.',
-      hLine2Color: '#f59e0b',
-      s: 'Preview isolated drums, bass, vocals, and instrumental stems with dynamic watermarking and zero latency. Verify scene fit before locking edit cuts.',
-      b1: 'Try Interactive Auditions',
+      badge: 'Multi-Track Stems Ingress',
+      dot: '#10b981',
+      hLine1: 'Cut and Edit With Ease.',
+      hLine2: 'Isolated Multi-Track Stems.',
+      hLine2Color: '#10b981',
+      s: 'Download isolated drums, bass, vocals, and instrumental cues in uncompressed WAV formats, making scene fitting and dialogue mixing effortless.',
+      b1: 'Test Stem Player',
       b1link: '/tools',
-      b2: 'Inspect Audio Formats',
+      b2: 'Stem Specs',
       b2link: '#stems',
       image: appsSyncImg
     },
     {
-      badge: 'Broadcast Cue Sheet Logger',
-      dot: '#f59e0b',
-      hLine1: 'Automated Cue Sheets.',
-      hLine2: 'PRO Regulatory Reports.',
-      hLine2Color: '#f59e0b',
-      s: 'Export formatted cue sheets compliant with ASCAP, BMI, and PRS directly from project timelines. Ensure artists and publishers receive accurate performance royalties.',
-      b1: 'Join Supervisor Roster',
+      badge: 'Bespoke Sonic Scoring',
+      dot: '#10b981',
+      hLine1: 'Original Scores on Demand.',
+      hLine2: 'Curated Composer Network.',
+      hLine2Color: '#10b981',
+      s: 'Can\'t find an existing match? Post confidential scene briefs to verified independent composers across East Africa and the global diaspora.',
+      b1: 'Post Private Brief',
       b1link: '/register?role=studio',
-      b2: 'Launch SyncMavens Platform',
-      b2link: syncMavensUrl,
+      b2: 'Review Composer Roster',
+      b2link: '#composers',
       image: heroMusic4Img
     }
   ];
@@ -125,7 +217,6 @@ export default function SupervisorLandingPage() {
     goToSlide((currentSlide + 1) % slideCount);
   };
 
-  // rAF progress bar and slide advancement triggering cascade on every slide
   useEffect(() => {
     const startTime = Date.now();
 
@@ -156,14 +247,75 @@ export default function SupervisorLandingPage() {
     };
   }, [currentSlide, slideCount]);
 
+  const scrollToRates = (e) => {
+    if (e) e.preventDefault();
+    const el = document.getElementById('supervisor-rates');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', '#supervisor-rates');
+    }
+  };
+
+  const handleOpenBooking = (tier) => {
+    setSelectedTier(tier);
+    setBookingForm(prev => ({
+      ...prev,
+      tier_slug: tier.slug,
+      estimated_budget: tier.price_usd === 0 
+        ? 'Free Forever' 
+        : `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+    }));
+    setInquirySuccess(null);
+    setModalOpen(true);
+  };
+
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+    setInquirySubmitting(true);
+    setInquirySuccess(null);
+
+    try {
+      const payload = {
+        role: 'supervisor',
+        organization_name: bookingForm.organization_name,
+        contact_name: bookingForm.contact_name,
+        contact_email: bookingForm.contact_email,
+        contact_phone: bookingForm.contact_phone || undefined,
+        tier_slug: bookingForm.tier_slug,
+        tier_name: selectedTier?.name,
+        estimated_budget: bookingForm.estimated_budget,
+        notes: `Project Type: ${bookingForm.project_type}. ${bookingForm.notes || ''}`
+      };
+
+      const res = await fetch('/api/roles/supervisor/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInquirySuccess({
+          ref: data.reference_code,
+          msg: data.message
+        });
+      } else {
+        alert(data.detail || 'Unable to submit reservation. Please try again.');
+      }
+    } catch (err) {
+      alert('Network error. Please verify your connection.');
+    } finally {
+      setInquirySubmitting(false);
+    }
+  };
+
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
-        aria-label="Music Supervisor Hero Carousel"
+        aria-label="Music Supervisors Hero Carousel"
       >
-        {/* Background cross-fade layers */}
         <div className="bgs">
           {slides.map((s, index) => (
             <div 
@@ -190,7 +342,6 @@ export default function SupervisorLandingPage() {
           />
         </div>
 
-        {/* Hero Stage Content (Constricted to 1240px) */}
         <div className="hs role-hero-stage">
           <div 
             className="hcont"
@@ -199,22 +350,19 @@ export default function SupervisorLandingPage() {
             onMouseLeave={() => setTitleHovered(false)}
             style={{ cursor: 'pointer' }}
           >
-            {/* Brand Logo Display */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
               <img 
                 src={syncLogo} 
-                alt="SyncMavens Brand Logo" 
+                alt="SyncMavens Logo" 
                 style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} 
               />
             </div>
 
-            {/* Breadcrumb indicator */}
             <div className="role-breadcrumb" style={{ justifyContent: 'center', marginBottom: '14px' }}>
-              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>Music Supervisors</span>
+              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>Music Supervisors &amp; Studios</span>
             </div>
 
-            {/* Pulsing Pill Badge */}
-            <div className={`he hbadge ${slideState}`}>
+            <div className="he hbadge in">
               <span 
                 className="bdot" 
                 style={{ 
@@ -225,7 +373,6 @@ export default function SupervisorLandingPage() {
               <span>{currentSlideData.badge}</span>
             </div>
             
-            {/* Staggered 2-Line Headline — Slides In One At A Time */}
             <h1 className="ht htitle">
               <span className={`ht-line ht-line-1 ${slideState}`}>{currentSlideData.hLine1}</span>
               <span 
@@ -236,22 +383,19 @@ export default function SupervisorLandingPage() {
               </span>
             </h1>
             
-            {/* Subtitle */}
             <p className={`hp hsub ${slideState}`}>
               {currentSlideData.s}
             </p>
 
-            {/* Dual CTA Buttons (Strict Flat Colors Standard) */}
             <div className={`hb hbtns ${slideState}`}>
-              {currentSlideData.b1link.startsWith('http') ? (
+              {currentSlideData.b1link.startsWith('#') ? (
                 <a 
                   href={currentSlideData.b1link} 
                   className="hbp"
-                  target="_blank" 
-                  rel="noopener noreferrer"
                   style={{ background: currentSlideData.dot }}
+                  onClick={scrollToRates}
                 >
-                  {currentSlideData.b1} <RiExternalLinkLine size={15} style={{ marginLeft: '6px' }} />
+                  {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
                 </a>
               ) : (
                 <Link 
@@ -262,24 +406,15 @@ export default function SupervisorLandingPage() {
                   {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
                 </Link>
               )}
+
               {currentSlideData.b2link.startsWith('http') ? (
-                <a href={currentSlideData.b2link} className="hbg" target="_blank" rel="noopener noreferrer">
-                  {currentSlideData.b2} <RiExternalLinkLine size={14} style={{ marginLeft: '4px' }} />
-                </a>
-              ) : currentSlideData.b2link.startsWith('#') ? (
                 <a 
                   href={currentSlideData.b2link} 
                   className="hbg"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const el = document.querySelector(currentSlideData.b2link);
-                    if (el) {
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      window.history.pushState(null, '', currentSlideData.b2link);
-                    }
-                  }}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {currentSlideData.b2}
+                  {currentSlideData.b2} <RiExternalLinkLine size={13} style={{ marginLeft: '4px' }} />
                 </a>
               ) : (
                 <Link to={currentSlideData.b2link} className="hbg">
@@ -290,7 +425,6 @@ export default function SupervisorLandingPage() {
           </div>
         </div>
 
-        {/* Side Arrows Navigation (Constricted to 1240px container) */}
         <div className={`sui-arrows ${slideState}`}>
           <button 
             type="button" 
@@ -310,7 +444,6 @@ export default function SupervisorLandingPage() {
           </button>
         </div>
 
-        {/* Bottom Timer Progress Bar & Pagination Dots (Constricted to 1240px container) */}
         <div className={`sui-bottom ${slideState}`}>
           <div className="spr">
             <div 
@@ -340,64 +473,63 @@ export default function SupervisorLandingPage() {
         </div>
       </section>
 
-      {/* ================= 2. Main Content (Strictly Constricted to 1240px) ================= */}
+      {/* ================= 2. Main Content ================= */}
       <div className="role-container">
-        {/* Stats Ribbon - Centered */}
         <section className="role-stats-ribbon" style={{ marginTop: '40px' }}>
           <div className="role-stat-item">
-            <span className="role-stat-value">100% Cleared</span>
-            <span className="role-stat-label">Master &amp; Publishing Escrow Guarantee</span>
+            <span className="role-stat-value">50,000+</span>
+            <span className="role-stat-label">Pre-Cleared Master Sync Tracks</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">94.8%</span>
-            <span className="role-stat-label">AI Scene Prompt Match Relevance</span>
+            <span className="role-stat-value">94%+</span>
+            <span className="role-stat-label">AI Brief Match Precision</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">0ms</span>
-            <span className="role-stat-label">Real-Time Fluid Audio Stem Auditions</span>
+            <span className="role-stat-value">1-Click</span>
+            <span className="role-stat-label">Automated Cue Sheet Generation</span>
           </div>
           <div className="role-stat-item">
-            <span className="role-stat-value">PRO Ready</span>
-            <span className="role-stat-label">Automated Cue Sheets with CAE/ISWC</span>
+            <span className="role-stat-value">100%</span>
+            <span className="role-stat-label">Worldwide Legal Indemnification</span>
           </div>
         </section>
 
         {/* 3. Core Feature Pillars Grid */}
-        <section id="sync-features" style={{ scrollMarginTop: '100px' }}>
+        <section id="escrow-safety" style={{ scrollMarginTop: '100px' }}>
           <div className="role-section-header">
-            <span className="role-section-eyebrow">Enterprise Sync Studio</span>
-            <h3 className="role-section-title">Built for High-Stakes Screen &amp; Game Production</h3>
+            <span className="role-section-eyebrow">Production-Grade Sync Tools</span>
+            <h3 className="role-section-title">Speed, Precision &amp; 100% Legal Certainty</h3>
             <p className="role-section-desc">
-              From natural language scene prompts to automated cue sheets, SyncMavens speeds up post-production music delivery.
+              Source authentic, high-impact music from emerging cultural epicenters with ironclad pre-cleared sync warranties.
             </p>
           </div>
 
           <div className="role-pillars-grid">
             <div className="role-pillar-card">
               <div className="role-pillar-icon"><RiSearchEyeFill size={24} /></div>
-              <h4 className="role-pillar-title">Natural Language Scene Parser</h4>
+              <h4 className="role-pillar-title">Natural Language Script Search</h4>
               <p className="role-pillar-desc">
-                Paste creative scene briefs, director mood boards, or screenplay excerpts. Our AI parses tempo, emotional arcs, instrumentation, and genre references to match catalogs instantly.
-              </p>
-            </div>
-
-            <div className="role-pillar-card" id="pre-cleared" style={{ scrollMarginTop: '100px' }}>
-              <div className="role-pillar-icon"><RiShieldCheckFill size={24} /></div>
-              <h4 className="role-pillar-title">100% Pre-Cleared Catalog</h4>
-              <p className="role-pillar-desc">
-                Every track in our Sync Marketplace is legally pre-cleared with writers and master owners agreeing to standardized terms, eliminating clearance gridlock.
+                Paste creative scene cues or emotional arcs directly into our AI search engine to retrieve tracks calibrated for pacing and mood.
               </p>
             </div>
 
             <div className="role-pillar-card">
               <div className="role-pillar-icon"><RiScales3Fill size={24} /></div>
-              <h4 className="role-pillar-title">Escrow Contracts &amp; Clearances</h4>
+              <h4 className="role-pillar-title">100% Pre-Cleared One-Stop Sync</h4>
               <p className="role-pillar-desc">
-                Fund sync licensing budgets safely through escrow contracts. Release payments only when final cue sheets, high-res masters, and stem deliveries are signed off.
+                Every track features pre-agreed master and sync splits. Clear music in hours rather than chasing multiple international publishing houses.
               </p>
             </div>
 
             <div className="role-pillar-card" id="stems" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiSoundModuleFill size={24} /></div>
+              <h4 className="role-pillar-title">Multi-Track Lossless Stems</h4>
+              <p className="role-pillar-desc">
+                Instant access to isolated drums, bass, synth pads, and vocal tracks in 24-bit WAV format for seamless cutting against screen dialogue.
+              </p>
+            </div>
+
+            <div className="role-pillar-card">
               <div className="role-pillar-icon"><RiRadioFill size={24} /></div>
               <h4 className="role-pillar-title">Audition Watermarking</h4>
               <p className="role-pillar-desc">
@@ -413,11 +545,11 @@ export default function SupervisorLandingPage() {
               </p>
             </div>
 
-            <div className="role-pillar-card">
+            <div className="role-pillar-card" id="composers" style={{ scrollMarginTop: '100px' }}>
               <div className="role-pillar-icon"><RiCompass3Fill size={24} /></div>
-              <h4 className="role-pillar-title">Sync Licensing Supervisor Console</h4>
+              <h4 className="role-pillar-title">Bespoke Scoring Commissions</h4>
               <p className="role-pillar-desc">
-                Monitor sync licensing budgets, active project briefs (films, commercials, video games), and licensed track counts under your dedicated supervisor console.
+                Commission custom score pieces from verified composers across Afrobeats, Amapiano, and cinematic electronic textures under standard escrow contracts.
               </p>
             </div>
           </div>
@@ -437,12 +569,12 @@ export default function SupervisorLandingPage() {
               <li><RiCheckFill size={18} /> Multi-territory, worldwide media buyout and festival licensing options</li>
               <li><RiCheckFill size={18} /> Direct line to verified songwriters and label A&amp;Rs</li>
             </ul>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '20px' }}>
               <Link to="/register?role=studio" className="role-btn-primary">
                 Join Supervisor Network <RiArrowRightLine size={14} />
               </Link>
-              <a href={syncMavensUrl} className="role-btn-secondary" target="_blank" rel="noopener noreferrer">
-                Launch SyncMavens <RiExternalLinkLine size={14} />
+              <a href="#supervisor-rates" className="role-btn-secondary" onClick={scrollToRates}>
+                Review Supervisor Plans
               </a>
             </div>
           </div>
@@ -452,7 +584,7 @@ export default function SupervisorLandingPage() {
         </section>
 
         {/* 5. 3-Step Guided Workflow Path */}
-        <section>
+        <section style={{ marginBottom: '64px' }}>
           <div className="role-section-header">
             <span className="role-section-eyebrow">Licensing Flow</span>
             <h3 className="role-section-title">How Supervisors License Music in 3 Steps</h3>
@@ -492,7 +624,115 @@ export default function SupervisorLandingPage() {
           </div>
         </section>
 
-        {/* 6. Conversion CTA Banner */}
+        {/* ================= 6. COMMERCIAL SUPERVISOR & STUDIO RATES ================= */}
+        <section id="supervisor-rates" style={{ scrollMarginTop: '100px', marginBottom: '72px' }}>
+          <div className="role-section-header">
+            <span className="role-section-eyebrow">Transparent Supervisor Subscriptions</span>
+            <h3 className="role-section-title">Music Supervisor &amp; Studio Membership Tiers</h3>
+            <p className="role-section-desc">
+              From free catalog auditioning for indie supervisors to enterprise broadcaster packages with worldwide commercial indemnification and urgent clearances.
+            </p>
+          </div>
+
+          <div className="role-rates-grid">
+            {tierPackages.map((rate) => (
+              <div 
+                key={rate.slug} 
+                className={`role-rate-card ${rate.is_popular ? 'featured' : ''}`}
+              >
+                {rate.is_popular && (
+                  <span className="role-featured-tag">
+                    Most Popular
+                  </span>
+                )}
+
+                <span className="role-rate-badge">{rate.tier_badge || 'Supervisor Plan'}</span>
+                <h4 className="role-rate-title">{rate.name}</h4>
+
+                <div className="role-rate-price-box">
+                  <span className="role-rate-price">
+                    {rate.price_usd === 0 ? '$0' : `$${rate.price_usd?.toLocaleString()}`}
+                  </span>
+                  <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
+                </div>
+
+                <div className="role-rate-submeta">
+                  <span style={{ color: '#f59e0b', fontWeight: 700 }}>
+                    {rate.credits > 0 ? `${rate.credits?.toLocaleString()} TM Credits/mo` : 'Free Discovery'}
+                  </span>
+                  <span style={{ color: '#64748b' }}>·</span>
+                  <span style={{ color: accent, fontWeight: 600 }}>
+                    {rate.key_metric || 'Sync Studio'}
+                  </span>
+                </div>
+
+                <div className="role-rate-reach">
+                  <strong style={{ color: '#fff' }}>{rate.key_metric}</strong>
+                </div>
+
+                <ul className="role-rate-features">
+                  {(rate.features || []).map((feature, i) => (
+                    <li key={i} className="role-rate-feature-item">
+                      <RiCheckFill size={16} color={accent} style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  className="role-btn-primary"
+                  onClick={() => handleOpenBooking(rate)}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    marginTop: 'auto'
+                  }}
+                >
+                  {rate.cta || 'Select Plan'} <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Technical Specs & Compliance Panel */}
+          <div className="role-specs-panel">
+            <h4 className="role-specs-title">
+              <RiShieldCheckFill size={20} color={accent} /> Sync Licensing Legal Indemnification &amp; Deliverable Specs
+            </h4>
+            <div className="role-specs-grid">
+              <div className="role-spec-box">
+                <span className="role-spec-label">Rights Clearance</span>
+                <div className="role-spec-value">
+                  100% pre-cleared one-stop licensing: both master recording and underlying publishing rights are confirmed prior to catalog listing.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Cue Sheet Data</span>
+                <div className="role-spec-value">
+                  Instant export populated with verified ISRC, ISWC, CAE/IPI numbers, writer/publisher splits, and track duration timestamps.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Multi-Track Delivery</span>
+                <div className="role-spec-value">
+                  Uncompressed 24-bit/48kHz or 96kHz broadcast WAV files with stems (drums, bass, melodies, vocals) for dialogue editing.
+                </div>
+              </div>
+
+              <div className="role-spec-box">
+                <span className="role-spec-label">Worldwide Indemnity</span>
+                <div className="role-spec-value">
+                  Full corporate legal indemnification through the Intermaven legal warranty framework, protecting productions worldwide.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 7. Conversion CTA Banner */}
         <section className="role-conversion-banner">
           <h3>Never Miss a Production Music Clearance Deadline</h3>
           <p>
@@ -502,8 +742,8 @@ export default function SupervisorLandingPage() {
             <Link to="/register?role=studio" className="role-btn-primary">
               Register Free as a Music Supervisor <RiArrowRightLine size={15} />
             </Link>
-            <a href={syncMavensUrl} className="role-btn-secondary" target="_blank" rel="noopener noreferrer">
-              Browse SyncMavens Catalog <RiExternalLinkLine size={14} />
+            <a href="#supervisor-rates" className="role-btn-secondary" onClick={scrollToRates}>
+              Review Supervisor Plans
             </a>
           </div>
           <span className="role-trust-note">
@@ -511,6 +751,219 @@ export default function SupervisorLandingPage() {
           </span>
         </section>
       </div>
+
+      {/* ================= 8. SUPERVISOR PLAN BOOKING & ONBOARDING MODAL ================= */}
+      {modalOpen && (
+        <div 
+          className="auth-modal-overlay-wrapper" 
+          onClick={(e) => { if (e.target.className === 'auth-modal-overlay-wrapper') setModalOpen(false); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(3,7,18,0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
+        >
+          <div 
+            className="auth-modal-card glass-panel" 
+            style={{ 
+              maxWidth: '560px', 
+              width: '100%', 
+              padding: '32px', 
+              borderRadius: '8px', 
+              border: `1px solid ${accent}`,
+              position: 'relative',
+              maxHeight: '92vh',
+              overflowY: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setModalOpen(false)} 
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+            >
+              <RiCloseFill size={22} />
+            </button>
+
+            {inquirySuccess ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <RiCheckboxCircleFill size={56} color="#22c55e" style={{ margin: '0 auto 16px', display: 'block' }} />
+                <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: '0 0 10px', fontFamily: 'Sansation, sans-serif' }}>
+                  Supervisor Plan Reserved
+                </h3>
+                <div style={{
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                  padding: '14px',
+                  borderRadius: '4px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Tracking Reference Code
+                  </div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#22c55e', fontFamily: 'Space Grotesk, sans-serif', marginTop: '4px' }}>
+                    {inquirySuccess.ref}
+                  </div>
+                </div>
+                <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '24px' }}>
+                  {inquirySuccess.msg} A dedicated music rights supervisor will assist with brief routing and stem clearance access.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button 
+                    onClick={() => setModalOpen(false)} 
+                    className="role-btn-primary"
+                  >
+                    Done
+                  </button>
+                  <Link 
+                    to="/register?role=studio" 
+                    className="role-btn-secondary"
+                    onClick={() => setModalOpen(false)}
+                  >
+                    Create Supervisor Account
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ textAlign: 'left', marginBottom: '20px' }}>
+                  <span style={{ fontSize: '11px', color: accent, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Music Supervisor Plan Reservation
+                  </span>
+                  <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: '4px 0 6px', fontFamily: 'Sansation, sans-serif' }}>
+                    {selectedTier?.name || 'Production Studio Plan'}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+                    Access pre-cleared music briefs, full multi-track stems, and 1-click cue sheet generation.
+                  </p>
+                </div>
+
+                <form onSubmit={handleInquirySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Production House / Studio *</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. BlueSky Film Studios"
+                        value={bookingForm.organization_name}
+                        onChange={e => setBookingForm({ ...bookingForm, organization_name: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Contact Supervisor *</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. David Mutiso"
+                        value={bookingForm.contact_name}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_name: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Work Email *</label>
+                      <input 
+                        type="email" 
+                        required
+                        placeholder="supervisor@studio.com"
+                        value={bookingForm.contact_email}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_email: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Phone / Mobile</label>
+                      <input 
+                        type="text" 
+                        placeholder="+254 700 000000"
+                        value={bookingForm.contact_phone}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_phone: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Selected Tier</label>
+                      <select
+                        value={bookingForm.tier_slug}
+                        onChange={e => {
+                          const slug = e.target.value;
+                          const found = tierPackages.find(r => r.slug === slug);
+                          setBookingForm({
+                            ...bookingForm,
+                            tier_slug: slug,
+                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}`) : '$149 / month'
+                          });
+                        }}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                      >
+                        <option value="supervisor-discovery">Indie Discovery — $0 / Free · 50k+ Search</option>
+                        <option value="supervisor-production">Production Studio Pro — $149/mo (1,500 Credits) · Stems &amp; Cues</option>
+                        <option value="supervisor-broadcast">Network Enterprise — $499/mo · Worldwide Indemnity</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Primary Project Format</label>
+                      <select
+                        value={bookingForm.project_type}
+                        onChange={e => setBookingForm({ ...bookingForm, project_type: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                      >
+                        <option value="Film & Television">Feature Film / TV Series</option>
+                        <option value="Commercial / Advertising">Commercial / Digital Ad Campaign</option>
+                        <option value="Gaming & Interactive">Video Games &amp; Interactive Media</option>
+                        <option value="Documentary / Indie">Documentary &amp; Indie Web Series</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Scene Brief or Music Requirements</label>
+                    <textarea 
+                      rows={2}
+                      placeholder="e.g. Looking for authentic Nairobi gengetone & modern Amapiano tracks for an 8-part TV series..."
+                      value={bookingForm.notes}
+                      onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
+                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={inquirySubmitting}
+                    className="role-btn-primary"
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      justifyContent: 'center',
+                      marginTop: '6px'
+                    }}
+                  >
+                    {inquirySubmitting ? 'Registering Supervisor Plan…' : 'Lock In Rate & Access Stems Vault'}
+                  </button>
+
+                  <p style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', margin: '4px 0 0' }}>
+                    Non-binding reservation · Escrow protected · Full legal indemnification
+                  </p>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
