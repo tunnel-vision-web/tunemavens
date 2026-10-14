@@ -87,6 +87,7 @@ Replacing fragmented spreadsheets and opaque distributor statements, **TuneLedge
 * **Instant Dual-Rail Payout Routing:** Instant disbursement via **M-Pesa B2C Mobile Money** (instant Safaricom wallet deposit in Kenya) and **Stripe Express** (global ACH, SEPA, and Faster Payments).
 * **Digital Split Sheets Vault & Signature Locking:** Permanent catalog linkage with verified ISRC/ISWC codes, tamper-resistant collaborator percentage locking, and digital contract signature verification.
 * **Distributor Statement Ingestion & CSV Auto-Matching Desk:** Drag-and-drop parsing of raw CSV/TSV statements from DistroKid, TuneCore, Spotify for Artists, Apple Music, and FUGA with automated ISRC matching and 1-click batch cascade settlement.
+* **5-Step Bidirectional Wizard & Click-to-Jump Companion:** The waterfall builder organizes configuration into 5 focused, uncluttered steps with bidirectional navigation footers (`← Back` / `Continue →`), an interactive top stepper progress bar, and a synchronized live breakdown panel with two-way click-to-jump navigation.
 * **Built-in Royalty University:** Complete interactive education on Master vs. Publishing copyrights, ethical recoupment, statutory compliance with African CMOs (MCSK, PRISK, KAMP) and international PROs (ASCAP, BMI, SESAC, PRS), and in-studio split protocol.
 
 ### 8. Institutional Team Roster & Multi-Seat Governance Engine

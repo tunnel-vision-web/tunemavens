@@ -1384,3 +1384,21 @@ The entire TuneLedger & Split Cascade Studio strictly adheres to the platform de
 - Background surfaces: Flat `#090e24`, `#0b1126`, `#0f172a`, `#1e293b`.
 - Accent indicators: Flat sky cyan (`#0ea5e9`), emerald green (`#10b981`), amber gold (`#f59e0b`), purple (`#a855f7`), and danger red (`#ef4444`).
 - **Zero Gradients:** Linear gradients and radial gradients are 100% prohibited across all interactive buttons, priority tier blocks, avatar badges, and sliders.
+
+#### 9.36.9 5-Step Bidirectional Wizard & Studio-Level Section Browsing
+To minimize cognitive load and deliver an effortless user experience, the Waterfall Studio segments the revenue cascade into 5 distinct, focused steps that can be navigated in either direction at any time:
+1. **Interactive Top Stepper (`WATERFALL_STEPS`):**
+   - Step 1: *Revenue Intake & Catalog Track*
+   - Step 2: *Platform Admin & Record Label Share*
+   - Step 3: *Recoupable Advance Offsets (Zero Cross-Collateralization)*
+   - Step 4: *Multi-Collaborator Split Sheets (100% Artist Pool)*
+   - Step 5: *Payout Gateway Routing & Cascade Execution*
+   - Features clickable step cards, active sky cyan (`#0ea5e9`) highlights, completed checkmark badges (`✓`), and fast header directional arrows (`‹ Previous Step` and `Next Step ›`).
+2. **Synchronized Bidirectional Step Footers:**
+   - Every step features dedicated navigation action bars (`← Back: [Previous Step]` and `Continue: [Next Step] →`), ensuring creators can browse forward and backward without friction.
+3. **Synchronized Click-to-Jump Live Companion:**
+   - The persistent Live Waterfall breakdown highlights the tier block matching the active step in real time.
+   - Clicking any tier block (Gross, Admin Fee, Label Share, Recoupment, Splits, Payout) immediately jumps the wizard to that exact step for instant parameter adjustment.
+4. **Studio-Level Section Navigation (`STUDIO_TABS`):**
+   - Bidirectional section footers at the base of every tab enable creators to seamlessly transition between the *Interactive Waterfall Builder*, *TuneLedger Transactions*, *Split Sheets Vault*, *Statement Ingestion & CSV*, and *Royalty University*.
+

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   RiCoinsFill, RiFileTextFill, RiShieldCheckFill, RiArrowRightLine,
-  RiEqualizerFill, RiSearchLine, RiDownloadFill, RiUploadCloud2Line,
+  RiArrowLeftLine, RiEqualizerFill, RiSearchLine, RiDownloadFill, RiUploadCloud2Line,
   RiAddLine, RiDeleteBin6Line, RiEditLine, RiCloseLine, RiCheckLine,
   RiInformationLine, RiBookOpenFill, RiSmartphoneFill, RiBankCardFill,
   RiFlashlightFill, RiGlobalFill, RiDiscFill, RiTeamFill, RiLockFill,
@@ -145,6 +145,54 @@ Before exporting stems or bouncing the final mix:
   }
 ];
 
+// 5-Step Waterfall Process Definition (Bidirectional Navigation)
+export const WATERFALL_STEPS = [
+  {
+    step: 1,
+    title: 'Revenue Intake & Catalog Track',
+    shortTitle: '1. Revenue Intake',
+    description: 'Income stream, catalog track linkage & gross revenue',
+    icon: RiCoinsFill
+  },
+  {
+    step: 2,
+    title: 'Platform Admin & Label Share',
+    shortTitle: '2. Admin & Label',
+    description: 'Collection admin (10%) and contractual imprint deals',
+    icon: RiEqualizerFill
+  },
+  {
+    step: 3,
+    title: 'Recoupable Advance Offsets',
+    shortTitle: '3. Recoupable Debt',
+    description: 'Isolated track debt with zero cross-collateralization',
+    icon: RiPriceTag3Fill
+  },
+  {
+    step: 4,
+    title: 'Collaborator Split Sheets',
+    shortTitle: '4. Collaborator Splits',
+    description: 'Allocate 100% net pool across producers, writers & performers',
+    icon: RiTeamFill
+  },
+  {
+    step: 5,
+    title: 'Payout Gateway & Execution',
+    shortTitle: '5. Settle Payouts',
+    description: 'Select gateway (M-Pesa / Stripe) and commit cascade',
+    icon: RiFlashlightFill
+  }
+];
+
+// Studio Section Tabs Definition (Bidirectional Navigation)
+export const STUDIO_TABS = [
+  { id: 'waterfall', label: 'Interactive Waterfall Builder', icon: RiEqualizerFill },
+  { id: 'ledger', label: 'TuneLedger Transactions', icon: RiFileTextFill },
+  { id: 'vault', label: 'Split Sheets Vault', icon: RiLockFill },
+  { id: 'importer', label: 'Statement Ingestion & CSV', icon: RiUploadCloud2Line },
+  { id: 'university', label: 'Royalty University & Guide', icon: RiBookOpenFill }
+];
+
 export default function TuneLedgerSplitCascadePanel({
   sessionUser,
   tracks = [],
@@ -170,6 +218,43 @@ export default function TuneLedgerSplitCascadePanel({
   const [recoupmentAmountUSD, setRecoupmentAmountUSD] = useState(200);
   const [managerFeePct, setManagerFeePct] = useState(10); // 10%
   const [payoutDestination, setPayoutDestination] = useState('mpesa'); // 'mpesa' | 'stripe'
+
+  // Bidirectional 5-Step Waterfall Wizard State
+  const [currentWaterfallStep, setCurrentWaterfallStep] = useState(1); // 1: Revenue, 2: Admin/Label, 3: Recoupment, 4: Splits, 5: Settle
+
+  const handleNextWaterfallStep = () => {
+    if (currentWaterfallStep < 5) {
+      setCurrentWaterfallStep(prev => prev + 1);
+    }
+  };
+
+  const handlePrevWaterfallStep = () => {
+    if (currentWaterfallStep > 1) {
+      setCurrentWaterfallStep(prev => prev - 1);
+    }
+  };
+
+  const handleJumpToWaterfallStep = (stepNumber) => {
+    setCurrentWaterfallStep(stepNumber);
+  };
+
+  const handleNextStudioTab = (currentId) => {
+    const idx = STUDIO_TABS.findIndex(t => t.id === currentId);
+    if (idx < STUDIO_TABS.length - 1) {
+      setActiveTab(STUDIO_TABS[idx + 1].id);
+    } else {
+      setActiveTab(STUDIO_TABS[0].id);
+    }
+  };
+
+  const handlePrevStudioTab = (currentId) => {
+    const idx = STUDIO_TABS.findIndex(t => t.id === currentId);
+    if (idx > 0) {
+      setActiveTab(STUDIO_TABS[idx - 1].id);
+    } else {
+      setActiveTab(STUDIO_TABS[STUDIO_TABS.length - 1].id);
+    }
+  };
 
   // Collaborators List State
   const [collaborators, setCollaborators] = useState([
@@ -670,393 +755,1000 @@ export default function TuneLedgerSplitCascadePanel({
         </div>
       </div>
 
-      {/* ================= TAB 1: INTERACTIVE WATERFALL BUILDER ================= */}
+      {/* ================= TAB 1: INTERACTIVE WATERFALL BUILDER (5-STEP BIDIRECTIONAL WIZARD) ================= */}
       {activeTab === 'waterfall' && (
         <div>
-          {/* Quick Preset Selector Bar */}
+          {/* Top Bidirectional Stepper Navigation Bar */}
           <div style={{
             background: '#090e24',
             border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '6px',
-            padding: '14px 18px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px'
+            borderRadius: '8px',
+            padding: '16px 20px',
+            marginBottom: '20px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <RiFlashlightFill size={18} style={{ color: '#f59e0b' }} />
-              <span style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>Quick Income Presets:</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              {REVENUE_PRESETS.map(p => (
+            {/* Stepper Header: Current Step Title & Quick Arrow Browsers */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{
+                  background: '#0ea5e9',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  textTransform: 'uppercase'
+                }}>
+                  Step {currentWaterfallStep} of 5
+                </span>
+                <h2 style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                  {WATERFALL_STEPS[currentWaterfallStep - 1].title}
+                </h2>
+              </div>
+
+              {/* Quick Directional Arrows */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
-                  key={p.id}
                   type="button"
-                  onClick={() => handleApplyPreset(p)}
+                  onClick={handlePrevWaterfallStep}
+                  disabled={currentWaterfallStep === 1}
                   style={{
-                    background: '#0f172a',
+                    background: currentWaterfallStep === 1 ? 'rgba(255,255,255,0.04)' : '#0f172a',
                     border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#e2e8f0',
+                    color: currentWaterfallStep === 1 ? '#475569' : '#e2e8f0',
                     padding: '6px 12px',
-                    borderRadius: '4px',
-                    fontSize: '11.5px',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                  title={p.desc}
-                >
-                  {p.title} (${p.gross.toLocaleString()})
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Grid: Configurator & Waterfall Visualization */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px' }}>
-            
-            {/* LEFT COLUMN: The Step-by-Step Configurator */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
-              {/* STEP 1: Revenue Source & Track Linkage */}
-              <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ background: '#0ea5e9', color: '#fff', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800 }}>1</span>
-                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#fff' }}>Revenue Intake &amp; Catalog Track</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveStepInfo(activeStepInfo === 1 ? null : 1)}
-                    style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px' }}
-                  >
-                    <RiInformationLine size={15} />
-                    <span>Guidance</span>
-                  </button>
-                </div>
-
-                {activeStepInfo === 1 && (
-                  <div style={{ background: '#0b1126', borderLeft: '3px solid #0ea5e9', padding: '10px 14px', borderRadius: '4px', fontSize: '12px', color: '#94a3b8', marginBottom: '14px', lineHeight: 1.4 }}>
-                    <strong style={{ color: '#fff' }}>Gross Revenue Intake:</strong> This is the total pre-tax, pre-commission dollar amount received from a licensee, DSP payout, or event merchandise sale. Binding an ISRC ensures statutory royalty tracking.
-                  </div>
-                )}
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>Income Stream Source</label>
-                    <select
-                      value={revenueSource}
-                      onChange={(e) => setRevenueSource(e.target.value)}
-                      style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '8px 10px', color: '#fff', fontSize: '12.5px' }}
-                    >
-                      <option value="Sync Licensing">Sync Licensing (TV / Film / Games)</option>
-                      <option value="DSP Streaming">DSP Streaming (Spotify / Apple)</option>
-                      <option value="TuneStream Tips">TuneStream Tips &amp; Dubplates</option>
-                      <option value="TunePay POS">TunePay POS Merch &amp; Live Tour</option>
-                      <option value="Physical / Direct">Direct Digital Sale / Master Buyout</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>Catalog Track</label>
-                    <select
-                      value={selectedTrackId}
-                      onChange={(e) => handleSelectTrack(e.target.value)}
-                      style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '8px 10px', color: '#fff', fontSize: '12.5px' }}
-                    >
-                      {tracks.map(t => (
-                        <option key={t.id} value={t.id}>{t.title} ({t.isrc || 'ISRC Attached'})</option>
-                      ))}
-                      <option value="custom">+ Custom Track Title...</option>
-                    </select>
-                  </div>
-                </div>
-
-                {selectedTrackId === 'custom' && (
-                  <div style={{ marginBottom: '14px' }}>
-                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>Custom Release Name</label>
-                    <input
-                      type="text"
-                      value={customTitle}
-                      onChange={(e) => setCustomTitle(e.target.value)}
-                      style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '8px 10px', color: '#fff', fontSize: '12.5px' }}
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#cbd5e1', marginBottom: '4px' }}>
-                    Gross Amount in USD ({currency.symbol}{(grossRevenueUSD * currency.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedCurrency})
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontWeight: 700 }}>$</span>
-                    <input
-                      type="number"
-                      min="1"
-                      step="50"
-                      value={grossRevenueUSD}
-                      onChange={(e) => setGrossRevenueUSD(Math.max(0, parseFloat(e.target.value) || 0))}
-                      style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '9px 12px 9px 28px', color: '#fff', fontSize: '14px', fontWeight: 800 }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* STEP 2 & 3: Platform Admin, Label Share & Recoupment Offsets */}
-              <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ background: '#0ea5e9', color: '#fff', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800 }}>2</span>
-                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#fff' }}>Deductions, Label Share &amp; Recoupment</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveStepInfo(activeStepInfo === 2 ? null : 2)}
-                    style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px' }}
-                  >
-                    <RiInformationLine size={15} />
-                    <span>Guidance</span>
-                  </button>
-                </div>
-
-                {activeStepInfo === 2 && (
-                  <div style={{ background: '#0b1126', borderLeft: '3px solid #0ea5e9', padding: '10px 14px', borderRadius: '4px', fontSize: '12px', color: '#94a3b8', marginBottom: '14px', lineHeight: 1.4 }}>
-                    <strong style={{ color: '#fff' }}>Priority Waterfall Order:</strong>
-                    <br />1. <strong>Platform Administration Fee:</strong> Standard 10% covering DDEX delivery, statutory reporting, and escrow settlement.
-                    <br />2. <strong>Master / Label Share:</strong> Contractual allocation retained by the imprint or investor.
-                    <br />3. <strong>Recoupment:</strong> Recoupable costs (mixing, marketing debt) are deducted before collaborator profits distribute.
-                  </div>
-                )}
-
-                {/* Platform Fee & Label Share Sliders */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', marginBottom: '4px' }}>
-                      <span style={{ color: '#cbd5e1' }}>Platform Admin Fee</span>
-                      <span style={{ color: '#ef4444', fontWeight: 700 }}>{platformAdminPct}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="20"
-                      value={platformAdminPct}
-                      onChange={(e) => setPlatformAdminPct(parseInt(e.target.value))}
-                      style={{ width: '100%', accentColor: '#ef4444' }}
-                    />
-                    <span style={{ fontSize: '10.5px', color: '#64748b' }}>-${calculations.commFeeUSD.toFixed(2)} USD</span>
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', marginBottom: '4px' }}>
-                      <span style={{ color: '#cbd5e1' }}>Record Label Share</span>
-                      <span style={{ color: '#ef4444', fontWeight: 700 }}>{labelSharePct}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="50"
-                      value={labelSharePct}
-                      onChange={(e) => setLabelSharePct(parseInt(e.target.value))}
-                      style={{ width: '100%', accentColor: '#ef4444' }}
-                    />
-                    <span style={{ fontSize: '10.5px', color: '#64748b' }}>-${calculations.labelShareUSD.toFixed(2)} USD</span>
-                  </div>
-                </div>
-
-                {/* Recoupment Offset Input */}
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', marginBottom: '4px' }}>
-                    <span style={{ color: '#cbd5e1' }}>Outstanding Recoupable Production Advance ($)</span>
-                    <span style={{ color: '#f59e0b', fontWeight: 700 }}>
-                      Offset: -${calculations.recoupmentDeductionUSD.toFixed(2)} USD
-                    </span>
-                  </div>
-                  <input
-                    type="number"
-                    min="0"
-                    step="50"
-                    value={recoupmentAmountUSD}
-                    onChange={(e) => setRecoupmentAmountUSD(Math.max(0, parseFloat(e.target.value) || 0))}
-                    style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '8px 12px', color: '#fff', fontSize: '13px' }}
-                    placeholder="e.g., $200 for mixing / mastering debt"
-                  />
-                  <div style={{ fontSize: '10.5px', color: '#64748b', marginTop: '4px' }}>
-                    Deducted from the net pool before distributing to artists. Zero cross-collateralization.
-                  </div>
-                </div>
-              </div>
-
-              {/* STEP 4: Multi-Collaborator Split Sheets */}
-              <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ background: '#0ea5e9', color: '#fff', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800 }}>3</span>
-                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#fff' }}>Collaborator Split Sheets</h3>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{
-                      fontSize: '11.5px',
-                      fontWeight: 800,
-                      color: totalCollabPct === 100 ? '#10b981' : '#ef4444',
-                      background: totalCollabPct === 100 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                      padding: '2px 8px',
-                      borderRadius: '3px'
-                    }}>
-                      Total: {totalCollabPct}% / 100%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Preset Selector */}
-                <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '12px' }}>
-                  <button type="button" onClick={() => handleApplyCollabPreset('equal_duo')} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', padding: '4px 8px', borderRadius: '3px', fontSize: '10.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>50/50 Duo</button>
-                  <button type="button" onClick={() => handleApplyCollabPreset('producer_split')} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', padding: '4px 8px', borderRadius: '3px', fontSize: '10.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>60/25/15 Standard</button>
-                  <button type="button" onClick={() => handleApplyCollabPreset('feature_heavy')} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', padding: '4px 8px', borderRadius: '3px', fontSize: '10.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>70/30 Guest Feature</button>
-                  <button type="button" onClick={() => handleApplyCollabPreset('solo_full')} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', padding: '4px 8px', borderRadius: '3px', fontSize: '10.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>100% Solo</button>
-                </div>
-
-                {/* Collaborators List */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
-                  {collaborators.map((col, idx) => (
-                    <div key={col.id} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '12px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 80px 32px', gap: '8px', alignItems: 'center' }}>
-                        <div>
-                          <input
-                            type="text"
-                            value={col.name}
-                            onChange={(e) => handleUpdateCollaborator(col.id, 'name', e.target.value)}
-                            placeholder="Collaborator Name"
-                            style={{ width: '100%', background: '#090e24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '6px 8px', color: '#fff', fontSize: '12px' }}
-                          />
-                          <input
-                            type="email"
-                            value={col.email}
-                            onChange={(e) => handleUpdateCollaborator(col.id, 'email', e.target.value)}
-                            placeholder="Email / Wallet ID"
-                            style={{ width: '100%', background: '#090e24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '4px 8px', color: '#94a3b8', fontSize: '10.5px', marginTop: '4px' }}
-                          />
-                        </div>
-
-                        <div>
-                          <input
-                            type="text"
-                            value={col.role}
-                            onChange={(e) => handleUpdateCollaborator(col.id, 'role', e.target.value)}
-                            placeholder="Role (e.g. Producer)"
-                            style={{ width: '100%', background: '#090e24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '6px 8px', color: '#cbd5e1', fontSize: '11px' }}
-                          />
-                          <div style={{ fontSize: '10.5px', color: '#10b981', fontWeight: 700, marginTop: '4px' }}>
-                            {currency.symbol}{(calculations.collaboratorShares[idx]?.amountLocal || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </div>
-                        </div>
-
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={col.pct}
-                              onChange={(e) => handleUpdateCollaborator(col.id, 'pct', e.target.value)}
-                              style={{ width: '50px', background: '#090e24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '6px 4px', color: '#0ea5e9', fontSize: '12px', fontWeight: 800, textAlign: 'center' }}
-                            />
-                            <span style={{ fontSize: '12px', color: '#64748b' }}>%</span>
-                          </div>
-                        </div>
-
-                        <div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCollaborator(col.id)}
-                            style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
-                            title="Remove collaborator"
-                          >
-                            <RiDeleteBin6Line size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleAddCollaborator}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    background: 'transparent',
-                    border: '1px dashed rgba(255,255,255,0.2)',
-                    color: '#94a3b8',
-                    padding: '8px 14px',
                     borderRadius: '4px',
                     fontSize: '12px',
                     fontWeight: 700,
-                    cursor: 'pointer',
-                    width: '100%',
-                    justifyContent: 'center'
+                    cursor: currentWaterfallStep === 1 ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
                   }}
+                  title="Browse to previous step"
                 >
-                  <RiAddLine size={15} />
-                  <span>+ Add Another Collaborator / Co-Writer</span>
+                  <RiArrowLeftLine size={15} />
+                  <span>Previous</span>
                 </button>
-              </div>
 
-              {/* STEP 5: Payout Destination Routing */}
-              <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                  <span style={{ background: '#0ea5e9', color: '#fff', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800 }}>4</span>
-                  <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#fff' }}>Payout Destination Gateway</h3>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div
-                    onClick={() => setPayoutDestination('mpesa')}
-                    style={{
-                      border: `1px solid ${payoutDestination === 'mpesa' ? '#10b981' : 'rgba(255,255,255,0.1)'}`,
-                      background: payoutDestination === 'mpesa' ? 'rgba(16,185,129,0.1)' : '#0f172a',
-                      padding: '12px',
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: 800, fontSize: '13px' }}>
-                      <RiSmartphoneFill size={16} />
-                      <span>M-Pesa B2C Mobile</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                      Instant payout to Safaricom Kenya phone wallet. Zero wire delays.
-                    </div>
-                  </div>
-
-                  <div
-                    onClick={() => setPayoutDestination('stripe')}
-                    style={{
-                      border: `1px solid ${payoutDestination === 'stripe' ? '#0ea5e9' : 'rgba(255,255,255,0.1)'}`,
-                      background: payoutDestination === 'stripe' ? 'rgba(14,165,233,0.1)' : '#0f172a',
-                      padding: '12px',
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0ea5e9', fontWeight: 800, fontSize: '13px' }}>
-                      <RiBankCardFill size={16} />
-                      <span>Stripe Express (ACH / IBAN)</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                      Direct global bank account deposit in USD, EUR, or GBP.
-                    </div>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleNextWaterfallStep}
+                  disabled={currentWaterfallStep === 5}
+                  style={{
+                    background: currentWaterfallStep === 5 ? 'rgba(255,255,255,0.04)' : '#0ea5e9',
+                    border: 'none',
+                    color: currentWaterfallStep === 5 ? '#475569' : '#ffffff',
+                    padding: '6px 14px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: currentWaterfallStep === 5 ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Browse to next step"
+                >
+                  <span>Next</span>
+                  <RiArrowRightLine size={15} />
+                </button>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: Visual Waterfall Engine & Real-Time Calculation */}
+            {/* Clickable 5-Step Progress Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+              gap: '8px'
+            }}>
+              {WATERFALL_STEPS.map((s) => {
+                const isCurrent = currentWaterfallStep === s.step;
+                const isCompleted = s.step < currentWaterfallStep;
+                const StepIcon = s.icon;
+                return (
+                  <button
+                    key={s.step}
+                    type="button"
+                    onClick={() => handleJumpToWaterfallStep(s.step)}
+                    style={{
+                      background: isCurrent ? '#0b1126' : '#0f172a',
+                      border: `1px solid ${isCurrent ? '#0ea5e9' : isCompleted ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                      borderRadius: '6px',
+                      padding: '10px 12px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: isCurrent ? '#0ea5e9' : isCompleted ? '#10b981' : '#1e293b',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        {isCompleted ? '✓' : s.step}
+                      </div>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        color: isCurrent ? '#38bdf8' : isCompleted ? '#10b981' : '#cbd5e1',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {s.shortTitle}
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: '10.5px',
+                      color: isCurrent ? '#94a3b8' : '#64748b',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {s.description}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Main Grid: Active Step Wizard & Visual Waterfall Companion */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px' }}>
+            
+            {/* LEFT COLUMN: The Active Step Container */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
+
+              {/* ================= STEP 1: REVENUE INTAKE & CATALOG TRACK ================= */}
+              {currentWaterfallStep === 1 && (
+                <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '24px' }}>
+                  {/* Step Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ background: '#0ea5e9', color: '#fff', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>1</div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fff' }}>Revenue Intake &amp; Catalog Track</h3>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' }}>Specify incoming revenue stream, bind to catalog ISRC, and set gross earnings</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveStepInfo(activeStepInfo === 1 ? null : 1)}
+                      style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px' }}
+                    >
+                      <RiInformationLine size={15} />
+                      <span>Guidance</span>
+                    </button>
+                  </div>
+
+                  {activeStepInfo === 1 && (
+                    <div style={{ background: '#0b1126', borderLeft: '3px solid #0ea5e9', padding: '12px 16px', borderRadius: '4px', fontSize: '12px', color: '#cbd5e1', marginBottom: '16px', lineHeight: 1.5 }}>
+                      <strong style={{ color: '#fff' }}>Gross Revenue Intake:</strong> This is the total pre-tax, pre-commission dollar amount received from a licensee, DSP payout, or event merchandise sale. Binding an ISRC ensures statutory royalty tracking.
+                    </div>
+                  )}
+
+                  {/* Quick Income Presets */}
+                  <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '12px 14px', marginBottom: '18px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                      <RiFlashlightFill size={15} style={{ color: '#f59e0b' }} />
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff' }}>Quick Income Scenarios:</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      {REVENUE_PRESETS.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleApplyPreset(p)}
+                          style={{
+                            background: '#0f172a',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: '#e2e8f0',
+                            padding: '6px 10px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                          title={p.desc}
+                        >
+                          {p.title} (${p.gross.toLocaleString()})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Form Fields */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '6px' }}>Income Stream Source</label>
+                      <select
+                        value={revenueSource}
+                        onChange={(e) => setRevenueSource(e.target.value)}
+                        style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '9px 12px', color: '#fff', fontSize: '13px' }}
+                      >
+                        <option value="Sync Licensing">Sync Licensing (TV / Film / Games)</option>
+                        <option value="DSP Streaming">DSP Streaming (Spotify / Apple)</option>
+                        <option value="TuneStream Tips">TuneStream Tips &amp; Dubplates</option>
+                        <option value="TunePay POS">TunePay POS Merch &amp; Live Tour</option>
+                        <option value="Physical / Direct">Direct Digital Sale / Master Buyout</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '6px' }}>Catalog Track Linkage</label>
+                      <select
+                        value={selectedTrackId}
+                        onChange={(e) => handleSelectTrack(e.target.value)}
+                        style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '9px 12px', color: '#fff', fontSize: '13px' }}
+                      >
+                        {tracks.map(t => (
+                          <option key={t.id} value={t.id}>{t.title} ({t.isrc || 'ISRC Attached'})</option>
+                        ))}
+                        <option value="custom">+ Custom Track Title...</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {selectedTrackId === 'custom' && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '6px' }}>Custom Release Name</label>
+                      <input
+                        type="text"
+                        value={customTitle}
+                        onChange={(e) => setCustomTitle(e.target.value)}
+                        style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '9px 12px', color: '#fff', fontSize: '13px' }}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1' }}>Gross Intake Amount in USD</label>
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#38bdf8' }}>
+                        ≈ {currency.symbol}{(grossRevenueUSD * currency.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedCurrency}
+                      </span>
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontWeight: 700 }}>$</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="50"
+                        value={grossRevenueUSD}
+                        onChange={(e) => setGrossRevenueUSD(Math.max(0, parseFloat(e.target.value) || 0))}
+                        style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '10px 12px 10px 28px', color: '#fff', fontSize: '15px', fontWeight: 800 }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Step Action Navigation Footer */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                    paddingTop: '16px'
+                  }}>
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                      Step 1 of 5: Revenue Configuration
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleNextWaterfallStep}
+                      style={{
+                        background: '#0ea5e9',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span>Continue: Admin &amp; Label Share</span>
+                      <RiArrowRightLine size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= STEP 2: PLATFORM ADMIN & LABEL SHARE ================= */}
+              {currentWaterfallStep === 2 && (
+                <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '24px' }}>
+                  {/* Step Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ background: '#0ea5e9', color: '#fff', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>2</div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fff' }}>Platform Administration &amp; Record Label Share</h3>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' }}>Deduct standard platform collection administration and imprint contractual share</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveStepInfo(activeStepInfo === 2 ? null : 2)}
+                      style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px' }}
+                    >
+                      <RiInformationLine size={15} />
+                      <span>Guidance</span>
+                    </button>
+                  </div>
+
+                  {activeStepInfo === 2 && (
+                    <div style={{ background: '#0b1126', borderLeft: '3px solid #0ea5e9', padding: '12px 16px', borderRadius: '4px', fontSize: '12px', color: '#cbd5e1', marginBottom: '16px', lineHeight: 1.5 }}>
+                      <strong style={{ color: '#fff' }}>Tiers 1 &amp; 2 Deductions:</strong>
+                      <br />• <strong>Platform Administration (10%):</strong> Covers DDEX delivery to 150+ DSPs, statutory mechanical licensing, and escrow processing.
+                      <br />• <strong>Record Label Share (0-50%):</strong> The imprint's contractual cut for funding, distribution, or marketing investment.
+                    </div>
+                  )}
+
+                  {/* 1-Click Label Presets */}
+                  <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '12px 14px', marginBottom: '18px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>1-Click Deal Presets:</div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setPlatformAdminPct(10); setLabelSharePct(0); }}
+                        style={{ background: labelSharePct === 0 ? '#0ea5e9' : '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '4px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        100% Solo Artist (0% Label)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setPlatformAdminPct(10); setLabelSharePct(15); }}
+                        style={{ background: labelSharePct === 15 ? '#0ea5e9' : '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '4px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        85/15 Indie Imprint (15% Label)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setPlatformAdminPct(10); setLabelSharePct(30); }}
+                        style={{ background: labelSharePct === 30 ? '#0ea5e9' : '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '4px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        70/30 Major Label Deal (30% Label)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sliders Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                    <div style={{ background: '#0b1126', padding: '16px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '8px' }}>
+                        <span style={{ color: '#cbd5e1', fontWeight: 700 }}>Platform Administration Fee</span>
+                        <span style={{ color: '#ef4444', fontWeight: 800 }}>{platformAdminPct}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="20"
+                        value={platformAdminPct}
+                        onChange={(e) => setPlatformAdminPct(parseInt(e.target.value))}
+                        style={{ width: '100%', accentColor: '#ef4444', marginBottom: '6px' }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
+                        <span>Deduction:</span>
+                        <span style={{ color: '#ef4444', fontWeight: 700 }}>-${calculations.commFeeUSD.toFixed(2)} USD</span>
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#0b1126', padding: '16px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '8px' }}>
+                        <span style={{ color: '#cbd5e1', fontWeight: 700 }}>Record Label / Imprint Share</span>
+                        <span style={{ color: '#ef4444', fontWeight: 800 }}>{labelSharePct}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="50"
+                        value={labelSharePct}
+                        onChange={(e) => setLabelSharePct(parseInt(e.target.value))}
+                        style={{ width: '100%', accentColor: '#ef4444', marginBottom: '6px' }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
+                        <span>Deduction:</span>
+                        <span style={{ color: '#ef4444', fontWeight: 700 }}>-${calculations.labelShareUSD.toFixed(2)} USD</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Net Summary After Tier 1 & 2 */}
+                  <div style={{ background: '#0f172a', border: '1px solid rgba(14,165,233,0.2)', borderRadius: '6px', padding: '14px 18px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Remaining Balance After Admin &amp; Label</div>
+                      <div style={{ fontSize: '17px', fontWeight: 800, color: '#38bdf8' }}>
+                        ${(calculations.grossUSD - calculations.commFeeUSD - calculations.labelShareUSD).toFixed(2)} USD
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '11.5px', color: '#64748b', textAlign: 'right' }}>
+                      Flows to Recoupment &amp; Collaborator Pool
+                    </div>
+                  </div>
+
+                  {/* Step Action Navigation Footer */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                    paddingTop: '16px'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={handlePrevWaterfallStep}
+                      style={{
+                        background: '#0f172a',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#cbd5e1',
+                        padding: '10px 18px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <RiArrowLeftLine size={16} />
+                      <span>Back: Revenue Intake</span>
+                    </button>
+
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                      Step 2 of 5
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleNextWaterfallStep}
+                      style={{
+                        background: '#0ea5e9',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span>Continue: Recoupable Debt</span>
+                      <RiArrowRightLine size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= STEP 3: RECOUPABLE ADVANCE OFFSETS ================= */}
+              {currentWaterfallStep === 3 && (
+                <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '24px' }}>
+                  {/* Step Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ background: '#0ea5e9', color: '#fff', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>3</div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fff' }}>Recoupable Advance Offsets</h3>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' }}>Offset production costs with zero cross-collateralization</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveStepInfo(activeStepInfo === 3 ? null : 3)}
+                      style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px' }}
+                    >
+                      <RiInformationLine size={15} />
+                      <span>Guidance</span>
+                    </button>
+                  </div>
+
+                  {activeStepInfo === 3 && (
+                    <div style={{ background: '#0b1126', borderLeft: '3px solid #0ea5e9', padding: '12px 16px', borderRadius: '4px', fontSize: '12px', color: '#cbd5e1', marginBottom: '16px', lineHeight: 1.5 }}>
+                      <strong style={{ color: '#fff' }}>How TuneLedger Recoupment Works:</strong>
+                      <br />• Advances (mastering, mixing, video shoot debt) are isolated strictly to <em>this specific release</em>.
+                      <br />• <strong>Zero Cross-Collateralization:</strong> Unlike legacy label contracts, this debt will never drain earnings from your other releases or merch sales.
+                    </div>
+                  )}
+
+                  {/* Zero Cross-Collateralization Callout */}
+                  <div style={{ background: '#0b1126', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '6px', padding: '14px 16px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <RiShieldCheckFill size={18} style={{ color: '#f59e0b' }} />
+                      <span style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>Isolated Per-Track Debt Protection</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8', lineHeight: 1.4 }}>
+                      Any advance specified here is recouped solely from the gross revenue of <strong style={{ color: '#fff' }}>{customTitle}</strong>. When paid off, 100% of future earnings flow immediately to the collaborator split sheets.
+                    </p>
+                  </div>
+
+                  {/* Advance Input Field & Presets */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1' }}>Outstanding Recoupable Production Advance ($)</label>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#f59e0b' }}>
+                        Deduction: -${calculations.recoupmentDeductionUSD.toFixed(2)} USD
+                      </span>
+                    </div>
+                    <div style={{ position: 'relative', marginBottom: '10px' }}>
+                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontWeight: 700 }}>$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="50"
+                        value={recoupmentAmountUSD}
+                        onChange={(e) => setRecoupmentAmountUSD(Math.max(0, parseFloat(e.target.value) || 0))}
+                        style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '10px 12px 10px 28px', color: '#fff', fontSize: '14px', fontWeight: 800 }}
+                        placeholder="e.g., $200 for mixing / mastering debt"
+                      />
+                    </div>
+
+                    {/* Quick Preset Buttons */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button type="button" onClick={() => setRecoupmentAmountUSD(0)} style={{ background: recoupmentAmountUSD === 0 ? '#10b981' : '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>$0 (Fully Recouped)</button>
+                      <button type="button" onClick={() => setRecoupmentAmountUSD(200)} style={{ background: recoupmentAmountUSD === 200 ? '#f59e0b' : '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>$200 (Mastering)</button>
+                      <button type="button" onClick={() => setRecoupmentAmountUSD(500)} style={{ background: recoupmentAmountUSD === 500 ? '#f59e0b' : '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>$500 (Production)</button>
+                      <button type="button" onClick={() => setRecoupmentAmountUSD(1000)} style={{ background: recoupmentAmountUSD === 1000 ? '#f59e0b' : '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>$1,000 (Video Budget)</button>
+                    </div>
+                  </div>
+
+                  {/* Recoupment Status Banner */}
+                  <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '14px', marginBottom: '24px' }}>
+                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Release Recoupment Status:</div>
+                    {recoupmentAmountUSD === 0 ? (
+                      <div style={{ color: '#10b981', fontSize: '13px', fontWeight: 700 }}>✓ Zero production debt on this release. 100% of proceeds flow to collaborators.</div>
+                    ) : (
+                      <div style={{ color: '#f59e0b', fontSize: '13px', fontWeight: 700 }}>
+                        Recouping ${calculations.recoupmentDeductionUSD.toFixed(2)} from current intake. Remaining debt on release: ${(Math.max(0, recoupmentAmountUSD - calculations.recoupmentDeductionUSD)).toFixed(2)} USD.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step Action Navigation Footer */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                    paddingTop: '16px'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={handlePrevWaterfallStep}
+                      style={{
+                        background: '#0f172a',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#cbd5e1',
+                        padding: '10px 18px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <RiArrowLeftLine size={16} />
+                      <span>Back: Admin &amp; Label</span>
+                    </button>
+
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                      Step 3 of 5
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleNextWaterfallStep}
+                      style={{
+                        background: '#0ea5e9',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span>Continue: Collaborator Splits</span>
+                      <RiArrowRightLine size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= STEP 4: COLLABORATOR SPLIT SHEETS ================= */}
+              {currentWaterfallStep === 4 && (
+                <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '24px' }}>
+                  {/* Step Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ background: '#0ea5e9', color: '#fff', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>4</div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fff' }}>Collaborator Split Sheets</h3>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' }}>Allocate 100% of the net artist pool across co-writers, producers &amp; performers</p>
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      color: totalCollabPct === 100 ? '#10b981' : '#ef4444',
+                      background: totalCollabPct === 100 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                      border: `1px solid ${totalCollabPct === 100 ? '#10b981' : '#ef4444'}`,
+                      padding: '4px 10px',
+                      borderRadius: '4px'
+                    }}>
+                      Total: {totalCollabPct}% / 100% {totalCollabPct === 100 ? '✓' : `(Diff: ${100 - totalCollabPct}%)`}
+                    </div>
+                  </div>
+
+                  {/* Preset Selector */}
+                  <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#94a3b8' }}>Split Sheet Formulas:</span>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <button type="button" onClick={() => handleApplyCollabPreset('equal_duo')} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#cbd5e1', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>50/50 Duo</button>
+                      <button type="button" onClick={() => handleApplyCollabPreset('producer_split')} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#cbd5e1', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>60/25/15 Standard</button>
+                      <button type="button" onClick={() => handleApplyCollabPreset('feature_heavy')} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#cbd5e1', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>70/30 Guest Feature</button>
+                      <button type="button" onClick={() => handleApplyCollabPreset('solo_full')} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#cbd5e1', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>100% Solo</button>
+                    </div>
+                  </div>
+
+                  {/* Collaborators List */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                    {collaborators.map((col, idx) => (
+                      <div key={col.id} style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 80px 32px', gap: '8px', alignItems: 'center' }}>
+                          <div>
+                            <input
+                              type="text"
+                              value={col.name}
+                              onChange={(e) => handleUpdateCollaborator(col.id, 'name', e.target.value)}
+                              placeholder="Collaborator Name"
+                              style={{ width: '100%', background: '#090e24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '6px 8px', color: '#fff', fontSize: '12px' }}
+                            />
+                            <input
+                              type="email"
+                              value={col.email}
+                              onChange={(e) => handleUpdateCollaborator(col.id, 'email', e.target.value)}
+                              placeholder="Email / Wallet ID"
+                              style={{ width: '100%', background: '#090e24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '4px 8px', color: '#94a3b8', fontSize: '10.5px', marginTop: '4px' }}
+                            />
+                          </div>
+
+                          <div>
+                            <input
+                              type="text"
+                              value={col.role}
+                              onChange={(e) => handleUpdateCollaborator(col.id, 'role', e.target.value)}
+                              placeholder="Role (e.g. Producer)"
+                              style={{ width: '100%', background: '#090e24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '6px 8px', color: '#cbd5e1', fontSize: '11px' }}
+                            />
+                            <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, marginTop: '4px' }}>
+                              +{currency.symbol}{(calculations.collaboratorShares[idx]?.amountLocal || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={col.pct}
+                                onChange={(e) => handleUpdateCollaborator(col.id, 'pct', e.target.value)}
+                                style={{ width: '54px', background: '#090e24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '6px 4px', color: '#0ea5e9', fontSize: '13px', fontWeight: 800, textAlign: 'center' }}
+                              />
+                              <span style={{ fontSize: '12px', color: '#64748b' }}>%</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCollaborator(col.id)}
+                              style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                              title="Remove collaborator"
+                            >
+                              <RiDeleteBin6Line size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddCollaborator}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'transparent',
+                      border: '1px dashed rgba(255,255,255,0.2)',
+                      color: '#94a3b8',
+                      padding: '8px 14px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      width: '100%',
+                      justifyContent: 'center',
+                      marginBottom: '16px'
+                    }}
+                  >
+                    <RiAddLine size={15} />
+                    <span>+ Add Another Collaborator / Co-Writer</span>
+                  </button>
+
+                  {/* Management Commission Slider */}
+                  <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '12px 14px', marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                      <span style={{ color: '#cbd5e1', fontWeight: 700 }}>Management &amp; Legal Rep Commission</span>
+                      <span style={{ color: '#ef4444', fontWeight: 800 }}>{managerFeePct}% (-${calculations.managerFeeUSD.toFixed(2)} USD)</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="15"
+                      value={managerFeePct}
+                      onChange={(e) => setManagerFeePct(parseInt(e.target.value))}
+                      style={{ width: '100%', accentColor: '#ef4444' }}
+                    />
+                    <div style={{ fontSize: '10.5px', color: '#64748b', marginTop: '4px' }}>
+                      Optional artist management fee deducted from net artist pool before collaborator disbursements.
+                    </div>
+                  </div>
+
+                  {/* Step Action Navigation Footer */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                    paddingTop: '16px'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={handlePrevWaterfallStep}
+                      style={{
+                        background: '#0f172a',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#cbd5e1',
+                        padding: '10px 18px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <RiArrowLeftLine size={16} />
+                      <span>Back: Recoupable Debt</span>
+                    </button>
+
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                      Step 4 of 5
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (totalCollabPct !== 100) {
+                          alert(`Collaborator shares sum to ${totalCollabPct}%. Please balance shares to exactly 100% before proceeding.`);
+                          return;
+                        }
+                        handleNextWaterfallStep();
+                      }}
+                      style={{
+                        background: totalCollabPct === 100 ? '#0ea5e9' : '#64748b',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: totalCollabPct === 100 ? 'pointer' : 'not-allowed',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span>Continue: Settle &amp; Payout</span>
+                      <RiArrowRightLine size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= STEP 5: PAYOUT GATEWAY & SETTLEMENT ================= */}
+              {currentWaterfallStep === 5 && (
+                <div style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '24px' }}>
+                  {/* Step Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ background: '#10b981', color: '#fff', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>5</div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fff' }}>Payout Gateway &amp; Cascade Execution</h3>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' }}>Review final waterfall calculations, select payout routing, and execute</p>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '3px 8px', borderRadius: '4px' }}>
+                      Ready to Settle
+                    </span>
+                  </div>
+
+                  {/* Payout Destination Gateway Selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '8px' }}>Select Payout Disbursement Gateway:</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div
+                        onClick={() => setPayoutDestination('mpesa')}
+                        style={{
+                          border: `1px solid ${payoutDestination === 'mpesa' ? '#10b981' : 'rgba(255,255,255,0.1)'}`,
+                          background: payoutDestination === 'mpesa' ? 'rgba(16,185,129,0.1)' : '#0b1126',
+                          padding: '14px',
+                          borderRadius: '6px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 800, fontSize: '13.5px' }}>
+                          <RiSmartphoneFill size={18} />
+                          <span>M-Pesa B2C Mobile Money</span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', lineHeight: 1.4 }}>
+                          Instant payout in KES to Safaricom Kenya phone wallet. Zero international bank delays.
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setPayoutDestination('stripe')}
+                        style={{
+                          border: `1px solid ${payoutDestination === 'stripe' ? '#0ea5e9' : 'rgba(255,255,255,0.1)'}`,
+                          background: payoutDestination === 'stripe' ? 'rgba(14,165,233,0.1)' : '#0b1126',
+                          padding: '14px',
+                          borderRadius: '6px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0ea5e9', fontWeight: 800, fontSize: '13.5px' }}>
+                          <RiBankCardFill size={18} />
+                          <span>Stripe Express (ACH / IBAN)</span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', lineHeight: 1.4 }}>
+                          Direct global bank deposit in USD, EUR, or GBP via ACH, SEPA, and Faster Payments.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Complete Pre-Settlement Review Card */}
+                  <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff', marginBottom: '10px' }}>
+                      Pre-Settlement Waterfall Audit Review:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#94a3b8' }}>Gross Intake ({customTitle}):</span>
+                        <span style={{ color: '#38bdf8', fontWeight: 800 }}>+${calculations.grossUSD.toFixed(2)} USD</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#94a3b8' }}>Platform Administration (10%):</span>
+                        <span style={{ color: '#ef4444' }}>-${calculations.commFeeUSD.toFixed(2)} USD</span>
+                      </div>
+                      {calculations.labelShareUSD > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#94a3b8' }}>Record Label Share ({labelSharePct}%):</span>
+                          <span style={{ color: '#ef4444' }}>-${calculations.labelShareUSD.toFixed(2)} USD</span>
+                        </div>
+                      )}
+                      {calculations.recoupmentDeductionUSD > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#94a3b8' }}>Recoupable Advance Offset:</span>
+                          <span style={{ color: '#f59e0b' }}>-${calculations.recoupmentDeductionUSD.toFixed(2)} USD</span>
+                        </div>
+                      )}
+                      {calculations.managerFeeUSD > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#94a3b8' }}>Management Commission ({managerFeePct}%):</span>
+                          <span style={{ color: '#ef4444' }}>-${calculations.managerFeeUSD.toFixed(2)} USD</span>
+                        </div>
+                      )}
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 800 }}>
+                        <span style={{ color: '#fff' }}>Primary Artist Net Take-Home:</span>
+                        <span style={{ color: '#10b981' }}>
+                          +{currency.symbol}{calculations.primaryArtistShareLocal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({selectedCurrency})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Primary Cascade Execution Action Button */}
+                  <button
+                    type="button"
+                    onClick={handleExecuteCascade}
+                    disabled={isProcessing || totalCollabPct !== 100}
+                    style={{
+                      width: '100%',
+                      background: '#10b981',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '14px',
+                      borderRadius: '6px',
+                      fontSize: '15px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      marginBottom: '20px'
+                    }}
+                    data-testid="execute-split-btn"
+                  >
+                    <RiCoinsFill size={20} />
+                    <span>{isProcessing ? 'Calculating & Settling Cascade...' : '⚡ Execute Split Cascade & Settle Payouts'}</span>
+                  </button>
+
+                  {/* Step Action Navigation Footer */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                    paddingTop: '16px'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={handlePrevWaterfallStep}
+                      style={{
+                        background: '#0f172a',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#cbd5e1',
+                        padding: '10px 18px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <RiArrowLeftLine size={16} />
+                      <span>Back: Collaborator Splits</span>
+                    </button>
+
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                      Step 5 of 5: Ready to Commit
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* RIGHT COLUMN: Visual Waterfall Companion with Click-to-Jump Navigation */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{
                 background: '#090e24',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -1071,7 +1763,7 @@ export default function TuneLedgerSplitCascadePanel({
                       Live Waterfall Breakdown
                     </h3>
                     <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                      Mathematical breakdown in priority sequence
+                      Interactive calculation in priority sequence
                     </div>
                   </div>
                   <span style={{ fontSize: '12px', fontWeight: 800, color: '#0ea5e9', background: 'rgba(14,165,233,0.1)', padding: '3px 8px', borderRadius: '4px' }}>
@@ -1079,37 +1771,79 @@ export default function TuneLedgerSplitCascadePanel({
                   </span>
                 </div>
 
-                {/* Waterfall Visual Blocks */}
+                {/* Waterfall Visual Blocks with Step Indicators & Jump Actions */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
                   
-                  {/* Gross Block */}
-                  <div style={{ background: '#0f172a', padding: '14px', borderRadius: '6px', borderLeft: '4px solid #38bdf8' }}>
+                  {/* Step 1 Block: Total Gross */}
+                  <div
+                    onClick={() => handleJumpToWaterfallStep(1)}
+                    style={{
+                      background: '#0f172a',
+                      padding: '14px',
+                      borderRadius: '6px',
+                      borderLeft: '4px solid #38bdf8',
+                      border: currentWaterfallStep === 1 ? '1px solid #38bdf8' : '1px solid transparent',
+                      cursor: 'pointer'
+                    }}
+                    title="Click to jump to Step 1: Revenue Intake"
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Total Gross Intake</div>
-                        <div style={{ fontSize: '14px', fontWeight: 800, color: '#fff' }}>{customTitle}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 800, background: 'rgba(56,189,248,0.15)', padding: '1px 5px', borderRadius: '3px' }}>STEP 1</span>
+                          <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Total Gross Intake</span>
+                        </div>
+                        <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#fff', marginTop: '2px' }}>{customTitle}</div>
                       </div>
-                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#38bdf8' }}>
+                      <div style={{ fontSize: '17px', fontWeight: 900, color: '#38bdf8' }}>
                         +{currency.symbol}{calculations.grossLocal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
                   </div>
 
-                  {/* Deduction: Platform Admin */}
-                  <div style={{ background: '#0b1126', padding: '12px 14px', borderRadius: '6px', borderLeft: '4px solid #ef4444' }}>
+                  {/* Step 2 Block: Platform Admin Fee */}
+                  <div
+                    onClick={() => handleJumpToWaterfallStep(2)}
+                    style={{
+                      background: '#0b1126',
+                      padding: '12px 14px',
+                      borderRadius: '6px',
+                      borderLeft: '4px solid #ef4444',
+                      border: currentWaterfallStep === 2 ? '1px solid #0ea5e9' : '1px solid transparent',
+                      cursor: 'pointer'
+                    }}
+                    title="Click to jump to Step 2: Admin & Label Share"
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '12px', color: '#cbd5e1' }}>1. Platform Admin Fee ({platformAdminPct}%)</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '10px', color: '#0ea5e9', fontWeight: 800, background: 'rgba(14,165,233,0.15)', padding: '1px 5px', borderRadius: '3px' }}>STEP 2</span>
+                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Platform Admin Fee ({platformAdminPct}%)</span>
+                      </div>
                       <span style={{ fontSize: '13px', fontWeight: 700, color: '#ef4444' }}>
                         -{currency.symbol}{calculations.commFeeLocal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
 
-                  {/* Deduction: Label Share */}
+                  {/* Step 2 Block: Label Share */}
                   {labelSharePct > 0 && (
-                    <div style={{ background: '#0b1126', padding: '12px 14px', borderRadius: '6px', borderLeft: '4px solid #ef4444' }}>
+                    <div
+                      onClick={() => handleJumpToWaterfallStep(2)}
+                      style={{
+                        background: '#0b1126',
+                        padding: '12px 14px',
+                        borderRadius: '6px',
+                        borderLeft: '4px solid #ef4444',
+                        border: currentWaterfallStep === 2 ? '1px solid #0ea5e9' : '1px solid transparent',
+                        cursor: 'pointer'
+                      }}
+                      title="Click to jump to Step 2: Admin & Label Share"
+                    >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>2. Record Label Share ({labelSharePct}%)</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '10px', color: '#0ea5e9', fontWeight: 800, background: 'rgba(14,165,233,0.15)', padding: '1px 5px', borderRadius: '3px' }}>STEP 2</span>
+                          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Record Label Share ({labelSharePct}%)</span>
+                        </div>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#ef4444' }}>
                           -{currency.symbol}{calculations.labelShareLocal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
@@ -1117,11 +1851,25 @@ export default function TuneLedgerSplitCascadePanel({
                     </div>
                   )}
 
-                  {/* Deduction: Recoupment */}
+                  {/* Step 3 Block: Recoupment Offset */}
                   {calculations.recoupmentDeductionUSD > 0 && (
-                    <div style={{ background: '#0b1126', padding: '12px 14px', borderRadius: '6px', borderLeft: '4px solid #f59e0b' }}>
+                    <div
+                      onClick={() => handleJumpToWaterfallStep(3)}
+                      style={{
+                        background: '#0b1126',
+                        padding: '12px 14px',
+                        borderRadius: '6px',
+                        borderLeft: '4px solid #f59e0b',
+                        border: currentWaterfallStep === 3 ? '1px solid #f59e0b' : '1px solid transparent',
+                        cursor: 'pointer'
+                      }}
+                      title="Click to jump to Step 3: Recoupable Debt"
+                    >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>3. Recoupable Advance Offset</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: 800, background: 'rgba(245,158,11,0.15)', padding: '1px 5px', borderRadius: '3px' }}>STEP 3</span>
+                          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Recoupable Advance Offset</span>
+                        </div>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#f59e0b' }}>
                           -{currency.symbol}{calculations.recoupmentDeductionLocal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
@@ -1129,11 +1877,25 @@ export default function TuneLedgerSplitCascadePanel({
                     </div>
                   )}
 
-                  {/* Deduction: Manager Fee */}
+                  {/* Step 4 Block: Management Fee */}
                   {managerFeePct > 0 && (
-                    <div style={{ background: '#0b1126', padding: '12px 14px', borderRadius: '6px', borderLeft: '4px solid #ef4444' }}>
+                    <div
+                      onClick={() => handleJumpToWaterfallStep(4)}
+                      style={{
+                        background: '#0b1126',
+                        padding: '12px 14px',
+                        borderRadius: '6px',
+                        borderLeft: '4px solid #ef4444',
+                        border: currentWaterfallStep === 4 ? '1px solid #10b981' : '1px solid transparent',
+                        cursor: 'pointer'
+                      }}
+                      title="Click to jump to Step 4: Collaborator Splits"
+                    >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>4. Management Fee ({managerFeePct}%)</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 800, background: 'rgba(16,185,129,0.15)', padding: '1px 5px', borderRadius: '3px' }}>STEP 4</span>
+                          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Management Fee ({managerFeePct}%)</span>
+                        </div>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#ef4444' }}>
                           -{currency.symbol}{calculations.managerFeeLocal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
@@ -1141,18 +1903,33 @@ export default function TuneLedgerSplitCascadePanel({
                     </div>
                   )}
 
-                  {/* Collaborator Payout List */}
-                  <div style={{ background: '#0f172a', padding: '14px', borderRadius: '6px', borderLeft: '4px solid #10b981' }}>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, marginBottom: '8px' }}>
-                      Collaborator Disbursements (100% of Net Pool)
+                  {/* Step 4 Block: Collaborator Disbursements */}
+                  <div
+                    onClick={() => handleJumpToWaterfallStep(4)}
+                    style={{
+                      background: '#0f172a',
+                      padding: '14px',
+                      borderRadius: '6px',
+                      borderLeft: '4px solid #10b981',
+                      border: currentWaterfallStep === 4 ? '1px solid #10b981' : '1px solid transparent',
+                      cursor: 'pointer'
+                    }}
+                    title="Click to jump to Step 4: Collaborator Splits"
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 800, background: 'rgba(16,185,129,0.15)', padding: '1px 5px', borderRadius: '3px' }}>STEP 4</span>
+                        <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Collaborators ({calculations.collaboratorShares.length})</span>
+                      </div>
+                      <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>100% Net Pool</span>
                     </div>
                     {calculations.collaboratorShares.map((col, idx) => (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: idx < calculations.collaboratorShares.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                         <div>
-                          <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#fff' }}>{col.name}</span>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#fff' }}>{col.name}</span>
                           <span style={{ fontSize: '10.5px', color: '#64748b', marginLeft: '6px' }}>({col.pct}%)</span>
                         </div>
-                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#10b981' }}>
+                        <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#10b981' }}>
                           +{currency.symbol}{col.amountLocal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -1161,24 +1938,30 @@ export default function TuneLedgerSplitCascadePanel({
                 </div>
 
                 {/* Primary Artist Net Callout */}
-                <div style={{
-                  background: 'rgba(16,185,129,0.1)',
-                  border: '1px solid rgba(16,185,129,0.3)',
-                  borderRadius: '6px',
-                  padding: '16px',
-                  marginBottom: '20px'
-                }}>
+                <div
+                  onClick={() => handleJumpToWaterfallStep(5)}
+                  style={{
+                    background: 'rgba(16,185,129,0.1)',
+                    border: `1px solid ${currentWaterfallStep === 5 ? '#10b981' : 'rgba(16,185,129,0.3)'}`,
+                    borderRadius: '6px',
+                    padding: '16px',
+                    marginBottom: '16px',
+                    cursor: 'pointer'
+                  }}
+                  title="Click to jump to Step 5: Settle & Payout"
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 700, textTransform: 'uppercase' }}>
-                        Your Primary Net Payout
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 800, background: 'rgba(16,185,129,0.2)', padding: '1px 5px', borderRadius: '3px' }}>STEP 5</span>
+                        <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700, textTransform: 'uppercase' }}>Primary Net Payout</span>
                       </div>
-                      <div style={{ fontSize: '24px', fontWeight: 900, color: '#ffffff' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 900, color: '#ffffff', marginTop: '4px' }}>
                         {currency.symbol}{calculations.primaryArtistShareLocal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>Disbursement Routing:</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>Payout Routing:</div>
                       <div style={{ fontSize: '12px', fontWeight: 700, color: '#38bdf8' }}>
                         {payoutDestination === 'mpesa' ? 'M-Pesa B2C Gateway' : 'Stripe Express Direct'}
                       </div>
@@ -1186,32 +1969,71 @@ export default function TuneLedgerSplitCascadePanel({
                   </div>
                 </div>
 
-                {/* Action Execution Button */}
-                <button
-                  type="button"
-                  onClick={handleExecuteCascade}
-                  disabled={isProcessing || totalCollabPct !== 100}
-                  style={{
-                    width: '100%',
-                    background: totalCollabPct === 100 ? '#10b981' : '#64748b',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '12px',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    fontWeight: 800,
-                    cursor: totalCollabPct === 100 ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}
-                  data-testid="execute-split-btn"
-                >
-                  <RiCoinsFill size={18} />
-                  <span>{isProcessing ? 'Calculating & Disbursing Cascade...' : 'Execute Split & Disburse Payouts'}</span>
-                </button>
+                {/* Jump to Settle Shortcut Button */}
+                {currentWaterfallStep !== 5 && (
+                  <button
+                    type="button"
+                    onClick={() => handleJumpToWaterfallStep(5)}
+                    style={{
+                      width: '100%',
+                      background: '#0f172a',
+                      color: '#38bdf8',
+                      border: '1px solid rgba(14,165,233,0.3)',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      fontSize: '12.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <span>Jump to Step 5: Review &amp; Settle →</span>
+                  </button>
+                )}
               </div>
+            </div>
+          </div>
+
+          {/* Studio Section-Level Directional Navigation Footer */}
+          <div style={{
+            background: '#090e24',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '6px',
+            padding: '14px 20px',
+            marginTop: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+              Finished calculating your cascade? Browse to historical transactions or split sheet contracts:
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setActiveTab('ledger')}
+                style={{
+                  background: '#0f172a',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#ffffff',
+                  padding: '8px 14px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>View TuneLedger Transactions ({ledgerRows.length})</span>
+                <RiArrowRightLine size={15} />
+              </button>
             </div>
           </div>
         </div>
@@ -1370,6 +2192,61 @@ export default function TuneLedgerSplitCascadePanel({
               </tbody>
             </table>
           </div>
+
+          {/* Section Navigation Footer */}
+          <div style={{
+            background: '#0b1126',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            padding: '16px 0 0',
+            marginTop: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('waterfall')}
+              style={{
+                background: '#0f172a',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#cbd5e1',
+                padding: '8px 14px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiArrowLeftLine size={15} />
+              <span>Previous: Interactive Waterfall Builder</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('vault')}
+              style={{
+                background: '#0ea5e9',
+                color: '#ffffff',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <span>Next: Split Sheets Vault</span>
+              <RiArrowRightLine size={15} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -1447,6 +2324,61 @@ export default function TuneLedgerSplitCascadePanel({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Section Navigation Footer */}
+          <div style={{
+            background: '#0b1126',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            padding: '16px 0 0',
+            marginTop: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('ledger')}
+              style={{
+                background: '#0f172a',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#cbd5e1',
+                padding: '8px 14px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiArrowLeftLine size={15} />
+              <span>Previous: TuneLedger Transactions</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('importer')}
+              style={{
+                background: '#0ea5e9',
+                color: '#ffffff',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <span>Next: Statement Ingestion & CSV</span>
+              <RiArrowRightLine size={15} />
+            </button>
           </div>
         </div>
       )}
@@ -1559,31 +2491,144 @@ export default function TuneLedgerSplitCascadePanel({
               </div>
             </div>
           )}
+
+          {/* Section Navigation Footer */}
+          <div style={{
+            background: '#0b1126',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            padding: '16px 0 0',
+            marginTop: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('vault')}
+              style={{
+                background: '#0f172a',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#cbd5e1',
+                padding: '8px 14px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiArrowLeftLine size={15} />
+              <span>Previous: Split Sheets Vault</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('university')}
+              style={{
+                background: '#0ea5e9',
+                color: '#ffffff',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <span>Next: Royalty University &amp; Guide</span>
+              <RiArrowRightLine size={15} />
+            </button>
+          </div>
         </div>
       )}
 
       {/* ================= TAB 5: ROYALTY UNIVERSITY & GUIDANCE HUB ================= */}
       {activeTab === 'university' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
-          {ROYALTY_GUIDES.map(guide => (
-            <div key={guide.id} style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: 800, background: 'rgba(14,165,233,0.1)', padding: '2px 8px', borderRadius: '4px' }}>
-                  {guide.tag}
-                </span>
-                <span style={{ fontSize: '11px', color: '#64748b' }}>{guide.readTime}</span>
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
+            {ROYALTY_GUIDES.map(guide => (
+              <div key={guide.id} style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: 800, background: 'rgba(14,165,233,0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                    {guide.tag}
+                  </span>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>{guide.readTime}</span>
+                </div>
+                <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
+                  {guide.title}
+                </h3>
+                <p style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.4, margin: '0 0 14px' }}>
+                  {guide.summary}
+                </p>
+                <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '6px', padding: '14px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                  {guide.content}
+                </div>
               </div>
-              <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
-                {guide.title}
-              </h3>
-              <p style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.4, margin: '0 0 14px' }}>
-                {guide.summary}
-              </p>
-              <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '6px', padding: '14px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                {guide.content}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Section Navigation Footer */}
+          <div style={{
+            background: '#090e24',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '6px',
+            padding: '14px 20px',
+            marginTop: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('importer')}
+              style={{
+                background: '#0f172a',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#cbd5e1',
+                padding: '8px 14px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <RiArrowLeftLine size={15} />
+              <span>Previous: Statement Ingestion &amp; CSV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('waterfall')}
+              style={{
+                background: '#0ea5e9',
+                color: '#ffffff',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <span>Return to: Interactive Waterfall Builder</span>
+              <RiArrowRightLine size={15} />
+            </button>
+          </div>
         </div>
       )}
 
