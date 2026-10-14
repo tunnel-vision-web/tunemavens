@@ -23,7 +23,7 @@ import {
   RiMusicFill, RiGlobalFill, RiBarChartFill, RiCheckboxCircleFill, RiApps2Fill, RiShieldFill, RiArrowRightFill, RiArrowLeftFill, RiLockFill, RiDatabase2Fill, RiStackFill, RiSettings3Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiKey2Fill, RiRefreshFill, RiCpuFill, RiQuestionFill, RiArrowDownSFill, RiArrowLeftSFill, RiArrowRightSFill, RiMenuFill, RiCloseFill, RiMessage2Fill, RiBookOpenFill, RiCoinsFill, RiBellFill, RiUserFill, RiLogoutBoxRFill, RiExternalLinkFill, RiSmartphoneFill, RiDownloadFill, RiHomeFill, RiAppleFill, RiBankCardFill, RiHeadphoneFill, RiLineChartFill, RiResetLeftFill, RiSendPlaneFill, RiGroupFill as UsersIcon, RiPenNibFill, RiLinksFill, RiMailFill, RiPlayFill, RiDiscFill, RiMicFill, RiEqualizerFill, RiWifiFill, RiFolderAddFill, RiTicket2Fill, RiStarFill, RiPauseFill,
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
   RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine,
-  RiPriceTag3Fill, RiLayoutMasonryFill
+  RiPriceTag3Fill, RiLayoutMasonryFill, RiMegaphoneFill, RiUserSharedFill
 } from 'react-icons/ri'
 
 // Local assets
@@ -113,10 +113,13 @@ import CreatorEpkView, { EPK_THEMES } from './views/creator/CreatorEpkView.jsx'
 import EpkWizard from './components/EpkWizard.jsx'
 import DashboardCmsStudio from './components/DashboardCmsStudio.jsx'
 import SmartCrmStudioPanel from './components/SmartCrmStudioPanel.jsx'
+import CorporateAdsPanel from './components/CorporateAdsPanel.jsx'
 import CatalogueWizard from './components/CatalogueWizard.jsx'
 import ArtistRosterSelector from './components/ArtistRosterSelector.jsx'
 import GenreManagerModal from './components/GenreManagerModal.jsx'
 import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from './lib/genres.js'
+import AppHelpAiControls from './components/common/AppHelpAiControls.jsx'
+import { getRelevantDocLink } from './services/userLifecycleMemory.js'
 import {
   OnboardingStripe, OnboardingWizardModal, RecommendationHero,
   PublishingElectionPanel, DistributionElectionPanel, ContractDrawer,
@@ -166,7 +169,7 @@ import {
 
 
 // ================= Dashboard Topbar (notifications + account dropdown) =================
-function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) {
+function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const notifRef = useRef(null);
@@ -284,6 +287,32 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser }) 
                 </div>
               </div>
               <div className="topbar-dropdown-divider" />
+              <button
+                className="topbar-menu-item"
+                style={{ color: '#ef4444' }}
+                onClick={() => {
+                  setAccountOpen(false);
+                  setActiveTab('corporate-ads');
+                }}
+              >
+                <RiMegaphoneFill size={14} />
+                <span>Corporate Ads &amp; Flights</span>
+              </button>
+              <button
+                className="topbar-menu-item"
+                style={{ color: '#f59e0b' }}
+                onClick={() => {
+                  setAccountOpen(false);
+                  const newRole = sessionUser?.role === 'corporate' ? 'creator' : 'corporate';
+                  const merged = { ...sessionUser, role: newRole };
+                  if (onUpdateUser) onUpdateUser(merged);
+                  sessionStorage.setItem('tunemavens_session', JSON.stringify(merged));
+                  window.location.reload();
+                }}
+              >
+                <RiUserSharedFill size={14} />
+                <span>{sessionUser?.role === 'corporate' ? 'Role: Corporate (Switch to Creator)' : 'Sandbox: Switch to Corporate Brand'}</span>
+              </button>
               <button
                 className="topbar-menu-item"
                 style={{ color: 'var(--cyan)' }}
@@ -470,7 +499,12 @@ function DashboardView({
   setCreatorEpk
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTabQuery = searchParams.get('tab');
+
   const [activeTab, setActiveTab] = useState(() => {
+    if (initialTabQuery) return initialTabQuery;
     const target = sessionStorage.getItem('preferred_dashboard_tab');
     if (target) {
       sessionStorage.removeItem('preferred_dashboard_tab');
@@ -478,6 +512,18 @@ function DashboardView({
     }
     return 'home';
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const t = params.get('tab');
+    if (t && t !== activeTab) {
+      setActiveTab(t);
+    }
+    const r = params.get('role');
+    if (r && sessionUser && sessionUser.role !== r && onUpdateUser) {
+      onUpdateUser({ ...sessionUser, role: r });
+    }
+  }, [location.search]);
   const [userCredits, setUserCredits] = useState(sessionUser?.credits || 600);
   const [payoutBalance, setPayoutBalance] = useState(4235.80);
   const [collapsed, setCollapsed] = useState(false);
@@ -725,6 +771,8 @@ function DashboardView({
         );
       case 'app-marketplace':
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
+      case 'corporate-ads':
+        return <CorporateAdsPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
       default:
         return <div>Tab not found</div>;
     }
@@ -757,12 +805,16 @@ function DashboardView({
       cms: { id: 'cms', label: 'CMS Layouts', icon: RiFileTextFill, category: 'Admin' },
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: RiGlobalFill, category: 'Admin' },
       'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: RiStarFill, category: 'Admin' },
+      'corporate-ads': { id: 'corporate-ads', label: 'Corporate Ads & Rates', icon: RiMegaphoneFill, category: role === 'admin' ? 'Admin' : 'Brand Sponsorships' },
     };
 
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'cms', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'domain-mappings', 'promoted-acts', 'profile'];
+        visibleKeys = ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
+        break;
+      case 'corporate':
+        visibleKeys = ['home', 'corporate-ads', 'crm', 'app-marketplace', 'social-ai', 'sync', 'escrow', 'profile'];
         break;
       case 'label':
         visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile'];
@@ -779,7 +831,7 @@ function DashboardView({
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
+        visibleKeys = ['home', 'corporate-ads', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'profile'];
         break;
     }
 
@@ -803,8 +855,8 @@ function DashboardView({
 
     const categories = {};
     visibleKeys.forEach(k => {
-      // Check if this tab is a marketplace app, and if so, only show if activated (CRM is always available).
-      if (APP_SLUGS[k] && k !== 'crm') {
+      // Check if this tab is a marketplace app, and if so, only show if activated (CRM and Corporate Ads are always available).
+      if (APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads') {
         const activeApps = sessionUser?.apps || getStoredActivatedApps(sessionUser) || [];
         if (!activeApps.includes(APP_SLUGS[k])) {
           return;
@@ -1032,10 +1084,26 @@ function DashboardView({
           onLogout={onLogout}
           setActiveTab={setActiveTab}
           onUpdateUser={onUpdateUser}
+          activeTab={activeTab}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
           <OnboardingStripe sessionUser={sessionUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} />
-          <div className="admin-app-wrapper">
+          <div className="admin-app-wrapper" style={{ position: 'relative' }}>
+            <div className="admin-app-header-bar" data-testid="admin-app-header-bar">
+              <div className="admin-app-header-left">
+                <span className="admin-app-badge">App Workspace</span>
+                <span className="admin-app-title">
+                  {getRelevantDocLink(activeTab).appTitle}
+                </span>
+              </div>
+              <div className="admin-app-header-right">
+                <AppHelpAiControls
+                  activeContext={activeTab}
+                  sessionUser={sessionUser}
+                  onNavigateTab={setActiveTab}
+                />
+              </div>
+            </div>
             {renderActivePanel()}
           </div>
         </div>
@@ -2542,6 +2610,44 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
   const getRoleSpecificData = () => {
     const role = sessionUser?.role || 'creator';
     switch (role) {
+      case 'admin':
+        return {
+          title: "Platform Administration & Corporate Console",
+          statLabel: "Corporate Ad Spend Committed",
+          statValue: "$9,497.00",
+          statTrend: "↗ +$5,498.00 this month",
+          stat2Label: "Verified Stream Impressions",
+          stat2Value: "160,580 Listens",
+          stat2Trend: "✨ 3.93% average CTR",
+          chartTitle: "Corporate Ad Delivery & Growth Trend",
+          chartPoints: [25000, 50000, 85000, 110000, 135000, 160580],
+          chartLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          detailsTitle: "Brand Flights & Rate Tiers",
+          detailsItems: [
+            { label: "Safaricom Neon (Amplified)", val: "42k listens", color: "var(--cyan)" },
+            { label: "Red Bull SoundClash (Culture)", val: "118k listens", color: "#ef4444" },
+            { label: "Active Rate Tiers", val: "4 Live Tiers", color: "#10b981" }
+          ]
+        };
+      case 'corporate':
+        return {
+          title: "Corporate Brand Advertising Console",
+          statLabel: "Audio Impressions Delivered",
+          statValue: "160,580 Listens",
+          statTrend: "↗ +18,420 listens this week",
+          stat2Label: "Average CTR",
+          stat2Value: "3.93%",
+          stat2Trend: "🎯 3.4x higher than standard banner display",
+          chartTitle: "Monthly Audio Stream Reach",
+          chartPoints: [25000, 50000, 85000, 110000, 135000, 160580],
+          chartLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          detailsTitle: "Active Brand Sponsorships",
+          detailsItems: [
+            { label: "TuneStream Audio Spots", val: "65% of budget", color: "#ef4444" },
+            { label: "Creator EPK Banners", val: "20% of budget", color: "var(--cyan)" },
+            { label: "Live Tour QR Passes", val: "15% of budget", color: "#f59e0b" }
+          ]
+        };
       case 'label':
         return {
           title: "Label Analytics Console",
@@ -8225,7 +8331,7 @@ function AppContent({
           <Route path="/tours" element={<ToursView sessionUser={sessionUser} />} />
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
-          <Route path="/help" element={<HelpView />} />
+          <Route path="/help" element={<HelpView sessionUser={sessionUser} />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
 
@@ -8310,8 +8416,8 @@ function AppContent({
                       <Link to="/tunestream/creators" className="footer-link">For Creators</Link>
                       <Link to="/native-apps/tunestream?view=explore" className="footer-link">Discover Artists</Link>
                       <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
-                      <Link to="/tunestream/help" className="footer-link">Support &amp; Help</Link>
-                      <Link to="/tunestream/help" className="footer-link">Contact</Link>
+                      <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
+                      <Link to="/help" className="footer-link">Support Desk</Link>
                     </div>
                   </div>
                 </div>
@@ -8394,8 +8500,8 @@ function AppContent({
                       <Link to="/tunestream/creators" className="footer-link">For Creators</Link>
                       <Link to="/native-apps/tunestream?view=explore" className="footer-link">Discover Artists</Link>
                       <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
-                      <Link to="/tunestream/help" className="footer-link">Support &amp; Help</Link>
-                      <Link to="/tunestream/help" className="footer-link">Contact</Link>
+                      <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
+                      <Link to="/help" className="footer-link">Support Desk</Link>
                     </div>
                   </div>
                 </div>

@@ -64,7 +64,10 @@ npm run dev
 
 ### 5. Design Standards & Visual Identity
 - **Analogous High-Contrast Notifications:** Deep midnight navy base (`#071d2c`) with vibrant 1.5px cyan/emerald borders (`#00f0ff`), left 5px solid highlight indicator strip, and high-contrast tag pills.
-- **Strict Flat Colors Standard:** Buttons across the ecosystem strictly use solid flat colors; all gradients on `<button>` elements are eliminated for visual clarity.
+- **Strict Flat Colors Standard:** Buttons and icons across the ecosystem strictly use solid flat colors; all gradients on `<button>` elements, icon vectors, and icon container badges are eliminated platformwide for visual clarity.
+- **Corporate Advertising & Sponsorships Engine:** Complete commercial ad rate platform (`/for/corporate`) with live CPM calculations, spot duration options (15s/30s audio), campaign telemetry tracking (`/api/corporate/*`), and admin console (`CorporateAdsPanel.jsx`).
+- **In-App Contextual Help Overlays & Zero Route Disruption:** Dedicated `'need help - view docs'` and `'ask ai'` controls located directly inside each app workspace (`.admin-app-header-bar`). Opens articles in-place via React Portals, completely eliminating route changes and preserving active workspace states.
+- **AI Prompt Assistant with Full Lifecycle Memory:** AI Copilot centered in viewport with persistent tracking of user lifecycle actions, credits, catalog metadata, and conversation history (`userLifecycleMemory.js`).
 - **AI Hero & Header Image Live Synchronization:** Real-time bi-directional synchronization between Mother-CMS (`db.cms_layouts`) and public EPKs (`db.epks`), cache-busting HTTP headers, and instantaneous frontend event bus updates.
 - **40% Header Image Luminance Boost:** Header banners across interior pages and Creator Web Worlds apply `filter: brightness(1.4)` (hover `brightness(1.55)`) with lightened overlays for maximum visual punch and legibility.
 - **Strict 1280px Grid:** All content below the hero section across TuneMavens is locked to `max-width: 1280px; margin: 0 auto;`.

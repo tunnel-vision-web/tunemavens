@@ -455,3 +455,66 @@ class DjClearanceRequest(BaseDocument):
     status: str = "pending"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+# ======================================================================
+# Corporate & Brand Advertising Models
+# ======================================================================
+class CorporateAdRate(BaseDocument):
+    slug: str
+    name: str
+    tier_badge: str
+    price_usd: float
+    credits: int
+    cpm_usd: float
+    guaranteed_impressions: int
+    duration_days: int
+    formats: List[str] = Field(default_factory=list)
+    features: List[str] = Field(default_factory=list)
+    is_popular: bool = False
+    cta: str = "Book Ad Spot"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CorporateAdCampaign(BaseDocument):
+    brand_name: str
+    company_name: Optional[str] = None
+    contact_email: str
+    contact_phone: Optional[str] = None
+    user_id: Optional[str] = None
+    tier_slug: str
+    tier_name: str
+    budget_usd: float
+    credits_allocated: int = 0
+    spot_duration_seconds: int = 15  # 15 | 30
+    audio_asset_url: Optional[str] = None
+    companion_banner_url: Optional[str] = None
+    destination_url: Optional[str] = None
+    promo_code: Optional[str] = None
+    target_regions: List[str] = Field(default_factory=list)
+    target_genres: List[str] = Field(default_factory=list)
+    status: str = "in_review"  # 'draft' | 'in_review' | 'active' | 'paused' | 'completed'
+    impressions_delivered: int = 0
+    completions_delivered: int = 0
+    clicks_delivered: int = 0
+    ctr: float = 0.0
+    leads_generated: int = 0
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CorporateAdInquiry(BaseDocument):
+    reference_code: str
+    brand_name: str
+    contact_name: str
+    contact_email: str
+    contact_phone: Optional[str] = None
+    tier_slug: str
+    target_region: Optional[str] = None
+    target_genre: Optional[str] = None
+    estimated_budget: Optional[str] = None
+    notes: Optional[str] = None
+    status: str = "pending"  # 'pending' | 'contacted' | 'booked'
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+

@@ -214,7 +214,53 @@ export default function PricingView() {
             </div>
           ))}
         </div>
+
+        {/* Corporate Advertising & Sponsorships Banner */}
+        <div style={{
+          marginTop: '56px',
+          background: '#090e24',
+          border: '1px solid rgba(239, 68, 68, 0.4)',
+          borderLeft: '5px solid #ef4444',
+          borderRadius: '6px',
+          padding: '28px 32px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '20px'
+        }}>
+          <div>
+            <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Corporate &amp; Enterprise Brands
+            </span>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '4px 0 6px', fontFamily: 'Sansation, sans-serif' }}>
+              Looking for Business Ad Rates &amp; Tour Sponsorships?
+            </h3>
+            <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0, maxWidth: '640px' }}>
+              Broadcast 15s/30s unskippable audio spots on TuneStream, sponsor creator concert tours, and capture CRM leads starting at $499/mo (~$14.99 CPM).
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/for/corporate')}
+            style={{
+              padding: '12px 24px',
+              background: '#ef4444',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 700,
+              fontSize: '14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            Review Business Ad Rates &rarr;
+          </button>
+        </div>
       </div>
+
 
       {checkoutPlan && (
         <CheckoutModal

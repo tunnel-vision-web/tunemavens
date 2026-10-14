@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { RiBookOpenFill, RiGlobalLine, RiExchangeDollarLine, RiCheckboxCircleLine, RiContractLine } from 'react-icons/ri'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
 import publishingDashboardMockup from '../../assets/images/publishing_dashboard_mockup.png'
@@ -34,6 +35,7 @@ export default function PublishingView({ sessionUser }) {
         bgImageWestern={headerAppsWesternImg} 
         breadcrumb="Publishing Administration" 
       />
+      <AppHelpAiControls activeContext="publishing" sessionUser={sessionUser} floating={true} />
       
       <div className="container" style={{ paddingBottom: '80px', marginTop: '50px' }}>
         {/* Intro Grid */}

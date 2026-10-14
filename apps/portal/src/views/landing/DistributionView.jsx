@@ -4,6 +4,7 @@ import { RiVolumeUpFill, RiGlobalLine, RiMusicFill } from 'react-icons/ri'
 import { SiSpotify, SiApplemusic, SiYoutube, SiTiktok, SiTidal, SiDeezer } from 'react-icons/si'
 import { FaAmazon } from 'react-icons/fa'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
 import SEO from '../../components/common/SEO.jsx'
@@ -58,6 +59,7 @@ export default function DistributionView({ sessionUser }) {
         bgImageWestern={headerAppsWesternImg} 
         breadcrumb="DSP Distribution" 
       />
+      <AppHelpAiControls activeContext="distribution" sessionUser={sessionUser} floating={true} />
       
       <div className="container" style={{ paddingBottom: '80px', marginTop: '50px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '56px' }}>

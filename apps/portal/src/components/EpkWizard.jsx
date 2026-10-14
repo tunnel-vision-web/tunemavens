@@ -2228,7 +2228,7 @@ function Step8Publish({ data, tracks, onPublish, saving }) {
         {data.bio && <div style={{ padding:'14px 18px', fontSize:12, color:'#94a3b8', lineHeight:1.6, borderBottom:`1px solid ${C.border}` }}>{data.bio.slice(0,220)}{data.bio.length>220?'...':''}</div>}
         {selectedTrack && (
           <div style={{ padding:'12px 18px', display:'flex', alignItems:'center', gap:10, borderBottom:`1px solid ${C.border}` }}>
-            <div style={{ width:36, height:36, borderRadius:4, background:selectedTrack.coverBg||'linear-gradient(135deg,#8b5cf6,#06b6d4)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:'#fff' }}>{selectedTrack.coverText||'♫'}</div>
+            <div style={{ width:36, height:36, borderRadius:4, background:selectedTrack.coverBg||'#7c3aed', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:'#fff' }}>{selectedTrack.coverText||'♫'}</div>
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:12, fontWeight:700, color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{selectedTrack.title}</div>
               <div style={{ fontSize:10, color:'#64748b' }}>{selectedTrack.artist}</div>

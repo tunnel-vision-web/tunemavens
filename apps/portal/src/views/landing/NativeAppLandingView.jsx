@@ -4,6 +4,7 @@ import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownlo
 import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
 import FaqItem from '../../components/common/FaqItem.jsx'
 import { useRegion } from '../../RegionContext.jsx'
+import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
 
 import tunestreamHeaderImg from '../../assets/images/tunestream_header.png'
 import tunestreamHeader2Img from '../../assets/images/tunestream_header_2.png'
@@ -1705,6 +1706,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         className="native-app-landing tunestream-landing" 
         style={{ background: getLandingBackground('tunestream'), color: '#f1f5f9', minHeight: '100vh', padding: '0 0 162px' }}
       >
+        <AppHelpAiControls activeContext={normalizedSlug} sessionUser={sessionUser} floating={true} />
         {renderTopHeader()}
         <div className="container" style={{ marginTop: view === 'listen' ? '40px' : '0' }}>
           {renderContent()}
@@ -1719,6 +1721,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       style={{ '--app-accent': data.accent, '--app-accent-glow': data.accentGlow, background: getLandingBackground(normalizedSlug) }}
       data-testid={`native-app-landing-${data.slug}`}
     >
+      <AppHelpAiControls activeContext={normalizedSlug} sessionUser={sessionUser} floating={true} />
       <div className="hw">
         <div className="bgs">
           {slides.map((s, idx) => (

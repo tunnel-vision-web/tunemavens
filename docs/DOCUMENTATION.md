@@ -1104,6 +1104,57 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
     - **PayPal:** One-click instant checkout with PayPal wallet or linked bank account.
   - Backed by `POST /api/storage/buy-credits`, updating user balance and orders log, allowing immediate storage pack activation in the same modal.
 
+### 9.32 Corporate Advertising, Knowledge Base Ecosystem, In-App Doc Overlays & AI Copilot Standards
+
+#### 9.32.1 Corporate Advertising Rates & Brand Sponsorship Engine
+- **Landing Gateway (`CorporateLandingPage.jsx`):** Dedicated `/for/corporate` portal providing full commercial rate cards, CPM structures, spot durations (15s/30s unskippable audio), live telemetry breakdowns, and brand sponsorship tiers:
+  - *Pulse Tier:* $499 / mo (2,500 Credits, ~$19.96 CPM, 25k targeted impressions)
+  - *Amplified Tier:* $1,499 / mo (7,500 Credits, ~$14.99 CPM, 100k targeted impressions + companion banner)
+  - *Culture Lead Tier:* $3,999 / mo (20,000 Credits, ~$13.33 CPM, 300k reach + creator tour sponsorship)
+  - *Titan Tier:* $9,999+ / mo (50,000 Credits, ~$9.99 CPM, 1M+ reach, category exclusivity, co-branded festival stage)
+- **FastAPI Corporate Router (`backend/routes/corporate_ads_router.py`):**
+  - `GET /api/corporate/ad-rates`: Authoritative list of active packages, CPM, spot lengths, and deliverable specs.
+  - `GET /api/corporate/campaigns`: Multi-tenant campaign tracking with impressions, clicks, CTR, and regional distribution.
+  - `POST /api/corporate/campaigns`: Campaign booking submission with validation, CRM lead generation, and credit deductions.
+  - `POST /api/corporate/campaigns/{id}/track`: Real-time impression and click telemetry tracker updating database records.
+  - `GET /api/corporate/stats`: High-level executive aggregates (Active Flights, Global Reach, Average CTR, Broadcast Hours).
+- **Admin Corporate Console (`CorporateAdsPanel.jsx`):** Integrated admin module (`activeTab === 'corporate-ads'`) for launching campaigns, booking custom ad flights, and monitoring analytics.
+
+#### 9.32.2 Comprehensive Music Industry Knowledge Base
+- **Canonical Article Data (`helpArticles.js`):** 18 comprehensive industry treatises organized into 5 categories (Publishing & Copyright, Music Business & Contracts, TuneMavens Services, Royalties & Payouts, Account & Security).
+- **Key Industry Topics:**
+  - *Master Rights vs. Composition Rights:* Sound recording vs. musical work duality, 5 distinct royalty streams, One-Stop sync advantage.
+  - *Mechanical Royalties & The MLC:* MMA compliance, blank mechanical rates ($0.124/stream formula), black box prevention.
+  - *PROs & CMOs:* ASCAP, BMI, SESAC, PRS, SAMRO performance royalty splits (50% writer / 50% publisher).
+  - *Metadata Identifiers:* ISRC, ISWC, IPI, UPC correlation and delivery pipeline specs.
+  - *Publishing Deals:* Traditional Co-Pub vs. Admin Mode vs. Catalog Buyout financial modeling.
+  - *Split Sheets & Waterfalls:* Studio split agreements, recoupment mathematics, net profit cascading.
+  - *Sync Placement & Clearances:* Music supervisor pitching protocol, cue sheet royalties, MFN clauses.
+  - *Live Touring & Tour Accounting:* Guarantees, riders, door splits, merch concessions, and nightly settlement math.
+- **Shared Markdown Article Renderer (`ArticleContentRenderer.jsx`):** High-performance parser rendering custom tables, blockquote callouts, nested lists, and inline monospace chips without third-party dependencies.
+
+#### 9.32.3 In-App Contextual Documentation Overlays & Zero Route Disruption
+- **App Boundary Placement:** The `'need help - view docs'` and `'ask ai'` controls are strictly placed inside `.admin-app-wrapper` at the top right of each app's workspace (`.admin-app-header-bar`), distinct from the global dashboard topbar.
+- **In-Place Modal Reader:** Clicking `'need help - view docs'` triggers an in-app overlay modal mounted directly via `createPortal(..., document.body)`.
+- **Zero Route Disruption:** Users read contextual articles without navigating to `/help`. Closing the modal (via Close `X`, "Back to [AppName]" footer button, backdrop click, or `Escape`) dismisses the overlay and leaves the user's workspace, form state, and audio session completely untouched.
+- **Dynamic Context Mapping (`userLifecycleMemory.js`):** Maps every workspace tab (`catalog`, `splits`, `sync`, `mastering`, `epk-builder`, `corporate-ads`, etc.) to its corresponding industry guide.
+
+#### 9.32.4 AI Copilot with Persistent User Lifecycle Memory
+- **Universal Viewport Centering:** The AI Prompt Assistant modal is rendered via `createPortal(..., document.body)` with `position: fixed !important; z-index: 999999; display: flex; align-items: center; justify-content: center;` spanning `100vw` by `100vh`, completely bypassing ancestor `backdrop-filter` containing block traps.
+- **Full Lifecycle Memory Tracking:**
+  - `loadUserLifecycleMemory` aggregates persistent user identity, active role, universal credits, registered catalog statistics, and activity timeline from `localStorage`.
+  - `logUserActivity` automatically records workspace actions (catalog edits, split calculations, ad submissions, doc consultations).
+  - Expandable Memory Inspector drawer (`.ai-memory-drawer`) allows creators to view the live memory context powering AI responses.
+- **Chat History & Contextual Prompt Chips:** Conversations persist across sessions (`tunemavens_ai_chat_{userId}`), with contextual prompt suggestions tailored to the active tab.
+
+#### 9.32.5 Strict Flat Colors Standard (Zero Gradients on Buttons & Icons)
+- **Strict Prohibition:** All multi-color gradients (`linear-gradient`) on `<button>` elements, icon glyphs, and icon badge containers are strictly banned platformwide.
+- **Design Specifications:**
+  - `'ask ai'` button (`.btn-ask-ai`): Solid flat `#7c3aed` with solid flat `#6d28d9` on hover.
+  - AI Send button (`.ai-send-btn`): Solid flat `#7c3aed`.
+  - AI Avatars & Badges (`.ai-avatar-badge`, `.inapp-doc-ai-avatar`): Solid flat `#7c3aed`.
+  - Icon vectors: Solid flat colors (`#ffffff`, `var(--cyan)`, `#7c3aed`).
+
 
 
 

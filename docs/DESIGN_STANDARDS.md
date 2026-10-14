@@ -172,11 +172,12 @@ Used for sub-applications or landing sub-views to easily jump back to the core p
 ### D. Icons Selection
 We standardized on the **Remix Icons** library (`react-icons/ri`) to preserve a cohesive style for line/fill weights across all interactive buttons, drop-downs, and sidebars.
 
-### D. Flat Colors Standard (Strict No Gradients on Buttons)
+### D. Flat Colors Standard (Strict No Gradients on Buttons & Icons)
 To preserve visual clarity, tactile predictability, and modern cyber minimalism:
-- **Zero Gradients:** Buttons across the ecosystem must strictly use solid flat colors (`var(--cyan)`, `#10b981`, `#8b5cf6`, `#ef4444`, `rgba(255, 255, 255, 0.06)`).
-- Gradient fills (`linear-gradient`) on `<button>` elements or `.btn` classes are strictly prohibited.
-- Subtle contrast is achieved via solid hover color shifts (`var(--btn-hover)`), 1px solid accent borders, and neon ambient box shadows, rather than multi-color gradient fills.
+- **Zero Gradients:** Buttons and icons across the ecosystem must strictly use solid flat colors (`var(--cyan)`, `#10b981`, `#8b5cf6`, `#7c3aed`, `#ef4444`, `rgba(255, 255, 255, 0.06)`).
+- Gradient fills (`linear-gradient`) on `<button>` elements, `.btn` classes, icon glyphs, or icon container badges are strictly prohibited platformwide.
+- Subtle contrast is achieved via solid hover color shifts (`var(--btn-hover)`, `#6d28d9`), 1px solid accent borders, and neon ambient box shadows, rather than multi-color gradient fills.
+- **AI Controls Specification:** The "Ask AI" button (`.btn-ask-ai`), prompt send button (`.ai-send-btn`), assistant avatars, and accompanying sparkle icons utilize solid flat `#7c3aed` / `#ffffff` with flat `#6d28d9` active/hover states.
 
 ### E. Strict Lightning Icon Ban Platformwide
 To maintain a clean, professional, and consistent visual identity:

@@ -697,7 +697,7 @@ export default function CatalogueWizard({
             width: '36px',
             height: '36px',
             borderRadius: '6px',
-            background: 'linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)',
+            background: '#00f0ff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

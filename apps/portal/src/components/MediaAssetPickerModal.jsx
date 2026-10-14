@@ -400,8 +400,8 @@ export default function MediaAssetPickerModal({
               disabled={generating || !aiPrompt.trim()}
               style={{
                 padding: '9px 16px',
-                background: 'linear-gradient(135deg, #a855f7, #22d3ee)',
-                color: '#0f172a',
+                background: '#7c3aed',
+                color: '#ffffff',
                 border: 'none',
                 borderRadius: '3px',
                 fontWeight: 800,

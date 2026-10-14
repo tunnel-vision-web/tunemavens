@@ -234,7 +234,7 @@ export default function LiveEpkCmsStudio({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            background: `linear-gradient(135deg, ${accent}, #8b5cf6)`,
+            background: accent || '#00f0ff',
             color: '#000',
             fontWeight: 900,
             fontSize: '0.72rem',

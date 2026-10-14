@@ -1157,7 +1157,7 @@ export default function CmsAssetsStudio({
                     disabled={buyingCredits}
                     onClick={handlePurchaseCredits}
                     style={{
-                      background: 'linear-gradient(135deg, #00f0ff 0%, #3b82f6 100%)',
+                      background: '#00f0ff',
                       color: '#000',
                       border: 'none',
                       borderRadius: '4px',

@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { RiCalendarEventFill, RiMapPinRangeLine, RiMoneyDollarCircleLine, RiCheckboxCircleLine, RiSendPlaneFill } from 'react-icons/ri'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
 import tourDashboardMockup from '../../assets/images/tour_dashboard_mockup.png'
@@ -34,6 +35,7 @@ export default function ToursView({ sessionUser }) {
         bgImageWestern={headerAppsWesternImg} 
         breadcrumb="Tours coordination" 
       />
+      <AppHelpAiControls activeContext="tours" sessionUser={sessionUser} floating={true} />
       
       <div className="container" style={{ paddingBottom: '80px', marginTop: '50px' }}>
         {/* Intro Section */}

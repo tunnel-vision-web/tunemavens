@@ -5,7 +5,7 @@
 // AppMarketplacePanel  -  plus the PanelHeader helper they share.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { RiCloseFill, RiCheckboxCircleFill, RiArrowDownSFill, RiArrowLeftFill, RiArrowRightFill, RiResetLeftFill, RiSendPlaneFill, RiPenNibFill, RiLinksFill, RiMailFill, RiLockFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDatabase2Fill, RiCoinsFill, RiGroupFill as UsersIcon, RiDiscFill } from 'react-icons/ri'
+import { RiCloseFill, RiCheckboxCircleFill, RiArrowDownSFill, RiArrowLeftFill, RiArrowRightFill, RiResetLeftFill, RiSendPlaneFill, RiPenNibFill, RiLinksFill, RiMailFill, RiLockFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDatabase2Fill, RiCoinsFill, RiGroupFill as UsersIcon, RiDiscFill, RiMegaphoneFill } from 'react-icons/ri'
 import { dealsApi, usersApi, contractsApi, tokenStore } from '../lib/api.js'
 import { INTERMAVEN_NATIVE_APPS } from '../lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'
@@ -345,7 +345,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: 'linear-gradient(180deg, rgba(11,15,30,0.98), rgba(11,15,30,0.94))', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', padding: '32px 32px 28px', maxWidth: '560px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
+        style={{ background: '#0b1126', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', padding: '32px 32px 28px', maxWidth: '560px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
@@ -473,7 +473,7 @@ export function RecommendationHero({ activatedSlugs, onActivate, onOpen, onOpenW
   if (!hasAnswers) {
     return (
       <div data-testid="recommendation-hero-cta"
-        style={{ padding: '18px 22px', background: 'linear-gradient(90deg, rgba(34,211,238,0.10), rgba(139,92,246,0.08)), rgba(11,15,30,0.65)', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+        style={{ padding: '18px 22px', background: '#0b1126', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '220px' }}>
           <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>Not sure where to start?</div>
           <div style={{ fontSize: '14px', color: '#f1f5f9', fontWeight: 700 }}>Answer 5 quick questions and the AI Recommendation Agent will pick the best combination of apps for you.</div>
@@ -498,7 +498,7 @@ export function RecommendationHero({ activatedSlugs, onActivate, onOpen, onOpenW
 
   return (
     <div data-testid="recommendation-hero"
-      style={{ padding: '18px 22px', background: 'linear-gradient(90deg, rgba(34,211,238,0.08), rgba(139,92,246,0.06)), rgba(11,15,30,0.5)', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', marginBottom: '24px' }}>
+      style={{ padding: '18px 22px', background: '#0b1126', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', marginBottom: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '2px' }}>
@@ -1300,18 +1300,23 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
     { slug: 'tunepay-settlement', name: 'POS Settlement', desc: 'Reconcile tunepay settlement runs against your ledger.', icon: RiCoinsFill, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
     { slug: 'tunepay-devices', name: 'POS Devices', desc: 'Pair and manage tunepay hardware tied to your account.', icon: RiSmartphoneFill, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'admin'] },
     { slug: 'epk-builder', name: 'EPK Builder', desc: 'Construct a stunning Electronic Press Kit (EPK) with your tracks, bio, and social links to pitch to supervisors.', icon: RiDiscFill, accent: 'var(--cyan)', tab: 'epk-builder', roles: ['creator', 'label', 'admin'] },
+    { slug: 'corporate-ads', name: 'Corporate Brand Ads & Rates', desc: 'Configure business audio interstitials on TuneStream, sponsor creator concert tours, inspect flight analytics, and manage established rate cards.', icon: RiMegaphoneFill, accent: '#ef4444', tab: 'corporate-ads', roles: ['corporate', 'admin', 'creator', 'label'] },
   ];
 
   const visible = catalogue.filter((a) => a.roles.includes(role));
-  const recommendedSlugs = role === 'label'
-    ? ['catalog-porting', 'distribution-election', 'tunepay-inventory']
-    : role === 'dj'
-      ? ['djpool', 'tunemavens-library']
-      : role === 'studio' || role === 'supervisor'
-        ? ['sync-marketplace', 'escrow-contracts']
-        : role === 'consumer'
-          ? ['tunemavens-library', 'tunemavens-tips']
-          : ['publishing-election', 'distribution-election', 'split-cascade'];
+  const recommendedSlugs = role === 'corporate'
+    ? ['corporate-ads', 'sync-marketplace']
+    : role === 'admin'
+      ? ['corporate-ads', 'catalog-porting', 'split-cascade']
+      : role === 'label'
+        ? ['catalog-porting', 'distribution-election', 'tunepay-inventory']
+        : role === 'dj'
+          ? ['djpool', 'tunemavens-library']
+          : role === 'studio' || role === 'supervisor'
+            ? ['sync-marketplace', 'escrow-contracts']
+            : role === 'consumer'
+              ? ['tunemavens-library', 'tunemavens-tips']
+              : ['publishing-election', 'distribution-election', 'split-cascade'];
 
   const recommended = visible.filter((a) => recommendedSlugs.includes(a.slug));
   const other = visible.filter((a) => !recommendedSlugs.includes(a.slug));

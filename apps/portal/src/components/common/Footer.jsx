@@ -87,8 +87,8 @@ export default function Footer() {
                   <Link to="/tunestream/creators" className="footer-link">For Creators</Link>
                   <Link to="/native-apps/tunestream?view=explore" className="footer-link">Discover Artists</Link>
                   <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
-                  <Link to="/tunestream/help" className="footer-link">Support &amp; Help</Link>
-                  <Link to="/tunestream/help" className="footer-link">Contact</Link>
+                  <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
+                  <Link to="/help" className="footer-link">Support Desk</Link>
                 </div>
               </div>
             </div>
@@ -170,8 +170,8 @@ export default function Footer() {
                   <Link to="/tunestream/creators" className="footer-link">For Creators</Link>
                   <Link to="/native-apps/tunestream?view=explore" className="footer-link">Discover Artists</Link>
                   <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
-                  <Link to="/tunestream/help" className="footer-link">Support &amp; Help</Link>
-                  <Link to="/tunestream/help" className="footer-link">Contact</Link>
+                  <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
+                  <Link to="/help" className="footer-link">Support Desk</Link>
                 </div>
               </div>
             </div>

@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { RiSearchLine, RiShieldKeyholeLine, RiSendPlaneLine, RiCheckboxCircleLine } from 'react-icons/ri'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
 import syncHeaderImg from '../../assets/images/sync_header.png'
 import { getServiceUrl } from '../../components/PerfectForSidebar.jsx'
 import SEO from '../../components/common/SEO.jsx'
@@ -51,6 +52,7 @@ export default function SyncPlacementView({ sessionUser }) {
         bgImageWestern={syncHeaderImg} 
         breadcrumb="Sync Placement" 
       />
+      <AppHelpAiControls activeContext="sync-placement" sessionUser={sessionUser} floating={true} />
       
       <div className="container" style={{ paddingBottom: '80px', marginTop: '50px' }}>
         {/* Intro */}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { RiSmartphoneFill } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
 
 import headerHelpImg from '../../assets/images/header_help.png'
 import headerHelpWesternImg from '../../assets/images/header_help_western.png'
@@ -128,6 +129,7 @@ export default function StreamView({
         bgImageWestern={headerHelpWesternImg} 
         breadcrumb="Stream & Listen" 
       />
+      <AppHelpAiControls activeContext="tunestream" sessionUser={sessionUser} floating={true} />
       
       <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
         <p className="section-desc" style={{ textAlign: 'center', marginBottom: '40px', maxWidth: '700px', margin: '0 auto 40px' }}>

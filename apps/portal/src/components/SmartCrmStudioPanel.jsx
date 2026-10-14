@@ -420,7 +420,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
             width: '36px',
             height: '36px',
             borderRadius: '6px',
-            background: 'linear-gradient(135deg, #00f0ff, #3b82f6)',
+            background: '#00f0ff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

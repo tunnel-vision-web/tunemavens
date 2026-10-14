@@ -1473,7 +1473,7 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '6px', background: 'linear-gradient(135deg,#00f0ff,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: '18px' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '6px', background: '#00f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: '18px' }}>
                           {formData.artist_name ? formData.artist_name.charAt(0).toUpperCase() : 'C'}
                         </div>
                         <div>
@@ -2330,7 +2330,7 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                                 }}
                                 disabled={isGenerating}
                                 style={{
-                                  background: isGenerating ? 'rgba(34,211,238,0.2)' : `linear-gradient(135deg, ${accent}, #8b5cf6)`,
+                                  background: isGenerating ? 'rgba(34,211,238,0.2)' : (accent || '#00f0ff'),
                                   color: '#000',
                                   border: 'none',
                                   padding: '6px 14px',
