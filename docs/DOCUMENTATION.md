@@ -1209,8 +1209,178 @@ Every persona gateway across the platform now features transparent rate cards, s
   - `renderActivePanel` checks `activeTab` against `roleAllowed[userRole]`. Any unauthorized tab navigation safely defaults back to `home`.
 - **User Scoping in Backend Routers:** Non-admin endpoints (`/api/roles/my-inquiries`, `/api/corporate/campaigns`) strictly filter by `user_id == current_user["_id"]` or `contact_email == current_user["email"]`. Admins retain global administrative visibility.
 
+---
 
+### 9.34 Site Admin Team Roster & Seats Governance Engine (Unified Credits Model)
 
+#### 9.34.1 Architectural Purpose & Operational Sovereign Governance
+The **Site Admin Team Roster & Seats Management** console (`apps/portal/src/components/admin/AdminTeamRosterPanel.jsx`) provides platform administrators with sovereign, institutional governance over the entire TuneMavens/Intermaven infrastructure. Rather than relying on generic, unconstrained superuser accounts, the engine introduces structured seat allocations, platform-tailored job functions, granular security clearance tiers, and an auditable member lifecycle.
 
+#### 9.34.2 Platform-Specific Administrative Roles & Clearance Tiers
+The console defines 9 authoritative operational roles mapped across 4 security clearance tiers:
 
+| Role Title | Department | Clearance Tier | Operational Sovereignty & Responsibilities | Default Scopes |
+|---|---|---|---|---|
+| **Network Operations Director / Super Admin** | Infrastructure & Core Ops | `Tier 1 - Super Admin` (`#a855f7`) | Full platform sovereignty: master killswitches, database integrity, domain routing, and root role elevation. | Platform Clusters, Master Killswitch, Database Migrations, Root Audit Trail |
+| **Platform Security & Compliance Lead** | InfoSec & Legal Governance | `Tier 1 - Super Admin` (`#a855f7`) | Enforces DMCA takedown orders, verifies custom subdomains and SSL certificates, and audits SSO session health. | DMCA Enforcement, Domain & SSL Provisioning, SSO Session Invalidation, Jurisdiction Compliance |
+| **Head of Catalog Ingestion & DDEX QA** | Catalog & IP Architecture | `Tier 2 - Operational Director` (`#0ea5e9`) | Authoritative validation of sound recordings, lossless stems, bulk DDEX XML/CSV feeds, and ISRC/ISWC uniqueness. | DDEX Ingestion QA, ISRC/ISWC Registry, Lossless Audio QA, Stem Archive Storage |
+| **Global Rights & Statutory Royalty Auditor** | Royalties & Financial Compliance | `Tier 2 - Operational Director` (`#0ea5e9`) | Reconciles statutory mechanical pools, PRO compliance exports (ASCAP/BMI/MCSK), and automated split cascade math. | Statutory Ledgers, PRO Compliance (ASCAP/BMI/MCSK), Mechanical Splits, Audit Trails |
+| **Split Cascades & Escrow Settlement Officer** | Treasury & Payout Gateway | `Tier 2 - Operational Director` (`#0ea5e9`) | Approves payout batches, monitors M-Pesa B2C and bank wire gateways, and mediates milestone escrow release contracts. | Escrow Dispute Arbitration, Payout Batch Approvals, M-Pesa B2C Releases, ACH & Wire Gateway |
+| **Chief Music Curation & Sync Placement Director** | Sync & Editorial Media | `Tier 2 - Operational Director` (`#0ea5e9`) | Curates TuneStream algorithmic and editorial stations, reviews sync placement briefs, and vets unreleased dubplate pools. | TuneStream Editorial Playlists, Sync Marketplace RFP Review, Dubplate Vetting, Supervisor Matching |
+| **Creator & Label Onboarding Director** | Ecosystem Growth | `Tier 2 - Operational Director` (`#0ea5e9`) | Reviews VIP EPK submissions, coordinates white-glove record label imprints, and handles artist roster verifications. | EPK Verification, Label Imprint Provisioning, Artist Roster Whitelist, Ecosystem Support |
+| **Corporate Ads & Brand Traffic Manager** | Advertising & Sponsorships | `Tier 3 - Platform Specialist` (`#10b981`) | Schedules 15s/30s audio flight campaigns, verifies impression delivery, and governs media house monetization rates. | Audio Ad Flight Approvals, CPM Rate Card Engine, Banner Impression QA, Media House Payouts |
+| **Infrastructure & Telemetry Engineer** | Infrastructure & Core Ops | `Tier 3 - Platform Specialist` (`#10b981`) | Supervises audio CDN edge latencies, WebSocket real-time telemetry, database pools, and POS terminal device heartbeats. | Audio CDN Edge Caching, WebSocket Telemetry, POS Device Heartbeats, Latency Optimization |
 
+Clearance tier definitions:
+- **Tier 1 - Super Admin (`#a855f7`):** Unrestricted root access, master infrastructure killswitches, root audit inspection, and user elevation.
+- **Tier 2 - Operational Director (`#0ea5e9`):** Department-level write authority, payout batch approvals, catalog DDEX validation, and contract dispute arbitration.
+- **Tier 3 - Platform Specialist (`#10b981`):** Operational workflows, flight scheduling, ticket resolution, telemetry monitoring, and audio QC.
+- **Tier 4 - Read-Only Auditor (`#f59e0b`):** Compliance observation, financial ledger inspection, and reporting exports without mutation permissions.
+
+#### 9.34.3 36-Scope Granular Permission Matrix
+The governance engine enforces 36 distinct authorization scopes spanning 9 domains:
+1. *Infrastructure:* `Platform Clusters`, `Master Killswitch`, `Database Migrations`, `Root Audit Trail`, `Audio CDN Edge Caching`, `WebSocket Telemetry`, `POS Device Heartbeats`, `Latency Optimization`.
+2. *Catalog QA & DDEX:* `DDEX Ingestion QA`, `ISRC/ISWC Registry`, `Lossless Audio QA`, `Stem Archive Storage`.
+3. *Statutory & Financial Compliance:* `Statutory Ledgers`, `PRO Compliance (ASCAP/BMI/MCSK)`, `Mechanical Splits`, `Audit Trails`.
+4. *Treasury & Escrow Settlements:* `Escrow Dispute Arbitration`, `Payout Batch Approvals`, `M-Pesa B2C Releases`, `ACH & Wire Gateway`.
+5. *Sync & Editorial Curation:* `TuneStream Editorial Playlists`, `Sync Marketplace RFP Review`, `Dubplate Vetting`, `Supervisor Matching`.
+6. *Advertising & Sponsorships:* `Audio Ad Flight Approvals`, `CPM Rate Card Engine`, `Banner Impression QA`, `Media House Payouts`.
+7. *InfoSec & Compliance:* `DMCA Enforcement`, `Domain & SSL Provisioning`, `SSO Session Invalidation`, `Jurisdiction Compliance`.
+8. *Ecosystem Onboarding:* `EPK Verification`, `Label Imprint Provisioning`, `Artist Roster Whitelist`, `Ecosystem Support`.
+
+#### 9.34.4 Member Lifecycle Governance (Add, Edit, Suspend, Revoke)
+- **Authorized Admin Guard:** Modifications to administrative team seats are strictly restricted via `isAuthorizedAdmin(sessionUser)`. Non-admin sessions or unprivileged roles are rendered in read-only mode with permission warnings.
+- **Add Operator Modal:** Provisions a new seat with designated role, department, clearance tier, and custom multi-scope assignment.
+- **Edit Operator Modal:** Enables authorized administrators to update operator names, emails, role assignments, department categorization, clearance tier, and individually toggle any of the 36 permission scopes.
+- **Suspend / Reactivate Lifecycle:** Operators can be suspended with a single action, instantly revoking active session credentials and disabling dashboard access without destroying operational audit logs. Suspended operators can be reinstated when clearance is re-verified.
+- **Revoke / Delete Seat:** Permanently deallocates the seat from the active quota after explicit confirmation, freeing capacity within the node's allocation.
+
+#### 9.34.5 Seat Allocation Packages & 100% Unified Credits Model
+To maintain ecosystem alignment, the Site Admin roster operates under the **100% Unified Credits Model** with zero recurring monthly subscription fees:
+
+| Allocation Package | Capacity | Unified Credits Load | One-Time Equivalent | Operational Deliverables |
+|---|---|---|---|---|
+| **Foundation Node Allocation** | 5 Seats | 2,500 Credits | $199 one-time | 5 Administrative Seats, Tier 1–4 Clearance Controls, Statutory Audit Logging, Escrow Settlement Authorization, Zero Monthly Charges |
+| **Operational Fleet Allocation** | 15 Seats | 6,000 Credits | $499 one-time | 15 Administrative Seats, Full DDEX Ingestion QA Desk, Automated Split Cascade Governance, Corporate Ads Flight Dispatcher, Zero Monthly Charges |
+| **Global Grid Allocation** | Unlimited Seats | 15,000 Credits | $1,199 one-time | Unlimited Administrative Seats, Multi-Region High Availability, Master Root Killswitch Access, Dedicated Hardware Security Module (HSM), Zero Monthly Charges |
+
+When seat capacity is exhausted, the UI triggers the unified `CreditReloadModal` allowing administrators to load credits or elevate their node allocation instantly.
+
+---
+
+### 9.35 Record Label Team Roster & Signed Artist Subdomain Governance
+
+#### 9.35.1 Label Collaborator & Roster Seat Model
+The **Label Team Roster & Seats Management** module (`apps/portal/src/components/label/LabelTeamRosterPanel.jsx`) enables record label executives to orchestrate their internal staff, external accountants, legal representatives, and signed artist rosters within an isolated imprint workspace.
+
+#### 9.35.2 Collaborator Lifecycle & Role Scoping
+- **Authorized User Guard:** Restricted to `role === 'label' || role === 'admin'`.
+- **Predefined Label Roles:** A&R Director, Royalty & Split Accountant, Marketing Specialist, Legal Representative, General Manager.
+- **Collaborator Lifecycle Actions:**
+  - *Edit Collaborator:* Modify name, email, operational role, and roster scope (e.g., *All Label Roster* vs. *Assigned Artist Imprints*).
+  - *Suspend / Activate:* Deactivate a collaborator's access during contract reviews or off-boarding while preserving transaction history.
+  - *Delete Collaborator:* Revoke the collaborator's seat and release seat capacity.
+
+#### 9.35.3 Integrated Artist Subdomain Routing & Multi-Tenant Catalog Binding
+- Labels manage signed artist imprints directly linked to Bandzoogle-style standalone creator Web Worlds (e.g. `ndufo.tunemavens.com`, `aisha.tunemavens.com`, `brian-omondi.tunemavens.com`).
+- Direct navigation links (`#/epk/{subdomain}`) enable instant verification of public EPK storefronts, ticketing boxes, and catalog track balances.
+
+#### 9.35.4 Unified Credits Seat Packs for Record Labels
+Operating strictly under the unified credit paradigm with zero monthly recurring charges:
+- **Indie Imprint Load:** 1,000 Unified Credits ($99 one-time) — 5 Artist Rosters, 3 Team Collaborator Seats, automated split cascades, one-stop sync.
+- **Scale Operations Load:** 3,500 Unified Credits ($299 one-time) — 25 Artist Rosters, 10 Team Collaborator Seats, ERP webhooks, priority sync placement.
+- **Enterprise Conglomerate Load:** 10,000 Unified Credits ($799 one-time) — Unlimited Artist Rosters, Unlimited Team Seats, white-glove DDEX ingestion, dedicated sync director.
+
+---
+
+### 9.36 TuneLedger & Split Cascade Studio — Sovereign Revenue Waterfall Architecture
+
+#### 9.36.1 Architectural Overview & Core Value Proposition
+The **TuneLedger & Split Cascade Studio** (`apps/portal/src/components/splits/TuneLedgerSplitCascadePanel.jsx`) is TuneMavens' flagship revenue waterfall and royalty accounting engine. Designed to replace opaque third-party distributor spreadsheets and contentious micro-royalty disputes, TuneLedger introduces an intuitive, transparent, and mathematically rigorous 7-tier revenue cascade paired with a cryptographic-style transaction audit trail.
+
+#### 9.36.2 The 7-Step Multi-Tier Revenue Waterfall Engine & Mathematical Pipeline
+
+```mermaid
+flowchart TD
+    Gross["Gross Revenue Intake (Sync, DSPs, Merch, Tips)"] --> T1["Tier 1: Platform & DSP Collection Administration (10%)"]
+    T1 --> T2["Tier 2: Master & Label Share (Contractual Imprint %)"]
+    T2 --> T3["Tier 3: Recoupable Advance Offsets (Isolated Track Debt)"]
+    T3 --> T4["Tier 4: Management & Legal Rep Commission (10-15%)"]
+    T4 --> T5["Tier 5: Multi-Collaborator Split Distribution (100% Artist Pool)"]
+    T5 --> S1["Collaborator A (Lead Performer)"]
+    T5 --> S2["Collaborator B (Beat Producer)"]
+    T5 --> S3["Collaborator C (Co-Songwriter)"]
+    S1 --> Pay["Instant Multi-Currency Payout (M-Pesa / Stripe Express)"]
+    S2 --> Pay
+    S3 --> Pay
+```
+
+The mathematical pipeline executes sequentially through 7 explicit steps:
+
+1. **Step 1: Revenue Intake & Track Linkage:**
+   - Ingests gross receipts across 4 revenue streams: *Sync Placement Licensing*, *DSP Digital Streaming*, *TunePay Event POS Merch*, and *TuneStream Live Listener Tips*.
+   - Binds the revenue intake directly to authoritative catalog tracks with verified ISRC codes (e.g. `US-TM1-26-00109`).
+2. **Step 2: Platform & DSP Collection Administration (10%):**
+   - Deducts the statutory platform and DSP collection administration fee (standard 10%).
+   - Educational tooltips explain the operational coverage: automated DDEX delivery to 150+ digital service providers, real-time playlog parsing, mechanical collection, and cloud audio CDN delivery.
+3. **Step 3: Master & Record Label Share (0% to 50%):**
+   - Allocates the contractual master imprint percentage from the net receipts balance.
+   - Includes 1-click industry deal presets: *100% Solo Artist* (0% label share), *85/15 Indie Imprint* (15% label share), and *70/30 Major Deal* (30% label share).
+4. **Step 4: Recoupable Production & Recording Advance Offsets:**
+   - Subtracts unrecouped recording advances and production debt directly from the artist pool before distribution.
+   - **Zero Cross-Collateralization:** Unlike major label legacy contracts, debts are strictly isolated per track and cannot cannibalize earnings from other catalog releases.
+5. **Step 5: Collaborator Split Sheets (Dynamic 100% Pool):**
+   - Distributes the remaining net artist balance across multiple song collaborators (e.g. Lead Performer, Beat Producer, Co-Songwriter, Session Musician).
+   - Dynamic collaborator management (add/remove) with real-time percentage sum validation (must strictly equal 100%).
+   - Live conversion computes exact currency take-home amounts per collaborator in real time.
+6. **Step 6: Management & Legal Commission (0% to 15%):**
+   - Calculates talent management and legal representative commissions from the artist share.
+7. **Step 7: Payout Gateway Routing:**
+   - Configures automated multi-gateway disbursement:
+     - **M-Pesa B2C Mobile Money:** Direct Safaricom wallet deposit in Kenyan Shillings (KES) with sub-second execution.
+     - **Stripe Express:** Direct bank deposit via ACH / SEPA / Faster Payments in USD, EUR, or GBP.
+
+#### 9.36.3 Real-Time Multi-Currency Engine
+The studio features a real-time multi-currency engine supporting four sovereign currencies:
+- **USD ($):** Base operational benchmark.
+- **KES (KSh):** Kenyan Shillings (fixed conversion benchmark: `1 USD = 132.50 KES`) for East African mobile money settlements.
+- **EUR (€):** Euros (fixed conversion benchmark: `1 USD = 0.92 EUR`) for European Union sync and streaming settlements.
+- **GBP (£):** British Pounds (fixed conversion benchmark: `1 USD = 0.79 GBP`) for UK PRS/PPL mechanical settlements.
+
+Currency switching dynamically converts all interface elements: gross sliders, intermediate fee tiers, collaborator take-home amounts, transaction audit ledgers, and digital audit vouchers.
+
+#### 9.36.4 TuneLedger Cryptographic Audit Trail & Voucher Generation
+- **Immutable Transaction Ledger:** Every settled cascade produces an auditable record containing:
+  - `TxID`: Cryptographic transaction identifier (e.g. `TX-9842104-TM`).
+  - `ISRC`: International Standard Recording Code.
+  - `Timestamp`: ISO 8601 creation record.
+  - `Deductions Breakdown`: Itemized platform admin, label share, recoupment offset, and management commission.
+  - `Settlement Status`: Verifiable `✓ SETTLED` badge.
+- **Audit Receipt Voucher Modal:** Generates an itemized printable and downloadable accounting voucher complete with:
+  - Collaborator settlement hashes.
+  - Currency exchange rate snapshot.
+  - CMO & PRO statutory compliance tax reference.
+- **1-Click CSV Export:** Structured export format compatible with QuickBooks, Xero, and CMO royalty reporting desks.
+
+#### 9.36.5 Digital Split Sheets Vault
+- **Pre-Cleared Song Agreements:** Catalog tracks are indexed alongside their verified ISRC/ISWC codes, active collaborator split percentages, and legal contract signatures.
+- **Cryptographic Signature Verification:** Tracks display verifiable signature badges (*Locked & Verified* with green shield or *Pending Signature* with amber alert).
+- **New Split Agreement Generator:** In-app modal enabling producers and artists to register collaborator legal names, IPI/CAE numbers, designated roles (Composer, Lyricist, Producer), and exact royalty percentages before leaving the recording studio.
+
+#### 9.36.6 Distributor Statement Ingestion & CSV Auto-Matching Desk
+- **Multi-Distributor Statement Parser:** Drag-and-drop ingestion of raw CSV/TSV earnings statements from DistroKid, TuneCore, Spotify for Artists, Apple Music, and FUGA.
+- **Automated ISRC Matching:** Analyzes imported CSV statement lines, extracts track ISRCs, cross-references pre-registered split sheets in the vault, and flags unidentified tracks.
+- **1-Click Batch Cascade Execution:** Runs automated waterfall calculations across thousands of statement line items simultaneously and commits settled balances to the audit ledger in a single action.
+
+#### 9.36.7 Royalty University & Legal Knowledge Hub
+To bridge the gap between creative music production and complex copyright law, the studio incorporates a built-in educational academy with 4 comprehensive modules:
+1. **Master Rights vs. Publishing Rights:** Comprehensive guide demystifying the sound recording (Master Copyright) versus the underlying musical composition (Publishing Copyright), mechanical royalties, and sync buyouts.
+2. **How Recoupment Works (Without Exploitation):** Explains how advance offsets work in TuneLedger, contrasting ethical per-track recoupment with exploitative industry cross-collateralization.
+3. **Statutory Royalties & African CMO Integration:** Practical compliance guide for registering works with Kenyan and African Collective Management Organizations (MCSK, PRISK, KAMP) as well as international PROs (ASCAP, BMI, SESAC, PRS for Music).
+4. **In-Studio Split Sheet Protocol:** Standard operating procedure for agreeing upon and digitally signing split sheets before leaving the recording session.
+
+#### 9.36.8 Strict Flat Color Design Standard Compliance
+The entire TuneLedger & Split Cascade Studio strictly adheres to the platform design specification:
+- Background surfaces: Flat `#090e24`, `#0b1126`, `#0f172a`, `#1e293b`.
+- Accent indicators: Flat sky cyan (`#0ea5e9`), emerald green (`#10b981`), amber gold (`#f59e0b`), purple (`#a855f7`), and danger red (`#ef4444`).
+- **Zero Gradients:** Linear gradients and radial gradients are 100% prohibited across all interactive buttons, priority tier blocks, avatar badges, and sliders.

@@ -72,16 +72,37 @@ EPKs in the Intermaven Network are not simple modal popups or static card previe
 * **Smart CRM Fanbase Data Retention**: All fan sign-ups, ticket purchases, and merch orders captured on creator Web Worlds automatically populate the creator's cohort in the **Intermaven Smart CRM** for direct multi-channel communication.
 * **Sleek Social Footer**: Styled social icon bar linking to Instagram, TikTok, YouTube, Spotify, Apple Music, and Discord.
 
-### 6. Shared Single Sign-On (SSO) & Unified Credit Bank
-Users sign up once and navigate frictionlessly across `intermaven.io`, `tunemavens.com`, `tunestream.co`, and `syncmavens.com`. Unified Network Credits can be earned from TuneStream listener tips or marketplace sales and spent on AI runs or CRM marketing campaigns across the entire network.
+### 6. Shared Single Sign-On (SSO) & Unified Credits Engine (Zero Monthly Subscription Fees)
+Users authenticate once and navigate frictionlessly across `intermaven.io`, `tunemavens.com`, `tunestream.co`, and `syncmavens.com`.
+* **Zero Monthly Subscriptions:** The entire ecosystem rejects monthly recurring fees. Every application, seat package, and operational tool runs on non-expiring **Unified Network Credits**.
+* **Usage-Based Consumption:** Users load credits calibrated to each package or tool requirement. Automatic reload triggers prompt creators and labels when balances approach replenishment thresholds.
+* **Universal Gateway Interoperability:** Complete reload payment protocols are integrated across all platforms, accepting instant M-Pesa mobile money (KES) and Stripe credit/debit card checkout (USD/EUR/GBP).
+* **Earn & Burn Utility:** Credits earned from TuneStream listener tips, sync licensing placements, or digital catalog sales can be instantly spent on AI generative runs, Mother-EPK hosting, CRM ad campaigns, or team seat expansions.
 
+### 7. Sovereign TuneLedger & Split Cascade Waterfall Engine
+Replacing fragmented spreadsheets and opaque distributor statements, **TuneLedger** is the platform's flagship 7-tier revenue waterfall and micro-royalty settlement engine:
+* **7-Tier Mathematical Waterfall:** Gross Revenue Intake & Track Linkage → Tier 1: Platform & DSP Collection Administration (10%) → Tier 2: Master & Label Share (Contractual Imprint %) → Tier 3: Isolated Recoupable Production Offsets → Tier 4: Management & Legal Rep Commission (0-15%) → Tier 5: Multi-Collaborator Split Distribution (Dynamic 100% Artist Pool) → Tier 6: Multi-Currency Settlement Routing.
+* **Zero Cross-Collateralization:** Production debts and recording advances are strictly isolated to individual releases, protecting creators from having catalog earnings cannibalized by separate project debt.
+* **Real-Time Multi-Currency Engine:** Live mathematical conversion between **USD ($)**, **KES (KSh)**, **EUR (€)**, and **GBP (£)** across all calculations, tables, vouchers, and balances.
+* **Instant Dual-Rail Payout Routing:** Instant disbursement via **M-Pesa B2C Mobile Money** (instant Safaricom wallet deposit in Kenya) and **Stripe Express** (global ACH, SEPA, and Faster Payments).
+* **Digital Split Sheets Vault & Signature Locking:** Permanent catalog linkage with verified ISRC/ISWC codes, tamper-resistant collaborator percentage locking, and digital contract signature verification.
+* **Distributor Statement Ingestion & CSV Auto-Matching Desk:** Drag-and-drop parsing of raw CSV/TSV statements from DistroKid, TuneCore, Spotify for Artists, Apple Music, and FUGA with automated ISRC matching and 1-click batch cascade settlement.
+* **Built-in Royalty University:** Complete interactive education on Master vs. Publishing copyrights, ethical recoupment, statutory compliance with African CMOs (MCSK, PRISK, KAMP) and international PROs (ASCAP, BMI, SESAC, PRS), and in-studio split protocol.
+
+### 8. Institutional Team Roster & Multi-Seat Governance Engine
+Both the **Site Admin** operations desk and **Record Label** workspace incorporate institutional team governance:
+* **Platform-Specific Operational Job Roles:** 9 dedicated site admin roles (Network Operations Director, DDEX QA Head, Statutory Royalty Auditor, Escrow Settlement Officer, Sync Curator, Corporate Ads Traffic Manager, InfoSec & Compliance Lead, Ecosystem Onboarding Director, Infrastructure Telemetry Engineer) and label collaborator roles (A&R Director, Royalty Accountant, Marketing Specialist, Legal Representative).
+* **4-Tier Security Clearance Model:** Clear hierarchy ranging from Tier 1 (Super Admin - root killswitches, `#a855f7`), Tier 2 (Operational Director - department write & payouts, `#0ea5e9`), Tier 3 (Platform Specialist - workflows & scheduling, `#10b981`), to Tier 4 (Read-Only Auditor - compliance exports, `#f59e0b`).
+* **36 Granular Permission Scopes:** Fine-grained authorization governing infrastructure clusters, DDEX QA, statutory mechanical ledgers, payout releases, sync brief approvals, and audio CDN telemetry.
+* **Full Member Lifecycle Management:** Authorized administrators and label owners can provision seats, modify operator assignments, suspend active access instantly without destroying audit records, and revoke seats to free capacity.
+* **Integrated Signed Artist Subdomains:** Labels manage signed talent directly linked to Bandzoogle-style creator Web Worlds (e.g. `ndufo.tunemavens.com`, `aisha.tunemavens.com`), facilitating frictionless A&R catalog oversight.
 
 ---
 
 ## 4. Ecosystem Platform Structure Summary
 
 > [!NOTE]
-> All four platforms are built on a shared FastAPI backend monorepo architecture and share a single MongoDB data cluster.
+> All four platforms are built on a shared FastAPI backend monorepo architecture, powered by a single MongoDB data cluster, and unified by the Zero-Monthly-Fee Network Credits Engine.
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -89,12 +110,15 @@ Users sign up once and navigate frictionlessly across `intermaven.io`, `tunemave
 +-----------------------------------------------------------------------------------+
 |  INTERMAVEN (intermaven.io)       |  TUNEMAVENS (tunemavens.com)                  |
 |  - Mother-CMS & EPK Builder       |  - Music Marketplace & Roster Portal          |
-|  - Social AI Studio (Gemini/Sora) |  - Contract Negotiation & Escrow Subsystem     |
-|  - AI Business Suite Catalog      |  - Split Cascade & Advance Ledgers            |
+|  - Social AI Studio (Gemini/Sora) |  - TuneLedger & Split Cascade Studio (7-Tier) |
+|  - AI Business Suite Catalog      |  - Site Admin & Label Multi-Seat Rosters      |
+|  - Universal Credit Reload Bank   |  - Contract Negotiation & Escrow Subsystem     |
 +-----------------------------------+-----------------------------------------------+
 |  SYNCMAVENS (syncmavens.com)      |  TUNESTREAM (tunestream.co)                   |
 |  - Ditto Sync Portal & Brief AI   |  - Consumer Audio Streaming Platform          |
 |  - Option 1: Agency (30/25/52.5)  |  - High-Fidelity Audio Player                 |
 |  - Option 2: Direct (15% Agency)  |  - Direct Fan Tipping & Offline Library       |
+|  - Pre-Cleared Stems Vault        |  - Dual-Rail Payouts (M-Pesa B2C / Stripe)    |
 +-----------------------------------------------------------------------------------+
 ```
+
