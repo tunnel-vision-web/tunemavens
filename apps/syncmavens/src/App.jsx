@@ -40,6 +40,7 @@ import { DEFAULT_ACTIVE_APPS_BY_ROLE, reconcileUserApps } from './lib/activatedA
 import { authApi, tokenStore } from './lib/api.js';
 import LoginView from './views/auth/LoginView.jsx';
 import RegisterView from './views/auth/RegisterView.jsx';
+import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog';
 
 export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
@@ -139,10 +140,21 @@ function AppContent() {
   const [submittedPitches, setSubmittedPitches] = useState({});
   const [myPitches, setMyPitches] = useState(INITIAL_PITCHES);
   
-  // Catalog states
-  const [myCatalog, setMyCatalog] = useState(INITIAL_CATALOG);
+  // Catalog states (unified across TuneMavens, TuneStream, and SyncMavens)
+  const [myCatalog, setMyCatalog] = useState(getUnifiedCatalog);
   const [catalogForm, setCatalogForm] = useState({ title: '', artist: '', genre: 'Synthwave', duration: '3:30' });
   const [ingestSuccess, setIngestSuccess] = useState(false);
+
+  // Cross-app catalog synchronization listener
+  useEffect(() => {
+    const handleCatUpdate = (e) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        setMyCatalog(e.detail);
+      }
+    };
+    window.addEventListener('tunemavens:catalog_updated', handleCatUpdate);
+    return () => window.removeEventListener('tunemavens:catalog_updated', handleCatUpdate);
+  }, []);
   const [pitchesReceived, setPitchesReceived] = useState([
     { id: 201, date: "2026-07-12", briefTitle: "Summer Adventure Campaign", client: "Automotive TV Commercial", songTitle: "Midnight Sun", artist: "Hologram Club", rationale: "Upbeat drive and retro synth vibes will fit perfectly with the road trip scenes.", status: "Pending", disbursalStatus: "ESCROW HOLD" },
     { id: 202, date: "2026-07-13", briefTitle: "Untitled Cyberpunk Drama", client: "Netflix Series", songTitle: "Resonance", artist: "Aether Echo", rationale: "Melancholic classical elements build tension during the end credit sequences.", status: "Pending", disbursalStatus: "ESCROW HOLD" }
@@ -485,15 +497,27 @@ function AppContent() {
     if (!catalogForm.title.trim() || !catalogForm.artist.trim()) return;
 
     const newTrack = {
-      id: 100 + myCatalog.length + 1,
+      id: Date.now(),
+      isrc: `KEN922600${Math.floor(100 + Math.random() * 900)}`,
       title: catalogForm.title,
       artist: catalogForm.artist,
+      album: catalogForm.title,
+      release: catalogForm.title,
       genre: catalogForm.genre,
       duration: catalogForm.duration,
-      status: "Ingested"
+      status: "Approved",
+      plays: '1 play',
+      streams: '1 play',
+      splits: '70/30',
+      split: '70/30',
+      cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
+      coverArt: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
+      audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
     };
 
-    setMyCatalog([newTrack, ...myCatalog]);
+    const updated = [newTrack, ...myCatalog];
+    setMyCatalog(updated);
+    saveUnifiedCatalog(updated);
     setIngestSuccess(true);
     setCatalogForm({ title: '', artist: '', genre: 'Synthwave', duration: '3:30' });
     setTimeout(() => setIngestSuccess(false), 3000);

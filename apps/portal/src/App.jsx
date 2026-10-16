@@ -141,6 +141,7 @@ import {
   AffiliateDirectTalentModal
 } from './components/affiliates/AffiliateActionModals.jsx'
 import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx'
+import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog.js'
 
 // ================= Dashboard Apps View =================
 // ================= Dashboard Apps Sub-Components =================
@@ -8950,21 +8951,18 @@ function App() {
     }
   });
 
-  const [catalogTracks, setCatalogTracks] = useState(() => {
-    try {
-      const saved = localStorage.getItem('catalog_tracks');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+  const [catalogTracks, setCatalogTracks] = useState(getUnifiedCatalog);
+
+  // Cross-app catalog synchronization listener
+  useEffect(() => {
+    const handleCatUpdate = (e) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        setCatalogTracks(e.detail);
       }
-    } catch (_) {}
-    return [
-      { id: 1, isrc: 'KE-TM1-26-00042', title: 'Nairobi Cyberwave (Master)', artist: 'Ndufo', release: 'Neon Safari EP', releaseType: 'EP', year: '2026', genre: 'Afro-House', duration: '3:45', streams: '3.4M', priceCredits: 50, coverArt: 'https://picsum.photos/seed/cyberwave_cover/600/600', coverText: 'Cyberwave', coverBg: 'linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)', status: 'valid', isFeatured: true, split: 'Artist (60%) / Producer (25%) / Label (15%)' },
-      { id: 2, isrc: 'KE-TM1-26-00043', title: 'Sunset over Rift Valley', artist: 'Ndufo', release: 'Singles 2026', releaseType: 'Single', year: '2026', genre: 'Amapiano', duration: '4:12', streams: '1.8M', priceCredits: 50, coverArt: 'https://picsum.photos/seed/riftvalley_cover/600/600', coverText: 'Sunset', coverBg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', status: 'valid', isFeatured: false, split: 'Artist (60%) / Producer (25%) / Label (15%)' },
-      { id: 3, isrc: 'KE-TM1-26-00044', title: 'Afro-Synth Cascade', artist: 'Ndufo', release: 'Mainstage Dubs', releaseType: 'Single', year: '2026', genre: 'Afro-House', duration: '3:18', streams: '940K', priceCredits: 40, coverArt: 'https://picsum.photos/seed/afrosynth_cover/600/600', coverText: 'Cascade', coverBg: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', status: 'valid', isFeatured: false, split: 'Artist (50%) / Producer (50%)' },
-      { id: 4, isrc: 'KE-TM1-26-00045', title: 'Midnight Mara Starlight', artist: 'Ndufo', release: 'EP 2025', releaseType: 'EP', year: '2025', genre: 'Deep-House', duration: '5:02', streams: '2.1M', priceCredits: 60, coverArt: 'https://picsum.photos/seed/mara_cover/600/600', coverText: 'Midnight', coverBg: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)', status: 'valid', isFeatured: true, split: 'Artist (70%) / Producer (30%)' }
-    ];
-  });
+    };
+    window.addEventListener('tunemavens:catalog_updated', handleCatUpdate);
+    return () => window.removeEventListener('tunemavens:catalog_updated', handleCatUpdate);
+  }, []);
 
   // Persistent catalogue track synchronization from backend API
   useEffect(() => {
@@ -8974,16 +8972,16 @@ function App() {
       .then(data => {
         if (data && Array.isArray(data.tracks) && data.tracks.length > 0) {
           setCatalogTracks(data.tracks);
-          localStorage.setItem('catalog_tracks', JSON.stringify(data.tracks));
+          saveUnifiedCatalog(data.tracks);
         }
       })
       .catch(err => console.warn('Catalogue sync fallback to local cache:', err));
   }, [sessionUser?.username]);
 
-  // Keep localStorage updated whenever catalogTracks changes
+  // Keep localStorage and cross-app event updated whenever catalogTracks changes
   useEffect(() => {
     if (Array.isArray(catalogTracks) && catalogTracks.length > 0) {
-      localStorage.setItem('catalog_tracks', JSON.stringify(catalogTracks));
+      saveUnifiedCatalog(catalogTracks);
     }
   }, [catalogTracks]);
 

@@ -36,6 +36,8 @@ import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx';
 import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx';
 import TuneLedgerSplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx';
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx';
+import TuneCompanionApp from './components/companion/TuneCompanionApp.jsx';
+import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog';
 
 export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
@@ -49,12 +51,7 @@ export const PERSONA_ROLES = [
   { id: 'consumer', label: 'Consumer / Fan', shortLabel: 'Consumer', shortDesc: 'Player, Library & Tips', icon: RiUserFill, color: '#6366f1' },
 ];
 
-const SAMPLE_TRACKS = [
-  { id: 1, title: "After Hours", artist: "Lumina Wave", album: "Electric Dreams", duration: "3:45", plays: "1.2M", cover: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", splits: "70/30" },
-  { id: 2, title: "Midnight Sun", artist: "Hologram Club", album: "Neon Horizon", duration: "4:12", plays: "982K", cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", splits: "50/50" },
-  { id: 3, title: "Resonance", artist: "Aether Echo", album: "Silent Grid", duration: "3:28", plays: "450K", cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", splits: "80/20" },
-  { id: 4, title: "Stardust", artist: "Solaris", album: "Nebula Core", duration: "5:01", plays: "2.3M", cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3", splits: "100/0" },
-];
+const SAMPLE_TRACKS = AUTHORITATIVE_CATALOG_TRACKS;
 
 export default function App() {
   return (
@@ -145,7 +142,7 @@ function AppContent() {
   );
 }
 
-function EcosystemAppsPanel() {
+function EcosystemAppsPanel({ setActiveTab }) {
   const apps = [
     {
       id: 'consumer',
@@ -292,7 +289,32 @@ function EcosystemAppsPanel() {
               </ul>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', marginTop: 'auto' }}>
+            {app.id === 'companion' && (
+              <button
+                type="button"
+                onClick={() => setActiveTab && setActiveTab('companion')}
+                style={{
+                  marginBottom: '10px',
+                  width: '100%',
+                  padding: '10px 14px',
+                  background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+                  border: 'none',
+                  borderRadius: '3px',
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                <RiLineChartFill size={16} /> Open TuneCompanion Dashboard
+              </button>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', marginTop: app.id === 'companion' ? '0' : 'auto' }}>
               <button 
                 type="button" 
                 onClick={() => alert(`App Store build for ${app.title} coming in Phase 5+.`)}
@@ -364,6 +386,7 @@ const APP_TITLES = {
   'label-team': 'Label Signed Roster & Permissions',
   'admin-team': 'Site Administration & Team Seats',
   apps: 'Ecosystem Native Apps & Mobile Distribution',
+  companion: 'TuneCompanion Pocket Split Ledger & Command Center',
   support: 'Support & AI Claims Desk',
   settings: 'Profile & Security Settings'
 };
@@ -456,6 +479,16 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
             <RiCoinsFill size={20} style={{ color: '#10b981' }} />
             <span style={{ fontSize: '13px', fontWeight: '700' }}>TuneLedger Splits</span>
             <span style={{ fontSize: '11px', color: '#64748b' }}>Automated waterfall ledgers</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('companion')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.25)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiLineChartFill size={20} style={{ color: '#c084fc' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>TuneCompanion</span>
+            <span style={{ fontSize: '11px', color: '#c084fc' }}>Pocket split ledger &amp; radar</span>
           </button>
 
           <button
@@ -1006,13 +1039,24 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     };
   }, []);
   
-  // Creator states
-  const [catalogTracks, setCatalogTracks] = useState(SAMPLE_TRACKS);
+  // Creator & Catalog states (unified across TuneMavens, TuneStream, and SyncMavens)
+  const [catalogTracks, setCatalogTracks] = useState(getUnifiedCatalog);
   const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: 'Electronic', splits: '100/0' });
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [fileName, setFileName] = useState('');
+
+  // Cross-app catalog synchronization listener
+  useEffect(() => {
+    const handleCatUpdate = (e) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        setCatalogTracks(e.detail);
+      }
+    };
+    window.addEventListener('tunemavens:catalog_updated', handleCatUpdate);
+    return () => window.removeEventListener('tunemavens:catalog_updated', handleCatUpdate);
+  }, []);
 
   const togglePlay = () => setIsPlaying(!isPlaying);
   
@@ -1071,6 +1115,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     }
 
     // Platform & Ecosystem
+    add('Ecosystem & Apps', { id: 'companion', label: 'TuneCompanion', icon: RiLineChartFill, color: '#a855f7' });
     add('Ecosystem & Apps', { id: 'apps', label: 'Ecosystem Apps', icon: RiApps2Fill, color: '#00f2fe' });
     add('Support & Config', { id: 'support', label: 'Support Desk', icon: RiQuestionLine });
     add('Support & Config', { id: 'settings', label: 'Settings', icon: RiSettings3Fill });
@@ -1096,19 +1141,35 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       return;
     }
 
-    // Add track to catalog mockup
+    // Add track to unified catalog and persist across all 3 platforms
     const newTrack = {
-      id: catalogTracks.length + 1,
+      id: Date.now(),
+      isrc: `KEN922600${Math.floor(100 + Math.random() * 900)}`,
+      iswc: `T-${Math.floor(100 + Math.random() * 900)}.${Math.floor(100 + Math.random() * 900)}.001-1`,
       title: uploadForm.title,
       artist: uploadForm.artist,
-      album: "Single",
-      duration: "3:30",
-      plays: "0",
-      cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=150&auto=format&fit=crop&q=60",
-      splits: uploadForm.splits
+      album: uploadForm.title,
+      release: uploadForm.title,
+      releaseType: 'Single',
+      year: '2026',
+      genre: uploadForm.genre || 'Electronic',
+      duration: '3:30',
+      plays: '1 play',
+      streams: '1 play',
+      priceCredits: 50,
+      cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
+      coverArt: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
+      coverText: uploadForm.title.slice(0, 10),
+      coverBg: 'linear-gradient(135deg, #00f2fe 0%, #a855f7 100%)',
+      splits: uploadForm.splits,
+      split: uploadForm.splits,
+      status: 'Approved',
+      audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
     };
 
-    setCatalogTracks([newTrack, ...catalogTracks]);
+    const updated = [newTrack, ...catalogTracks];
+    setCatalogTracks(updated);
+    saveUnifiedCatalog(updated);
     setUploadSuccess(true);
     setFileName('');
     setUploadForm({ title: '', artist: '', genre: 'Electronic', splits: '100/0' });
@@ -1206,8 +1267,16 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         return <LabelTeamRosterPanel sessionUser={activeUser} />;
       case 'admin-team':
         return <AdminTeamRosterPanel sessionUser={activeUser} />;
+      case 'companion':
+        return (
+          <TuneCompanionApp
+            sessionUser={activeUser}
+            onPlayTrack={handleTrackSelect}
+            setActiveTab={setActiveTab}
+          />
+        );
       case 'apps':
-        return <EcosystemAppsPanel />;
+        return <EcosystemAppsPanel setActiveTab={setActiveTab} />;
       case 'support':
         return <SupportTicketsPanel sessionUser={activeUser} />;
       case 'settings':
