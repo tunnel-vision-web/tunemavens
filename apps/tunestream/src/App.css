@@ -1205,4 +1205,40 @@ body {
   animation: spin 1s linear infinite;
 }
 
+/* Ecosystem Apps full-width layout overrides */
+.ts-ecosystem-apps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 28px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ts-ecosystem-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1080px) {
+  .ts-ecosystem-apps-grid,
+  .ts-ecosystem-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 680px) {
+  .ts-ecosystem-apps-grid,
+  .ts-ecosystem-summary-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+}
+
+
 

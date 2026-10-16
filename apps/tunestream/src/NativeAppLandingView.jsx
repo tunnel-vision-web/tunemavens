@@ -1459,7 +1459,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             <p style={{ fontSize: '14.5px', color: '#cbd5e1', lineHeight: '1.6', margin: '0 auto 28px', textAlign: 'center', maxWidth: '880px' }}>
               TuneStream distributes high-performance native experiences across the shared Intermaven Network. Every app synchronizes your credentials, streaming library, and unified credits vault in real time:
             </p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '28px', width: '100%' }}>
+            <ul className="ts-ecosystem-summary-grid" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               <li style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
                 <RiHeadphoneFill size={32} style={{ color: '#00f2fe' }} />
                 <div>
@@ -1484,7 +1484,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             </ul>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '28px', width: '100%', maxWidth: '100%', margin: '0' }}>
+          <div className="ts-ecosystem-apps-grid" style={{ margin: '0' }}>
             {appListing.map((ap, idx) => {
               return (
                 <div key={idx} className="glass-panel" style={{ padding: '36px 30px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'rgba(15, 23, 42, 0.65)', alignItems: 'center', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -1785,7 +1785,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         style={{ background: getLandingBackground('tunestream'), color: '#f1f5f9', minHeight: '100vh', padding: '0 0 162px' }}
       >
         {renderTopHeader()}
-        <div className="container" style={{ marginTop: view === 'listen' ? '40px' : '0', maxWidth: view === 'apps' ? '100%' : '1200px', padding: view === 'apps' ? '0 32px' : '0 24px', boxSizing: 'border-box' }}>
+        <div className={`container ${view === 'apps' ? 'full-width-apps' : ''}`} style={{ marginTop: view === 'listen' ? '40px' : '0', maxWidth: view === 'apps' ? '100%' : '1200px', width: view === 'apps' ? '100%' : undefined, padding: view === 'apps' ? '0 32px' : '0 24px', boxSizing: 'border-box' }}>
           {renderContent()}
         </div>
       </div>

@@ -217,7 +217,7 @@ function EcosystemAppsPanel() {
           Every native app in the Intermaven Network synchronizes with your unified credentials, shared credits vault, and TuneLedger splits waterfall.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', width: '100%' }}>
+        <div className="ts-ecosystem-summary-grid">
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
             <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Consumers</span>
             <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Listen & Tip On the Go</div>
@@ -237,13 +237,7 @@ function EcosystemAppsPanel() {
       </div>
 
       {/* Expansive Full-Width Apps Grid */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', 
-        gap: '28px', 
-        width: '100%', 
-        boxSizing: 'border-box' 
-      }}>
+      <div className="ts-ecosystem-apps-grid">
         {apps.map((app) => (
           <div 
             key={app.id} 
