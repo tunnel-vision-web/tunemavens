@@ -11,9 +11,12 @@ import {
   RiCoinsLine, RiBarChartLine, RiCloseFill, RiMusicLine, RiUserFill,
   RiDownloadLine, RiBellFill, RiShieldFill, RiSettings3Fill, RiLogoutBoxRFill,
   RiCheckLine, RiSparklingLine, RiCoinsFill, RiExchangeDollarLine,
-  RiFolderMusicLine, RiQuestionLine, RiBriefcaseLine, RiArrowDownSFill
+  RiFolderMusicLine, RiQuestionLine, RiBriefcaseLine, RiArrowDownSFill,
+  RiApps2Fill, RiAppleFill
 } from 'react-icons/ri';
 import tsLogo from './assets/tunestream-logo.png';
+import tcLogo from './assets/tunecompanion-logo.png';
+import tpLogo from './assets/tunepay-logo.png';
 import './App.css';
 
 // Import newly copied header assets
@@ -122,6 +125,7 @@ function AppContent() {
           <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/sync" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/sync-marketplace" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
+          <Route path="/apps" element={<PlayerDashboard sessionUser={sessionUser} initialTab="apps" onLogout={handleLogout} />} />
           <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/dashboard" element={<Navigate to="/stream" replace />} />
@@ -137,6 +141,218 @@ function AppContent() {
           </Routes>
         </div>
       )}
+    </div>
+  );
+}
+
+function EcosystemAppsPanel() {
+  const apps = [
+    {
+      id: 'consumer',
+      title: 'TuneStream Mobile',
+      tagline: 'Stream. Tip. Carry the catalogue.',
+      target: 'For Listeners & Fans',
+      desc: 'The consumer streaming client with high-fidelity 24-bit FLAC audio, 8GB offline caching, and direct creator micro-tipping that settles automatically into creator splits.',
+      platforms: 'iOS & Android (Capacitor)',
+      logo: tsLogo,
+      accent: '#00f2fe',
+      features: [
+        'Lossless 24-bit FLAC audio & low-latency streaming',
+        '8GB smart offline library caching for travel & commutes',
+        'Direct creator tipping into unified split ledgers',
+        'Region-aware editorial feeds and community live radio'
+      ]
+    },
+    {
+      id: 'companion',
+      title: 'Creator Companion',
+      tagline: 'Your split ledger in your pocket.',
+      target: 'For Artists & Managers',
+      desc: 'Mobile command center for creators and artist managers: real-time split cascade waterfall, accrued payout balances, sync brief alerts, and instant release analytics.',
+      platforms: 'iOS & Android',
+      logo: tcLogo,
+      accent: '#a855f7',
+      features: [
+        'Live split cascade revenue waterfall visualization',
+        'Instant royalty payout balances and micro-tip notifications',
+        'Push notifications for incoming TV/film sync brief pitches',
+        'AI-assisted release scheduling and EPK sharing tools'
+      ]
+    },
+    {
+      id: 'tunepay',
+      title: 'TunePay POS',
+      tagline: 'Sell at the show. Settle by morning.',
+      target: 'For Labels & Venues',
+      desc: 'Portable point-of-sale for concerts, festivals, and merch booths: process card and M-Pesa STK mobile money checkout, scan gate tickets, and settle splits automatically.',
+      platforms: 'iOS & Android Tablet',
+      logo: tpLogo,
+      accent: '#10b981',
+      features: [
+        'Contactless card, Apple Pay & M-Pesa STK mobile rails',
+        'Real-time merch inventory management (vinyl, apparel, CDs)',
+        'Barcode / QR door ticket scanner with fast credential pass',
+        'Automated event settlement run with instant ledger cascade'
+      ]
+    }
+  ];
+
+  return (
+    <div style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+      {/* Header Banner */}
+      <div style={{ 
+        padding: '36px 32px', 
+        borderRadius: '8px', 
+        border: '1px solid rgba(255,255,255,0.08)', 
+        background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%)', 
+        marginBottom: '28px', 
+        width: '100%', 
+        boxSizing: 'border-box' 
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+          <RiApps2Fill size={22} style={{ color: '#00f2fe' }} />
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#fff', margin: 0 }}>Ecosystem App Distribution & Native Suites</h2>
+        </div>
+        <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', margin: '0 0 24px 0', maxWidth: '840px' }}>
+          Every native app in the Intermaven Network synchronizes with your unified credentials, shared credits vault, and TuneLedger splits waterfall.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', width: '100%' }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Consumers</span>
+            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Listen & Tip On the Go</div>
+            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>High-fidelity streaming with offline mode.</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <span style={{ fontSize: '11px', color: '#a855f7', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Creators</span>
+            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Pocket Split Ledger</div>
+            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Real-time earnings, splits and sync brief alerts.</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Labels & Venues</span>
+            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Tour & Event Settlement</div>
+            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Hardware POS, ticket scanning, and instant payout runs.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Expansive Full-Width Apps Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', 
+        gap: '28px', 
+        width: '100%', 
+        boxSizing: 'border-box' 
+      }}>
+        {apps.map((app) => (
+          <div 
+            key={app.id} 
+            style={{ 
+              background: 'rgba(15, 23, 42, 0.75)', 
+              border: '1px solid rgba(255,255,255,0.08)', 
+              borderRadius: '8px', 
+              padding: '36px 30px', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'space-between',
+              position: 'relative',
+              overflow: 'hidden',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: app.accent }}></div>
+            
+            <div style={{ width: '100%' }}>
+              <div style={{ height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                <img src={app.logo} alt={app.title} style={{ height: '42px', width: 'auto', display: 'block', maxWidth: '240px', objectFit: 'contain' }} />
+              </div>
+              
+              <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+                <span style={{ 
+                  background: 'rgba(255,255,255,0.06)', 
+                  color: app.accent, 
+                  padding: '4px 12px', 
+                  borderRadius: '12px', 
+                  fontSize: '11px', 
+                  fontWeight: 'bold', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '0.5px' 
+                }}>
+                  {app.target}
+                </span>
+              </div>
+
+              <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#fff', textAlign: 'center', margin: '0 0 6px 0' }}>{app.title}</h3>
+              <div style={{ color: app.accent, fontSize: '13px', fontWeight: '600', textAlign: 'center', marginBottom: '8px' }}>{app.tagline}</div>
+              <div style={{ color: '#94a3b8', fontSize: '11.5px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.8px', textAlign: 'center', marginBottom: '18px' }}>{app.platforms}</div>
+
+              <p style={{ fontSize: '13.5px', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '24px', minHeight: '65px' }}>{app.desc}</p>
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {app.features.map((feat, fIdx) => (
+                  <li key={fIdx} style={{ fontSize: '12.5px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: app.accent, fontSize: '14px', lineHeight: 1 }}>✓</span>
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', marginTop: 'auto' }}>
+              <button 
+                type="button" 
+                onClick={() => alert(`App Store build for ${app.title} coming in Phase 5+.`)}
+                style={{ 
+                  cursor: 'pointer', 
+                  background: 'rgba(255,255,255,0.04)', 
+                  border: '1px solid rgba(255,255,255,0.1)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px', 
+                  padding: '10px 14px', 
+                  borderRadius: '6px', 
+                  color: '#fff', 
+                  textAlign: 'left', 
+                  width: '100%', 
+                  outline: 'none', 
+                  justifyContent: 'center' 
+                }}
+              >
+                <RiAppleFill size={22} style={{ color: '#fff', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: '9px', opacity: 0.7 }}>Download on</div>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold' }}>App Store</div>
+                </div>
+              </button>
+              <button 
+                type="button" 
+                onClick={() => alert(`Google Play build for ${app.title} coming in Phase 5+.`)}
+                style={{ 
+                  cursor: 'pointer', 
+                  background: 'rgba(255,255,255,0.04)', 
+                  border: '1px solid rgba(255,255,255,0.1)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px', 
+                  padding: '10px 14px', 
+                  borderRadius: '6px', 
+                  color: '#fff', 
+                  textAlign: 'left', 
+                  width: '100%', 
+                  outline: 'none', 
+                  justifyContent: 'center' 
+                }}
+              >
+                <RiDownloadLine size={22} style={{ color: '#00f2fe', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: '9px', opacity: 0.7 }}>Get it on</div>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold' }}>Google Play</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -359,14 +575,25 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       {/* Sidebar Navigation */}
       <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="dashboard-sidebar-scroll">
-          <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="dashboard-sidebar-header" style={{ flexDirection: 'column', gap: '6px', alignItems: 'center', justifyContent: 'center', padding: collapsed ? '12px 0' : '16px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
             <Link to="/" title="Back to landing page" style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', textDecoration: 'none' }}>
               {collapsed ? (
-                <img src="/favicon.png" alt="TuneStream Icon" style={{ height: '32px', width: 'auto', display: 'block' }} />
+                <img 
+                  src="/favicon.png" 
+                  alt="TuneStream Icon" 
+                  style={{ height: '32px', width: '32px', objectFit: 'contain', display: 'block', margin: '0 auto' }} 
+                />
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
-                  <img src={tsLogo} alt="TuneStream Logo" style={{ height: '28px', width: 'auto', display: 'block' }} />
-                  <span style={{ fontWeight: '800', letterSpacing: '1px', fontSize: '18px', color: '#00f2fe' }}>TUNE<span style={{ color: '#fff' }}>STREAM</span></span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                  <img 
+                    src={tsLogo} 
+                    alt="TuneStream Logo" 
+                    className="dashboard-sidebar-logo" 
+                    style={{ height: '32px', width: 'auto', display: 'block', maxHeight: '36px' }} 
+                  />
+                  <div style={{ fontSize: '10.5px', color: '#94a3b8', letterSpacing: '0.4px', marginTop: '4px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                    &lt;&lt; a tunemavens utility
+                  </div>
                 </div>
               )}
             </Link>
@@ -429,6 +656,16 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
                     {!collapsed && "Sync Marketplace"}
                   </button>
                 </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('apps')} 
+                    className={`dashboard-nav-item ${activeTab === 'apps' ? 'active' : ''}`}
+                    title="Ecosystem Native Apps"
+                  >
+                    <RiApps2Fill size={16} style={{ color: '#00f2fe' }} />
+                    {!collapsed && "Ecosystem Apps"}
+                  </button>
+                </li>
               </ul>
             </div>
           ) : (
@@ -467,6 +704,16 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
                   >
                     <RiSparklingLine size={16} style={{ color: '#22d3ee' }} />
                     {!collapsed && "Sync Marketplace"}
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('apps')} 
+                    className={`dashboard-nav-item ${activeTab === 'apps' ? 'active' : ''}`}
+                    title="Ecosystem Native Apps"
+                  >
+                    <RiApps2Fill size={16} style={{ color: '#00f2fe' }} />
+                    {!collapsed && "Ecosystem Apps"}
                   </button>
                 </li>
               </ul>
@@ -532,6 +779,16 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
                 >
                   <RiQuestionLine size={16} />
                   {!collapsed && "Support Desk"}
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => setActiveTab('apps')} 
+                  className={`dashboard-nav-item ${activeTab === 'apps' ? 'active' : ''}`}
+                  title="Ecosystem Native Apps"
+                >
+                  <RiApps2Fill size={16} style={{ color: '#00f2fe' }} />
+                  {!collapsed && "Ecosystem Apps"}
                 </button>
               </li>
             </ul>
@@ -915,7 +1172,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
           </div>
         </header>
 
-        <div className="dashboard-main-scroll" style={{ padding: (activeTab === 'sync-marketplace' || activeTab === 'sync') ? '16px 20px' : '24px 32px' }}>
+        <div className="dashboard-main-scroll" style={{ padding: (activeTab === 'sync-marketplace' || activeTab === 'sync' || activeTab === 'apps') ? '16px 20px' : '24px 32px' }}>
           {activeTab === 'splits' ? (
             <TuneLedgerSplitCascadePanel sessionUser={activeUser} />
           ) : activeTab === 'affiliates' ? (
@@ -928,6 +1185,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             <SupportTicketsPanel sessionUser={activeUser} />
           ) : (activeTab === 'sync-marketplace' || activeTab === 'sync') ? (
             <SyncMarketplacePanel sessionUser={activeUser} />
+          ) : activeTab === 'apps' ? (
+            <EcosystemAppsPanel />
           ) : currentView === 'listener' ? (
             /* ================= LISTENER VIEW ================= */
             <div>
