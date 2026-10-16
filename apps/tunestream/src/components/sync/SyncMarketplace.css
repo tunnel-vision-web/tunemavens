@@ -942,3 +942,150 @@
   color: #34d399;
   font-weight: 700;
 }
+
+/* =====================================================================
+   Sync Catalog Pagination Bar (Strictly max 4 rows showing)
+   ===================================================================== */
+.sync-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 14px 20px;
+  background: #090e1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  margin-top: 10px;
+}
+
+.sync-pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: #94a3b8;
+}
+
+.sync-pagination-badge {
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  color: #22d3ee;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+}
+
+.sync-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sync-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sync-page-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  color: #cbd5e1;
+  font-size: 12.5px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.sync-page-btn:hover:not(:disabled) {
+  background: rgba(34, 211, 238, 0.15);
+  border-color: #22d3ee;
+  color: #22d3ee;
+  box-shadow: 0 0 10px -2px rgba(34, 211, 238, 0.3);
+}
+
+.sync-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.sync-page-btn.active {
+  background: #22d3ee;
+  border-color: #22d3ee;
+  color: #030712;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+}
+
+.sync-page-ellipsis {
+  color: #64748b;
+  font-size: 13px;
+  padding: 0 4px;
+  user-select: none;
+}
+
+.sync-pagination-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sync-rows-selector-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sync-rows-select {
+  background: #060813;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  color: #cbd5e1;
+  font-size: 11.5px;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sync-rows-select:focus {
+  border-color: #22d3ee;
+}
+
+.sync-empty-catalog {
+  background: #090e1f;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  padding: 48px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .sync-pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .sync-pagination-controls {
+    justify-content: center;
+  }
+  .sync-pagination-info,
+  .sync-pagination-meta {
+    justify-content: center;
+  }
+}
+

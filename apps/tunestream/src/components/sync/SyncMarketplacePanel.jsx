@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   RiMusic2Fill,
   RiPlayFill,
@@ -19,7 +19,11 @@ import {
   RiCheckLine,
   RiFileTextLine,
   RiExternalLinkLine,
-  RiCloseLine
+  RiCloseLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
+  RiArrowLeftDoubleLine,
+  RiArrowRightDoubleLine
 } from 'react-icons/ri'
 import {
   SYNC_CATALOG_TRACKS,
@@ -166,6 +170,79 @@ export default function SyncMarketplacePanel({ sessionUser }) {
   // Stems download mock
   const handleDownloadStems = (track) => {
     showToast(`Downloading broadcast package & stems zip for "${track.title}"...`);
+  };
+
+  // =====================================================================
+  // Pagination Engine (Guarantees no more than 4 rows showing at any time)
+  // =====================================================================
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsLimit, setRowsLimit] = useState(4); // Default & strict maximum allowed rows: 4
+  const [gridColumns, setGridColumns] = useState(2);
+  const gridContainerRef = useRef(null);
+
+  // Auto-detect responsive column count to calculate exact row math
+  useEffect(() => {
+    if (!gridContainerRef.current) return;
+    const updateColumns = () => {
+      if (!gridContainerRef.current) return;
+      const width = gridContainerRef.current.offsetWidth;
+      // .sync-titles-grid has minmax(360px, 1fr) with gap 20px
+      // width >= 360 * col + 20 * (col - 1) = 380 * col - 20 => col = floor((width + 20) / 380)
+      const computedCols = Math.max(1, Math.min(4, Math.floor((width + 20) / 380)));
+      setGridColumns(computedCols);
+    };
+
+    updateColumns();
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => updateColumns());
+      resizeObserver.observe(gridContainerRef.current);
+    } else {
+      window.addEventListener('resize', updateColumns);
+    }
+
+    return () => {
+      if (resizeObserver) resizeObserver.disconnect();
+      else window.removeEventListener('resize', updateColumns);
+    };
+  }, [activeTab]);
+
+  // Reset to page 1 whenever any search, filter, or row parameter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedGenre, selectedMood, selectedVocal, sortBy, rowsLimit]);
+
+  // Enforce strictly no more than 4 rows showing
+  const safeRowsLimit = Math.min(4, Math.max(1, rowsLimit));
+  const itemsPerPage = Math.max(1, gridColumns * safeRowsLimit);
+  const totalPages = Math.max(1, Math.ceil(filteredTracks.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredTracks.length);
+  const paginatedTracks = filteredTracks.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === safeCurrentPage) return;
+    setCurrentPage(newPage);
+    if (gridContainerRef.current) {
+      gridContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages = [];
+    if (safeCurrentPage <= 4) {
+      pages.push(1, 2, 3, 4, 5, '...', totalPages);
+    } else if (safeCurrentPage >= totalPages - 3) {
+      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, '...', safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, '...', totalPages);
+    }
+    return pages;
   };
 
   const MOOD_TAGS = ['all', 'action', 'cinematic', 'afrobeats', 'uplifting', 'sunset', 'chill', 'tension', 'club'];
@@ -365,18 +442,18 @@ export default function SyncMarketplacePanel({ sessionUser }) {
           </div>
 
           {/* Results Count & Quick Status */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#94a3b8' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#94a3b8', flexWrap: 'wrap', gap: '8px' }}>
             <span>
-              Showing <strong style={{ color: '#fff' }}>{filteredTracks.length}</strong> sync-ready titles (100% pre-cleared for one-stop licensing)
+              Showing <strong style={{ color: '#22d3ee' }}>{filteredTracks.length > 0 ? `${startIndex + 1}–${endIndex}` : 0}</strong> of <strong style={{ color: '#fff' }}>{filteredTracks.length}</strong> sync-ready titles (Page {safeCurrentPage} of {totalPages})
             </span>
             <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <RiShieldCheckFill /> All stems & master WAVs verified
+              <RiShieldCheckFill /> All stems & master WAVs verified · 100% Pre-cleared
             </span>
           </div>
 
-          {/* Titles Grid */}
-          <div className="sync-titles-grid">
-            {filteredTracks.map(track => {
+          {/* Titles Grid (No more than 4 rows showing) */}
+          <div className="sync-titles-grid" ref={gridContainerRef}>
+            {paginatedTracks.map(track => {
               const isPlaying = playingTrackId === track.id;
               const progress = playbackProgress[track.id] || { currentTime: 0, duration: 30, percent: 0 };
               const inBin = isTrackInCurrentBin(track.id);
@@ -596,6 +673,129 @@ export default function SyncMarketplacePanel({ sessionUser }) {
               );
             })}
           </div>
+
+          {/* Empty State */}
+          {filteredTracks.length === 0 && (
+            <div className="sync-empty-catalog">
+              <RiMusic2Fill style={{ fontSize: '36px', color: '#64748b', marginBottom: '8px' }} />
+              <h4 style={{ color: '#f8fafc', margin: '0 0 6px 0', fontSize: '15px' }}>No Sync Titles Found</h4>
+              <p style={{ color: '#94a3b8', margin: '0 0 16px 0', fontSize: '13px' }}>
+                No pre-cleared tracks match your current search and filter settings.
+              </p>
+              <button
+                type="button"
+                className="sync-secondary-btn"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedGenre('all');
+                  setSelectedMood('all');
+                  setSelectedVocal('all');
+                }}
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
+
+          {/* Pagination Controls Bar (Guarantees max 4 rows showing) */}
+          {filteredTracks.length > 0 && (
+            <div className="sync-pagination-bar">
+              <div className="sync-pagination-info">
+                <span>
+                  Showing <strong style={{ color: '#22d3ee' }}>{startIndex + 1}–{endIndex}</strong> of <strong style={{ color: '#fff' }}>{filteredTracks.length}</strong> titles
+                </span>
+                <span className="sync-pagination-badge">
+                  Max 4 Rows ({gridColumns} {gridColumns === 1 ? 'column' : 'columns'} × {safeRowsLimit} rows = {itemsPerPage}/page)
+                </span>
+              </div>
+
+              <div className="sync-pagination-controls">
+                <button
+                  type="button"
+                  className="sync-page-btn nav-btn"
+                  onClick={() => handlePageChange(1)}
+                  disabled={safeCurrentPage === 1}
+                  title="First Page"
+                  aria-label="First Page"
+                >
+                  <RiArrowLeftDoubleLine />
+                </button>
+                <button
+                  type="button"
+                  className="sync-page-btn nav-btn"
+                  onClick={() => handlePageChange(safeCurrentPage - 1)}
+                  disabled={safeCurrentPage === 1}
+                  title="Previous Page"
+                  aria-label="Previous Page"
+                >
+                  <RiArrowLeftSLine />
+                </button>
+
+                <div className="sync-page-numbers">
+                  {getPageNumbers().map((p, idx) => {
+                    if (p === '...') {
+                      return <span key={`dots-${idx}`} className="sync-page-ellipsis">…</span>;
+                    }
+                    return (
+                      <button
+                        key={`page-${p}`}
+                        type="button"
+                        className={`sync-page-btn page-num ${safeCurrentPage === p ? 'active' : ''}`}
+                        onClick={() => handlePageChange(p)}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  className="sync-page-btn nav-btn"
+                  onClick={() => handlePageChange(safeCurrentPage + 1)}
+                  disabled={safeCurrentPage === totalPages}
+                  title="Next Page"
+                  aria-label="Next Page"
+                >
+                  <RiArrowRightSLine />
+                </button>
+                <button
+                  type="button"
+                  className="sync-page-btn nav-btn"
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={safeCurrentPage === totalPages}
+                  title="Last Page"
+                  aria-label="Last Page"
+                >
+                  <RiArrowRightDoubleLine />
+                </button>
+              </div>
+
+              <div className="sync-pagination-meta">
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  Page <strong style={{ color: '#fff' }}>{safeCurrentPage}</strong> of <strong style={{ color: '#fff' }}>{totalPages}</strong>
+                </span>
+                <div className="sync-rows-selector-group">
+                  <label htmlFor="sync-rows-select" style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>
+                    Rows:
+                  </label>
+                  <select
+                    id="sync-rows-select"
+                    className="sync-rows-select"
+                    value={rowsLimit}
+                    onChange={(e) => {
+                      setRowsLimit(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value={2}>2 rows</option>
+                    <option value={3}>3 rows</option>
+                    <option value={4}>4 rows (Max)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
