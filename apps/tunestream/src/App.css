@@ -210,7 +210,7 @@ body {
 .ts-hero {
   position: relative;
   height: 280px;
-  border-radius: 16px;
+  border-radius: 3px;
   overflow: hidden;
   background-image: url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&auto=format&fit=crop&q=80');
   background-size: cover;
@@ -243,7 +243,7 @@ body {
   color: #000;
   font-weight: 800;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 3px;
   letter-spacing: 1px;
 }
 
@@ -269,7 +269,7 @@ body {
   border: none;
   font-weight: 700;
   padding: 12px 24px;
-  border-radius: 30px;
+  border-radius: 3px;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
@@ -302,7 +302,7 @@ body {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 3px;
   cursor: pointer;
   transition: background-color 0.2s ease;
   font-size: 14px;
@@ -324,7 +324,7 @@ body {
 .track-cover {
   width: 40px;
   height: 40px;
-  border-radius: 4px;
+  border-radius: 3px;
   object-fit: cover;
   margin-right: 16px;
 }
@@ -395,7 +395,7 @@ body {
 .player-cover {
   width: 48px;
   height: 48px;
-  border-radius: 4px;
+  border-radius: 3px;
   object-fit: cover;
   margin-right: 16px;
 }
@@ -446,7 +446,7 @@ body {
   color: #000;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 3px;
   font-size: 20px;
   box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
 }
@@ -1341,3 +1341,45 @@ body {
   padding-right: 32px !important;
   box-sizing: border-box !important;
 }
+
+/* ====================================================================== */
+/* Strict 3px Border Radius Sweep: Explore, Stream, Cards, Boxes & Buttons */
+/* ====================================================================== */
+.ts-hero,
+.hero-badge,
+.btn-play-hero,
+.track-row,
+.track-cover,
+.player-cover,
+.btn-play-pause,
+.btn-control,
+.ts-player-bar,
+.ts-player-bar a,
+.ts-player-bar span,
+.ts-player-bar button,
+.ts-music-section,
+.tunestream-home-panel .dashboard-card,
+.tunestream-home-panel button,
+.tunestream-home-panel img,
+.dashboard-card,
+.dashboard-main-content button,
+.dashboard-main-content input,
+.dashboard-main-content select,
+.dashboard-main-content textarea,
+.ts-ecosystem-summary-grid > div,
+.ts-ecosystem-apps-grid > div,
+.ts-ecosystem-apps-grid button,
+.ts-ecosystem-apps-grid span {
+  border-radius: 3px !important;
+}
+
+/* Preserve circular avatars and notification indicators */
+.dashboard-avatar,
+.topbar-avatar,
+.topbar-notif-dot,
+.topbar-simulation-dot,
+.topbar-badge,
+.user-avatar-circle {
+  border-radius: 50% !important;
+}
+

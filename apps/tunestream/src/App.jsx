@@ -202,7 +202,7 @@ function EcosystemAppsPanel() {
       {/* Header Banner */}
       <div style={{ 
         padding: '36px 32px', 
-        borderRadius: '8px', 
+        borderRadius: '3px', 
         border: '1px solid rgba(255,255,255,0.08)', 
         background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%)', 
         marginBottom: '28px', 
@@ -218,17 +218,17 @@ function EcosystemAppsPanel() {
         </p>
 
         <div className="ts-ecosystem-summary-grid">
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.04)' }}>
             <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Consumers</span>
             <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Listen & Tip On the Go</div>
             <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>High-fidelity streaming with offline mode.</div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.04)' }}>
             <span style={{ fontSize: '11px', color: '#a855f7', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Creators</span>
             <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Pocket Split Ledger</div>
             <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Real-time earnings, splits and sync brief alerts.</div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.04)' }}>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Labels & Venues</span>
             <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Tour & Event Settlement</div>
             <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Hardware POS, ticket scanning, and instant payout runs.</div>
@@ -244,7 +244,7 @@ function EcosystemAppsPanel() {
             style={{ 
               background: 'rgba(15, 23, 42, 0.75)', 
               border: '1px solid rgba(255,255,255,0.08)', 
-              borderRadius: '8px', 
+              borderRadius: '3px', 
               padding: '36px 30px', 
               display: 'flex', 
               flexDirection: 'column', 
@@ -266,7 +266,7 @@ function EcosystemAppsPanel() {
                   background: 'rgba(255,255,255,0.06)', 
                   color: app.accent, 
                   padding: '4px 12px', 
-                  borderRadius: '12px', 
+                  borderRadius: '3px', 
                   fontSize: '11px', 
                   fontWeight: 'bold', 
                   textTransform: 'uppercase', 
@@ -304,7 +304,7 @@ function EcosystemAppsPanel() {
                   alignItems: 'center', 
                   gap: '10px', 
                   padding: '10px 14px', 
-                  borderRadius: '6px', 
+                  borderRadius: '3px', 
                   color: '#fff', 
                   textAlign: 'left', 
                   width: '100%', 
@@ -329,7 +329,7 @@ function EcosystemAppsPanel() {
                   alignItems: 'center', 
                   gap: '10px', 
                   padding: '10px 14px', 
-                  borderRadius: '6px', 
+                  borderRadius: '3px', 
                   color: '#fff', 
                   textAlign: 'left', 
                   width: '100%', 
@@ -373,7 +373,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
     <div className="tunestream-home-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* KPI Overview Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Catalog Repository</span>
             <RiDatabase2Line size={18} style={{ color: '#00f2fe' }} />
@@ -384,7 +384,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           </div>
         </div>
 
-        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Monthly Stream Plays</span>
             <RiCompass3Line size={18} style={{ color: '#a855f7' }} />
@@ -393,7 +393,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           <div style={{ fontSize: '12px', color: '#a855f7', marginTop: '6px' }}>Across 142 Geographies</div>
         </div>
 
-        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Accrued Balance</span>
             <RiCoinsFill size={18} style={{ color: '#10b981' }} />
@@ -402,7 +402,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>Ready for M-Pesa / Bank Payout</div>
         </div>
 
-        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Unified Credits</span>
             <RiSparklingLine size={18} style={{ color: '#22d3ee' }} />
@@ -413,7 +413,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
       </div>
 
       {/* Quick Launchpad Action Grid */}
-      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
         <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <RiApps2Fill style={{ color: '#00f2fe' }} /> Quick Actions &amp; Workflow Launchpad
         </h4>
@@ -421,7 +421,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           <button
             type="button"
             onClick={() => setActiveTab('upload')}
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
             <RiUpload2Line size={20} style={{ color: '#00f2fe' }} />
             <span style={{ fontSize: '13px', fontWeight: '700' }}>Ingest Audio</span>
@@ -431,7 +431,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           <button
             type="button"
             onClick={() => setActiveTab('explore')}
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
             <RiCompass3Line size={20} style={{ color: '#a855f7' }} />
             <span style={{ fontSize: '13px', fontWeight: '700' }}>Explore Streams</span>
@@ -441,7 +441,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           <button
             type="button"
             onClick={() => setActiveTab('sync-marketplace')}
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
             <RiGlobalFill size={20} style={{ color: '#ec4899' }} />
             <span style={{ fontSize: '13px', fontWeight: '700' }}>Sync Marketplace</span>
@@ -451,7 +451,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           <button
             type="button"
             onClick={() => setActiveTab('splits')}
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
             <RiCoinsFill size={20} style={{ color: '#10b981' }} />
             <span style={{ fontSize: '13px', fontWeight: '700' }}>TuneLedger Splits</span>
@@ -461,7 +461,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           <button
             type="button"
             onClick={() => setActiveTab('apps')}
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
             <RiApps2Fill size={20} style={{ color: '#38bdf8' }} />
             <span style={{ fontSize: '13px', fontWeight: '700' }}>Ecosystem Apps</span>
@@ -471,7 +471,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
       </div>
 
       {/* Trending Streams Row */}
-      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: 0 }}>Spotlight &amp; Trending Releases</h4>
           <button
@@ -487,24 +487,24 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
             <div
               key={track.id}
               onClick={() => onPlayTrack && onPlayTrack(track)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px', cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '12px', color: '#64748b', width: '16px', textAlign: 'center' }}>{idx + 1}</span>
-                <img src={track.cover} alt={track.title} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
+                <img src={track.cover} alt={track.title} style={{ width: '40px', height: '40px', borderRadius: '3px', objectFit: 'cover' }} />
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{track.title}</div>
                   <div style={{ fontSize: '11px', color: '#94a3b8' }}>{track.artist} · {track.album}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '3px' }}>
                   Splits: {track.splits || '100/0'}
                 </span>
                 <span style={{ fontSize: '12px', color: '#64748b' }}>{track.plays} plays</span>
                 <button
                   type="button"
-                  style={{ background: '#00f2fe', border: 'none', color: '#000', padding: '6px 14px', borderRadius: '4px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  style={{ background: '#00f2fe', border: 'none', color: '#000', padding: '6px 14px', borderRadius: '3px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <RiPlayFill size={14} /> Listen
                 </button>
@@ -582,7 +582,7 @@ function TuneStreamFavoritesPanel({ tracks, currentTrack, likes, onLike, onPlayT
       </div>
       <div className="tracks-list">
         {favoriteTracks.length === 0 ? (
-          <div style={{ color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '6px' }}>
+          <div style={{ color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '3px' }}>
             No liked tracks yet. Explore releases and tap the heart icon to save!
           </div>
         ) : (
@@ -621,13 +621,13 @@ function TuneStreamFavoritesPanel({ tracks, currentTrack, likes, onLike, onPlayT
 
 function TuneStreamRadioPanel() {
   return (
-    <div style={{ textAlign: 'center', padding: '60px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ textAlign: 'center', padding: '60px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
       <RiRadioLine size={56} style={{ color: '#00f2fe', marginBottom: '20px', animation: 'pulse 2s infinite' }} />
       <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: '800' }}>TuneStream Live Radio Node</h3>
       <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '10px', maxWidth: '480px', margin: '10px auto 20px', lineHeight: '1.6' }}>
         Lossless stream broadcasts curated daily by the community and vetted curators. Connected to regional low-latency edge node.
       </p>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '6px 14px', borderRadius: '3px', fontSize: '12px', fontWeight: '700' }}>
         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></span>
         Live Broadcast Active · 24-bit / 96kHz FLAC
       </div>
@@ -688,19 +688,19 @@ function TuneStreamUploadPanel({
   setFileName
 }) {
   return (
-    <div className="dashboard-card" style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+    <div className="dashboard-card" style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px' }}>
       <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <RiUpload2Line style={{ color: '#00f2fe' }} /> Lossless Catalogue Audio Ingestion
       </h4>
       
       {uploadSuccess && (
-        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '12px', borderRadius: '6px', color: '#10b981', fontSize: '13px', marginBottom: '16px' }}>
+        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '12px', borderRadius: '3px', color: '#10b981', fontSize: '13px', marginBottom: '16px' }}>
           ✓ Track successfully ingested and transcoded into Lossless cache system!
         </div>
       )}
 
       {uploadError && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px', borderRadius: '6px', color: '#ef4444', fontSize: '13px', marginBottom: '16px' }}>
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px', borderRadius: '3px', color: '#ef4444', fontSize: '13px', marginBottom: '16px' }}>
           ⚠ {uploadError}
         </div>
       )}
@@ -714,7 +714,7 @@ function TuneStreamUploadPanel({
               placeholder="e.g. Dream Escape" 
               value={uploadForm.title} 
               onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })}
-              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -724,7 +724,7 @@ function TuneStreamUploadPanel({
               placeholder="e.g. Lumina Wave" 
               value={uploadForm.artist} 
               onChange={e => setUploadForm({ ...uploadForm, artist: e.target.value })}
-              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
             />
           </div>
         </div>
@@ -735,7 +735,7 @@ function TuneStreamUploadPanel({
             <select 
               value={uploadForm.genre} 
               onChange={e => setUploadForm({ ...uploadForm, genre: e.target.value })}
-              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
             >
               <option value="Electronic">Electronic / Ambient</option>
               <option value="Hip Hop">Hip Hop / Beats</option>
@@ -750,7 +750,7 @@ function TuneStreamUploadPanel({
               placeholder="e.g. 70/30" 
               value={uploadForm.splits} 
               onChange={e => setUploadForm({ ...uploadForm, splits: e.target.value })}
-              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
             />
           </div>
         </div>
@@ -765,7 +765,7 @@ function TuneStreamUploadPanel({
             onDrop={handleDrop}
             style={{
               border: `2px dashed ${dragActive ? '#00f2fe' : 'rgba(255,255,255,0.15)'}`,
-              borderRadius: '8px',
+              borderRadius: '3px',
               padding: '28px',
               textAlign: 'center',
               background: dragActive ? 'rgba(0,242,254,0.05)' : 'rgba(0,0,0,0.15)',
@@ -795,7 +795,7 @@ function TuneStreamUploadPanel({
               style={{ display: 'none' }}
               id="file-upload-input"
             />
-            <label htmlFor="file-upload-input" style={{ display: 'inline-block', marginTop: '12px', padding: '6px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+            <label htmlFor="file-upload-input" style={{ display: 'inline-block', marginTop: '12px', padding: '6px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>
               Browse Local Storage
             </label>
           </div>
@@ -816,7 +816,7 @@ function TuneStreamUploadPanel({
 function TuneStreamSettingsPanel({ sessionUser, onSwitchRole }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
         <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <RiSettings3Fill style={{ color: '#00f2fe' }} /> User Profile &amp; Network Identity
         </h4>
@@ -840,7 +840,7 @@ function TuneStreamSettingsPanel({ sessionUser, onSwitchRole }) {
         </div>
       </div>
 
-      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
         <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <RiShieldFill style={{ color: '#a855f7' }} /> Persona Role Simulator (Admin Verification)
         </h4>
@@ -863,7 +863,7 @@ function TuneStreamSettingsPanel({ sessionUser, onSwitchRole }) {
                   padding: '12px',
                   background: isActive ? 'rgba(0, 242, 254, 0.1)' : 'rgba(255,255,255,0.03)',
                   border: isActive ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '6px',
+                  borderRadius: '3px',
                   cursor: 'pointer',
                   textAlign: 'left'
                 }}
@@ -1752,7 +1752,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
                   href={`http://localhost:3000/#/epk/${currentTrack.artist.toLowerCase().replace(/\s+/g, '')}`}
                   target="_blank" 
                   rel="noreferrer"
-                  style={{ fontSize: '10px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f0ff', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600 }}
+                  style={{ fontSize: '10px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f2fe', padding: '2px 6px', borderRadius: '3px', textDecoration: 'none', fontWeight: 600 }}
                 >
                   🌐 Web World
                 </a>
@@ -1769,7 +1769,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
               <button className="btn-control"><RiSkipForwardFill /></button>
 
               {/* Plan-Based Audio Stream Gating Tag */}
-              <span style={{ fontSize: '10px', fontWeight: 'bold', background: 'rgba(255,183,3,0.15)', color: '#ffb703', border: '1px solid #ffb70344', padding: '2px 8px', borderRadius: '12px' }}>
+              <span style={{ fontSize: '10px', fontWeight: 'bold', background: 'rgba(255,183,3,0.15)', color: '#ffb703', border: '1px solid #ffb70344', padding: '2px 8px', borderRadius: '3px' }}>
                 🎧 Lossless FLAC Stream • Intermaven Shared Pool
               </span>
             </div>
@@ -1787,7 +1787,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             {/* Direct Artist Tip Button */}
             <button 
               onClick={() => alert(`Sent $5.00 tip to ${currentTrack.artist} via Intermaven Credit Bank!`)}
-              style={{ background: 'linear-gradient(135deg, #ff007f 0%, #7928ca 100%)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              style={{ background: 'linear-gradient(135deg, #ff007f 0%, #7928ca 100%)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
             >
               <RiCoinsLine /> Tip Artist $5
             </button>
