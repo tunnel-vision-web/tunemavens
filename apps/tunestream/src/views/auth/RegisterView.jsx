@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { RiRefreshFill } from 'react-icons/ri'
+import { RiRefreshFill, RiCloseLine } from 'react-icons/ri'
 import { authApi, tokenStore } from '../../lib/api.js'
 import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
 
-export default function RegisterView({ onLogin }) {
+export default function RegisterView({ onLogin, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -492,8 +492,44 @@ export default function RegisterView({ onLogin }) {
     }
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <div className="auth-modal-card" style={{ cursor: 'default' }}>
+      {/* Dismiss Button */}
+      <button 
+        type="button" 
+        onClick={handleClose} 
+        className="auth-modal-close-btn"
+        aria-label="Close"
+        style={{
+          position: 'absolute',
+          top: '14px',
+          right: '14px',
+          background: 'transparent',
+          border: 'none',
+          color: '#94a3b8',
+          cursor: 'pointer',
+          padding: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '4px',
+          transition: 'all 0.15s ease',
+          zIndex: 10
+        }}
+      >
+        <RiCloseLine size={20} />
+      </button>
+
       <button 
         onClick={handleResetRegistration}
         className="auth-reset-btn"

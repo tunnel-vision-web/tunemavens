@@ -68,16 +68,26 @@ function AppContent() {
   const navigate = useNavigate();
   const [sessionUser, setSessionUser] = useState(() => {
     try {
-      const saved = sessionStorage.getItem('tunestream_session');
+      const saved = sessionStorage.getItem('tunestream_session') || sessionStorage.getItem('tunemavens_session') || localStorage.getItem('tunemavens_saved_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
     }
   });
 
+  const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
+
+  useEffect(() => {
+    if (location.pathname !== '/login' && location.pathname !== '/register') {
+      setLastNonAuthPath(location.pathname);
+    }
+  }, [location.pathname]);
+
   const handleLogin = (user) => {
     setSessionUser(user);
     sessionStorage.setItem('tunestream_session', JSON.stringify(user));
+    sessionStorage.setItem('tunemavens_session', JSON.stringify(user));
+    localStorage.setItem('tunemavens_saved_user', JSON.stringify(user));
   };
 
   const handleLogout = () => {
@@ -86,11 +96,15 @@ function AppContent() {
   };
 
   const isAuthModalActive = location.pathname === '/login' || location.pathname === '/register';
-  const backgroundLocation = isAuthModalActive ? { pathname: '/' } : location;
+  const backgroundLocation = isAuthModalActive ? { pathname: lastNonAuthPath } : location;
 
   const handleBackdropClose = (e) => {
-    if (e.target.className === 'auth-modal-overlay-wrapper') {
-      navigate('/');
+    if (e.target.className && e.target.className.includes('auth-modal-overlay-wrapper')) {
+      if (window.history.state && window.history.state.idx > 0) {
+        navigate(-1);
+      } else {
+        navigate(lastNonAuthPath || '/');
+      }
     }
   };
 
@@ -108,18 +122,18 @@ function AppContent() {
           <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/sync" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/sync-marketplace" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
-          <Route path="/login" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
-          <Route path="/register" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
+          <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/dashboard" element={<Navigate to="/stream" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
 
       {isAuthModalActive && (
-        <div className="auth-modal-overlay-wrapper" onClick={handleBackdropClose} style={{ position: 'fixed', inset: 0, background: 'rgba(3, 7, 18, 0.78)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+        <div className="auth-modal-overlay-wrapper" onClick={handleBackdropClose}>
           <Routes>
-            <Route path="/login" element={<LoginView onLogin={handleLogin} />} />
-            <Route path="/register" element={<RegisterView onLogin={handleLogin} />} />
+            <Route path="/login" element={<LoginView onLogin={handleLogin} onClose={() => navigate(lastNonAuthPath || '/')} />} />
+            <Route path="/register" element={<RegisterView onLogin={handleLogin} onClose={() => navigate(lastNonAuthPath || '/')} />} />
           </Routes>
         </div>
       )}

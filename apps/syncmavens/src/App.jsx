@@ -36,8 +36,10 @@ import AffiliateAdminPanel from './components/affiliates/AffiliateAdminPanel.jsx
 import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx';
 import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx';
 import TuneLedgerSplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx';
-import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx';
-import { DEFAULT_ACTIVE_APPS_BY_ROLE } from './lib/activatedApps.js';
+import { DEFAULT_ACTIVE_APPS_BY_ROLE, reconcileUserApps } from './lib/activatedApps.js';
+import { authApi, tokenStore } from './lib/api.js';
+import LoginView from './views/auth/LoginView.jsx';
+import RegisterView from './views/auth/RegisterView.jsx';
 
 export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
@@ -226,10 +228,77 @@ function AppContent() {
   const [progress, setProgress] = useState(0);
   const [titleHovered, setTitleHovered] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('syncmavens_logged_in') === 'true');
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('syncmavens_logged_in') === 'true' || !!sessionStorage.getItem('syncmavens_session'));
   const [userRole, setUserRole] = useState(() => localStorage.getItem('syncmavens_user_role') || 'creator');
   const [userName, setUserName] = useState(() => localStorage.getItem('syncmavens_user_name') || 'Creator Pro');
   const [userEmail, setUserEmail] = useState(() => localStorage.getItem('syncmavens_user_email') || 'creator@tunemavens.com');
+
+  const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
+  const isAuthModalActive = location.pathname === '/login' || location.pathname === '/register';
+
+  useEffect(() => {
+    if (location.pathname !== '/login' && location.pathname !== '/register') {
+      setLastNonAuthPath(location.pathname);
+    }
+  }, [location.pathname]);
+
+  const backgroundLocation = isAuthModalActive ? { pathname: lastNonAuthPath } : location;
+
+  const handleBackdropClose = (e) => {
+    if (e.target.className && e.target.className.includes('auth-modal-overlay-wrapper')) {
+      if (window.history.state && window.history.state.idx > 0) {
+        navigate(-1);
+      } else {
+        navigate(lastNonAuthPath || '/');
+      }
+    }
+  };
+
+  // Restore authenticated session from TuneMavens / Intermaven storage
+  useEffect(() => {
+    const saved = sessionStorage.getItem('syncmavens_session') || sessionStorage.getItem('tunemavens_session') || localStorage.getItem('tunemavens_saved_user');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.email) {
+          setIsLoggedIn(true);
+          if (parsed.role) setUserRole(parsed.role);
+          if (parsed.name) setUserName(parsed.name);
+          if (parsed.email) setUserEmail(parsed.email);
+          if (parsed.credits) setUserCredits(parsed.credits);
+        }
+      } catch (_) {}
+    }
+  }, []);
+
+  const handleLogin = (user) => {
+    const reconciled = reconcileUserApps(user);
+    setIsLoggedIn(true);
+    setUserRole(reconciled.role || 'creator');
+    setUserName(reconciled.name || 'Creator Pro');
+    setUserEmail(reconciled.email || 'creator@tunemavens.com');
+    if (reconciled.credits) setUserCredits(reconciled.credits);
+    localStorage.setItem('syncmavens_logged_in', 'true');
+    localStorage.setItem('syncmavens_user_role', reconciled.role || 'creator');
+    localStorage.setItem('syncmavens_user_name', reconciled.name || 'Creator Pro');
+    localStorage.setItem('syncmavens_user_email', reconciled.email || 'creator@tunemavens.com');
+    sessionStorage.setItem('syncmavens_session', JSON.stringify(reconciled));
+    sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
+    localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
+    if (reconciled.role === 'supervisor') {
+      setActiveTab('briefs_mgmt');
+    } else {
+      setActiveTab('briefs');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem('syncmavens_logged_in');
+    sessionStorage.removeItem('syncmavens_session');
+    tokenStore.clear();
+    navigate('/');
+  };
 
   const sessionUser = {
     id: 'user_syncmavens_01',
@@ -650,10 +719,10 @@ function AppContent() {
     );
   };
 
-  if (isDashboardRoute) {
-    /* ================= UNIFIED DASHBOARD ROUTE ================= */
-    return (
-      <div className="dashboard-container">
+  const isEffectiveDashboard = backgroundLocation.pathname.startsWith('/dashboard');
+
+  const mainLayoutContent = isEffectiveDashboard ? (
+    <div className="dashboard-container">
         {/* Sidebar Navigation */}
         <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
           <div className="dashboard-sidebar-scroll">
@@ -2073,11 +2142,7 @@ function AppContent() {
 
         {renderContractModal()}
       </div>
-    );
-  }
-
-  /* ================= STANDARD ROUTER MULTIPAGE VIEWS ================= */
-  return (
+  ) : (
     <div className="landing-layout">
       {/* Navigation Bar */}
       <header className={`navbar ${scrolled ? 'scrolled' : ''}`}>
@@ -2225,7 +2290,7 @@ function AppContent() {
       </header>
 
       {/* Pages Router Content */}
-      <Routes>
+      <Routes location={backgroundLocation}>
         <Route path="/" element={
           <>
             {/* Sliding Hero Banner */}
@@ -2489,36 +2554,8 @@ function AppContent() {
         <Route path="/creator-dashboard" element={<CreatorDashboardPageView standalone={true} />} />
         <Route path="/blog" element={<BlogView standalone={true} />} />
         <Route path="/pricing" element={<PricingView standalone={true} />} />
-        <Route path="/login" element={<LoginView onLogin={(user) => {
-          localStorage.setItem('syncmavens_logged_in', 'true');
-          localStorage.setItem('syncmavens_user_role', user.role);
-          localStorage.setItem('syncmavens_user_name', user.name);
-          localStorage.setItem('syncmavens_user_email', user.email);
-          setIsLoggedIn(true);
-          setUserRole(user.role);
-          setUserName(user.name);
-          setUserEmail(user.email);
-          if (user.role === 'supervisor') {
-            setActiveTab('briefs_mgmt');
-          } else {
-            setActiveTab('briefs');
-          }
-        }} />} />
-        <Route path="/register" element={<RegisterView onLogin={(user) => {
-          localStorage.setItem('syncmavens_logged_in', 'true');
-          localStorage.setItem('syncmavens_user_role', user.role);
-          localStorage.setItem('syncmavens_user_name', user.name);
-          localStorage.setItem('syncmavens_user_email', user.email);
-          setIsLoggedIn(true);
-          setUserRole(user.role);
-          setUserName(user.name);
-          setUserEmail(user.email);
-          if (user.role === 'supervisor') {
-            setActiveTab('briefs_mgmt');
-          } else {
-            setActiveTab('briefs');
-          }
-        }} />} />
+        <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
+        <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
       </Routes>
 
       {/* Shared Landing Page Footer (Portal Styled with logo second instance) */}
@@ -2619,6 +2656,30 @@ function AppContent() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+
+  return (
+    <div style={{ position: 'relative', width: '100%', minHeight: '100vh' }}>
+      <div 
+        style={{ 
+          opacity: isAuthModalActive ? 0.8 : 1, 
+          transition: 'opacity 0.3s ease',
+          pointerEvents: isAuthModalActive ? 'none' : 'auto'
+        }}
+      >
+        {mainLayoutContent}
+      </div>
+
+      {/* Auth Modal Overlay Wrapper (Matches TuneMavens Exactly) */}
+      {isAuthModalActive && (
+        <div className="auth-modal-overlay-wrapper" onClick={handleBackdropClose}>
+          <Routes>
+            <Route path="/login" element={<LoginView onLogin={handleLogin} onClose={() => navigate(lastNonAuthPath || '/')} />} />
+            <Route path="/register" element={<RegisterView onLogin={handleLogin} onClose={() => navigate(lastNonAuthPath || '/')} />} />
+          </Routes>
+        </div>
+      )}
     </div>
   );
 }
@@ -3341,544 +3402,6 @@ function SyncReadyView({ standalone }) {
 
       <div style={{ padding: standalone ? '40px 24px 80px 24px' : '0', maxWidth: '1360px', margin: '0 auto' }}>
         <SyncMarketplacePanel sessionUser={sessionUser} />
-      </div>
-    </div>
-  );
-
-  const [playingSongId, setPlayingSongId] = useState(null);
-  const [playbackTime, setPlaybackTime] = useState(0);
-  const [isSupervisor, setIsSupervisor] = useState(() => localStorage.getItem('syncmavens_supervisor_unlocked') === 'true');
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 12;
-  const audioRef = useRef(null);
-
-  const handlePlayToggle = (song) => {
-    if (!audioRef.current) return;
-
-    if (playingSongId === song.id) {
-      audioRef.current.pause();
-      setPlayingSongId(null);
-    } else {
-      audioRef.current.src = song.url;
-      audioRef.current.currentTime = 0;
-      setPlaybackTime(0);
-      setPlayingSongId(song.id);
-      audioRef.current.play().catch(e => console.log("Audio play failed:", e));
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (!audioRef.current) return;
-    const cur = audioRef.current.currentTime;
-    setPlaybackTime(cur);
-
-    if (cur >= 45) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setPlayingSongId(null);
-      setPlaybackTime(0);
-      alert("45-second preview limit reached. Verified music supervisors can authenticate to unlock full audio tracks and master WAV stems.");
-    }
-  };
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (email === 'supervisor@tunemavens.com' && password === 'password') {
-      localStorage.setItem('syncmavens_supervisor_unlocked', 'true');
-      setIsSupervisor(true);
-      setShowLoginModal(false);
-      setLoginError('');
-      setEmail('');
-      setPassword('');
-      alert("Welcome back, Supervisor Pro! Credentials verified via TuneMavens Identity Protocol. Master downloads unlocked.");
-    } else {
-      setLoginError("Invalid supervisor credentials. Use supervisor@tunemavens.com / password.");
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('syncmavens_supervisor_unlocked');
-    setIsSupervisor(false);
-    alert("Supervisor session closed. Master vaults locked.");
-  };
-
-  const handleDownload = (song) => {
-    if (!isSupervisor) {
-      setShowLoginModal(true);
-      return;
-    }
-    alert(`Downloading Master WAV file for: "${song.title}" by ${song.artist}\nTarget: 24-bit / 48kHz Broadcast Standard`);
-  };
-
-  const filteredSongs = SYNC_READY_SONGS.filter(song => 
-    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.mood.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredSongs.length / pageSize) || 1;
-  const paginatedSongs = filteredSongs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
-  return (
-    <div className={standalone ? "standalone-page-wrapper" : ""}>
-      <div style={{ opacity: showLoginModal ? 0.08 : 1, transition: 'opacity 0.2s ease-in-out', pointerEvents: showLoginModal ? 'none' : 'auto' }}>
-        {standalone && (
-          <div className="page-header-banner" style={{ backgroundImage: `url(${syncPlacementHero})` }}>
-            <div className="page-header-overlay" />
-            <div className="page-header-content">
-              <h1 className="page-header-title">Sync-Ready Catalog</h1>
-              <div className="page-header-breadcrumb">
-                <Link to="/" className="breadcrumb-link">Home</Link>
-                <span className="breadcrumb-separator">/</span>
-                <span className="breadcrumb-active">Sync-Ready Catalog</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <audio 
-          ref={audioRef} 
-          onTimeUpdate={handleTimeUpdate} 
-        />
-
-        <section className="landing-stepper" style={{ paddingTop: standalone ? '60px' : '80px', paddingBottom: '80px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px', textAlign: 'left' }}>
-            <div style={{ textAlign: 'left' }}>
-              <h2 style={{ textAlign: 'left', margin: 0 }}>Browse Sync-Ready Tracks</h2>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '4px', textAlign: 'left' }}>
-                Index of pre-cleared, high-resolution musical works ready for licensing synchronization.
-              </p>
-            </div>
-            <div>
-              {isSupervisor ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '12px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#10b981', padding: '6px 12px', borderRadius: '3px', fontWeight: 'bold' }}>
-                    ✓ VERIFIED SUPERVISOR SESSION ACTIVE
-                  </span>
-                  <button onClick={handleLogout} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
-                    Lock Vault
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => setShowLoginModal(true)} className="btn-primary" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <RiUserFill size={16} /> Supervisor Sign In
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Search field */}
-          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '24px', textAlign: 'left' }}>
-            <div style={{ position: 'relative', maxWidth: '400px', width: '100%' }}>
-              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: '14px', pointerEvents: 'none' }}>🔍</span>
-              <input 
-                type="text" 
-                placeholder="Search by title, artist, genre or mood..." 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px 10px 38px', background: '#0b0f1e', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', color: '#fff', fontSize: '13px', outline: 'none' }}
-              />
-            </div>
-          </div>
-
-          {/* Songs Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '24px' }}>
-            {paginatedSongs.map((song) => {
-              const isCurrent = playingSongId === song.id;
-              const progressPct = isCurrent ? (playbackTime / 45) * 100 : 0;
-              return (
-                <div key={song.id} className="step-card" style={{ padding: '24px', background: 'var(--bg-panel)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'stretch', textAlign: 'left' }}>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <img src={song.cover} alt={song.title} style={{ width: '80px', height: '80px', borderRadius: '3px', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.05)' }} />
-                    <div style={{ overflow: 'hidden' }}>
-                      <h4 style={{ margin: 0, fontSize: '16px', color: '#fff', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{song.title}</h4>
-                      <span style={{ display: 'block', fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>{song.artist}</span>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
-                        <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '2px', color: '#cbd5e1' }}>{song.genre}</span>
-                        <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '2px', color: '#cbd5e1' }}>{song.mood}</span>
-                        <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '2px', color: '#00f2fe' }}>{song.bpm} BPM</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Progress bar container */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-                      <span>{isCurrent ? `Previewing: ${Math.floor(playbackTime)}s` : 'Audio Clip Preview'}</span>
-                      <span>Limit: 45s</span>
-                    </div>
-                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden', position: 'relative' }}>
-                      <div style={{ width: `${progressPct}%`, height: '100%', background: '#00f2fe', transition: 'width 0.1s linear' }}></div>
-                    </div>
-                  </div>
-
-                  {/* Card footer controls */}
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                    <button 
-                      onClick={() => handlePlayToggle(song)} 
-                      className="btn-primary" 
-                      style={{ flex: 1, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: isCurrent ? '#ef4444' : 'var(--accent-cyan)', border: 'none', color: '#000', fontWeight: 'bold', fontSize: '12.5px' }}
-                    >
-                      {isCurrent ? (
-                        <>
-                          <RiPauseFill size={16} /> Pause Preview
-                        </>
-                      ) : (
-                        <>
-                          <RiPlayFill size={16} /> Play Preview (45s)
-                        </>
-                      )}
-                    </button>
-
-                    <button 
-                      onClick={() => handleDownload(song)} 
-                      className="btn-secondary" 
-                      style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12.5px', position: 'relative', border: '1px solid rgba(255,255,255,0.1)' }}
-                    >
-                      <RiDownloadLine size={16} />
-                      <span>Download WAV</span>
-                      {!isSupervisor && (
-                        <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', fontSize: '8px', padding: '1px 4px', borderRadius: '10px', fontWeight: 'bold' }}>
-                          LOCKED
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
-              <button 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                disabled={currentPage === 1}
-                className="btn-secondary" 
-                style={{ padding: '6px 12px', fontSize: '12px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
-              >
-                Previous
-              </button>
-              <span style={{ fontSize: '13px', color: '#94a3b8' }}>
-                Page {currentPage} of {totalPages}
-              </span>
-              <button 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
-                disabled={currentPage === totalPages}
-                className="btn-secondary" 
-                style={{ padding: '6px 12px', fontSize: '12px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </section>
-      </div>
-
-      {/* Supervisor Credentials Modal */}
-      {showLoginModal && (
-        <div 
-          onClick={() => setShowLoginModal(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(5, 4, 8, 0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="dashboard-card" 
-            style={{ maxWidth: '400px', width: '100%', padding: '32px', background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}
-          >
-            <button 
-              onClick={() => setShowLoginModal(false)} 
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
-            >
-              <RiCloseFill size={20} />
-            </button>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#8b5cf6' }}>
-              <RiLockLine size={24} />
-              <h3 style={{ margin: 0, fontSize: '18px', color: '#fff' }}>Supervisor Authentication</h3>
-            </div>
-            
-            <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
-              Master WAV downloads and licensing cue sheets are restricted to authorized music supervisors. Authenticate using your TuneMavens account.
-            </p>
-
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Email Address</label>
-                <input 
-                  type="email" 
-                  value={email} 
-                  onChange={e => setEmail(e.target.value)} 
-                  placeholder="supervisor@tunemavens.com" 
-                  style={{ width: '100%', padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} 
-                  required 
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Password</label>
-                <input 
-                  type="password" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)} 
-                  placeholder="••••••••" 
-                  style={{ width: '100%', padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} 
-                  required 
-                />
-              </div>
-
-              {loginError && (
-                <div style={{ fontSize: '11px', color: '#ef4444', background: 'rgba(239,68,68,0.05)', padding: '8px', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '3px' }}>
-                  {loginError}
-                </div>
-              )}
-
-              <div style={{ fontSize: '11px', color: '#eab308', background: 'rgba(234,179,8,0.03)', padding: '8px', border: '1px solid rgba(234,179,8,0.1)', borderRadius: '3px', lineHeight: '1.4' }}>
-                <strong>Sandbox Credentials:</strong><br />
-                Email: <code>supervisor@tunemavens.com</code><br />
-                Password: <code>password</code>
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                style={{ width: '100%', padding: '10px', fontSize: '13px', background: 'var(--accent-cyan)', border: 'none', color: '#000', fontWeight: 'bold', borderRadius: '3px', marginTop: '6px' }}
-              >
-                Authenticate Supervisor
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ==========================================
-// Login / Registration Authentication Views
-// ==========================================
-
-function LoginView({ onLogin }) {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('creator');
-  const [googleLoading, setGoogleLoading] = useState(false);
-
-  const handleGoogleLogin = () => {
-    setGoogleLoading(true);
-    setTimeout(() => {
-      setGoogleLoading(false);
-      onLogin({
-        email: 'googleuser@tunemavens.com',
-        name: 'Aisha Okoro',
-        role: role,
-      });
-      navigate('/dashboard');
-    }, 1200);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const stubName = (email.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase());
-    onLogin({
-      email,
-      name: stubName,
-      role
-    });
-    navigate('/dashboard');
-  };
-
-  return (
-    <div className="standalone-page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 120px)', padding: '40px 20px' }}>
-      <div className="dashboard-card" style={{ maxWidth: '400px', width: '100%', padding: '32px', background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', textAlign: 'left' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-          <img src={smLogo} alt="SyncMavens Logo" style={{ height: '32px', width: 'auto' }} />
-        </div>
-        <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '19px', fontWeight: '800', margin: '0 0 6px', color: '#fff' }}>Log In to SyncMavens</h3>
-          <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Access your unified creator or supervisor sync profile</p>
-        </div>
-
-        <button 
-          onClick={handleGoogleLogin} 
-          disabled={googleLoading}
-          style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', marginBottom: '20px' }}
-        >
-          {googleLoading ? "Connecting to Google..." : "Continue with Google"}
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-          <span style={{ fontSize: '11px', color: '#64748b' }}>or email (auto-sandbox)</span>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-        </div>
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Email Address</label>
-            <input 
-              type="email" 
-              placeholder="name@example.com" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              style={{ width: '100%', padding: '8px 12px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} 
-              required 
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Password</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              style={{ width: '100%', padding: '8px 12px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} 
-              required 
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Your Ecosystem Role</label>
-            <select 
-              value={role} 
-              onChange={e => setRole(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }}
-            >
-              <option value="creator">Creator (seeking sync deals)</option>
-              <option value="supervisor">Music Supervisor (film/tv/ads)</option>
-            </select>
-          </div>
-
-          <button 
-            type="submit" 
-            className="btn-primary" 
-            style={{ width: '100%', padding: '10px', fontSize: '13px', background: 'var(--accent-cyan)', border: 'none', color: '#000', fontWeight: 'bold', borderRadius: '3px', marginTop: '8px' }}
-          >
-            Log In
-          </button>
-        </form>
-
-        <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '20px', textAlign: 'center', margin: '20px 0 0' }}>
-          Don't have an account? <Link to="/register" style={{ color: '#00f2fe', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function RegisterView({ onLogin }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const paramRole = searchParams.get('role');
-  
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState(paramRole === 'supervisor' ? 'supervisor' : 'creator');
-
-  useEffect(() => {
-    if (paramRole === 'supervisor' || paramRole === 'creator') {
-      setRole(paramRole);
-    }
-  }, [paramRole]);
-
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onLogin({
-      email,
-      name: name || (email.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase()),
-      role
-    });
-    navigate('/dashboard');
-  };
-
-  return (
-    <div className="standalone-page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 120px)', padding: '40px 20px' }}>
-      <div className="dashboard-card" style={{ maxWidth: '400px', width: '100%', padding: '32px', background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', textAlign: 'left' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-          <img src={smLogo} alt="SyncMavens Logo" style={{ height: '32px', width: 'auto' }} />
-        </div>
-        <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '19px', fontWeight: '800', margin: '0 0 6px', color: '#fff' }}>Start Free Sync Profile</h3>
-          <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Register and match your audio with dynamic briefs</p>
-        </div>
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Full Name</label>
-            <input 
-              type="text" 
-              placeholder="Aisha Okoro" 
-              value={name} 
-              onChange={e => setName(e.target.value)} 
-              style={{ width: '100%', padding: '8px 12px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} 
-              required 
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Email Address</label>
-            <input 
-              type="email" 
-              placeholder="name@example.com" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              style={{ width: '100%', padding: '8px 12px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} 
-              required 
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Password</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              style={{ width: '100%', padding: '8px 12px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }} 
-              required 
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Choose Account Role</label>
-            <select 
-              value={role} 
-              onChange={e => setRole(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px' }}
-            >
-              <option value="creator">Creator (seeking sync placements)</option>
-              <option value="supervisor">Music Supervisor (film/tv/ads)</option>
-            </select>
-          </div>
-
-          <button 
-            type="submit" 
-            className="btn-primary" 
-            style={{ width: '100%', padding: '10px', fontSize: '13px', background: 'var(--accent-cyan)', border: 'none', color: '#000', fontWeight: 'bold', borderRadius: '3px', marginTop: '8px' }}
-          >
-            Create Account
-          </button>
-        </form>
-
-        <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '20px', textAlign: 'center', margin: '20px 0 0' }}>
-          Already have an account? <Link to="/login" style={{ color: '#00f2fe', textDecoration: 'none', fontWeight: '600' }}>Log In here</Link>
-        </p>
       </div>
     </div>
   );
