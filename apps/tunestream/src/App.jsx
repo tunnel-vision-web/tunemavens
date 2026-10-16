@@ -124,6 +124,8 @@ function AppContent() {
           <Route path="/sync" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/sync-marketplace" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/apps" element={<PlayerDashboard sessionUser={sessionUser} initialTab="apps" onLogout={handleLogout} />} />
+          <Route path="/companion" element={<PlayerDashboard sessionUser={sessionUser} initialTab="companion" onLogout={handleLogout} />} />
+          <Route path="/tunecompanion" element={<PlayerDashboard sessionUser={sessionUser} initialTab="companion" onLogout={handleLogout} />} />
           <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/dashboard" element={<PlayerDashboard sessionUser={sessionUser} initialTab="home" onLogout={handleLogout} />} />
@@ -1082,8 +1084,16 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       categories[cat].push(item);
     };
 
-    // Dashboard Overview
+    // Dashboard Overview & Copilot
     add('Dashboard', { id: 'home', label: 'Overview', icon: RiHomeFill });
+    add('Dashboard', { 
+      id: 'companion', 
+      label: 'TuneCompanion', 
+      icon: RiLineChartFill, 
+      iconImg: tcLogo,
+      color: '#c084fc', 
+      badge: 'COPILOT' 
+    });
 
     // Discover & Audio
     add('Discover & Audio', { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Line });
@@ -1102,6 +1112,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     // Splits & Ledgers
     if (['creator', 'label', 'admin', 'affiliate'].includes(userRole)) {
       add('Splits & Ledgers', { id: 'splits', label: 'TuneLedger Splits', icon: RiExchangeDollarLine, color: '#22d3ee' });
+      add('Splits & Ledgers', { id: 'companion', label: 'TuneCompanion Ledger', icon: RiLineChartFill, iconImg: tcLogo, color: '#c084fc', badge: 'MOBILE' });
       add('Splits & Ledgers', { id: 'affiliates', label: 'Affiliate Hub', icon: RiSparklingLine, color: '#22d3ee' });
     }
 
@@ -1116,7 +1127,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     }
 
     // Platform & Ecosystem
-    add('Ecosystem & Apps', { id: 'companion', label: 'TuneCompanion', icon: RiLineChartFill, color: '#a855f7' });
+    add('Ecosystem & Apps', { id: 'companion', label: 'TuneCompanion', icon: RiLineChartFill, iconImg: tcLogo, color: '#a855f7', badge: 'APP' });
     add('Ecosystem & Apps', { id: 'apps', label: 'Ecosystem Apps', icon: RiApps2Fill, color: '#00f2fe' });
     add('Support & Config', { id: 'support', label: 'Support Desk', icon: RiQuestionLine });
     add('Support & Config', { id: 'settings', label: 'Settings', icon: RiSettings3Fill });
@@ -1335,17 +1346,44 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
                 </div>
               )}
               <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
-                {items.map(item => {
+                {items.map((item, idx) => {
                   const Icon = item.icon;
                   return (
-                    <li key={item.id}>
+                    <li key={`${item.id}-${idx}`}>
                       <button 
                         onClick={() => setActiveTab(item.id)} 
                         className={`dashboard-nav-item ${activeTab === item.id ? 'active' : ''}`}
                         title={item.label}
+                        style={{
+                          borderRadius: '3px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: collapsed ? 'center' : 'space-between',
+                          width: '100%'
+                        }}
                       >
-                        <Icon size={16} style={item.color ? { color: item.color } : {}} />
-                        {!collapsed && item.label}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          {item.iconImg ? (
+                            <img src={item.iconImg} alt={item.label} style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                          ) : (
+                            <Icon size={16} style={item.color ? { color: item.color } : {}} />
+                          )}
+                          {!collapsed && <span>{item.label}</span>}
+                        </div>
+                        {!collapsed && item.badge && (
+                          <span style={{
+                            fontSize: '9px',
+                            fontWeight: 800,
+                            padding: '2px 5px',
+                            borderRadius: '3px',
+                            background: item.badge === 'LIVE' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(168, 85, 247, 0.25)',
+                            color: item.badge === 'LIVE' ? '#10b981' : '#c084fc',
+                            border: `1px solid ${item.badge === 'LIVE' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(168, 85, 247, 0.4)'}`,
+                            letterSpacing: '0.5px'
+                          }}>
+                            {item.badge}
+                          </span>
+                        )}
                       </button>
                     </li>
                   );
@@ -1353,6 +1391,59 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
               </ul>
             </div>
           ))}
+
+          {/* TuneCompanion Prominent Quick Launcher Widget */}
+          {!collapsed ? (
+            <div 
+              onClick={() => setActiveTab('companion')}
+              style={{
+                margin: '14px 4px 6px',
+                padding: '12px 14px',
+                background: activeTab === 'companion' 
+                  ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(15, 23, 42, 0.95) 100%)' 
+                  : 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                border: activeTab === 'companion' ? '1px solid #c084fc' : '1px solid rgba(168, 85, 247, 0.35)',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+                transition: 'all 0.2s ease'
+              }}
+              title="Launch TuneCompanion App & Split Ledger"
+            >
+              <img src={tcLogo} alt="TuneCompanion" style={{ width: '26px', height: '26px', objectFit: 'contain' }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  TuneCompanion
+                  <span style={{ fontSize: '8px', background: '#a855f7', color: '#fff', padding: '1px 5px', borderRadius: '3px', fontWeight: 800 }}>LIVE</span>
+                </div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Pocket Split & Sync Copilot
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div 
+              onClick={() => setActiveTab('companion')}
+              style={{
+                margin: '12px auto',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: activeTab === 'companion' ? 'rgba(168, 85, 247, 0.35)' : 'rgba(168, 85, 247, 0.15)',
+                border: activeTab === 'companion' ? '1px solid #c084fc' : '1px solid rgba(168, 85, 247, 0.35)',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+              title="TuneCompanion Copilot"
+            >
+              <img src={tcLogo} alt="TuneCompanion" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+            </div>
+          )}
 
           <ul className="dashboard-nav-list" style={{ marginTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px' }}>
             <li>
