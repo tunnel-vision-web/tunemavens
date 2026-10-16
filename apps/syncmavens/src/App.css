@@ -2075,3 +2075,97 @@ input[type="range"]::-webkit-slider-thumb {
   animation: spin 1s linear infinite;
 }
 
+/* ====================================================================== */
+/* Admin Apps Area - Contrast & Legibility Overrides (TuneMavens Parity)  */
+/* ====================================================================== */
+.admin-app-wrapper {
+  background: #141a2f !important; /* High contrast solid slate-blue */
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 28px !important;
+  margin: 16px 0 !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45) !important;
+  font-size: 15px !important;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-app-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-app-badge {
+  font-size: 11px !important;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-app-title {
+  font-size: 15px !important;
+  font-weight: 800;
+  color: var(--cyan, #00f2fe) !important;
+}
+
+.admin-app-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.admin-app-wrapper h3 { font-size: 17px !important; }
+.admin-app-wrapper h4 { font-size: 15px !important; }
+.admin-app-wrapper p,
+.admin-app-wrapper label,
+.admin-app-wrapper span,
+.admin-app-wrapper select,
+.admin-app-wrapper select option,
+.admin-app-wrapper input,
+.admin-app-wrapper textarea,
+.admin-app-wrapper button,
+.admin-app-wrapper td,
+.admin-app-wrapper th {
+  font-size: 13px !important;
+}
+
+.admin-app-wrapper .dashboard-card {
+  background: #090c16 !important;
+  padding: 24px !important;
+  margin-bottom: 24px !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.dashboard-copyright-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: rgba(11, 15, 30, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 11px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.dashboard-copyright-divider {
+  opacity: 0.5;
+}

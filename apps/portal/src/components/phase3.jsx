@@ -1731,7 +1731,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
           <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: 0, marginBottom: '16px', lineHeight: '1.55' }}>
             The 3 flagship mobile experiences shipped through the Intermaven Network. Activate to add a quick-launch entry to your dashboard, then tap <em>View App</em> to open the full app surface.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+          <div className="native-apps-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
             {intermavenCards.map(renderCard)}
           </div>
         </div>

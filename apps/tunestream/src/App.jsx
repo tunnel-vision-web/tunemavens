@@ -12,7 +12,7 @@ import {
   RiDownloadLine, RiBellFill, RiShieldFill, RiSettings3Fill, RiLogoutBoxRFill,
   RiCheckLine, RiSparklingLine, RiCoinsFill, RiExchangeDollarLine,
   RiFolderMusicLine, RiQuestionLine, RiBriefcaseLine, RiArrowDownSFill,
-  RiApps2Fill, RiAppleFill
+  RiApps2Fill, RiAppleFill, RiHomeFill, RiBarChartFill, RiGlobalFill, RiArrowLeftFill, RiCloseLine
 } from 'react-icons/ri';
 import tsLogo from './assets/tunestream-logo.png';
 import tcLogo from './assets/tunecompanion-logo.png';
@@ -122,13 +122,13 @@ function AppContent() {
       >
         <Routes location={backgroundLocation}>
           <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
-          <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} initialTab="explore" onLogout={handleLogout} />} />
           <Route path="/sync" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/sync-marketplace" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/apps" element={<PlayerDashboard sessionUser={sessionUser} initialTab="apps" onLogout={handleLogout} />} />
           <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
-          <Route path="/dashboard" element={<Navigate to="/stream" replace />} />
+          <Route path="/dashboard" element={<PlayerDashboard sessionUser={sessionUser} initialTab="home" onLogout={handleLogout} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
@@ -237,7 +237,7 @@ function EcosystemAppsPanel() {
       </div>
 
       {/* Expansive Full-Width Apps Grid */}
-      <div className="ts-ecosystem-apps-grid">
+      <div className="ts-ecosystem-apps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '24px', width: '100%', boxSizing: 'border-box' }}>
         {apps.map((app) => (
           <div 
             key={app.id} 
@@ -351,16 +351,548 @@ function EcosystemAppsPanel() {
   );
 }
 
+const APP_TITLES = {
+  home: 'Streaming Overview & Royalty Dashboard',
+  explore: 'Explore Lossless Audio Streams',
+  favorites: 'My Favorite Audio Streams',
+  radio: 'Community Live Radio Node',
+  'my-catalog': 'Lossless Audio Catalog Repository',
+  upload: 'Lossless Audio Ingestion & Transcoding',
+  'sync-marketplace': 'Sync Licensing Marketplace',
+  splits: 'TuneLedger Split Cascade Waterfall',
+  affiliates: 'Affiliate Programme & Partner Hub',
+  'label-team': 'Label Signed Roster & Permissions',
+  'admin-team': 'Site Administration & Team Seats',
+  apps: 'Ecosystem Native Apps & Mobile Distribution',
+  support: 'Support & AI Claims Desk',
+  settings: 'Profile & Security Settings'
+};
+
+function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, onPlayTrack }) {
+  return (
+    <div className="tunestream-home-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* KPI Overview Metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Catalog Repository</span>
+            <RiDatabase2Line size={18} style={{ color: '#00f2fe' }} />
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>{tracks.length} Releases</div>
+          <div style={{ fontSize: '12px', color: '#10b981', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>✓ 100% Lossless FLAC Transcoded</span>
+          </div>
+        </div>
+
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Monthly Stream Plays</span>
+            <RiCompass3Line size={18} style={{ color: '#a855f7' }} />
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>4.9M Streams</div>
+          <div style={{ fontSize: '12px', color: '#a855f7', marginTop: '6px' }}>Across 142 Geographies</div>
+        </div>
+
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Accrued Balance</span>
+            <RiCoinsFill size={18} style={{ color: '#10b981' }} />
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#10b981' }}>$12,450.00</div>
+          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>Ready for M-Pesa / Bank Payout</div>
+        </div>
+
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Unified Credits</span>
+            <RiSparklingLine size={18} style={{ color: '#22d3ee' }} />
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#22d3ee' }}>{(userCredits ?? 600).toLocaleString()}</div>
+          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>Intermaven Network Vault</div>
+        </div>
+      </div>
+
+      {/* Quick Launchpad Action Grid */}
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+        <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <RiApps2Fill style={{ color: '#00f2fe' }} /> Quick Actions &amp; Workflow Launchpad
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('upload')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiUpload2Line size={20} style={{ color: '#00f2fe' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Ingest Audio</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Lossless FLAC/WAV upload</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('explore')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiCompass3Line size={20} style={{ color: '#a855f7' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Explore Streams</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Discover trending releases</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('sync-marketplace')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiGlobalFill size={20} style={{ color: '#ec4899' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Sync Marketplace</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Pitch to TV/Film supervisors</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('splits')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiCoinsFill size={20} style={{ color: '#10b981' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>TuneLedger Splits</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Automated waterfall ledgers</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('apps')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiApps2Fill size={20} style={{ color: '#38bdf8' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Ecosystem Apps</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>iOS, Android &amp; POS suites</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Trending Streams Row */}
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: 0 }}>Spotlight &amp; Trending Releases</h4>
+          <button
+            type="button"
+            onClick={() => setActiveTab('explore')}
+            style={{ background: 'transparent', border: 'none', color: '#00f2fe', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+          >
+            View All Streams &rarr;
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {tracks.slice(0, 3).map((track, idx) => (
+            <div
+              key={track.id}
+              onClick={() => onPlayTrack && onPlayTrack(track)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', cursor: 'pointer' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '12px', color: '#64748b', width: '16px', textAlign: 'center' }}>{idx + 1}</span>
+                <img src={track.cover} alt={track.title} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{track.title}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{track.artist} · {track.album}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                  Splits: {track.splits || '100/0'}
+                </span>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>{track.plays} plays</span>
+                <button
+                  type="button"
+                  style={{ background: '#00f2fe', border: 'none', color: '#000', padding: '6px 14px', borderRadius: '4px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <RiPlayFill size={14} /> Listen
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TuneStreamExplorePanel({ tracks, currentTrack, isPlaying, likes, onLike, onPlayTrack }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <section className="ts-hero" style={{ height: '220px', marginBottom: '8px' }}>
+        <div className="hero-overlay"></div>
+        <div className="hero-text" style={{ padding: '20px' }}>
+          <span className="hero-badge">SPOTLIGHT CREATOR</span>
+          <h1 style={{ fontSize: '28px', margin: '8px 0' }}>Lumina Wave</h1>
+          <p style={{ fontSize: '13px', marginBottom: '12px', maxWidth: '500px' }}>
+            Experience the latest high-fidelity ambient electronic tracks from Lumina Wave's latest release "Electric Dreams". Now streaming in Lossless Audio.
+          </p>
+          <button className="btn-play-hero" onClick={() => onPlayTrack(tracks[0])} style={{ padding: '8px 20px' }}>
+            <RiPlayFill /> Play Album
+          </button>
+        </div>
+      </section>
+
+      <section className="ts-music-section">
+        <div className="section-header" style={{ marginBottom: '12px' }}>
+          <h3 style={{ fontSize: '16px' }}>Trending Right Now</h3>
+        </div>
+        
+        <div className="tracks-list">
+          {tracks.map((track, idx) => (
+            <div 
+              key={track.id} 
+              className={`track-row ${currentTrack?.id === track.id ? 'active' : ''}`}
+              onClick={() => onPlayTrack(track)}
+            >
+              <div className="track-number">{idx + 1}</div>
+              <img src={track.cover} alt={track.title} className="track-cover" />
+              <div className="track-details" style={{ width: '220px' }}>
+                <span className="track-title">{track.title}</span>
+                <span className="track-artist">{track.artist}</span>
+              </div>
+              <div className="track-album" style={{ color: '#64748b' }}>{track.album}</div>
+              <div className="track-plays" style={{ color: '#64748b' }}>{track.plays} plays</div>
+              <div className="track-duration" style={{ color: '#64748b' }}>{track.duration}</div>
+              <button 
+                className={`btn-like ${likes.includes(track.id) ? 'liked' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLike(track.id);
+                }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+              >
+                <RiHeart3Fill />
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function TuneStreamFavoritesPanel({ tracks, currentTrack, likes, onLike, onPlayTrack }) {
+  const favoriteTracks = tracks.filter(t => likes.includes(t.id));
+  return (
+    <section className="ts-music-section">
+      <div className="section-header" style={{ marginBottom: '12px' }}>
+        <h3 style={{ fontSize: '16px' }}>My Favorites</h3>
+      </div>
+      <div className="tracks-list">
+        {favoriteTracks.length === 0 ? (
+          <div style={{ color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '6px' }}>
+            No liked tracks yet. Explore releases and tap the heart icon to save!
+          </div>
+        ) : (
+          favoriteTracks.map((track, idx) => (
+            <div 
+              key={track.id} 
+              className={`track-row ${currentTrack?.id === track.id ? 'active' : ''}`}
+              onClick={() => onPlayTrack(track)}
+            >
+              <div className="track-number">{idx + 1}</div>
+              <img src={track.cover} alt={track.title} className="track-cover" />
+              <div className="track-details" style={{ width: '220px' }}>
+                <span className="track-title">{track.title}</span>
+                <span className="track-artist">{track.artist}</span>
+              </div>
+              <div className="track-album">{track.album}</div>
+              <div className="track-plays">{track.plays} plays</div>
+              <div className="track-duration">{track.duration}</div>
+              <button 
+                className="btn-like liked"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLike(track.id);
+                }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+              >
+                <RiHeart3Fill />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TuneStreamRadioPanel() {
+  return (
+    <div style={{ textAlign: 'center', padding: '60px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <RiRadioLine size={56} style={{ color: '#00f2fe', marginBottom: '20px', animation: 'pulse 2s infinite' }} />
+      <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: '800' }}>TuneStream Live Radio Node</h3>
+      <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '10px', maxWidth: '480px', margin: '10px auto 20px', lineHeight: '1.6' }}>
+        Lossless stream broadcasts curated daily by the community and vetted curators. Connected to regional low-latency edge node.
+      </p>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>
+        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></span>
+        Live Broadcast Active · 24-bit / 96kHz FLAC
+      </div>
+    </div>
+  );
+}
+
+function TuneStreamCatalogPanel({ tracks, onPlayTrack, setActiveTab }) {
+  return (
+    <section className="ts-music-section">
+      <div className="section-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3 style={{ fontSize: '16px' }}>My Uploaded Catalog Repository</h3>
+        <button className="btn-play-hero" onClick={() => setActiveTab('upload')} style={{ padding: '6px 14px', fontSize: '12px' }}>
+          <RiUpload2Line /> Ingest New Track
+        </button>
+      </div>
+      
+      <div className="tracks-list">
+        {tracks.map((track, idx) => (
+          <div key={track.id} className="track-row" style={{ cursor: 'default' }}>
+            <div className="track-number">{idx + 1}</div>
+            <img src={track.cover} alt={track.title} className="track-cover" />
+            <div className="track-details" style={{ width: '220px' }}>
+              <span className="track-title">{track.title}</span>
+              <span className="track-artist">{track.artist}</span>
+            </div>
+            <div className="track-album" style={{ color: '#64748b' }}>{track.album}</div>
+            <div className="track-plays" style={{ color: '#64748b' }}>{track.plays} plays</div>
+            <div style={{ color: '#00f2fe', width: '100px', fontSize: '12px', fontWeight: 'bold' }}>
+              Splits: {track.splits || "100/0"}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn-play-hero" 
+                onClick={() => onPlayTrack(track)}
+                style={{ padding: '4px 10px', fontSize: '11px' }}
+              >
+                Listen
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TuneStreamUploadPanel({
+  uploadForm,
+  setUploadForm,
+  uploadSuccess,
+  uploadError,
+  handleUploadSubmit,
+  dragActive,
+  handleDrag,
+  handleDrop,
+  fileName,
+  setFileName
+}) {
+  return (
+    <div className="dashboard-card" style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+      <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <RiUpload2Line style={{ color: '#00f2fe' }} /> Lossless Catalogue Audio Ingestion
+      </h4>
+      
+      {uploadSuccess && (
+        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '12px', borderRadius: '6px', color: '#10b981', fontSize: '13px', marginBottom: '16px' }}>
+          ✓ Track successfully ingested and transcoded into Lossless cache system!
+        </div>
+      )}
+
+      {uploadError && (
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px', borderRadius: '6px', color: '#ef4444', fontSize: '13px', marginBottom: '16px' }}>
+          ⚠ {uploadError}
+        </div>
+      )}
+
+      <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Track Title</label>
+            <input 
+              type="text" 
+              placeholder="e.g. Dream Escape" 
+              value={uploadForm.title} 
+              onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Primary Artist Name</label>
+            <input 
+              type="text" 
+              placeholder="e.g. Lumina Wave" 
+              value={uploadForm.artist} 
+              onChange={e => setUploadForm({ ...uploadForm, artist: e.target.value })}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Genre</label>
+            <select 
+              value={uploadForm.genre} 
+              onChange={e => setUploadForm({ ...uploadForm, genre: e.target.value })}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+            >
+              <option value="Electronic">Electronic / Ambient</option>
+              <option value="Hip Hop">Hip Hop / Beats</option>
+              <option value="Pop">Indie Pop</option>
+              <option value="Classical">Neo-Classical</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Royalty Split Cascade Setup (Creator/Label)</label>
+            <input 
+              type="text" 
+              placeholder="e.g. 70/30" 
+              value={uploadForm.splits} 
+              onChange={e => setUploadForm({ ...uploadForm, splits: e.target.value })}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+            />
+          </div>
+        </div>
+
+        {/* Drag and Drop Ingestion Box */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Audio File Ingestion</label>
+          <div 
+            onDragEnter={handleDrag} 
+            onDragLeave={handleDrag} 
+            onDragOver={handleDrag} 
+            onDrop={handleDrop}
+            style={{
+              border: `2px dashed ${dragActive ? '#00f2fe' : 'rgba(255,255,255,0.15)'}`,
+              borderRadius: '8px',
+              padding: '28px',
+              textAlign: 'center',
+              background: dragActive ? 'rgba(0,242,254,0.05)' : 'rgba(0,0,0,0.15)',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer'
+            }}
+          >
+            {fileName ? (
+              <div style={{ color: '#00f2fe', fontWeight: 'bold', fontSize: '14px' }}>
+                📁 Ready for Ingestion: {fileName}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <RiUpload2Line size={32} style={{ color: '#94a3b8' }} />
+                <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Drag &amp; drop audio files here, or browse local device</span>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>Supports Lossless FLAC/WAV up to 150MB</span>
+              </div>
+            )}
+            <input 
+              type="file" 
+              accept="audio/*" 
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setFileName(e.target.files[0].name);
+                }
+              }}
+              style={{ display: 'none' }}
+              id="file-upload-input"
+            />
+            <label htmlFor="file-upload-input" style={{ display: 'inline-block', marginTop: '12px', padding: '6px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+              Browse Local Storage
+            </label>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          className="btn-play-hero" 
+          style={{ marginTop: '10px', justifyContent: 'center' }}
+        >
+          <RiUpload2Line /> Ingest &amp; Publish Track
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function TuneStreamSettingsPanel({ sessionUser, onSwitchRole }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+        <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <RiSettings3Fill style={{ color: '#00f2fe' }} /> User Profile &amp; Network Identity
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Account Name</span>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#fff', marginTop: '4px' }}>{sessionUser.name}</div>
+          </div>
+          <div>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Email Address</span>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#fff', marginTop: '4px' }}>{sessionUser.email}</div>
+          </div>
+          <div>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Current Role</span>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#00f2fe', marginTop: '4px', textTransform: 'uppercase' }}>{sessionUser.role}</div>
+          </div>
+          <div>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Credits Vault</span>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#10b981', marginTop: '4px' }}>{sessionUser.credits} Credits</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+        <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <RiShieldFill style={{ color: '#a855f7' }} /> Persona Role Simulator (Admin Verification)
+        </h4>
+        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 16px', lineHeight: '1.5' }}>
+          Switch persona views in real time to verify navigation menus, catalog permissions, and role-gated tooling:
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+          {PERSONA_ROLES.map((roleItem) => {
+            const isActive = sessionUser.role === roleItem.id;
+            const RoleIcon = roleItem.icon;
+            return (
+              <button
+                key={roleItem.id}
+                type="button"
+                onClick={() => onSwitchRole(roleItem.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '12px',
+                  background: isActive ? 'rgba(0, 242, 254, 0.1)' : 'rgba(255,255,255,0.03)',
+                  border: isActive ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+              >
+                <RoleIcon size={16} style={{ color: roleItem.color }} />
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>{roleItem.shortLabel}</div>
+                  <div style={{ fontSize: '10px', color: '#64748b' }}>{roleItem.shortDesc}</div>
+                </div>
+                {isActive && <RiCheckLine size={14} style={{ color: '#10b981', marginLeft: 'auto' }} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(SAMPLE_TRACKS[0]);
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const [likes, setLikes] = useState([1, 3]);
   const [volume, setVolume] = useState(80);
   
   // Unified Dashboard States
-  const [currentView, setCurrentView] = useState('listener'); // 'listener' | 'creator'
   const [collapsed, setCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState(initialTab || 'explore'); // 'explore' | 'favorites' | 'radio' for listener, 'my-catalog' | 'upload' for creator
+  const [activeTab, setActiveTab] = useState(initialTab || 'home');
 
   const [userRole, setUserRole] = useState(() => localStorage.getItem('tunestream_user_role') || (sessionUser?.role || 'creator'));
   const [userCredits, setUserCredits] = useState(() => {
@@ -487,6 +1019,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
   const handleTrackSelect = (track) => {
     setCurrentTrack(track);
     setIsPlaying(true);
+    setIsPlayerOpen(true);
   };
 
   const handleLike = (id) => {
@@ -497,11 +1030,52 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     }
   };
 
-  const handleViewChange = (view) => {
-    setCurrentView(view);
-    setActiveTab(view === 'listener' ? 'explore' : 'my-catalog');
-    setUploadSuccess(false);
-    setUploadError('');
+  const getCategorizedMenu = () => {
+    const categories = {};
+    const add = (cat, item) => {
+      if (!categories[cat]) categories[cat] = [];
+      categories[cat].push(item);
+    };
+
+    // Dashboard Overview
+    add('Dashboard', { id: 'home', label: 'Overview', icon: RiHomeFill });
+
+    // Discover & Audio
+    add('Discover & Audio', { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Line });
+    add('Discover & Audio', { id: 'favorites', label: 'Favorites', icon: RiHeart3Fill });
+    add('Discover & Audio', { id: 'radio', label: 'Live Radio Node', icon: RiRadioLine });
+
+    // Catalog & Upload
+    if (['creator', 'label', 'admin'].includes(userRole)) {
+      add('Catalog & Ingestion', { id: 'my-catalog', label: 'Lossless Catalog', icon: RiDatabase2Line });
+      add('Catalog & Ingestion', { id: 'upload', label: 'Ingest Audio', icon: RiUpload2Line });
+    }
+
+    // Sync Marketplace
+    add('Sync & Licensing', { id: 'sync-marketplace', label: 'Sync Marketplace', icon: RiSparklingLine, color: '#22d3ee' });
+
+    // Splits & Ledgers
+    if (['creator', 'label', 'admin', 'affiliate'].includes(userRole)) {
+      add('Splits & Ledgers', { id: 'splits', label: 'TuneLedger Splits', icon: RiExchangeDollarLine, color: '#22d3ee' });
+      add('Splits & Ledgers', { id: 'affiliates', label: 'Affiliate Hub', icon: RiSparklingLine, color: '#22d3ee' });
+    }
+
+    // Label Roster
+    if (['label', 'admin'].includes(userRole)) {
+      add('Label Roster', { id: 'label-team', label: 'Signed Roster', icon: RiFolderMusicLine, color: '#a855f7' });
+    }
+
+    // Admin Governance
+    if (userRole === 'admin') {
+      add('Governance & Admin', { id: 'admin-team', label: 'Admin Team Seats', icon: RiShieldFill, color: '#ec4899' });
+    }
+
+    // Platform & Ecosystem
+    add('Ecosystem & Apps', { id: 'apps', label: 'Ecosystem Apps', icon: RiApps2Fill, color: '#00f2fe' });
+    add('Support & Config', { id: 'support', label: 'Support Desk', icon: RiQuestionLine });
+    add('Support & Config', { id: 'settings', label: 'Settings', icon: RiSettings3Fill });
+
+    return categories;
   };
 
   const handleUploadSubmit = (e) => {
@@ -564,31 +1138,112 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     }
   };
 
+  const renderActivePanel = () => {
+    switch (activeTab) {
+      case 'home':
+        return (
+          <TuneStreamHomePanel
+            sessionUser={activeUser}
+            tracks={catalogTracks}
+            userCredits={userCredits}
+            setActiveTab={setActiveTab}
+            onPlayTrack={handleTrackSelect}
+          />
+        );
+      case 'explore':
+        return (
+          <TuneStreamExplorePanel
+            tracks={catalogTracks}
+            currentTrack={currentTrack}
+            likes={likes}
+            onPlayTrack={handleTrackSelect}
+            onToggleLike={handleLike}
+          />
+        );
+      case 'favorites':
+        return (
+          <TuneStreamFavoritesPanel
+            tracks={catalogTracks}
+            currentTrack={currentTrack}
+            likes={likes}
+            onPlayTrack={handleTrackSelect}
+            onToggleLike={handleLike}
+          />
+        );
+      case 'radio':
+        return <TuneStreamRadioPanel />;
+      case 'my-catalog':
+        return (
+          <TuneStreamCatalogPanel
+            tracks={catalogTracks}
+            onPlayTrack={handleTrackSelect}
+            setActiveTab={setActiveTab}
+          />
+        );
+      case 'upload':
+        return (
+          <TuneStreamUploadPanel
+            uploadForm={uploadForm}
+            setUploadForm={setUploadForm}
+            uploadError={uploadError}
+            uploadSuccess={uploadSuccess}
+            dragActive={dragActive}
+            fileName={fileName}
+            setFileName={setFileName}
+            handleDrag={handleDrag}
+            handleDrop={handleDrop}
+            handleUploadSubmit={handleUploadSubmit}
+          />
+        );
+      case 'sync-marketplace':
+      case 'sync':
+        return <SyncMarketplacePanel sessionUser={activeUser} />;
+      case 'splits':
+        return <TuneLedgerSplitCascadePanel sessionUser={activeUser} />;
+      case 'affiliates':
+        return <AffiliateAdminPanel sessionUser={activeUser} />;
+      case 'label-team':
+        return <LabelTeamRosterPanel sessionUser={activeUser} />;
+      case 'admin-team':
+        return <AdminTeamRosterPanel sessionUser={activeUser} />;
+      case 'apps':
+        return <EcosystemAppsPanel />;
+      case 'support':
+        return <SupportTicketsPanel sessionUser={activeUser} />;
+      case 'settings':
+        return <TuneStreamSettingsPanel sessionUser={activeUser} onSwitchRole={handleSwitchRole} />;
+      default:
+        return (
+          <TuneStreamHomePanel
+            sessionUser={activeUser}
+            tracks={catalogTracks}
+            userCredits={userCredits}
+            setActiveTab={setActiveTab}
+            onPlayTrack={handleTrackSelect}
+          />
+        );
+    }
+  };
+
   return (
     <div className="dashboard-container">
       {/* Sidebar Navigation */}
       <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="dashboard-sidebar-scroll">
-          <div className="dashboard-sidebar-header" style={{ flexDirection: 'column', gap: '6px', alignItems: 'center', justifyContent: 'center', padding: collapsed ? '12px 0' : '16px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-            <Link to="/" title="Back to landing page" style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', textDecoration: 'none' }}>
+          <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
+            <Link to="/" title="Back to TuneStream public site" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
               {collapsed ? (
                 <img 
                   src="/favicon.png" 
                   alt="TuneStream Icon" 
-                  style={{ height: '32px', width: '32px', objectFit: 'contain', display: 'block', margin: '0 auto' }} 
+                  style={{ height: '32px', width: 'auto', display: 'block' }} 
                 />
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                  <img 
-                    src={tsLogo} 
-                    alt="TuneStream Logo" 
-                    className="dashboard-sidebar-logo" 
-                    style={{ height: '32px', width: 'auto', display: 'block', maxHeight: '36px' }} 
-                  />
-                  <div style={{ fontSize: '10.5px', color: '#94a3b8', letterSpacing: '0.4px', marginTop: '4px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                    &lt;&lt; a tunemavens utility
-                  </div>
-                </div>
+                <img 
+                  src={tsLogo} 
+                  alt="TuneStream Logo" 
+                  style={{ height: '36px', width: 'auto', display: 'block', margin: '0 auto' }} 
+                />
               )}
             </Link>
           </div>
@@ -602,203 +1257,44 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
           </button>
 
-          {currentView === 'listener' ? (
-            <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
+          {Object.entries(getCategorizedMenu()).map(([category, items]) => (
+            <div key={category} className="sidebar-category-group" style={{ marginBottom: '12px' }}>
               {!collapsed && (
                 <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
-                  Discover
+                  {category}
                 </div>
               )}
               <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('explore')} 
-                    className={`dashboard-nav-item ${activeTab === 'explore' ? 'active' : ''}`}
-                    title="Explore"
-                  >
-                    <RiCompass3Line size={16} />
-                    {!collapsed && "Explore"}
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('favorites')} 
-                    className={`dashboard-nav-item ${activeTab === 'favorites' ? 'active' : ''}`}
-                    title="Favorites"
-                  >
-                    <RiHeart3Fill size={16} className="fav-icon" />
-                    {!collapsed && "Favorites"}
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('radio')} 
-                    className={`dashboard-nav-item ${activeTab === 'radio' ? 'active' : ''}`}
-                    title="Live Radio"
-                  >
-                    <RiRadioLine size={16} />
-                    {!collapsed && "Live Radio"}
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('sync-marketplace')} 
-                    className={`dashboard-nav-item ${activeTab === 'sync-marketplace' ? 'active' : ''}`}
-                    title="Sync Marketplace"
-                  >
-                    <RiSparklingLine size={16} style={{ color: '#22d3ee' }} />
-                    {!collapsed && "Sync Marketplace"}
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('apps')} 
-                    className={`dashboard-nav-item ${activeTab === 'apps' ? 'active' : ''}`}
-                    title="Ecosystem Native Apps"
-                  >
-                    <RiApps2Fill size={16} style={{ color: '#00f2fe' }} />
-                    {!collapsed && "Ecosystem Apps"}
-                  </button>
-                </li>
+                {items.map(item => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.id}>
+                      <button 
+                        onClick={() => setActiveTab(item.id)} 
+                        className={`dashboard-nav-item ${activeTab === item.id ? 'active' : ''}`}
+                        title={item.label}
+                      >
+                        <Icon size={16} style={item.color ? { color: item.color } : {}} />
+                        {!collapsed && item.label}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
-          ) : (
-            <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
-              {!collapsed && (
-                <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
-                  Catalog & IP
-                </div>
-              )}
-              <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('my-catalog')} 
-                    className={`dashboard-nav-item ${activeTab === 'my-catalog' ? 'active' : ''}`}
-                    title="My Catalog"
-                  >
-                    <RiDatabase2Line size={16} />
-                    {!collapsed && "My Catalog"}
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('upload')} 
-                    className={`dashboard-nav-item ${activeTab === 'upload' ? 'active' : ''}`}
-                    title="Upload Track"
-                  >
-                    <RiUpload2Line size={16} />
-                    {!collapsed && "Upload Track"}
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('sync-marketplace')} 
-                    className={`dashboard-nav-item ${activeTab === 'sync-marketplace' ? 'active' : ''}`}
-                    title="Sync Marketplace"
-                  >
-                    <RiSparklingLine size={16} style={{ color: '#22d3ee' }} />
-                    {!collapsed && "Sync Marketplace"}
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('apps')} 
-                    className={`dashboard-nav-item ${activeTab === 'apps' ? 'active' : ''}`}
-                    title="Ecosystem Native Apps"
-                  >
-                    <RiApps2Fill size={16} style={{ color: '#00f2fe' }} />
-                    {!collapsed && "Ecosystem Apps"}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          )}
-
-          <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
-            {!collapsed && (
-              <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
-                Governance & Splits
-              </div>
-            )}
-            <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('splits')} 
-                  className={`dashboard-nav-item ${activeTab === 'splits' ? 'active' : ''}`}
-                  title="TuneLedger Split Cascade"
-                >
-                  <RiExchangeDollarLine size={16} style={{ color: '#22d3ee' }} />
-                  {!collapsed && "TuneLedger Splits"}
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('affiliates')} 
-                  className={`dashboard-nav-item ${activeTab === 'affiliates' ? 'active' : ''}`}
-                  title="Affiliate Scheme"
-                >
-                  <RiSparklingLine size={16} style={{ color: '#22d3ee' }} />
-                  {!collapsed && "Affiliate Hub"}
-                </button>
-              </li>
-              {(userRole === 'admin' || userRole === 'label') && (
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('label-team')} 
-                    className={`dashboard-nav-item ${activeTab === 'label-team' ? 'active' : ''}`}
-                    title="Label Signed Roster"
-                  >
-                    <RiFolderMusicLine size={16} style={{ color: '#a855f7' }} />
-                    {!collapsed && "Label Roster"}
-                  </button>
-                </li>
-              )}
-              {userRole === 'admin' && (
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('admin-team')} 
-                    className={`dashboard-nav-item ${activeTab === 'admin-team' ? 'active' : ''}`}
-                    title="Site Admin Team"
-                  >
-                    <RiShieldFill size={16} style={{ color: '#ec4899' }} />
-                    {!collapsed && "Admin Team Seats"}
-                  </button>
-                </li>
-              )}
-              <li>
-                <button 
-                  onClick={() => setActiveTab('support')} 
-                  className={`dashboard-nav-item ${activeTab === 'support' ? 'active' : ''}`}
-                  title="Support & Claims Desk"
-                >
-                  <RiQuestionLine size={16} />
-                  {!collapsed && "Support Desk"}
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => setActiveTab('apps')} 
-                  className={`dashboard-nav-item ${activeTab === 'apps' ? 'active' : ''}`}
-                  title="Ecosystem Native Apps"
-                >
-                  <RiApps2Fill size={16} style={{ color: '#00f2fe' }} />
-                  {!collapsed && "Ecosystem Apps"}
-                </button>
-              </li>
-            </ul>
-          </div>
+          ))}
 
           <ul className="dashboard-nav-list" style={{ marginTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px' }}>
             <li>
-              <a 
-                href="/" 
+              <Link 
+                to="/" 
                 className="dashboard-nav-item"
                 style={{ textDecoration: 'none' }}
                 title="Back to Home Site"
               >
-                <RiSkipBackFill size={16} style={{ transform: 'rotate(180deg)' }} />
+                <RiArrowLeftFill size={16} />
                 {!collapsed && "Back to Home Site"}
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -836,7 +1332,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       </aside>
 
       {/* Main Content Pane */}
-      <main className="dashboard-main-content" style={{ height: 'calc(100% - 90px)' }}>
+      <main className="dashboard-main-content">
         <header className="dashboard-topbar">
           <div className="dashboard-topbar-title">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1166,392 +1662,157 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
           </div>
         </header>
 
-        <div className="dashboard-main-scroll" style={{ padding: (activeTab === 'sync-marketplace' || activeTab === 'sync' || activeTab === 'apps') ? '16px 20px' : '24px 32px' }}>
-          {activeTab === 'splits' ? (
-            <TuneLedgerSplitCascadePanel sessionUser={activeUser} />
-          ) : activeTab === 'affiliates' ? (
-            <AffiliateAdminPanel sessionUser={activeUser} />
-          ) : activeTab === 'label-team' ? (
-            <LabelTeamRosterPanel sessionUser={activeUser} />
-          ) : activeTab === 'admin-team' ? (
-            <AdminTeamRosterPanel sessionUser={activeUser} />
-          ) : activeTab === 'support' ? (
-            <SupportTicketsPanel sessionUser={activeUser} />
-          ) : (activeTab === 'sync-marketplace' || activeTab === 'sync') ? (
-            <SyncMarketplacePanel sessionUser={activeUser} />
-          ) : activeTab === 'apps' ? (
-            <EcosystemAppsPanel />
-          ) : currentView === 'listener' ? (
-            /* ================= LISTENER VIEW ================= */
-            <div>
-              {activeTab === 'explore' && (
-                <>
-                  <section className="ts-hero" style={{ height: '220px', marginBottom: '24px' }}>
-                    <div className="hero-overlay"></div>
-                    <div className="hero-text" style={{ padding: '20px' }}>
-                      <span className="hero-badge">SPOTLIGHT CREATOR</span>
-                      <h1 style={{ fontSize: '28px', margin: '8px 0' }}>Lumina Wave</h1>
-                      <p style={{ fontSize: '13px', marginBottom: '12px', maxWidth: '500px' }}>
-                        Experience the latest high-fidelity ambient electronic tracks from Lumina Wave's latest release "Electric Dreams". Now streaming in Lossless Audio.
-                      </p>
-                      <button className="btn-play-hero" onClick={() => handleTrackSelect(SAMPLE_TRACKS[0])} style={{ padding: '8px 20px' }}>
-                        <RiPlayFill /> Play Album
-                      </button>
-                    </div>
-                  </section>
-
-                  <section className="ts-music-section">
-                    <div className="section-header" style={{ marginBottom: '12px' }}>
-                      <h3 style={{ fontSize: '16px' }}>Trending Right Now</h3>
-                    </div>
-                    
-                    <div className="tracks-list">
-                      {catalogTracks.map((track, idx) => (
-                        <div 
-                          key={track.id} 
-                          className={`track-row ${currentTrack.id === track.id ? 'active' : ''}`}
-                          onClick={() => handleTrackSelect(track)}
-                        >
-                          <div className="track-number">{idx + 1}</div>
-                          <img src={track.cover} alt={track.title} className="track-cover" />
-                          <div className="track-details" style={{ width: '220px' }}>
-                            <span className="track-title">{track.title}</span>
-                            <span className="track-artist">{track.artist}</span>
-                          </div>
-                          <div className="track-album" style={{ color: '#64748b' }}>{track.album}</div>
-                          <div className="track-plays" style={{ color: '#64748b' }}>{track.plays} plays</div>
-                          <div className="track-duration" style={{ color: '#64748b' }}>{track.duration}</div>
-                          <button 
-                            className={`btn-like ${likes.includes(track.id) ? 'liked' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleLike(track.id);
-                            }}
-                            style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
-                          >
-                            <RiHeart3Fill />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                </>
-              )}
-
-              {activeTab === 'favorites' && (
-                <section className="ts-music-section">
-                  <div className="section-header" style={{ marginBottom: '12px' }}>
-                    <h3 style={{ fontSize: '16px' }}>My Favorites</h3>
-                  </div>
-                  <div className="tracks-list">
-                    {catalogTracks.filter(t => likes.includes(t.id)).length === 0 ? (
-                      <div style={{ color: '#64748b', padding: '24px', textAlign: 'center' }}>No liked tracks yet. Explore and tap the heart icon to save!</div>
-                    ) : (
-                      catalogTracks.filter(t => likes.includes(t.id)).map((track, idx) => (
-                        <div 
-                          key={track.id} 
-                          className={`track-row ${currentTrack.id === track.id ? 'active' : ''}`}
-                          onClick={() => handleTrackSelect(track)}
-                        >
-                          <div className="track-number">{idx + 1}</div>
-                          <img src={track.cover} alt={track.title} className="track-cover" />
-                          <div className="track-details" style={{ width: '220px' }}>
-                            <span className="track-title">{track.title}</span>
-                            <span className="track-artist">{track.artist}</span>
-                          </div>
-                          <div className="track-album">{track.album}</div>
-                          <div className="track-plays">{track.plays} plays</div>
-                          <div className="track-duration">{track.duration}</div>
-                          <button 
-                            className="btn-like liked"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleLike(track.id);
-                            }}
-                            style={{ background: 'transparent', border: 'none' }}
-                          >
-                            <RiHeart3Fill />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {activeTab === 'radio' && (
-                <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <RiRadioLine size={48} style={{ color: '#00f2fe', marginBottom: '16px', animation: 'pulse 2s infinite' }} />
-                  <h4>TuneStream Live Radio</h4>
-                  <p style={{ color: '#64748b', fontSize: '13px', marginTop: '8px', maxWidth: '400px', margin: '8px auto' }}>
-                    Lossless stream broadcasts curated daily by the community. Connecting to stream node...
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* ================= CREATOR VIEW ================= */
-            <div>
-              {/* Creator Overview Panel */}
-              <div className="dashboard-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                <div className="dashboard-card" style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Catalog Size</span>
-                  <h3 style={{ fontSize: '24px', margin: '8px 0 0', color: '#00f2fe' }}>{catalogTracks.length} Tracks</h3>
-                </div>
-                <div className="dashboard-card" style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Plays</span>
-                  <h3 style={{ fontSize: '24px', margin: '8px 0 0', color: '#00f2fe' }}>4.9M Streams</h3>
-                </div>
-                <div className="dashboard-card" style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Accrued Balance</span>
-                  <h3 style={{ fontSize: '24px', margin: '8px 0 0', color: '#00f2fe' }}>$12,450.00</h3>
+        <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
+          {/* Low unified credits prompt banner - Excludes affiliates since affiliate dashboard requires 0 credits */}
+          {userCredits < 50 && userRole !== 'affiliate' && activeTab !== 'affiliates' && (
+            <div
+              style={{
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid #ef4444',
+                borderRadius: '6px',
+                padding: '10px 16px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}
+              data-testid="low-credits-alert-banner"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <RiCoinsFill size={18} style={{ color: '#ef4444' }} />
+                <div>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#fca5a5' }}>
+                    Low Credit Balance: {userCredits} Credits remaining.
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#cbd5e1', marginLeft: '6px' }}>
+                    Reload unified platform credits to unlock continuous AI mastering, stem downloads, and split cascades. Zero monthly fees.
+                  </span>
                 </div>
               </div>
-
-              {activeTab === 'my-catalog' && (
-                <section className="ts-music-section">
-                  <div className="section-header" style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '16px' }}>My Uploaded Catalog</h3>
-                    <button className="btn-play-hero" onClick={() => setActiveTab('upload')} style={{ padding: '6px 12px', fontSize: '11px' }}>
-                      <RiUpload2Line /> Ingest New Track
-                    </button>
-                  </div>
-                  
-                  <div className="tracks-list">
-                    {catalogTracks.map((track, idx) => (
-                      <div key={track.id} className="track-row" style={{ cursor: 'default' }}>
-                        <div className="track-number">{idx + 1}</div>
-                        <img src={track.cover} alt={track.title} className="track-cover" />
-                        <div className="track-details" style={{ width: '220px' }}>
-                          <span className="track-title">{track.title}</span>
-                          <span className="track-artist">{track.artist}</span>
-                        </div>
-                        <div className="track-album" style={{ color: '#64748b' }}>{track.album}</div>
-                        <div className="track-plays" style={{ color: '#64748b' }}>{track.plays} plays</div>
-                        <div style={{ color: '#00f2fe', width: '100px', fontSize: '12px', fontWeight: 'bold' }}>
-                          Splits: {track.splits || "100/0"}
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button 
-                            className="btn-play-hero" 
-                            onClick={() => handleTrackSelect(track)}
-                            style={{ padding: '4px 8px', fontSize: '10px' }}
-                          >
-                            Listen
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {activeTab === 'upload' && (
-                <div className="dashboard-card" style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
-                  <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <RiUpload2Line style={{ color: '#00f2fe' }} /> Lossless Catalogue Audio Ingestion
-                  </h4>
-                  
-                  {uploadSuccess && (
-                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '12px', borderRadius: '6px', color: '#10b981', fontSize: '13px', marginBottom: '16px' }}>
-                      ✓ Track successfully ingested and transcoded into Lossless cache system!
-                    </div>
-                  )}
-
-                  {uploadError && (
-                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px', borderRadius: '6px', color: '#ef4444', fontSize: '13px', marginBottom: '16px' }}>
-                      ⚠ {uploadError}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Track Title</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. Dream Escape" 
-                          value={uploadForm.title} 
-                          onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })}
-                          style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Primary Artist Name</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. Lumina Wave" 
-                          value={uploadForm.artist} 
-                          onChange={e => setUploadForm({ ...uploadForm, artist: e.target.value })}
-                          style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Genre</label>
-                        <select 
-                          value={uploadForm.genre}
-                          onChange={e => setUploadForm({ ...uploadForm, genre: e.target.value })}
-                          style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
-                        >
-                          <option value="Electronic">Electronic / Ambient</option>
-                          <option value="Hip Hop">Hip Hop / Beats</option>
-                          <option value="Pop">Indie Pop</option>
-                          <option value="Classical">Neo-Classical</option>
-                        </select>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Royalty Split Cascade Setup (Creator/Label)</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. 70/30" 
-                          value={uploadForm.splits}
-                          onChange={e => setUploadForm({ ...uploadForm, splits: e.target.value })}
-                          style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', outline: 'none' }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Drag and Drop Ingestion Box */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Audio File Ingestion</label>
-                      <div 
-                        onDragEnter={handleDrag}
-                        onDragOver={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDrop={handleDrop}
-                        style={{ 
-                          border: `2px dashed ${dragActive ? '#00f2fe' : 'rgba(255, 255, 255, 0.15)'}`, 
-                          borderRadius: '8px', 
-                          padding: '30px', 
-                          textAlign: 'center', 
-                          background: dragActive ? 'rgba(0, 242, 254, 0.04)' : 'rgba(0,0,0,0.1)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        <RiUpload2Line size={32} style={{ color: '#00f2fe', marginBottom: '8px' }} />
-                        {fileName ? (
-                          <div>
-                            <strong style={{ color: '#00f2fe' }}>File Loaded:</strong> {fileName}
-                            <button 
-                              type="button" 
-                              onClick={() => setFileName('')} 
-                              style={{ marginLeft: '10px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                            >
-                              <RiCloseFill />
-                            </button>
-                          </div>
-                        ) : (
-                          <div>
-                            <p style={{ fontSize: '13px' }}>Drag & drop your WAV, FLAC, or MP3 file here, or click to browse</p>
-                            <span style={{ fontSize: '11px', color: '#64748b' }}>Supports Lossless FLAC/WAV up to 150MB</span>
-                          </div>
-                        )}
-                        <input 
-                          type="file" 
-                          accept="audio/*" 
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              setFileName(e.target.files[0].name);
-                            }
-                          }}
-                          style={{ display: 'none' }}
-                          id="file-upload-input"
-                        />
-                        <label htmlFor="file-upload-input" style={{ display: 'inline-block', marginTop: '12px', padding: '6px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
-                          Browse Local Storage
-                        </label>
-                      </div>
-                    </div>
-
-                    <button 
-                      type="submit" 
-                      className="btn-play-hero" 
-                      style={{ marginTop: '10px', justifyContent: 'center' }}
-                    >
-                      <RiUpload2Line /> Ingest & Publish Track
-                    </button>
-                  </form>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => setIsCreditReloadOpen(true)}
+                style={{
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '6px 14px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+                data-testid="low-credits-reload-btn"
+              >
+                Reload Now
+              </button>
             </div>
           )}
-        </div>
 
-        {/* Unified Dashboard Footer Copyright Strip */}
-        <div className="dashboard-copyright-strip" style={{ background: 'rgba(11, 15, 30, 0.95)' }}>
-          <span>© {new Date().getFullYear()} TuneMavens Ltd. All rights reserved.</span>
-          <span className="dashboard-copyright-divider">·</span>
-          <span>Operating on the shared Intermaven network.</span>
+          <div className="admin-app-wrapper" style={{ position: 'relative' }}>
+            <div className="admin-app-header-bar" data-testid="admin-app-header-bar">
+              <div className="admin-app-header-left">
+                <span className="admin-app-badge">App Workspace</span>
+                <h2 className="admin-app-title">
+                  {APP_TITLES[activeTab] || 'TuneStream Workspace'}
+                </h2>
+              </div>
+              <div className="admin-app-header-right">
+                <AppHelpAiControls
+                  activeTab={activeTab}
+                  sessionUser={activeUser}
+                />
+              </div>
+            </div>
+
+            {renderActivePanel()}
+          </div>
+
+          {/* Unified Dashboard Footer Copyright Strip */}
+          <div className="dashboard-copyright-strip" style={{ background: 'rgba(11, 15, 30, 0.95)', marginTop: '24px' }}>
+            <span>© {new Date().getFullYear()} TuneMavens Ltd. All rights reserved.</span>
+            <span className="dashboard-copyright-divider">·</span>
+            <span>Operating on the shared Intermaven network.</span>
+          </div>
         </div>
       </main>
 
-      {/* Persistent Audio Player Bar */}
-      <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)' }}>
-        <div className="player-track-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src={currentTrack.cover} alt={currentTrack.title} className="player-cover" />
-          <div className="player-metadata">
-            <span className="player-title">{currentTrack.title}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="player-artist">{currentTrack.artist}</span>
-              <a 
-                href={`http://localhost:3000/#/epk/${currentTrack.artist.toLowerCase().replace(/\s+/g, '')}`}
-                target="_blank" 
-                rel="noreferrer"
-                style={{ fontSize: '10px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f0ff', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600 }}
-              >
-                🌐 Web World
-              </a>
+      {/* Docked Audio Player Bar (only visible when a track is selected / playing) */}
+      {isPlayerOpen && currentTrack && (
+        <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)', zIndex: 1000 }}>
+          <div className="player-track-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src={currentTrack.cover} alt={currentTrack.title} className="player-cover" />
+            <div className="player-metadata">
+              <span className="player-title">{currentTrack.title}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="player-artist">{currentTrack.artist}</span>
+                <a 
+                  href={`http://localhost:3000/#/epk/${currentTrack.artist.toLowerCase().replace(/\s+/g, '')}`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  style={{ fontSize: '10px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f0ff', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600 }}
+                >
+                  🌐 Web World
+                </a>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="player-controls">
-          <div className="control-buttons" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button className="btn-control"><RiSkipBackFill /></button>
-            <button className="btn-control btn-play-pause" onClick={togglePlay}>
-              {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
+          <div className="player-controls">
+            <div className="control-buttons" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button className="btn-control"><RiSkipBackFill /></button>
+              <button className="btn-control btn-play-pause" onClick={togglePlay}>
+                {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
+              </button>
+              <button className="btn-control"><RiSkipForwardFill /></button>
+
+              {/* Plan-Based Audio Stream Gating Tag */}
+              <span style={{ fontSize: '10px', fontWeight: 'bold', background: 'rgba(255,183,3,0.15)', color: '#ffb703', border: '1px solid #ffb70344', padding: '2px 8px', borderRadius: '12px' }}>
+                🎧 Lossless FLAC Stream • Intermaven Shared Pool
+              </span>
+            </div>
+
+            <div className="playback-bar">
+              <span className="time-stamp">1:24</span>
+              <div className="progress-bar-container">
+                <div className="progress-bar-fill" style={{ width: '40%' }}></div>
+              </div>
+              <span className="time-stamp">{currentTrack.duration}</span>
+            </div>
+          </div>
+
+          <div className="player-volume" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Direct Artist Tip Button */}
+            <button 
+              onClick={() => alert(`Sent $5.00 tip to ${currentTrack.artist} via Intermaven Credit Bank!`)}
+              style={{ background: 'linear-gradient(135deg, #ff007f 0%, #7928ca 100%)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              <RiCoinsLine /> Tip Artist $5
             </button>
-            <button className="btn-control"><RiSkipForwardFill /></button>
 
-            {/* Plan-Based Audio Stream Gating Tag */}
-            <span style={{ fontSize: '10px', fontWeight: 'bold', background: 'rgba(255,183,3,0.15)', color: '#ffb703', border: '1px solid #ffb70344', padding: '2px 8px', borderRadius: '12px' }}>
-              🎧 45s Preview (Starter) • Upgrade for Full Stream
-            </span>
+            <RiVolumeUpFill className="volume-icon" />
+            <input 
+              type="range" 
+              min="0" 
+              max="100" 
+              value={volume}
+              onChange={(e) => setVolume(e.target.value)} 
+              className="volume-slider"
+            />
+
+            <button
+              type="button"
+              onClick={() => setIsPlayerOpen(false)}
+              style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+              title="Close Player"
+            >
+              <RiCloseLine size={18} />
+            </button>
           </div>
-
-          <div className="playback-bar">
-            <span className="time-stamp">1:24</span>
-            <div className="progress-bar-container">
-              <div className="progress-bar-fill" style={{ width: '40%' }}></div>
-            </div>
-            <span className="time-stamp">{currentTrack.duration}</span>
-          </div>
-        </div>
-
-        <div className="player-volume" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Direct Artist Tip Button */}
-          <button 
-            onClick={() => alert(`Sent $5.00 tip to ${currentTrack.artist} via Intermaven Credit Bank!`)}
-            style={{ background: 'linear-gradient(135deg, #ff007f 0%, #7928ca 100%)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-          >
-            <RiCoinsLine /> Tip Artist $5
-          </button>
-
-          <RiVolumeUpFill className="volume-icon" />
-          <input 
-            type="range" 
-            min="0" 
-            max="100" 
-            value={volume}
-            onChange={(e) => setVolume(e.target.value)} 
-            className="volume-slider"
-          />
-        </div>
-      </footer>
+        </footer>
+      )}
 
       <CreditReloadModal
         isOpen={isCreditReloadOpen}
@@ -1575,10 +1836,6 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       <AffiliateDirectTalentModal
         isOpen={isDirectTalentModalOpen}
         onClose={() => setIsDirectTalentModalOpen(false)}
-        sessionUser={activeUser}
-      />
-      <AppHelpAiControls
-        activeTab={activeTab}
         sessionUser={activeUser}
       />
 

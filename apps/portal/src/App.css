@@ -4275,4 +4275,25 @@
     opacity: 1;
     transform: translateY(-50%) translateX(0);
   }
+}
+
+/* Native Apps 3-Column Responsive Layout without empty 4th column */
+.native-apps-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1080px) {
+  .native-apps-responsive-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .native-apps-responsive-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
