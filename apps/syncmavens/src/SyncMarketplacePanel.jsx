@@ -704,9 +704,6 @@ export default function SyncMarketplacePanel({ sessionUser }) {
                 <span>
                   Showing <strong style={{ color: '#22d3ee' }}>{startIndex + 1}–{endIndex}</strong> of <strong style={{ color: '#fff' }}>{filteredTracks.length}</strong> titles
                 </span>
-                <span className="sync-pagination-badge">
-                  Max 4 Rows ({gridColumns} {gridColumns === 1 ? 'column' : 'columns'} × {safeRowsLimit} rows = {itemsPerPage}/page)
-                </span>
               </div>
 
               <div className="sync-pagination-controls">
