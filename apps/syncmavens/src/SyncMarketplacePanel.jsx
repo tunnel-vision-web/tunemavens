@@ -176,7 +176,7 @@ export default function SyncMarketplacePanel({ sessionUser }) {
   // Pagination Engine (Guarantees no more than 4 rows showing at any time)
   // =====================================================================
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsLimit, setRowsLimit] = useState(4); // Default & strict maximum allowed rows: 4
+  const rowsLimit = 4; // Strictly capped to 4 rows
   const [gridColumns, setGridColumns] = useState(2);
   const gridContainerRef = useRef(null);
 
@@ -208,10 +208,10 @@ export default function SyncMarketplacePanel({ sessionUser }) {
     };
   }, [activeTab]);
 
-  // Reset to page 1 whenever any search, filter, or row parameter changes
+  // Reset to page 1 whenever any search, filter, or sort parameter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedGenre, selectedMood, selectedVocal, sortBy, rowsLimit]);
+  }, [searchQuery, selectedGenre, selectedMood, selectedVocal, sortBy]);
 
   // Enforce strictly no more than 4 rows showing
   const safeRowsLimit = Math.min(4, Math.max(1, rowsLimit));
@@ -772,24 +772,6 @@ export default function SyncMarketplacePanel({ sessionUser }) {
                 <span style={{ fontSize: '12px', color: '#94a3b8' }}>
                   Page <strong style={{ color: '#fff' }}>{safeCurrentPage}</strong> of <strong style={{ color: '#fff' }}>{totalPages}</strong>
                 </span>
-                <div className="sync-rows-selector-group">
-                  <label htmlFor="sync-rows-select" style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>
-                    Rows:
-                  </label>
-                  <select
-                    id="sync-rows-select"
-                    className="sync-rows-select"
-                    value={rowsLimit}
-                    onChange={(e) => {
-                      setRowsLimit(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <option value={2}>2 rows</option>
-                    <option value={3}>3 rows</option>
-                    <option value={4}>4 rows (Max)</option>
-                  </select>
-                </div>
               </div>
             </div>
           )}
