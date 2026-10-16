@@ -68,6 +68,8 @@ A comprehensive progress audit shows significant engineering milestones already 
 - ✅ **Phase 3 Creator Pipeline:** Publishing election, distribution election, Stripe onboarding, Contract Negotiation subsystem (locked vs negotiable clauses, e-signatures).
 - ✅ **Phase 4 Record Label Console:** Roster CSV bulk upload, multi-file drag-and-drop audio file ingestion, catalogue list showing ISRCs, splits, and action shortcuts.
 - ✅ **Phase 3 Recommendation Agent (§9.8):** Dual-layer AI recommendation system (Claude Sonnet 4.6 primary + rules fallback).
+- ✅ **Phase 7 Split Cascade Engine (§9.32/§9.36):** Sovereign TuneLedger 7-tier revenue waterfall, dynamic multi-currency conversions (USD, KES, EUR, GBP), and dual-rail M-Pesa B2C / Stripe Express settlements.
+- ✅ **Phase 8 Escrow & Contract Module / MyContracts (§9.39):** Universal smart legal vault, engagement auto-generator (Publishing, Co-Pub, Catalog Acquisition, Flat/Rev-Share Distribution, Sync Licensing, Split Sheets, Live Gig Escrow), in-app e-signatures (script & canvas) with `SIG-SHA256` tamper-evident seals, and milestone escrow management wired directly into creator payout balances.
 - ✅ **Canonical 7-Role & 4-Tier Schema:** Database schemas extended for 7 canonical roles (Creator, Label, DJ, Media House, Exec/Supervisor, Consumer, Corporate) and 4 pricing tiers (Starter, Pro, Business, Enterprise).
 
 ### 3. TuneStream Consumer Streaming (`tunestream.co`)

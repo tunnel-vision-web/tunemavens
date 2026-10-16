@@ -42,8 +42,18 @@ admin console with role-gated tabs, domain-mapping registry.
 ### Phase 6 · Sync Marketplace (SyncMavens) 🟡 P2
 - Sync licensing marketplace (formerly SyncMaster), interactive brief matching, catalog integration.
 - Domain Routing: Automatic deployment pipeline to `syncmavens.com` from isolated build directory.
-### Phase 7 · Split Cascade Engine 🟡 P2 — compensation math from `COMPENSATION_AND_CONTRACTS.md`
-### Phase 8 · Escrow & Contract Module 🟡 P2 — expands the Phase 3 contract subsystem with escrow + funds movement
+### Phase 7 · Split Cascade Engine ✅ SHIPPED
+- Sovereign TuneLedger 7-tier revenue waterfall and micro-royalty settlement engine (§9.32/§9.36).
+- Real-time multi-currency conversion (USD, KES, EUR, GBP), M-Pesa B2C and Stripe Express dual-rail routing.
+- Drag-and-drop distributor statement CSV parser and 1-click batch cascade settlement.
+
+### Phase 8 · Escrow & Contract Module (MyContracts) ✅ SHIPPED
+- Universal MyContracts Smart Legal Vault and Engagement Auto-Generator (§9.39) across Portal, TuneStream, and SyncMavens.
+- 6 canonical templates from `COMPENSATION_AND_CONTRACTS.md` (§2 Publishing, §3 Distribution, Sync Licensing, Split Sheets, Live Escrow).
+- In-app e-signature execution (elegance script + HTML5 touchscreen/mouse canvas) with `SIG-SHA256` tamper-evident seals and statutory consent.
+- Milestone smart escrow management linked directly into creator payout balances (`payoutBalance`).
+- Cross-portal state synchronization via custom DOM events and 1-click printable PDF legal export.
+
 ### Phase 9 · Ad Injection Platform 🟡 P2
 ### Phase 10 · Media House Routing 🟡 P2
 

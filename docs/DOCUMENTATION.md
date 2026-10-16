@@ -4,7 +4,8 @@ Canonical technical reference for the TuneMavens build. Sections §9.1–§9.7
 are inherited from the shared `intermaven` platform documentation.
 Sections §9.8+ are TuneMavens-specific.
 
-Current focus: §9.8 (App Marketplace + Recommendation Agent — SHIPPED)
+Current focus: §9.8 (App Marketplace + Recommendation Agent — SHIPPED),
+§9.39 (MyContracts Smart Legal Vault, Engagement Auto-Generator & E-Signature Protocol — SHIPPED),
 plus §9.9–§9.12 (Identity, Social Graph, Community, CRM — IN PLAN).
 
 > [!NOTE]
@@ -1526,5 +1527,88 @@ The TuneMavens Editorial & Creator Blog (`/community/blog` and `/community/blog/
 - **Active Navigation Highlights:** Both desktop and mobile navbar states recognize `/community/blog`, `/blog`, and `/blog/:slug` as active routes.
 - **Footer Navigation (`Footer.jsx`):** Added `Blog & Articles` under the Community column across both TuneMavens and TuneStream footer views.
 - **Deep URL Routing (`App.jsx`):** Deep routes `/community/blog/:slug` and `/blog/:slug` load specific articles directly with reading progress indicator, category tags, author byline, and related recommendations.
+
+---
+
+## §9.39 — MyContracts Smart Legal Vault, Engagement Auto-Generator & E-Signature Protocol
+
+### 9.39.1 System Purpose & Architectural Overview
+Branded across the ecosystem as **MyContracts**, this subsystem provides an institutional-grade, zero-friction smart contract generation, digital execution, and milestone escrow management environment. It eliminates the legal ambiguity, delayed countersignatures, and black-box payment practices that historically disrupt independent creator and label relationships.
+
+MyContracts is natively deployed across all three key platform apps:
+- **TuneMavens Portal (`apps/portal`):** Available via `/contracts`, `/mycontracts`, and the dedicated dashboard tab `contracts`. Linked directly from Artist Roster cards, Catalogue releases, and Split Cascade engines.
+- **TuneStream (`apps/tunestream`):** Available via the sidebar navigation item `MyContracts` (`/contracts`, `/mycontracts`) with a live active counter badge, enabling streaming artists and label signees to review, sign, and monitor deals directly in their listening hub.
+- **SyncMavens (`apps/syncmavens`):** Available via the sidebar navigation item `MyContracts & Escrow` (`/contracts`, `/escrow`) with a live badge, allowing music supervisors, agencies, and rights-holders to execute synch licenses and disburse escrow milestones.
+
+All visual components strictly adhere to the TuneMavens UI Design System (`docs/DESIGN_STANDARDS.md`), including standard `3px` border radius across all cards, badges, buttons, inputs, modals, tabs, and interactive signature canvas pads.
+
+### 9.39.2 Core Contract Templates (Authoritative Legal Source: `COMPENSATION_AND_CONTRACTS.md`)
+The system provides turnkey engagement generation for six canonical music industry agreements, faithfully translating the statutory terms, royalty percentages, and indemnities specified in `COMPENSATION_AND_CONTRACTS.md`:
+
+1. **§2.1 Standard Publishing Administration Agreement (`publishing-admin`)**:
+   - **Scope:** Exclusive worldwide publishing administration for catalog musical compositions.
+   - **Royalty Split:** 50% / 50% split on Publisher's Share of gross mechanical, synchronization, and print receipts.
+   - **Writer's Share Guarantee:** 100% of Writer's Share is retained exclusively by Creator and paid directly by performing rights organizations (PROs: ASCAP, BMI, PRS, MCSK, SAMRO).
+   - **Term & Run-off:** 3-year initial term with an exclusive 1-year collection run-off period.
+   - **Accounting:** Semi-annual transparent accounting with audit rights and zero cross-collateralization.
+
+2. **§2.2 Co-Publishing & Exclusive Sync Representation Addendum (`co-publishing-sync`)**:
+   - **Scope:** Co-publishing ownership (50% copyright share) paired with exclusive commercial synchronization representation across film, television, gaming, and commercial advertisements.
+   - **Financial Terms:** Recoupable advance options, with 50/50 net publishing split and 25% sync administration commission.
+   - **Strict Recoupment Boundary:** Advance recoupment is strictly isolated to the specified composition/album. Deficits cannot cross-collateralize against creator's other catalog royalties.
+
+3. **§2.3 Catalog Acquisition & Master Buyout Agreement (`catalog-acquisition`)**:
+   - **Scope:** Assignment of master sound recordings with explicit reservation of unassignable moral rights and statutory digital performer equities.
+   - **Escrow Milestones:** Total acquisition consideration deposited into smart escrow prior to IP assignment; disbursed in milestone tranches upon verified DDEX delivery and metadata audit.
+
+4. **§3.1 Flat-Fee DSP Distribution Agreement (`distro-flat-fee`)**:
+   - **Scope:** Global ingestion, delivery, and automated royalty collection across DSPs (Spotify, Apple Music, Tidal, Boomplay, Audiomack, Amazon Music).
+   - **Creator Royalty:** 100% of net DSP royalties retained by creator / label.
+   - **Billing:** Modest flat annual fee per release with $0 ongoing revenue percentage retention.
+
+5. **§3.2 Native Revenue-Share Distribution Agreement (55/45) (`distro-rev-share`)**:
+   - **Scope:** Zero-upfront-cost global DSP distribution for independent acts.
+   - **Split Terms:** 55% Net streaming royalties retained by Creator / Collaborator Pool, 45% retained by TuneMavens Platform for ingestion, delivery, and ongoing marketing telemetry.
+
+6. **§3.3 Sync Master & Sync Publishing Licensing Agreement (`sync-license`)**:
+   - **Scope:** Pre-cleared commercial synchronization master buyout and synchronization clearance for media houses and brand campaigns.
+   - **Dual-Model Waterfall:** Incorporates SyncMavens Option 1 (Agency Placement: 30% agency off top, 25% admin of remainder, 52.5% net creator pool) and Option 2 (Direct Brief AI: 15% agency fee, 85% creator payout).
+   - **Escrow Hold:** Licensee consideration held in smart escrow until media broadcast verification.
+
+7. **Digital Split Sheets & Collaborator Agreements (§9.36.5)**:
+   - Dynamic 100% collaborator pool locked per track with verified ISRC/ISWC codes and PRO affiliations.
+
+8. **Live Performance & Touring Appearance Escrow Contracts**:
+   - Milestone protection for concerts and tours: 50% deposit advance upon signature, 50% remaining balance released from escrow immediately upon soundcheck check-in or venue manager digital sign-off.
+
+### 9.39.3 Engagement Auto-Generator Wizard
+The auto-generator provides a guided 4-step wizard accessible via the "Spin Up Engagement" action:
+- **Step 1: Template Selection:** Creators or executives choose from Publishing Admin, Co-Publishing, Master Acquisition, Distribution, Sync Licensing, or Live Escrow agreements.
+- **Step 2: Contracting Parties & Roles:** Configures Party A (Licensor/Creator/Artist) and Party B (Licensee/Publisher/Distributor/Supervisor), capturing legal entity names, contact emails, professional roles, PRO affiliations, and governing jurisdictions.
+- **Step 3: Commercial Terms & Split Parameters:** Customizes advance amounts, royalty split percentages, contract duration, territorial exclusivity, and toggles statutory protections (Zero Cross-Collateralization Guarantee and Milestone Escrow Protection).
+- **Step 4: Engagement Preview & Execution Dispatch:** Renders the complete legal text with dynamic variable substitution, creates the tamper-evident audit record, and adds the contract to the active vault in `pending_signatures` status.
+
+### 9.39.4 Multi-Party E-Signature & Tamper-Evident Digital Sealing
+- **Interactive Signing Studio:** Parties can sign directly within the app using either:
+  1. *Elegance Script Engine:* Formats the typed legal name into an official calligraphic signature seal.
+  2. *HTML5 Canvas Drawing Pad:* High-fidelity signature canvas allowing mobile touchscreen or mouse stylus signature drawing with stroke smoothing, Undo, and Clear controls.
+- **Statutory Consent & Legal Binding:** Enforces explicit statutory consent under the Electronic Signatures in Global and National Commerce Act (ESIGN) and Uniform Electronic Transactions Act (UETA).
+- **Cryptographic Digital Seal:** On execution, the system computes and appends a `SIG-SHA256` tamper-evident seal recording:
+  - Signer Name and Email
+  - Exact Timestamp (ISO 8601 UTC)
+  - Verified Role and PRO affiliation
+  - Digital IP / Client User-Agent hash
+  - Document revision checksum
+
+### 9.39.5 Milestone Escrow Management & Payout Settlement
+For agreements with financial consideration or advances:
+- **Escrow Vaulting:** Funds are deposited and held securely in the smart escrow registry (`tunemavens_escrow_registry`).
+- **Milestone Verification:** Each contract defines release milestones (e.g., "DDEX Delivery & Master Clearance", "Sync Broadcast Clearance", "Venue Soundcheck Verification").
+- **1-Click Settlement:** Authorized parties can trigger "Release Funds". Released amounts flow immediately into the creator's payout balance (`payoutBalance` in `localStorage`), reflecting instantly in the Treasury & Payout Gateway without administrative delay.
+
+### 9.39.6 Cross-Portal State Synchronization & Export
+- **Reactive DOM Events:** Contract creations, edits, signatures, and escrow releases broadcast custom DOM events (`tunemavens:contract_updated`), allowing multiple browser tabs, windows, or embedded iframe views to update instantaneously.
+- **Printable Legal PDF Export:** Built-in `Print / PDF Export` action renders clean, print-optimized document formatting that automatically strips platform sidebars, buttons, and navigation bars, producing court-admissible printed contracts.
+
 
 
