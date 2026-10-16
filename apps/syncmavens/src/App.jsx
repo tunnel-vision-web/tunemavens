@@ -1055,12 +1055,10 @@ function AppContent() {
         <main className="dashboard-main-content">
           <header className="dashboard-topbar">
             <div className="dashboard-topbar-title">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <RiGlobalLine style={{ color: '#00f2fe' }} />
-                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
-                  SERVING FROM: <strong>syncmavens.com</strong> | UTILITY BACKEND INTERFACE
-                </span>
-              </div>
+              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Sync Console</span>
+              <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
+                {activeUser?.brand_name || activeUser?.name || 'SyncMavens'}
+              </h1>
             </div>
             
             <div className="dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

@@ -1496,12 +1496,10 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       <main className="dashboard-main-content">
         <header className="dashboard-topbar">
           <div className="dashboard-topbar-title">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <RiGlobalLine style={{ color: '#00f2fe' }} />
-              <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
-                SERVING FROM: <strong>tunestream.co</strong> | ALIAS: <strong>tunestream.tunemavens.com</strong>
-              </span>
-            </div>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Stream Console</span>
+            <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
+              {activeUser?.brand_name || activeUser?.name || 'TuneStream'}
+            </h1>
           </div>
           <div className="dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div className="search-bar" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
