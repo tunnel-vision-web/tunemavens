@@ -376,6 +376,43 @@ export default function LabelTeamRosterPanel({
     if (typeof onSelectArtist === 'function') {
       onSelectArtist(artist);
     }
+    try {
+      localStorage.setItem('tunemavens_active_artist', JSON.stringify(artist));
+      localStorage.setItem('last_saved_epk_subdomain', artist.subdomain);
+      window.dispatchEvent(new CustomEvent('tunemavens:artist_selected', { detail: artist }));
+    } catch (_) {}
+
+    const isPortal = typeof window !== 'undefined' && (
+      window.location.port === '3000' ||
+      (!window.location.port && !window.location.hostname.includes('tunestream') && !window.location.hostname.includes('syncmavens'))
+    );
+
+    if (targetTab === 'epk-builder') {
+      if (isPortal && typeof setActiveTab === 'function') {
+        setActiveTab('epk-builder');
+      } else {
+        const epkBuilderUrl = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+          ? 'http://localhost:3000/#/dashboard?tab=epk-builder'
+          : 'https://tunemavens.com/#/dashboard?tab=epk-builder';
+        window.open(epkBuilderUrl, '_blank');
+      }
+      return;
+    }
+
+    if (targetTab === 'catalog') {
+      if (typeof setActiveTab === 'function') {
+        setActiveTab('catalog');
+      }
+      return;
+    }
+
+    if (targetTab === 'sync') {
+      if (typeof setActiveTab === 'function') {
+        setActiveTab('sync');
+      }
+      return;
+    }
+
     if (typeof setActiveTab === 'function') {
       setActiveTab(targetTab);
     }
@@ -451,7 +488,7 @@ export default function LabelTeamRosterPanel({
                 color: '#ffffff',
                 border: 'none',
                 padding: '7px 14px',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -464,7 +501,7 @@ export default function LabelTeamRosterPanel({
             </button>
 
             {/* Quick Plan Switcher Simulator for Sandbox/Admin */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0b1126', padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0b1126', padding: '6px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
               <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, padding: '0 6px' }}>PLAN:</span>
               {Object.keys(LABEL_TIERS).map(key => {
                 const tier = LABEL_TIERS[key];
@@ -498,7 +535,7 @@ export default function LabelTeamRosterPanel({
         {/* Capacity Gauges Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
           {/* Team Seats Gauge */}
-          <div style={{ background: '#0f172a', padding: '16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ background: '#0f172a', padding: '16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <RiTeamFill size={16} style={{ color: '#0ea5e9' }} />
@@ -509,7 +546,7 @@ export default function LabelTeamRosterPanel({
               </span>
             </div>
             {/* Flat Progress Bar */}
-            <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+            <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '3px', overflow: 'hidden', marginBottom: '10px' }}>
               <div style={{
                 width: `${seatsPct}%`,
                 height: '100%',
@@ -563,7 +600,7 @@ export default function LabelTeamRosterPanel({
           </div>
 
           {/* Signed Artist Roster Gauge */}
-          <div style={{ background: '#0f172a', padding: '16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ background: '#0f172a', padding: '16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <RiDiscFill size={16} style={{ color: '#a855f7' }} />
@@ -574,7 +611,7 @@ export default function LabelTeamRosterPanel({
               </span>
             </div>
             {/* Flat Progress Bar */}
-            <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+            <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '3px', overflow: 'hidden', marginBottom: '10px' }}>
               <div style={{
                 width: `${rosterPct}%`,
                 height: '100%',
@@ -649,7 +686,7 @@ export default function LabelTeamRosterPanel({
               border: `1px solid ${isAuthorizedUser ? '#10b981' : '#ef4444'}`,
               color: isAuthorizedUser ? '#10b981' : '#ef4444',
               padding: '6px 12px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               fontSize: '11px',
               fontWeight: 700
             }}>
@@ -669,7 +706,7 @@ export default function LabelTeamRosterPanel({
                 background: '#10b981',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -705,7 +742,7 @@ export default function LabelTeamRosterPanel({
         </div>
 
         {/* Members Table */}
-        <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px' }}>
+        <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
               <tr style={{ background: '#0a0f1d', borderBottom: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>
@@ -774,7 +811,7 @@ export default function LabelTeamRosterPanel({
                         color: member.status === 'Active' ? '#10b981' : '#ef4444',
                         background: member.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
                         padding: '3px 8px',
-                        borderRadius: '4px',
+                        borderRadius: '3px',
                         border: `1px solid ${member.status === 'Active' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
                         fontSize: '11px',
                         fontWeight: 700
@@ -794,7 +831,7 @@ export default function LabelTeamRosterPanel({
                             border: '1px solid rgba(255,255,255,0.08)',
                             color: '#94a3b8',
                             padding: '6px',
-                            borderRadius: '4px',
+                            borderRadius: '3px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -814,7 +851,7 @@ export default function LabelTeamRosterPanel({
                             border: `1px solid ${member.status === 'Active' ? '#ef4444' : '#10b981'}`,
                             color: member.status === 'Active' ? '#ef4444' : '#10b981',
                             padding: '5px 10px',
-                            borderRadius: '4px',
+                            borderRadius: '3px',
                             fontSize: '11px',
                             fontWeight: 700,
                             cursor: 'pointer'
@@ -833,7 +870,7 @@ export default function LabelTeamRosterPanel({
                             border: '1px solid rgba(239,68,68,0.3)',
                             color: '#ef4444',
                             padding: '6px',
-                            borderRadius: '4px',
+                            borderRadius: '3px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -885,46 +922,109 @@ export default function LabelTeamRosterPanel({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: '16px' }}>
           {rosterArtists.map(artist => {
             const isCurrentlyActive = (activeArtist?.subdomain || '').toLowerCase() === (artist.subdomain || '').toLowerCase();
+            const epkLiveUrl = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+              ? `http://localhost:3000/#/epk/${artist.subdomain}`
+              : `https://tunemavens.com/#/epk/${artist.subdomain}`;
+
             return (
               <div
                 key={artist.subdomain}
+                onClick={() => {
+                  if (typeof onSelectArtist === 'function') onSelectArtist(artist);
+                  try {
+                    localStorage.setItem('tunemavens_active_artist', JSON.stringify(artist));
+                    localStorage.setItem('last_saved_epk_subdomain', artist.subdomain);
+                    window.dispatchEvent(new CustomEvent('tunemavens:artist_selected', { detail: artist }));
+                  } catch (_) {}
+                }}
                 style={{
                   background: '#0a0f1d',
                   border: isCurrentlyActive ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   padding: '16px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '12px'
+                  gap: '12px',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'border-color 0.15s ease, transform 0.15s ease'
                 }}
+                title={`Click to set ${artist.name} as active artist`}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: '#1e293b', flexShrink: 0 }}>
-                    <img
-                      src={artist.avatar || '/heroes/ndufo_hero_slide1_retina.jpg'}
-                      alt={artist.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => { e.target.src = '/heroes/ndufo_hero_slide1_retina.jpg'; }}
-                    />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#ffffff' }}>
-                        {artist.name}
-                      </span>
-                      {isCurrentlyActive && (
-                        <span style={{ fontSize: '10px', background: 'rgba(168,85,247,0.2)', color: '#c084fc', padding: '1px 6px', borderRadius: '3px', fontWeight: 700 }}>
-                          ACTIVE
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: '#1e293b', flexShrink: 0 }}>
+                      <img
+                        src={artist.avatar || '/heroes/ndufo_hero_slide1_retina.jpg'}
+                        alt={artist.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => { e.target.src = '/heroes/ndufo_hero_slide1_retina.jpg'; }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#ffffff' }}>
+                          {artist.name}
                         </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#22d3ee', marginTop: '2px' }}>
-                      {artist.subdomain}.tunemavens.com
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                      {artist.genre || 'Afro-fusion'} • {artist.role || 'Signed Artist'}
+                        {isCurrentlyActive && (
+                          <span style={{ fontSize: '10px', background: 'rgba(168,85,247,0.2)', color: '#c084fc', padding: '1px 6px', borderRadius: '3px', fontWeight: 700 }}>
+                            ACTIVE
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ marginTop: '2px' }}>
+                        <a
+                          href={epkLiveUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            fontSize: '11px',
+                            color: '#22d3ee',
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            cursor: 'pointer'
+                          }}
+                          title={`Open live EPK Web World: ${artist.subdomain}.tunemavens.com`}
+                        >
+                          <span>{artist.subdomain}.tunemavens.com</span>
+                          <RiExternalLinkFill size={10} style={{ opacity: 0.8 }} />
+                        </a>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                        {artist.genre || 'Afro-fusion'} • {artist.role || 'Signed Artist'}
+                      </div>
                     </div>
                   </div>
+
+                  {isAuthorizedUser && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveArtist(artist.subdomain);
+                      }}
+                      title={`Remove ${artist.name} from label roster`}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: '3px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'color 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; }}
+                    >
+                      <RiDeleteBin6Line size={14} />
+                    </button>
+                  )}
                 </div>
 
                 <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -935,54 +1035,78 @@ export default function LabelTeamRosterPanel({
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
                   <button
                     type="button"
-                    onClick={() => handleJumpToApp(artist, 'epk-builder')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleJumpToApp(artist, 'epk-builder');
+                    }}
                     style={{
                       background: '#1e293b',
                       color: '#38bdf8',
-                      border: '1px solid rgba(56, 189, 248, 0.2)',
+                      border: '1px solid rgba(56, 189, 248, 0.25)',
                       padding: '6px 8px',
                       borderRadius: '3px',
                       fontSize: '11px',
                       fontWeight: 700,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease'
                     }}
                     title={`Open ${artist.name} in EPK Builder`}
                   >
-                    EPK Builder
+                    <span>EPK Builder</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleJumpToApp(artist, 'catalog')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleJumpToApp(artist, 'catalog');
+                    }}
                     style={{
                       background: '#1e293b',
                       color: '#a855f7',
-                      border: '1px solid rgba(168, 85, 247, 0.2)',
+                      border: '1px solid rgba(168, 85, 247, 0.25)',
                       padding: '6px 8px',
                       borderRadius: '3px',
                       fontSize: '11px',
                       fontWeight: 700,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease'
                     }}
                     title={`Manage ${artist.name} Catalogue`}
                   >
-                    Catalogue
+                    <span>Catalogue</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleJumpToApp(artist, 'sync')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleJumpToApp(artist, 'sync');
+                    }}
                     style={{
                       background: '#1e293b',
                       color: '#10b981',
-                      border: '1px solid rgba(16, 185, 129, 0.2)',
+                      border: '1px solid rgba(16, 185, 129, 0.25)',
                       padding: '6px 8px',
                       borderRadius: '3px',
                       fontSize: '11px',
                       fontWeight: 700,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease'
                     }}
                     title={`Pitch ${artist.name} tracks to Sync Briefs`}
                   >
-                    Sync Hub
+                    <span>Sync Hub</span>
                   </button>
                 </div>
               </div>
@@ -1010,7 +1134,7 @@ export default function LabelTeamRosterPanel({
           <div style={{
             background: '#090e24',
             border: '1px solid rgba(14, 165, 233, 0.3)',
-            borderRadius: '8px',
+            borderRadius: '3px',
             maxWidth: '480px',
             width: '100%',
             padding: '24px',
@@ -1035,7 +1159,7 @@ export default function LabelTeamRosterPanel({
             </p>
 
             {inviteError && (
-              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '4px', fontSize: '12px', marginBottom: '14px' }}>
+              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '3px', fontSize: '12px', marginBottom: '14px' }}>
                 {inviteError}
               </div>
             )}
@@ -1112,13 +1236,13 @@ export default function LabelTeamRosterPanel({
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(false)}
-                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#cbd5e1', padding: '8px 16px', borderRadius: '4px', fontSize: '12.5px', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#cbd5e1', padding: '8px 16px', borderRadius: '3px', fontSize: '12.5px', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '4px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '3px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
                 >
                   Confirm &amp; Send Invite
                 </button>
@@ -1147,7 +1271,7 @@ export default function LabelTeamRosterPanel({
           <div style={{
             background: '#090e24',
             border: '1px solid rgba(14, 165, 233, 0.3)',
-            borderRadius: '8px',
+            borderRadius: '3px',
             maxWidth: '500px',
             width: '100%',
             padding: '24px',
@@ -1172,7 +1296,7 @@ export default function LabelTeamRosterPanel({
             </p>
 
             {editMemberError && (
-              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '4px', fontSize: '12px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '3px', fontSize: '12px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <RiAlertFill size={15} />
                 <span>{editMemberError}</span>
               </div>
@@ -1265,13 +1389,13 @@ export default function LabelTeamRosterPanel({
                 <button
                   type="button"
                   onClick={() => setShowEditMemberModal(false)}
-                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#cbd5e1', padding: '8px 16px', borderRadius: '4px', fontSize: '12.5px', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#cbd5e1', padding: '8px 16px', borderRadius: '3px', fontSize: '12.5px', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '4px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '3px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
                 >
                   Save Collaborator Changes
                 </button>
@@ -1300,7 +1424,7 @@ export default function LabelTeamRosterPanel({
           <div style={{
             background: '#090e24',
             border: '1px solid rgba(168, 85, 247, 0.35)',
-            borderRadius: '8px',
+            borderRadius: '3px',
             maxWidth: '480px',
             width: '100%',
             padding: '24px',
@@ -1325,7 +1449,7 @@ export default function LabelTeamRosterPanel({
             </p>
 
             {artistError && (
-              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '4px', fontSize: '12px', marginBottom: '14px' }}>
+              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '3px', fontSize: '12px', marginBottom: '14px' }}>
                 {artistError}
               </div>
             )}
@@ -1404,13 +1528,13 @@ export default function LabelTeamRosterPanel({
                 <button
                   type="button"
                   onClick={() => setShowArtistModal(false)}
-                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#cbd5e1', padding: '8px 16px', borderRadius: '4px', fontSize: '12.5px', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#cbd5e1', padding: '8px 16px', borderRadius: '3px', fontSize: '12.5px', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '4px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '3px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}
                 >
                   Sign &amp; Add to Roster
                 </button>

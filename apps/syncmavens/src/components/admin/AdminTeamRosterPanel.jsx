@@ -552,7 +552,7 @@ export default function AdminTeamRosterPanel({
       <div style={{
         background: '#090e24',
         border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '8px',
+        borderRadius: '3px',
         padding: '24px',
         marginBottom: '24px'
       }}>
@@ -597,7 +597,7 @@ export default function AdminTeamRosterPanel({
                 color: '#ffffff',
                 border: 'none',
                 padding: '8px 16px',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -616,7 +616,7 @@ export default function AdminTeamRosterPanel({
               gap: '6px',
               background: '#0b1126',
               padding: '6px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               border: '1px solid rgba(255,255,255,0.08)'
             }}>
               <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, padding: '0 6px' }}>ALLOCATION:</span>
@@ -670,7 +670,7 @@ export default function AdminTeamRosterPanel({
               </span>
             </div>
             {/* Flat Progress Bar */}
-            <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+            <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '3px', overflow: 'hidden', marginBottom: '10px' }}>
               <div style={{
                 width: `${seatsPct}%`,
                 height: '100%',
@@ -763,7 +763,7 @@ export default function AdminTeamRosterPanel({
       <div style={{
         background: '#090e24',
         border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '8px',
+        borderRadius: '3px',
         padding: '16px',
         marginBottom: '20px',
         display: 'flex',
@@ -784,7 +784,7 @@ export default function AdminTeamRosterPanel({
                 width: '100%',
                 background: '#0f172a',
                 border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 padding: '8px 12px 8px 36px',
                 color: '#ffffff',
                 fontSize: '12.5px',
@@ -801,7 +801,7 @@ export default function AdminTeamRosterPanel({
             style={{
               background: '#0f172a',
               border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '4px',
+              borderRadius: '3px',
               padding: '8px 12px',
               color: '#ffffff',
               fontSize: '12.5px',
@@ -823,7 +823,7 @@ export default function AdminTeamRosterPanel({
             border: `1px solid ${isAuthorizedAdmin ? '#10b981' : '#ef4444'}`,
             color: isAuthorizedAdmin ? '#10b981' : '#ef4444',
             padding: '7px 12px',
-            borderRadius: '4px',
+            borderRadius: '3px',
             fontSize: '11px',
             fontWeight: 700
           }}>
@@ -851,7 +851,7 @@ export default function AdminTeamRosterPanel({
               color: '#ffffff',
               border: 'none',
               padding: '9px 18px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               fontSize: '13px',
               fontWeight: 700,
               cursor: 'pointer',
@@ -916,7 +916,7 @@ export default function AdminTeamRosterPanel({
       <div style={{
         background: '#090e24',
         border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '8px',
+        borderRadius: '3px',
         overflow: 'hidden'
       }}>
         <div style={{ overflowX: 'auto' }}>
@@ -958,7 +958,7 @@ export default function AdminTeamRosterPanel({
                           <div style={{
                             width: '38px',
                             height: '38px',
-                            borderRadius: '4px',
+                            borderRadius: '3px',
                             background: clearanceInfo.badgeBg,
                             border: `1px solid ${clearanceInfo.color}`,
                             color: clearanceInfo.color,
@@ -999,7 +999,7 @@ export default function AdminTeamRosterPanel({
                           alignItems: 'center',
                           gap: '6px',
                           padding: '4px 10px',
-                          borderRadius: '4px',
+                          borderRadius: '3px',
                           background: clearanceInfo.badgeBg,
                           border: `1px solid ${clearanceInfo.color}`,
                           color: clearanceInfo.color,
@@ -1069,7 +1069,7 @@ export default function AdminTeamRosterPanel({
                               border: '1px solid rgba(255,255,255,0.08)',
                               color: '#94a3b8',
                               padding: '6px',
-                              borderRadius: '4px',
+                              borderRadius: '3px',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
@@ -1088,7 +1088,7 @@ export default function AdminTeamRosterPanel({
                               border: `1px solid ${member.status === 'Active' ? '#ef4444' : '#10b981'}`,
                               color: member.status === 'Active' ? '#ef4444' : '#10b981',
                               padding: '5px 10px',
-                              borderRadius: '4px',
+                              borderRadius: '3px',
                               fontSize: '11px',
                               fontWeight: 700,
                               cursor: 'pointer'
@@ -1106,7 +1106,7 @@ export default function AdminTeamRosterPanel({
                               border: '1px solid rgba(239,68,68,0.3)',
                               color: '#ef4444',
                               padding: '6px',
-                              borderRadius: '4px',
+                              borderRadius: '3px',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
@@ -1131,7 +1131,7 @@ export default function AdminTeamRosterPanel({
         marginTop: '28px',
         background: '#090e24',
         border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '8px',
+        borderRadius: '3px',
         padding: '24px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
@@ -1205,7 +1205,7 @@ export default function AdminTeamRosterPanel({
           <div style={{
             background: '#090e24',
             border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '8px',
+            borderRadius: '3px',
             width: '100%',
             maxWidth: '620px',
             maxHeight: '90vh',
@@ -1215,7 +1215,7 @@ export default function AdminTeamRosterPanel({
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ background: '#0ea5e9', color: '#ffffff', padding: '6px', borderRadius: '4px' }}>
+                <div style={{ background: '#0ea5e9', color: '#ffffff', padding: '6px', borderRadius: '3px' }}>
                   <RiUserAddFill size={18} />
                 </div>
                 <div>
@@ -1242,7 +1242,7 @@ export default function AdminTeamRosterPanel({
                 border: '1px solid #ef4444',
                 color: '#ef4444',
                 padding: '10px 14px',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 fontSize: '12px',
                 marginBottom: '16px',
                 display: 'flex',
@@ -1269,7 +1269,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1293,7 +1293,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1315,7 +1315,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1339,7 +1339,7 @@ export default function AdminTeamRosterPanel({
                   <div style={{
                     background: '#0b1126',
                     border: '1px solid rgba(34, 211, 238, 0.25)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '12px 14px',
                     marginBottom: '16px'
                   }}>
@@ -1398,7 +1398,7 @@ export default function AdminTeamRosterPanel({
                           border: `1px solid ${isSelected ? tier.color : 'rgba(255,255,255,0.08)'}`,
                           background: isSelected ? tier.badgeBg : '#0f172a',
                           padding: '10px',
-                          borderRadius: '4px',
+                          borderRadius: '3px',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease'
                         }}
@@ -1425,7 +1425,7 @@ export default function AdminTeamRosterPanel({
                   overflowY: 'auto',
                   background: '#0b1126',
                   border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   padding: '8px'
                 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
@@ -1478,7 +1478,7 @@ export default function AdminTeamRosterPanel({
                   onClick={() => setShowInviteModal(false)}
                   style={{
                     padding: '8px 16px',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     border: '1px solid rgba(255,255,255,0.12)',
                     background: 'transparent',
                     color: '#94a3b8',
@@ -1493,7 +1493,7 @@ export default function AdminTeamRosterPanel({
                   type="submit"
                   style={{
                     padding: '8px 20px',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     border: 'none',
                     background: '#0ea5e9',
                     color: '#ffffff',
@@ -1529,7 +1529,7 @@ export default function AdminTeamRosterPanel({
           <div style={{
             background: '#090e24',
             border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '8px',
+            borderRadius: '3px',
             width: '100%',
             maxWidth: '600px',
             maxHeight: '90vh',
@@ -1560,7 +1560,7 @@ export default function AdminTeamRosterPanel({
                 border: '1px solid #ef4444',
                 color: '#ef4444',
                 padding: '10px 14px',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 fontSize: '12px',
                 marginBottom: '16px',
                 display: 'flex',
@@ -1586,7 +1586,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1609,7 +1609,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1632,7 +1632,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1654,7 +1654,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1679,7 +1679,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1704,7 +1704,7 @@ export default function AdminTeamRosterPanel({
                     width: '100%',
                     background: '#0f172a',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     padding: '9px 12px',
                     color: '#ffffff',
                     fontSize: '13px',
@@ -1726,7 +1726,7 @@ export default function AdminTeamRosterPanel({
                   overflowY: 'auto',
                   background: '#0b1126',
                   border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   padding: '8px'
                 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
@@ -1779,7 +1779,7 @@ export default function AdminTeamRosterPanel({
                   onClick={() => setShowEditModal(false)}
                   style={{
                     padding: '8px 16px',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     border: '1px solid rgba(255,255,255,0.12)',
                     background: 'transparent',
                     color: '#94a3b8',
@@ -1794,7 +1794,7 @@ export default function AdminTeamRosterPanel({
                   type="submit"
                   style={{
                     padding: '8px 20px',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     border: 'none',
                     background: '#0ea5e9',
                     color: '#ffffff',

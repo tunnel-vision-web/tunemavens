@@ -221,6 +221,23 @@ function AppContent() {
   // FAQ state
   const [openFaq, setOpenFaq] = useState(null);
 
+  const [activeArtist, setActiveArtist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tunemavens_active_artist');
+      return saved ? JSON.parse(saved) : null;
+    } catch (_) {
+      return null;
+    }
+  });
+
+  const handleSwitchArtist = (artist) => {
+    if (!artist) return;
+    setActiveArtist(artist);
+    try {
+      localStorage.setItem('tunemavens_active_artist', JSON.stringify(artist));
+    } catch (_) {}
+  };
+
   // Match Simulator states
   const [simulatorForm, setSimulatorForm] = useState({ title: '', artist: '', genre: 'Synthwave', mood: 'Action', vocals: 'Instrumental' });
   const [simulating, setSimulating] = useState(false);
@@ -2118,8 +2135,20 @@ function AppContent() {
 
             {activeTab === 'splits' && <TuneLedgerSplitCascadePanel sessionUser={sessionUser} />}
             {activeTab === 'affiliates' && <AffiliateAdminPanel sessionUser={sessionUser} />}
-            {activeTab === 'label-team' && <LabelTeamRosterPanel sessionUser={sessionUser} />}
-            {activeTab === 'admin-team' && <AdminTeamRosterPanel sessionUser={sessionUser} />}
+            {activeTab === 'label-team' && (
+              <LabelTeamRosterPanel
+                sessionUser={sessionUser}
+                setActiveTab={setActiveTab}
+                activeArtist={activeArtist}
+                onSelectArtist={handleSwitchArtist}
+              />
+            )}
+            {activeTab === 'admin-team' && (
+              <AdminTeamRosterPanel
+                sessionUser={sessionUser}
+                setActiveTab={setActiveTab}
+              />
+            )}
             {activeTab === 'support' && <SupportTicketsPanel sessionUser={sessionUser} />}
             {(activeTab === 'sync_marketplace' || activeTab === 'sync') && <SyncMarketplacePanel sessionUser={sessionUser} />}
 

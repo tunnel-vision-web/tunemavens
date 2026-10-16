@@ -252,7 +252,6 @@ export function getUnifiedCatalog() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Return parsed tracks with normalized keys
         return parsed.map(t => ({
           ...t,
           cover: t.cover || t.coverArt,
@@ -270,7 +269,6 @@ export function getUnifiedCatalog() {
     console.warn('Failed to parse catalog_tracks from localStorage:', err);
   }
 
-  // Fallback to Authoritative List and store to localStorage
   if (typeof localStorage !== 'undefined') {
     try {
       localStorage.setItem('catalog_tracks', JSON.stringify(AUTHORITATIVE_CATALOG_TRACKS));

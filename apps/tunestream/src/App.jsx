@@ -1061,6 +1061,23 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     return () => window.removeEventListener('tunemavens:catalog_updated', handleCatUpdate);
   }, []);
 
+  const [activeArtist, setActiveArtist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tunemavens_active_artist');
+      return saved ? JSON.parse(saved) : null;
+    } catch (_) {
+      return null;
+    }
+  });
+
+  const handleSwitchArtist = (artist) => {
+    if (!artist) return;
+    setActiveArtist(artist);
+    try {
+      localStorage.setItem('tunemavens_active_artist', JSON.stringify(artist));
+    } catch (_) {}
+  };
+
   const togglePlay = () => setIsPlaying(!isPlaying);
   
   const handleTrackSelect = (track) => {
@@ -1245,6 +1262,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         );
       case 'radio':
         return <TuneStreamRadioPanel />;
+      case 'catalog':
       case 'my-catalog':
         return (
           <TuneStreamCatalogPanel
@@ -1276,9 +1294,21 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       case 'affiliates':
         return <AffiliateAdminPanel sessionUser={activeUser} />;
       case 'label-team':
-        return <LabelTeamRosterPanel sessionUser={activeUser} />;
+        return (
+          <LabelTeamRosterPanel
+            sessionUser={activeUser}
+            setActiveTab={setActiveTab}
+            activeArtist={activeArtist}
+            onSelectArtist={handleSwitchArtist}
+          />
+        );
       case 'admin-team':
-        return <AdminTeamRosterPanel sessionUser={activeUser} />;
+        return (
+          <AdminTeamRosterPanel
+            sessionUser={activeUser}
+            setActiveTab={setActiveTab}
+          />
+        );
       case 'companion':
         return (
           <TuneCompanionApp
