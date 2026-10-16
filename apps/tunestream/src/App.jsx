@@ -13,7 +13,7 @@ import {
   RiCheckLine, RiSparklingLine, RiCoinsFill, RiExchangeDollarLine,
   RiFolderMusicLine, RiQuestionLine, RiBriefcaseLine, RiArrowDownSFill,
   RiApps2Fill, RiAppleFill, RiHomeFill, RiBarChartFill, RiGlobalFill, RiArrowLeftFill, RiCloseLine,
-  RiLineChartFill
+  RiLineChartFill, RiFileTextFill
 } from 'react-icons/ri';
 import tsLogo from './assets/tunestream-logo.png';
 import tcLogo from './assets/tunecompanion-logo.png';
@@ -38,6 +38,7 @@ import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx';
 import TuneLedgerSplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx';
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx';
 import TuneCompanionApp from './components/companion/TuneCompanionApp.jsx';
+import MyContractsPanel from './components/contracts/MyContractsPanel.jsx';
 import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog';
 
 export const PERSONA_ROLES = [
@@ -1129,6 +1130,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     // Splits & Ledgers
     if (['creator', 'label', 'admin', 'affiliate'].includes(userRole)) {
       add('Splits & Ledgers', { id: 'splits', label: 'TuneLedger Splits', icon: RiExchangeDollarLine, color: '#22d3ee' });
+      add('Splits & Ledgers', { id: 'contracts', label: 'MyContracts', icon: RiFileTextFill, color: '#38bdf8', badge: 'LEGAL' });
       add('Splits & Ledgers', { id: 'companion', label: 'TuneCompanion Ledger', icon: RiLineChartFill, iconImg: tcLogo, color: '#c084fc', badge: 'MOBILE' });
       add('Splits & Ledgers', { id: 'affiliates', label: 'Affiliate Hub', icon: RiSparklingLine, color: '#22d3ee' });
     }
@@ -1291,6 +1293,10 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         return <SyncMarketplacePanel sessionUser={activeUser} />;
       case 'splits':
         return <TuneLedgerSplitCascadePanel sessionUser={activeUser} />;
+      case 'contracts':
+      case 'mycontracts':
+      case 'escrow':
+        return <MyContractsPanel sessionUser={activeUser} setActiveTab={setActiveTab} />;
       case 'affiliates':
         return <AffiliateAdminPanel sessionUser={activeUser} />;
       case 'label-team':

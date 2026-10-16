@@ -7,7 +7,8 @@ import {
   RiArrowLeftSFill, RiArrowRightSFill, RiFileListLine, RiQuestionLine,
   RiNetflixFill, RiMovieLine, RiVolumeUpFill, RiMusicFill, RiUserFill,
   RiPlayFill, RiPauseFill, RiAlertLine, RiCheckLine, RiLoader4Line, RiMenuFill, RiCloseFill,
-  RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiLogoutBoxRFill, RiCoinsFill
+  RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiLogoutBoxRFill, RiCoinsFill,
+  RiFileTextFill
 } from 'react-icons/ri';
 import { 
   SiSpotify, SiApplemusic, SiYoutube, SiTiktok, SiTidal, SiDeezer 
@@ -36,6 +37,7 @@ import AffiliateAdminPanel from './components/affiliates/AffiliateAdminPanel.jsx
 import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx';
 import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx';
 import TuneLedgerSplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx';
+import MyContractsPanel from './components/contracts/MyContractsPanel.jsx';
 import { DEFAULT_ACTIVE_APPS_BY_ROLE, reconcileUserApps } from './lib/activatedApps.js';
 import { authApi, tokenStore } from './lib/api.js';
 import LoginView from './views/auth/LoginView.jsx';
@@ -885,12 +887,12 @@ function AppContent() {
                     </li>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('escrow_splits')} 
-                        className={`dashboard-nav-item ${activeTab === 'escrow_splits' ? 'active' : ''}`}
-                        title="Escrow Split Logs"
+                        onClick={() => setActiveTab('contracts')} 
+                        className={`dashboard-nav-item ${(activeTab === 'contracts' || activeTab === 'escrow_splits' || activeTab === 'mycontracts') ? 'active' : ''}`}
+                        title="MyContracts & Escrow"
                       >
-                        <RiExchangeDollarLine size={16} />
-                        {!collapsed && "Escrow Split Logs"}
+                        <RiFileTextFill size={16} />
+                        {!collapsed && "MyContracts & Escrow"}
                       </button>
                     </li>
                   </>
@@ -946,6 +948,16 @@ function AppContent() {
                   >
                     <RiSparklingLine size={16} style={{ color: '#22d3ee' }} />
                     {!collapsed && "Affiliate Hub"}
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('contracts')} 
+                    className={`dashboard-nav-item ${(activeTab === 'contracts' || activeTab === 'mycontracts') ? 'active' : ''}`}
+                    title="MyContracts Smart Legal Vault"
+                  >
+                    <RiFileTextFill size={16} style={{ color: '#38bdf8' }} />
+                    {!collapsed && "MyContracts"}
                   </button>
                 </li>
                 {(userRole === 'admin' || userRole === 'label') && (
@@ -1740,133 +1752,8 @@ function AppContent() {
               </div>
             )}
 
-            {activeTab === 'escrow_splits' && (
-              <div style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px', padding: '24px' }}>
-                <h3 style={{ fontSize: '16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><RiExchangeDollarLine style={{ color: '#8b5cf6' }} /> Escrow Splits Logs</h3>
-                <p style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '20px' }}>License buyout contract split cascades. Releases funds to creator wallets automatically.</p>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  {pitchesReceived.filter(p => p.status === 'Approved').length === 0 ? (
-                    <div style={{ color: '#64748b', fontSize: '13px', textAlign: 'center', padding: '24px', border: '1px dashed rgba(255,255,255,0.06)' }}>
-                      No active approved placements currently pending escrow disbursal.
-                    </div>
-                  ) : (
-                    pitchesReceived.filter(p => p.status === 'Approved').map(deal => {
-                      const matchingBrief = briefs.find(b => b.project === deal.briefTitle);
-                      const budgetStr = matchingBrief ? matchingBrief.budget.replace(/[^0-9]/g, '') : '15000';
-                      const dealBudget = parseInt(budgetStr, 10) || 15000;
-                      
-                      const agencyShare = Math.round(dealBudget * 0.3);
-                      const remainder = dealBudget - agencyShare;
-                      const smShare = Math.round(remainder * 0.25);
-                      const creatorShare = remainder - smShare;
-                      
-                      const isSettled = deal.disbursalStatus === 'SETTLED';
-
-                      const handleRelease = () => {
-                        if (isSettled) return;
-                        
-                        setPitchesReceived(pitchesReceived.map(p => p.id === deal.id ? { ...p, disbursalStatus: 'SETTLED' } : p));
-                        setSyncFeesInvoiced(prev => prev + dealBudget);
-                        setAccruedRoyalties(prev => prev + creatorShare);
-                        
-                        alert(`Escrow funds disbursed successfully!\n\nBuyout: $${dealBudget.toLocaleString()}\n- Partner Network Agency (30%): $${agencyShare.toLocaleString()}\n- SyncMavens Platform Fee (25% of net): $${smShare.toLocaleString()}\n- Creator Split Waterfall (52.5% of gross): $${creatorShare.toLocaleString()} credited to Artist Ledger.\n\nStatus: SETTLED`);
-                      };
-
-                      return (
-                        <div key={deal.id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '20px', background: 'rgba(255,255,255,0.01)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '8px' }}>
-                            <div>
-                              <strong style={{ fontSize: '14px', color: '#fff' }}>{deal.briefTitle}</strong>
-                              <span style={{ display: 'block', fontSize: '11px', color: '#64748b' }}>Artist: {deal.artist} | Track: {deal.songTitle}</span>
-                            </div>
-                            <strong style={{ color: '#10b981', fontSize: '16px' }}>${dealBudget.toLocaleString()} Buyout</strong>
-                          </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', fontSize: '12px', marginBottom: '16px' }}>
-                            <div>
-                              <span style={{ color: '#64748b', display: 'block', fontSize: '10px' }}>Agency Partner (30%):</span>
-                              <strong>${agencyShare.toLocaleString()}</strong>
-                            </div>
-                            <div>
-                              <span style={{ color: '#64748b', display: 'block', fontSize: '10px' }}>SyncMavens Admin (25%):</span>
-                              <strong>${smShare.toLocaleString()}</strong>
-                            </div>
-                            <div>
-                              <span style={{ color: '#64748b', display: 'block', fontSize: '10px' }}>Creator Payout (45%):</span>
-                              <strong style={{ color: '#00f2fe' }}>${creatorShare.toLocaleString()}</strong>
-                            </div>
-                            <div>
-                              <span style={{ color: '#64748b', display: 'block', fontSize: '10px' }}>Disbursal Status:</span>
-                              <strong style={{ color: isSettled ? '#10b981' : '#eab308' }}>{deal.disbursalStatus || 'ESCROW HOLD'}</strong>
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', gap: '10px' }}>
-                            <button 
-                              onClick={handleRelease} 
-                              disabled={isSettled}
-                              className="btn-get-signed" 
-                              style={{ 
-                                flex: 1,
-                                padding: '8px 16px', 
-                                background: isSettled ? 'rgba(255,255,255,0.05)' : '#10b981', 
-                                color: isSettled ? '#64748b' : '#000', 
-                                border: 'none', 
-                                borderRadius: '3px',
-                                cursor: isSettled ? 'not-allowed' : 'pointer'
-                              }}
-                            >
-                              {isSettled ? 'Waterfall Settled' : 'Release Escrow & Disburse Waterfall'}
-                            </button>
-
-                            {isSettled && (
-                              <button 
-                                onClick={() => {
-                                  const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<CueSheet xmlns="http://www.ascap.com/cuesheet">
-  <Header>
-    <Title>${deal.briefTitle}</Title>
-    <Publisher>TuneMavens Publishing</Publisher>
-    <Status>SETTLED</Status>
-  </Header>
-  <Cues>
-    <Cue>
-      <Number>1</Number>
-      <Title>${deal.songTitle}</Title>
-      <Composer>${deal.artist}</Composer>
-      <Publisher>TuneMavens Publishing</Publisher>
-      <Duration>Full Sync</Duration>
-      <Usage>BI</Usage>
-      <Split ComposerShare="50%" PublisherShare="50%" />
-    </Cue>
-  </Cues>
-</CueSheet>`;
-
-                                  const blob = new Blob([xmlContent], { type: 'text/xml' });
-                                  const url = URL.createObjectURL(blob);
-                                  const link = document.createElement('a');
-                                  link.href = url;
-                                  link.download = `${deal.songTitle.replace(/\s+/g, '_')}_CueSheet.xml`;
-                                  document.body.appendChild(link);
-                                  link.click();
-                                  document.body.removeChild(link);
-                                  URL.revokeObjectURL(url);
-                                  alert(`ASCAP/BMI Cue Sheet XML downloaded successfully for: "${deal.songTitle}"`);
-                                }}
-                                className="btn-secondary" 
-                                style={{ padding: '8px 16px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                              >
-                                📥 Cue Sheet XML
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
+            {(activeTab === 'contracts' || activeTab === 'mycontracts' || activeTab === 'escrow_splits') && (
+              <MyContractsPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />
             )}
 
             {activeTab === 'dashboard_publishing' && (

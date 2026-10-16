@@ -134,6 +134,7 @@ import {
 import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx'
 import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx'
 import SplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx'
+import MyContractsPanel from './components/contracts/MyContractsPanel.jsx'
 import CreditReloadModal from './components/common/CreditReloadModal.jsx'
 import {
   AffiliatePayoutSettingsModal,
@@ -789,8 +790,8 @@ const NAV_ITEM_DESCRIPTIONS = {
     category: 'Label Administration'
   },
   escrow: {
-    title: 'Escrow Contracts',
-    desc: 'Smart contract escrow agreements for milestone-based production, mixing & collab payments',
+    title: 'MyContracts & Escrow',
+    desc: 'Legal engagement contracts, digital e-signatures, split agreements & milestone escrow release',
     category: 'Royalty Ledgers'
   },
   'publishing-election': {
@@ -1206,11 +1207,15 @@ function DashboardView({
         );
       case 'mastering':
         return <MasteringUploadPanel sessionUser={sessionUser} />;
+      case 'contracts':
+      case 'mycontracts':
       case 'escrow':
         return (
-          <EscrowContractsPanel 
+          <MyContractsPanel 
+            sessionUser={sessionUser}
             payoutBalance={payoutBalance} 
             setPayoutBalance={setPayoutBalance} 
+            setActiveTab={setActiveTab}
           />
         );
       case 'settings':
@@ -1297,7 +1302,7 @@ function DashboardView({
       djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
       sync: { id: 'sync', label: 'Sync Marketplace', icon: RiGlobalFill, category: 'Pools & Sync' },
       'label-team': { id: 'label-team', label: 'Roster & Team Seats', icon: RiTeamFill, category: 'Label Administration' },
-      escrow: { id: 'escrow', label: 'Escrow Contracts', icon: RiShieldFill, category: 'Royalty Ledgers' },
+      escrow: { id: 'escrow', label: 'MyContracts', icon: RiFileTextFill, category: 'Royalty Ledgers' },
       profile: { id: 'profile', label: 'Profile Settings', icon: RiSettings3Fill, category: 'Account' },
       support: { id: 'support', label: 'Support & AI Claims', icon: RiCustomerService2Fill, category: 'Account' },
       // Native-app user controls (full editing parity with the apps)
@@ -7301,87 +7306,9 @@ function SyncBriefMatchPanel(props) {
   return <SyncLicensingPanel {...props} />;
 }
 
-// ================= SUB-PANEL: Escrow Contracts (Phase 8) =================
-function EscrowContractsPanel({ payoutBalance, setPayoutBalance }) {
-  const [contracts, setContracts] = useState([
-    { id: 'cnt_801', title: 'Live at Blankets & Wine (Nairobi, KE)', deposit: 1500.00, status: 'held', date: 'Jul 15, 2026' },
-    { id: 'cnt_802', title: 'AfroNation Concert (Lagos, NG)', deposit: 5000.00, status: 'released', date: 'Jun 22, 2026' },
-    { id: 'cnt_803', title: 'Intermaven Showcase (London, UK)', deposit: 2500.00, status: 'pending_hold', date: 'Aug 05, 2026' }
-  ]);
-  const [releasingId, setReleasingId] = useState(null);
-
-  const handleRelease = (id, amount) => {
-    setReleasingId(id);
-    setTimeout(() => {
-      setReleasingId(null);
-      setContracts(prev => prev.map(c => c.id === id ? { ...c, status: 'released' } : c));
-      setPayoutBalance(prev => prev + amount);
-      alert(`Escrow release authorized! $${amount.toFixed(2)} has been added to your payout balance.`);
-    }, 2000);
-  };
-
-  return (
-    <div>
-      <div className="dashboard-panel-header">
-        <h2>Appearance Escrow &amp; Gig Contracts</h2>
-        <p>Secure gig booking payments in escrow. Deposits are automatically released once attendance milestones are verified.</p>
-      </div>
-
-      <div className="dashboard-card">
-        <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Appearance Escrows List</h3>
-        <table className="dashboard-table">
-          <thead>
-            <tr>
-              <th>Contract ID</th>
-              <th>Gig / Performance</th>
-              <th>Date</th>
-              <th>Deposit (USD)</th>
-              <th>Escrow Status</th>
-              <th>Milestone Check</th>
-            </tr>
-          </thead>
-          <tbody>
-            {contracts.map(cnt => (
-              <tr key={cnt.id}>
-                <td style={{ fontFamily: 'monospace' }}>{cnt.id}</td>
-                <td style={{ fontWeight: 'bold' }}>{cnt.title}</td>
-                <td>{cnt.date}</td>
-                <td>${cnt.deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td>
-                  <span className={`badge-status ${
-                    cnt.status === 'released' ? 'success' : (cnt.status === 'held' ? 'warning' : 'error')
-                  }`}>
-                    {cnt.status === 'released' ? 'RELEASED' : (cnt.status === 'held' ? 'HELD' : 'PENDING APPROVAL')}
-                  </span>
-                </td>
-                <td>
-                  {cnt.status === 'held' ? (
-                    <button 
-                      onClick={() => handleRelease(cnt.id, cnt.deposit)} 
-                      disabled={releasingId !== null}
-                      className="btn-primary" 
-                      style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                      {releasingId === cnt.id ? (
-                        <>
-                          <RiRefreshFill size={10} className="spin-animation" style={{ marginRight: '4px' }} />
-                          Verifying GPS Check-In...
-                        </>
-                      ) : 'Release Escrow'}
-                    </button>
-                  ) : (
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>
-                      {cnt.status === 'released' ? '✓ Milestone Complete' : 'Waiting for gig deposit'}
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+// ================= SUB-PANEL: MyContracts & Escrow (Phase 8 & Intermaven Protocol) =================
+function EscrowContractsPanel(props) {
+  return <MyContractsPanel {...props} />;
 }
 
 // ================= Global Floating & Docked Audio Player =================
