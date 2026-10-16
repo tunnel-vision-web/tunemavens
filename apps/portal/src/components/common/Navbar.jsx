@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { RiArrowDownSFill, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill } from 'react-icons/ri'
+import { RiArrowDownSFill, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill } from 'react-icons/ri'
 import { ROLE_LOGOS, getServiceUrl } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -355,6 +355,15 @@ export default function Navbar({ sessionUser }) {
                 onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}
               >
                 <RiBookOpenFill size={16} /> Blog &amp; Articles
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/affiliates" 
+                className={`dropdown-link ${isActive('/affiliates') ? 'active' : ''}`} 
+                onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}
+              >
+                <RiUserSharedFill size={16} /> Affiliate Programme
               </Link>
             </li>
             <li>

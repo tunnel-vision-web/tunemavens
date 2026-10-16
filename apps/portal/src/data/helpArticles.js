@@ -12,10 +12,228 @@ export const HELP_CATEGORIES = [
   { id: 'services', label: 'TuneMavens Service Offering', icon: 'RiSparklingLine' },
   { id: 'royalties', label: 'Royalties & Payouts', icon: 'RiExchangeDollarLine' },
   { id: 'account', label: 'Credits & Security', icon: 'RiShieldCheckLine' },
+  { id: 'affiliates', label: 'Affiliates & Creator Onboarding', icon: 'RiUserSharedFill' },
   { id: 'support', label: 'Support & AI Claims Desk', icon: 'RiCustomerService2Fill' },
 ];
 
 export const HELP_ARTICLES = [
+  // =========================================================================
+  // CATEGORY: AFFILIATES & CREATOR ONBOARDING (RECOMMENDED READING)
+  // =========================================================================
+  {
+    id: 'affiliate-program-guide',
+    category: 'affiliates',
+    title: 'The TuneMavens Affiliate Scheme: 3% to 12% Multi-Stream Commissions',
+    readingTime: '7 min read',
+    excerpt: 'Complete guide to the Ditto Music-modeled TuneMavens affiliate scheme. Learn how 3% to 12% multi-stream compensation operates across streaming, lossless sales, multitrack stems, VIP tour passes, sync placements, and creator reloads with persistent 90-day cookie tracking.',
+    tags: ['Affiliate Scheme', 'Ditto Model', 'Commission Matrix', '90-Day Cookies', 'Recommended Reading'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['affiliate'],
+    toolLink: { label: 'Open Affiliate Partner Console', path: '/affiliates' },
+    sections: [
+      {
+        heading: 'The Ditto-Modeled Ecosystem Framework',
+        content: `TuneMavens operates an industry-grade affiliate and creator ambassador scheme closely modeled around **Ditto Music's global partner framework**, but specifically optimized for the high-velocity East African and global creator economies.
+
+Unlike legacy affiliate programs that pay a one-time flat bounty on software signups, TuneMavens ties affiliate rewards directly to **multi-stream consumption and ongoing creator commerce**. When an affiliate brings a creator, record label, music supervisor, or corporate brand into the ecosystem, the affiliate earns recurring commissions every single time content is consumed, streamed, licensed, or purchased.
+
+Every verified partner receives:
+* An official referral link (e.g. \`https://tunemavens.com/?ref=YOURCODE\`)
+* Persistent **90-day cross-subdomain tracking cookies** (attributing activity across TuneMavens, TuneStream, and SyncMavens)
+* Real-time ledger entries on **TuneLedger** with immutable transaction timestamps
+* Tier-based bonus accelerators ranging from **Scout** (Base) to **Ambassador** (+2.0% across all streams).`
+      },
+      {
+        heading: 'The 3% to 12% Multi-Stream Compensation Matrix',
+        content: `Affiliate earnings are calculated against gross net transaction receipts across seven distinct ecosystem monetization channels:
+
+| Monetization Stream | Ecosystem Channel | Base Rate | Partner Tier (+1%) | Ambassador Tier (+2%) | Calculation Basis |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Streaming & Micro-Tipping** | TuneStream Web World | **3.0%** | **4.0%** | **5.0%** | Creator Net Stream Pool Royalty + Tips |
+| **Lossless Track Downloads** | Creator EPK & Storefront | **5.0%** | **6.0%** | **7.0%** | Gross Single Track Sale ($0.99 - $1.99) |
+| **Full Album Showcase** | TuneStream & EPK Web Worlds | **7.0%** | **8.0%** | **9.0%** | Gross Album Package Sale ($9.99 / 50 Credits) |
+| **Multitrack Stems & Producer Kits** | SyncMavens & Industry Hub | **8.5%** | **9.5%** | **10.5%** | Gross Stems Package ($29 - $99) |
+| **Digital QR Passes & Live Tours** | TuneTours & M-Pesa Live Push | **10.0%** | **11.0%** | **12.0%** | Net Live Event Ticket Proceeds ($20 - $100) |
+| **Commercial Sync Licensing** | SyncMavens Brief Matching Hub | **12.0%** | **12.0%** | **12.0%** | Net Sync Placement Fee (Capped at $300/deal) |
+| **Creator Onboarding & Credits** | Intermaven Unified Network | **12.0%** | **12.0%** | **12.0%** | First Unified Credit Top-Up Pack ($100 pack) |`
+      },
+      {
+        heading: 'Persistent 90-Day Cross-Domain Cookie Attribution',
+        content: `Attribution tracking follows strict, fraud-resilient technical rules:
+1. **90-Day Persistence**: When a prospective user clicks your referral link, an encrypted HTTP cookie (\`tm_aff_ref\`) is set with a \`max-age\` of 7,776,000 seconds (90 days).
+2. **Cross-Subdomain Coverage**: The cookie applies to all ecosystem domains—including the main portal, \`tunestream.com\`, and \`syncmavens.com\`.
+3. **First Touch & Account Binding**: If the prospective user browses today, listens to tracks on TuneStream next week, and registers their creator account on Day 45, your referral code is permanently bound to their user account record in MongoDB.
+4. **Self-Healing Referral Protection**: If an affiliate user clears their cookies after clicking, but registers through your link query parameter or enters your custom code during onboarding, the link takes immediate precedence.`
+      },
+      {
+        heading: 'Tier Milestones & Automatic Promotion',
+        content: `* **Scout Tier (Entry Level)**: Base matrix rates (3.0% - 12.0%). Assigned immediately upon registration.
+* **Partner Tier (+1.0% Bonus)**: Automatically unlocked once your referred creators generate over **$2,500 in cumulative GMV** or you onboard **25 active creators**. Increases streaming commissions to 4.0%, album sales to 8.0%, and stem sales to 9.5%.
+* **Ambassador Tier (+2.0% Bonus)**: Reserved for premier curators, artist managers, and major industry figures generating over **$10,000 in GMV**. Unlocks maximum rates up to 12.0% across all content streams and priority weekly payout settlement.`
+      },
+      {
+        heading: 'Zero Platform Credits Required for Affiliate Operations',
+        content: `A central architectural principle of TuneMavens is that **partner influence should never be gated by platform credit balances**:
+* **Affiliate Console Access (0 Credits)**: Viewing analytics, metrics, conversion feeds, tracking matrices, and revenue charts is 100% free forever.
+* **Link Generation & Attribution (0 Credits)**: Generating referral links, setting up custom tracking codes, and utilizing the 90-day cookie protocol cost zero credits.
+* **Direct Creator & Label Onboarding (0 Credits)**: Pre-registering recording artists, indie record labels, and music supervisors from your Linked Network tab deducts zero credits.
+* **When Do Platform Credits Apply?**: Unified Platform Credits **only** apply to affiliate accounts if an affiliate voluntarily elects to use production tools or services—such as mastering tracks in MasterLab AI, pitching songs to commercial television sync briefs on SyncMavens, registering custom domains, or purchasing POS hardware. If you are operating strictly as an affiliate or curator, you never need to purchase or maintain platform credits.`
+      }
+    ]
+  },
+
+  {
+    id: 'onboarding-creators-and-labels',
+    category: 'affiliates',
+    title: 'Onboarding Creators, Labels & Partners: The Affiliate Roster Playbook',
+    readingTime: '8 min read',
+    excerpt: 'How affiliates act as ecosystem ambassadors to onboard recording artists, record labels, and music supervisors. Step-by-step instructions on direct user linking, invitation protocols, split incentives, and tracking roster revenue.',
+    tags: ['Creator Onboarding', 'Record Labels', 'Direct Linking', 'Roster Management', 'Recommended Reading'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['affiliate', 'label'],
+    toolLink: { label: 'Manage Linked Network', path: '/affiliates' },
+    sections: [
+      {
+        heading: 'Direct Backend Onboarding vs. Public Referral Links',
+        content: `As an authorized TuneMavens Affiliate Partner, you possess two distinct superpowers to expand your network:
+1. **Public Referral Links**: Ideal for sharing on social media (TikTok, Instagram, YouTube, X), podcast descriptions, and blog reviews. Prospective users self-register via \`?ref=YOURCODE\`.
+2. **Direct Backend Onboarding**: Modeled after how record labels add artists to their rosters. You can directly onboard creators, indie record labels, music supervisors, and sub-affiliates from your **Linked Network & Onboarding** console.
+
+When you onboard a user directly from your backend:
+* The user's account is instantly pre-created in MongoDB and bound to your affiliate ID.
+* An instant personal invitation link with an embedded security token (\`INV-TOKEN\`) is generated.
+* You can send this invitation link via WhatsApp, email, or SMS, allowing the creator to claim their workspace with one click without having to enter payment details.
+* Direct backend onboarding is 100% free and consumes **0 platform credits** from your affiliate balance.`
+      },
+      {
+        heading: 'Onboarding Recording Artists & Producers (Step-by-Step)',
+        content: `When pitching TuneMavens to independent music artists and producers, focus on our three primary value propositions:
+* **Zero Monthly Subscriptions**: Unlike legacy distributors who charge $20-$40 every year per artist, TuneMavens operates on Unified Credits with zero recurring annual renewal fees.
+* **MasterLab AI Mastering**: 24-bit lossless mastering calibrated specifically for streaming DSPs and Kenyan radio broadcast standards.
+* **Automated Split Cascade**: Creators can set percentage splits with collaborators, beatmakers, and feature vocalists. Collaborators are paid directly via M-Pesa STK or Stripe with zero manual accounting overhead.
+
+**Affiliate Onboarding Checklist for Artists:**
+1. Collect their official artist name, primary genre, and contact email.
+2. Enter their details in your **Linked Network** modal under the **Creator** role.
+3. Share the generated invitation link.
+4. Guide them through uploading their first track or porting an existing catalog CSV into the Catalogue Wizard.`
+      },
+      {
+        heading: 'Onboarding Independent Record Labels',
+        content: `Independent record labels represent your highest-earning affiliate opportunity because a single label can bring 10 to 50 active artists into your linked roster.
+
+Key features to highlight for label executives:
+* **Multi-Artist Roster Management**: Labels manage all signed artists under a single unified dashboard with seat-based permission access.
+* **Publishing & Distribution Elections**: Instant worldwide DDEX distribution coupled with publishing administration that registers mechanicals with The MLC and global PROs.
+* **Escrow Contract Protection**: Automated contract generation with digital signature locks for recording agreements, master licensing, and exclusive distribution deals.
+
+When onboarding a label, select the **Record Label** role in your management console. The label's entire catalog GMV and streaming royalty flow will attribute commissions to your affiliate account.`
+      },
+      {
+        heading: 'Monitoring Your Linked Network & Account Types',
+        content: `Your **Linked Network Directory** provides real-time telemetry for every connected account:
+* **Account Type & Role Badge**: Distinguishes between Creators, Labels, Music Supervisors, Corporate Brands, and Campus Sub-Affiliates.
+* **Releases & Catalog Velocity**: Displays how many singles, EPs, and albums each creator has deployed.
+* **Gross Attributed Revenue**: Tracks the total commerce volume generated by that specific creator's releases.
+* **Net Commission Yield**: Your personal earnings derived from that user's catalog.
+* **Last Active Telemetry**: Helps you identify creators who may need assistance finishing their release uploads or activating their EPK Web World.`
+      }
+    ]
+  },
+
+  {
+    id: 'affiliate-payouts-mpesa-settlement',
+    category: 'affiliates',
+    title: 'Affiliate Payout Rails & M-Pesa STK Settlement Guide (Kenya & East Africa)',
+    readingTime: '6 min read',
+    excerpt: 'Deep-dive into affiliate commission settlement workflows. How M-Pesa instant STK pushes operate for Kenyan and East African partners, minimum payout thresholds, conversion clearance periods, and currency conversion.',
+    tags: ['Payout Rails', 'M-Pesa STK', 'Kenya Settlement', 'TuneLedger', 'Recommended Reading'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['affiliate'],
+    toolLink: { label: 'View Payout Rails & Ledger', path: '/affiliates' },
+    sections: [
+      {
+        heading: 'Supported Payout Rails Across East Africa & Globally',
+        content: `TuneMavens supports multiple disbursement rails to ensure partners receive their earnings swiftly, securely, and without predatory cross-border banking fees:
+
+* **M-Pesa STK Automated B2C Push (Kenya & East Africa)**: Direct mobile wallet disbursement to Safaricom / Airtel numbers in Kenya. Funds arrive within seconds of batch execution.
+* **Stripe Direct Deposit**: Direct bank transfer for partners residing in the US, UK, EU, and supported international territories.
+* **PayPal Global**: Worldwide electronic wallet settlement in USD, EUR, or GBP.
+* **Unified Platform Credits (+5% Bonus)**: Partners can elect to convert their pending commission balance directly into platform credits with an added **+5% bonus**, which can be used to fund mastering, sync pitching, or creator tools.`
+      },
+      {
+        heading: 'M-Pesa STK Settlement Protocol in Detail',
+        content: `For partners in Kenya, TuneMavens integrates directly with Safaricom Daraja B2C APIs:
+1. **Verification**: Enter your Kenyan mobile number in the format \`+2547XXXXXXXX\` during registration or in your Partner Console.
+2. **Currency Conversion**: While platform transactions are accounted in USD on TuneLedger, M-Pesa disbursements are automatically converted to Kenya Shillings (KES) using real-time interbank foreign exchange rates updated hourly.
+3. **Zero Fee Deductions**: TuneMavens absorbs the standard carrier B2C transfer charges so you receive 100% of your earned commission.`
+      },
+      {
+        heading: 'Minimum Payout Threshold & Clearing Periods',
+        content: `* **Minimum Threshold**: **$20.00 USD** (approximately KES 2,600). Once your cleared pending balance reaches $20, it is automatically marked eligible for the next scheduled settlement batch.
+* **Instant Clearance vs. Fraud Hold**:
+  * *Stream Pool & Credit Top-Ups*: Clear **instantly** (0-hour hold).
+  * *Digital Downloads & Stems Purchases*: Clear within **48 hours**.
+  * *Credit Card / Stripe Transactions*: Subject to a standard **7-day rolling hold** to guard against chargebacks or credit card disputes before final disbursement.`
+      },
+      {
+        heading: 'Immutable Audit Logging on TuneLedger',
+        content: `Every payout batch executed generates a unique **Batch ID** (e.g. \`batch_8921a4f\`) recorded permanently on the platform's audit ledger. You can inspect your historical payout statements, download tax invoices, and reconcile every transaction right from your **Attribution Ledger** tab.`
+      }
+    ]
+  },
+
+  {
+    id: 'affiliate-compliance-promotional-ethics',
+    category: 'affiliates',
+    title: 'Affiliate Compliance, Disclosures & Ethical Promotional Standards',
+    readingTime: '5 min read',
+    excerpt: 'Standards of conduct, FTC and Kenyan CAK disclosure compliance, prohibited spam practices, brand safety guidelines, and copyright integrity for TuneMavens ambassadors.',
+    tags: ['Compliance', 'Disclosures', 'Ethical Standards', 'CAK Guidelines', 'Recommended Reading'],
+    popular: false,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['affiliate'],
+    toolLink: { label: 'Affiliate Scheme Terms', path: '/affiliates' },
+    sections: [
+      {
+        heading: 'Mandatory Regulatory Disclosures (#ad, #affiliate)',
+        content: `In accordance with guidelines from the **Competition Authority of Kenya (CAK)**, the US **Federal Trade Commission (FTC)**, and international advertising standards, all affiliate partners must clearly and conspicuously disclose their financial relationship with TuneMavens.
+
+**Standard Disclosure Guidelines:**
+* When posting video walkthroughs on YouTube or TikTok, include prominent verbal or on-screen disclosure: *"This video contains affiliate links. If you sign up or purchase music through these links, I earn a commission at no additional cost to you."*
+* Social media posts, tweets, and descriptions must include clear tags such as \`#ad\`, \`#affiliate\`, or \`#TuneMavensPartner\` before the fold.
+* Never conceal affiliate disclosures inside buried comment sections or obscure link shorteners.`
+      },
+      {
+        heading: 'Strictly Prohibited Promotional Practices',
+        content: `To safeguard creator trust and platform reputation, the following practices result in **immediate account suspension and forfeiture of unpaid balances**:
+
+1. **Unsolicited Spam**: Bulk emailing, automated direct-messaging (DM bots), WhatsApp group spamming, or spamming artist social media comments.
+2. **Misleading Income Claims**: Never promise artists guaranteed streaming counts, algorithmic playlist placements, or false revenue claims (e.g. *"Get 1 million Spotify streams overnight with TuneMavens"*).
+3. **Trademark Bidding (PPC)**: You may not bid on Google Ads, Bing Ads, or search engine pay-per-click keywords containing *"TuneMavens"*, *"TuneStream"*, *"SyncMavens"*, or confusingly similar misspellings.
+4. **Cookie Stuffing**: Using hidden iframes, popup scripts, or automated redirect chains to artificially force tracking cookies without genuine user clicks.`
+      },
+      {
+        heading: 'Brand Safety & Copyright Integrity',
+        content: `TuneMavens is built on absolute respect for music copyright and fair creator remuneration:
+* Never promote TuneMavens links on sites hosting pirated music, unauthorized torrents, or copyright-infringing content.
+* When showcasing catalog releases, only use music for which you have verified permission or which is available through public preview players on TuneStream.
+* Represent the East African and global creative community with professionalism, cultural authenticity, and integrity.`
+      },
+      {
+        heading: 'Account Audits & Dispute Resolutions',
+        content: `TuneLedger runs continuous automated heuristic scans to detect abnormal click-to-conversion anomalies. If an affiliate account is flagged for review, pending payouts are frozen for up to 14 days while compliance officers examine attribution logs. Partners in good standing have access to direct human review via the **Support & Claims Desk**.`
+      }
+    ]
+  },
+
   // =========================================================================
   // CATEGORY 1: MUSIC PUBLISHING & COPYRIGHT
   // =========================================================================
@@ -25,8 +243,10 @@ export const HELP_ARTICLES = [
     title: 'The Two Halves of Music Copyright: Master Rights vs. Composition Rights',
     readingTime: '5 min read',
     excerpt: 'Every recorded song possesses two distinct copyrights: the Sound Recording (Master) and the Musical Work (Composition). Learn how each generates revenue and why owning both gives you a massive advantage.',
-    tags: ['Copyright', 'Master Rights', 'Publishing', 'One-Stop', 'Royalties'],
+    tags: ['Copyright', 'Master Rights', 'Publishing', 'One-Stop', 'Royalties', 'Recommended Reading'],
     popular: true,
+    recommendedReading: true,
+    assignedRoles: ['creator', 'songwriter'],
     toolLink: { label: 'Explore TuneMavens Publishing', path: '/for/songwriters' },
     sections: [
       {
@@ -351,8 +571,10 @@ If Album 1 fails and is $50,000 in the red, and Album 2 becomes a breakout hit g
     title: 'Sync Licensing Masterclass: Securing Placements in Film, TV, Games & Ads',
     readingTime: '6 min read',
     excerpt: 'How music supervisors pick music, the two licenses needed for every placement, deliverable stems, and how to format metadata for high-paying sync opportunities.',
-    tags: ['Sync Licensing', 'Music Supervisors', 'Cue Sheets', 'Film & TV', 'Stems'],
+    tags: ['Sync Licensing', 'Music Supervisors', 'Cue Sheets', 'Film & TV', 'Stems', 'Recommended Reading'],
     popular: true,
+    recommendedReading: true,
+    assignedRoles: ['supervisor', 'studio'],
     toolLink: { label: 'Explore SyncMavens', path: '/sync-placement' },
     sections: [
       {
@@ -480,8 +702,10 @@ By completing **IRS Form W-8BEN** (Certificate of Foreign Status of Beneficial O
     title: 'TuneStream: Audiophile Lossless Streaming & Direct Artist Monetization',
     readingTime: '4 min read',
     excerpt: 'Experience high-fidelity 24-bit FLAC audio streaming with direct listener tipping, custom radio channels, and fair creator compensation.',
-    tags: ['TuneStream', 'Lossless Audio', 'FLAC', 'Streaming', 'Tipping'],
+    tags: ['TuneStream', 'Lossless Audio', 'FLAC', 'Streaming', 'Tipping', 'Recommended Reading'],
     popular: true,
+    recommendedReading: true,
+    assignedRoles: ['dj', 'curator'],
     toolLink: { label: 'Launch TuneStream', path: '/tunestream' },
     sections: [
       {
@@ -536,8 +760,10 @@ By completing **IRS Form W-8BEN** (Certificate of Foreign Status of Beneficial O
     title: 'TuneLedger & Split Cascade: Automated Multi-Currency Royalty Payouts',
     readingTime: '5 min read',
     excerpt: 'Ingest raw royalty CSV statements from any distributor or DSP, apply automatic split sheets, deduct recoupable costs, and disburse instant payouts.',
-    tags: ['TuneLedger', 'Split Cascade', 'Royalties', 'Stripe', 'M-Pesa', 'Accounting'],
+    tags: ['TuneLedger', 'Split Cascade', 'Royalties', 'Stripe', 'M-Pesa', 'Accounting', 'Recommended Reading'],
     popular: true,
+    recommendedReading: true,
+    assignedRoles: ['label', 'manager'],
     toolLink: { label: 'Open TuneLedger', path: '/dashboard?tab=splits' },
     sections: [
       {
@@ -622,8 +848,10 @@ If you upload a track mastered too loudly (e.g. -6 LUFS), the streaming platform
     title: 'Corporate Ads & Brand Flight Sponsorships',
     readingTime: '5 min read',
     excerpt: 'Learn how corporate advertisers sponsor curated playlists, podcasts, and audio prerolls across the TuneMavens ecosystem at established rate tiers.',
-    tags: ['Corporate Ads', 'Brand Sponsorships', 'Ad Rates', 'CPM', 'Flights'],
+    tags: ['Corporate Ads', 'Brand Sponsorships', 'Ad Rates', 'CPM', 'Flights', 'Recommended Reading'],
     popular: false,
+    recommendedReading: true,
+    assignedRoles: ['corporate', 'media', 'media_house'],
     toolLink: { label: 'Review Ad Rates', path: '/for/corporate#business-ad-rates' },
     sections: [
       {
@@ -873,6 +1101,30 @@ Because there are no recurring subscriptions, support claims regarding billing a
 ];
 
 export const FREQUENT_FAQS = [
+  {
+    q: 'Do I need platform credits to use the Affiliate Dashboard or onboard creators?',
+    a: 'No, absolutely not. The Affiliate Dashboard, referral link generator, conversion tracking, attribution ledger, and direct creator/label onboarding are 100% free and require zero credits. Platform Unified Credits only apply if you personally choose to use creator tools (such as MasterLab AI audio mastering, SyncMavens sync pitching, or custom domain hosting).'
+  },
+  {
+    q: 'How does the TuneMavens 3% to 12% affiliate compensation matrix work?',
+    a: 'Modeled after Ditto Music, TuneMavens pays recurring multi-stream commissions ranging from 3% on streaming royalties to 12% on sync clearances and creator credit reloads. Every time someone you refer streams, buys, or licenses music, your commission is recorded automatically on TuneLedger.'
+  },
+  {
+    q: 'Can affiliates directly onboard creators and record labels?',
+    a: 'Yes! From your Linked Network & Onboarding console, you can onboard recording artists, beatmakers, indie record labels, and music supervisors just like a label adds roster talent. Entering their details generates an instant pre-bound invitation link that attaches 100% of their future ecosystem activity to your referral ID.'
+  },
+  {
+    q: 'How do M-Pesa STK affiliate payouts work in Kenya and East Africa?',
+    a: 'Kenyan and East African partners can receive cleared earnings directly to their Safaricom or Airtel mobile money numbers via automated M-Pesa B2C pushes. Payouts are converted from USD to KES at real-time interbank rates with zero transfer fee deductions.'
+  },
+  {
+    q: 'What is the tracking cookie duration for affiliate links?',
+    a: 'Every referral link click sets a persistent 90-day tracking cookie across all TuneMavens subdomains (including TuneStream and SyncMavens). If a creator or fan registers within 90 days of clicking your link, their account is permanently bound to your affiliate profile.'
+  },
+  {
+    q: 'Why are certain articles marked as Recommended Reading during onboarding?',
+    a: 'During onboarding, TuneMavens highlights recommended reading tailored to each user\'s assigned role (creators, record labels, music supervisors, or affiliate partners). These guides are 100% optional and never required to access your dashboard, port tracks, or earn commissions, but provide industry best practices on copyright splits, sync pitching, and multi-stream earnings.'
+  },
   {
     q: 'How does the Support & AI Claims Desk resolve disputes?',
     a: 'When you submit a claim with an ISRC or Split Cascade TxID, TuneSupport AI performs an instant automated diagnosis, validates metadata against catalog records, and places an escrow freeze on disputed split payouts. You can chat with the AI in real time and execute automated settlements with 1 click.'

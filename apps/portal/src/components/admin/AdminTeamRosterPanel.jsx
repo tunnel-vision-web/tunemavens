@@ -4,9 +4,11 @@ import {
   RiCloseLine, RiMailLine, RiCheckLine, RiCoinsFill, RiLockFill,
   RiKey2Fill, RiTerminalFill, RiRadioFill, RiFileTextFill, RiSearchLine,
   RiGlobalFill, RiFlashlightFill, RiEqualizerFill, RiPriceTag3Fill,
-  RiDatabase2Fill, RiAlertFill, RiEditLine, RiFilter3Line
+  RiDatabase2Fill, RiAlertFill, RiEditLine, RiFilter3Line,
+  RiBookOpenFill, RiBookOpenLine
 } from 'react-icons/ri';
 import CreditReloadModal from '../common/CreditReloadModal.jsx';
+import InAppDocModal from '../common/InAppDocModal.jsx';
 
 // Site Admin Seat Allocation Quotas  -  100% Unified Credits Model (Zero Monthly Fees)
 export const ADMIN_TIERS = {
@@ -50,7 +52,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'Infrastructure & Core Ops',
     clearance: 'Tier 1 - Super Admin',
     description: 'Full platform sovereignty: master killswitches, database integrity, domain routing, and root role elevation.',
-    defaultScopes: ['Platform Clusters', 'Master Killswitch', 'Database Migrations', 'Root Audit Trail']
+    defaultScopes: ['Platform Clusters', 'Master Killswitch', 'Database Migrations', 'Root Audit Trail'],
+    recommendedReadings: [
+      { id: 'universal-credits-system-guide', title: 'Universal Credits Engine' },
+      { id: 'account-security-2fa-and-roles', title: 'Account Security, 2FA & Roles' }
+    ]
   },
   {
     id: 'role_catalog_ddex',
@@ -58,7 +64,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'Catalog & IP Architecture',
     clearance: 'Tier 2 - Operational Director',
     description: 'Authoritative validation of sound recordings, lossless stems, bulk DDEX XML/CSV feeds, and ISRC/ISWC uniqueness.',
-    defaultScopes: ['DDEX Ingestion QA', 'ISRC/ISWC Registry', 'Lossless Audio QA', 'Stem Archive Storage']
+    defaultScopes: ['DDEX Ingestion QA', 'ISRC/ISWC Registry', 'Lossless Audio QA', 'Stem Archive Storage'],
+    recommendedReadings: [
+      { id: 'music-metadata-isrc-iswc-ipi-upc', title: 'ISRC, ISWC & UPC Identifiers' },
+      { id: 'masterlab-ai-mastering', title: 'MasterLab AI & Loudness Standards' }
+    ]
   },
   {
     id: 'role_statutory_auditor',
@@ -66,7 +76,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'Royalties & Financial Compliance',
     clearance: 'Tier 2 - Operational Director',
     description: 'Reconciles statutory mechanical pools, PRO compliance exports (ASCAP/BMI/MCSK), and automated split cascade math.',
-    defaultScopes: ['Statutory Ledgers', 'PRO Compliance (ASCAP/BMI/MCSK)', 'Mechanical Splits', 'Audit Trails']
+    defaultScopes: ['Statutory Ledgers', 'PRO Compliance (ASCAP/BMI/MCSK)', 'Mechanical Splits', 'Audit Trails'],
+    recommendedReadings: [
+      { id: 'mechanical-royalties-and-mlc', title: 'Mechanical Royalties & The MLC' },
+      { id: 'pros-cmos-ascap-bmi-sesac-prs', title: 'PROs & CMOs (ASCAP, BMI, MCSK)' }
+    ]
   },
   {
     id: 'role_escrow_officer',
@@ -74,7 +88,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'Treasury & Payout Gateway',
     clearance: 'Tier 2 - Operational Director',
     description: 'Approves payout batches, monitors M-Pesa B2C and bank wire gateways, and mediates milestone escrow release contracts.',
-    defaultScopes: ['Escrow Dispute Arbitration', 'Payout Batch Approvals', 'M-Pesa B2C Releases', 'ACH & Wire Gateway']
+    defaultScopes: ['Escrow Dispute Arbitration', 'Payout Batch Approvals', 'M-Pesa B2C Releases', 'ACH & Wire Gateway'],
+    recommendedReadings: [
+      { id: 'tuneledger-and-split-cascade', title: 'TuneLedger & Split Cascade' },
+      { id: 'tuneledger-escrow-dispute-locks', title: 'TuneLedger Escrow Dispute Locks' }
+    ]
   },
   {
     id: 'role_sync_curator',
@@ -82,7 +100,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'Sync & Editorial Media',
     clearance: 'Tier 2 - Operational Director',
     description: 'Curates TuneStream algorithmic and editorial stations, reviews sync placement briefs, and vets unreleased dubplate pools.',
-    defaultScopes: ['TuneStream Editorial Playlists', 'Sync Marketplace RFP Review', 'Dubplate Vetting', 'Supervisor Matching']
+    defaultScopes: ['TuneStream Editorial Playlists', 'Sync Marketplace RFP Review', 'Dubplate Vetting', 'Supervisor Matching'],
+    recommendedReadings: [
+      { id: 'sync-licensing-masterclass', title: 'Sync Licensing Masterclass' },
+      { id: 'syncmavens-licensing-platform', title: 'SyncMavens Licensing Marketplace' }
+    ]
   },
   {
     id: 'role_ad_traffic',
@@ -90,7 +112,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'Advertising & Sponsorships',
     clearance: 'Tier 3 - Platform Specialist',
     description: 'Schedules 15s/30s audio flight campaigns, verifies impression delivery, and governs media house monetization rates.',
-    defaultScopes: ['Audio Ad Flight Approvals', 'CPM Rate Card Engine', 'Banner Impression QA', 'Media House Payouts']
+    defaultScopes: ['Audio Ad Flight Approvals', 'CPM Rate Card Engine', 'Banner Impression QA', 'Media House Payouts'],
+    recommendedReadings: [
+      { id: 'corporate-ads-and-brand-flights', title: 'Corporate Ads & Brand Flights' },
+      { id: 'tunestream-audiophile-streaming', title: 'TuneStream Lossless Streaming' }
+    ]
   },
   {
     id: 'role_security_compliance',
@@ -98,7 +124,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'InfoSec & Legal Governance',
     clearance: 'Tier 1 - Super Admin',
     description: 'Enforces DMCA takedown orders, verifies custom subdomains and SSL certificates, and audits SSO session health.',
-    defaultScopes: ['DMCA Enforcement', 'Domain & SSL Provisioning', 'SSO Session Invalidation', 'Jurisdiction Compliance']
+    defaultScopes: ['DMCA Enforcement', 'Domain & SSL Provisioning', 'SSO Session Invalidation', 'Jurisdiction Compliance'],
+    recommendedReadings: [
+      { id: 'account-security-2fa-and-roles', title: 'Account Security & Roles' },
+      { id: 'affiliate-compliance-promotional-ethics', title: 'Compliance & Ethical Standards' }
+    ]
   },
   {
     id: 'role_onboarding_director',
@@ -106,7 +136,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'Ecosystem Growth',
     clearance: 'Tier 2 - Operational Director',
     description: 'Reviews VIP EPK submissions, coordinates white-glove record label imprints, and handles artist roster verifications.',
-    defaultScopes: ['EPK Verification', 'Label Imprint Provisioning', 'Artist Roster Whitelist', 'Ecosystem Support']
+    defaultScopes: ['EPK Verification', 'Label Imprint Provisioning', 'Artist Roster Whitelist', 'Ecosystem Support'],
+    recommendedReadings: [
+      { id: 'onboarding-creators-and-labels', title: 'Onboarding Creators & Labels Playbook' },
+      { id: 'affiliate-program-guide', title: 'Affiliate Scheme & 3%–12% Matrix' }
+    ]
   },
   {
     id: 'role_infra_telemetry',
@@ -114,7 +148,11 @@ export const PLATFORM_ADMIN_ROLES = [
     department: 'Infrastructure & Core Ops',
     clearance: 'Tier 3 - Platform Specialist',
     description: 'Supervises audio CDN edge latencies, WebSocket real-time telemetry, database pools, and POS terminal device heartbeats.',
-    defaultScopes: ['Audio CDN Edge Caching', 'WebSocket Telemetry', 'POS Device Heartbeats', 'Latency Optimization']
+    defaultScopes: ['Audio CDN Edge Caching', 'WebSocket Telemetry', 'POS Device Heartbeats', 'Latency Optimization'],
+    recommendedReadings: [
+      { id: 'universal-credits-system-guide', title: 'Universal Credits Engine' },
+      { id: 'tunesupport-ai-diagnosis-and-resolution', title: 'TuneSupport AI Diagnosis' }
+    ]
   }
 ];
 
@@ -291,6 +329,7 @@ export default function AdminTeamRosterPanel({
   const [selectedMember, setSelectedMember] = useState(null);
   const [showReloadModal, setShowReloadModal] = useState(false);
   const [reloadReason, setReloadReason] = useState('Site Administration Unified Credits Seat Expansion');
+  const [activeReadingDocId, setActiveReadingDocId] = useState(null);
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -1291,6 +1330,58 @@ export default function AdminTeamRosterPanel({
                 </select>
               </div>
 
+              {/* Recommended Reading for this Assigned Role (Not Required) */}
+              {(() => {
+                const selectedRoleObj = PLATFORM_ADMIN_ROLES.find(r => r.id === inviteRoleId);
+                const roleReadings = selectedRoleObj?.recommendedReadings || [];
+                if (roleReadings.length === 0) return null;
+                return (
+                  <div style={{
+                    background: '#0b1126',
+                    border: '1px solid rgba(34, 211, 238, 0.25)',
+                    borderRadius: '4px',
+                    padding: '12px 14px',
+                    marginBottom: '16px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: '#38bdf8', marginBottom: '8px' }}>
+                      <RiBookOpenLine size={15} />
+                      <span>Recommended Reading for this Role (Not Required):</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {roleReadings.map(item => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setActiveReadingDocId(item.id)}
+                          style={{
+                            background: 'rgba(34, 211, 238, 0.1)',
+                            border: '1px solid rgba(34, 211, 238, 0.3)',
+                            borderRadius: '3px',
+                            color: '#e0f2fe',
+                            fontSize: '11.5px',
+                            fontWeight: 600,
+                            padding: '4px 10px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.15s ease'
+                          }}
+                          title="Click to preview this recommended reading guide"
+                        >
+                          <RiBookOpenFill size={12} color="#22d3ee" />
+                          <span>{item.title}</span>
+                          <span style={{ fontSize: '10px', color: '#94a3b8' }}>(Optional)</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px', lineHeight: 1.4 }}>
+                      * Attached to user onboarding invite as recommended reading. Reading is 100% optional and does not restrict seat activation.
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Clearance Tier */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#cbd5e1', marginBottom: '6px' }}>
@@ -1736,6 +1827,15 @@ export default function AdminTeamRosterPanel({
           }}
         />
       )}
+
+      {/* Role Onboarding Recommended Reading Modal */}
+      <InAppDocModal
+        isOpen={Boolean(activeReadingDocId)}
+        onClose={() => setActiveReadingDocId(null)}
+        initialArticleId={activeReadingDocId}
+        contextTitle="Staff Role Onboarding & Recommended Reading"
+        sessionUser={sessionUser}
+      />
     </div>
   );
 }

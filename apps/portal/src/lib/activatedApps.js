@@ -15,6 +15,7 @@ export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
   media_house: ['sync-marketplace', 'corporate-ads'],
   media: ['sync-marketplace', 'corporate-ads'],
   corporate: ['sync-marketplace', 'corporate-ads'],
+  affiliate: ['affiliates', 'split-cascade', 'tunemavens-library'],
   consumer: ['tunemavens-library', 'tunemavens-tips'],
   admin: [
     'epk-builder', 'catalog-porting', 'split-cascade', 'publishing-election',

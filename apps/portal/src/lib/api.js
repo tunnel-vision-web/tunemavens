@@ -249,3 +249,46 @@ export const blogApi = {
   }),
 };
 
+// --- Affiliate Program Management ---
+export const affiliatesApi = {
+  getMatrix: () => request('/api/affiliates/matrix'),
+  apply: (payload) => request('/api/affiliates/apply', { method: 'POST', body: payload }),
+  track: (refCode) => request(`/api/affiliates/track/${encodeURIComponent(refCode)}`),
+  getMe: (ref = '') => request(`/api/affiliates/me${ref ? `?ref=${encodeURIComponent(ref)}` : ''}`),
+  simulateConversion: (payload) => request('/api/affiliates/simulate-conversion', { method: 'POST', body: payload }),
+  getNetwork: (refCode) => request(`/api/affiliates/network/${encodeURIComponent(refCode)}`),
+  onboardUser: (payload) => request('/api/affiliates/onboard-user', { method: 'POST', body: payload }),
+  getAcademy: (refCode) => request(`/api/affiliates/academy/${encodeURIComponent(refCode)}`),
+  acknowledgeReading: (payload) => request('/api/affiliates/academy/acknowledge', { method: 'POST', body: payload }),
+  admin: {
+    getOverview: () => request('/api/affiliates/admin/overview'),
+    getRoster: (params = {}) => {
+      const q = new URLSearchParams();
+      if (params.search) q.append('search', params.search);
+      if (params.tier && params.tier !== 'all') q.append('tier', params.tier);
+      if (params.status_filter && params.status_filter !== 'all') q.append('status_filter', params.status_filter);
+      if (params.limit) q.append('limit', params.limit);
+      const qs = q.toString();
+      return request(`/api/affiliates/admin/roster${qs ? `?${qs}` : ''}`);
+    },
+    getLedger: (params = {}) => {
+      const q = new URLSearchParams();
+      if (params.ref) q.append('ref', params.ref);
+      if (params.type_filter && params.type_filter !== 'all') q.append('type_filter', params.type_filter);
+      if (params.limit) q.append('limit', params.limit);
+      const qs = q.toString();
+      return request(`/api/affiliates/admin/ledger${qs ? `?${qs}` : ''}`);
+    },
+    executePayout: (payload) => request('/api/affiliates/admin/payout', { method: 'POST', body: payload }),
+    updateMatrix: (payload) => request('/api/affiliates/admin/matrix', { method: 'PUT', body: payload }),
+    updateStatus: (affiliateId, params = {}) => {
+      const q = new URLSearchParams();
+      if (params.status_val) q.append('status_val', params.status_val);
+      if (params.tier_val) q.append('tier_val', params.tier_val);
+      return request(`/api/affiliates/admin/affiliate/${encodeURIComponent(affiliateId)}/status?${q.toString()}`, {
+        method: 'PATCH'
+      });
+    }
+  }
+};
+

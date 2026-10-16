@@ -118,6 +118,8 @@ import EpkWizard from './components/EpkWizard.jsx'
 import DashboardCmsStudio from './components/DashboardCmsStudio.jsx'
 import SmartCrmStudioPanel from './components/SmartCrmStudioPanel.jsx'
 import CorporateAdsPanel from './components/CorporateAdsPanel.jsx'
+import AffiliatesView from './views/landing/AffiliatesView.jsx'
+import AffiliateAdminPanel from './components/affiliates/AffiliateAdminPanel.jsx'
 import CatalogueWizard from './components/CatalogueWizard.jsx'
 import ArtistRosterSelector from './components/ArtistRosterSelector.jsx'
 import GenreManagerModal from './components/GenreManagerModal.jsx'
@@ -133,6 +135,12 @@ import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx'
 import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx'
 import SplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx'
 import CreditReloadModal from './components/common/CreditReloadModal.jsx'
+import {
+  AffiliatePayoutSettingsModal,
+  AffiliateReferralLinkModal,
+  AffiliateDirectTalentModal
+} from './components/affiliates/AffiliateActionModals.jsx'
+import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx'
 
 // ================= Dashboard Apps View =================
 // ================= Dashboard Apps Sub-Components =================
@@ -179,6 +187,7 @@ import CreditReloadModal from './components/common/CreditReloadModal.jsx'
 // ================= Dashboard Topbar (notifications + account dropdown + admin persona switcher) =================
 const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
+  { id: 'affiliate', label: 'Affiliate Partner', shortLabel: 'Affiliate', shortDesc: 'Links, Matrix & Payouts', icon: RiCoinsFill, color: '#22d3ee' },
   { id: 'creator', label: 'Creator / Artist', shortLabel: 'Creator', shortDesc: 'EPK, Catalog, Splits', icon: RiMicFill, color: '#22d3ee' },
   { id: 'label', label: 'Record Label', shortLabel: 'Label', shortDesc: 'Roster, Rights, Splits & Sync', icon: RiDiscFill, color: '#a855f7' },
   { id: 'supervisor', label: 'Music Supervisor', shortLabel: 'Supervisor', shortDesc: 'Sync Briefs & Escrow', icon: RiEqualizerFill, color: '#ec4899' },
@@ -235,6 +244,14 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
         simulated_role: targetRole !== 'admin' ? targetRole : null
       };
 
+      if (targetRole === 'affiliate') {
+        updatedUser.ref_code = updatedUser.ref_code || 'TM-KENYA-254';
+        updatedUser.tier = updatedUser.tier || 'partner';
+        updatedUser.payout_method = updatedUser.payout_method || 'mpesa';
+        updatedUser.payout_account = updatedUser.payout_account || '+254712345678';
+        updatedUser.name = updatedUser.name || 'Zawadi Kiprop';
+      }
+
       try {
         localStorage.setItem('tunemavens_admin_verified', 'true');
         if (targetRole === 'admin') {
@@ -251,7 +268,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
       }
 
       if (onUpdateUser) onUpdateUser(updatedUser);
-      if (setActiveTab) setActiveTab('home');
+      if (setActiveTab) setActiveTab(targetRole === 'affiliate' ? 'affiliates' : 'home');
       setAccountOpen(false);
       window.location.reload();
     } catch (err) {
@@ -261,12 +278,98 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
   const currentRoleObj = PERSONA_ROLES.find(r => r.id === sessionUser?.role) || PERSONA_ROLES[1];
 
-  // Placeholder notification feed  -  real live updates are on the roadmap.
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Welcome to TuneMavens', body: 'You\u2019re signed in across the whole network. Credits: 600.', read: false, at: '2m ago' },
-    { id: 2, title: 'Your workspace is ready', body: 'Publishing, distribution and split panels are wired up and waiting.', read: false, at: '12m ago' },
-    { id: 3, title: 'Tip: complete your profile', body: 'Add a brand bio so labels can find you in Sync Marketplace.', read: true, at: '1h ago' },
-  ]);
+  // Notification feed with role-tailored actionable tasks
+  const [notifications, setNotifications] = useState(() => {
+    if (sessionUser?.role === 'affiliate') {
+      return [
+        {
+          id: 'aff_payout',
+          title: 'Partner Payout Rails & Mobile STK',
+          body: 'Connect M-Pesa STK or Bank to receive weekly automatic payouts.',
+          actionText: 'Settings',
+          actionType: 'payout',
+          read: false,
+          at: '1m ago'
+        },
+        {
+          id: 'aff_link',
+          title: '90-Day Referral Link & Share Suite',
+          body: 'Earn 3%–12% commission on music sales, sync licensing, and EPKs.',
+          actionText: 'Get Link',
+          actionType: 'link',
+          read: false,
+          at: '5m ago'
+        },
+        {
+          id: 'aff_talent',
+          title: 'Directly Onboard Creators & Labels',
+          body: 'Add talent directly to your network with 0 credit deduction.',
+          actionText: 'Add Talent',
+          actionType: 'talent',
+          read: false,
+          at: '15m ago'
+        },
+        {
+          id: 'aff_guide',
+          title: 'Recommended Reading: Partner Playbook',
+          body: 'Commission matrix and promotional standards (Optional reading).',
+          actionText: 'Read Guide',
+          actionType: 'guide',
+          read: false,
+          at: '30m ago'
+        }
+      ];
+    }
+    return [
+      { id: 1, title: 'Welcome to TuneMavens', body: 'You\u2019re signed in across the whole network. Credits: 600.', read: false, at: '2m ago' },
+      { id: 2, title: 'Your workspace is ready', body: 'Publishing, distribution and split panels are wired up and waiting.', read: false, at: '12m ago' },
+      { id: 3, title: 'Tip: complete your profile', body: 'Add a brand bio so labels can find you in Sync Marketplace.', read: true, at: '1h ago' },
+    ];
+  });
+
+  useEffect(() => {
+    if (sessionUser?.role === 'affiliate') {
+      setNotifications([
+        {
+          id: 'aff_payout',
+          title: 'Partner Payout Rails & Mobile STK',
+          body: 'Connect M-Pesa STK or Bank to receive weekly automatic payouts.',
+          actionText: 'Settings',
+          actionType: 'payout',
+          read: false,
+          at: '1m ago'
+        },
+        {
+          id: 'aff_link',
+          title: '90-Day Referral Link & Share Suite',
+          body: 'Earn 3%–12% commission on music sales, sync licensing, and EPKs.',
+          actionText: 'Get Link',
+          actionType: 'link',
+          read: false,
+          at: '5m ago'
+        },
+        {
+          id: 'aff_talent',
+          title: 'Directly Onboard Creators & Labels',
+          body: 'Add talent directly to your network with 0 credit deduction.',
+          actionText: 'Add Talent',
+          actionType: 'talent',
+          read: false,
+          at: '15m ago'
+        },
+        {
+          id: 'aff_guide',
+          title: 'Recommended Reading: Partner Playbook',
+          body: 'Commission matrix and promotional standards (Optional reading).',
+          actionText: 'Read Guide',
+          actionType: 'guide',
+          read: false,
+          at: '30m ago'
+        }
+      ]);
+    }
+  }, [sessionUser?.role]);
+
   const unread = notifications.filter(n => !n.read).length;
 
   const markAllRead = () => setNotifications(n => n.map(x => ({ ...x, read: true })));
@@ -321,44 +424,58 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
         )}
 
         {/* Unified Credits Badge & Reload Trigger on Topbar */}
-        <button
-          type="button"
-          onClick={() => {
-            if (typeof onOpenCreditReload === 'function') {
-              onOpenCreditReload('Top-Up Unified Platform Credits');
-            }
-          }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: (sessionUser?.credits ?? 0) < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)',
-            border: (sessionUser?.credits ?? 0) < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)',
-            color: (sessionUser?.credits ?? 0) < 50 ? '#ef4444' : '#10b981',
-            padding: '5px 11px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-          title="Click to reload unified platform credits (Zero monthly charges)"
-          data-testid="topbar-unified-credits-btn"
-        >
-          <RiCoinsFill size={15} style={{ color: (sessionUser?.credits ?? 0) < 50 ? '#ef4444' : '#10b981' }} />
-          <span>{(sessionUser?.credits ?? 0).toLocaleString()} Credits</span>
-          <span style={{
-            fontSize: '10px',
-            background: (sessionUser?.credits ?? 0) < 50 ? '#ef4444' : '#10b981',
-            color: '#ffffff',
-            padding: '1px 5px',
-            borderRadius: '2px',
-            fontWeight: 800,
-            textTransform: 'uppercase'
-          }}>
-            Top Up
-          </span>
-        </button>
+        {(() => {
+          const isAffiliate = sessionUser?.role === 'affiliate' || activeTab === 'affiliates';
+          const creditsCount = sessionUser?.credits ?? 0;
+          return (
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof onOpenCreditReload === 'function') {
+                  onOpenCreditReload(isAffiliate ? 'Creator Tools Credit Reload' : 'Top-Up Unified Platform Credits');
+                }
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: isAffiliate
+                  ? 'rgba(34, 211, 238, 0.1)'
+                  : (creditsCount < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)'),
+                border: isAffiliate
+                  ? '1px solid rgba(34, 211, 238, 0.35)'
+                  : (creditsCount < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)'),
+                color: isAffiliate
+                  ? '#22d3ee'
+                  : (creditsCount < 50 ? '#ef4444' : '#10b981'),
+                padding: '5px 11px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title={isAffiliate 
+                ? "Unified Credits: Applies only if you use creator tools (MasterLab AI, Sync briefs, etc.). The Affiliate Dashboard requires 0 credits." 
+                : "Click to reload unified platform credits (Zero monthly charges)"}
+              data-testid="topbar-unified-credits-btn"
+            >
+              <RiCoinsFill size={15} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
+              <span>{creditsCount.toLocaleString()} Credits</span>
+              <span style={{
+                fontSize: '10px',
+                background: isAffiliate ? 'rgba(34, 211, 238, 0.25)' : (creditsCount < 50 ? '#ef4444' : '#10b981'),
+                color: isAffiliate ? '#22d3ee' : '#ffffff',
+                padding: '1px 5px',
+                borderRadius: '2px',
+                fontWeight: 800,
+                textTransform: 'uppercase'
+              }}>
+                {isAffiliate ? 'Studio Tools' : 'Top Up'}
+              </span>
+            </button>
+          );
+        })()}
 
         {/* Task 3: prominent back-to-public-site button */}
         <Link
@@ -403,6 +520,43 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                       <div className="topbar-notif-title">{n.title}</div>
                       <div className="topbar-notif-text">{n.body}</div>
                       <div className="topbar-notif-time">{n.at}</div>
+                      {n.actionText && (
+                        <div style={{ marginTop: '6px' }}>
+                          <button
+                            type="button"
+                            className="topbar-notif-action-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNotifOpen(false);
+                              if (n.actionType === 'payout') {
+                                window.dispatchEvent(new CustomEvent('tunemavens:open-payout-settings'));
+                              } else if (n.actionType === 'link') {
+                                window.dispatchEvent(new CustomEvent('tunemavens:open-referral-link'));
+                              } else if (n.actionType === 'talent') {
+                                window.dispatchEvent(new CustomEvent('tunemavens:open-direct-talent'));
+                              } else if (n.actionType === 'guide') {
+                                window.dispatchEvent(new CustomEvent('tunemavens:open-reading-doc', { detail: { docId: 'affiliate-program-guide' } }));
+                              }
+                              setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+                            }}
+                            style={{
+                              background: 'rgba(34, 211, 238, 0.15)',
+                              border: '1px solid rgba(34, 211, 238, 0.4)',
+                              color: '#22d3ee',
+                              padding: '3px 8px',
+                              borderRadius: '3px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            {n.actionText} <RiArrowRightFill size={11} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -798,6 +952,27 @@ function DashboardView({
     }
   }, [sessionUser?.credits]);
 
+  // Global Affiliate Action Modals State & Listeners
+  const [globalPayoutModalOpen, setGlobalPayoutModalOpen] = useState(false);
+  const [globalReferralModalOpen, setGlobalReferralModalOpen] = useState(false);
+  const [globalTalentModalOpen, setGlobalTalentModalOpen] = useState(false);
+
+  useEffect(() => {
+    const onOpenPayout = () => setGlobalPayoutModalOpen(true);
+    const onOpenLink = () => setGlobalReferralModalOpen(true);
+    const onOpenTalent = () => setGlobalTalentModalOpen(true);
+
+    window.addEventListener('tunemavens:open-payout-settings', onOpenPayout);
+    window.addEventListener('tunemavens:open-referral-link', onOpenLink);
+    window.addEventListener('tunemavens:open-direct-talent', onOpenTalent);
+
+    return () => {
+      window.removeEventListener('tunemavens:open-payout-settings', onOpenPayout);
+      window.removeEventListener('tunemavens:open-referral-link', onOpenLink);
+      window.removeEventListener('tunemavens:open-direct-talent', onOpenTalent);
+    };
+  }, []);
+
   const [payoutBalance, setPayoutBalance] = useState(4235.80);
   const [collapsed, setCollapsed] = useState(false);
   const [hoveredNavItem, setHoveredNavItem] = useState(null);
@@ -942,16 +1117,17 @@ function DashboardView({
     // Role-based permission guard ensuring users only access authorized apps
     const userRole = sessionUser?.role || 'creator';
     const roleAllowed = {
-      admin: ['home', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team'],
-      corporate: ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings'],
-      media_house: ['home', 'corporate-ads', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings'],
-      media: ['home', 'corporate-ads', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings'],
-      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'label-team'],
-      dj: ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
-      studio: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
-      supervisor: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings'],
-      consumer: ['home', 'library', 'tips', 'stream-controls', 'profile', 'settings'],
-      creator: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings']
+      admin: ['home', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
+      corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support'],
+      media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support'],
+      media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support'],
+      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'label-team', 'affiliates', 'support'],
+      dj: ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
+      studio: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
+      supervisor: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
+      consumer: ['home', 'library', 'tips', 'stream-controls', 'profile', 'settings', 'support'],
+      affiliate: ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
+      creator: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
     if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
@@ -1093,6 +1269,8 @@ function DashboardView({
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       case 'corporate-ads':
         return <CorporateAdsPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
+      case 'affiliates':
+        return <AffiliateAdminPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
       case 'support':
         return (
           <SupportTicketsPanel 
@@ -1138,36 +1316,40 @@ function DashboardView({
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: RiGlobalFill, category: 'Admin' },
       'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: RiStarFill, category: 'Admin' },
       'corporate-ads': { id: 'corporate-ads', label: 'Corporate Ads & Rates', icon: RiMegaphoneFill, category: role === 'admin' ? 'Admin' : 'Brand Sponsorships' },
+      affiliates: { id: 'affiliates', label: 'Affiliate Programme', icon: RiUserSharedFill, category: role === 'admin' ? 'Admin' : (role === 'affiliate' ? 'Affiliate Partner' : 'Creator Tools') },
     };
 
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'admin-team', 'corporate-ads', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
+        visibleKeys = ['home', 'admin-team', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
+        break;
+      case 'affiliate':
+        visibleKeys = ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'support'];
         break;
       case 'corporate':
-        visibleKeys = ['home', 'corporate-ads', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'support'];
         break;
       case 'media_house':
       case 'media':
-        visibleKeys = ['home', 'corporate-ads', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'label-team'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'label-team', 'affiliates'];
         break;
       case 'dj':
         visibleKeys = ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'studio':
       case 'supervisor':
-        visibleKeys = ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'affiliates'];
         break;
       case 'consumer':
         visibleKeys = ['home', 'library', 'tips', 'stream-controls', 'profile', 'support'];
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'social-ai', 'crm', 'app-marketplace', 'profile', 'affiliates', 'support'];
         break;
     }
 
@@ -1424,8 +1606,8 @@ function DashboardView({
           onOpenCreditReload={handleOpenCreditReload}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
-          {/* Low unified credits prompt banner */}
-          {(sessionUser?.credits ?? userCredits) < 50 && (
+          {/* Low unified credits prompt banner - Excludes affiliates since affiliate dashboard requires 0 credits */}
+          {(sessionUser?.credits ?? userCredits) < 50 && sessionUser?.role !== 'affiliate' && activeTab !== 'affiliates' && (
             <div
               style={{
                 background: 'rgba(239, 68, 68, 0.12)',
@@ -1503,6 +1685,45 @@ function DashboardView({
         onClose={() => setWizardOpen(false)}
         initial={wizardAnswers}
         onSaved={(answers) => setWizardAnswers(answers)}
+      />
+
+      {/* Global Affiliate Action Modals */}
+      <AffiliatePayoutSettingsModal
+        isOpen={globalPayoutModalOpen}
+        onClose={() => setGlobalPayoutModalOpen(false)}
+        sessionUser={sessionUser}
+        onSuccess={(updated) => {
+          if (updated && onUpdateUser && sessionUser) {
+            onUpdateUser({
+              ...sessionUser,
+              payout_method: updated.rail,
+              payout_account: updated.phone || updated.bankAccount || updated.paypalEmail
+            });
+          }
+        }}
+      />
+      <AffiliateReferralLinkModal
+        isOpen={globalReferralModalOpen}
+        onClose={() => setGlobalReferralModalOpen(false)}
+        sessionUser={sessionUser}
+        onLinkCopied={() => {
+          localStorage.setItem('tunemavens_affiliate_link_shared', 'true');
+        }}
+        onGoToDashboard={() => {
+          setActiveTab('affiliates');
+        }}
+      />
+      <AffiliateDirectTalentModal
+        isOpen={globalTalentModalOpen}
+        onClose={() => setGlobalTalentModalOpen(false)}
+        sessionUser={sessionUser}
+        onSuccess={() => {
+          localStorage.setItem('tunemavens_affiliate_talent_added', 'true');
+        }}
+        onViewInNetwork={() => {
+          setActiveTab('affiliates');
+          window.dispatchEvent(new CustomEvent('tunemavens:switch-subtab', { detail: { subTab: 'network' } }));
+        }}
       />
 
       {activeModalApp && (
@@ -2891,6 +3112,31 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
         </button>
       </form>
 
+      {/* Partner Payout Rails & Mobile STK Settings Card */}
+      <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(34, 211, 238, 0.05)', border: '1px solid rgba(34, 211, 238, 0.25)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <RiSmartphoneFill size={16} color="#22d3ee" />
+              <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#fff', margin: 0 }}>
+                Partner Payout Rails &amp; Mobile STK Settings
+              </h4>
+            </div>
+            <p style={{ fontSize: '11.5px', color: '#94a3b8', margin: '4px 0 0' }}>
+              Configure your M-Pesa Express STK prompt, Airtel Money, or Bank Wire for automatic Friday settlements (0 platform credits).
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-payout-settings'))}
+            className="btn-primary"
+            style={{ padding: '7px 14px', fontSize: '12px', borderRadius: '3px', cursor: 'pointer', background: 'var(--cyan, #22d3ee)', color: '#060813', border: 'none', fontWeight: 800 }}
+          >
+            Configure Payout Rails
+          </button>
+        </div>
+      </div>
+
       {/* Record Label Team Collaborators & Roster Seats Link */}
       {(sessionUser?.role === 'label' || sessionUser?.role === 'admin') && (
         <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(0, 240, 255, 0.05)', border: '1px solid rgba(0, 240, 255, 0.2)', borderRadius: '4px' }}>
@@ -3032,9 +3278,6 @@ function OverviewPanel(props) {
 function SplitsCascadePanel(props) {
   return <SplitCascadePanel {...props} />;
 }
-function SyncMarketplacePanel(props) {
-  return <SyncLicensingPanel {...props} />;
-}
 
 // ================= SUB-PANEL: Overview Home =================
 function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits, setActiveTab }) {
@@ -3170,6 +3413,25 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
             { label: "Amapiano", val: "50%", color: "#8b5cf6" }
           ]
         };
+      case 'affiliate':
+        return {
+          title: "Affiliate Partner Growth Console",
+          statLabel: "Attributed Commissions Earned",
+          statValue: "$490.10",
+          statTrend: "↗ +$114.10 pending settlement",
+          stat2Label: "Active Referral Link Clicks",
+          stat2Value: "841 Hits",
+          stat2Trend: "✨ 5.95% conversion rate",
+          chartTitle: "Monthly Attributed GMV Trend ($)",
+          chartPoints: [800, 1500, 2600, 3700, 4400, 5260],
+          chartLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          detailsTitle: "Compensation Tier & Payouts",
+          detailsItems: [
+            { label: "Tier Status", val: "Partner (+1.0% Matrix Bonus)", color: "var(--cyan)" },
+            { label: "Payout Rail", val: "M-Pesa STK (+254712345678)", color: "#10b981" },
+            { label: "Tracking Cookie", val: "90 Days Active", color: "#f59e0b" }
+          ]
+        };
       case 'creator':
       default:
         return {
@@ -3230,16 +3492,27 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
       <div className="dashboard-grid-3">
         <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div className="stat-label">AI Credit Balance</div>
+            <div className="stat-label">
+              {sessionUser?.role === 'affiliate' ? 'Studio & Tool Credits' : 'AI Credit Balance'}
+            </div>
             <div className="stat-value">{userCredits} Credits</div>
-            <div className="stat-trend">✨ Sandbox Wallet Active</div>
+            <div className="stat-trend" style={{ color: sessionUser?.role === 'affiliate' ? 'var(--cyan)' : undefined }}>
+              {sessionUser?.role === 'affiliate' 
+                ? '✨ 0 Credits for Affiliate Dashboard (100% Free)' 
+                : '✨ Sandbox Wallet Active'}
+            </div>
+            {sessionUser?.role === 'affiliate' && (
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: '8px 0 0 0', lineHeight: '1.4' }}>
+                Affiliate console, link generator, and roster management require <strong>zero credits</strong>. Credits only apply should you desire to use studio tools or sync pitching.
+              </p>
+            )}
           </div>
           <button 
             onClick={handleBuyCredits} 
             className="btn-primary" 
             style={{ width: '100%', marginTop: '16px', padding: '6px', fontSize: '11px', borderRadius: '4px', cursor: 'pointer' }}
           >
-            + Buy 250 Credits
+            {sessionUser?.role === 'affiliate' ? 'Optional: Buy Studio Tool Credits' : '+ Buy 250 Credits'}
           </button>
         </div>
 
@@ -3251,7 +3524,8 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
           </div>
           <button 
             onClick={() => {
-              if (sessionUser?.role === 'dj') setActiveTab('djpool');
+              if (sessionUser?.role === 'affiliate') setActiveTab('affiliates');
+              else if (sessionUser?.role === 'dj') setActiveTab('djpool');
               else if (sessionUser?.role === 'studio' || sessionUser?.role === 'supervisor') setActiveTab('sync');
               else if (sessionUser?.role === 'consumer') setActiveTab('profile');
               else setActiveTab('splits');
@@ -3271,7 +3545,8 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
           </div>
           <button 
             onClick={() => {
-              if (sessionUser?.role === 'dj') setActiveTab('djpool');
+              if (sessionUser?.role === 'affiliate') setActiveTab('affiliates');
+              else if (sessionUser?.role === 'dj') setActiveTab('djpool');
               else if (sessionUser?.role === 'studio' || sessionUser?.role === 'supervisor') setActiveTab('escrow');
               else if (sessionUser?.role === 'consumer') setActiveTab('profile');
               else setActiveTab('catalog');
@@ -7016,278 +7291,9 @@ function DjPoolPanel() {
 }
 
 
-// ================= SUB-PANEL: Sync Licensing Marketplace (Phase 6) =================
-function SyncLicensingPanel({ sessionUser, tracks: propTracks, activeArtist }) {
-  const [activeMood, setActiveMood] = useState('all');
-  const [playingTrack, setPlayingTrack] = useState(null);
-  
-  // Ported Asset support
-  const [portedAsset, setPortedAsset] = useState(() => sessionStorage.getItem('ported_asset_url'));
-  const [coverUrl, setCoverUrl] = useState('');
-  const [trackTitle, setTrackTitle] = useState('');
-  const [briefTarget, setBriefTarget] = useState('Netflix Sci-Fi Series');
-  const [submitting, setSubmitting] = useState(false);
-  const [submittedPitches, setSubmittedPitches] = useState([]);
-
-  const handleApplyPortedAsset = () => {
-    setCoverUrl(portedAsset);
-    sessionStorage.removeItem('ported_asset_url');
-    setPortedAsset(null);
-  };
-
-  const handlePitchSubmit = (e) => {
-    e.preventDefault();
-    if (!trackTitle.trim()) return;
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      setSubmittedPitches([
-        ...submittedPitches,
-        {
-          id: Date.now(),
-          title: trackTitle,
-          target: briefTarget,
-          coverUrl: coverUrl || 'https://picsum.photos/seed/default/80/80',
-          date: new Date().toLocaleDateString()
-        }
-      ]);
-      setTrackTitle('');
-      setCoverUrl('');
-      alert('Track pitched successfully to the Music Supervisor network!');
-    }, 1200);
-  };
-
-  const defaultTracks = [
-    { id: 1, title: "Kilimanjaro Vibe", artist: "Aisha Okoro", moods: ["Afrobeats", "energetic", "sunset"] },
-    { id: 2, title: "Nairobi Sunset", artist: "Aisha Okoro", moods: ["chill", "sunset", "Afrobeats"] },
-    { id: 3, title: "Midnight Grooves", artist: "Aisha Okoro", moods: ["dark", "cinematic", "energetic"] },
-    { id: 4, title: "Neon Shadows", artist: "Aisha Okoro", moods: ["dark", "chill", "cinematic"] },
-    { id: 5, title: "Nairobi Cyberwave (Master)", artist: "Ndufo", moods: ["energetic", "cinematic", "Afrobeats"] },
-    { id: 6, title: "Rift Valley Amapiano", artist: "Brian Omondi", moods: ["chill", "sunset"] }
-  ];
-
-  const catalogMappedTracks = (Array.isArray(propTracks) && propTracks.length > 0)
-    ? propTracks.map((t, idx) => ({
-        id: t.id || t.isrc || idx + 10,
-        title: t.title,
-        artist: t.artist || 'Ndufo',
-        moods: [
-          (t.genre && t.genre.toLowerCase().includes('afro')) ? 'Afrobeats' : 'chill',
-          (idx % 2 === 0) ? 'energetic' : 'cinematic',
-          'sunset'
-        ]
-      }))
-    : defaultTracks;
-
-  let allAvailableTracks = catalogMappedTracks;
-
-  // If label role, strictly limit to artists in label roster
-  if (sessionUser?.role === 'label') {
-    let rosterNames = ['Aisha Okoro', 'Brian Omondi', 'Ndufo'];
-    try {
-      const storedRoster = localStorage.getItem('tunemavens_label_roster');
-      if (storedRoster) {
-        const parsed = JSON.parse(storedRoster);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          rosterNames = parsed.map(p => p.name || p.artist_name || p.subdomain).filter(Boolean);
-        }
-      }
-    } catch (_) {}
-    allAvailableTracks = allAvailableTracks.filter(t => 
-      rosterNames.some(rn => (t.artist || '').toLowerCase().includes(rn.toLowerCase()))
-    );
-  } else if (activeArtist && activeArtist.subdomain !== 'all') {
-    allAvailableTracks = allAvailableTracks.filter(t => 
-      (t.artist || '').toLowerCase().includes((activeArtist.name || '').toLowerCase())
-    );
-  }
-
-  const filteredTracks = activeMood === 'all' 
-    ? allAvailableTracks 
-    : allAvailableTracks.filter(t => t.moods.includes(activeMood));
-
-  return (
-    <div>
-      {portedAsset && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(34, 211, 238, 0.06)', border: '1px solid rgba(34, 211, 238, 0.20)', padding: '12px 18px', borderRadius: '4px', marginBottom: '24px' }}>
-          <div style={{ flex: 1, fontSize: '12.5px', color: '#cbd5e1' }}>
-            🎨 <strong>Ported Asset Detected:</strong> You have a generated artwork from your Social AI Studio ready.
-          </div>
-          <button type="button" onClick={handleApplyPortedAsset} className="btn-secondary" style={{ background: 'var(--cyan)', color: '#000', padding: '6px 12px', fontSize: '11px', fontWeight: 'bold', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
-            Apply as Pitch Cover Art
-          </button>
-          <button type="button" onClick={() => { sessionStorage.removeItem('ported_asset_url'); setPortedAsset(null); }} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', marginLeft: '6px' }}>
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      <div className="dashboard-panel-header">
-        <h2>Sync Licensing &amp; Scene-tag Hub</h2>
-        <p>Pitch tracks for films, games, and commercials using AI scene tagging and 30-second watermarked streams.</p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
-        {/* Left Side: Filters and Pitch Form */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Filters */}
-          <div className="dashboard-card" style={{ height: 'fit-content' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>AI Scene Tags</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {['all', 'Afrobeats', 'sunset', 'energetic', 'chill', 'dark', 'cinematic'].map(mood => (
-                <button 
-                  key={mood}
-                  onClick={() => { setActiveMood(mood); setPlayingTrack(null); }}
-                  className={`dashboard-nav-item ${activeMood === mood ? 'active' : ''}`}
-                  style={{ width: '100%', border: 'none', background: activeMood === mood ? 'rgba(34,211,238,0.1)' : 'transparent', textTransform: 'capitalize' }}
-                >
-                  #{mood}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Pitch Form */}
-          <div className="dashboard-card">
-            <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>New Sync Pitch</h3>
-            <form onSubmit={handlePitchSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <label style={{ fontSize: '11.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px' }}>Track Title</label>
-                <input 
-                  type="text" 
-                  value={trackTitle} 
-                  onChange={(e) => setTrackTitle(e.target.value)} 
-                  placeholder="e.g. Neon Horizon" 
-                  className="form-control"
-                  style={{ width: '100%', fontSize: '12.5px', padding: '8px' }}
-                  required
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '11.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px' }}>Target Brief</label>
-                <select 
-                  value={briefTarget} 
-                  onChange={(e) => setBriefTarget(e.target.value)} 
-                  className="form-control"
-                  style={{ width: '100%', background: '#0a0f1d', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', fontSize: '12.5px', padding: '8px' }}
-                >
-                  <option value="Netflix Sci-Fi Series">Netflix Sci-Fi Series Theme</option>
-                  <option value="Nike Summer Campaign">Nike Summer Commercial</option>
-                  <option value="EA Sports Football 2027">EA Sports Football 2027 In-game Radio</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: '11.5px', color: '#cbd5e1', display: 'block', marginBottom: '4px' }}>Cover Artwork URL</label>
-                <input 
-                  type="text" 
-                  value={coverUrl} 
-                  onChange={(e) => setCoverUrl(e.target.value)} 
-                  placeholder="https://images..." 
-                  className="form-control"
-                  style={{ width: '100%', fontSize: '12.5px', padding: '8px' }}
-                />
-                {coverUrl && (
-                  <div style={{ marginTop: '8px', width: '60px', height: '60px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <img src={coverUrl} alt="Cover Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                )}
-              </div>
-              <button 
-                type="submit" 
-                disabled={submitting} 
-                className="btn-primary" 
-                style={{ width: '100%', padding: '10px', fontSize: '12.5px', marginTop: '6px', fontWeight: 'bold' }}
-              >
-                {submitting ? 'Pitching...' : 'Pitch to Supervisor'}
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Right Side: Grid and Active Pitches */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Tracks grid */}
-          <div className="dashboard-card">
-            <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Watermarked Tracks Grid</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {filteredTracks.map(tr => (
-                <div 
-                  key={tr.id}
-                  style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    padding: '16px', 
-                    background: 'rgba(255,255,255,0.02)', 
-                    border: '1px solid rgba(255,255,255,0.04)', 
-                    borderRadius: '8px' 
-                  }}
-                >
-                  <div>
-                    <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', margin: '0 0 4px 0' }}>{tr.title}</h4>
-                    <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '8px' }}>by {tr.artist}</span>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      {tr.moods.map((m, i) => (
-                        <span key={i} style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(34,211,238,0.05)', color: 'var(--cyan)', border: '1px solid rgba(34,211,238,0.1)', borderRadius: '20px' }}>
-                          #{m}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    {playingTrack === tr.id ? (
-                      /* Animated audio wave indicator */
-                      <div style={{ display: 'flex', gap: '3px', alignItems: 'center', height: '20px' }}>
-                        <div className="wave-bar" style={{ width: '3px', height: '100%', background: 'var(--cyan)', animation: 'wave 0.6s infinite ease-in-out alternate' }} />
-                        <div className="wave-bar" style={{ width: '3px', height: '60%', background: 'var(--cyan)', animation: 'wave 0.6s infinite ease-in-out alternate 0.2s' }} />
-                        <div className="wave-bar" style={{ width: '3px', height: '80%', background: 'var(--cyan)', animation: 'wave 0.6s infinite ease-in-out alternate 0.4s' }} />
-                      </div>
-                    ) : null}
-
-                    <button 
-                      onClick={() => setPlayingTrack(playingTrack === tr.id ? null : tr.id)}
-                      className="btn-primary" 
-                      style={{ padding: '8px 16px', fontSize: '12px', borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                      {playingTrack === tr.id ? 'Pause Stream' : 'Preview 30s'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Active Pitches Ledger */}
-          {submittedPitches.length > 0 && (
-            <div className="dashboard-card">
-              <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Active Sync Pitches Ledger</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {submittedPitches.map(p => (
-                  <div key={p.id} style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                    <img src={p.coverUrl} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ fontSize: '13px', color: '#fff', display: 'block' }}>{p.title}</strong>
-                      <span style={{ fontSize: '11px', color: 'var(--cyan)' }}>Pitched to: {p.target}</span>
-                    </div>
-                    <span style={{ fontSize: '10px', color: '#64748b' }}>{p.date}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Wave animation styling */}
-      <style>{`
-        @keyframes wave {
-          0% { height: 4px; }
-          100% { height: 20px; }
-        }
-      `}</style>
-    </div>
-  );
+// ================= SUB-PANEL: Sync Licensing Marketplace (Phase 6 / Master Revamp) =================
+function SyncLicensingPanel({ sessionUser }) {
+  return <SyncMarketplacePanel sessionUser={sessionUser} />;
 }
 
 function SyncBriefMatchPanel(props) {
@@ -8664,6 +8670,7 @@ function AppContent({
           <Route path="/tours" element={<ToursView sessionUser={sessionUser} />} />
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
+          <Route path="/affiliates" element={<AffiliatesView sessionUser={sessionUser} />} />
           <Route path="/help" element={<HelpView sessionUser={sessionUser} />} />
           <Route path="/community/support" element={<SupportPageView sessionUser={sessionUser} catalogTracks={catalogTracks} />} />
           <Route path="/support" element={<SupportPageView sessionUser={sessionUser} catalogTracks={catalogTracks} />} />
@@ -8758,6 +8765,7 @@ function AppContent({
                       <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
                       <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
                       <Link to="/community/support" className="footer-link">Support Desk &amp; Claims</Link>
+                      <Link to="/affiliates" className="footer-link">Affiliate Programme</Link>
                     </div>
                   </div>
                 </div>
@@ -8842,6 +8850,7 @@ function AppContent({
                       <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
                       <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
                       <Link to="/community/support" className="footer-link">Support Desk &amp; Claims</Link>
+                      <Link to="/affiliates" className="footer-link">Affiliate Programme</Link>
                     </div>
                   </div>
                 </div>

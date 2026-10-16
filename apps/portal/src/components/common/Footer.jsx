@@ -90,6 +90,7 @@ export default function Footer() {
                   <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
                   <Link to="/help" className="footer-link">Support Desk</Link>
                   <Link to="/community/blog" className="footer-link">Blog &amp; Articles</Link>
+                  <Link to="/affiliates" className="footer-link">Affiliate Programme</Link>
                 </div>
               </div>
             </div>
@@ -174,6 +175,7 @@ export default function Footer() {
                   <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
                   <Link to="/help" className="footer-link">Support Desk</Link>
                   <Link to="/community/blog" className="footer-link">Blog &amp; Articles</Link>
+                  <Link to="/affiliates" className="footer-link">Affiliate Programme</Link>
                 </div>
               </div>
             </div>

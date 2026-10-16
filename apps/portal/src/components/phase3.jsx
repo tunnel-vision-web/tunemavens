@@ -12,6 +12,8 @@ import { INTERMAVEN_PLATFORM_APPS } from '../lib/intermavenPlatformApps.js'
 import { lookupApp } from '../lib/appCatalog.js'
 import { getIntermavenUrl } from '../PerfectForSidebar.jsx'
 import { persistAppActivation, persistAppDeactivation, getStoredActivatedApps } from '../lib/activatedApps.js'
+import InAppDocModal from './common/InAppDocModal.jsx'
+import { AffiliatePayoutSettingsModal, AffiliateReferralLinkModal, AffiliateDirectTalentModal } from './affiliates/AffiliateActionModals.jsx'
 
 // Small shared helper  -  a plain title + description block used by every
 // Phase 3 panel. Kept next to the panels that use it.
@@ -29,6 +31,75 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
   const [distDeals, setDistDeals] = useState([]);
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('onboarding_dismissed') === 'true');
   const [collapsed, setCollapsed] = useState(false);
+  const [readingDocId, setReadingDocId] = useState(null);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [showTalentModal, setShowTalentModal] = useState(false);
+
+  const [payoutRailConfigured, setPayoutRailConfigured] = useState(() => {
+    try {
+      return Boolean(
+        localStorage.getItem('tunemavens_payout_configured') === 'true' ||
+        sessionUser?.payout_account ||
+        sessionUser?.payout_details?.phone
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  const [linkShared, setLinkShared] = useState(() => {
+    try {
+      return Boolean(localStorage.getItem('tunemavens_affiliate_link_shared') === 'true');
+    } catch {
+      return false;
+    }
+  });
+
+  const [talentOnboarded, setTalentOnboarded] = useState(() => {
+    try {
+      return Boolean(localStorage.getItem('tunemavens_affiliate_talent_added') === 'true');
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const handleOpenPayout = () => setShowPayoutModal(true);
+    const handleOpenLink = () => setShowReferralModal(true);
+    const handleOpenTalent = () => setShowTalentModal(true);
+    const handlePayoutUpdated = () => setPayoutRailConfigured(true);
+
+    window.addEventListener('tunemavens:open-payout-settings', handleOpenPayout);
+    window.addEventListener('tunemavens:open-referral-link', handleOpenLink);
+    window.addEventListener('tunemavens:open-direct-talent', handleOpenTalent);
+    window.addEventListener('tunemavens:payout-updated', handlePayoutUpdated);
+
+    return () => {
+      window.removeEventListener('tunemavens:open-payout-settings', handleOpenPayout);
+      window.removeEventListener('tunemavens:open-referral-link', handleOpenLink);
+      window.removeEventListener('tunemavens:open-direct-talent', handleOpenTalent);
+      window.removeEventListener('tunemavens:payout-updated', handlePayoutUpdated);
+    };
+  }, []);
+
+  const [readDocs, setReadDocs] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('tunemavens_read_recommended_docs') || '[]');
+    } catch (_) {
+      return [];
+    }
+  });
+
+  const markDocRead = (docId) => {
+    setReadDocs(prev => {
+      const updated = Array.from(new Set([...prev, docId]));
+      try {
+        localStorage.setItem('tunemavens_read_recommended_docs', JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+  };
 
   useEffect(() => {
     if (dismissed || !tokenStore.get() || !sessionUser) return;
@@ -63,32 +134,80 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
   let steps = [];
   const userRole = sessionUser?.role || 'creator';
 
-  if (userRole === 'studio' || userRole === 'corporate' || userRole === 'media') {
+  if (userRole === 'affiliate') {
+    const affiliateReadingDone = readDocs.includes('affiliate-program-guide');
     steps = [
-      { id: 'profile', label: 'Complete supervisor profile', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      {
+        id: 'profile',
+        label: 'Complete partner payout rails & mobile STK settings',
+        done: payoutRailConfigured,
+        tab: 'profile',
+        cta: payoutRailConfigured ? 'Review Rails' : 'Settings',
+        onClick: () => setShowPayoutModal(true)
+      },
+      {
+        id: 'reading',
+        label: 'Recommended Reading: Affiliate Playbook & 3%–12% Matrix (Optional)',
+        done: affiliateReadingDone,
+        cta: affiliateReadingDone ? 'Review Guide' : 'Read Guide (Optional)',
+        onClick: () => {
+          markDocRead('affiliate-program-guide');
+          setReadingDocId('affiliate-program-guide');
+        }
+      },
+      {
+        id: 'link',
+        label: 'Generate & share your 90-day referral link',
+        done: linkShared,
+        tab: 'affiliates',
+        cta: linkShared ? 'View Link' : 'Get Link',
+        onClick: () => setShowReferralModal(true)
+      },
+      {
+        id: 'network',
+        label: 'Directly onboard your first creator or record label',
+        done: talentOnboarded,
+        tab: 'affiliates',
+        cta: talentOnboarded ? 'Add More Talent' : 'Add Talent',
+        onClick: () => setShowTalentModal(true)
+      },
+    ];
+  } else if (userRole === 'studio' || userRole === 'corporate' || userRole === 'media' || userRole === 'supervisor' || userRole === 'media_house') {
+    const isSupervisor = userRole === 'studio' || userRole === 'supervisor';
+    const targetDoc = isSupervisor ? 'sync-licensing-masterclass' : 'corporate-ads-and-brand-flights';
+    const readingDone = readDocs.includes(targetDoc);
+    steps = [
+      { id: 'profile', label: 'Complete profile credentials', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      { id: 'reading', label: isSupervisor ? 'Recommended Reading: Sync Briefs & Clearances (Optional)' : 'Recommended Reading: Brand Flights & Ad Tiers (Optional)', done: readingDone, cta: readingDone ? 'Review Guide' : 'Read Guide (Optional)', onClick: () => { markDocRead(targetDoc); setReadingDocId(targetDoc); } },
       { id: 'wizard', label: 'Tell us about your licensing goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
       { id: 'apps', label: 'Activate Sync Master App', done: sessionUser?.apps?.includes('sync-master') || appActivated, tab: 'app-marketplace', cta: 'Activate App' },
       { id: 'search', label: 'Browse creator catalogs', done: false, tab: 'app-marketplace', cta: 'Search Music', onClick: () => setActiveTab('app-marketplace') },
       { id: 'briefs', label: 'Submit a sync licensing brief', done: false, tab: 'app-marketplace', cta: 'Create Brief', onClick: () => setActiveTab('app-marketplace') },
     ];
   } else if (userRole === 'label') {
+    const readingDone = readDocs.includes('tuneledger-and-split-cascade');
     steps = [
       { id: 'profile', label: 'Complete label credentials', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      { id: 'reading', label: 'Recommended Reading: Roster & Split Cascades (Optional)', done: readingDone, cta: readingDone ? 'Review Guide' : 'Read Guide (Optional)', onClick: () => { markDocRead('tuneledger-and-split-cascade'); setReadingDocId('tuneledger-and-split-cascade'); } },
       { id: 'wizard', label: 'Tell us about your label goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
       { id: 'apps', label: 'Activate TuneManagement App', done: sessionUser?.apps?.includes('tunemanagement') || appActivated, tab: 'app-marketplace', cta: 'Activate App' },
       { id: 'publishing', label: 'Set up label publishing splits', done: publishingDone, tab: 'publishing-election', cta: 'Choose Tier' },
       { id: 'catalog', label: 'Submit your label roster & catalog', done: catalogStarted, tab: 'catalog', cta: 'Import Catalog' },
     ];
   } else if (userRole === 'dj') {
+    const readingDone = readDocs.includes('tunestream-audiophile-streaming');
     steps = [
       { id: 'profile', label: 'Complete DJ profile details', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      { id: 'reading', label: 'Recommended Reading: Lossless Sets & Curation (Optional)', done: readingDone, cta: readingDone ? 'Review Guide' : 'Read Guide (Optional)', onClick: () => { markDocRead('tunestream-audiophile-streaming'); setReadingDocId('tunestream-audiophile-streaming'); } },
       { id: 'wizard', label: 'Tell us about your mix goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
       { id: 'apps', label: 'Activate TunePay App', done: sessionUser?.apps?.includes('tunepay') || appActivated, tab: 'app-marketplace', cta: 'Activate App' },
       { id: 'catalog', label: 'Submit your first DJ mix set', done: catalogStarted, tab: 'catalog', cta: 'Upload Mix' },
     ];
   } else {
+    const readingDone = readDocs.includes('master-vs-composition-copyright');
     steps = [
       { id: 'profile', label: 'Complete your profile', done: profileDone, tab: 'profile', cta: 'Open Profile' },
+      { id: 'reading', label: 'Recommended Reading: Copyright & Royalties (Optional)', done: readingDone, cta: readingDone ? 'Review Guide' : 'Read Guide (Optional)', onClick: () => { markDocRead('master-vs-composition-copyright'); setReadingDocId('master-vs-composition-copyright'); } },
       { id: 'wizard', label: 'Tell us about your goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
       { id: 'publishing', label: 'Elect your publishing tier', done: publishingDone, tab: 'publishing-election', cta: 'Choose Tier' },
       { id: 'distribution', label: 'Elect your distribution path', done: distributionDone, tab: 'distribution-election', cta: 'Choose Path' },
@@ -171,10 +290,10 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
               <div className="onboarding-step-body">
                 <span className="onboarding-step-label">{s.label}</span>
               </div>
-              {!s.done && (
+              {(!s.done || s.id === 'reading' || userRole === 'affiliate') && (
                 <button
                   type="button"
-                  className="onboarding-step-cta"
+                  className={`onboarding-step-cta ${s.done ? 'step-done-cta' : ''}`}
                   onClick={() => {
                     if (s.onClick) s.onClick();
                     else if (s.external) window.location.hash = s.external;
@@ -189,6 +308,42 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
           ))}
         </ul>
       )}
+
+      {/* Role Onboarding Recommended Reading Modal */}
+      <InAppDocModal
+        isOpen={Boolean(readingDocId)}
+        onClose={() => setReadingDocId(null)}
+        initialArticleId={readingDocId}
+        contextTitle="Role Onboarding & Recommended Reading"
+        sessionUser={sessionUser}
+      />
+
+      {/* Affiliate Partner Action Modals */}
+      <AffiliatePayoutSettingsModal
+        isOpen={showPayoutModal}
+        onClose={() => setShowPayoutModal(false)}
+        sessionUser={sessionUser}
+        onSuccess={() => setPayoutRailConfigured(true)}
+      />
+      <AffiliateReferralLinkModal
+        isOpen={showReferralModal}
+        onClose={() => setShowReferralModal(false)}
+        sessionUser={sessionUser}
+        onLinkCopied={() => setLinkShared(true)}
+        onGoToDashboard={() => {
+          if (setActiveTab) setActiveTab('affiliates');
+        }}
+      />
+      <AffiliateDirectTalentModal
+        isOpen={showTalentModal}
+        onClose={() => setShowTalentModal(false)}
+        sessionUser={sessionUser}
+        onSuccess={() => setTalentOnboarded(true)}
+        onViewInNetwork={() => {
+          if (setActiveTab) setActiveTab('affiliates');
+          window.dispatchEvent(new CustomEvent('tunemavens:switch-subtab', { detail: { subTab: 'network' } }));
+        }}
+      />
     </div>
   );
 }

@@ -1,0 +1,564 @@
+/* =====================================================================
+   Affiliate Action Modals CSS
+   High-end Dark Palette · 3px Border-Radius · Cyan & Emerald Accents
+   ===================================================================== */
+
+.aff-action-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(5, 7, 18, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.aff-action-modal-card {
+  background: #090e1f;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 3px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 65px -10px rgba(0, 0, 0, 0.95), 0 0 35px -5px rgba(34, 211, 238, 0.15);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.aff-action-modal-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  background: rgba(14, 20, 42, 0.98);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.aff-action-modal-eyebrow {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--cyan, #22d3ee);
+  font-weight: 800;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.aff-action-modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aff-action-modal-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aff-action-modal-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.aff-action-modal-body {
+  padding: 22px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Notice / Credit Zero Banner */
+.aff-action-notice-box {
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  border-radius: 3px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.aff-action-notice-box strong {
+  color: #22d3ee;
+}
+
+/* Payout Rail Radio Grid */
+.aff-rail-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+@media (max-width: 540px) {
+  .aff-rail-selector-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aff-rail-card-option {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.aff-rail-card-option:hover {
+  border-color: rgba(34, 211, 238, 0.4);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.aff-rail-card-option.selected {
+  border-color: var(--cyan, #22d3ee);
+  background: rgba(34, 211, 238, 0.08);
+  box-shadow: 0 0 15px -3px rgba(34, 211, 238, 0.15);
+}
+
+.aff-rail-radio-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #64748b;
+  margin-top: 2px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.aff-rail-card-option.selected .aff-rail-radio-dot {
+  border-color: var(--cyan, #22d3ee);
+  background: var(--cyan, #22d3ee);
+}
+
+.aff-rail-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.aff-rail-info strong {
+  font-size: 13px;
+  color: #f1f5f9;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aff-rail-info span {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.aff-rail-badge-rec {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+/* Form Groups */
+.aff-modal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aff-modal-form-group label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aff-modal-input,
+.aff-modal-select {
+  background: #060914;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  color: #fff;
+  font-size: 13px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.aff-modal-input:focus,
+.aff-modal-select:focus {
+  outline: none;
+  border-color: var(--cyan, #22d3ee);
+  box-shadow: 0 0 10px -2px rgba(34, 211, 238, 0.3);
+}
+
+.aff-modal-hint {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* STK Ping Simulation Area */
+.aff-stk-test-box {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px dashed rgba(34, 211, 238, 0.35);
+  border-radius: 3px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aff-stk-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.aff-stk-test-btn {
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid var(--cyan, #22d3ee);
+  color: var(--cyan, #22d3ee);
+  padding: 6px 14px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.aff-stk-test-btn:hover:not(:disabled) {
+  background: var(--cyan, #22d3ee);
+  color: #060813;
+}
+
+.aff-stk-test-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.aff-stk-test-result {
+  font-size: 11.5px;
+  padding: 8px 10px;
+  border-radius: 2px;
+  line-height: 1.4;
+  animation: fadeIn 0.25s ease;
+}
+
+.aff-stk-test-result.success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  color: #34d399;
+}
+
+.aff-stk-test-result.pinging {
+  background: rgba(34, 211, 238, 0.15);
+  border: 1px solid #22d3ee;
+  color: #22d3ee;
+}
+
+/* Link URL Display & Copy Row */
+.aff-link-display-box {
+  background: #060813;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 3px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aff-link-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aff-copy-btn {
+  background: var(--cyan, #22d3ee);
+  color: #060813;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 10px 16px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.aff-copy-btn:hover {
+  background: #67e8f9;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+}
+
+.aff-copy-btn.copied {
+  background: #10b981;
+  color: #ffffff;
+}
+
+/* Quick Share Buttons Grid */
+.aff-share-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 500px) {
+  .aff-share-buttons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.aff-share-pill-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 10px 8px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.aff-share-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.aff-share-pill-btn.whatsapp:hover {
+  background: rgba(37, 211, 102, 0.15);
+  border-color: #25d366;
+  color: #25d366;
+}
+
+.aff-share-pill-btn.twitter:hover {
+  background: rgba(29, 155, 240, 0.15);
+  border-color: #1d9bf0;
+  color: #1d9bf0;
+}
+
+.aff-share-pill-btn.telegram:hover {
+  background: rgba(0, 136, 204, 0.15);
+  border-color: #0088cc;
+  color: #0088cc;
+}
+
+.aff-share-pill-btn.email:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+/* Campaign Preset Chips */
+.aff-campaign-chips-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.aff-campaign-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.aff-campaign-chip:hover {
+  border-color: var(--cyan, #22d3ee);
+  color: #fff;
+}
+
+.aff-campaign-chip.active {
+  background: rgba(34, 211, 238, 0.15);
+  border-color: var(--cyan, #22d3ee);
+  color: var(--cyan, #22d3ee);
+  font-weight: 700;
+}
+
+/* Value Highlights Grid */
+.aff-value-highlights-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 500px) {
+  .aff-value-highlights-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aff-value-highlight-item {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aff-value-highlight-item strong {
+  font-size: 12.5px;
+  color: #f1f5f9;
+}
+
+.aff-value-highlight-item span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Modal Actions Footer */
+.aff-action-modal-footer {
+  padding: 16px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  background: rgba(14, 20, 42, 0.98);
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+
+.aff-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aff-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.aff-btn-submit-primary {
+  background: var(--cyan, #22d3ee);
+  color: #060813;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 9px 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.aff-btn-submit-primary:hover {
+  background: #67e8f9;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+}
+
+.aff-btn-submit-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Success Card Inside Modal */
+.aff-success-inner-card {
+  text-align: center;
+  padding: 18px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.aff-success-inner-card h4 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin: 12px 0 6px 0;
+}
+
+.aff-success-inner-card p {
+  color: #94a3b8;
+  font-size: 13.5px;
+  max-width: 480px;
+  margin: 0 0 18px 0;
+  line-height: 1.45;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

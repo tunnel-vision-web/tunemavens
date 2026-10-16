@@ -7,7 +7,7 @@ import {
   RiArrowLeftSFill, RiArrowRightSFill, RiFileListLine, RiQuestionLine,
   RiNetflixFill, RiMovieLine, RiVolumeUpFill, RiMusicFill, RiUserFill,
   RiPlayFill, RiPauseFill, RiAlertLine, RiCheckLine, RiLoader4Line, RiMenuFill, RiCloseFill,
-  RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiLogoutBoxRFill
+  RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiLogoutBoxRFill, RiCoinsFill
 } from 'react-icons/ri';
 import { 
   SiSpotify, SiApplemusic, SiYoutube, SiTiktok, SiTidal, SiDeezer 
@@ -24,6 +24,32 @@ import headerApps from './assets/images/header_apps.png';
 import headerPricing from './assets/images/header_pricing.png';
 import headerPricingWestern from './assets/images/header_pricing_western.png';
 import interstellarHeader from './assets/images/interstellar_header.png';
+import SyncMarketplacePanel from './SyncMarketplacePanel.jsx';
+import CreditReloadModal from './components/common/CreditReloadModal.jsx';
+import AppHelpAiControls from './components/common/AppHelpAiControls.jsx';
+import {
+  AffiliatePayoutSettingsModal,
+  AffiliateReferralLinkModal,
+  AffiliateDirectTalentModal
+} from './components/affiliates/AffiliateActionModals.jsx';
+import AffiliateAdminPanel from './components/affiliates/AffiliateAdminPanel.jsx';
+import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx';
+import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx';
+import TuneLedgerSplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx';
+import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx';
+import { DEFAULT_ACTIVE_APPS_BY_ROLE } from './lib/activatedApps.js';
+
+export const PERSONA_ROLES = [
+  { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
+  { id: 'affiliate', label: 'Affiliate Partner', shortLabel: 'Affiliate', shortDesc: 'Links, Matrix & Payouts', icon: RiExchangeDollarLine, color: '#22d3ee' },
+  { id: 'creator', label: 'Creator / Artist', shortLabel: 'Creator', shortDesc: 'EPK, Catalog, Splits', icon: RiMusicFill, color: '#22d3ee' },
+  { id: 'label', label: 'Record Label', shortLabel: 'Label', shortDesc: 'Roster, Rights, Splits & Sync', icon: RiFolderMusicLine, color: '#a855f7' },
+  { id: 'supervisor', label: 'Music Supervisor', shortLabel: 'Supervisor', shortDesc: 'Sync Briefs & Escrow', icon: RiCompass3Line, color: '#ec4899' },
+  { id: 'dj', label: 'DJ / Curator', shortLabel: 'DJ', shortDesc: 'DJ Pool & Library', icon: RiVolumeUpFill, color: '#f59e0b' },
+  { id: 'media_house', label: 'Media House', shortLabel: 'Media House', shortDesc: 'Sync, Broadcast & Ads', icon: RiGlobalLine, color: '#10b981' },
+  { id: 'corporate', label: 'Corporate Brand', shortLabel: 'Corporate', shortDesc: 'Ad flights & Sponsorships', icon: RiBriefcaseLine, color: '#f97316' },
+  { id: 'consumer', label: 'Consumer / Fan', shortLabel: 'Consumer', shortDesc: 'Player, Library & Tips', icon: RiUserFill, color: '#6366f1' },
+];
 
 const EXTENSIVE_GENRES = [
   "Synthwave", "Neo-Classical", "Orchestral Cinematic", "Indie Rock", 
@@ -129,9 +155,53 @@ function AppContent() {
   const [accountOpen, setAccountOpen] = useState(false);
   const notifRef = useRef(null);
   const accountRef = useRef(null);
+
+  const [userCredits, setUserCredits] = useState(() => {
+    const saved = localStorage.getItem('tunemavens_user_credits');
+    return saved ? parseInt(saved, 10) : 600;
+  });
+  const [isCreditReloadOpen, setIsCreditReloadOpen] = useState(false);
+  const [isPayoutSettingsModalOpen, setIsPayoutSettingsModalOpen] = useState(false);
+  const [isReferralLinkModalOpen, setIsReferralLinkModalOpen] = useState(false);
+  const [isDirectTalentModalOpen, setIsDirectTalentModalOpen] = useState(false);
+
   const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Welcome to SyncMavens', body: 'You are signed in across the shared Intermaven network.', read: false, at: '2m ago' },
-    { id: 2, title: 'Sync-Ready Catalog Active', body: 'Audition clips are restricted to 45 seconds under sandbox rules.', read: false, at: '10m ago' },
+    {
+      id: 'aff_payout',
+      title: 'Partner Payout Rails & Mobile STK',
+      body: 'Connect M-Pesa STK or Bank to receive weekly automatic payouts.',
+      actionText: 'Settings',
+      actionType: 'payout',
+      read: false,
+      at: '1m ago'
+    },
+    {
+      id: 'aff_link',
+      title: '90-Day Referral Link & Share Suite',
+      body: 'Earn 3%–12% commission on music sales, sync licensing, and EPKs.',
+      actionText: 'Get Link',
+      actionType: 'link',
+      read: false,
+      at: '5m ago'
+    },
+    {
+      id: 'aff_talent',
+      title: 'Directly Onboard Creators & Labels',
+      body: 'Add talent directly to your network with 0 credit deduction.',
+      actionText: 'Add Talent',
+      actionType: 'talent',
+      read: false,
+      at: '15m ago'
+    },
+    {
+      id: 'aff_guide',
+      title: 'Recommended Reading: Partner Playbook',
+      body: 'Commission matrix and promotional standards (Optional reading).',
+      actionText: 'Read Guide',
+      actionType: 'guide',
+      read: false,
+      at: '30m ago'
+    }
   ]);
 
   // FAQ state
@@ -160,6 +230,43 @@ function AppContent() {
   const [userRole, setUserRole] = useState(() => localStorage.getItem('syncmavens_user_role') || 'creator');
   const [userName, setUserName] = useState(() => localStorage.getItem('syncmavens_user_name') || 'Creator Pro');
   const [userEmail, setUserEmail] = useState(() => localStorage.getItem('syncmavens_user_email') || 'creator@tunemavens.com');
+
+  const sessionUser = {
+    id: 'user_syncmavens_01',
+    name: userName,
+    email: userEmail,
+    role: userRole,
+    credits: userCredits,
+    phone: '254712345678',
+    is_admin: userRole === 'admin' || (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true'),
+    tier: 'pro'
+  };
+
+  const currentRoleObj = PERSONA_ROLES.find(r => r.id === userRole) || PERSONA_ROLES[0];
+  const isAdminSimulated = (sessionUser.is_admin && userRole !== 'admin') || (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true' && userRole !== 'admin');
+
+  const handleSwitchRole = (targetRole) => {
+    try {
+      localStorage.setItem('tunemavens_admin_verified', 'true');
+      localStorage.setItem('syncmavens_user_role', targetRole);
+      setUserRole(targetRole);
+
+      if (targetRole === 'affiliate') {
+        setActiveTab('affiliates');
+      } else if (targetRole === 'admin') {
+        setActiveTab('admin-team');
+      } else if (targetRole === 'label') {
+        setActiveTab('label-team');
+      } else if (targetRole === 'supervisor') {
+        setActiveTab('sync_ready_vault');
+      } else {
+        setActiveTab('sync_ready_vault');
+      }
+      setAccountOpen(false);
+    } catch (err) {
+      console.error('Failed to switch role:', err);
+    }
+  };
 
   const SLIDE_DURATION = 8000;
   const slideCount = SLIDES.length;
@@ -707,6 +814,70 @@ function AppContent() {
             <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
               {!collapsed && (
                 <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
+                  Governance & Splits
+                </div>
+              )}
+              <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('splits')} 
+                    className={`dashboard-nav-item ${activeTab === 'splits' ? 'active' : ''}`}
+                    title="TuneLedger Split Cascade"
+                  >
+                    <RiExchangeDollarLine size={16} style={{ color: '#22d3ee' }} />
+                    {!collapsed && "TuneLedger Splits"}
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('affiliates')} 
+                    className={`dashboard-nav-item ${activeTab === 'affiliates' ? 'active' : ''}`}
+                    title="Affiliate Scheme"
+                  >
+                    <RiSparklingLine size={16} style={{ color: '#22d3ee' }} />
+                    {!collapsed && "Affiliate Hub"}
+                  </button>
+                </li>
+                {(userRole === 'admin' || userRole === 'label') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('label-team')} 
+                      className={`dashboard-nav-item ${activeTab === 'label-team' ? 'active' : ''}`}
+                      title="Label Signed Roster"
+                    >
+                      <RiFolderMusicLine size={16} style={{ color: '#a855f7' }} />
+                      {!collapsed && "Label Roster"}
+                    </button>
+                  </li>
+                )}
+                {userRole === 'admin' && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('admin-team')} 
+                      className={`dashboard-nav-item ${activeTab === 'admin-team' ? 'active' : ''}`}
+                      title="Site Admin Team"
+                    >
+                      <RiShieldFill size={16} style={{ color: '#ec4899' }} />
+                      {!collapsed && "Admin Team Seats"}
+                    </button>
+                  </li>
+                )}
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('support')} 
+                    className={`dashboard-nav-item ${activeTab === 'support' ? 'active' : ''}`}
+                    title="Support & Claims Desk"
+                  >
+                    <RiQuestionLine size={16} />
+                    {!collapsed && "Support Desk"}
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
+              {!collapsed && (
+                <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                   Ecosystem Admin
                 </div>
               )}
@@ -805,6 +976,81 @@ function AppContent() {
                 <input type="text" placeholder="Search briefs, deals, metadata..." style={{ fontSize: '13px' }} />
               </div>
 
+              {/* Persona Simulation Badge */}
+              {isAdminSimulated && (
+                <div
+                  className="topbar-simulation-badge"
+                  onClick={() => setAccountOpen(true)}
+                  title="Simulating persona for admin verification. Click account dropdown to switch or reset."
+                >
+                  <span className="topbar-simulation-dot" />
+                  <span className="topbar-simulation-text">
+                    Verifying: <strong>{currentRoleObj.shortLabel}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    className="topbar-quick-reset-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSwitchRole('admin');
+                    }}
+                    title="Reset to Administrator view"
+                  >
+                    <RiShieldFill size={11} />
+                    <span>Reset</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Unified Credits Badge & Reload Trigger on Topbar */}
+              {(() => {
+                const isAffiliate = userRole === 'affiliate' || activeTab === 'affiliates';
+                const creditsCount = userCredits ?? 0;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => setIsCreditReloadOpen(true)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: isAffiliate
+                        ? 'rgba(34, 211, 238, 0.1)'
+                        : (creditsCount < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)'),
+                      border: isAffiliate
+                        ? '1px solid rgba(34, 211, 238, 0.35)'
+                        : (creditsCount < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)'),
+                      color: isAffiliate
+                        ? '#22d3ee'
+                        : (creditsCount < 50 ? '#ef4444' : '#10b981'),
+                      padding: '5px 11px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title={isAffiliate 
+                      ? "Unified Credits: Applies only if you use creator tools (MasterLab AI, Sync briefs, etc.). The Affiliate Dashboard requires 0 credits." 
+                      : "Click to reload unified platform credits (Zero monthly charges)"}
+                  >
+                    <RiCoinsFill size={15} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
+                    <span>{creditsCount.toLocaleString()} Credits</span>
+                    <span style={{
+                      fontSize: '10px',
+                      background: isAffiliate ? 'rgba(34, 211, 238, 0.25)' : (creditsCount < 50 ? '#ef4444' : '#10b981'),
+                      color: isAffiliate ? '#22d3ee' : '#ffffff',
+                      padding: '1px 5px',
+                      borderRadius: '2px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase'
+                    }}>
+                      {isAffiliate ? 'Studio Tools' : 'Top Up'}
+                    </span>
+                  </button>
+                );
+              })()}
+
               {/* Back to public site button */}
               <Link
                 to="/"
@@ -862,6 +1108,43 @@ function AppContent() {
                             <div className="topbar-notif-title" style={{ fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{n.title}</div>
                             <div className="topbar-notif-text" style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px', lineHeight: '1.4' }}>{n.body}</div>
                             <div className="topbar-notif-time" style={{ fontSize: '10px', color: '#64748b', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{n.at}</div>
+                            {n.actionText && (
+                              <div style={{ marginTop: '6px' }}>
+                                <button
+                                  type="button"
+                                  className="topbar-notif-action-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNotifOpen(false);
+                                    if (n.actionType === 'payout') {
+                                      setIsPayoutSettingsModalOpen(true);
+                                    } else if (n.actionType === 'link') {
+                                      setIsReferralLinkModalOpen(true);
+                                    } else if (n.actionType === 'talent') {
+                                      setIsDirectTalentModalOpen(true);
+                                    } else if (n.actionType === 'guide') {
+                                      setActiveTab('affiliates');
+                                    }
+                                    setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+                                  }}
+                                  style={{
+                                    background: 'rgba(34, 211, 238, 0.15)',
+                                    border: '1px solid rgba(34, 211, 238, 0.4)',
+                                    color: '#22d3ee',
+                                    padding: '3px 8px',
+                                    borderRadius: '3px',
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  {n.actionText} <RiArrowRightSFill size={11} />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </li>
                       ))}
@@ -898,27 +1181,97 @@ function AppContent() {
                         </div>
                       </div>
                     </div>
+
+                    <div style={{ padding: '0 16px 12px 16px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountOpen(false);
+                          setIsCreditReloadOpen(true);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          width: '100%',
+                          padding: '7px 12px',
+                          background: '#10b981',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <RiCoinsFill size={14} />
+                        <span>Reload Unified Credits</span>
+                      </button>
+                    </div>
+
                     <div className="topbar-dropdown-divider" />
-                    
-                    <button
-                      className="topbar-menu-item"
-                      style={{ color: '#00f2fe' }}
-                      onClick={() => {
-                        setAccountOpen(false);
-                        const nextRole = userRole === 'supervisor' ? 'creator' : 'supervisor';
-                        localStorage.setItem('syncmavens_user_role', nextRole);
-                        setUserRole(nextRole);
-                        if (nextRole === 'supervisor') {
-                          setActiveTab('briefs_mgmt');
-                        } else {
-                          setActiveTab('briefs');
-                        }
-                        alert(`Sandbox: Switched role to ${nextRole}`);
-                      }}
-                    >
-                      <RiShieldFill size={14} />
-                      <span>Switch Sandbox Role ({userRole === 'supervisor' ? 'to Creator' : 'to Supervisor'})</span>
-                    </button>
+
+                    {/* Admin Persona Role Switcher Section */}
+                    {sessionUser.is_admin ? (
+                      <div className="topbar-persona-section" data-testid="topbar-persona-switcher">
+                        <div className="topbar-persona-header">
+                          <div className="topbar-persona-title">
+                            <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
+                            <span>Switch Persona View</span>
+                          </div>
+                          {userRole !== 'admin' && (
+                            <button
+                              type="button"
+                              className="topbar-reset-link"
+                              onClick={() => handleSwitchRole('admin')}
+                              title="Return to full Administrator role"
+                            >
+                              Reset to Admin
+                            </button>
+                          )}
+                        </div>
+                        <div className="topbar-persona-sub">
+                          Verify visible apps, tools &amp; permissions for each user role:
+                        </div>
+
+                        <div className="topbar-role-grid">
+                          {PERSONA_ROLES.map((roleItem) => {
+                            const isActive = userRole === roleItem.id;
+                            const RoleIcon = roleItem.icon;
+                            return (
+                              <button
+                                key={roleItem.id}
+                                type="button"
+                                className={`topbar-role-tile ${isActive ? 'active' : ''}`}
+                                onClick={() => handleSwitchRole(roleItem.id)}
+                                title={`${roleItem.label}: ${roleItem.shortDesc}`}
+                              >
+                                <div className="topbar-role-tile-top">
+                                  <span className="topbar-role-icon" style={{ color: roleItem.color }}>
+                                    <RoleIcon size={14} />
+                                  </span>
+                                  {isActive && <RiCheckLine size={13} style={{ color: '#10b981', marginLeft: 'auto' }} />}
+                                </div>
+                                <div className="topbar-role-tile-name">{roleItem.shortLabel}</div>
+                                <div className="topbar-role-tile-desc">{roleItem.shortDesc}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="topbar-menu-item"
+                        style={{ color: '#0ea5e9' }}
+                        onClick={() => handleSwitchRole('admin')}
+                      >
+                        <RiShieldFill size={14} />
+                        <span>Sandbox: Elevate to Admin (Unlock Role Switcher)</span>
+                      </button>
+                    )}
+
+                    <div className="topbar-dropdown-divider" />
 
                     <button
                       className="topbar-menu-item"
@@ -1672,6 +2025,13 @@ function AppContent() {
               </div>
             )}
 
+            {activeTab === 'splits' && <TuneLedgerSplitCascadePanel sessionUser={sessionUser} />}
+            {activeTab === 'affiliates' && <AffiliateAdminPanel sessionUser={sessionUser} />}
+            {activeTab === 'label-team' && <LabelTeamRosterPanel sessionUser={sessionUser} />}
+            {activeTab === 'admin-team' && <AdminTeamRosterPanel sessionUser={sessionUser} />}
+            {activeTab === 'support' && <SupportTicketsPanel sessionUser={sessionUser} />}
+            {(activeTab === 'sync_marketplace' || activeTab === 'sync') && <SyncMarketplacePanel sessionUser={sessionUser} />}
+
           </div>
 
           {/* Copyright strip */}
@@ -1681,6 +2041,35 @@ function AppContent() {
             <span>Operating on the shared Intermaven network.</span>
           </div>
         </main>
+
+        <CreditReloadModal
+          isOpen={isCreditReloadOpen}
+          onClose={() => setIsCreditReloadOpen(false)}
+          sessionUser={sessionUser}
+          onCreditsUpdated={(newCredits) => {
+            setUserCredits(newCredits);
+            localStorage.setItem('tunemavens_user_credits', newCredits.toString());
+          }}
+        />
+        <AffiliatePayoutSettingsModal
+          isOpen={isPayoutSettingsModalOpen}
+          onClose={() => setIsPayoutSettingsModalOpen(false)}
+          sessionUser={sessionUser}
+        />
+        <AffiliateReferralLinkModal
+          isOpen={isReferralLinkModalOpen}
+          onClose={() => setIsReferralLinkModalOpen(false)}
+          sessionUser={sessionUser}
+        />
+        <AffiliateDirectTalentModal
+          isOpen={isDirectTalentModalOpen}
+          onClose={() => setIsDirectTalentModalOpen(false)}
+          sessionUser={sessionUser}
+        />
+        <AppHelpAiControls
+          activeTab={activeTab}
+          sessionUser={sessionUser}
+        />
 
         {renderContractModal()}
       </div>
@@ -2089,6 +2478,7 @@ function AppContent() {
         <Route path="/publishing" element={<PublishingView standalone={true} />} />
         <Route path="/youtube-id" element={<YoutubeIdView standalone={true} />} />
         <Route path="/sync-ready" element={<SyncReadyView standalone={true} />} />
+        <Route path="/marketplace" element={<SyncReadyView standalone={true} />} />
         <Route path="/distribution" element={<DistributionView standalone={true} />} />
         <Route path="/global-dsp" element={<GlobalDspView standalone={true} />} />
         <Route path="/smartlinks" element={<SmartLinksView standalone={true} />} />
@@ -2927,6 +3317,34 @@ const SYNC_READY_SONGS = [
 ];
 
 function SyncReadyView({ standalone }) {
+  const sessionUser = {
+    role: localStorage.getItem('syncmavens_user_role') || 'supervisor',
+    name: localStorage.getItem('syncmavens_user_name') || 'Music Supervisor Pro',
+    email: localStorage.getItem('syncmavens_user_email') || 'supervisor@tunemavens.com'
+  };
+
+  return (
+    <div className={standalone ? "standalone-page-wrapper" : ""}>
+      {standalone && (
+        <div className="page-header-banner" style={{ backgroundImage: `url(${syncPlacementHero})` }}>
+          <div className="page-header-overlay" />
+          <div className="page-header-content">
+            <h1 className="page-header-title">Sync Marketplace &amp; Placement Hub</h1>
+            <div className="page-header-breadcrumb">
+              <Link to="/" className="breadcrumb-link">Home</Link>
+              <span className="breadcrumb-separator">/</span>
+              <span className="breadcrumb-active">Sync Marketplace</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ padding: standalone ? '40px 24px 80px 24px' : '0', maxWidth: '1360px', margin: '0 auto' }}>
+        <SyncMarketplacePanel sessionUser={sessionUser} />
+      </div>
+    </div>
+  );
+
   const [playingSongId, setPlayingSongId] = useState(null);
   const [playbackTime, setPlaybackTime] = useState(0);
   const [isSupervisor, setIsSupervisor] = useState(() => localStorage.getItem('syncmavens_supervisor_unlocked') === 'true');

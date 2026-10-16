@@ -1807,3 +1807,153 @@ input[type="range"]::-webkit-slider-thumb {
 
 
 
+
+/* =====================================================================
+   Admin Persona Switcher & Topbar Enhancements (Parity with TuneMavens)
+   ===================================================================== */
+.topbar-simulation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.topbar-simulation-badge:hover {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: #0ea5e9;
+}
+.topbar-simulation-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: pulse 1.8s infinite;
+}
+.topbar-simulation-text {
+  color: #cbd5e1;
+  font-size: 11.5px;
+}
+.topbar-simulation-text strong {
+  color: #38bdf8;
+  font-weight: 700;
+}
+.topbar-quick-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.topbar-quick-reset-btn:hover {
+  background: #0369a1;
+}
+
+.topbar-persona-section {
+  padding: 12px 14px;
+  background: #080d20;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.topbar-persona-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.topbar-persona-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #f1f5f9;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.topbar-reset-link {
+  background: transparent;
+  border: none;
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.topbar-reset-link:hover {
+  color: #7dd3fc;
+}
+.topbar-persona-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 4px 0 10px 0;
+  line-height: 1.35;
+}
+.topbar-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.topbar-role-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 0;
+}
+.topbar-role-tile:hover {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.topbar-role-tile.active {
+  background: #1e293b;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 1px #0ea5e9;
+}
+.topbar-role-tile-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 3px;
+}
+.topbar-role-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.topbar-role-tile-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+.topbar-role-tile-desc {
+  font-size: 9.5px;
+  color: #94a3b8;
+  line-height: 1.2;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}

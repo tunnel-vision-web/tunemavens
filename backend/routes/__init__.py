@@ -23,6 +23,7 @@ from .corporate_ads_router import router as corporate_ads_router
 from .role_tiers_router import router as role_tiers_router
 from .support_router import router as support_router
 from .blog_router import router as blog_router
+from .affiliate_router import router as affiliate_router
 
 __all__ = [
     "admin_router",
@@ -50,6 +51,7 @@ __all__ = [
     "role_tiers_router",
     "support_router",
     "blog_router",
+    "affiliate_router",
 ]
 
 
