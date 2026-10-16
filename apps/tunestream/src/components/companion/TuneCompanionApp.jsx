@@ -4,10 +4,12 @@ import {
   RiDatabase2Line, RiPlayFill, RiShieldCheckFill, RiSendPlaneFill, 
   RiFlashlightFill, RiSmartphoneLine, RiComputerLine, RiArrowRightLine,
   RiCheckDoubleLine, RiTimeLine, RiGlobalLine, RiExchangeDollarLine,
-  RiMusicLine, RiUserStarFill, RiMoneyDollarCircleFill, RiArrowUpLine
+  RiMusicLine, RiUserStarFill, RiMoneyDollarCircleFill, RiArrowUpLine,
+  RiBookOpenLine
 } from 'react-icons/ri';
 import tcLogo from '../../assets/tunecompanion-logo.png';
 import { getUnifiedCatalog } from '../../data/authoritativeCatalog';
+import InAppDocModal from '../common/InAppDocModal.jsx';
 
 export default function TuneCompanionApp({ sessionUser, onPlayTrack, setActiveTab }) {
   const [tracks, setTracks] = useState(getUnifiedCatalog);
@@ -18,6 +20,7 @@ export default function TuneCompanionApp({ sessionUser, onPlayTrack, setActiveTa
   const [cashoutAmount, setCashoutAmount] = useState('2500');
   const [cashoutRail, setCashoutRail] = useState('mpesa'); // 'mpesa' | 'stripe'
   const [pitchedBriefId, setPitchedBriefId] = useState(null);
+  const [docModalOpen, setDocModalOpen] = useState(false);
 
   // Sync with unified catalog updates
   useEffect(() => {
@@ -158,6 +161,26 @@ export default function TuneCompanionApp({ sessionUser, onPlayTrack, setActiveTa
             }}
           >
             <RiSmartphoneLine size={14} /> Pocket Phone Frame
+          </button>
+          <button
+            type="button"
+            onClick={() => setDocModalOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              background: 'rgba(168, 85, 247, 0.15)',
+              color: '#c084fc',
+              border: '1px solid rgba(168, 85, 247, 0.4)',
+              borderRadius: '3px',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+            title="Read Comprehensive TuneCompanion Documentation"
+          >
+            <RiBookOpenLine size={14} /> Operating Docs
           </button>
         </div>
       </div>
@@ -718,6 +741,16 @@ export default function TuneCompanionApp({ sessionUser, onPlayTrack, setActiveTa
           </div>
         )}
       </div>
+
+      {/* In-App Documentation Reader Modal */}
+      <InAppDocModal
+        isOpen={docModalOpen}
+        onClose={() => setDocModalOpen(false)}
+        initialArticleId="tunecompanion-creator-operating-system"
+        activeContext="companion"
+        contextTitle="TuneCompanion Operating System"
+        sessionUser={sessionUser}
+      />
     </div>
   );
 }

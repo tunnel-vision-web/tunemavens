@@ -36,6 +36,7 @@ export default function InAppDocModal({
   initialArticleId = null,
   category = null,
   activeContext = null,
+  activeTab = null,
   searchQuery = '',
   contextTitle = null,
   sessionUser = null,
@@ -72,7 +73,8 @@ export default function InAppDocModal({
   }, [isOpen, onClose]);
 
   // Context fallback
-  const relevantDoc = getRelevantDocLink(activeContext || 'home');
+  const currentContext = activeTab || activeContext || 'home';
+  const relevantDoc = getRelevantDocLink(currentContext);
   const resolvedContextTitle = contextTitle || relevantDoc.appTitle || 'TuneMavens Ecosystem';
 
   // Determine active article

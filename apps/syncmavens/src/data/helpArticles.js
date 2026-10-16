@@ -730,6 +730,91 @@ By completing **IRS Form W-8BEN** (Certificate of Foreign Status of Beneficial O
   },
 
   {
+    id: 'tunecompanion-creator-operating-system',
+    category: 'services',
+    title: 'TuneCompanion: Mobile & Desktop Operating System for Creator Royalty Cascades, Sync Radars & AI Strategy',
+    readingTime: '9 min read',
+    excerpt: 'Comprehensive guide to TuneCompanion, the cross-platform mobile and desktop creator operating system. Master the interactive 7-tier split ledger, instant M-Pesa & Stripe cashouts, algorithmic sync placement radar, AI strategy playbook, and real-time catalog telemetry.',
+    tags: ['TuneCompanion', 'Split Ledger', 'Sync Radar', 'M-Pesa STK', 'Stripe Payouts', 'AI Playbook', 'Catalog Telemetry', 'Mobile App', 'Recommended Reading'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['creator', 'producer', 'label', 'affiliate', 'dj'],
+    toolLink: { label: 'Launch TuneCompanion', path: '/tunestream' },
+    sections: [
+      {
+        heading: 'The Cross-Platform Operating System: Pocket Frame & Expansive Studio Views',
+        content: `**TuneCompanion** serves as the central operational cockpit and mobile-first operating system for recording artists, beatmakers, songwriter collectives, and indie label managers across the TuneMavens ecosystem.
+
+While traditional distribution and royalty dashboards force creators to sit behind complex desktop spreadsheets, TuneCompanion bridges the gap between field mobility and studio analytics through its **Dual Viewport Architecture**:
+
+* **Expansive Desktop Studio Console**: An exhaustive, multi-column analytics workstation displaying high-density split sheet tables, live telemetry maps, deep audio spectrum meters, and comprehensive sync brief boards.
+* **Pocket Phone Frame (375px Mobile View)**: Sized precisely to simulate a native smartphone companion app. It features tap-friendly tactile cards, bottom action buttons, swipeable telemetry pills, and quick-action modals for approving splits, pitching tracks to sync briefs, or triggering instant M-Pesa payouts while backstage, traveling, or on stage.
+* **Instant View Switcher**: Creators can seamlessly toggle between Desktop and Pocket views in real-time with zero state loss using the responsive switcher located in the top-right header.`
+      },
+      {
+        heading: 'Interactive Split Ledger & The 7-Tier Waterfall Liquidity Protocol',
+        content: `Traditional 50/50 split sheets inevitably fail when studio recording outlays, mix invoices, sample clearance advances, or marketing budgets enter the equation. TuneCompanion replaces static split percentages with an **Interactive 7-Tier Waterfall Liquidity Engine** powered by TuneLedger:
+
+1. **Tier 1 (Direct Recording & Production Recoupment)**: 100% of gross incoming revenue flows directly to reimburse the upfront investor or producer until initial tracking, mastering, and stem production invoices are repaid in full.
+2. **Tier 2 (Producer Milestone Performance Bonus)**: Once upfront capital is recouped, a priority milestone bonus (e.g. $1,000) unlocks automatically for the primary producer or sound designer.
+3. **Tier 3 (Sample Clearance & Legal Indemnity Reserve)**: Holds a designated reserve (e.g. 5%) in digital escrow until statutory sample clearance warranties and publishing clearance windows mature.
+4. **Tier 4 (Songwriter Composition Equity / Writer's Share)**: Directly attributes composition performance royalties to co-writers' designated PRO / CMO member accounts (ASCAP, BMI, PRS, MCSK, SAMRO).
+5. **Tier 5 (Master Sound Recording Net Equity)**: The remaining gross streaming, sync, and download revenues distribute perpetually according to agreed master shares (e.g. 55% Lead Artist, 25% Co-Producer, 20% Record Label).
+6. **Tier 6 (Dispute Lock Protocol)**: If any collaborator challenges a split percentage or sample clearance, TuneCompanion engages an automated **Escrow Dispute Lock**. The contested percentage is frozen safely in digital escrow while non-disputed shares continue disbursing normally without cross-collateralization.
+7. **Tier 7 (Automated Audit Trail)**: Every transaction, deduction, and distribution generates an immutable cryptographic transaction hash on TuneLedger, accessible by all parties for complete transparency.`
+      },
+      {
+        heading: 'Multi-Rail Payout Engine & Micro-Tipping (M-Pesa STK & Stripe Direct)',
+        content: `TuneCompanion eliminates predatory bank wire delays and minimum threshold hurdles by offering frictionless multi-currency liquidity:
+
+* **M-Pesa STK Automated B2C Push (Kenya & East Africa)**: Direct mobile wallet disbursement to Safaricom / Airtel numbers (\`+2547XXXXXXXX\`). Payouts disburse within seconds of batch execution with zero carrier deduction fees absorbed by TuneMavens.
+* **Stripe Direct Bank Deposit**: Seamless automated ACH/SEPA/Faster Payments transfers for creators across the US, UK, EU, Canada, and 135+ global territories.
+* **Real-Time Live Tip Stream**: TuneStream listeners and audiophiles can send direct micro-tips ($1 to $50) while streaming tracks in lossless 24-bit audio. Tips land directly in the creator's wallet with instant mobile notifications.
+* **Zero Platform Extraction on Tips**: 100% of fan micro-tips pass through to the artist's account.
+* **Low Cashout Minimum**: Set at **$20.00 USD** (approx. KES 2,600) with a 1-tap **Cashout to M-Pesa** or **Cashout to Stripe** button directly within the companion app.`
+      },
+      {
+        heading: 'Sync Placement Radar & 1-Tap Supervisor Pitching',
+        content: `Music supervisors in Hollywood, London, Berlin, and Nairobi operate on unforgiving deadlines—often needing broadcast-ready tracks within 2 to 4 hours. The **Sync Placement Radar** inside TuneCompanion continuously analyzes your catalog against active SyncMavens briefs:
+
+* **Algorithmic Brief Match Scoring (0% - 100%)**: Automatically calculates placement probability by cross-referencing your track's BPM, musical key, sonic mood, instrumentation, lyrical themes, and vocal presence against supervisor requirements.
+* **One-Stop Pre-Clearance Verification**: Flags whether your master and publishing splits are 100% pre-cleared, assuring supervisors that your track can be cleared in under 2 hours without legal friction.
+* **One-Tap Pitch Packet Generation**: Directly compiles a professional sync package containing:
+  * 24-bit / 48kHz broadcast-standard lossless WAV
+  * TV clean mix & instrumental version
+  * Complete multitrack stems (Drums, Bass, Synths/Guitars, Vocals)
+  * Standard cue sheet metadata bundle with pre-populated ISRC, ISWC, and writer CAE/IPI numbers.`
+      },
+      {
+        heading: 'MasterLab AI Strategy Playbook & Autonomous Catalog Copilot',
+        content: `Operating as your personal digital artist manager and executive producer, the **AI Strategy Playbook** tab delivers contextual release intelligence:
+
+* **Streaming Loudness Calibration**: Analyzes audio dynamic range and integrated loudness against DSP standards (-14 LUFS integrated with a -1.0 dBFS true peak ceiling for Spotify and YouTube; -16 LUFS for Apple Music and TIDAL) to ensure zero distortion and maximum acoustic impact.
+* **Autonomous Release Timeline**: Generates a bespoke 6-week release roadmap—including pre-save windows, radio station submission targets, sync brief windows, and social media promo drops.
+* **Metadata Integrity Audit**: Cross-checks ISRC, UPC, and DDEX 4.3 container tags to prevent tracks from falling into the $400M global "black box" unclaimed royalty pools.
+* **Promotional Asset Generation**: Automatically prepares promotional hooks, Instagram Reel audio snippets, and customizable EPK Web World landing pages.`
+      },
+      {
+        heading: 'Live Catalog Telemetry, Streaming Retention & Hotspots',
+        content: `Knowledge is power in the modern music business. TuneCompanion provides a real-time pulse of your music across the Intermaven network:
+
+* **Real-Time Ingestion Counter**: Live stream counter updating every minute with granular listener duration metrics.
+* **Listener Completion Rates & Skip Velocity**: Reveals exactly where listeners replay or skip, providing actionable insights for upcoming radio edits.
+* **City-Level Telemetry Heatmaps**: Identifies high-density streaming clusters across key urban centers (e.g. Nairobi, Mombasa, London, Lagos, New York, Johannesburg) to guide live tour booking routing in TuneBookings.
+* **Authoritative Catalog Synchronization**: Directly mirrors the 8 authoritative Master releases across TuneStream, SyncMavens, and the TuneMavens Portal with unified artwork, audio streams, and credits.`
+      },
+      {
+        heading: 'Zero Platform Credits Required for Core Telemetry & Operations',
+        content: `In alignment with TuneMavens' core design principles, **daily creator operations are never paywalled**:
+
+* **Free Forever (0 Credits)**: Launching TuneCompanion, monitoring real-time telemetry, toggling dual viewports, auditing split cascade waterfalls, viewing sync briefs, and executing mobile M-Pesa or Stripe cashouts consumes **zero platform credits**.
+* **When Do Platform Credits Apply?**: Credits are only consumed when a creator voluntarily commissions deep computational tasks—such as executing an automated 24-bit audio mastering pass in MasterLab AI (15 credits) or submitting a priority commercial sync pitch on SyncMavens (5 credits).`
+      }
+    ]
+  },
+
+  {
     id: 'syncmavens-licensing-platform',
     category: 'services',
     title: 'SyncMavens: Sync Placement Briefs & Licensing Marketplace',
@@ -1160,6 +1245,23 @@ export const FREQUENT_FAQS = [
   {
     q: 'Is registration free, and do I get starter credits?',
     a: 'Yes! Registering an account is 100% free and includes 150 starter credits to test MasterLab mastering, explore the sync marketplace, and build your digital press kit.'
+  },
+  {
+    q: 'What is TuneCompanion and how does it integrate with TuneStream and SyncMavens?',
+    a: 'TuneCompanion is the cross-platform creator business operating system and live copilot within the TuneMavens ecosystem. Available directly inside the TuneStream backend and across the network, it unites real-time royalty split accounting (TuneLedger), instant M-Pesa STK and Stripe cashouts, live TV/film sync brief matching (SyncMavens Radar), AI release optimization, and authoritative catalog telemetry into one responsive interface.'
+  },
+  {
+    q: 'Can I switch between mobile phone view and full desktop view in TuneCompanion?',
+    a: 'Yes. TuneCompanion includes a built-in Dual Viewport toggle in the top bar. You can switch instantly between the Pocket Phone Frame (simulating the 375px native mobile companion app with touch-friendly cards) and the Expansive Desktop Studio View for full-width multi-column analytics.'
+  },
+  {
+    q: 'How does the TuneCompanion 7-tier split ledger protect my collaborators?',
+    a: 'Unlike static 50/50 splits that lead to disputes over studio bills, TuneCompanion implements programmatic waterfall liquidity: 100% of initial royalties recoup recording and mastering outlays first, followed by producer performance bonuses and sample escrow reserves, before perpetual writer/master equity distributes. Collaborators receive instant disbursement notifications and direct payouts.'
+  },
+  {
+    q: 'Do I need to spend Universal Credits to monitor my telemetry in TuneCompanion?',
+    a: 'No. Accessing the TuneCompanion dashboard, toggling mobile/desktop views, auditing split sheets, reviewing sync briefs, checking listener telemetry, and initiating standard cashouts costs zero credits forever. Platform credits are only consumed when you run deep MasterLab AI mastering passes or submit priority pitches to commercial television sync briefs.'
   }
 ];
+
 

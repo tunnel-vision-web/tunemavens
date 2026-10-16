@@ -138,6 +138,18 @@ export const APP_DOC_MAPPINGS = {
     label: 'TuneStream Lossless Audio & Payouts',
     appTitle: 'TuneStream Lossless Player'
   },
+  'companion': {
+    articleId: 'tunecompanion-creator-operating-system',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'TuneCompanion Creator Copilot & Telemetry Guide',
+    appTitle: 'TuneCompanion Operating System'
+  },
+  'tunecompanion': {
+    articleId: 'tunecompanion-creator-operating-system',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'TuneCompanion Creator Copilot Guide',
+    appTitle: 'TuneCompanion Operating System'
+  },
   'djpool': {
     articleId: 'tunestream-audiophile-streaming',
     fallbackArticleId: 'sync-licensing-masterclass',
@@ -514,6 +526,27 @@ export function generateAiAssistantResponse(query, user, activeTab, conversation
   const currentApp = APP_DOC_MAPPINGS[activeTab] || { appTitle: activeTab || 'Workspace' };
 
   // Contextual intelligence based on lifecycle query & active tool
+  if (q.includes('companion') || q.includes('tunecompanion') || activeTab === 'companion' || activeTab === 'tunecompanion') {
+    return {
+      reply: `Welcome to **TuneCompanion**—your real-time creator business operating system and live copilot across the TuneMavens ecosystem.
+
+Here is what TuneCompanion coordinates for your catalog:
+1. **Interactive Split Ledger & 7-Tier Waterfall**: Recoups recording advances first, then producer performance bonuses and sample escrow reserves, before perpetual writer/master equity distributes.
+2. **Instant Multi-Rail Payouts**: Automated M-Pesa STK mobile wallet pushes (Kenya & East Africa) and Stripe direct bank deposits (global) with 0% platform extraction on tips.
+3. **Sync Placement Radar**: Live algorithmic matching against active SyncMavens briefs for Hollywood films, Netflix series, gaming, and brand commercials with one-tap stem and cue sheet dispatch.
+4. **MasterLab AI Playbook**: Calibrates your streaming audio (-14 LUFS integrated / -1.0 dBFS true peak ceiling) and schedules your 6-week release timeline.
+5. **Catalog Telemetry & Hotspots**: Real-time cross-platform listener metrics and streaming hotspot heatmaps (Nairobi, London, Lagos, New York).
+
+*Dual Viewport Tip:* You can toggle between the **Desktop Studio Console** and the **Pocket Phone Frame** using the responsive switcher in the top bar.`,
+      suggestedActions: [
+        { label: 'TuneCompanion Guide', link: '/#/help#tunecompanion-creator-operating-system' },
+        { label: 'Open Split Ledger', tab: 'splits' },
+        { label: 'Sync Placement Radar', tab: 'sync' },
+        { label: 'MasterLab AI Audio', tab: 'mastering' }
+      ]
+    };
+  }
+
   if (q.includes('split') || q.includes('ledger') || activeTab === 'splits') {
     return {
       reply: `I see from your lifecycle history that you recently configured a **50/50 songwriter & producer split** in TuneLedger for your upcoming single release.

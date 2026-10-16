@@ -89,6 +89,8 @@ export default function HelpView({ sessionUser }) {
         reply = "Filing a ticket at the Support & Claims Desk takes less than a minute. Enter your contact details, your ISRC or Split Cascade TxID (auto-matched by the platform), choose your category, describe the issue, and attach up to 3 evidence files (split sheets, cue sheets, error logs). TuneSupport AI immediately analyzes the root cause and provides a live communication thread.";
       } else if (q.includes('refund') || q.includes('credit') || q.includes('fee') || q.includes('billing')) {
         reply = "TuneMavens operates on 100% Unified Credits with Zero Recurring Monthly Fees. If an error occurs (such as a merchant POS duplicate charge or DSP processing latency), TuneSupport AI authorizes an instant 1-click credit refund directly deposited into your platform balance.";
+      } else if (q.includes('companion') || q.includes('tunecompanion') || q.includes('radar')) {
+        reply = "TuneCompanion is the cross-platform creator business operating system and live copilot within TuneMavens. It unites 7-tier split waterfalls (TuneLedger), instant M-Pesa STK & Stripe multi-rail cashouts, live Sync Radar brief matching, MasterLab AI loudness calibration, and real-time catalog telemetry with responsive dual desktop and mobile phone frames.";
       } else if (q.includes('ddex') || q.includes('spotify') || q.includes('apple') || q.includes('distro')) {
         reply = "If a partner DSP rejects a release due to an ERN 4.3 container checksum error or audio duration mismatch, TuneSupport AI flags the track for a free Warranty Re-Dispatch at zero credit cost.";
       } else {

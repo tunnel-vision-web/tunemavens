@@ -34,11 +34,14 @@ import {
 import './AppHelpAiControls.css'
 
 export default function AppHelpAiControls({
-  activeContext = 'home',
+  activeContext,
+  activeTab,
   sessionUser,
   onNavigateTab,
   floating = false
 }) {
+  const currentContext = activeTab || activeContext || 'home';
+
   // Modal states: both modals render via createPortal into document.body to remain strictly within viewport
   const [aiOverlayOpen, setAiOverlayOpen] = useState(false);
   const [docModalOpen, setDocModalOpen] = useState(false);
@@ -57,7 +60,7 @@ export default function AppHelpAiControls({
   const inputRef = useRef(null);
 
   const userId = sessionUser?.id || sessionUser?._id || sessionUser?.email || 'guest';
-  const relevantDoc = getRelevantDocLink(activeContext);
+  const relevantDoc = getRelevantDocLink(currentContext);
 
   // Active article being inspected in the in-app doc modal
   const activeDocArticle = HELP_ARTICLES.find(a => a.id === selectedDocArticleId) ||
@@ -69,7 +72,7 @@ export default function AppHelpAiControls({
     const saved = loadAiChatHistory(userId);
     if (saved && saved.length > 0) return saved;
 
-    const initial = generateAiAssistantResponse('hello', sessionUser, activeContext, []);
+    const initial = generateAiAssistantResponse('hello', sessionUser, currentContext, []);
     return [
       {
         id: 'msg-init',
@@ -132,7 +135,7 @@ export default function AppHelpAiControls({
       action: 'Opened In-App Documentation',
       app: relevantDoc.appTitle,
       summary: `Viewed contextual documentation for ${relevantDoc.appTitle}`,
-      metadata: { context: activeContext, articleId: relevantDoc.articleId }
+      metadata: { context: currentContext, articleId: relevantDoc.articleId }
     });
   };
 
@@ -177,12 +180,12 @@ export default function AppHelpAiControls({
       action: 'AI Prompt Assistant Consultation',
       app: relevantDoc.appTitle,
       summary: `Prompted AI: "${text.length > 50 ? text.substring(0, 47) + '...' : text}"`,
-      metadata: { context: activeContext }
+      metadata: { context: currentContext }
     });
 
     // Simulate AI thinking and response with full lifecycle context
     setTimeout(() => {
-      const response = generateAiAssistantResponse(text, sessionUser, activeContext, chatMessages);
+      const response = generateAiAssistantResponse(text, sessionUser, currentContext, chatMessages);
       const assistantMsg = {
         id: `ai-${Date.now()}`,
         sender: 'assistant',
@@ -199,7 +202,7 @@ export default function AppHelpAiControls({
 
   // Clear conversation history
   const handleClearHistory = () => {
-    const initial = generateAiAssistantResponse('hello', sessionUser, activeContext, []);
+    const initial = generateAiAssistantResponse('hello', sessionUser, currentContext, []);
     const resetMsgs = [
       {
         id: `msg-reset-${Date.now()}`,
@@ -215,7 +218,15 @@ export default function AppHelpAiControls({
 
   // Suggested quick prompt chips based on active tab
   const getContextualPrompts = () => {
-    switch (activeContext) {
+    switch (currentContext) {
+      case 'companion':
+      case 'tunecompanion':
+        return [
+          'How does the 7-tier split waterfall work?',
+          'How do M-Pesa & Stripe cashouts clear?',
+          'How does the Sync Radar brief match work?',
+          'Explain AI Playbook release targets'
+        ];
       case 'splits':
         return ['Explain my split percentages', 'How are recoupable debts deducted?', 'When to sign split sheets?'];
       case 'publishing-election':
@@ -279,7 +290,7 @@ export default function AppHelpAiControls({
       <InAppDocModal
         isOpen={docModalOpen}
         onClose={() => setDocModalOpen(false)}
-        activeContext={activeContext}
+        activeContext={currentContext}
         initialArticleId={selectedDocArticleId || relevantDoc.articleId}
         contextTitle={relevantDoc.appTitle}
         sessionUser={sessionUser}
