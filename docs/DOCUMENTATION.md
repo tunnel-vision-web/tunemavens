@@ -6,7 +6,7 @@ Sections §9.8+ are TuneMavens-specific.
 
 Current focus: §9.8 (App Marketplace + Recommendation Agent — SHIPPED),
 §9.39 (MyContracts Smart Legal Vault, Engagement Auto-Generator & E-Signature Protocol — SHIPPED),
-§9.40 (Synergy Ecosystem Localization, Kiswahili `sw` Translation & Multi-Currency Engine — SHIPPED),
+§9.40–§9.41 (Synergy Multi-Market Localization: Simultaneous Kenya & USA Launch with Kiswahili, Gĩkũyũ & Spanish Language Engine — SHIPPED),
 plus §9.9–§9.12 (Identity, Social Graph, Community, CRM — IN PLAN).
 
 > [!NOTE]
@@ -1633,3 +1633,33 @@ The engine (`public/js/localization.js`) translates DOM text nodes, placeholders
 - **All Sidebars:** 100% of sidebar category headers, menu items, status badges (`COPILOT`, `LEGAL`, `MOBILE`, `APP`, `LIVE`), collapsed-sidebar hover tooltips (`NAV_ITEM_DESCRIPTIONS`), and `PerfectForSidebar.jsx` role tiles across Portal, TuneStream, and SyncMavens translate into Kiswahili.
 - **Synchronized TuneStream Hero Carousel:** Both `apps/tunestream/src/NativeAppLandingView.jsx` and `apps/portal/src/views/landing/NativeAppLandingView.jsx` feature a 5-slide auto-advancing hero carousel matching the main Portal landing page behavior (6.5s interval, pause-on-hover, previous/next arrows, slide counter, and clickable dot indicators) with 100% Kiswahili slide titles, subtitles, and CTAs.
 - **Structured Article Rendering (`ArticleContentRenderer.jsx`):** All articles across `blogArticles.js` (`BlogPageView.jsx`), `helpArticles.js` (`HelpView.jsx`, `InAppDocModal.jsx`), and `TuneLedgerSplitCascadePanel.jsx` (`ROYALTY_GUIDES`) render through `ArticleContentRenderer.jsx`, parsing Markdown tables, callout boxes, checklists, subheadings, and inline `**bold**` / `*italic*` spans into discrete React DOM text nodes with zero untranslated English words left behind.
+
+---
+
+## §9.41 — Multi-Market Language Expansion: Simultaneous Kenya & USA Launch (Gĩkũyũ `ki` & Spanish `es` Engine)  ✅ SHIPPED
+
+### 9.41.1 Simultaneous Dual-Market Launch Architecture
+To support the simultaneous launch in both **Kenya (`KE`)** and the **United States (`US`)**, the TuneMavens ecosystem expands the Synergy Localization Engine (`window.SynergyLocalization`, `v=48`) to natively support **4 distinct languages**:
+1. **English (`en` / `EN`, 🇬🇧)** — Canonical ecosystem baseline and global lingua franca.
+2. **Kiswahili (`sw` / `SW`, 🇰🇪)** — Kenya and East African national/official language.
+3. **Kikuyu / Gĩkũyũ (`ki` / `KI`, 🇰🇪)** — Kenya regional/vernacular language for central Kenyan artists, songwriters, producers, and audiences (`rwĩmbo`, `aini`, `mbeca`, `marĩhi`, `cihooto`, `mĩgayano`, `kĩharo kĩa wĩra`).
+4. **Español / Spanish (`es` / `ES`, 🇺🇸)** — United States second-largest language market and Latin American / European diaspora (`música`, `artistas`, `regalías`, `derechos`, `sincronización`, `panel de control`).
+
+### 9.41.2 Market & Language Routing Mappings
+- **Kenya (`KE`)**: Default currency `KES` (`KSh`), supported languages `['en', 'sw', 'ki']`. Default language: `sw`.
+- **United States (`US`)**: Default currency `USD` (`$`), supported languages `['en', 'es']`. Default language: `en`.
+- **European Union (`EU`)**: Default currency `EUR` (`€`), supported languages `['en', 'es']`.
+- **TopBar Quick-Cycle Toggle (`RegionSwitcher.jsx`):** Cycles smoothly across all registered languages (`🇬🇧 EN` → `🇰🇪 SW` → `🇰🇪 KI` → `🇺🇸 ES` → `🇬🇧 EN`) with distinct color accents (`cyan`, `emerald`, `amber`, `purple`), accompanied by a 2x2 modal quick-select grid.
+
+### 9.41.3 Complete Dictionary Coverage & Dynamic Language Registry
+- **Comprehensive Dictionaries (`pack.T` & `pack.WORD_LEXICON`):** Each language pack (`sw`, `ki`, `es`) includes over 1,300 curated UI/article phrases in `T` and over 2,900 verified domain and general vocabulary words in `WORD_LEXICON`.
+- **Pre-Compiled Reverse Map (`T_REVERSE`):** Indexes translated phrases across all active language packs back to canonical English, enabling seamless N-way switching among any language combinations (`es` ↔ `ki`, `sw` ↔ `es`, `ki` ↔ `en`) with zero loss of original text.
+- **Dynamic Extensible Language Registry (`window.SynergyLocalization.registerLanguage`):** Provides an extensible runtime API allowing future language packs (e.g. French, German, Portuguese, Luo) to register dynamically without architectural refactoring:
+  ```javascript
+  window.SynergyLocalization.registerLanguage(
+    { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+    { T: { ... }, WORD_LEXICON: { ... } }
+  );
+  ```
+- **React Hydration & Real-Time Observer:** `RegionContext.jsx` queries `window.SynergyLocalization.getLanguagesList()` dynamically to merge runtime languages with static options. MutationObservers across Portal, TuneStream, and SyncMavens track dynamic React DOM route updates, modal popups, and carousel advances, maintaining 100% language fidelity without manual re-rendering.
+

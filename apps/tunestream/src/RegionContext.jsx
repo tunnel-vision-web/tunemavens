@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+
+export const LANGUAGES_LIST = [
+  { code: 'en', short: 'EN', name: 'English', native: 'English', flag: '🇬🇧', market: 'US', accent: '#22d3ee', textDark: '#060813' },
+  { code: 'sw', short: 'SW', name: 'Swahili', native: 'Kiswahili', flag: '🇰🇪', market: 'KE', accent: '#10b981', textDark: '#042f2e' },
+  { code: 'ki', short: 'KI', name: 'Kikuyu', native: 'Gĩkũyũ', flag: '🇰🇪', market: 'KE', accent: '#f59e0b', textDark: '#1c1917' },
+  { code: 'es', short: 'ES', name: 'Spanish', native: 'Español', flag: '🇺🇸', market: 'US', accent: '#a855f7', textDark: '#ffffff' }
+];
 
 const RegionContext = createContext(null);
 export const useRegion = () => useContext(RegionContext) || {
@@ -9,11 +16,8 @@ export const useRegion = () => useContext(RegionContext) || {
   currency: 'KES',
   currencyInfo: { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
   language: 'en',
-  languages: [
-    { code: 'en', name: 'English', native: 'English', flag: '🇬🇧' },
-    { code: 'sw', name: 'Swahili', native: 'Kiswahili', flag: '🇰🇪' }
-  ],
-  options: { countries: [], currencies: [], languages: [] },
+  languages: LANGUAGES_LIST,
+  options: { countries: [], currencies: [], languages: LANGUAGES_LIST },
   changeCountry: () => {},
   changeCurrency: () => {},
   changeLanguage: () => {},
@@ -25,23 +29,23 @@ export const useRegion = () => useContext(RegionContext) || {
 const STORAGE_KEY = 'tunemaven_region';
 
 export const COUNTRIES_LIST = [
-  { code: 'KE', name: 'Kenya', flag: '🇰🇪', currency: 'KES', lang: 'sw' },
-  { code: 'TZ', name: 'Tanzania', flag: '🇹🇿', currency: 'TZS', lang: 'sw' },
-  { code: 'UG', name: 'Uganda', flag: '🇺🇬', currency: 'UGX', lang: 'sw' },
-  { code: 'NG', name: 'Nigeria', flag: '🇳🇬', currency: 'NGN', lang: 'en' },
-  { code: 'ZA', name: 'South Africa', flag: '🇿🇦', currency: 'ZAR', lang: 'en' },
-  { code: 'US', name: 'United States', flag: '🇺🇸', currency: 'USD', lang: 'en' },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', currency: 'GBP', lang: 'en' },
-  { code: 'EU', name: 'European Union', flag: '🇪🇺', currency: 'EUR', lang: 'en' }
+  { code: 'KE', name: 'Kenya', flag: '🇰🇪', currency: 'KES', lang: 'sw', supportedLangs: ['en', 'sw', 'ki'] },
+  { code: 'US', name: 'United States', flag: '🇺🇸', currency: 'USD', lang: 'en', supportedLangs: ['en', 'es'] },
+  { code: 'TZ', name: 'Tanzania', flag: '🇹🇿', currency: 'TZS', lang: 'sw', supportedLangs: ['en', 'sw'] },
+  { code: 'UG', name: 'Uganda', flag: '🇺🇬', currency: 'UGX', lang: 'sw', supportedLangs: ['en', 'sw'] },
+  { code: 'NG', name: 'Nigeria', flag: '🇳🇬', currency: 'NGN', lang: 'en', supportedLangs: ['en'] },
+  { code: 'ZA', name: 'South Africa', flag: '🇿🇦', currency: 'ZAR', lang: 'en', supportedLangs: ['en'] },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', currency: 'GBP', lang: 'en', supportedLangs: ['en'] },
+  { code: 'EU', name: 'European Union', flag: '🇪🇺', currency: 'EUR', lang: 'en', supportedLangs: ['en', 'es'] }
 ];
 
 export const CURRENCIES_MAP = {
   KES: { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
+  USD: { code: 'USD', symbol: '$', name: 'US Dollar' },
   TZS: { code: 'TZS', symbol: 'TSh', name: 'Tanzanian Shilling' },
   UGX: { code: 'UGX', symbol: 'USh', name: 'Ugandan Shilling' },
   NGN: { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
   ZAR: { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
-  USD: { code: 'USD', symbol: '$', name: 'US Dollar' },
   GBP: { code: 'GBP', symbol: '£', name: 'British Pound' },
   EUR: { code: 'EUR', symbol: '€', name: 'Euro' }
 };
@@ -57,10 +61,25 @@ export const EXCHANGE_RATES = {
   EUR: 0.92
 };
 
-export const LANGUAGES_LIST = [
-  { code: 'en', name: 'English', native: 'English', flag: '🇬🇧' },
-  { code: 'sw', name: 'Swahili', native: 'Kiswahili', flag: '🇰🇪' }
-];
+function getMergedLanguages() {
+  const dynList = (typeof window !== 'undefined' && window.SynergyLocalization && typeof window.SynergyLocalization.getLanguagesList === 'function')
+    ? window.SynergyLocalization.getLanguagesList()
+    : null;
+  if (!Array.isArray(dynList) || dynList.length === 0) return LANGUAGES_LIST;
+  const map = new Map();
+  LANGUAGES_LIST.forEach(l => map.set(l.code, l));
+  dynList.forEach(l => {
+    if (l && l.code) {
+      map.set(l.code, { ...(map.get(l.code) || {}), ...l });
+    }
+  });
+  return Array.from(map.values());
+}
+
+function isSupportedLanguageCode(code) {
+  if (!code) return false;
+  return getMergedLanguages().some(l => l.code === code);
+}
 
 function getInitialLocaleState() {
   let country = 'KE';
@@ -81,7 +100,7 @@ function getInitialLocaleState() {
       if (parsed.currency && CURRENCIES_MAP[parsed.currency]) {
         currency = parsed.currency;
       }
-      if (parsed.language && (parsed.language === 'en' || parsed.language === 'sw')) {
+      if (parsed.language && isSupportedLanguageCode(parsed.language)) {
         language = parsed.language;
       }
     }
@@ -92,7 +111,7 @@ function getInitialLocaleState() {
     if (synCurr && CURRENCIES_MAP[synCurr]) {
       currency = synCurr;
     }
-    if (synLang === 'en' || synLang === 'sw') {
+    if (isSupportedLanguageCode(synLang)) {
       language = synLang;
     }
   } catch (_) {}
@@ -119,6 +138,8 @@ export function RegionProvider({ children }) {
   const [currencyInfo, setCurrencyInfo] = useState(initial.currencyInfo);
   const [language, setLanguage] = useState(initial.language);
 
+  const availableLanguages = useMemo(() => getMergedLanguages(), [language]);
+
   useEffect(() => {
     const handleSynergyChange = (e) => {
       const detail = e.detail || {};
@@ -134,7 +155,7 @@ export function RegionProvider({ children }) {
         setCurrency(detail.currency);
         setCurrencyInfo(CURRENCIES_MAP[detail.currency]);
       }
-      if (detail.lang === 'en' || detail.lang === 'sw') {
+      if (isSupportedLanguageCode(detail.lang)) {
         setLanguage(detail.lang);
       }
     };
@@ -197,7 +218,7 @@ export function RegionProvider({ children }) {
   }, [country, language]);
 
   const changeLanguage = useCallback((code) => {
-    if (code !== 'en' && code !== 'sw') return;
+    if (!isSupportedLanguageCode(code)) return;
     setLanguage(code);
     try {
       localStorage.setItem('synergy_lang', code);
@@ -253,11 +274,11 @@ export function RegionProvider({ children }) {
       currency,
       currencyInfo,
       language,
-      languages: LANGUAGES_LIST,
+      languages: availableLanguages,
       options: {
         countries: COUNTRIES_LIST,
         currencies: Object.values(CURRENCIES_MAP),
-        languages: LANGUAGES_LIST
+        languages: availableLanguages
       },
       changeCountry,
       changeCurrency,

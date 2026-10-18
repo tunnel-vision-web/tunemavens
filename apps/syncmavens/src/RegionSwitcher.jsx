@@ -29,10 +29,20 @@ function RegionSwitcher() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const langList = Array.isArray(languages) && languages.length > 0 ? languages : [
+    { code: 'en', short: 'EN', name: 'English', native: 'English', flag: '🇬🇧', accent: '#22d3ee', textDark: '#060813' },
+    { code: 'sw', short: 'SW', name: 'Swahili', native: 'Kiswahili', flag: '🇰🇪', accent: '#10b981', textDark: '#042f2e' },
+    { code: 'ki', short: 'KI', name: 'Kikuyu', native: 'Gĩkũyũ', flag: '🇰🇪', accent: '#f59e0b', textDark: '#1c1917' },
+    { code: 'es', short: 'ES', name: 'Spanish', native: 'Español', flag: '🇺🇸', accent: '#a855f7', textDark: '#ffffff' }
+  ];
+
+  const activeLangIndex = Math.max(0, langList.findIndex(l => l.code === language));
+  const activeLangObj = langList[activeLangIndex] || langList[0];
+  const nextLangObj = langList[(activeLangIndex + 1) % langList.length] || langList[0];
+
   const toggleLanguageQuick = (e) => {
     e.stopPropagation();
-    const nextLang = language === 'sw' ? 'en' : 'sw';
-    changeLanguage(nextLang);
+    changeLanguage(nextLangObj.code);
   };
 
   return (
@@ -78,13 +88,13 @@ function RegionSwitcher() {
           type="button"
           id="langSelectorBtn"
           onClick={toggleLanguageQuick}
-          title={language === 'sw' ? 'Switch to English' : 'Badilisha kwenda Kiswahili'}
+          title={`Switch language to ${nextLangObj.native} (${nextLangObj.name})`}
           data-testid="lang-quick-toggle"
           data-no-i18n="true"
           style={{
-            background: language === 'sw' ? '#10b981' : 'rgba(34, 211, 238, 0.14)',
-            color: language === 'sw' ? '#042f2e' : '#22d3ee',
-            border: language === 'sw' ? '1px solid #10b981' : '1px solid rgba(34, 211, 238, 0.35)',
+            background: language === 'en' ? 'rgba(34, 211, 238, 0.14)' : (activeLangObj.accent || '#10b981'),
+            color: language === 'en' ? '#22d3ee' : (activeLangObj.textDark || '#042f2e'),
+            border: language === 'en' ? '1px solid rgba(34, 211, 238, 0.35)' : `1px solid ${activeLangObj.accent || '#10b981'}`,
             borderRadius: '3px',
             padding: '2px 7px',
             fontSize: '11px',
@@ -94,12 +104,14 @@ function RegionSwitcher() {
             lineHeight: 1.3
           }}
         >
-          <span id="selectedLangText">{language === 'sw' ? '🇰🇪 SW' : '🇬🇧 EN'}</span>
+          <span id="selectedLangText">
+            {activeLangObj.flag || '🌐'} {activeLangObj.short || activeLangObj.code.toUpperCase()}
+          </span>
         </button>
       </div>
 
       {open && (
-        <div className="region-panel" data-testid="region-switcher-panel" style={{ zIndex: 99999 }}>
+        <div className="region-panel" data-testid="region-switcher-panel" style={{ zIndex: 99999, minWidth: '250px' }}>
           <label className="region-field">
             <span>Country / Region</span>
             <select
@@ -137,7 +149,7 @@ function RegionSwitcher() {
               onChange={(e) => changeLanguage(e.target.value)}
               data-testid="region-language-select"
             >
-              {(languages || []).map((l) => (
+              {langList.map((l) => (
                 <option key={l.code} value={l.code} data-no-i18n="true">
                   {l.flag ? `${l.flag} ` : ''}{l.native} ({l.name})
                 </option>
@@ -145,41 +157,45 @@ function RegionSwitcher() {
             </select>
           </label>
 
-          <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }} data-no-i18n="true">
-            <button
-              type="button"
-              onClick={() => changeLanguage('en')}
-              style={{
-                flex: 1,
-                padding: '6px 8px',
-                borderRadius: '3px',
-                border: language === 'en' ? '1px solid #22d3ee' : '1px solid #1e293b',
-                background: language === 'en' ? '#22d3ee' : '#0f172a',
-                color: language === 'en' ? '#060813' : '#94a3b8',
-                fontSize: '11px',
-                fontWeight: 800,
-                cursor: 'pointer'
-              }}
-            >
-              🇬🇧 English
-            </button>
-            <button
-              type="button"
-              onClick={() => changeLanguage('sw')}
-              style={{
-                flex: 1,
-                padding: '6px 8px',
-                borderRadius: '3px',
-                border: language === 'sw' ? '1px solid #10b981' : '1px solid #1e293b',
-                background: language === 'sw' ? '#10b981' : '#0f172a',
-                color: language === 'sw' ? '#042f2e' : '#94a3b8',
-                fontSize: '11px',
-                fontWeight: 800,
-                cursor: 'pointer'
-              }}
-            >
-              🇰🇪 Kiswahili
-            </button>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '6px',
+              marginTop: '6px'
+            }}
+            data-no-i18n="true"
+          >
+            {langList.map((l) => {
+              const isSelected = language === l.code;
+              const accentColor = l.accent || '#22d3ee';
+              const darkText = l.textDark || '#060813';
+              return (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => changeLanguage(l.code)}
+                  data-testid={`lang-btn-${l.code}`}
+                  style={{
+                    padding: '6px 8px',
+                    borderRadius: '3px',
+                    border: isSelected ? `1px solid ${accentColor}` : '1px solid #1e293b',
+                    background: isSelected ? accentColor : '#0f172a',
+                    color: isSelected ? darkText : '#94a3b8',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  <span>{l.flag}</span>
+                  <span>{l.native}</span>
+                </button>
+              );
+            })}
           </div>
 
           <p className="region-note">Prices and plans update live to your local currency.</p>

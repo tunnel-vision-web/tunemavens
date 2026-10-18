@@ -2,42 +2,49 @@
 
 ## 1. Executive Overview
 
-TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adaptation Engine** (`window.SynergyLocalization`, version `v=47`) across all three standalone web applications in the monorepo:
+TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adaptation Engine** (`window.SynergyLocalization`, version `v=48`) across all three standalone web applications in the monorepo:
 - **Portal (`apps/portal`, port 3000)**: Landing pages, Blog & Help Center articles, In-App Documentation Modal (`InAppDocModal.jsx`), Creator EPK Web Worlds, Label Roster, Mother-CMS Studio, Smart CRM, Affiliates, MyContracts, and TuneLedger Split Cascade Studio (`ROYALTY_GUIDES`).
 - **TuneStream (`apps/tunestream`, port 3001)**: Consumer lossless streaming portal, 5-slide auto-advancing hero carousel (synchronized with the main Portal landing page), fan tipping, stem unlocking, and artist discovery.
 - **SyncMavens (`apps/syncmavens`, port 3002)**: Pre-cleared audiovisual sync licensing marketplace, supervisor brief management, and dynamic waterfall quote calculator.
 
-### Kenya Launch Defaults
-- **Default Market (`synergy_market`)**: `KE` (Kenya 🇰🇪)
-- **Default Currency (`synergy_currency`)**: `KES` (`KSh`, rate `130.0` per `1 USD`)
+### Simultaneous Kenya & USA Launch Defaults
+- **Primary Launch Markets**:
+  - `KE` (Kenya 🇰🇪) — Base Currency `KES` (`KSh`), Default Language `sw` (Kiswahili)
+  - `US` (United States 🇺🇸) — Base Currency `USD` (`$`), Default Language `en` (English)
 - **Supported Languages (`synergy_lang`)**:
-  - `en` — English (`EN`)
-  - `sw` — Kiswahili (`SW`)
+  - `en` — English (`EN`, 🇬🇧)
+  - `sw` — Kiswahili (`SW`, 🇰🇪)
+  - `ki` — Gĩkũyũ / Kikuyu (`KI`, 🇰🇪)
+  - `es` — Español / Spanish (`ES`, 🇺🇸)
+- **Extensible Language Architecture**: Runtime registration of new language packs via `window.SynergyLocalization.registerLanguage()`.
 
 ---
 
-## 2. Core Design Principles & 3-Tier Translation Pipeline
+## 2. Core Design Principles & Multi-Language Translation Pipeline
 
-1. **Single Source of Truth in HTML/JSX (English + USD Base)**
+1. **Single Source of Truth in HTML/JSX (English + Multi-Currency Base)**
    - All React components, landing pages, sidebars, articles, modals, and dashboard applications are authored in canonical English (`en`) and base US Dollars (`$`) or Kenyan Shillings (`KES`).
-   - There are no duplicated `/sw/` route trees or separate per-component language JSON files to maintain.
+   - There are no duplicated route trees or separate per-component JSON files.
 
-2. **3-Tier Kiswahili Translation Architecture (`translateStringToSwahili` / `translateSingleLineToSwahili`)**
-   - **Multiline Decomposition**: Strings containing `\n` are automatically split line-by-line when not matched as a full block, ensuring multi-paragraph strings and tooltip descriptions translate cleanly.
-   - **Tier 1A — Exact Phrase Dictionary (`T`)**: Over 1,600 curated full-sentence, heading, button, sidebar, tooltip, and article paragraph translations.
-   - **Tier 1B — Punctuation, List-Numbering & Hashtag Stripping**: Automatically strips leading list markers (`1. `, `• `, `— `, `☐ `, `#`), translates the core phrase via `T`, and restores the exact leading/trailing punctuation or `#` tag prefix (e.g., `#Recoupment` → `#Urejeshaji Gharama`).
-   - **Tier 2 — Longest-First Multi-Word Phrase Matching (`MULTI_WORD_KEYS`)**: Replaces multi-word domain phrases (sorted by descending length so longer phrases always take precedence over shorter substrings).
-   - **Pre-Tier 3 — Contraction & English Article Normalization**: Normalizes English contractions (`don't`, `doesn't`, `can't`, `haven't`, `it's`, `you're`, etc.), possessives (`'s`), and standalone English articles (`the`, `a`, `an`) while preserving sentence-initial capitalization.
-   - **Tier 3 — Case-Preserving Word-Boundary Lexicon (`WORD_LEXICON` & `WORD_REGEX`)**: Over 2,800 domain and general vocabulary words applied with strict `\b` word boundaries and `matchCase()` (`UPPERCASE`, `Title Case`, `lowercase`) so single words never corrupt Kiswahili substrings.
+2. **3-Tier Multi-Language Translation Architecture (`translateStringToLang` / `translateSingleLineToLang`)**
+   - **Multiline Decomposition**: Strings containing `\n` are automatically split line-by-line when not matched as a full block, ensuring multi-paragraph strings, list items, and tooltip descriptions translate cleanly.
+   - **Tier 1A — Exact Phrase Dictionary (`pack.T`)**: Over 1,300 curated full-sentence, heading, button, sidebar, tooltip, and article paragraph translations per language pack.
+   - **Tier 1B — Punctuation, List-Numbering & Symbol Stripping**: Automatically strips leading list markers (`1. `, `• `, `— `, `☐ `, `#`), translates the core phrase via `pack.T`, and restores the exact leading/trailing punctuation or `#` tag prefix (e.g., `#Recoupment` → `#Urejeshaji Gharama` in Swahili, `#Ũrihi wa Mbere` in Kikuyu, `#Recuperación` in Spanish).
+   - **Tier 2 — Longest-First Multi-Word Phrase Matching (`pack.MULTI_WORD_KEYS`)**: Replaces multi-word domain phrases (sorted by descending character length so longer phrases take precedence over shorter substrings).
+   - **Pre-Tier 3 — Contraction & Language-Specific Normalization**:
+     - *English/Swahili*: Normalizes contractions (`don't` → `usifanye`, `doesn't` → `haifanyi`, `can't` → `haiwezi`, etc.) and removes English standalone articles (`the`, `a`, `an`).
+     - *English/Kikuyu*: Normalizes contractions (`don't` → `ndũgathe`, `doesn't` → `ndĩrĩkaga`, `can't` → `ndĩngĩhota`, etc.) and strips English articles.
+     - *English/Spanish*: Normalizes contractions (`don't` → `no`, `can't` → `no puede`, possessive `'s` → `de $1`).
+   - **Tier 3 — Case-Preserving Word-Boundary Lexicon (`pack.WORD_LEXICON` & `pack.WORD_REGEX`)**: Over 2,900 domain and general vocabulary words per language pack applied with strict `\b` word boundaries and `matchCase()` (`UPPERCASE`, `Title Case`, `lowercase`) ensuring single words never corrupt foreign substrings.
 
 3. **Structured Markdown Article Rendering (`ArticleContentRenderer.jsx`)**
    - Used across `HelpView.jsx`, `InAppDocModal.jsx`, `BlogPageView.jsx`, and `TuneLedgerSplitCascadePanel.jsx` (`ROYALTY_GUIDES`).
    - Parses Markdown tables (`| ... |`), callout blockquotes (`> `), subheadings (`### `), numbered lists (`1. `), bulleted checklists (`* [ ] `), and inline `**bold**` (`<strong>`) and `*italic*` (`<em>`) spans into clean, discrete React DOM text nodes so every segment is individually captured and translated by `window.SynergyLocalization`.
 
-4. **Lossless Bidirectional Switching (`EN` ↔ `SW` & Multi-Currency)**
-   - Before any DOM text node or attribute (`placeholder`, `title`, `aria-label`) is translated or currency-converted, its original English string is cached in `DOM_ENGLISH_NODES` (`WeakMap`).
-   - A companion `DOM_LAST_APPLIED` (`WeakMap`) tracks the exact string last written by the localization engine. When React updates a text node in-place (e.g., hero carousel slide changes, tab switches, or dynamic counters), the engine detects `node.nodeValue !== DOM_LAST_APPLIED.get(node)`, refreshes the cached English baseline (using `T_REVERSE` if needed), and immediately applies Kiswahili translation and currency conversion.
-   - Switching back to English (`EN`) or `USD ($)` restores the exact original strings instantaneously without a page reload.
+4. **Lossless Multi-Way Language Switching (`EN` ↔ `SW` ↔ `KI` ↔ `ES`)**
+   - Before any DOM text node or attribute (`placeholder`, `title`) is translated or currency-converted, its original English string is cached in `DOM_ENGLISH_NODES` (`WeakMap`).
+   - A companion `DOM_LAST_APPLIED` (`WeakMap`) tracks the exact string last written by the localization engine. When React updates a text node in-place (e.g., hero carousel slide changes, tab switches, dynamic counters), the engine detects `node.nodeValue !== DOM_LAST_APPLIED.get(node)`, refreshes the cached English baseline (using `T_REVERSE` across all language packs if needed), and immediately applies target language translation and currency conversion.
+   - Switching back to English (`EN`) or between any languages (`SW` ↔ `ES`, `KI` ↔ `EN`) restores exact strings instantaneously without a page reload.
 
 5. **Zero-Latency Persistence & Cross-Component Synchronization**
    - Preferences are persisted in `localStorage` under both Synergy and TuneMavens keys:
@@ -49,31 +56,39 @@ TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adap
 
 ---
 
-## 3. Supported Markets & Currencies
+## 3. Supported Markets, Currencies & Languages
 
 ### Markets (`MARKETS`)
-| ISO Code | Country | Flag | Default Currency | Supported Languages |
-| :--- | :--- | :---: | :---: | :---: |
-| `KE` | Kenya *(Launch Default)* | 🇰🇪 | `KES` (`KSh`) | `en`, `sw` |
-| `TZ` | Tanzania | 🇹🇿 | `TZS` (`TSh`) | `sw`, `en` |
-| `UG` | Uganda | 🇺🇬 | `UGX` (`USh`) | `en`, `sw` |
-| `NG` | Nigeria | 🇳🇬 | `NGN` (`₦`) | `en` |
-| `ZA` | South Africa | 🇿🇦 | `ZAR` (`R`) | `en` |
-| `US` | United States | 🇺🇸 | `USD` (`$`) | `en` |
-| `GB` | United Kingdom | 🇬🇧 | `GBP` (`£`) | `en` |
-| `EU` | European Union | 🇪🇺 | `EUR` (`€`) | `en` |
+| ISO Code | Country | Flag | Default Currency | Supported Languages | Primary Launch Region |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| `KE` | Kenya | 🇰🇪 | `KES` (`KSh`) | `en`, `sw`, `ki` | **Kenya Launch** |
+| `US` | United States | 🇺🇸 | `USD` (`$`) | `en`, `es` | **USA Launch** |
+| `TZ` | Tanzania | 🇹🇿 | `TZS` (`TSh`) | `sw`, `en` | East Africa |
+| `UG` | Uganda | 🇺🇬 | `UGX` (`USh`) | `sw`, `en` | East Africa |
+| `NG` | Nigeria | 🇳🇬 | `NGN` (`₦`) | `en` | West Africa |
+| `ZA` | South Africa | 🇿🇦 | `ZAR` (`R`) | `en` | Southern Africa |
+| `GB` | United Kingdom | 🇬🇧 | `GBP` (`£`) | `en` | Europe |
+| `EU` | European Union | 🇪🇺 | `EUR` (`€`) | `en`, `es` | Europe |
 
 ### Currencies (`CURRENCIES`)
 | Code | Symbol | Rate (per 1 USD) | Format Example |
 | :--- | :---: | :---: | :--- |
 | `KES` | `KSh` | `130.0` | `KSh 3,250` |
-| `TZS` | `TSh` | `2550.0` | `TSh 63,750` |
+| `TZS` | `TSh` | `2600.0` | `TSh 65,000` |
 | `UGX` | `USh` | `3700.0` | `USh 92,500` |
-| `NGN` | `₦` | `1550.0` | `₦ 38,750` |
-| `ZAR` | `R` | `18.5` | `R 463` |
+| `NGN` | `₦` | `1500.0` | `₦ 37,500` |
+| `ZAR` | `R` | `18.0` | `R 450` |
 | `USD` | `$` | `1.0` | `$25` |
-| `GBP` | `£` | `0.79` | `£19.75` |
-| `EUR` | `€` | `0.92` | `€23` |
+| `GBP` | `£` | `0.80` | `£20.00` |
+| `EUR` | `€` | `0.92` | `€23.00` |
+
+### Supported Languages (`SUPPORTED_LANGUAGES`)
+| Code | Name | Native Name | Flag | Accent Color | Quick Toggle Badge |
+| :---: | :--- | :--- | :---: | :---: | :---: |
+| `en` | English | English | 🇬🇧 | `#22d3ee` | `🇬🇧 EN` |
+| `sw` | Kiswahili | Kiswahili | 🇰🇪 | `#10b981` | `🇰🇪 SW` |
+| `ki` | Kikuyu | Gĩkũyũ | 🇰🇪 | `#f59e0b` | `🇰🇪 KI` |
+| `es` | Spanish | Español | 🇺🇸 | `#a855f7` | `🇺🇸 ES` |
 
 ---
 
@@ -84,11 +99,11 @@ TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adap
 | `apps/portal/public/js/localization.js` | Master Synergy Localization Engine for Portal (Landing, Sidebars, Blog, Help, In-App Docs, EPK, Dashboard Apps) |
 | `apps/tunestream/public/js/localization.js` | Master Synergy Localization Engine for TuneStream (5-Slide Hero Carousel, Sidebars, Streaming Console) |
 | `apps/syncmavens/public/js/localization.js` | Master Synergy Localization Engine for SyncMavens (Sync Marketplace, Sidebars, Briefs & Quotes) |
-| `apps/*/index.html` | Loads `/js/localization.js?v=47` prior to `/src/main.jsx` |
-| `apps/*/src/RegionContext.jsx` | React Context bridging `window.SynergyLocalization` state (`country`, `currency`, `language`, `setCountry`, `setCurrency`, `setLanguage`, `formatPrice`) |
-| `apps/*/src/RegionSwitcher.jsx` | Unified header selector (`Market/Country`, `Currency`, and `EN \| SW` language toggle) |
+| `apps/*/index.html` | Loads `/js/localization.js?v=48` prior to `/src/main.jsx` |
+| `apps/*/src/RegionContext.jsx` | React Context bridging `window.SynergyLocalization` state (`country`, `currency`, `language`, `changeCountry`, `changeCurrency`, `changeLanguage`, `formatPrice`, `getMergedLanguages()`) |
+| `apps/*/src/RegionSwitcher.jsx` | Unified header selector (Quick 4-way language toggle cycling `EN` → `SW` → `KI` → `ES`, plus 2x2 modal quick-select grid) |
 | `apps/portal/src/components/common/ArticleContentRenderer.jsx` | Structured Markdown-to-JSX renderer for Help, Blog, In-App Doc Modal, and Royalty Guide articles |
-| `apps/portal/src/components/common/InAppDocModal.jsx` | Contextual documentation reader modal with CSS-truncated article pills for exact title translation |
+| `apps/portal/src/components/common/InAppDocModal.jsx` | Contextual documentation reader modal with exact article title translation |
 | `apps/*/src/components/splits/TuneLedgerSplitCascadePanel.jsx` | Multi-currency Split Cascade Waterfall calculator & `ROYALTY_GUIDES` reader synced with `window.SynergyLocalization` |
 
 ---
@@ -96,20 +111,37 @@ TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adap
 ## 5. Public JavaScript API (`window.SynergyLocalization`)
 
 ```javascript
-// Get current state
-window.SynergyLocalization.getMarket();     // Returns market object, e.g. { code: 'KE', name: 'Kenya', currency: 'KES', ... }
-window.SynergyLocalization.getCurrency();   // e.g. 'KES'
-window.SynergyLocalization.getLanguage();   // e.g. 'en' or 'sw'
+// Query current state
+window.SynergyLocalization.getMarket();            // { code: 'KE', name: 'Kenya', currency: 'KES', ... }
+window.SynergyLocalization.getCurrency();          // 'KES' or 'USD'
+window.SynergyLocalization.getLanguage();          // 'en', 'sw', 'ki', or 'es'
+window.SynergyLocalization.getLanguagesList();      // Array of supported language objects
+window.SynergyLocalization.getSupportedLanguages(); // Object dictionary of supported languages
 
-// Programmatically switch language ('en' | 'sw')
-window.SynergyLocalization.setLanguage('sw');
+// Programmatically switch language
+window.SynergyLocalization.setLanguage('ki');      // Switch to Gĩkũyũ
+window.SynergyLocalization.setLanguage('es');      // Switch to Spanish
+window.SynergyLocalization.setLanguage('sw');      // Switch to Kiswahili
+window.SynergyLocalization.setLanguage('en');      // Switch to English
 
 // Programmatically switch market or currency
-window.SynergyLocalization.setMarket('KE'); // Automatically sets currency to 'KES'
-window.SynergyLocalization.setCurrency('KES');
+window.SynergyLocalization.setMarket('US');        // Automatically sets default currency to 'USD'
+window.SynergyLocalization.setMarket('KE');        // Automatically sets default currency to 'KES'
+window.SynergyLocalization.setCurrency('USD');
+
+// Dynamic Language Registration (Extensibility for future languages)
+window.SynergyLocalization.registerLanguage(
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+  {
+    T: { "Dashboard": "Tableau de bord", "Pricing": "Tarification" },
+    WORD_LEXICON: { "music": "musique", "artist": "artiste" }
+  }
+);
 
 // Translate a string or format currency amounts
 window.SynergyLocalization.translateString('Command Center', 'sw'); // -> 'Kituo cha Uongozi'
+window.SynergyLocalization.translateString('Pricing', 'ki');        // -> 'Thogora na Mĩbango'
+window.SynergyLocalization.translateString('Pricing', 'es');        // -> 'Precios'
 window.SynergyLocalization.formatCurrency(3250);                    // Converts KES 3,250 to active currency
 window.SynergyLocalization.formatUsdPrice(25);                      // Converts $25 USD to active currency
 ```
@@ -118,7 +150,7 @@ window.SynergyLocalization.formatUsdPrice(25);                      // Converts 
 
 ## 6. Maintenance & Validation Protocol
 
-Whenever adding new phrases to `T` or words to `WORD_LEXICON` in `localization.js`:
+Whenever updating language dictionaries in `localization.js`:
 1. Ensure all three application copies (`apps/portal/public/js/localization.js`, `apps/tunestream/public/js/localization.js`, and `apps/syncmavens/public/js/localization.js`) remain identical and bump the `?v=` cache-buster in `apps/*/index.html`.
 2. Run syntax validation before committing:
    ```powershell
