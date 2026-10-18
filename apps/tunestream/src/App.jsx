@@ -56,10 +56,13 @@ export const PERSONA_ROLES = [
 
 const SAMPLE_TRACKS = AUTHORITATIVE_CATALOG_TRACKS;
 
+import LocaleWelcomeBanner from './components/common/LocaleWelcomeBanner.jsx';
+
 export default function App() {
   return (
     <RegionProvider>
       <Router>
+        <LocaleWelcomeBanner />
         <AppContent />
       </Router>
     </RegionProvider>

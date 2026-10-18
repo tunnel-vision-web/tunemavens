@@ -86,6 +86,7 @@ import { PerfectForSidebar, PERFECT_FOR_ROLES, ROLE_LOGOS, getIntermavenUrl } fr
 import Navbar from './components/common/Navbar.jsx'
 import PageHeader from './components/common/PageHeader.jsx'
 import Footer from './components/common/Footer.jsx'
+import LocaleWelcomeBanner from './components/common/LocaleWelcomeBanner.jsx'
 
 import HomeView from './views/landing/HomeView.jsx'
 import ToolsView from './views/landing/ToolsView.jsx'
@@ -9104,6 +9105,7 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+      <LocaleWelcomeBanner />
       <AppContent 
         sessionUser={sessionUser}
         handleLogin={handleLogin}

@@ -15,12 +15,14 @@ export const useRegion = () => useContext(RegionContext) || {
   region: 'east-africa',
   currency: 'KES',
   currencyInfo: { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
-  language: 'en',
+  language: 'sw',
   languages: LANGUAGES_LIST,
   options: { countries: [], currencies: [], languages: LANGUAGES_LIST },
   changeCountry: () => {},
   changeCurrency: () => {},
   changeLanguage: () => {},
+  setRegionDefaultLanguage: () => {},
+  getRegionDefaultLanguage: () => 'en',
   formatPrice: (v) => `KSh ${Math.round((v || 0) * 130).toLocaleString()}`,
   convertPrice: (v) => Math.round((v || 0) * 130),
   t: (s) => s
@@ -84,7 +86,7 @@ function isSupportedLanguageCode(code) {
 function getInitialLocaleState() {
   let country = 'KE';
   let currency = 'KES';
-  let language = 'en';
+  let language = 'sw';
 
   try {
     const synMarket = localStorage.getItem('synergy_market');
@@ -113,6 +115,8 @@ function getInitialLocaleState() {
     }
     if (isSupportedLanguageCode(synLang)) {
       language = synLang;
+    } else if (typeof window !== 'undefined' && window.SynergyLocalization && typeof window.SynergyLocalization.getRegionDefaultLanguage === 'function') {
+      language = window.SynergyLocalization.getRegionDefaultLanguage(country) || language;
     }
   } catch (_) {}
 
@@ -161,9 +165,20 @@ export function RegionProvider({ children }) {
       }
     };
 
+    const handleDefaultChange = (e) => {
+      const detail = e.detail || {};
+      if (detail.marketCode === country && detail.defaultLang && isSupportedLanguageCode(detail.defaultLang)) {
+        setLanguage(detail.defaultLang);
+      }
+    };
+
     window.addEventListener('synergyLocalizationChanged', handleSynergyChange);
-    return () => window.removeEventListener('synergyLocalizationChanged', handleSynergyChange);
-  }, []);
+    window.addEventListener('synergyMarketDefaultChanged', handleDefaultChange);
+    return () => {
+      window.removeEventListener('synergyLocalizationChanged', handleSynergyChange);
+      window.removeEventListener('synergyMarketDefaultChanged', handleDefaultChange);
+    };
+  }, [country]);
 
   // Trigger DOM localization pass whenever country, currency, or language updates
   useEffect(() => {
@@ -174,7 +189,7 @@ export function RegionProvider({ children }) {
     }
   }, [country, currency, language]);
 
-  const changeCountry = useCallback((code) => {
+  const changeCountry = useCallback((code, preserveLang = false) => {
     const cObj = COUNTRIES_LIST.find(c => c.code === code);
     if (cObj) {
       setCountry(cObj.code);
@@ -183,18 +198,30 @@ export function RegionProvider({ children }) {
       setCurrency(cObj.currency);
       setCurrencyInfo(CURRENCIES_MAP[cObj.currency]);
 
+      let targetLang = language;
+      if (!preserveLang) {
+        const adminDefault = (window.SynergyLocalization && typeof window.SynergyLocalization.getRegionDefaultLanguage === 'function')
+          ? window.SynergyLocalization.getRegionDefaultLanguage(cObj.code)
+          : cObj.lang;
+        if (adminDefault && isSupportedLanguageCode(adminDefault)) {
+          targetLang = adminDefault;
+          setLanguage(targetLang);
+        }
+      }
+
       try {
         localStorage.setItem('synergy_market', cObj.code);
         localStorage.setItem('synergy_currency', cObj.currency);
+        localStorage.setItem('synergy_lang', targetLang);
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           country: cObj.code,
           currency: cObj.currency,
-          language
+          language: targetLang
         }));
       } catch (_) {}
 
       if (window.SynergyLocalization && typeof window.SynergyLocalization.setMarket === 'function') {
-        window.SynergyLocalization.setMarket(cObj.code);
+        window.SynergyLocalization.setMarket(cObj.code, preserveLang);
       }
     }
   }, [language]);
@@ -236,36 +263,42 @@ export function RegionProvider({ children }) {
     }
   }, [country, currency]);
 
+  const setRegionDefaultLanguage = useCallback((marketCode, langCode) => {
+    if (window.SynergyLocalization && typeof window.SynergyLocalization.setRegionDefaultLanguage === 'function') {
+      window.SynergyLocalization.setRegionDefaultLanguage(marketCode, langCode);
+      if (country === marketCode) {
+        setLanguage(langCode);
+      }
+    }
+  }, [country]);
+
+  const getRegionDefaultLanguage = useCallback((marketCode) => {
+    if (window.SynergyLocalization && typeof window.SynergyLocalization.getRegionDefaultLanguage === 'function') {
+      return window.SynergyLocalization.getRegionDefaultLanguage(marketCode);
+    }
+    const cObj = COUNTRIES_LIST.find(c => c.code === marketCode);
+    return cObj ? cObj.lang : 'en';
+  }, []);
+
   const convertPrice = useCallback((usdAmount) => {
     const rate = EXCHANGE_RATES[currency] || 130;
-    const rawValue = (usdAmount || 0) * rate;
-    if (currency === 'USD' || currency === 'GBP' || currency === 'EUR') {
-      return Math.round(rawValue * 100) / 100;
-    }
-    if (currency === 'ZAR') return Math.round(rawValue / 10) * 10;
-    if (rawValue > 0 && rawValue < 100) return Math.round(rawValue);
-    return Math.round(rawValue / 100) * 100;
+    return Math.round(usdAmount * rate);
   }, [currency]);
 
   const formatPrice = useCallback((usdAmount) => {
-    const finalValue = convertPrice(usdAmount);
-    const symbol = currencyInfo?.symbol || 'KSh';
-    if (currency === 'USD' || currency === 'GBP' || currency === 'EUR') {
-      const suffix = usdAmount > 0 && Number.isInteger(finalValue) ? '.99' : '';
-      return `${symbol}${finalValue.toLocaleString()}${suffix}`;
-    }
-    return `${symbol} ${finalValue.toLocaleString()}`;
-  }, [convertPrice, currency, currencyInfo]);
+    const converted = convertPrice(usdAmount);
+    const sym = currencyInfo?.symbol || '$';
+    return `${sym} ${converted.toLocaleString()}`;
+  }, [convertPrice, currencyInfo]);
 
-  const t = useCallback((str) => {
-    if (!str) return str;
+  const t = useCallback((text) => {
     if (window.SynergyLocalization && typeof window.SynergyLocalization.translateString === 'function') {
-      return window.SynergyLocalization.translateString(str, language);
+      return window.SynergyLocalization.translateString(text, language);
     }
-    return str;
+    return text;
   }, [language]);
 
-  const region = ['US', 'GB', 'EU'].includes(country) ? 'western' : 'east-africa';
+  const region = (country === 'KE' || country === 'TZ' || country === 'UG') ? 'east-africa' : 'west';
 
   return (
     <RegionContext.Provider value={{
@@ -285,6 +318,8 @@ export function RegionProvider({ children }) {
       changeCountry,
       changeCurrency,
       changeLanguage,
+      setRegionDefaultLanguage,
+      getRegionDefaultLanguage,
       formatPrice,
       convertPrice,
       t

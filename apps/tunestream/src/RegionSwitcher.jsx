@@ -5,6 +5,7 @@ import { useRegion } from './RegionContext';
 function RegionSwitcher() {
   const {
     country,
+    countryName,
     countryFlag,
     currency,
     currencyInfo,
@@ -13,10 +14,13 @@ function RegionSwitcher() {
     options,
     changeCountry,
     changeCurrency,
-    changeLanguage
+    changeLanguage,
+    setRegionDefaultLanguage,
+    getRegionDefaultLanguage
   } = useRegion();
 
   const [open, setOpen] = useState(false);
+  const [showAdminDefaults, setShowAdminDefaults] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -27,6 +31,13 @@ function RegionSwitcher() {
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Listen for open trigger from LocaleWelcomeBanner or external UI
+  useEffect(() => {
+    const openHandler = () => setOpen(true);
+    window.addEventListener('synergyOpenRegionSwitcher', openHandler);
+    return () => window.removeEventListener('synergyOpenRegionSwitcher', openHandler);
   }, []);
 
   const langList = Array.isArray(languages) && languages.length > 0 ? languages : [
@@ -44,6 +55,8 @@ function RegionSwitcher() {
     e.stopPropagation();
     changeLanguage(nextLangObj.code);
   };
+
+  const currentDefaultLang = getRegionDefaultLanguage ? getRegionDefaultLanguage(country) : 'en';
 
   return (
     <div
@@ -111,7 +124,7 @@ function RegionSwitcher() {
       </div>
 
       {open && (
-        <div className="region-panel" data-testid="region-switcher-panel" style={{ zIndex: 99999, minWidth: '250px' }}>
+        <div className="region-panel" data-testid="region-switcher-panel" style={{ zIndex: 99999, minWidth: '260px' }}>
           <label className="region-field">
             <span>Country / Region</span>
             <select
@@ -196,6 +209,63 @@ function RegionSwitcher() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Admin Region Default Language Configuration */}
+          <div style={{ marginTop: '12px', borderTop: '1px solid #1e293b', paddingTop: '8px' }}>
+            <button
+              type="button"
+              onClick={() => setShowAdminDefaults((s) => !s)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#64748b',
+                fontSize: '11px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                padding: '4px 0'
+              }}
+            >
+              <span>⚙️ Admin: Region Default Language</span>
+              <span>{showAdminDefaults ? '▲' : '▼'}</span>
+            </button>
+
+            {showAdminDefaults && (
+              <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
+                <p style={{ margin: '0 0 4px 0', color: '#94a3b8', fontSize: '10px' }}>
+                  Default language for {countryName || country}:
+                </p>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {langList.map((l) => {
+                    const isDefault = currentDefaultLang === l.code;
+                    return (
+                      <button
+                        key={l.code}
+                        type="button"
+                        onClick={() => setRegionDefaultLanguage && setRegionDefaultLanguage(country, l.code)}
+                        title={`Set ${l.name} as default language for ${countryName}`}
+                        style={{
+                          flex: 1,
+                          padding: '4px 3px',
+                          fontSize: '10px',
+                          borderRadius: '3px',
+                          border: isDefault ? '1px solid #10b981' : '1px solid #334155',
+                          background: isDefault ? 'rgba(16, 185, 129, 0.25)' : '#0f172a',
+                          color: isDefault ? '#34d399' : '#94a3b8',
+                          cursor: 'pointer',
+                          fontWeight: isDefault ? 800 : 500
+                        }}
+                      >
+                        {l.flag} {l.short}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <p className="region-note">Prices and plans update live to your local currency.</p>

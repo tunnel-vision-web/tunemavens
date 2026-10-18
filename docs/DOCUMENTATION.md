@@ -1663,3 +1663,45 @@ To support the simultaneous launch in both **Kenya (`KE`)** and the **United Sta
   ```
 - **React Hydration & Real-Time Observer:** `RegionContext.jsx` queries `window.SynergyLocalization.getLanguagesList()` dynamically to merge runtime languages with static options. MutationObservers across Portal, TuneStream, and SyncMavens track dynamic React DOM route updates, modal popups, and carousel advances, maintaining 100% language fidelity without manual re-rendering.
 
+---
+
+## §9.42 — Ecosystem Vocabulary Audit (4,800+ Words), Admin Regional Defaults & First-Time Locale Onboarding Notification (v49)  ✅ SHIPPED
+
+### 9.42.1 Ecosystem Vocabulary Audit & Comprehensive Coverage
+To ensure zero untranslated English residue across all landing pages, content cards, article bodies, tables, and admin dashboards in Kiswahili (`sw`), Kikuyu / Gĩkũyũ (`ki`), and Spanish (`es`):
+1. **Full AST & String Extraction**: Extracted 4,559 user-facing UI strings and 3,579 distinct constituent words across 170 source files in Portal, TuneStream, and SyncMavens.
+2. **Lexicon Expansion to 4,807 Words**: Expanded `WORD_LEXICON` across all 3 language packs from 2,987 to **4,807 domain and general vocabulary words**, covering:
+   - Dynamic administrative and action buttons: `+ Add Admin Team Member`, `+ Spin Up New Contract`, `+ Invite Admin`, `+ Register New Split Sheet`, `Spin Up Engagement`, `Deactivate Account`, `Archive Record`.
+   - Admin table status and role labels: `Super Admin`, `Operator`, `Staff`, `Clearance`, `Verified`, `Pending Verification`, `One-Time`, `Recurring`, `Zero-Monthly-Fee`.
+   - General and technical terms: prepositions, numbers, quantities, relative adverbs, legal clauses, and streaming metadata.
+3. **Curated Tier 1 Phrase Expansions (`pack.T`)**: Expanded to 1,362 (Swahili) and 1,405 (Kikuyu/Spanish) exact phrases with punctuation and list-number preservation, ensuring instant lossless translation for compound sentences.
+
+### 9.42.2 Administrator-Configurable Regional Default Languages
+To allow platform administrators and label operators to tailor the entry language for different territories:
+1. **Persistence & Priority Engine**:
+   - Stores custom market defaults in `localStorage` key `synergy_market_defaults` (e.g. `{"KE":"sw","US":"en"}`).
+   - When a market is activated, the engine queries `getRegionDefaultLanguage(marketCode)`. If an admin has overridden the market default (e.g. setting Kenya to `ki` or USA to `es`), new visitors from that region automatically receive the configured default language.
+2. **Public API Methods**:
+   ```javascript
+   window.SynergyLocalization.getRegionDefaultLanguage(marketCode);
+   window.SynergyLocalization.setRegionDefaultLanguage(marketCode, langCode);
+   window.SynergyLocalization.getAllRegionDefaults();
+   ```
+3. **Operator Control Surfaces**:
+   - **CmsAdminView.jsx**: Added dedicated "Regional Defaults & Language Configuration (Multi-Market Launch Engine)" management card. Allows administrators to inspect supported languages per market, view active defaults, and switch default languages with 1 click.
+   - **RegionSwitcher.jsx**: Built-in collapsible "⚙️ Admin: Region Default Language" control inside the main modal switcher, allowing rapid territory default reconfiguration from any application header.
+
+### 9.42.3 First-Time User Locale Onboarding Banner (`LocaleWelcomeBanner.jsx`)
+When a first-time visitor arrives on Portal (`:3000`), TuneStream (`:3001`), or SyncMavens (`:3002`):
+1. **Smart Welcome Notification**:
+   - Automatically detects the user's localized region (e.g. Kenya 🇰🇪), default currency (`KSh` / `KES`), and default language (Kiswahili `SW` or Kikuyu `KI`).
+   - Floats unobtrusively above bottom content with high-contrast glassmorphism (`backdrop-blur-md`, emerald border glow).
+2. **Transparent User Guidance**:
+   - Informs the visitor that regional settings were configured for optimal local currency display and language compatibility.
+   - Explains that currency and language can be customized or changed at any time via the globe selector in the top navigation bar.
+   - Explanatory copy is natively localized across English, Kiswahili, Kikuyu, and Spanish.
+3. **1-Click Interaction**:
+   - **"Customize Region & Language"**: Emits `window.dispatchEvent(new CustomEvent('synergyOpenRegionSwitcher'))`, opening `RegionSwitcher.jsx` instantly without refreshing or reloading the route.
+   - **"Got it / Dismiss"**: Sets `synergy_locale_welcomed` in `localStorage`, dismissing the banner permanently across subsequent navigation sessions.
+
+

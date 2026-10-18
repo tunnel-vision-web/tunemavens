@@ -120,9 +120,12 @@ const INITIAL_PITCHES = [
   { id: 1, briefTitle: "Untitled Cyberpunk Drama", trackTitle: "Midnight Sun", client: "Netflix Series", status: "Under Review", date: "2026-07-09" }
 ];
 
+import LocaleWelcomeBanner from './components/common/LocaleWelcomeBanner.jsx';
+
 export default function App() {
   return (
     <Router>
+      <LocaleWelcomeBanner />
       <AppContent />
     </Router>
   );

@@ -2,15 +2,15 @@
 
 ## 1. Executive Overview
 
-TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adaptation Engine** (`window.SynergyLocalization`, version `v=48`) across all three standalone web applications in the monorepo:
+TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adaptation Engine** (`window.SynergyLocalization`, version `v=49`) across all three standalone web applications in the monorepo:
 - **Portal (`apps/portal`, port 3000)**: Landing pages, Blog & Help Center articles, In-App Documentation Modal (`InAppDocModal.jsx`), Creator EPK Web Worlds, Label Roster, Mother-CMS Studio, Smart CRM, Affiliates, MyContracts, and TuneLedger Split Cascade Studio (`ROYALTY_GUIDES`).
 - **TuneStream (`apps/tunestream`, port 3001)**: Consumer lossless streaming portal, 5-slide auto-advancing hero carousel (synchronized with the main Portal landing page), fan tipping, stem unlocking, and artist discovery.
 - **SyncMavens (`apps/syncmavens`, port 3002)**: Pre-cleared audiovisual sync licensing marketplace, supervisor brief management, and dynamic waterfall quote calculator.
 
 ### Simultaneous Kenya & USA Launch Defaults
 - **Primary Launch Markets**:
-  - `KE` (Kenya 🇰🇪) — Base Currency `KES` (`KSh`), Default Language `sw` (Kiswahili)
-  - `US` (United States 🇺🇸) — Base Currency `USD` (`$`), Default Language `en` (English)
+  - `KE` (Kenya 🇰🇪) — Base Currency `KES` (`KSh`), Default Language `sw` (Kiswahili, configurable by Admin to `ki` or `en`)
+  - `US` (United States 🇺🇸) — Base Currency `USD` (`$`), Default Language `en` (English, configurable by Admin to `es`)
 - **Supported Languages (`synergy_lang`)**:
   - `en` — English (`EN`, 🇬🇧)
   - `sw` — Kiswahili (`SW`, 🇰🇪)
@@ -28,14 +28,14 @@ TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adap
 
 2. **3-Tier Multi-Language Translation Architecture (`translateStringToLang` / `translateSingleLineToLang`)**
    - **Multiline Decomposition**: Strings containing `\n` are automatically split line-by-line when not matched as a full block, ensuring multi-paragraph strings, list items, and tooltip descriptions translate cleanly.
-   - **Tier 1A — Exact Phrase Dictionary (`pack.T`)**: Over 1,300 curated full-sentence, heading, button, sidebar, tooltip, and article paragraph translations per language pack.
+   - **Tier 1A — Exact Phrase Dictionary (`pack.T`)**: Over 1,400 curated full-sentence, heading, button, sidebar, tooltip, and article paragraph translations per language pack (including dynamic button verbs like `+ Add Admin Team Member`, `+ Spin Up New Contract`, `+ Invite Admin`, `+ Register New Split Sheet`).
    - **Tier 1B — Punctuation, List-Numbering & Symbol Stripping**: Automatically strips leading list markers (`1. `, `• `, `— `, `☐ `, `#`), translates the core phrase via `pack.T`, and restores the exact leading/trailing punctuation or `#` tag prefix (e.g., `#Recoupment` → `#Urejeshaji Gharama` in Swahili, `#Ũrihi wa Mbere` in Kikuyu, `#Recuperación` in Spanish).
    - **Tier 2 — Longest-First Multi-Word Phrase Matching (`pack.MULTI_WORD_KEYS`)**: Replaces multi-word domain phrases (sorted by descending character length so longer phrases take precedence over shorter substrings).
    - **Pre-Tier 3 — Contraction & Language-Specific Normalization**:
      - *English/Swahili*: Normalizes contractions (`don't` → `usifanye`, `doesn't` → `haifanyi`, `can't` → `haiwezi`, etc.) and removes English standalone articles (`the`, `a`, `an`).
      - *English/Kikuyu*: Normalizes contractions (`don't` → `ndũgathe`, `doesn't` → `ndĩrĩkaga`, `can't` → `ndĩngĩhota`, etc.) and strips English articles.
      - *English/Spanish*: Normalizes contractions (`don't` → `no`, `can't` → `no puede`, possessive `'s` → `de $1`).
-   - **Tier 3 — Case-Preserving Word-Boundary Lexicon (`pack.WORD_LEXICON` & `pack.WORD_REGEX`)**: Over 2,900 domain and general vocabulary words per language pack applied with strict `\b` word boundaries and `matchCase()` (`UPPERCASE`, `Title Case`, `lowercase`) ensuring single words never corrupt foreign substrings.
+   - **Tier 3 — Case-Preserving Word-Boundary Lexicon (`pack.WORD_LEXICON` & `pack.WORD_REGEX`)**: Over 4,800 domain and general vocabulary words per language pack applied with strict `\b` word boundaries and `matchCase()` (`UPPERCASE`, `Title Case`, `lowercase`) ensuring single words never corrupt foreign substrings.
 
 3. **Structured Markdown Article Rendering (`ArticleContentRenderer.jsx`)**
    - Used across `HelpView.jsx`, `InAppDocModal.jsx`, `BlogPageView.jsx`, and `TuneLedgerSplitCascadePanel.jsx` (`ROYALTY_GUIDES`).
@@ -99,9 +99,12 @@ TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adap
 | `apps/portal/public/js/localization.js` | Master Synergy Localization Engine for Portal (Landing, Sidebars, Blog, Help, In-App Docs, EPK, Dashboard Apps) |
 | `apps/tunestream/public/js/localization.js` | Master Synergy Localization Engine for TuneStream (5-Slide Hero Carousel, Sidebars, Streaming Console) |
 | `apps/syncmavens/public/js/localization.js` | Master Synergy Localization Engine for SyncMavens (Sync Marketplace, Sidebars, Briefs & Quotes) |
-| `apps/*/index.html` | Loads `/js/localization.js?v=48` prior to `/src/main.jsx` |
-| `apps/*/src/RegionContext.jsx` | React Context bridging `window.SynergyLocalization` state (`country`, `currency`, `language`, `changeCountry`, `changeCurrency`, `changeLanguage`, `formatPrice`, `getMergedLanguages()`) |
-| `apps/*/src/RegionSwitcher.jsx` | Unified header selector (Quick 4-way language toggle cycling `EN` → `SW` → `KI` → `ES`, plus 2x2 modal quick-select grid) |
+| `apps/syncmavens/public/js/localization.js` | Master Synergy Localization Engine for SyncMavens (Sync Marketplace, Sidebars, Briefs & Quotes) |
+| `apps/*/index.html` | Loads `/js/localization.js?v=49` prior to `/src/main.jsx` |
+| `apps/*/src/RegionContext.jsx` | React Context bridging `window.SynergyLocalization` state (`country`, `currency`, `language`, `changeCountry`, `changeCurrency`, `changeLanguage`, `formatPrice`, `getMergedLanguages()`, `setRegionDefaultLanguage()`, `getRegionDefaultLanguage()`, `getAllRegionDefaults()`) |
+| `apps/*/src/RegionSwitcher.jsx` | Unified header selector (Quick 4-way language toggle cycling `EN` → `SW` → `KI` → `ES`, 2x2 modal quick-select grid, Admin Region Default Language manager, and listener for `synergyOpenRegionSwitcher`) |
+| `apps/*/src/components/common/LocaleWelcomeBanner.jsx` | First-time visitor onboarding notification: communicates active region, currency, and language, explains customization options, provides 1-click trigger to open `RegionSwitcher`, and persists dismissal to `synergy_locale_welcomed` |
+| `apps/portal/src/views/admin/CmsAdminView.jsx` | Multi-market Launch Engine card: GUI for viewing and configuring default platform language per market/country |
 | `apps/portal/src/components/common/ArticleContentRenderer.jsx` | Structured Markdown-to-JSX renderer for Help, Blog, In-App Doc Modal, and Royalty Guide articles |
 | `apps/portal/src/components/common/InAppDocModal.jsx` | Contextual documentation reader modal with exact article title translation |
 | `apps/*/src/components/splits/TuneLedgerSplitCascadePanel.jsx` | Multi-currency Split Cascade Waterfall calculator & `ROYALTY_GUIDES` reader synced with `window.SynergyLocalization` |
@@ -118,6 +121,11 @@ window.SynergyLocalization.getLanguage();          // 'en', 'sw', 'ki', or 'es'
 window.SynergyLocalization.getLanguagesList();      // Array of supported language objects
 window.SynergyLocalization.getSupportedLanguages(); // Object dictionary of supported languages
 
+// Admin Regional Default Language Engine
+window.SynergyLocalization.getRegionDefaultLanguage('KE'); // returns 'sw' (or custom configured default like 'ki')
+window.SynergyLocalization.setRegionDefaultLanguage('KE', 'ki'); // persists to 'synergy_market_defaults'
+window.SynergyLocalization.getAllRegionDefaults(); // { KE: 'ki', US: 'es', ... }
+
 // Programmatically switch language
 window.SynergyLocalization.setLanguage('ki');      // Switch to Gĩkũyũ
 window.SynergyLocalization.setLanguage('es');      // Switch to Spanish
@@ -125,9 +133,12 @@ window.SynergyLocalization.setLanguage('sw');      // Switch to Kiswahili
 window.SynergyLocalization.setLanguage('en');      // Switch to English
 
 // Programmatically switch market or currency
-window.SynergyLocalization.setMarket('US');        // Automatically sets default currency to 'USD'
-window.SynergyLocalization.setMarket('KE');        // Automatically sets default currency to 'KES'
+window.SynergyLocalization.setMarket('US');        // Automatically sets default currency to 'USD' and market default language
+window.SynergyLocalization.setMarket('KE');        // Automatically sets default currency to 'KES' and market default language
 window.SynergyLocalization.setCurrency('USD');
+
+// Open Region & Language Switcher via Global DOM Event
+window.dispatchEvent(new CustomEvent('synergyOpenRegionSwitcher'));
 
 // Dynamic Language Registration (Extensibility for future languages)
 window.SynergyLocalization.registerLanguage(
@@ -148,7 +159,23 @@ window.SynergyLocalization.formatUsdPrice(25);                      // Converts 
 
 ---
 
-## 6. Maintenance & Validation Protocol
+## 6. First-Time Visitor Onboarding Notification (`LocaleWelcomeBanner`)
+
+When a new user visits any of the ecosystem applications (`portal`, `tunestream`, `syncmavens`):
+1. **Detection & Greeting**:
+   - Reads active market, currency, and language (e.g. Kenya 🇰🇪 · `KSh` / `KES` · Kiswahili `SW`).
+   - If the user has not dismissed the notice (`localStorage.getItem('synergy_locale_welcomed') !== 'true'`), the floating glassmorphism banner slides in above the bottom navigation or content viewport.
+2. **Contextual Explanation**:
+   - Explains that the platform has automatically set regional defaults for optimum pricing, payment methods (such as M-Pesa), and local language.
+   - Points the user to the header globe badge where currency and language can be customized at any time.
+   - Text is natively translated across English, Kiswahili, Kikuyu, and Spanish.
+3. **Actions**:
+   - **"Customize Region & Language"**: Immediately triggers `window.dispatchEvent(new CustomEvent('synergyOpenRegionSwitcher'))`, opening the modal switcher without requiring page navigation.
+   - **"Got it / Dismiss"**: Marks `synergy_locale_welcomed` in `localStorage` so the banner never intrudes again on future visits.
+
+---
+
+## 7. Maintenance & Validation Protocol
 
 Whenever updating language dictionaries in `localization.js`:
 1. Ensure all three application copies (`apps/portal/public/js/localization.js`, `apps/tunestream/public/js/localization.js`, and `apps/syncmavens/public/js/localization.js`) remain identical and bump the `?v=` cache-buster in `apps/*/index.html`.
@@ -158,3 +185,4 @@ Whenever updating language dictionaries in `localization.js`:
    node --check apps/tunestream/public/js/localization.js
    node --check apps/syncmavens/public/js/localization.js
    ```
+

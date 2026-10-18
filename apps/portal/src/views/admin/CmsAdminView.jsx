@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useRegion, COUNTRIES_LIST, LANGUAGES_LIST } from '../../RegionContext';
+import { RiGlobalFill, RiCheckDoubleLine } from 'react-icons/ri';
 
 export default function CmsAdminView() {
+  const { setRegionDefaultLanguage, getRegionDefaultLanguage } = useRegion();
+
   const [layoutId, setLayoutId] = useState('home_hero');
   const [layoutData, setLayoutData] = useState({
     hero_title: 'Intermaven Network',
@@ -16,9 +20,30 @@ export default function CmsAdminView() {
   const [statusMsg, setStatusMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Regional Defaults State
+  const [regionDefaults, setRegionDefaults] = useState(() => {
+    const initial = {};
+    COUNTRIES_LIST.forEach(c => {
+      initial[c.code] = (typeof window !== 'undefined' && window.SynergyLocalization && typeof window.SynergyLocalization.getRegionDefaultLanguage === 'function')
+        ? window.SynergyLocalization.getRegionDefaultLanguage(c.code)
+        : c.lang;
+    });
+    return initial;
+  });
+  const [regionSavedMsg, setRegionSavedMsg] = useState('');
+
   useEffect(() => {
     fetchLayout(layoutId);
   }, [layoutId]);
+
+  const handleUpdateRegionDefault = (mCode, langCode) => {
+    setRegionDefaults(prev => ({ ...prev, [mCode]: langCode }));
+    if (setRegionDefaultLanguage) {
+      setRegionDefaultLanguage(mCode, langCode);
+    }
+    setRegionSavedMsg(`Default language for ${mCode} successfully set to ${langCode.toUpperCase()}.`);
+    setTimeout(() => setRegionSavedMsg(''), 4000);
+  };
 
   const fetchLayout = async (id) => {
     setLoading(true);
@@ -117,6 +142,88 @@ export default function CmsAdminView() {
           {statusMsg}
         </div>
       )}
+
+      {/* Admin Regional Defaults & Language Configuration Panel */}
+      <div style={{ background: '#131b2e', border: '1px solid rgba(34, 211, 238, 0.25)', borderRadius: '10px', padding: '20px', marginBottom: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <RiGlobalFill size={18} style={{ color: '#22d3ee' }} />
+            <h2 style={{ margin: 0, fontSize: '16px', color: '#ffffff', fontWeight: 800 }}>
+              Regional Defaults & Language Configuration (Multi-Market Launch Engine)
+            </h2>
+          </div>
+          {regionSavedMsg && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#34d399', fontSize: '12px', background: 'rgba(16, 185, 129, 0.15)', padding: '4px 10px', borderRadius: '4px', border: '1px solid #10b981' }}>
+              <RiCheckDoubleLine size={14} />
+              <span>{regionSavedMsg}</span>
+            </div>
+          )}
+        </div>
+        <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94a3b8' }}>
+          Configure the default presentation language for each supported regional market. First-time visitors from each market will automatically experience the ecosystem in this configured language.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COUNTRIES_LIST.map((c) => {
+            const currentDef = regionDefaults[c.code] || c.lang;
+            const supported = c.supportedLangs || ['en'];
+            return (
+              <div
+                key={c.code}
+                style={{
+                  background: '#0a0e1a',
+                  border: '1px solid #1e293b',
+                  borderRadius: '6px',
+                  padding: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 700, fontSize: '13px', color: '#f1f5f9' }}>
+                    {c.flag} {c.name}
+                  </span>
+                  <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 600 }}>
+                    {c.currency}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Default:</span>
+                  <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
+                    {supported.map((langCode) => {
+                      const lObj = LANGUAGES_LIST.find(l => l.code === langCode) || { short: langCode.toUpperCase() };
+                      const isSelected = currentDef === langCode;
+                      return (
+                        <button
+                          key={langCode}
+                          type="button"
+                          onClick={() => handleUpdateRegionDefault(c.code, langCode)}
+                          style={{
+                            flex: 1,
+                            padding: '4px 6px',
+                            borderRadius: '4px',
+                            border: isSelected ? '1px solid #22d3ee' : '1px solid #334155',
+                            background: isSelected ? 'rgba(34, 211, 238, 0.2)' : '#0f172a',
+                            color: isSelected ? '#22d3ee' : '#94a3b8',
+                            fontSize: '11px',
+                            fontWeight: isSelected ? 800 : 500,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {lObj.flag || ''} {lObj.short || langCode.toUpperCase()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}>
         {/* Layout Data Editor */}
