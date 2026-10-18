@@ -490,6 +490,11 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           <span>Back to Site</span>
         </Link>
 
+        {/* Region, Currency & Language Switcher in Dashboard */}
+        <div className="dashboard-topbar-item">
+          <RegionSwitcher />
+        </div>
+
         {/* Notifications */}
         <div className="dashboard-topbar-item" ref={notifRef}>
           <button

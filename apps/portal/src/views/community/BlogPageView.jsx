@@ -24,6 +24,7 @@ import { blogApi } from '../../lib/api.js';
 import { BLOG_CATEGORIES, INITIAL_BLOG_ARTICLES, INITIAL_COMMENTS } from '../../data/blogArticles.js';
 import BlogCard from '../../components/blog/BlogCard.jsx';
 import BlogCommentsSection from '../../components/blog/BlogCommentsSection.jsx';
+import ArticleContentRenderer from '../../components/common/ArticleContentRenderer.jsx';
 
 export default function BlogPageView({ sessionUser }) {
   const { slug } = useParams();
@@ -413,23 +414,11 @@ export default function BlogPageView({ sessionUser }) {
                     >
                       {sec.heading}
                     </h2>
-                    <div
-                      style={{ whiteSpace: 'pre-line' }}
-                      dangerouslySetInnerHTML={{
-                        __html: sec.content
-                          .replace(/^### (.*$)/gim, '<h3 style="font-size:18px; color:#00f0ff; margin:20px 0 10px 0;">$1</h3>')
-                          .replace(/^> (.*$)/gim, '<blockquote style="border-left:3px solid #00f0ff; background:rgba(0,240,255,0.05); padding:12px 18px; margin:20px 0; border-radius:3px; font-style:italic; color:#f1f5f9;">$1</blockquote>')
-                          .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;">$1</strong>')
-                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                          .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:3px; color:#00f0ff; font-family:monospace;">$1</code>')
-                      }}
-                    />
+                    <ArticleContentRenderer content={sec.content} />
                   </div>
                 ))
               ) : (
-                <div style={{ whiteSpace: 'pre-wrap' }}>
-                  {activeArticle.content}
-                </div>
+                <ArticleContentRenderer content={activeArticle.content} />
               )}
             </div>
 

@@ -418,6 +418,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const TUNESTREAM_HERO_SLIDES = [
     {
       img: tunestreamHeaderImg,
+      dot: '#10b981',
       badge: 'Free Download · No Credit Card',
       headline1: 'Carry the catalogue.',
       headline2: 'Even off-grid.',
@@ -426,6 +427,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     },
     {
       img: tunestreamHeader2Img,
+      dot: '#22d3ee',
       badge: 'FLAC · Lossless · Zero Ads',
       headline1: 'Hear every detail.',
       headline2: 'Nothing compressed.',
@@ -434,13 +436,13 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     },
     {
       img: tunestreamHeader3Img,
+      dot: '#f59e0b',
       badge: 'African Artists · Global Reach',
       headline1: 'Feel the crowd.',
       headline2: 'Anywhere on earth.',
       headline2Color: '#f59e0b',
       sub: 'From Lagos to London, Nairobi to New York — stream the full depth of African music culture with built-in creator tipping and direct support.',
     },
-
   ];
   const INTERIOR_HEADER_MAP = {
   explore: tunestreamHeader2Img,
@@ -452,26 +454,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   premium: tunestreamHeader3Img,
   help: tunestreamHeaderImg,
   };
-  const [tsSlide, setTsSlide] = useState(0);
-  const [tsTextVisible, setTsTextVisible] = useState(true);
-  const [tsHovered, setTsHovered] = useState(false);
   const [autoplay, setAutoplay] = useState(true);
   const [playerPlaying, setPlayerPlaying] = useState(true);
   const [playerProgress, setPlayerProgress] = useState(0);
-  const tsSlideTimer = useRef(null);
   const playerTimer = useRef(null);
-  const TS_SLIDE_INTERVAL = 8000;
-
-  useEffect(() => {
-    tsSlideTimer.current = setInterval(() => {
-      setTsTextVisible(false);
-      setTimeout(() => {
-        setTsSlide(prev => (prev + 1) % TUNESTREAM_HERO_SLIDES.length);
-        setTsTextVisible(true);
-      }, 700);
-    }, TS_SLIDE_INTERVAL);
-    return () => clearInterval(tsSlideTimer.current);
-  }, []);
 
   useEffect(() => {
     if (!autoplay || !playerPlaying) { clearInterval(playerTimer.current); return; }
@@ -507,10 +493,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const [titleHovered, setTitleHovered] = useState(false);
   const progressRef = useRef(null);
   const timerRef = useRef(null);
-  const SLIDE_DURATION = 48000;
-  const TRANSITION_OUT_MS = 700;
+  const SLIDE_DURATION = 36000;
+  const TRANSITION_OUT_MS = 400;
 
-  const slides = data?.heroSlides || [];
+  const slides = normalizedSlug === 'tunestream' ? TUNESTREAM_HERO_SLIDES : (data?.heroSlides || []);
   const slideCount = slides.length;
   const currentSlideData = slides[currentSlide] || null;
 
@@ -603,102 +589,109 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
 
     const renderTopHeader = () => {
       if (view === 'listen') {
-        const slide = TUNESTREAM_HERO_SLIDES[tsSlide];
+        const slide = TUNESTREAM_HERO_SLIDES[currentSlide] || TUNESTREAM_HERO_SLIDES[0];
         return (
           <>
-            <div
-              className="tunestream-app-header"
-              style={{
-                position: 'relative',
-                height: 'calc(100vh - 62px)',
-                minHeight: '480px',
-                overflow: 'hidden',
-                width: '100%',
-              }}
-              onMouseEnter={() => setTsHovered(true)}
-              onMouseLeave={() => setTsHovered(false)}
-            >
-              {TUNESTREAM_HERO_SLIDES.map((s, i) => (
-                <div
-                  key={i}
-                  style={{
-                    position: 'absolute', inset: 0,
-                    backgroundImage: `url(${s.img})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center center',
-                    opacity: tsSlide === i ? 1 : 0,
-                    transition: 'opacity 1.2s cubic-bezier(0.4,0,0.2,1)',
-                    filter: tsHovered ? 'brightness(0.95) blur(0px)' : 'brightness(0.55) blur(1px)',
-                    transform: tsHovered ? 'scale(1.03)' : 'scale(1)',
-                    zIndex: 0,
-                  }}
-                />
-              ))}
-
-              <div style={{
-                position: 'absolute', inset: 0, zIndex: 1,
-                background: tsHovered
-                  ? 'linear-gradient(to bottom, rgba(7,14,27,0.15) 0%, rgba(7,14,27,0.55) 100%)'
-                  : 'linear-gradient(to bottom, rgba(7,14,27,0.5) 0%, rgba(7,14,27,0.88) 100%)',
-                transition: 'background 0.9s ease',
-              }} />
-
-              <div style={{ position: 'absolute', bottom: '22px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '8px', zIndex: 3 }}>
-                {TUNESTREAM_HERO_SLIDES.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { setTsTextVisible(false); setTimeout(() => { setTsSlide(i); setTsTextVisible(true); clearInterval(tsSlideTimer.current); tsSlideTimer.current = setInterval(() => { setTsTextVisible(false); setTimeout(() => { setTsSlide(prev => (prev + 1) % TUNESTREAM_HERO_SLIDES.length); setTsTextVisible(true); }, 700); }, TS_SLIDE_INTERVAL); }, 700); }}
-                    style={{ width: tsSlide === i ? '24px' : '8px', height: '8px', borderRadius: '4px', background: tsSlide === i ? '#10b981' : 'rgba(255,255,255,0.35)', border: 'none', cursor: 'pointer', transition: 'all 0.4s ease', padding: 0 }}
+            <div className="hw">
+              <div className="bgs">
+                {TUNESTREAM_HERO_SLIDES.map((s, idx) => (
+                  <div
+                    key={idx}
+                    className={`bg ${currentSlide === idx ? 'on' : ''}`}
+                    style={{
+                      backgroundImage: `url(${s.img})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      filter: currentSlide === idx
+                        ? (titleHovered ? 'brightness(1.05) blur(0px)' : 'brightness(0.7) blur(1.5px)')
+                        : 'none',
+                      transform: currentSlide === idx && titleHovered ? 'scale(1.04)' : 'scale(1)',
+                      transition: 'filter 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)',
+                    }}
                   />
                 ))}
+                <div
+                  className="bgo"
+                  style={{
+                    opacity: titleHovered ? 0.3 : 0.8,
+                    transition: 'opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1)',
+                  }}
+                />
               </div>
 
-              <div style={{
-                position: 'relative', zIndex: 2,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
-                minHeight: 'calc(100vh - 62px)',
-                padding: '120px 24px 120px',
-                textAlign: 'center',
-              }}>
-                <div style={{ 
-                  display: 'inline-flex', gap: '6px', alignItems: 'center', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', padding: '6px 14px', borderRadius: '20px', marginBottom: '22px',
-                  opacity: tsTextVisible ? 1 : 0, transform: tsTextVisible ? 'translateY(0)' : 'translateY(12px)', transition: 'opacity 0.7s cubic-bezier(0.4,0,0.2,1) 0.1s, transform 0.7s cubic-bezier(0.4,0,0.2,1) 0.1s' 
-                }}>
-                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block', animation: 'pulseGlow 2s infinite' }} />
-                  <span style={{ fontSize: '12px', color: '#a7f3d0', fontWeight: 600, letterSpacing: '0.3px' }}>{slide.badge}</span>
+              <div className="hs">
+                <div
+                  className="hcont"
+                  key={currentSlide}
+                  onMouseEnter={() => setTitleHovered(true)}
+                  onMouseLeave={() => setTitleHovered(false)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className={`he hbadge ${slideState}`}>
+                    <span
+                      className="bdot"
+                      style={{
+                        background: slide.dot || slide.headline2Color || '#10b981',
+                        animation: 'pulseGlow 2s infinite',
+                      }}
+                    />
+                    <span>{slide.badge}</span>
+                  </div>
+
+                  <h1 className="ht htitle">
+                    <span className={`ht-line ht-line-1 ${slideState}`}>{slide.headline1}</span>
+                    <span
+                      className={`ht-line ht-line-2 ${slideState}`}
+                      style={{ color: slide.headline2Color }}
+                    >
+                      {slide.headline2}
+                    </span>
+                  </h1>
+
+                  <p className={`hp hsub ${slideState}`}>
+                    {slide.sub}
+                  </p>
+
+                  <div className={`hb hbtns ${slideState}`}>
+                    <button
+                      type="button"
+                      onClick={() => alert('TuneStream — Download Free on iOS & Android coming soon!')}
+                      className="hbp"
+                      style={{ border: 'none', fontFamily: 'inherit', gap: '8px' }}
+                    >
+                      <RiDownloadFill size={16} /> <span>Download Free</span>
+                    </button>
+                    <a
+                      href="#plans-section"
+                      className="hbg"
+                      onClick={(e) => { e.preventDefault(); scrollToSection('plans-section'); }}
+                    >
+                      View Plans
+                    </a>
+                  </div>
                 </div>
+              </div>
 
-                <h1 style={{ fontFamily: '"Sansation", sans-serif', fontSize: 'clamp(30px, 5vw, 52px)', fontWeight: 900, color: '#fff', lineHeight: 1.15, marginBottom: '18px', maxWidth: '700px' }}>
-                  <span style={{ display: 'block', opacity: tsTextVisible ? 1 : 0, transform: tsTextVisible ? 'translateY(0)' : 'translateY(12px)', transition: 'opacity 0.7s cubic-bezier(0.4,0,0.2,1) 0.2s, transform 0.7s cubic-bezier(0.4,0,0.2,1) 0.2s' }}>{slide.headline1}</span>
-                  <span style={{ display: 'block', color: slide.headline2Color, opacity: tsTextVisible ? 1 : 0, transform: tsTextVisible ? 'translateY(0)' : 'translateY(12px)', transition: 'opacity 0.7s cubic-bezier(0.4,0,0.2,1) 0.3s, transform 0.7s cubic-bezier(0.4,0,0.2,1) 0.3s' }}>{slide.headline2}</span>
-                </h1>
+              <div className={`sui-arrows ${slideState}`}>
+                <button type="button" className="slide-nav prev" onClick={goToPrevSlide} aria-label="Previous slide" data-testid="landing-hero-prev">‹</button>
+                <button type="button" className="slide-nav next" onClick={goToNextSlide} aria-label="Next slide" data-testid="landing-hero-next">›</button>
+              </div>
 
-                <p style={{ 
-                  fontSize: '16px', color: '#cbd5e1', lineHeight: 1.7, marginBottom: '32px', maxWidth: '580px',
-                  opacity: tsTextVisible ? 1 : 0, transform: tsTextVisible ? 'translateY(0)' : 'translateY(12px)', transition: 'opacity 0.7s cubic-bezier(0.4,0,0.2,1) 0.4s, transform 0.7s cubic-bezier(0.4,0,0.2,1) 0.4s'
-                }}>
-                  {slide.sub}
-                </p>
-
-                <div style={{ 
-                  display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap',
-                  opacity: tsTextVisible ? 1 : 0, transform: tsTextVisible ? 'translateY(0)' : 'translateY(12px)', transition: 'opacity 0.7s cubic-bezier(0.4,0,0.2,1) 0.5s, transform 0.7s cubic-bezier(0.4,0,0.2,1) 0.5s'
-                }}>
-                  <button
-                    onClick={() => alert('TuneStream — Download Free on iOS & Android coming soon!')}
-                    className="btn-primary"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '15px', padding: '13px 26px' }}
-                  >
-                    <RiDownloadFill size={16} /> Download Free
-                  </button>
-                  <a
-                    href="#plans-section"
-                    className="plan-btn outline"
-                    onClick={(e) => { e.preventDefault(); scrollToSection('plans-section'); }}
-                    style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', padding: '13px 26px', borderRadius: '4px', color: '#fff', border: '1px solid rgba(255,255,255,0.22)', fontSize: '15px', transition: 'all 0.3s ease' }}
-                  >
-                    View Plans
-                  </a>
+              <div className={`sui-bottom ${slideState}`}>
+                <div className="spr">
+                  <div className="spb" style={{ width: `${progress}%` }} />
+                </div>
+                <div className="sdots">
+                  {TUNESTREAM_HERO_SLIDES.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={`sd ${index === currentSlide ? 'on' : ''}`}
+                      onClick={() => goToSlide(index)}
+                      aria-label={`Go to slide ${index + 1}`}
+                      data-testid={`landing-hero-dot-${index}`}
+                    />
+                  ))}
                 </div>
               </div>
             </div>

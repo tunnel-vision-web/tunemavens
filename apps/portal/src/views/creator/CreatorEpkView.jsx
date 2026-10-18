@@ -22,6 +22,7 @@ import heroSlide1 from '../../assets/creator_hero_banner.jpg'
 import heroSlide2 from '../../assets/creator_hero_slide2.jpg'
 import heroSlide3 from '../../assets/creator_hero_slide3.jpg'
 import { persistAppActivation } from '../../lib/activatedApps.js'
+import RegionSwitcher from '../../RegionSwitcher.jsx'
 
 // 20 Pre-populated Theme Templates Specification
 const DEFAULT_PAGE_HEADERS = {
@@ -2873,8 +2874,9 @@ Direct Management Contact: mgmt@intermaven.io`
             )}
           </nav>
 
-          {/* Right Action Controls: Cart, Fan Portal / VIP Modal, Hamburger */}
+          {/* Right Action Controls: Localization Switcher, Cart, Fan Portal / VIP Modal, Hamburger */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1001 }}>
+            <RegionSwitcher />
             <button onClick={() => setCartOpen(true)} title="View Shopping Cart" style={{ position: 'relative', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', width: '38px', height: '38px', borderRadius: '3px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <RiShoppingBasket2Fill />
               {totalCartQty > 0 && (

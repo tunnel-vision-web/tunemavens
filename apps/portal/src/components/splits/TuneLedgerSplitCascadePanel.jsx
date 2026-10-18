@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   RiCoinsFill, RiFileTextFill, RiShieldCheckFill, RiArrowRightLine,
   RiArrowLeftLine, RiEqualizerFill, RiSearchLine, RiDownloadFill, RiUploadCloud2Line,
@@ -8,11 +8,16 @@ import {
   RiPriceTag3Fill, RiQuestionFill, RiRefreshFill, RiCheckboxCircleFill,
   RiAlertFill
 } from 'react-icons/ri';
+import ArticleContentRenderer from '../common/ArticleContentRenderer.jsx';
 
-// Multi-Currency Exchange Rates relative to 1 USD
+// Multi-Currency Exchange Rates relative to 1 USD (Kenya Launch Default: KES)
 export const CURRENCY_RATES = {
-  USD: { symbol: '$', rate: 1.0, label: 'USD ($)', flag: '🇺🇸' },
   KES: { symbol: 'KSh ', rate: 130.0, label: 'KES (KSh)', flag: '🇰🇪' },
+  USD: { symbol: '$', rate: 1.0, label: 'USD ($)', flag: '🇺🇸' },
+  TZS: { symbol: 'TSh ', rate: 2580.0, label: 'TZS (TSh)', flag: '🇹🇿' },
+  UGX: { symbol: 'USh ', rate: 3750.0, label: 'UGX (USh)', flag: '🇺🇬' },
+  NGN: { symbol: '₦', rate: 1550.0, label: 'NGN (₦)', flag: '🇳🇬' },
+  ZAR: { symbol: 'R ', rate: 18.5, label: 'ZAR (R)', flag: '🇿🇦' },
   EUR: { symbol: '€', rate: 0.92, label: 'EUR (€)', flag: '🇪🇺' },
   GBP: { symbol: '£', rate: 0.78, label: 'GBP (£)', flag: '🇬🇧' }
 };
@@ -204,9 +209,23 @@ export default function TuneLedgerSplitCascadePanel({
   // Navigation View Tabs
   const [activeTab, setActiveTab] = useState('waterfall'); // 'waterfall' | 'ledger' | 'vault' | 'importer' | 'university'
 
-  // Multi-Currency State
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
-  const currency = CURRENCY_RATES[selectedCurrency] || CURRENCY_RATES.USD;
+  // Multi-Currency State (Synced with SynergyLocalization Engine, Defaulting to KES for Kenya Launch)
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    const engineCurr = typeof window !== 'undefined' && window.SynergyLocalization ? window.SynergyLocalization.getCurrency() : null;
+    return (engineCurr && CURRENCY_RATES[engineCurr]) ? engineCurr : 'KES';
+  });
+  const currency = CURRENCY_RATES[selectedCurrency] || CURRENCY_RATES.KES;
+
+  useEffect(() => {
+    const onLocChange = (e) => {
+      const nextCurr = e?.detail?.currency;
+      if (nextCurr && CURRENCY_RATES[nextCurr]) {
+        setSelectedCurrency(nextCurr);
+      }
+    };
+    window.addEventListener('synergyLocalizationChanged', onLocChange);
+    return () => window.removeEventListener('synergyLocalizationChanged', onLocChange);
+  }, []);
 
   // Waterfall Configurator States
   const [selectedTrackId, setSelectedTrackId] = useState(tracks[0]?.id || 'custom');
@@ -653,7 +672,12 @@ export default function TuneLedgerSplitCascadePanel({
                   <button
                     key={cKey}
                     type="button"
-                    onClick={() => setSelectedCurrency(cKey)}
+                    onClick={() => {
+                      setSelectedCurrency(cKey);
+                      if (typeof window !== 'undefined' && window.SynergyLocalization) {
+                        window.SynergyLocalization.setCurrency(cKey);
+                      }
+                    }}
                     style={{
                       background: isSelected ? '#0ea5e9' : 'transparent',
                       color: isSelected ? '#ffffff' : '#94a3b8',
@@ -2567,8 +2591,8 @@ export default function TuneLedgerSplitCascadePanel({
                 <p style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.4, margin: '0 0 14px' }}>
                   {guide.summary}
                 </p>
-                <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '6px', padding: '14px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                  {guide.content}
+                <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '6px', padding: '14px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.5 }}>
+                  <ArticleContentRenderer content={guide.content} />
                 </div>
               </div>
             ))}

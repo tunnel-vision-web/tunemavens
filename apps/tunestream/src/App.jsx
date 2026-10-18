@@ -3,6 +3,7 @@ import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLo
 import LoginView from './views/auth/LoginView';
 import RegisterView from './views/auth/RegisterView';
 import { RegionProvider } from './RegionContext';
+import RegionSwitcher from './RegionSwitcher';
 import { 
   RiPlayFill, RiPauseFill, RiSkipForwardFill, RiSkipBackFill, 
   RiVolumeUpFill, RiHeadphoneLine, RiCompass3Line, RiHeart3Fill, 
@@ -1641,6 +1642,10 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             >
               <span>Back to Site</span>
             </Link>
+
+            <div className="dashboard-topbar-item">
+              <RegionSwitcher />
+            </div>
 
             {/* Notifications */}
             <div className="dashboard-topbar-item" ref={notifRef}>

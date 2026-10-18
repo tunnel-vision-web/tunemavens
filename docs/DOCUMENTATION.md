@@ -6,10 +6,11 @@ Sections §9.8+ are TuneMavens-specific.
 
 Current focus: §9.8 (App Marketplace + Recommendation Agent — SHIPPED),
 §9.39 (MyContracts Smart Legal Vault, Engagement Auto-Generator & E-Signature Protocol — SHIPPED),
+§9.40 (Synergy Ecosystem Localization, Kiswahili `sw` Translation & Multi-Currency Engine — SHIPPED),
 plus §9.9–§9.12 (Identity, Social Graph, Community, CRM — IN PLAN).
 
 > [!NOTE]
-> **Design Standards & Guidelines:** For the canonical reference on styling tokens, typography, buttons, header/sidebar behaviors, card layouts, scrollbars, and animations used across the TuneMavens ecosystem, see [DESIGN_STANDARDS.md](file:///c:/Users/judit/workspace/tunemaven/docs/DESIGN_STANDARDS.md).
+> **Design & Localization Standards:** For the canonical reference on styling tokens, typography, buttons, header/sidebar behaviors, card layouts, scrollbars, and animations used across the TuneMavens ecosystem, see [DESIGN_STANDARDS.md](file:///c:/BOCM/Apps/tunemavens/docs/DESIGN_STANDARDS.md). For the client-side DOM localization and multi-currency engine, see [LOCALIZATION_ARCHITECTURE_GUIDE.md](file:///c:/BOCM/Apps/tunemavens/docs/LOCALIZATION_ARCHITECTURE_GUIDE.md).
 
 ---
 
@@ -1610,5 +1611,25 @@ For agreements with financial consideration or advances:
 - **Reactive DOM Events:** Contract creations, edits, signatures, and escrow releases broadcast custom DOM events (`tunemavens:contract_updated`), allowing multiple browser tabs, windows, or embedded iframe views to update instantaneously.
 - **Printable Legal PDF Export:** Built-in `Print / PDF Export` action renders clean, print-optimized document formatting that automatically strips platform sidebars, buttons, and navigation bars, producing court-admissible printed contracts.
 
+---
 
+## §9.40 — Synergy Ecosystem Localization, Kiswahili (`sw`) Translation & Multi-Currency Engine (Kenya Launch)  ✅ SHIPPED
 
+### 9.40.1 System Purpose & Kenya Launch Defaults
+To support the official launch in **Kenya (`KE`)**, the TuneMavens ecosystem integrates the **Synergy Client-Side DOM Localization & Multi-Currency Adaptation Engine** (`window.SynergyLocalization`, `v=47`) across all three web applications (`apps/portal`, `apps/tunestream`, and `apps/syncmavens`).
+
+- **Default Market (`synergy_market`):** `KE` (Kenya 🇰🇪)
+- **Default Currency (`synergy_currency`):** `KES` (`KSh`, conversion rate `130.0 KES = 1.00 USD`)
+- **Supported Languages (`synergy_lang`):** English (`en`) and Kiswahili (`sw`), switchable instantaneously without page reloads via the topbar `RegionSwitcher.jsx` component.
+- **Supported Markets & Currencies:** Kenya (`KE` / `KES`), Tanzania (`TZ` / `TZS`), Uganda (`UG` / `UGX`), Nigeria (`NG` / `NGN`), South Africa (`ZA` / `ZAR`), United States (`US` / `USD`), United Kingdom (`GB` / `GBP`), and European Union (`EU` / `EUR`).
+
+### 9.40.2 3-Tier Kiswahili Translation Pipeline
+The engine (`public/js/localization.js`) translates DOM text nodes, placeholders, and `title` tooltips using a 3-tier pipeline:
+1. **Tier 1 — Exact Phrase & Punctuation/Hashtag-Aware Lookup (`T`):** Matches over 1,600 exact phrases, headings, sidebar labels, collapsed-sidebar tooltips (`NAV_ITEM_DESCRIPTIONS`), and article paragraphs. Automatically strips and restores leading list numbering (`1. `, `• `, `☐ `) and `#` hashtag prefixes (`#Recoupment` → `#Urejeshaji Gharama`), and decomposes multiline (`\n`) strings line-by-line.
+2. **Tier 2 — Longest-First Multi-Word Phrase Replacement (`MULTI_WORD_KEYS`):** Replaces compound music-business and technical phrases before word-level processing.
+3. **Tier 3 — Contraction Normalization & Case-Aware Word Lexicon (`WORD_LEXICON`):** Normalizes English contractions (`don't`, `can't`, `haven't`, `it's`, etc.) and standalone English articles (`the`, `a`, `an`), then applies a 2,800+ word dictionary using strict `\b` word boundaries and `matchCase()` (`UPPERCASE`, `Title Case`, `lowercase`).
+
+### 9.40.3 Full Sidebar, Hero Carousel & Article Coverage
+- **All Sidebars:** 100% of sidebar category headers, menu items, status badges (`COPILOT`, `LEGAL`, `MOBILE`, `APP`, `LIVE`), collapsed-sidebar hover tooltips (`NAV_ITEM_DESCRIPTIONS`), and `PerfectForSidebar.jsx` role tiles across Portal, TuneStream, and SyncMavens translate into Kiswahili.
+- **Synchronized TuneStream Hero Carousel:** Both `apps/tunestream/src/NativeAppLandingView.jsx` and `apps/portal/src/views/landing/NativeAppLandingView.jsx` feature a 5-slide auto-advancing hero carousel matching the main Portal landing page behavior (6.5s interval, pause-on-hover, previous/next arrows, slide counter, and clickable dot indicators) with 100% Kiswahili slide titles, subtitles, and CTAs.
+- **Structured Article Rendering (`ArticleContentRenderer.jsx`):** All articles across `blogArticles.js` (`BlogPageView.jsx`), `helpArticles.js` (`HelpView.jsx`, `InAppDocModal.jsx`), and `TuneLedgerSplitCascadePanel.jsx` (`ROYALTY_GUIDES`) render through `ArticleContentRenderer.jsx`, parsing Markdown tables, callout boxes, checklists, subheadings, and inline `**bold**` / `*italic*` spans into discrete React DOM text nodes with zero untranslated English words left behind.

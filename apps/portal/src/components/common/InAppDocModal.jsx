@@ -236,7 +236,7 @@ export default function InAppDocModal({
                 {activeDocArticle.readingTime}
               </span>
               <span className="inapp-doc-app-context-badge">
-                Context: {resolvedContextTitle}
+                <span>Context:</span> <span>{resolvedContextTitle}</span>
               </span>
             </div>
             <h2 className="inapp-doc-title">
@@ -262,17 +262,17 @@ export default function InAppDocModal({
           <div className="inapp-doc-nav-strip">
             <span className="inapp-doc-nav-label">
               <RiCompass3Line size={14} color="var(--cyan)" />
-              Related Guides ({relatedArticles.length}):
+              <span>Related Guides</span> ({relatedArticles.length}):
             </span>
             <div className="inapp-doc-nav-pills">
               {/* Pill for current active article */}
               <button
                 type="button"
                 className="inapp-doc-nav-pill active"
-                title={`Currently viewing: ${activeDocArticle.title}`}
+                title={activeDocArticle.title}
               >
                 <RiBookOpenLine size={12} />
-                <span>{activeDocArticle.title.length > 38 ? `${activeDocArticle.title.substring(0, 35)}...` : activeDocArticle.title}</span>
+                <span style={{ maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeDocArticle.title}</span>
               </button>
 
               {/* Pills for all related articles in this issue/section */}
@@ -288,7 +288,7 @@ export default function InAppDocModal({
                   title={rel.title}
                 >
                   <RiBookOpenLine size={12} color="var(--cyan)" />
-                  <span>{rel.title.length > 38 ? `${rel.title.substring(0, 35)}...` : rel.title}</span>
+                  <span style={{ maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rel.title}</span>
                 </button>
               ))}
             </div>
@@ -439,7 +439,7 @@ export default function InAppDocModal({
               onClick={onClose}
             >
               <RiArrowLeftLine size={14} />
-              <span>Back to {resolvedContextTitle}</span>
+              <span>Back to</span> <span>{resolvedContextTitle}</span>
             </button>
           </div>
         </div>

@@ -42,6 +42,7 @@ import { DEFAULT_ACTIVE_APPS_BY_ROLE, reconcileUserApps } from './lib/activatedA
 import { authApi, tokenStore } from './lib/api.js';
 import LoginView from './views/auth/LoginView.jsx';
 import RegisterView from './views/auth/RegisterView.jsx';
+import RegionSwitcher from './RegionSwitcher.jsx';
 import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog';
 
 export const PERSONA_ROLES = [
@@ -1195,6 +1196,10 @@ function AppContent() {
                 <span>Back to Site</span>
               </Link>
 
+              <div className="dashboard-topbar-item">
+                <RegionSwitcher />
+              </div>
+
               {/* Notifications */}
               <div className="dashboard-topbar-item" ref={notifRef}>
                 <button
@@ -2208,7 +2213,10 @@ function AppContent() {
           </ul>
 
           {/* Desktop Actions */}
-          <div className="nav-desktop-actions-box">
+          <div className="nav-desktop-actions-box" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="desktop-switcher">
+              <RegionSwitcher />
+            </div>
             {isLoggedIn ? (
               <button onClick={() => navigate('/dashboard')} className="btn-primary">
                 Dashboard

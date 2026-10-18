@@ -7,8 +7,8 @@ export function renderInlineFormatted(text) {
   let remaining = text;
   let keyIdx = 0;
 
-  // Regex matches **bold** or `code`
-  const regex = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+  // Regex matches **bold**, `code`, or *italic*
+  const regex = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*\n]+\*)/g;
   let match;
   let lastIndex = 0;
 
@@ -35,6 +35,8 @@ export function renderInlineFormatted(text) {
           {token.slice(1, -1)}
         </code>
       );
+    } else if (token.startsWith('*') && token.endsWith('*')) {
+      parts.push(<em key={keyIdx++}>{token.slice(1, -1)}</em>);
     }
     lastIndex = regex.lastIndex;
   }
@@ -117,10 +119,12 @@ export default function ArticleContentRenderer({ content }) {
 
     // Bullet points
     if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
-      const bulletText = line.trim().substring(2);
+      const rawBullet = line.trim().substring(2);
+      const isChecklist = /^\[\s*\]\s*/.test(rawBullet);
+      const bulletText = rawBullet.replace(/^\[\s*\]\s*/, '');
       elements.push(
         <div key={`bullet-${i}`} style={{ display: 'flex', gap: '8px', marginBottom: '8px', paddingLeft: '8px' }}>
-          <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>•</span>
+          <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>{isChecklist ? '☐' : '•'}</span>
           <div style={{ flex: 1 }}>{renderInlineFormatted(bulletText)}</div>
         </div>
       );

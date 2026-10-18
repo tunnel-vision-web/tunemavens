@@ -54,6 +54,11 @@ admin console with role-gated tabs, domain-mapping registry.
 - Milestone smart escrow management linked directly into creator payout balances (`payoutBalance`).
 - Cross-portal state synchronization via custom DOM events and 1-click printable PDF legal export.
 
+### Phase 8.5 · Ecosystem Localization & Multi-Currency Adaptation (Kenya Launch) ✅ SHIPPED
+- Synergy Client-Side DOM Localization Engine (`window.SynergyLocalization`, `v=47`) deployed across `apps/portal`, `apps/tunestream`, and `apps/syncmavens` (§9.40 & `docs/LOCALIZATION_ARCHITECTURE_GUIDE.md`).
+- Default Kenya (`KE`) market and Kenyan Shilling (`KES` / `KSh`) currency with instant switching across 8 global markets and 8 currencies (`KES`, `TZS`, `UGX`, `NGN`, `ZAR`, `USD`, `GBP`, `EUR`).
+- 100% bidirectional English (`EN`) ↔ Kiswahili (`SW`) switching across all landing pages, 5-slide hero carousels, sidebar menu items, collapsed-sidebar tooltips, dashboard apps, and the entirety of all Blog, Help Center, In-App Documentation Modal, and Royalty Guide articles.
+
 ### Phase 9 · Ad Injection Platform 🟡 P2
 ### Phase 10 · Media House Routing 🟡 P2
 
