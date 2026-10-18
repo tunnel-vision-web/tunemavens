@@ -2,7 +2,7 @@
 
 ## 1. Executive Overview
 
-TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adaptation Engine** (`window.SynergyLocalization`, version `v=49`) across all three standalone web applications in the monorepo:
+TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adaptation Engine** (`window.SynergyLocalization`, version `v=50`) across all three standalone web applications in the monorepo:
 - **Portal (`apps/portal`, port 3000)**: Landing pages, Blog & Help Center articles, In-App Documentation Modal (`InAppDocModal.jsx`), Creator EPK Web Worlds, Label Roster, Mother-CMS Studio, Smart CRM, Affiliates, MyContracts, and TuneLedger Split Cascade Studio (`ROYALTY_GUIDES`).
 - **TuneStream (`apps/tunestream`, port 3001)**: Consumer lossless streaming portal, 5-slide auto-advancing hero carousel (synchronized with the main Portal landing page), fan tipping, stem unlocking, and artist discovery.
 - **SyncMavens (`apps/syncmavens`, port 3002)**: Pre-cleared audiovisual sync licensing marketplace, supervisor brief management, and dynamic waterfall quote calculator.
@@ -30,12 +30,13 @@ TuneMavens uses the **Synergy Client-Side DOM Localization & Multi-Currency Adap
    - **Multiline Decomposition**: Strings containing `\n` are automatically split line-by-line when not matched as a full block, ensuring multi-paragraph strings, list items, and tooltip descriptions translate cleanly.
    - **Tier 1A — Exact Phrase Dictionary (`pack.T`)**: Over 1,400 curated full-sentence, heading, button, sidebar, tooltip, and article paragraph translations per language pack (including dynamic button verbs like `+ Add Admin Team Member`, `+ Spin Up New Contract`, `+ Invite Admin`, `+ Register New Split Sheet`).
    - **Tier 1B — Punctuation, List-Numbering & Symbol Stripping**: Automatically strips leading list markers (`1. `, `• `, `— `, `☐ `, `#`), translates the core phrase via `pack.T`, and restores the exact leading/trailing punctuation or `#` tag prefix (e.g., `#Recoupment` → `#Urejeshaji Gharama` in Swahili, `#Ũrihi wa Mbere` in Kikuyu, `#Recuperación` in Spanish).
-   - **Tier 2 — Longest-First Multi-Word Phrase Matching (`pack.MULTI_WORD_KEYS`)**: Replaces multi-word domain phrases (sorted by descending character length so longer phrases take precedence over shorter substrings).
+   - **Tier 2 — Bounded Multi-Word Phrase Matching with Protected Output (`pack.MULTI_WORD_KEYS`)**: Replaces multi-word domain phrases on word boundaries (sorted by descending length) and protects translated text with internal tokens (`\uE000...\uE001`) to prevent subsequent Tier 3 passes from re-translating translated target words.
    - **Pre-Tier 3 — Contraction & Language-Specific Normalization**:
      - *English/Swahili*: Normalizes contractions (`don't` → `usifanye`, `doesn't` → `haifanyi`, `can't` → `haiwezi`, etc.) and removes English standalone articles (`the`, `a`, `an`).
      - *English/Kikuyu*: Normalizes contractions (`don't` → `ndũgathe`, `doesn't` → `ndĩrĩkaga`, `can't` → `ndĩngĩhota`, etc.) and strips English articles.
      - *English/Spanish*: Normalizes contractions (`don't` → `no`, `can't` → `no puede`, possessive `'s` → `de $1`).
-   - **Tier 3 — Case-Preserving Word-Boundary Lexicon (`pack.WORD_LEXICON` & `pack.WORD_REGEX`)**: Over 4,800 domain and general vocabulary words per language pack applied with strict `\b` word boundaries and `matchCase()` (`UPPERCASE`, `Title Case`, `lowercase`) ensuring single words never corrupt foreign substrings.
+   - **Tier 3 — Unicode-Aware Lexicon Tokenizer with Morphological Fallback (`pack.WORD_LEXICON`)**: Applies 4,800+ vocabulary words using O(1) dictionary lookups with morphological candidate derivation for English plurals (`-s`, `-es`, `-ies`, `-ves`), past tenses (`-ed`, `-ied`), participles (`-ing`), adverbs (`-ly`, `-ally`), and nominalizations (`-ment`, `-tion`).
+   - **Form & Attribute Coverage**: Translates `<input type="button|submit|reset">` values, `placeholder`, `title`, and `aria-label` attributes with real-time DOM mutation tracking.
 
 3. **Structured Markdown Article Rendering (`ArticleContentRenderer.jsx`)**
    - Used across `HelpView.jsx`, `InAppDocModal.jsx`, `BlogPageView.jsx`, and `TuneLedgerSplitCascadePanel.jsx` (`ROYALTY_GUIDES`).
