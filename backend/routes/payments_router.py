@@ -23,7 +23,7 @@ from auth import get_current_user
 import config
 from config import db
 from models import Event, Order, Product, Ticket, User
-from services import ledger_service
+from services import daraja_service, ledger_service
 
 logger = logging.getLogger("payments_router")
 
@@ -258,12 +258,44 @@ def initiate_mpesa_stk_push(
             detail="Invalid Kenyan phone number. Format should be 2547XXXXXXXX or 07XXXXXXXX."
         )
 
-    checkout_request_id = f"ws_CO_{int(datetime.now(timezone.utc).timestamp())}_{secrets.token_hex(4)}"
-    merchant_request_id = f"MR_{secrets.token_hex(8)}"
-    receipt = f"MPESA-PEND-{secrets.token_hex(4).upper()}"
-
     amount_kes = package["price_kes"]
     credits_expected = package["credits"]
+    receipt = f"MPESA-PEND-{secrets.token_hex(4).upper()}"
+
+    # Dispatch STK Push via Safaricom Daraja API
+    merchant_request_id = None
+    checkout_request_id = None
+    customer_message = f"Success. Enter your M-Pesa PIN on handset {phone} to reload {credits_expected:,} credits."
+
+    try:
+        daraja_res = daraja_service.initiate_stk_push(
+            phone_number=phone,
+            amount=amount_kes,
+            account_reference="TuneMavens",
+            transaction_desc=f"{package['name'][:12]}"
+        )
+        if daraja_res.get("ResponseCode") == "0":
+            checkout_request_id = daraja_res.get("CheckoutRequestID")
+            merchant_request_id = daraja_res.get("MerchantRequestID")
+            customer_message = daraja_res.get("CustomerMessage", customer_message)
+        else:
+            logger.warning(f"[Daraja] Non-zero ResponseCode from Daraja: {daraja_res}")
+            if config.ENV == "production":
+                raise HTTPException(
+                    status_code=502,
+                    detail=daraja_res.get("ResponseDescription", "M-Pesa payment gateway rejected request")
+                )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f"[Daraja] Live dispatch exception: {e}")
+        if config.ENV == "production":
+            raise HTTPException(status_code=502, detail=f"M-Pesa STK Push dispatch failed: {e}")
+
+    # Fallback simulation only for offline/unit-test environments without internet
+    if not checkout_request_id:
+        checkout_request_id = f"ws_CO_{int(datetime.now(timezone.utc).timestamp())}_{secrets.token_hex(4)}"
+        merchant_request_id = f"MR_{secrets.token_hex(8)}"
 
     # Record pending transaction in credit_reloads. User balance is UNCHANGED.
     db.credit_reloads.insert_one({
@@ -292,7 +324,7 @@ def initiate_mpesa_stk_push(
         "CheckoutRequestID": checkout_request_id,
         "ResponseCode": "0",
         "ResponseDescription": "Success. Request accepted for processing",
-        "CustomerMessage": f"Success. Enter your M-Pesa PIN on handset {phone} to reload {credits_expected:,} credits.",
+        "CustomerMessage": customer_message,
         "receipt_number": receipt,
         "credits_expected": credits_expected,
         "amount_kes": amount_kes
