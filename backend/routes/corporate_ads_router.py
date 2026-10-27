@@ -16,6 +16,7 @@ from pydantic import BaseModel, EmailStr, Field
 from auth import get_current_user, get_optional_user
 from config import db
 from models import CorporateAdRate, CorporateAdCampaign, CorporateAdInquiry
+from services import ledger_service
 
 logger = logging.getLogger(__name__)
 
@@ -340,19 +341,23 @@ def create_campaign(payload: CampaignCreateRequest, request: Request):
 
     user_id = str(current_user["_id"]) if current_user else None
 
-    # If paying via credits and authenticated, check balance
+    # If paying via credits and authenticated, check balance and deduct via TuneLedger
     if payload.payment_method == "credits" and current_user:
-        current_credits = current_user.get("credits", 0)
-        if current_credits < credits_allocated:
+        try:
+            ledger_service.record_transaction(
+                user_id=current_user["_id"],
+                amount=-credits_allocated,
+                entry_type="CREDIT_SPEND_ADS",
+                provider="tunemavens_ads",
+                provider_ref=f"ADS-{uuid.uuid4().hex[:8].upper()}",
+                description=f"Ad placement campaign for {payload.brand_name} ({tier_name})",
+                metadata={"tier_slug": payload.tier_slug, "brand_name": payload.brand_name}
+            )
+        except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Insufficient Intermaven credits. Required: {credits_allocated}, available: {current_credits}"
+                detail=str(e)
             )
-        # Deduct credits
-        db.users.update_one(
-            {"_id": current_user["_id"]},
-            {"$inc": {"credits": -credits_allocated}}
-        )
 
     campaign_doc = {
         "brand_name": payload.brand_name.strip(),

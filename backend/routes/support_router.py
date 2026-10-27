@@ -16,6 +16,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from auth import get_current_user, get_optional_user
 from config import db
+from services import ledger_service
 
 logger = logging.getLogger(__name__)
 
@@ -460,6 +461,20 @@ def resolve_ticket(ticket_id: str, payload: TicketResolveRequest):
         credits = payload.refund_credits or ticket.get("ai_diagnosis", {}).get("suggested_refund_credits", 100)
         updates["status"] = "Refunded"
         updates["is_frozen"] = False
+        target_uid = ticket.get("user_id") or ticket.get("author_id")
+        if target_uid:
+            try:
+                ledger_service.record_transaction(
+                    user_id=target_uid,
+                    amount=int(credits),
+                    entry_type="SUPPORT_REFUND",
+                    provider="support_engine",
+                    provider_ref=f"TICKET-{ticket_id}",
+                    description=f"Support dispute settlement refund for ticket #{ticket_id}",
+                    metadata={"ticket_id": ticket_id, "category": ticket.get("category")}
+                )
+            except Exception as e:
+                logger.error(f"Failed to post support refund to TuneLedger: {e}")
         log_text = f"Claim settled via Unified Credits Refund: +{credits} credits issued to client wallet. Ledger dispute lock released."
     elif action == "redispatch_repair":
         updates["status"] = "Scheduled Repair"

@@ -13,7 +13,8 @@ from bson import ObjectId
 
 from auth import get_current_user, get_optional_user
 from services.s3_storage import storage
-from config import db
+from config import db, ENV, ENABLE_SANDBOX_BYPASS
+from services import ledger_service
 
 logger = logging.getLogger(__name__)
 
@@ -452,19 +453,29 @@ def top_up_storage(
     if not user_doc:
         raise HTTPException(status_code=404, detail="User account not found.")
 
-    current_credits = int(user_doc.get("credits") or 0)
-    if current_credits < cost:
+    # Deduct credits atomically via TuneLedger
+    try:
+        ledger_res = ledger_service.record_transaction(
+            user_id=user_doc["_id"],
+            amount=-cost,
+            entry_type="CREDIT_SPEND_STORAGE",
+            provider="tunemavens_storage",
+            provider_ref=f"STORAGE-{secrets.token_hex(6).upper()}",
+            description=f"Storage top-up +{extra_mb}MB for {cost} credits",
+            metadata={"package_id": payload.package_id, "extra_mb": extra_mb}
+        )
+        new_credits = ledger_res["current_balance"]
+    except ValueError as e:
         raise HTTPException(
             status_code=400,
-            detail=f"Insufficient credits. This package requires {cost} credits, but you have {current_credits} credits."
+            detail=str(e)
         )
 
-    new_credits = current_credits - cost
     new_quota = int(user_doc.get("storage_quota_mb") or 500) + extra_mb
 
     db.users.update_one(
         {"_id": user_doc["_id"]},
-        {"$set": {"credits": new_credits, "storage_quota_mb": new_quota, "updated_at": datetime.now(timezone.utc)}}
+        {"$set": {"storage_quota_mb": new_quota, "updated_at": datetime.now(timezone.utc)}}
     )
 
     return {
@@ -484,7 +495,16 @@ def buy_credits(
     payload: CreditPurchaseRequest,
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
-    """Purchase account credits using Stripe, M-Pesa, or PayPal protocols."""
+    """Purchase account credits using Stripe, M-Pesa, or PayPal protocols.
+    Per Technical Foundation Spec §5.1, direct credit increments without verified provider events
+    are forbidden in production.
+    """
+    if ENV == "production" or not ENABLE_SANDBOX_BYPASS:
+        raise HTTPException(
+            status_code=400,
+            detail="Direct credit purchasing on this endpoint is disabled. Use /api/payments/reload-credits or /api/payments/mpesa/stk-push."
+        )
+
     if payload.amount_credits <= 0:
         raise HTTPException(status_code=400, detail="Credit amount must be greater than 0.")
 
@@ -500,20 +520,19 @@ def buy_credits(
     if not user_doc:
         raise HTTPException(status_code=404, detail="User account not found.")
 
-    current_credits = int(user_doc.get("credits") or 0)
-    new_credits = current_credits + payload.amount_credits
-
-    db.users.update_one(
-        {"_id": user_doc["_id"]},
-        {
-            "$set": {
-                "credits": new_credits,
-                "updated_at": datetime.now(timezone.utc)
-            }
-        }
-    )
-
     tx_id = f"TM-{payload.protocol[:3].upper()}-{secrets.token_hex(4).upper()}"
+
+    # Route through ledger service in sandbox
+    ledger_res = ledger_service.record_transaction(
+        user_id=user_doc["_id"],
+        amount=payload.amount_credits,
+        entry_type="SANDBOX_CREDIT_RELOAD",
+        provider="sandbox_storage",
+        provider_ref=tx_id,
+        description=f"Sandbox credit top-up +{payload.amount_credits} via {payload.protocol}",
+        metadata={"protocol": payload.protocol, "subdomain": clean_sub}
+    )
+    new_credits = ledger_res["current_balance"]
 
     db.orders.insert_one({
         "user_id": str(user_doc["_id"]),
@@ -530,7 +549,7 @@ def buy_credits(
     return {
         "status": "success",
         "success": True,
-        "message": f"Payment successful! Loaded +{payload.amount_credits} credits via {payload.protocol.upper()}.",
+        "message": f"Sandbox payment successful! Loaded +{payload.amount_credits} credits via {payload.protocol.upper()}.",
         "credits_added": payload.amount_credits,
         "new_balance": new_credits,
         "credits": new_credits,

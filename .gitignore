@@ -4,7 +4,7 @@
 .emergent/
 .ruff_cache/
 test_reports/
-tests/
+/tests/
 memory/
 test_result.md
 yarn.lock
@@ -83,3 +83,12 @@ credentials.json
 # Local media uploads (keep pre-bundled heroes and ai_assets)
 backend/uploads/audio/
 backend/uploads/artwork/
+
+__pycache__/
+*.pyc
+
+# Track backend tests
+!backend/tests/**
+
+
+**/__pycache__/

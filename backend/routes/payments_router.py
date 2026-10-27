@@ -1,27 +1,34 @@
-"""Stripe & Payments Router.
+"""Unified Payments, Credits & Checkout Router.
 
-Handles creating Stripe checkout sessions and processing webhooks.
-Includes sandbox mock fallbacks if Stripe keys are not configured.
+Per Technical Foundation Spec §5.1 & §5.2:
+- Zero subscriptions: 100% unified, non-expiring credit model.
+- Server-authoritative packages: client-supplied credit amounts and prices are ignored.
+- Pending credit reload lifecycle: credits only increment upon verified provider event.
+- M-Pesa STK Push: initiates pending request, settles idempotently upon Safaricom Daraja callback.
+- Stripe Webhook: strict signature verification, replay protection via processed event IDs, no mock fallback in production.
+- Sandbox bypass: disabled/404 in production, guarded by ENABLE_SANDBOX_BYPASS flag.
+- Single ledger service integration: all credit allocations and deductions route through TuneLedger.
 """
 from datetime import datetime, timezone
 import logging
 import os
 import secrets
-from typing import Optional
+from typing import Any, Dict, List, Optional
+from bson import ObjectId
 
-
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
+from pydantic import BaseModel, Field
 
 from auth import get_current_user
+import config
 from config import db
 from models import Event, Order, Product, Ticket, User
+from services import ledger_service
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("payments_router")
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
-# Stripe Setup (optional for sandbox)
 STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
@@ -34,185 +41,188 @@ except ImportError:
     STRIPE_AVAILABLE = False
 
 
-# Tier credit load matrix (100% Unified Credits, Zero Monthly Commitments)
-SUBSCRIPTION_PLANS = {
-    "starter": {
-        "id": "starter",
-        "name": "Starter Top-Up",
-        "price_monthly": 0.0,
-        "price_reload": 0.0,
-        "billing_period": "one-time credit reload",
-        "credits": 600,
-        "features": ["Catalog Ingestion", "Community Access", "Lossless Audio Player", "600 Network Credits"],
+# Canonical Server-Authoritative Credit Packages (Spec §5.2)
+CREDIT_PACKAGES: Dict[str, Dict[str, Any]] = {
+    "indie-label-load": {
+        "id": "indie-label-load",
+        "name": "Indie Label Credit Load",
+        "credits": 1000,
+        "price_usd": 99.0,
+        "price_kes": 12870,
+        "target_role": "label",
+        "description": "Loads 1,000 non-expiring credits. Covers 3 collaborator seats, 5 signed roster artists, and catalog ingestion.",
+        "deliverables": ["3 Collaborator Seats", "5 Signed Roster Artists", "Full Split Cascade Engine", "Sync Pitching Clearance"]
     },
-    "pro": {
-        "id": "pro",
-        "name": "Professional Pack",
-        "price_monthly": 19.99,
-        "price_reload": 19.99,
-        "billing_period": "one-time credit reload",
-        "credits": 2000,
-        "features": ["EPK Builder", "AI Match Simulator", "Sync Placement Pitching", "2,000 Network Credits"],
+    "scale-label-load": {
+        "id": "scale-label-load",
+        "name": "Scale Label Credit Load",
+        "credits": 3500,
+        "price_usd": 299.0,
+        "price_kes": 38870,
+        "target_role": "label",
+        "description": "Loads 3,500 non-expiring credits. Covers 10 collaborator seats, 25 signed roster artists, multi-seat A&R/Accounting.",
+        "deliverables": ["10 Collaborator Seats", "25 Signed Roster Artists", "Multi-Seat Logins", "Priority Sync Pitching"]
     },
-    "business": {
-        "id": "business",
-        "name": "Business Operations Pack",
-        "price_monthly": 49.99,
-        "price_reload": 49.99,
-        "billing_period": "one-time credit reload",
+    "enterprise-label-load": {
+        "id": "enterprise-label-load",
+        "name": "Enterprise Conglomerate Load",
         "credits": 10000,
-        "features": ["Label Roster Console", "Social AI Studio", "Contract E-Signatures", "10,000 Network Credits"],
+        "price_usd": 799.0,
+        "price_kes": 103870,
+        "target_role": "label",
+        "description": "Loads 10,000 non-expiring credits. Covers unlimited collaborator seats, unlimited roster artists, and ERP webhooks.",
+        "deliverables": ["Unlimited Collaborator Seats", "Unlimited Signed Artists", "White-Glove DDEX", "Direct Rail Bulk Payouts"]
     },
-    "enterprise": {
-        "id": "enterprise",
-        "name": "Enterprise Conglomerate Pack",
-        "price_monthly": 199.99,
-        "price_reload": 199.99,
-        "billing_period": "one-time credit reload",
-        "credits": 50000,
-        "features": ["Dedicated API Access", "Media House Portal", "White-Label CMS", "50,000 Network Credits"],
+    "creator-starter": {
+        "id": "creator-starter",
+        "name": "Creator Starter Top-Up",
+        "credits": 250,
+        "price_usd": 25.0,
+        "price_kes": 3250,
+        "target_role": "creator",
+        "description": "250 Non-expiring credits for EPK building, AI mastering, and sync pitching.",
+        "deliverables": ["Full EPK Builder Hosting", "AI Mastering for 5 tracks", "Sync Placement Submissions"]
     },
+    "pro-creator-load": {
+        "id": "pro-creator-load",
+        "name": "Pro Growth Top-Up",
+        "credits": 600,
+        "price_usd": 50.0,
+        "price_kes": 6500,
+        "target_role": "creator",
+        "description": "600 Non-expiring credits for regular release schedules and social marketing.",
+        "deliverables": ["Social AI Studio Generation", "Custom Subdomain Routing", "Split Cascade Ledgers"]
+    },
+    "studio-master-load": {
+        "id": "studio-master-load",
+        "name": "Studio Producer Pack",
+        "credits": 1500,
+        "price_usd": 120.0,
+        "price_kes": 15600,
+        "target_role": "studio",
+        "description": "1,500 Non-expiring credits for high-volume audio mastering and stem distribution.",
+        "deliverables": ["Lossless Stems Storage", "Escrow Milestone Contracts", "DJ Pool Clearance"]
+    }
+}
+
+# Legacy alias map for backward compatibility
+PACKAGE_ALIASES: Dict[str, str] = {
+    "starter": "creator-starter",
+    "pro": "pro-creator-load",
+    "professional": "pro-creator-load",
+    "business": "scale-label-load",
+    "enterprise": "enterprise-label-load",
 }
 
 
-class CreditReloadRequest(BaseModel):
-    credits: int
-    amount: float
-    currency: str = "USD"
-    payment_method: str = "mpesa"  # "mpesa" | "card" | "bank" | "apple_pay"
+def resolve_package(package_id: str) -> Optional[Dict[str, Any]]:
+    """Resolves a package from the canonical package table or alias map."""
+    if not package_id:
+        return None
+    clean_id = package_id.strip().lower()
+    if clean_id in CREDIT_PACKAGES:
+        return CREDIT_PACKAGES[clean_id]
+    aliased = PACKAGE_ALIASES.get(clean_id)
+    if aliased and aliased in CREDIT_PACKAGES:
+        return CREDIT_PACKAGES[aliased]
+    return None
+
+
+class CreditReloadInitiateRequest(BaseModel):
+    package_id: str
+    payment_method: str = "card"  # "card" | "mpesa" | "paypal"
     phone_number: Optional[str] = None
-    package_id: Optional[str] = None
-    card_last4: Optional[str] = None
+    currency: Optional[str] = "USD"
+    # Note: client-supplied 'credits' or 'amount' are deliberately excluded or ignored.
+    credits: Optional[int] = None
+    amount: Optional[float] = None
 
 
 class MpesaStkPushRequest(BaseModel):
     phone_number: str
-    amount: float
-    credits: int
-    package_id: Optional[str] = None
+    package_id: str
+    # Note: client-supplied 'credits' or 'amount' are ignored to prevent forged pricing.
+    credits: Optional[int] = None
+    amount: Optional[float] = None
+
+
+class CheckoutSessionRequest(BaseModel):
+    item_type: str  # 'credits' | 'ticket' | 'merch' | 'subscription' (aliased to credits)
+    item_id: str    # package_id | event_id | product_id
+    quantity: int = 1
+    shipping_address: Optional[str] = None
 
 
 @router.get("/credit-packages")
 def get_credit_packages():
     """Returns official credit reload packages. Zero monthly subscriptions."""
-    packages = [
-        {
-            "id": "indie-label-load",
-            "name": "Indie Label Credit Load",
-            "credits": 1000,
-            "price_usd": 99.0,
-            "price_kes": 12870,
-            "target_role": "label",
-            "description": "Loads 1,000 non-expiring credits. Covers 3 collaborator seats, 5 signed roster artists, and catalog ingestion.",
-            "deliverables": ["3 Collaborator Seats", "5 Signed Roster Artists", "Full Split Cascade Engine", "Sync Pitching Clearance"]
-        },
-        {
-            "id": "scale-label-load",
-            "name": "Scale Label Credit Load",
-            "credits": 3500,
-            "price_usd": 299.0,
-            "price_kes": 38870,
-            "target_role": "label",
-            "description": "Loads 3,500 non-expiring credits. Covers 10 collaborator seats, 25 signed roster artists, multi-seat A&R/Accounting.",
-            "deliverables": ["10 Collaborator Seats", "25 Signed Roster Artists", "Multi-Seat Logins", "Priority Sync Pitching"]
-        },
-        {
-            "id": "enterprise-label-load",
-            "name": "Enterprise Conglomerate Load",
-            "credits": 10000,
-            "price_usd": 799.0,
-            "price_kes": 103870,
-            "target_role": "label",
-            "description": "Loads 10,000 non-expiring credits. Covers unlimited collaborator seats, unlimited roster artists, and ERP webhooks.",
-            "deliverables": ["Unlimited Collaborator Seats", "Unlimited Signed Artists", "White-Glove DDEX", "Direct Rail Bulk Payouts"]
-        },
-        {
-            "id": "creator-starter",
-            "name": "Creator Starter Top-Up",
-            "credits": 250,
-            "price_usd": 25.0,
-            "price_kes": 3250,
-            "target_role": "creator",
-            "description": "250 Non-expiring credits for EPK building, AI mastering, and sync pitching.",
-            "deliverables": ["Full EPK Builder Hosting", "AI Mastering for 5 tracks", "Sync Placement Submissions"]
-        },
-        {
-            "id": "pro-creator-load",
-            "name": "Pro Growth Top-Up",
-            "credits": 600,
-            "price_usd": 50.0,
-            "price_kes": 6500,
-            "target_role": "creator",
-            "description": "600 Non-expiring credits for regular release schedules and social marketing.",
-            "deliverables": ["Social AI Studio Generation", "Custom Subdomain Routing", "Split Cascade Ledgers"]
-        },
-        {
-            "id": "studio-master-load",
-            "name": "Studio Producer Pack",
-            "credits": 1500,
-            "price_usd": 120.0,
-            "price_kes": 15600,
-            "target_role": "studio",
-            "description": "1,500 Non-expiring credits for high-volume audio mastering and stem distribution.",
-            "deliverables": ["Lossless Stems Storage", "Escrow Milestone Contracts", "DJ Pool Clearance"]
-        }
-    ]
-    return {"packages": packages, "billing_model": "unified_credits", "no_monthly_charges": True}
+    return {
+        "packages": list(CREDIT_PACKAGES.values()),
+        "billing_model": "unified_credits",
+        "no_monthly_charges": True
+    }
 
 
 @router.post("/reload-credits")
-def reload_credits(
-    payload: CreditReloadRequest,
+def initiate_credit_reload(
+    payload: CreditReloadInitiateRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    """Processes credit reload via M-Pesa STK push or Card.
+    """Initiates a credit reload transaction.
 
-    Zero monthly subscriptions. Immediately updates user credit balance.
+    Per Technical Foundation Spec §5.1:
+    - Derives credits and price strictly from server-side package table keyed by package_id.
+    - Ignores any client-supplied credits or amount.
+    - Creates a PENDING record when payment starts.
+    - Does NOT grant credits immediately. Completion requires verified provider callback.
     """
     user_id = current_user["_id"]
-    credits_to_add = int(payload.credits)
-    if credits_to_add <= 0:
-        raise HTTPException(status_code=400, detail="Credits to add must be greater than zero")
+    package = resolve_package(payload.package_id)
+    if not package:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid package_id '{payload.package_id}'. Must be a valid server credit package."
+        )
+
+    is_mpesa = (payload.payment_method.lower() == "mpesa")
+    expected_amount = package["price_kes"] if is_mpesa else package["price_usd"]
+    expected_currency = "KES" if is_mpesa else "USD"
+    credits_to_grant = package["credits"]
 
     receipt = f"TM-CR-{secrets.token_hex(6).upper()}"
     now = datetime.now(timezone.utc)
-
-    checkout_id = None
-    if payload.payment_method == "mpesa":
-        checkout_id = f"ws_CO_{int(now.timestamp())}_{secrets.token_hex(4)}"
+    checkout_id = f"ck_{secrets.token_hex(12)}"
 
     reload_record = {
-        "user_id": user_id,
+        "user_id": str(user_id),
         "receipt_number": receipt,
-        "credits": credits_to_add,
-        "amount": payload.amount,
-        "currency": payload.currency.upper(),
-        "payment_method": payload.payment_method,
-        "phone_number": payload.phone_number,
-        "package_id": payload.package_id,
         "checkout_id": checkout_id,
-        "status": "completed",
+        "package_id": package["id"],
+        "credits": credits_to_grant,  # Authoritative server-derived credits
+        "amount": expected_amount,    # Authoritative server-derived amount
+        "currency": expected_currency,
+        "payment_method": payload.payment_method.lower(),
+        "phone_number": payload.phone_number,
+        "status": "pending",          # Crucial: starts in PENDING status
         "created_at": now
     }
     db.credit_reloads.insert_one(reload_record)
 
-    updated = db.users.find_one_and_update(
-        {"_id": user_id},
-        {"$inc": {"credits": credits_to_add}},
-        return_document=True
+    logger.info(
+        f"[Payment] Initiated reload order {receipt} for user {user_id}. "
+        f"Package: {package['id']} ({credits_to_grant} credits for {expected_currency} {expected_amount}). Status: PENDING."
     )
-    new_balance = updated.get("credits", credits_to_add) if updated else credits_to_add
-
-    logger.info(f"User {user_id} reloaded {credits_to_add} credits via {payload.payment_method}. Receipt: {receipt}. New balance: {new_balance}")
 
     return {
-        "status": "success",
+        "status": "pending",
         "receipt_number": receipt,
-        "credits_added": credits_to_add,
-        "new_balance": new_balance,
-        "payment_method": payload.payment_method,
         "checkout_id": checkout_id,
-        "timestamp": now.isoformat()
+        "package_id": package["id"],
+        "credits": credits_to_grant,
+        "amount": expected_amount,
+        "currency": expected_currency,
+        "payment_method": payload.payment_method,
+        "message": "Payment order registered. Waiting for payment provider confirmation before crediting."
     }
 
 
@@ -221,79 +231,223 @@ def initiate_mpesa_stk_push(
     payload: MpesaStkPushRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    """Initiates an M-Pesa STK Push prompt on user phone for credit reload."""
+    """Initiates an M-Pesa STK Push prompt on user phone for credit reload.
+
+    Per Technical Foundation Spec §5.1:
+    - Waits for the Safaricom callback with a successful result code before crediting.
+    - Does NOT increment user balance on initial STK dispatch.
+    - Matches CheckoutRequestID and amount to pending record upon callback.
+    """
     user_id = current_user["_id"]
+    package = resolve_package(payload.package_id)
+    if not package:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid package_id '{payload.package_id}'. Must be a valid server credit package."
+        )
+
     phone = payload.phone_number.strip().replace("+", "").replace(" ", "")
     if phone.startswith("0"):
         phone = "254" + phone[1:]
     elif not phone.startswith("254"):
         phone = "254" + phone
 
-    if len(phone) != 12:
-        raise HTTPException(status_code=400, detail="Invalid Kenyan phone number. Format should be 2547XXXXXXXX or 07XXXXXXXX.")
+    if len(phone) != 12 or not phone.isdigit():
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Kenyan phone number. Format should be 2547XXXXXXXX or 07XXXXXXXX."
+        )
 
     checkout_request_id = f"ws_CO_{int(datetime.now(timezone.utc).timestamp())}_{secrets.token_hex(4)}"
     merchant_request_id = f"MR_{secrets.token_hex(8)}"
+    receipt = f"MPESA-PEND-{secrets.token_hex(4).upper()}"
 
-    db.users.update_one(
-        {"_id": user_id},
-        {"$inc": {"credits": payload.credits}}
-    )
-    user_doc = db.users.find_one({"_id": user_id})
-    new_balance = user_doc.get("credits", payload.credits) if user_doc else payload.credits
+    amount_kes = package["price_kes"]
+    credits_expected = package["credits"]
 
-    receipt = f"MPESA-{secrets.token_hex(5).upper()}"
+    # Record pending transaction in credit_reloads. User balance is UNCHANGED.
     db.credit_reloads.insert_one({
-        "user_id": user_id,
+        "user_id": str(user_id),
         "receipt_number": receipt,
-        "credits": payload.credits,
-        "amount": payload.amount,
+        "package_id": package["id"],
+        "credits": credits_expected,
+        "amount": amount_kes,
         "currency": "KES",
         "payment_method": "mpesa",
         "phone_number": phone,
-        "package_id": payload.package_id,
         "checkout_request_id": checkout_request_id,
         "merchant_request_id": merchant_request_id,
-        "status": "completed",
+        "status": "pending",  # NOT completed
         "created_at": datetime.now(timezone.utc)
     })
 
+    logger.info(
+        f"[M-Pesa STK] Dispatched STK push for user {user_id} to phone {phone}. "
+        f"CheckoutRequestID: {checkout_request_id}. Amount: KES {amount_kes}. Awaiting callback."
+    )
+
     return {
-        "status": "success",
+        "status": "pending",
         "MerchantRequestID": merchant_request_id,
         "CheckoutRequestID": checkout_request_id,
         "ResponseCode": "0",
         "ResponseDescription": "Success. Request accepted for processing",
-        "CustomerMessage": f"Success. Enter your M-Pesa PIN on handset {phone} to reload {payload.credits:,} credits.",
+        "CustomerMessage": f"Success. Enter your M-Pesa PIN on handset {phone} to reload {credits_expected:,} credits.",
         "receipt_number": receipt,
-        "credits_added": payload.credits,
-        "new_balance": new_balance
+        "credits_expected": credits_expected,
+        "amount_kes": amount_kes
     }
 
 
-@router.get("/plans")
-def get_subscription_plans():
-    """Returns official 4-tier pricing matrix."""
-    return {"plans": list(SUBSCRIPTION_PLANS.values())}
+@router.post("/mpesa/callback")
+async def mpesa_daraja_callback(request: Request):
+    """Processes Safaricom Daraja STK Push callback.
 
+    Per Technical Foundation Spec §5.1:
+    - Validates callback payload and matches CheckoutRequestID.
+    - Idempotent on M-Pesa receipt number.
+    - Reconciles paid amount with server package pricing.
+    - Credits account via TuneLedger only when ResultCode is 0.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON callback")
 
-@router.post("/cancel-subscription")
-def cancel_subscription(current_user: dict = Depends(get_current_user)):
-    """Cancels active subscription and reverts account to Starter tier."""
-    user_id = current_user["_id"]
-    db.users.update_one(
-        {"_id": user_id},
-        {"$set": {"plan": "starter", "subscription_cancelled_at": datetime.now(timezone.utc)}}
+    stk_callback = body.get("Body", {}).get("stkCallback", {})
+    checkout_request_id = stk_callback.get("CheckoutRequestID")
+    merchant_request_id = stk_callback.get("MerchantRequestID")
+    result_code = stk_callback.get("ResultCode")
+    result_desc = stk_callback.get("ResultDesc", "")
+
+    if not checkout_request_id:
+        logger.warning(f"[M-Pesa Callback] Missing CheckoutRequestID in callback: {body}")
+        return {"ResultCode": 0, "ResultDesc": "Ignored missing CheckoutRequestID"}
+
+    reload_record = db.credit_reloads.find_one({"checkout_request_id": checkout_request_id})
+    if not reload_record:
+        logger.warning(f"[M-Pesa Callback] No pending reload found for CheckoutRequestID {checkout_request_id}")
+        return {"ResultCode": 0, "ResultDesc": "No pending record"}
+
+    # Idempotency check: if already completed, do not credit again
+    if reload_record.get("status") == "completed":
+        logger.info(f"[M-Pesa Callback] Duplicate callback received for already completed {checkout_request_id}")
+        return {"ResultCode": 0, "ResultDesc": "Already processed"}
+
+    # Handle failed or cancelled transactions
+    if result_code != 0:
+        logger.info(f"[M-Pesa Callback] STK failed for {checkout_request_id}: {result_desc} (Code {result_code})")
+        db.credit_reloads.update_one(
+            {"_id": reload_record["_id"]},
+            {
+                "$set": {
+                    "status": "failed",
+                    "result_code": result_code,
+                    "result_desc": result_desc,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        return {"ResultCode": 0, "ResultDesc": "Failure recorded"}
+
+    # Parse metadata items
+    items = stk_callback.get("CallbackMetadata", {}).get("Item", [])
+    item_map = {item.get("Name"): item.get("Value") for item in items if "Name" in item}
+
+    mpesa_receipt = str(item_map.get("MpesaReceiptNumber", "")).strip().upper()
+    amount_paid = float(item_map.get("Amount", 0))
+
+    if not mpesa_receipt:
+        logger.error(f"[M-Pesa Callback] Success ResultCode but missing MpesaReceiptNumber for {checkout_request_id}")
+        return {"ResultCode": 0, "ResultDesc": "Missing receipt number"}
+
+    # Anti-replay protection on M-Pesa receipt number across all ledger entries
+    existing_receipt = db.credit_ledger.find_one({"provider_ref": mpesa_receipt})
+    if existing_receipt:
+        logger.error(f"[M-Pesa Callback] REPLAY DETECTED! Receipt {mpesa_receipt} has already been credited.")
+        return {"ResultCode": 0, "ResultDesc": "Replay rejected"}
+
+    # Verify amount matches expected package price
+    expected_amount = float(reload_record["amount"])
+    if amount_paid < expected_amount:
+        logger.error(f"[M-Pesa Callback] Underpayment on {checkout_request_id}: paid {amount_paid}, expected {expected_amount}")
+        db.credit_reloads.update_one(
+            {"_id": reload_record["_id"]},
+            {"$set": {"status": "underpaid", "amount_paid": amount_paid, "mpesa_receipt": mpesa_receipt}}
+        )
+        return {"ResultCode": 0, "ResultDesc": "Underpayment recorded"}
+
+    # Complete reload record
+    db.credit_reloads.update_one(
+        {"_id": reload_record["_id"]},
+        {
+            "$set": {
+                "status": "completed",
+                "mpesa_receipt": mpesa_receipt,
+                "amount_paid": amount_paid,
+                "result_code": 0,
+                "result_desc": result_desc,
+                "completed_at": datetime.now(timezone.utc)
+            }
+        }
     )
-    logger.info(f"User {user_id} cancelled subscription. Reverted to starter.")
-    return {"status": "cancelled", "plan": "starter"}
+
+    # Post atomic credit entry to TuneLedger
+    credits_to_grant = reload_record["credits"]
+    user_id = reload_record["user_id"]
+    ledger_service.record_transaction(
+        user_id=user_id,
+        amount=credits_to_grant,
+        entry_type="CREDIT_RELOAD",
+        provider="mpesa_daraja",
+        provider_ref=mpesa_receipt,
+        idempotency_key=f"MPESA-{checkout_request_id}",
+        description=f"Reload {credits_to_grant} credits via M-Pesa ({mpesa_receipt})",
+        metadata={
+            "checkout_request_id": checkout_request_id,
+            "merchant_request_id": merchant_request_id,
+            "package_id": reload_record.get("package_id"),
+            "amount_kes": amount_paid
+        }
+    )
+
+    logger.info(
+        f"[M-Pesa Callback] Successfully completed reload for user {user_id}. "
+        f"Receipt: {mpesa_receipt}, Credits: +{credits_to_grant}."
+    )
+    return {"ResultCode": 0, "ResultDesc": "Success. Account credited"}
 
 
-class CheckoutSessionRequest(BaseModel):
-    item_type: str  # 'subscription' | 'ticket' | 'merch'
-    item_id: str    # plan name (starter/pro/etc) | event_id | product_id
-    quantity: int = 1
-    shipping_address: Optional[str] = None
+@router.get("/reload-status/{checkout_id}")
+def check_reload_status(checkout_id: str, current_user: dict = Depends(get_current_user)):
+    """Polls completion status of a pending reload by checkout ID or receipt."""
+    user_id = str(current_user["_id"])
+    reload = db.credit_reloads.find_one({
+        "$or": [
+            {"checkout_request_id": checkout_id},
+            {"checkout_id": checkout_id},
+            {"receipt_number": checkout_id}
+        ],
+        "user_id": user_id
+    })
+
+    if not reload:
+        raise HTTPException(status_code=404, detail="Reload record not found")
+
+    user_doc = db.users.find_one({"_id": current_user["_id"]})
+    current_credits = user_doc.get("credits", 0) if user_doc else 0
+
+    return {
+        "status": reload.get("status", "pending"),
+        "checkout_id": checkout_id,
+        "package_id": reload.get("package_id"),
+        "credits": reload.get("credits"),
+        "amount": reload.get("amount"),
+        "currency": reload.get("currency"),
+        "receipt_number": reload.get("receipt_number"),
+        "mpesa_receipt": reload.get("mpesa_receipt"),
+        "current_balance": current_credits
+    }
 
 
 @router.post("/checkout-session")
@@ -301,32 +455,29 @@ def create_checkout_session(
     payload: CheckoutSessionRequest,
     current_user: dict = Depends(get_current_user),
 ):
+    """Creates a Stripe Checkout Session for credits, tickets, or merchandise.
 
-    """Creates a Stripe Checkout Session.
-
-    Falls back to a mock session URL if Stripe credentials are missing.
+    Unified non-expiring credit packages replace all subscription modes.
     """
     user_id = str(current_user["_id"])
     description = "Fast, automated settlements."
-
-    # Validate items exist
     price = 0.0
     title = ""
+    package_id = None
 
-    if payload.item_type == "subscription":
-        item_id_key = payload.item_id.lower()
-        if item_id_key == "professional":
-            item_id_key = "pro"
-        
-        plan_info = SUBSCRIPTION_PLANS.get(item_id_key)
-        if not plan_info:
-            raise HTTPException(status_code=400, detail="Invalid subscription plan")
-        price = plan_info["price_monthly"]
-        title = f"TuneMavens {plan_info['name']} Subscription"
+    # Handle credits (or legacy subscription request remapped to credits)
+    if payload.item_type in ("credits", "subscription"):
+        package = resolve_package(payload.item_id)
+        if not package:
+            raise HTTPException(status_code=400, detail=f"Invalid credit package '{payload.item_id}'")
+        price = package["price_usd"]
+        title = f"TuneMavens {package['name']} ({package['credits']:,} Credits)"
+        package_id = package["id"]
+        description = package["description"]
+
     elif payload.item_type == "ticket":
         event = db.events.find_one({"_id": payload.item_id})
         if not event:
-            # Create a mock event for sandbox testing if none exists
             mock_event = {
                 "_id": payload.item_id,
                 "creator_id": "mock_creator",
@@ -341,10 +492,10 @@ def create_checkout_session(
             event = mock_event
         price = event["price"]
         title = f"Ticket: {event['title']}"
+
     elif payload.item_type == "merch":
         product = db.products.find_one({"_id": payload.item_id})
         if not product:
-            # Create a mock product for sandbox testing if none exists
             mock_product = {
                 "_id": payload.item_id,
                 "creator_id": "mock_creator",
@@ -362,7 +513,6 @@ def create_checkout_session(
 
     total_amount = price * payload.quantity
 
-    # Real Stripe integration
     if STRIPE_AVAILABLE and STRIPE_API_KEY:
         try:
             session = stripe.checkout.Session.create(
@@ -382,26 +532,31 @@ def create_checkout_session(
                     "user_id": user_id,
                     "item_type": payload.item_type,
                     "item_id": payload.item_id,
+                    "package_id": package_id or "",
                     "quantity": payload.quantity,
                     "shipping_address": payload.shipping_address or "",
                 },
-                mode="payment" if payload.item_type != "subscription" else "subscription",
+                mode="payment",  # All transactions are one-time payments. Zero subscriptions.
                 success_url="http://localhost:3000/dashboard?checkout=success",
                 cancel_url="http://localhost:3000/dashboard?checkout=cancel",
             )
             return {"checkout_url": session.url, "session_id": session.id}
         except Exception as e:
-            logger.error(f"Stripe Session creation error: {e}. Falling back to sandbox.")
+            logger.error(f"Stripe Session creation error: {e}.")
+            if config.ENV == "production":
+                raise HTTPException(status_code=502, detail="Payment gateway unavailable")
 
-    # Sandbox Mock Fallback
+    # In production, mock sessions are strictly disallowed
+    if config.ENV == "production":
+        raise HTTPException(status_code=500, detail="Payment provider unconfigured")
+
     mock_session_id = f"mock_sess_{secrets.token_hex(16)}"
-    
-    # Store mock session in DB to simulate webhook callback
     db.mock_checkout_sessions.insert_one({
         "session_id": mock_session_id,
         "user_id": user_id,
         "item_type": payload.item_type,
         "item_id": payload.item_id,
+        "package_id": package_id,
         "quantity": payload.quantity,
         "total_amount": total_amount,
         "shipping_address": payload.shipping_address,
@@ -409,134 +564,129 @@ def create_checkout_session(
         "created_at": datetime.now(timezone.utc),
     })
 
-    # Frontend redirects directly to the success callback with the mock session ID
     mock_success_url = f"http://localhost:3000/dashboard?checkout=success&session_id={mock_session_id}"
     return {"checkout_url": mock_success_url, "session_id": mock_session_id, "mock": True}
 
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request):
-    """Processes Stripe checkout success and subscription lifecycle events.
+    """Processes Stripe checkout success and payment completion events.
 
-    Supports simulated payloads for sandbox testing.
+    Per Technical Foundation Spec §5.1:
+    - Always requires valid Stripe-Signature and rejects anything else in production.
+    - Stores processed event IDs and ignores duplicate/replayed payloads.
+    - Zero subscription events: no balance resets or cancellations.
+    - Grants credits derived strictly from package configuration via TuneLedger.
     """
-    payload = await request.body()
+    raw_body = await request.body()
     sig_header = request.headers.get("Stripe-Signature")
 
-    # Real Webhook parsing
-    if STRIPE_AVAILABLE and STRIPE_WEBHOOK_SECRET and sig_header:
+    # In production, or whenever ALLOW_SANDBOX_WEBHOOKS is false, enforce strict crypto verification
+    is_production_or_strict = (config.ENV == "production" or not config.ALLOW_SANDBOX_WEBHOOKS)
+
+    event = None
+    if is_production_or_strict:
+        if not sig_header:
+            logger.error("[Stripe Webhook] Rejected webhook: Missing Stripe-Signature header.")
+            raise HTTPException(status_code=400, detail="Missing Stripe-Signature header")
+
+        if not STRIPE_WEBHOOK_SECRET:
+            logger.error("[Stripe Webhook] STRIPE_WEBHOOK_SECRET not configured on server.")
+            raise HTTPException(status_code=500, detail="Webhook signature verification unavailable")
+
         try:
             event = stripe.Webhook.construct_event(
-                payload, sig_header, STRIPE_WEBHOOK_SECRET
+                raw_body, sig_header, STRIPE_WEBHOOK_SECRET
             )
-            event_type = event["type"]
-            if event_type in ("checkout.session.completed", "invoice.payment_succeeded"):
-                session = event["data"]["object"]
-                _process_successful_checkout(session.get("metadata", {}))
-            elif event_type == "customer.subscription.deleted":
-                subscription = event["data"]["object"]
-                _process_subscription_cancelled(subscription.get("metadata", {}))
-            return {"status": "success"}
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Webhook Error: {e}")
+            logger.error(f"[Stripe Webhook] Signature verification failed: {e}")
+            raise HTTPException(status_code=400, detail=f"Invalid webhook signature: {e}")
+    else:
+        # Development / Sandbox mode only when ALLOW_SANDBOX_WEBHOOKS is explicitly enabled
+        if sig_header and STRIPE_WEBHOOK_SECRET:
+            try:
+                event = stripe.Webhook.construct_event(
+                    raw_body, sig_header, STRIPE_WEBHOOK_SECRET
+                )
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid webhook signature: {e}")
+        else:
+            try:
+                event = await request.json()
+            except Exception:
+                raise HTTPException(status_code=400, detail="Invalid JSON webhook payload")
 
-    # Sandbox / Mock Webhook parsing (direct POST payload fallback)
-    try:
-        data = await request.json()
-        event_type = data.get("type")
-        if event_type in ("checkout.session.completed", "invoice.payment_succeeded"):
-            metadata = data.get("data", {}).get("object", {}).get("metadata", {})
-            _process_successful_checkout(metadata)
-            return {"status": "success", "mocked": True}
-        elif event_type == "customer.subscription.deleted":
-            metadata = data.get("data", {}).get("object", {}).get("metadata", {})
-            _process_subscription_cancelled(metadata)
-            return {"status": "success", "mocked": True}
-    except Exception:
-        pass
+    if not event or not isinstance(event, dict):
+        raise HTTPException(status_code=400, detail="Malformed event data")
 
-    raise HTTPException(status_code=400, detail="Invalid webhook structure")
+    event_id = event.get("id")
+    event_type = event.get("type")
 
+    # Idempotency & Replay Protection: store processed event IDs
+    if event_id:
+        existing_event = db.processed_webhook_events.find_one({"event_id": event_id})
+        if existing_event:
+            logger.warning(f"[Stripe Webhook] Replayed event {event_id} ignored idempotently.")
+            return {"status": "already_processed", "event_id": event_id}
 
-def _process_subscription_cancelled(metadata: dict):
-    from bson import ObjectId
-    user_id = metadata.get("user_id")
-    if user_id:
-        db.users.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"plan": "starter", "credits": 600}}
-        )
-        logger.info(f"Processed subscription cancellation webhook for user {user_id}")
+        db.processed_webhook_events.insert_one({
+            "event_id": event_id,
+            "event_type": event_type,
+            "processed_at": datetime.now(timezone.utc)
+        })
 
+    # Process successful payment completion
+    if event_type in ("checkout.session.completed", "payment_intent.succeeded"):
+        session_obj = event.get("data", {}).get("object", {})
+        metadata = session_obj.get("metadata", {})
+        session_id = session_obj.get("id", event_id)
+        _process_successful_checkout(metadata, provider_ref=session_id)
+        return {"status": "success", "event_id": event_id}
 
+    # Subscription events are obsolete and intentionally ignored (zero subscription policy)
+    if "subscription" in str(event_type):
+        logger.info(f"[Stripe Webhook] Ignored obsolete subscription event {event_type}. Credits are non-expiring.")
+        return {"status": "ignored", "reason": "subscriptions_deprecated"}
 
-@router.post("/sandbox-bypass")
-def sandbox_checkout_bypass(
-    session_id: str,
-    current_user: dict = Depends(get_current_user),
-):
-    """Sandbox endpoint allowing clients to instantly settle mock checkout sessions."""
-    sess = db.mock_checkout_sessions.find_one({"session_id": session_id})
-    if not sess:
-        raise HTTPException(status_code=404, detail="Mock session not found")
-    
-    if sess.get("status") == "completed":
-        return {"status": "already_completed"}
-
-    # Execute webhook processor
-    metadata = {
-        "user_id": sess["user_id"],
-        "item_type": sess["item_type"],
-        "item_id": sess["item_id"],
-        "quantity": str(sess["quantity"]),
-        "shipping_address": sess.get("shipping_address") or "",
-    }
-    
-    _process_successful_checkout(metadata)
-    
-    db.mock_checkout_sessions.update_one(
-        {"session_id": session_id},
-        {"$set": {"status": "completed"}}
-    )
-    return {"status": "completed"}
+    return {"status": "unhandled_event", "type": event_type}
 
 
-def _process_successful_checkout(metadata: dict):
-    from bson import ObjectId
+def _process_successful_checkout(metadata: dict, provider_ref: str = ""):
+    """Fulfills paid orders for credits, tickets, or merchandise."""
     user_id = metadata.get("user_id")
     item_type = metadata.get("item_type")
     item_id = metadata.get("item_id")
+    package_id = metadata.get("package_id")
     quantity = int(metadata.get("quantity", 1))
     shipping_address = metadata.get("shipping_address")
 
-    if not user_id or not item_type or not item_id:
-        logger.warning(f"Incomplete checkout metadata parsed: {metadata}")
+    if not user_id:
+        logger.warning(f"[Checkout Fulfillment] Missing user_id in metadata: {metadata}")
         return
 
-    if item_type == "subscription":
-        # Grant tier properties
-        credit_grants = {
-            "starter": 600,
-            "pro": 2000,
-            "professional": 2000,
-            "business": 10000,
-            "enterprise": 50000,
-        }
+    # 1. Credits Fulfillment
+    if item_type in ("credits", "subscription") or package_id:
+        target_pkg_id = package_id or item_id
+        package = resolve_package(target_pkg_id)
+        if not package:
+            logger.error(f"[Checkout Fulfillment] Unknown package '{target_pkg_id}' in metadata")
+            return
 
-        credits = credit_grants.get(item_id, 600)
-        db.users.update_one(
-            {"_id": ObjectId(user_id)},
-            {
-                "$set": {
-                    "plan": item_id,
-                    "credits": credits,
-                }
-            }
+        credits_to_grant = package["credits"] * quantity
+        ledger_service.record_transaction(
+            user_id=user_id,
+            amount=credits_to_grant,
+            entry_type="CREDIT_RELOAD",
+            provider="stripe",
+            provider_ref=provider_ref or f"STRIPE-CS-{secrets.token_hex(6)}",
+            idempotency_key=f"STRIPE-{provider_ref}-{package['id']}",
+            description=f"Loaded {credits_to_grant} credits via Stripe ({package['name']})",
+            metadata={"package_id": package["id"], "quantity": quantity}
         )
-        logger.info(f"User {user_id} upgraded to plan {item_id} (Granted {credits} credits)")
+        logger.info(f"[Checkout Fulfillment] Credited user {user_id} with {credits_to_grant} credits via TuneLedger.")
 
+    # 2. Ticket Fulfillment
     elif item_type == "ticket":
-        # Generate ticket tokens
         for _ in range(quantity):
             qr_token = f"TKT-{secrets.token_hex(16).upper()}"
             db.tickets.insert_one({
@@ -547,28 +697,19 @@ def _process_successful_checkout(metadata: dict):
                 "scanned_at": None,
                 "purchased_at": datetime.now(timezone.utc),
             })
-        
-        # Update event registry
-        db.events.update_one(
-            {"_id": item_id},
-            {"$inc": {"tickets_sold": quantity}}
-        )
-        logger.info(f"Generated {quantity} tickets for event {item_id} purchased by user {user_id}")
+        db.events.update_one({"_id": item_id}, {"$inc": {"tickets_sold": quantity}})
+        logger.info(f"[Checkout Fulfillment] Generated {quantity} tickets for event {item_id} (User: {user_id})")
 
+    # 3. Merch Fulfillment
     elif item_type == "merch":
         product = db.products.find_one({"_id": item_id})
         if not product:
-            logger.warning(f"Merchandise catalog item {item_id} not found on checkout")
+            logger.warning(f"[Checkout Fulfillment] Merchandise {item_id} not found.")
             return
 
         total_amount = float(product["price"]) * quantity
-        
-        # Digital files get secure download tokens
-        download_token = None
-        status_label = "completed"
-        if product["type"] == "digital":
-            download_token = secrets.token_urlsafe(24)
-            status_label = "download_ready"
+        download_token = secrets.token_urlsafe(24) if product.get("type") == "digital" else None
+        status_label = "download_ready" if product.get("type") == "digital" else "completed"
 
         db.orders.insert_one({
             "product_id": item_id,
@@ -581,11 +722,49 @@ def _process_successful_checkout(metadata: dict):
             "created_at": datetime.now(timezone.utc),
         })
 
-        # Decrement physical stock
-        if product["type"] == "physical" and product.get("stock") is not None:
-            db.products.update_one(
-                {"_id": item_id},
-                {"$inc": {"stock": -quantity}}
-            )
-        
-        logger.info(f"Processed order for product {item_id} (Status: {status_label})")
+        if product.get("type") == "physical" and product.get("stock") is not None:
+            db.products.update_one({"_id": item_id}, {"$inc": {"stock": -quantity}})
+
+        logger.info(f"[Checkout Fulfillment] Processed order for product {item_id} (User: {user_id})")
+
+
+@router.post("/sandbox-bypass")
+def sandbox_checkout_bypass(
+    session_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Sandbox endpoint allowing clients to settle mock checkout sessions during local development.
+
+    Per Technical Foundation Spec §5.1:
+    - Strictly disabled and returns 404 under production or when ENABLE_SANDBOX_BYPASS is False.
+    - Validates server packages and routes fulfillment through TuneLedger.
+    """
+    if config.ENV == "production" or not config.ENABLE_SANDBOX_BYPASS:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sandbox bypass endpoint is disabled."
+        )
+
+    sess = db.mock_checkout_sessions.find_one({"session_id": session_id})
+    if not sess:
+        raise HTTPException(status_code=404, detail="Mock session not found")
+
+    if sess.get("status") == "completed":
+        return {"status": "already_completed"}
+
+    metadata = {
+        "user_id": sess["user_id"],
+        "item_type": sess["item_type"],
+        "item_id": sess["item_id"],
+        "package_id": sess.get("package_id"),
+        "quantity": str(sess.get("quantity", 1)),
+        "shipping_address": sess.get("shipping_address") or "",
+    }
+
+    _process_successful_checkout(metadata, provider_ref=f"SANDBOX-{session_id}")
+
+    db.mock_checkout_sessions.update_one(
+        {"session_id": session_id},
+        {"$set": {"status": "completed", "settled_at": datetime.now(timezone.utc)}}
+    )
+    return {"status": "completed", "sandbox": True}

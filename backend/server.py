@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db
+from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db, validate_production_security
 from routes import (
     admin_router, auth_router, contracts_router, dashboard_router,
     deals_router, users_router, sso_router, payments_router,
@@ -40,6 +40,9 @@ if sentry_dsn:
         logger.warning(f"Failed to initialize Sentry: {e}")
 
 app = FastAPI(title="Intermaven Network Unified API", version="1.0.0")
+
+# Security verification: abort startup if invalid environment configurations detected
+validate_production_security()
 
 # Mount static uploads directory for media fallbacks
 uploads_dir = os.environ.get("LOCAL_UPLOADS_DIR", "uploads")

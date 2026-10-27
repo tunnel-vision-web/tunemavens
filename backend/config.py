@@ -45,3 +45,30 @@ COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax")
 # --- CORS ---
 _cors = os.environ.get("CORS_ORIGINS", "*")
 CORS_ORIGINS = [o.strip() for o in _cors.split(",")] if _cors != "*" else ["*"]
+
+# --- Environment & Security Guards (Technical Foundation Spec §5.1) ---
+ENV = os.environ.get("ENV", "development").lower()
+ENABLE_SANDBOX_BYPASS = os.environ.get("ENABLE_SANDBOX_BYPASS", "false").lower() == "true"
+ALLOW_SANDBOX_WEBHOOKS = os.environ.get("ALLOW_SANDBOX_WEBHOOKS", "false").lower() == "true"
+
+
+def validate_production_security():
+    """Startup verification: ensures insecure sandbox endpoints and bypasses
+
+    cannot run under production configuration.
+    """
+    if ENV == "production":
+        if ENABLE_SANDBOX_BYPASS:
+            raise RuntimeError(
+                "FATAL CONFIGURATION ERROR: ENABLE_SANDBOX_BYPASS is set to True in production! "
+                "Production systems must not allow unverified checkout bypass."
+            )
+        if ALLOW_SANDBOX_WEBHOOKS:
+            raise RuntimeError(
+                "FATAL CONFIGURATION ERROR: ALLOW_SANDBOX_WEBHOOKS is set to True in production! "
+                "Production webhooks must strictly require cryptographic signature validation."
+            )
+
+
+# Execute security check on configuration import
+validate_production_security()
