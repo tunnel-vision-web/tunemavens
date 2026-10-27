@@ -10,7 +10,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db, validate_production_security
 from routes import (
@@ -102,6 +103,42 @@ app.include_router(role_tiers_router)
 app.include_router(support_router)
 app.include_router(blog_router)
 app.include_router(affiliate_router)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request, exc):
+    """Handles HTTP exceptions, rendering helpful HTML 404 pages for browsers and crawlers (Spec §2 R2.5)."""
+    if exc.status_code == 404:
+        accept_header = request.headers.get("accept", "")
+        if "text/html" in accept_header:
+            html_content = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>404 — Page Not Found | TuneMavens</title>
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { background: #0b0f19; color: #f1f5f9; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; }
+    .card { max-width: 480px; padding: 40px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: rgba(255,255,255,0.02); }
+    h1 { color: #00f0ff; font-size: 56px; margin: 0 0 12px 0; }
+    p { color: #94a3b8; font-size: 16px; line-height: 1.6; margin-bottom: 24px; }
+    a { display: inline-block; background: #00f0ff; color: #0b0f19; padding: 12px 24px; border-radius: 6px; font-weight: 700; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>404</h1>
+    <h2>Page Not Found</h2>
+    <p>The requested route or frequency does not exist. Check the URL or return to the platform homepage.</p>
+    <a href="/">Return to TuneMavens</a>
+  </div>
+</body>
+</html>"""
+            return HTMLResponse(content=html_content, status_code=404)
+        return JSONResponse(status_code=404, content={"detail": "Not Found", "status_code": 404})
+
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 @app.exception_handler(RequestValidationError)
