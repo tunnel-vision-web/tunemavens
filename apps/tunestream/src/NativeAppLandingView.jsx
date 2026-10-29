@@ -2442,7 +2442,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
           isPlaying={isHiFiPlaying}
           onTogglePlay={setIsHiFiPlaying}
           onTrackSelect={setActiveHiFiTrack}
-          onClose={() => setIsHiFiPlaying(false)}
+          sessionUser={sessionUser}
+          onClose={() => {
+            setIsHiFiPlaying(false);
+            setActiveHiFiTrack(null);
+          }}
         />
       )}
       <LandingFooter view={view} />

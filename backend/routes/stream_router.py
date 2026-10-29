@@ -164,7 +164,29 @@ def stream_catalog_track(
         elif audio_url.startswith("http://") or audio_url.startswith("https://"):
             return RedirectResponse(url=audio_url)
 
-    # 3. Fallback: Stream synthesized harmonic preview
+    # 3. Fallback: Stream real studio catalog audio from uploads/audio
+    search_dirs = [
+        os.path.join(os.environ.get("LOCAL_UPLOADS_DIR", "uploads"), "audio"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "audio"),
+        "uploads/audio",
+        "backend/uploads/audio"
+    ]
+    real_files = []
+    for s_dir in search_dirs:
+        if os.path.exists(s_dir):
+            for fname in sorted(os.listdir(s_dir)):
+                if fname.lower().endswith(('.wav', '.mp3', '.flac', '.ogg')) and not fname.startswith('.'):
+                    full_p = os.path.join(s_dir, fname)
+                    if os.path.isfile(full_p) and full_p not in real_files:
+                        real_files.append(full_p)
+    if real_files:
+        pick_idx = abs(hash(clean_id)) % len(real_files)
+        chosen_file = real_files[pick_idx]
+        ext = Path(chosen_file).suffix.lower()
+        media_type = "audio/wav" if ext == ".wav" else ("audio/flac" if ext == ".flac" else "audio/mpeg")
+        return FileResponse(chosen_file, media_type=media_type)
+
+    # 4. Ultimate fallback if disk has 0 audio files: Stream synthesized preview
     title = target_track.get("title") if target_track else clean_id
     wav_bytes = generate_synthesized_preview(seed_text=title, duration_sec=45.0)
     total_len = len(wav_bytes)

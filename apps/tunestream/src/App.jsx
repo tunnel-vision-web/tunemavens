@@ -2432,11 +2432,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
           track={currentTrack}
           tracks={catalogTracks}
           isPlaying={isPlaying}
+          sessionUser={sessionUser}
           onTogglePlay={(p) => setIsPlaying(typeof p === 'boolean' ? p : !isPlaying)}
           onTrackSelect={(t) => handleTrackSelect(t)}
           onClose={() => {
             setIsPlaying(false);
             setIsPlayerOpen(false);
+            setActivePlayerTrack(null);
           }}
         />
       )}

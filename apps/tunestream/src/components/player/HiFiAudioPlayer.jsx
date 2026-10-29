@@ -4,7 +4,7 @@ import {
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine,
   RiRepeatLine, RiRepeatOneLine, RiVolumeUpFill,
   RiVolumeMuteFill, RiDragMove2Fill, RiSubtractFill,
-  RiAddFill, RiCloseFill, RiDiscFill
+  RiAddFill, RiCloseFill, RiDiscFill, RiCoinLine
 } from 'react-icons/ri';
 import { normalizeMediaUrl } from '../../lib/api.js';
 
@@ -15,6 +15,7 @@ export default function HiFiAudioPlayer({
   onTogglePlay,
   onTrackSelect,
   accentColor = '#00f2fe',
+  sessionUser = null,
   onClose
 }) {
   const [isPlayerVisible, setIsPlayerVisible] = useState(true);
@@ -25,6 +26,21 @@ export default function HiFiAudioPlayer({
   const [repeatMode, setRepeatMode] = useState('playlist'); // 'off' | 'track' | 'playlist'
   const [playbackProgress, setPlaybackProgress] = useState(0); // in seconds
   const [trackDuration, setTrackDuration] = useState(210); // in seconds
+  const [previewLimitReached, setPreviewLimitReached] = useState(false);
+
+  // Determine user credit status
+  const effectiveUser = sessionUser || (() => {
+    try {
+      const s = sessionStorage.getItem('tunestream_session') || sessionStorage.getItem('tunemavens_session') || localStorage.getItem('tunemavens_saved_user');
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const userCredits = effectiveUser?.credits ?? 0;
+  const hasCredits = userCredits > 0;
+  const PREVIEW_LIMIT = 30; // 30 seconds limit unless user has credits
 
   const [playerPos, setPlayerPos] = useState({
     x: Math.max(20, (typeof window !== 'undefined' ? window.innerWidth - 480 : 800)),
@@ -53,22 +69,32 @@ export default function HiFiAudioPlayer({
     const audio = audioRef.current;
     if (!audio) return;
 
-    const streamSrc = currentTrack.audioUrl || currentTrack.audio_url || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.id || currentTrack.title)}`;
+    const rawAudio = currentTrack.audioUrl || currentTrack.audio_url || currentTrack.fileUrl;
+    const streamSrc = rawAudio 
+      ? normalizeMediaUrl(rawAudio) 
+      : `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.id || currentTrack.title)}`;
     
     if (audio.src !== streamSrc && !audio.src.endsWith(streamSrc)) {
       audio.src = streamSrc;
       audio.load();
       setPlaybackProgress(0);
+      setPreviewLimitReached(false);
     }
 
     if (isPlaying) {
-      audio.play().catch(err => {
-        console.warn('Hi-Fi playback error:', err);
-      });
+      if (!hasCredits && audio.currentTime >= PREVIEW_LIMIT) {
+        audio.pause();
+        setPreviewLimitReached(true);
+        if (onTogglePlay) onTogglePlay(false);
+      } else {
+        audio.play().catch(err => {
+          console.warn('Hi-Fi playback error:', err);
+        });
+      }
     } else {
       audio.pause();
     }
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack, isPlaying, hasCredits]);
 
   // Sync volume & mute
   useEffect(() => {
@@ -77,9 +103,27 @@ export default function HiFiAudioPlayer({
     audio.volume = isPlayerMuted ? 0 : playerVolume;
   }, [playerVolume, isPlayerMuted]);
 
+  // Time update with 30s limit
+  const handleTimeUpdate = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const current = audio.currentTime;
+    setPlaybackProgress(Math.floor(current));
+
+    // Limit to 30s unless user has credits
+    if (!hasCredits && current >= PREVIEW_LIMIT) {
+      audio.pause();
+      audio.currentTime = PREVIEW_LIMIT;
+      setPlaybackProgress(PREVIEW_LIMIT);
+      setPreviewLimitReached(true);
+      if (onTogglePlay) onTogglePlay(false);
+    }
+  };
+
   // Track advance handler
   const handleTrackAdvance = () => {
     if (!tracks || tracks.length === 0) return;
+    setPreviewLimitReached(false);
     if (repeatMode === 'track') {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
@@ -105,6 +149,7 @@ export default function HiFiAudioPlayer({
 
   const handleTrackPrevious = () => {
     if (!tracks || tracks.length === 0) return;
+    setPreviewLimitReached(false);
     if (playbackProgress > 4 && audioRef.current) {
       audioRef.current.currentTime = 0;
       setPlaybackProgress(0);
@@ -117,6 +162,40 @@ export default function HiFiAudioPlayer({
     }
     const prevIdx = safeIndex === 0 ? tracks.length - 1 : safeIndex - 1;
     if (onTrackSelect) onTrackSelect(tracks[prevIdx]);
+  };
+
+  const handleSeek = (newSec) => {
+    const targetSec = !hasCredits ? Math.min(newSec, PREVIEW_LIMIT) : newSec;
+    setPlaybackProgress(targetSec);
+    if (audioRef.current) {
+      audioRef.current.currentTime = targetSec;
+      if (!hasCredits && targetSec < PREVIEW_LIMIT) {
+        setPreviewLimitReached(false);
+      }
+    }
+  };
+
+  const handleTogglePlay = () => {
+    if (!isPlaying && !hasCredits && playbackProgress >= PREVIEW_LIMIT) {
+      // Restart preview from beginning
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        setPlaybackProgress(0);
+        setPreviewLimitReached(false);
+      }
+    }
+    if (onTogglePlay) onTogglePlay(!isPlaying);
+  };
+
+  // Close player completely (stop audio and unmount)
+  const handleClosePlayer = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlayerVisible(false);
+    if (onTogglePlay) onTogglePlay(false);
+    if (onClose) onClose();
   };
 
   // Draggable window handlers
@@ -155,18 +234,16 @@ export default function HiFiAudioPlayer({
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  const effectiveMaxDuration = hasCredits ? (trackDuration || 210) : PREVIEW_LIMIT;
+
   return (
     <>
       {/* Real HTML5 Audio Element */}
       <audio
         ref={audioRef}
-        onTimeUpdate={() => {
-          if (audioRef.current) {
-            setPlaybackProgress(Math.floor(audioRef.current.currentTime));
-          }
-        }}
+        onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={() => {
-          if (audioRef.current && audioRef.current.duration) {
+          if (audioRef.current && audioRef.current.duration && !isNaN(audioRef.current.duration)) {
             setTrackDuration(Math.floor(audioRef.current.duration));
           }
         }}
@@ -176,42 +253,73 @@ export default function HiFiAudioPlayer({
 
       {/* Floating Minimized Pill when player closed/minimized */}
       {!isPlayerVisible && (
-        <button
-          type="button"
-          onClick={() => setIsPlayerVisible(true)}
-          title="Open TuneMavens Hi-Fi Player"
-          data-testid="hifi-player-pill"
+        <div 
+          data-testid="hifi-player-pill-wrapper"
           style={{
             position: 'fixed',
             bottom: '24px',
             right: '24px',
             zIndex: 9000,
-            background: isPlaying ? 'rgba(34, 197, 94, 0.15)' : 'rgba(15, 23, 42, 0.85)',
-            border: `1.5px solid ${isPlaying ? '#22c55e' : accentColor}`,
-            borderRadius: '3px',
-            padding: '8px 16px',
-            color: '#fff',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(12px)',
-            fontSize: '0.82rem',
-            fontWeight: 800
+            gap: '6px'
           }}
         >
-          <span style={{
-            width: '10px',
-            height: '10px',
-            borderRadius: '50%',
-            background: isPlaying ? '#22c55e' : accentColor,
-            boxShadow: isPlaying ? '0 0 10px #22c55e' : 'none',
-            display: 'inline-block'
-          }} />
-          <RiMusic2Fill style={{ color: accentColor, fontSize: '1.1rem' }} />
-          <span>TuneMavens Hi-Fi Player {isPlaying ? '• Playing' : '• Paused'}</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsPlayerVisible(true);
+              setIsPlayerMinimized(false);
+            }}
+            title="Open TuneMavens Hi-Fi Player"
+            data-testid="hifi-player-pill"
+            style={{
+              background: isPlaying ? 'rgba(34, 197, 94, 0.15)' : 'rgba(15, 23, 42, 0.9)',
+              border: `1.5px solid ${isPlaying ? '#22c55e' : accentColor}`,
+              borderRadius: '3px',
+              padding: '8px 16px',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(12px)',
+              fontSize: '0.82rem',
+              fontWeight: 800
+            }}
+          >
+            <span style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: isPlaying ? '#22c55e' : accentColor,
+              boxShadow: isPlaying ? '0 0 10px #22c55e' : 'none',
+              display: 'inline-block'
+            }} />
+            <RiMusic2Fill style={{ color: accentColor, fontSize: '1.1rem' }} />
+            <span>TuneMavens Hi-Fi Player {isPlaying ? '• Playing' : '• Paused'}</span>
+          </button>
+          <button
+            type="button"
+            data-testid="close-hifi-pill-btn"
+            onClick={handleClosePlayer}
+            title="Close Web Player"
+            style={{
+              background: 'rgba(15, 23, 42, 0.9)',
+              border: '1.5px solid rgba(255,255,255,0.2)',
+              borderRadius: '3px',
+              color: '#94a3b8',
+              padding: '8px 10px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <RiCloseFill size={16} />
+          </button>
+        </div>
       )}
 
       {/* Floating Draggable Overlay Card */}
@@ -270,7 +378,7 @@ export default function HiFiAudioPlayer({
               </span>
             </div>
 
-            {/* Window Controls */}
+            {/* Window Controls: Minimize & Close */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
               <button
                 type="button"
@@ -293,11 +401,9 @@ export default function HiFiAudioPlayer({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  if (onClose) onClose();
-                  else setIsPlayerVisible(false);
-                }}
-                title="Hide to Bottom Floating Pill"
+                data-testid="close-hifi-player-btn"
+                onClick={handleClosePlayer}
+                title="Close Web Player"
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -308,10 +414,13 @@ export default function HiFiAudioPlayer({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '0.9rem'
+                  fontSize: '0.9rem',
+                  transition: 'color 0.15s ease'
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; }}
               >
-                <RiCloseFill size={16} />
+                <RiCloseFill size={18} />
               </button>
             </div>
           </div>
@@ -330,12 +439,12 @@ export default function HiFiAudioPlayer({
                   {currentTrack.title}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: accentColor, fontWeight: 700 }}>
-                  {formatSec(playbackProgress)} / {formatSec(trackDuration)}
+                  {formatSec(playbackProgress)} / {!hasCredits ? '0:30' : formatSec(trackDuration)}
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => onTogglePlay && onTogglePlay(!isPlaying)}
+                onClick={handleTogglePlay}
                 style={{
                   width: '32px',
                   height: '32px',
@@ -386,6 +495,7 @@ export default function HiFiAudioPlayer({
                   onChange={(e) => {
                     const idx = Number(e.target.value);
                     if (tracks[idx] && onTrackSelect) {
+                      setPreviewLimitReached(false);
                       onTrackSelect(tracks[idx]);
                     }
                   }}
@@ -441,16 +551,65 @@ export default function HiFiAudioPlayer({
                     <span>•</span>
                     <span>ISRC: {currentTrack.isrc || 'KE-TM1-26-00042'}</span>
                   </div>
-                  <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', padding: '1px 6px', borderRadius: '3px', fontSize: '0.62rem', fontWeight: 800 }}>
-                      Lossless FLAC / MP3 • 320kbps
+                  <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <span data-no-i18n="true" data-testid="hifi-credit-badge" style={{
+                      background: hasCredits ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.15)',
+                      color: hasCredits ? '#22c55e' : '#f59e0b',
+                      border: hasCredits ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(245,158,11,0.3)',
+                      padding: '1px 6px',
+                      borderRadius: '3px',
+                      fontSize: '0.62rem',
+                      fontWeight: 800
+                    }}>
+                      {hasCredits ? 'Lossless FLAC • Master Unlocked' : 'Free Preview (30s limit)'}
+                    </span>
+                    <span style={{ fontSize: '0.68rem', color: hasCredits ? 'var(--cyan)' : '#94a3b8', fontWeight: hasCredits ? 800 : 400 }}>
+                      {hasCredits ? `${userCredits.toLocaleString()} credits` : '0 credits (preview)'}
                     </span>
                     <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
-                      Track {safeIndex + 1} of {tracks.length || 1}
+                      • Track {safeIndex + 1} of {tracks.length || 1}
                     </span>
                   </div>
                 </div>
               </div>
+
+              {/* 30s Preview Expiration Alert */}
+              {previewLimitReached && !hasCredits && (
+                <div data-no-i18n="true" data-testid="preview-limit-alert" style={{
+                  padding: '8px 12px',
+                  borderRadius: '3px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid #ef4444',
+                  color: '#f8fafc',
+                  fontSize: '0.74rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px'
+                }}>
+                  <span style={{ fontWeight: 700 }}>
+                    ⏱️ 30s free preview ended. Credits required for full track.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== 'undefined') window.location.hash = '#/pricing';
+                    }}
+                    style={{
+                      background: '#ef4444',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '3px',
+                      padding: '4px 8px',
+                      fontSize: '0.7rem',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Add Credits
+                  </button>
+                </div>
+              )}
 
               {/* Scrubber & Timers */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -461,19 +620,13 @@ export default function HiFiAudioPlayer({
                   <input
                     type="range"
                     min="0"
-                    max={trackDuration || 225}
+                    max={effectiveMaxDuration}
                     value={playbackProgress}
-                    onChange={(e) => {
-                      const newTime = Number(e.target.value);
-                      setPlaybackProgress(newTime);
-                      if (audioRef.current) {
-                        audioRef.current.currentTime = newTime;
-                      }
-                    }}
+                    onChange={(e) => handleSeek(Number(e.target.value))}
                     style={{ flex: 1, accentColor, cursor: 'pointer', height: '4px' }}
                   />
-                  <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontFamily: 'monospace', minWidth: '32px', textAlign: 'right' }}>
-                    {formatSec(trackDuration)}
+                  <span style={{ fontSize: '0.72rem', color: !hasCredits ? '#f59e0b' : '#94a3b8', fontFamily: 'monospace', minWidth: '32px', textAlign: 'right' }}>
+                    {!hasCredits ? '0:30' : formatSec(trackDuration)}
                   </span>
                 </div>
               </div>
@@ -530,7 +683,7 @@ export default function HiFiAudioPlayer({
                   {/* Play / Pause */}
                   <button
                     type="button"
-                    onClick={() => onTogglePlay && onTogglePlay(!isPlaying)}
+                    onClick={handleTogglePlay}
                     title={isPlaying ? "Pause" : "Play"}
                     style={{
                       width: '40px',
