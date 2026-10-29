@@ -582,3 +582,33 @@ To reinforce our precision-engineered, tech-forward aesthetic:
 - Combines HTML5 `audio.currentTime` with `requestAnimationFrame` for buttery-smooth visual tracking.
 - Audio progress bars utilize smooth linear CSS interpolation (`transition: width 0.1s linear`), preventing jagged jumping.
 
+---
+
+## 16. Creator Profiles & Explore Card Navigation Architecture
+
+### A. Direct Card-to-Creator Navigation Flow
+- **Immediate Identity Association:** In Explore views (`NativeAppLandingView.jsx`), clicking an artist, label, DJ, or publisher content card routes the user directly to the creator's dedicated profile view (`/creator/:slug`), prioritizing the human/brand persona before deep album or EPK exploration.
+- **Header Removal for Maximum Vertical Real Estate:** To maximize functional screen space on the Creator Profile page, full-width top header images are omitted from the profile view (`CreatorProfileView.jsx`). Instead, a compact identity bar with a glowing cyan avatar (`border: 2px solid #00f0ff`, `border-radius: 3px`), verified badge, role indicator, stats, social links, and CTAs (Stream, EPK) sits at the top of the content container.
+
+### B. High-Contrast Select Dropdown Styling
+- **Anti-Invisibility Rule:** In dark mode layouts, standard HTML `<select>` elements must never use semi-transparent backgrounds without explicit background colors on child `<option>` elements. Native OS rendering can cause options to appear as white text on light backgrounds or black text on dark backgrounds.
+- **Standard Select Styling:**
+  ```jsx
+  <select style={{
+    background: '#090d1f',
+    color: '#ffffff',
+    border: '1px solid rgba(0, 240, 255, 0.3)',
+    borderRadius: '3px',
+    padding: '8px 12px'
+  }}>
+    <option style={{ background: '#090d1f', color: '#ffffff' }} value="...">...</option>
+  </select>
+  ```
+
+---
+
+## 17. Brand Language: "AI-Assisted" Standard
+
+- **Strict Terminology Standard:** Platform-wide, all copy, tooltips, buttons, headlines, and descriptions must use the terminology **"AI-Assisted"** (or **"Ai-Assisted"**) rather than **"AI-Powered"** / **"Ai-Powered"**.
+- **Philosophy:** Our tools empower human creators, music supervisors, and administrators by augmenting and assisting their creative vision rather than replacing or claiming autonomous mastery over human craft.
+

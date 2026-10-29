@@ -27,6 +27,7 @@ import listenHero from './assets/images/listen_hero.png';
 
 import NativeAppLandingView from './NativeAppLandingView';
 import CreatorEpkView from './views/creator/CreatorEpkView.jsx';
+import CreatorProfileView from './components/creator/CreatorProfileView.jsx';
 import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx';
 import CreditReloadModal from './components/common/CreditReloadModal.jsx';
 import AppHelpAiControls from './components/common/AppHelpAiControls.jsx';
@@ -134,6 +135,7 @@ function AppContent() {
       >
         <Routes location={backgroundLocation}>
           <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/explore" element={<Navigate to="/?view=explore" replace />} />
           <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} initialTab="explore" onLogout={handleLogout} />} />
           <Route path="/singles" element={<PlayerDashboard sessionUser={sessionUser} initialTab="singles" onLogout={handleLogout} />} />
           <Route path="/artists" element={<PlayerDashboard sessionUser={sessionUser} initialTab="artists" onLogout={handleLogout} />} />
@@ -818,7 +820,14 @@ function TuneStreamExplorePanel({
                       style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} 
                     />
                     <div>
-                      <h4 data-no-i18n="true" style={{ margin: '0 0 4px', fontSize: '16px', color: '#fff', fontWeight: '800' }}>{artist.name}</h4>
+                      <h4 
+                        data-no-i18n="true" 
+                        style={{ margin: '0 0 4px', fontSize: '16px', color: '#fff', fontWeight: '800', cursor: 'pointer', textDecoration: 'underline text-decoration-color: rgba(34, 211, 238, 0.4)' }}
+                        onClick={() => setViewingCreatorProfile(artist)}
+                        title="View Creator Profile"
+                      >
+                        {artist.name}
+                      </h4>
                       <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '3px', fontWeight: 'bold' }}>
                         {artist.genre || 'Afro-fusion'}
                       </span>

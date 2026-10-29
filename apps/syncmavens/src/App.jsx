@@ -68,7 +68,7 @@ const EXTENSIVE_GENRES = [
 const SLIDES = [
   { 
     dot: '#00f2fe', 
-    badge: 'AI-Powered Sync Matching',
+    badge: 'AI-Assisted Sync Matching',
     hLine1: 'Pitch directly to',
     hLine2: 'Netflix & HBO',
     hLine2Color: '#00f2fe',

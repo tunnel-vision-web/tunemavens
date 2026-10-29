@@ -191,7 +191,7 @@ export default function AboutView() {
               <h3 className="about-eco-name">SyncMavens</h3>
               <span className="about-eco-role">Sync Licensing Platform</span>
               <p className="about-eco-desc">
-                The AI-powered licensing and sync placement engine for television, film, advertising, and video game music supervisors. Audition pre-cleared catalogs, parse natural-language script briefs, and clear rights instantly.
+                The AI-assisted licensing and sync placement engine for television, film, advertising, and video game music supervisors. Audition pre-cleared catalogs, parse natural-language script briefs, and clear rights instantly.
               </p>
               <ul className="about-eco-features">
                 <li><RiCheckboxCircleFill size={15} color="#f59e0b" /> Sync Brief AI Natural-Language Search</li>

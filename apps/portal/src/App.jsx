@@ -8607,6 +8607,7 @@ function AppContent({
               sessionUser={sessionUser}
             />
           } />
+          <Route path="/explore" element={<Navigate to="/native-apps/tunestream?view=explore" replace />} />
           <Route path="/for" element={<PerfectForPageView />} />
           <Route path="/for/:role" element={<RoleLandingView />} />
           <Route path="/pricing" element={<PricingView />} />

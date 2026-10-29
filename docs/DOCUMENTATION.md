@@ -1723,5 +1723,47 @@ To completely eliminate any remaining untranslated English words across all land
    - Nominalizations: `-ment`, `-tion`, `-ness`
 3. **Comprehensive Form & Attribute Translation**: Automatically translates `<input type="button|submit|reset">` values, `placeholder`, `title`, and `aria-label` accessibility attributes with real-time DOM mutation observer tracking.
 
+---
 
+## §9.44 — Explore Card Creator Routing, Dedicated Headers & AI-Assisted Generation Engine  ✅ SHIPPED
+
+### 9.44.1 Direct Creator Profile Card Routing
+To provide fans, curators, and industry partners with immediate context about creators before browsing catalogs:
+1. **Interactive Routing in Explore Views**: Clicking any music card, artist card, or catalog item in `NativeAppLandingView.jsx` across Portal and TuneStream navigates directly to the dedicated creator view (`/creator/{slug}`).
+2. **Comprehensive Profile Features (`CreatorProfileView.jsx`)**:
+   - Creator identity card: square avatar with neon cyan border, verified badge, creator role (Artist, DJ, Label, Publisher), genre tags, and listener statistics.
+   - Social & streaming integrations: direct links to Spotify, Apple Music, YouTube, SoundCloud, Instagram, Twitter/X, and Audiomack.
+   - Action CTAs: Direct buttons to listen on TuneStream, view the full Press Kit / EPK (`/epk/{slug}`), and follow/subscribe.
+   - Engagement: Interactive comment feed allowing listeners and curators to post feedback.
+   - Discography: Integrated track listing with full-length streaming playback.
+3. **Optimized Screen Real Estate**:
+   - Header image is excluded from the creator profile page to maximize viewport room for essential biography, social links, and discography.
+   - Distinct custom widescreen headers are reserved for the artist's full web world / EPK pages.
+
+### 9.44.2 Bespoke Creator Retina Headers & Custom Asset Catalog
+Generated unique, high-resolution retina headers (`2560x854`) tailored to the sonic and visual identity of each creator:
+- **`ndufo`** (`/headers/header_ndufo_custom.jpg`): Afro-futurist modular cyan/purple synthesizer studio.
+- **`khalid`** (`/headers/header_khalid_custom.jpg`): Sunset coastal deep house wave with warm amber and teal oceanic hues.
+- **`aisha`** (`/headers/header_aisha_custom.jpg`): Acoustic amber & soul live performance space with warm tungsten glows.
+- **`brian-omondi`** (`/headers/header_brian_custom.jpg`): Amapiano royal blue & magenta soundstage with analog log-drum instruments.
+- **`kiprono`** (`/headers/header_kiprono_custom.jpg`): Highland Rift Valley emerald folk-house sound lab with lush organic motifs.
+- **`nairobicybersound`** (`/headers/header_nairobicyber_custom.jpg`): Cyber label imprint hub with futuristic holographic consoles.
+- **`intermavenpublishing`** (`/headers/header_intermavenpub_custom.jpg`): Global sync & copyright administration headquarters.
+
+### 9.44.3 Backend AI-Assisted Header Generation API (`POST /api/epk/{subdomain}/edit-header-ai`)
+Allows creators and administrators to update or regenerate custom headers via natural language prompts:
+- **Endpoint**: `POST /api/epk/{subdomain}/edit-header-ai`
+- **Request Body**:
+  ```json
+  {
+    "prompt": "Vibrant synthwave sunset with Nairobi skyline and analog synthesizer racks",
+    "style": "cinematic",
+    "seed": 8492015
+  }
+  ```
+- **Pipeline**: Connects to the generative art pipeline with a 2560x854 retina aspect ratio, applies unsharp masking and sharpness enhancement, outputs a 96 DPI JPEG, deploys the asset across web client public directories (`apps/portal`, `apps/tunestream`, `apps/syncmavens`), and persists metadata to MongoDB collections `db.epks` and `db.creators`.
+
+### 9.44.4 Explore Page Dropdown Fixes & Platform-Wide "AI-Assisted" Terminology
+1. **Dropdown Visibility**: Fixed genre and sorting dropdowns in `NativeAppLandingView.jsx` by establishing a comprehensive `BASE_GENRES` array fallback and applying explicit `#090d1f` background styling on `<select>` and `<option>` elements, preventing invisible text rendering on Windows/Chromium browsers.
+2. **Global Language Shift**: Replaced all instances of "AI-Powered" / "Ai-Powered" with "AI-Assisted" / "Ai-Assisted" across marketing copy, navigation items, tool descriptions, and landing page registries.
 

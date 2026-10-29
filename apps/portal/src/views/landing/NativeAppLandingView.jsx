@@ -1,4 +1,5 @@
 import HiFiAudioPlayer from '../../components/player/HiFiAudioPlayer.jsx';
+import CreatorProfileView from '../../components/creator/CreatorProfileView.jsx';
 import { 
   AUTHORITATIVE_CATALOG_TRACKS, 
   AUTHORITATIVE_CATALOG_ARTISTS, 
@@ -407,6 +408,21 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const [exploreSort, setExploreSort] = useState('newest');
   const [activeHiFiTrack, setActiveHiFiTrack] = useState(null);
   const [isHiFiPlaying, setIsHiFiPlaying] = useState(false);
+  const creatorSlugParam = searchParams.get('creator');
+  const [selectedCreatorProfile, setSelectedCreatorProfile] = useState(null);
+
+  useEffect(() => {
+    if (creatorSlugParam) {
+      const match = (artists && artists.length > 0 ? artists : AUTHORITATIVE_CATALOG_ARTISTS).find(a => 
+        a.subdomain?.toLowerCase() === creatorSlugParam.toLowerCase() ||
+        a.id?.toLowerCase() === creatorSlugParam.toLowerCase() ||
+        a.name?.toLowerCase().replace(/[^a-z0-9]/g, '') === creatorSlugParam.toLowerCase()
+      );
+      if (match) {
+        setSelectedCreatorProfile(match);
+      }
+    }
+  }, [creatorSlugParam, artists]);
 
   useEffect(() => {
     fetch('/api/catalog/tracks?all=true')
@@ -1115,13 +1131,37 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     };
 
     const renderExplore = () => {
+      if (selectedCreatorProfile) {
+        return (
+          <CreatorProfileView
+            creator={selectedCreatorProfile}
+            tracks={tracks}
+            onBack={() => {
+              setSelectedCreatorProfile(null);
+              const sp = new URLSearchParams(location.search);
+              sp.delete('creator');
+              navigate(`?${sp.toString()}`, { replace: true });
+            }}
+            onPlayTrack={handlePlaySong}
+            onNavigateToEpk={(sub) => navigate(`/epk/${sub}`)}
+            sessionUser={sessionUser}
+          />
+        );
+      }
       const popularCreators = (artists && artists.length > 0 ? artists : AUTHORITATIVE_CATALOG_ARTISTS).map(a => ({
         id: a.id,
         name: a.name,
         role: a.role || 'Signed Creator',
         genre: a.genre || 'Afro-fusion',
-        listeners: a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners',
+        listeners: a.listeners || (a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners'),
         avatar: normalizeMediaUrl(a.avatar) || `/uploads/artwork/ndufo_cover.jpg`,
+        banner: a.banner,
+        bio: a.bio,
+        location: a.location,
+        socials: a.socials,
+        followers_count: a.followers_count,
+        subscribers_count: a.subscribers_count,
+        creator_type: a.creator_type,
         subdomain: a.subdomain
       }));
 
@@ -1153,11 +1193,26 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       const q = exploreSearch.toLowerCase().trim();
 
       // Collect available unique genres for filter dropdown
+      const BASE_GENRES = [
+        'Afrobeats',
+        'Afro-House',
+        'Deep-House',
+        'Afro-fusion',
+        'Amapiano',
+        'Afro-Tech',
+        'Kalenjin Folk-House',
+        'Contemporary Soul',
+        'Electronic',
+        'Hip-Hop',
+        'Pan-African'
+      ];
+
       const allGenres = Array.from(new Set([
+        ...BASE_GENRES,
         ...popularCreators.map(a => a.genre),
         ...popularSingles.map(s => s.genre),
         ...popularAlbums.map(al => al.genre)
-      ].filter(Boolean)));
+      ].filter(Boolean))).sort();
 
       // Build unified collection
       let combinedItems = [];
@@ -1256,6 +1311,41 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       const currentPage = Math.min(Math.max(1, explorePage), totalPages);
       const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
       const pageItems = combinedItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      const handleCardClick = (item) => {
+        let targetCreator = null;
+        if (item.kind === 'creator') {
+          targetCreator = item.data;
+        } else {
+          const artistName = item.data?.artist || item.title || '';
+          targetCreator = popularCreators.find(c => 
+            c.name.toLowerCase() === artistName.toLowerCase() ||
+            c.subdomain.toLowerCase() === artistName.toLowerCase().replace(/[^a-z0-9]/g, '')
+          );
+          if (!targetCreator) {
+            targetCreator = {
+              id: `art_${artistName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+              name: artistName,
+              creator_type: item.kind === 'album' ? 'artist' : 'artist',
+              role: 'Signed Recording Artist',
+              genre: item.genre || 'Afro-fusion',
+              bio: `${artistName} is an active creator in the TuneMavens ecosystem, producing high-fidelity lossless masters with automated split contracts and international sync clearance.`,
+              avatar: item.cover,
+              banner: item.cover,
+              location: 'Nairobi, Kenya',
+              listeners: '1.2M listeners',
+              followers_count: 85000,
+              subscribers_count: 22000,
+              subdomain: artistName.toLowerCase().replace(/[^a-z0-9]/g, '')
+            };
+          }
+        }
+        setSelectedCreatorProfile(targetCreator);
+        const sp = new URLSearchParams(location.search);
+        sp.set('creator', targetCreator.subdomain || targetCreator.id);
+        navigate(`?${sp.toString()}`, { replace: true });
+        window.scrollTo({ top: 320, behavior: 'smooth' });
+      };
 
       return (
         <div style={{ textAlign: 'center', width: '100%', maxWidth: '1240px', margin: '0 auto', boxSizing: 'border-box' }}>
@@ -1479,11 +1569,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   key={`${item.kind}_${item.id}_${idx}`} 
                   className="landing-feature-card" 
                   style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }} 
-                  onClick={() => {
-                    if (item.kind === 'creator') handleArtistClick(item.data);
-                    else if (item.kind === 'album') handlePlayAlbum(item.data);
-                    else handlePlaySong(item.data);
-                  }}
+                  onClick={() => handleCardClick(item)}
                 >
                   <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '12px', background: '#0e1424' }}>
                     <img 
@@ -1506,16 +1592,25 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                       {item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
                     </span>
                     {item.kind !== 'creator' && (
-                      <span style={{ position: 'absolute', bottom: '8px', right: '8px', width: '26px', height: '26px', borderRadius: '3px', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.kind === 'album') handlePlayAlbum(item.data);
+                          else handlePlaySong(item.data);
+                        }}
+                        style={{ position: 'absolute', bottom: '8px', right: '8px', width: '28px', height: '28px', borderRadius: '3px', background: 'rgba(0,0,0,0.75)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                        title="Quick Audio Preview"
+                      >
                         <RiPlayFill size={15} color="#00f2fe" />
-                      </span>
+                      </button>
                     )}
                   </div>
                   <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: '700', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</h3>
                   <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subtitle}</p>
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                     <span style={{ color: 'var(--mu)', fontFamily: item.kind === 'single' ? 'monospace' : 'inherit' }}>{item.metaLeft}</span>
-                    <span style={{ color: item.kind === 'creator' ? 'var(--cyan)' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold' }}>{item.metaRight}</span>
+                    <span style={{ color: item.kind === 'creator' ? 'var(--cyan)' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold' }}>View Creator Profile &rarr;</span>
                   </div>
                 </div>
               ))}
@@ -2073,8 +2168,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   };
 
   const handleArtistClick = (artist) => {
-    const sub = artist.subdomain || (artist.name ? artist.name.toLowerCase().replace(/\s+/g, '') : 'ndufo');
-    navigate(`/epk/${sub}`);
+    setSelectedCreatorProfile(artist);
+    const sp = new URLSearchParams(location.search);
+    sp.set('view', 'explore');
+    sp.set('creator', artist.subdomain || (artist.name ? artist.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'ndufo'));
+    navigate(`?${sp.toString()}`);
   };
 
   const handlePlayAlbum = (album) => {
