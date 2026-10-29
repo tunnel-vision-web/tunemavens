@@ -980,7 +980,7 @@ export default function CreatorProfileView({
                 <img
                   src={activeProfilePic}
                   alt={creator.name}
-                  onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg' }}
+                  onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -1166,7 +1166,7 @@ export default function CreatorProfileView({
                       <img
                         src={imgUrl}
                         alt={`Gallery shot ${idx + 1}`}
-                        onError={(e) => { e.currentTarget.src = '/headers/discography_retina_header.jpg' }}
+                        onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/headers/discography_retina_header.jpg'; }}
                         style={{
                           width: '100%',
                           height: '100%',
@@ -1496,7 +1496,7 @@ export default function CreatorProfileView({
                         <img
                           src={comment.avatar}
                           alt={comment.author}
-                          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100' }}
+                          onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'; }}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       </div>
@@ -1664,7 +1664,7 @@ export default function CreatorProfileView({
                   <img
                     src={currentHeaderUrl}
                     alt={`${creator.name} Header`}
-                    onError={(e) => { e.currentTarget.src = '/headers/discography_retina_header.jpg' }}
+                    onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/headers/discography_retina_header.jpg'; }}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
                   <div

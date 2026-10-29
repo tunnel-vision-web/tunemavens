@@ -46,7 +46,14 @@ app = FastAPI(title="Intermaven Network Unified API", version="1.0.0")
 validate_production_security()
 
 # Mount static uploads directory for media fallbacks
-uploads_dir = os.environ.get("LOCAL_UPLOADS_DIR", "uploads")
+uploads_dir = os.environ.get("LOCAL_UPLOADS_DIR")
+if not uploads_dir:
+    if os.path.exists("backend/uploads"):
+        uploads_dir = "backend/uploads"
+    elif os.path.exists("uploads"):
+        uploads_dir = "uploads"
+    else:
+        uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 

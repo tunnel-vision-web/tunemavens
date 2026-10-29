@@ -1724,7 +1724,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                       src={item.cover} 
                       alt={item.title} 
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
-                      onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
+                      onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
                     />
                     <span style={{ 
                       position: 'absolute', 

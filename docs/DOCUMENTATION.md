@@ -1775,3 +1775,14 @@ Allows creators and administrators to update or regenerate custom headers via na
    - **LiveEpkCmsStudio**: Dedicated "Bespoke Retina Header (2560x854)" section in the "Brand & Header" tab with prompt textarea, style presets, and live preview.
    - **DashboardCmsStudio**: Dedicated "Bespoke Retina Header Banner (AI-Assisted)" card in the "Page Header Banners" tab calling `POST /api/epk/{subdomain}/edit-header-ai`.
 
+
+### 9.44.6 Bespoke Profile Page Header, Explore Custom Dropdowns & 404 Fallback Loop Prevention
+1. **Dynamic Creator Header on Profile Pages**:
+   - Replaced generic landing page header banners (`page-header-banner`) with the creator's bespoke widescreen retina header (`selectedCreatorProfile.headerImageUrl || /headers/header_${selectedCreatorProfile.subdomain}_custom.jpg`) when viewing any creator profile in both Portal and TuneStream.
+   - Features an integrated breadcrumb link back to Explore, creator verified badge, name overlay, role pills, and instant AI-Assisted header edit modal launcher.
+2. **ExploreCustomDropdown Component**:
+   - Replaced native `<select>` dropdowns in `NativeAppLandingView.jsx` with an accessible, high-contrast dark custom dropdown component (`ExploreCustomDropdown`).
+   - Styled with `#090d1f` background, 1.5px `#22d3ee` cyan borders, active checkmark icons (`RiCheckFill`), click-outside listeners, and `data-no-i18n="true"` to prevent mutation or text erasure by external Google Translate extensions.
+3. **Infinite 404 Fallback Loop Prevention**:
+   - Created genuine square fallback artwork `/uploads/artwork/ndufo_cover.jpg` across all frontends (`apps/portal/public`, `apps/tunestream/public`, `apps/syncmavens/public`) and backend mounts (`uploads/artwork`, `backend/uploads/artwork`).
+   - Hardened all `onError` handlers across `CreatorProfileView.jsx`, `HiFiAudioPlayer.jsx`, and `NativeAppLandingView.jsx` with dataset guards (`if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true';`), completely eliminating recursive image 404 loops in the browser console.

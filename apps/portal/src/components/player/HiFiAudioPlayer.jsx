@@ -431,7 +431,7 @@ export default function HiFiAudioPlayer({
               <img
                 src={normalizeMediaUrl(currentTrack.cover || currentTrack.coverArt)}
                 alt={currentTrack.title}
-                onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
+                onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
                 style={{ width: '36px', height: '36px', borderRadius: '3px', objectFit: 'cover', border: `1px solid ${accentColor}44` }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -526,7 +526,7 @@ export default function HiFiAudioPlayer({
                   <img
                     src={normalizeMediaUrl(currentTrack.cover || currentTrack.coverArt)}
                     alt={currentTrack.title}
-                    onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
+                    onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
                     style={{
                       width: '52px',
                       height: '52px',
