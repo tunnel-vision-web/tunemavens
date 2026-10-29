@@ -1786,3 +1786,22 @@ Allows creators and administrators to update or regenerate custom headers via na
 3. **Infinite 404 Fallback Loop Prevention**:
    - Created genuine square fallback artwork `/uploads/artwork/ndufo_cover.jpg` across all frontends (`apps/portal/public`, `apps/tunestream/public`, `apps/syncmavens/public`) and backend mounts (`uploads/artwork`, `backend/uploads/artwork`).
    - Hardened all `onError` handlers across `CreatorProfileView.jsx`, `HiFiAudioPlayer.jsx`, and `NativeAppLandingView.jsx` with dataset guards (`if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true';`), completely eliminating recursive image 404 loops in the browser console.
+
+### 9.44.7 Consumer Support & Community Hub, Relative Blog, Knowledge Base & Plan Options
+1. **Consumer-Targeted Support and Community Hub (`ConsumerSupportCommunityView.jsx`)**:
+   - Designed specifically for everyday music consumers, listeners, and audiophiles under `/help`, `/blog`, `/support`, or `?view=help`.
+   - Unified 3-tab layout:
+     - 📚 **Knowledge Base & Documentation**: 8 categories (Getting Started, Audio Quality & HiFi, Offline Downloads, Credits & Tipping, Playlists & Crates, Plans & Billing, Devices & In-Car, Privacy & Security) with search filtering, step-by-step instructions, guide feedback rating, and expandable FAQs.
+     - 📰 **Consumer Music & Sound Blog**: Relative consumer articles focusing on lossless 24-bit FLAC acoustics, direct artist tipping economics, modern African music culture, budget DAC/IEM hardware guides, and crate curation. Features interactive likes counters, live comments feed, and URL copy sharing.
+     - 🎫 **Support Tickets Desk**: Incorporates the exact same 24/7 AI-Assisted `SupportTicketsPanel.jsx` as TuneMavens, enabling one-click filing of streaming defects, offline cache hold resolutions, credit reload verifications, and claims triage.
+2. **Landing Page Membership Plans Section (`#plans-section`)**:
+   - Re-introduced the comprehensive tiered membership section on the TuneStream landing page.
+   - Monthly vs Annual billing toggle with 20% annual savings badge.
+   - Region-aware pricing formatted via `RegionContext` (`formatPrice`).
+   - 4 High-contrast dark cards adhering strictly to brand guidelines (3px border radius, `#090d1f` background, solid border accents, zero pill gradients):
+     - **TuneStream Free**: $0 / Free Forever, ad-supported, 150 shared registration credits, 160kbps standard streaming, crate building, and creator following.
+     - **HiFi Individual**: $4.99/mo (or $3.99/mo annual), Lossless 24-bit / 48kHz FLAC master audio, 100% ad-free, 8GB smart offline library caching, direct creator tipping enabled, 500 bonus credits/month, bit-perfect DAC pass, unlimited skips.
+     - **TuneStream Duo**: $7.99/mo (or $6.39/mo annual), 2 independent accounts, weekly shared Duo Mix playlist, 2 devices with 8GB offline storage each, 1,000 monthly credits.
+     - **TuneStream Family**: $9.99/mo (or $7.99/mo annual), up to 6 independent accounts, parental controls & explicit lyrics filter, Family Mix playlist, 6 offline devices, 1,500 monthly credits.
+   - Student 50% discount verification banner ($2.49/mo).
+   - Full Feature Comparison matrix table and interactive billing FAQ accordion.

@@ -1,3 +1,4 @@
+import ConsumerSupportCommunityView from './components/community/ConsumerSupportCommunityView.jsx';
 import HiFiAudioPlayer from './components/player/HiFiAudioPlayer.jsx';
 import CreatorProfileView from './components/creator/CreatorProfileView.jsx';
 import { 
@@ -549,6 +550,9 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const [isHiFiPlaying, setIsHiFiPlaying] = useState(false);
   const creatorSlugParam = searchParams.get('creator');
   const [selectedCreatorProfile, setSelectedCreatorProfile] = useState(null);
+  const { formatPrice, currencyInfo } = useRegion();
+  const [planBillingCycle, setPlanBillingCycle] = useState('monthly');
+  const [planFaqOpenIndex, setPlanFaqOpenIndex] = useState(-1);
 
   useEffect(() => {
     if (creatorSlugParam) {
@@ -673,6 +677,16 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   }, [autoplay, playerPlaying]);
 
   const scrollToSection = (id) => {
+    if (view !== 'listen') {
+      const sp = new URLSearchParams(location.search);
+      sp.set('view', 'listen');
+      navigate(`?${sp.toString()}`);
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+      return;
+    }
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -1044,7 +1058,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         apps: { title: 'TuneStream Apps', breadcrumb: 'Apps' },
         free: { title: 'TuneStream Free', breadcrumb: 'Plans / Free' },
         premium: { title: 'TuneStream Premium', breadcrumb: 'Plans / Premium' },
-        help: { title: 'Support & Community', breadcrumb: 'Support' }
+        plans: { title: 'Membership & Access Plans', breadcrumb: 'Plans' },
+        help: { title: 'Support & Community', breadcrumb: 'Support & Docs' },
+        blog: { title: 'Consumer Music & Sound Blog', breadcrumb: 'Community / Blog' },
+        support: { title: 'Support Tickets & Claims Desk', breadcrumb: 'Support Desk' },
+        tickets: { title: 'Support Tickets & Claims Desk', breadcrumb: 'Support Desk' }
       };
 
       const meta = headerMeta[view] || { title: 'TuneStream', breadcrumb: 'Portal' };
@@ -1145,6 +1163,468 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         </div>
       );
     };
+
+
+    const renderPlansSection = () => {
+      const isAnnual = planBillingCycle === 'annual';
+
+      const plans = [
+        {
+          id: 'free',
+          name: 'TuneStream Free',
+          badge: 'Free Forever',
+          badgeColor: '#10b981',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          priceDisplay: '$0',
+          period: 'forever',
+          subtext: 'No credit card required',
+          desc: 'Ad-supported music streaming with essential playlist crates and 150 shared registration credits.',
+          features: [
+            'Ad-supported listening experience',
+            '150 shared Intermaven Network credits',
+            'Standard 160kbps audio streaming',
+            'Mobile & Web player access',
+            'Create & share custom playlist crates',
+            'Follow creators and comment on releases'
+          ],
+          cta: 'Start Listening Free',
+          ctaStyle: {
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            color: '#fff'
+          },
+          targetRoute: '/register?plan=free'
+        },
+        {
+          id: 'individual',
+          name: 'HiFi Individual',
+          badge: 'Most Popular • Lossless 24-bit',
+          badgeColor: '#22d3ee',
+          border: '2px solid #22d3ee',
+          boxShadow: '0 0 24px rgba(34, 211, 238, 0.25)',
+          priceDisplay: formatPrice ? formatPrice(isAnnual ? 3.99 : 4.99) : (isAnnual ? '$3.99' : '$4.99'),
+          period: isAnnual ? '/ month, billed annually' : '/ month',
+          subtext: isAnnual ? 'Save 20% compared to monthly' : 'Flexible monthly cancellation',
+          desc: 'For solo listeners who demand studio master fidelity and direct mid-listen creator tipping.',
+          features: [
+            'Lossless Studio 24-bit / 48kHz FLAC master audio',
+            '100% Ad-Free uninterrupted playback',
+            '8GB Smart offline library caching',
+            'Direct creator tipping enabled (bypasses pools)',
+            '500 bonus network credits every month',
+            'Bit-perfect DAC output & 10-band studio EQ',
+            'Unlimited track skips & full lyrics display'
+          ],
+          cta: 'Get HiFi Individual',
+          ctaStyle: {
+            background: '#22d3ee',
+            border: 'none',
+            color: '#060813',
+            boxShadow: '0 0 16px rgba(34, 211, 238, 0.4)'
+          },
+          targetRoute: '/register?plan=individual'
+        },
+        {
+          id: 'duo',
+          name: 'TuneStream Duo',
+          badge: 'For 2 Listeners',
+          badgeColor: '#a855f7',
+          border: '1px solid rgba(168, 85, 247, 0.5)',
+          priceDisplay: formatPrice ? formatPrice(isAnnual ? 6.39 : 7.99) : (isAnnual ? '$6.39' : '$7.99'),
+          period: isAnnual ? '/ month, billed annually' : '/ month',
+          subtext: '2 independent accounts under 1 bill',
+          desc: 'Two independent premium accounts for couples or housemates with personalized mix crates.',
+          features: [
+            '2 separate, private accounts with personal crates',
+            'Shared Duo Mix playlist updated weekly',
+            '2 devices with 8GB offline storage each',
+            'Lossless 24-bit FLAC audio for both listeners',
+            '1,000 shared network credits every month',
+            'Direct creator tipping for both accounts'
+          ],
+          cta: 'Get Duo Plan',
+          ctaStyle: {
+            background: '#a855f7',
+            border: 'none',
+            color: '#fff',
+            boxShadow: '0 0 16px rgba(168, 85, 247, 0.3)'
+          },
+          targetRoute: '/register?plan=duo'
+        },
+        {
+          id: 'family',
+          name: 'TuneStream Family',
+          badge: 'Up to 6 Accounts',
+          badgeColor: '#f59e0b',
+          border: '1px solid rgba(245, 158, 11, 0.5)',
+          priceDisplay: formatPrice ? formatPrice(isAnnual ? 7.99 : 9.99) : (isAnnual ? '$7.99' : '$9.99'),
+          period: isAnnual ? '/ month, billed annually' : '/ month',
+          subtext: 'For households with up to 6 members',
+          desc: 'Up to 6 standalone premium accounts with parental controls and a blended Family Mix crate.',
+          features: [
+            'Up to 6 independent accounts for family members',
+            'Parental explicit lyrics filter toggle',
+            'Family Mix playlist blending tracks everyone loves',
+            'Up to 6 devices with offline caching',
+            '1,500 shared network credits every month',
+            'Lossless 24-bit studio FLAC for the entire house'
+          ],
+          cta: 'Get Family Plan',
+          ctaStyle: {
+            background: '#f59e0b',
+            border: 'none',
+            color: '#060813',
+            boxShadow: '0 0 16px rgba(245, 158, 11, 0.3)'
+          },
+          targetRoute: '/register?plan=family'
+        }
+      ];
+
+      const comparisonMatrix = [
+        { feature: 'Audio Streaming Quality', free: 'Standard (160kbps)', ind: 'Lossless 24-Bit FLAC', duo: 'Lossless 24-Bit FLAC', fam: 'Lossless 24-Bit FLAC' },
+        { feature: 'Ad-Free Playback', free: 'No (Ad-supported)', ind: 'Yes (100% Ad-Free)', duo: 'Yes (100% Ad-Free)', fam: 'Yes (100% Ad-Free)' },
+        { feature: 'Offline Library Caching', free: 'None', ind: '8GB Smart Cache', duo: '8GB per Account', fam: '8GB per Account' },
+        { feature: 'Direct Creator Tipping', free: 'Disabled', ind: 'Enabled', duo: 'Enabled', fam: 'Enabled' },
+        { feature: 'Monthly Network Credits', free: '150 (one-time)', ind: '500 / month', duo: '1,000 / month', fam: '1,500 / month' },
+        { feature: 'Independent Accounts', free: '1 Account', ind: '1 Account', duo: '2 Accounts', fam: 'Up to 6 Accounts' },
+        { feature: 'Studio EQ & Bit-Perfect DAC', free: 'Basic', ind: '10-Band + DAC pass', duo: '10-Band + DAC pass', fam: '10-Band + DAC pass' },
+        { feature: 'Unlimited Skips & Lyrics', free: 'Limited skips', ind: 'Unlimited', duo: 'Unlimited', fam: 'Unlimited' },
+      ];
+
+      const planFaqs = [
+        { q: 'Can I switch between plans at any time?', a: 'Yes! You can upgrade, downgrade, or switch between monthly and annual billing at any point from your Billing settings. Upgrades apply immediately with prorated credits.' },
+        { q: 'How does direct artist tipping work with my subscription?', a: "Every Premium plan includes monthly bonus Intermaven Network Credits. While streaming, tap \'Tip Artist\' to send credits directly to the creator\'s verified split wallet." },
+        { q: 'Do Duo and Family members share listening history or playlists?', a: 'Never. Each member gets their own private login credentials, library, favorite artists, and custom recommendations.' },
+        { q: 'What happens if I cancel my subscription?', a: 'If you cancel, you will keep all Premium perks until the end of your billing cycle. After that, your account transitions gracefully to TuneStream Free without losing any playlists.' }
+      ];
+
+      return (
+        <section id="plans-section" style={{ marginTop: '70px', marginBottom: '60px', textAlign: 'center', scrollMarginTop: '100px' }}>
+          {/* Section Header */}
+          <div style={{ maxWidth: '800px', margin: '0 auto 36px auto' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(34, 211, 238, 0.08)',
+              border: '1px solid rgba(34, 211, 238, 0.25)',
+              padding: '6px 14px',
+              borderRadius: '3px',
+              fontSize: '11px',
+              fontWeight: '700',
+              color: '#22d3ee',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              marginBottom: '14px'
+            }}>
+              <RiCoinsFill size={14} /> Membership &amp; Access Tiers
+            </div>
+
+            <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#fff', margin: '0 0 12px 0', letterSpacing: '-0.02em' }}>
+              Choose Your Sound. Pick Your Plan.
+            </h2>
+            <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', margin: '0 0 28px 0' }}>
+              Experience master lossless audio, direct artist tipping, and 8GB offline caching. Prices adapt automatically to your local currency ({currencyInfo?.symbol || '$'}).
+            </p>
+
+            {/* Monthly / Annual Billing Toggle */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: '#090d1f',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '3px',
+              padding: '4px',
+              gap: '4px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setPlanBillingCycle('monthly')}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '3px',
+                  border: planBillingCycle === 'monthly' ? '1px solid #22d3ee' : '1px solid transparent',
+                  background: planBillingCycle === 'monthly' ? 'rgba(34, 211, 238, 0.15)' : 'transparent',
+                  color: planBillingCycle === 'monthly' ? '#22d3ee' : '#94a3b8',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Monthly Billing
+              </button>
+              <button
+                type="button"
+                onClick={() => setPlanBillingCycle('annual')}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '3px',
+                  border: planBillingCycle === 'annual' ? '1px solid #10b981' : '1px solid transparent',
+                  background: planBillingCycle === 'annual' ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
+                  color: planBillingCycle === 'annual' ? '#10b981' : '#94a3b8',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>Annual Billing</span>
+                <span style={{
+                  background: '#10b981',
+                  color: '#060813',
+                  fontSize: '10px',
+                  fontWeight: '900',
+                  padding: '1px 6px',
+                  borderRadius: '3px'
+                }}>
+                  SAVE 20%
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Plan Cards Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '24px',
+            marginBottom: '40px',
+            textAlign: 'left'
+          }}>
+            {plans.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  background: '#090d1f',
+                  border: p.border,
+                  boxShadow: p.boxShadow || '0 8px 24px rgba(0, 0, 0, 0.5)',
+                  borderRadius: '3px',
+                  padding: '28px 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  position: 'relative'
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      color: p.badgeColor,
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: `1px solid ${p.badgeColor}40`,
+                      padding: '3px 8px',
+                      borderRadius: '3px',
+                      textTransform: 'uppercase'
+                    }}>
+                      {p.badge}
+                    </span>
+                  </div>
+
+                  <h3 style={{ fontSize: '22px', fontWeight: '900', color: '#fff', margin: '0 0 10px 0' }}>
+                    {p.name}
+                  </h3>
+
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '32px', fontWeight: '900', color: '#fff' }}>
+                      {p.priceDisplay}
+                    </span>
+                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                      {p.period}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '16px' }}>
+                    {p.subtext}
+                  </div>
+
+                  <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', margin: '0 0 24px 0', minHeight: '38px' }}>
+                    {p.desc}
+                  </p>
+
+                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '20px', marginBottom: '24px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '12px' }}>
+                      Included Features:
+                    </div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {p.features.map((feat, fIdx) => (
+                        <li key={fIdx} style={{ fontSize: '12.5px', color: '#e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                          <RiCheckFill size={15} color={p.badgeColor} style={{ flexShrink: 0, marginTop: '2px' }} />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate(p.targetRoute)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '3px',
+                    fontWeight: '800',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    ...p.ctaStyle
+                  }}
+                >
+                  {p.cta}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Student Discount Banner */}
+          <div style={{
+            background: 'rgba(34, 211, 238, 0.04)',
+            border: '1px solid rgba(34, 211, 238, 0.2)',
+            borderRadius: '3px',
+            padding: '16px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+            marginBottom: '50px',
+            textAlign: 'left'
+          }}>
+            <div>
+              <span style={{ fontSize: '13px', fontWeight: '800', color: '#22d3ee' }}>
+                🎓 University &amp; College Student Discount:
+              </span>
+              <span style={{ fontSize: '13px', color: '#cbd5e1', marginLeft: '8px' }}>
+                Full-time enrolled students receive 50% discount on HiFi Individual ({formatPrice ? formatPrice(2.49) : '$2.49'}/mo).
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/register?plan=student')}
+              style={{
+                background: 'rgba(34, 211, 238, 0.12)',
+                border: '1px solid #22d3ee',
+                color: '#22d3ee',
+                padding: '6px 14px',
+                borderRadius: '3px',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              Verify Student Status &rarr;
+            </button>
+          </div>
+
+          {/* Feature Comparison Table */}
+          <div style={{
+            background: '#090d1f',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '3px',
+            padding: '32px',
+            maxWidth: '1000px',
+            margin: '0 auto 50px auto',
+            overflowX: 'auto',
+            textAlign: 'left'
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: '0 0 20px 0', textAlign: 'center' }}>
+              Full Feature Comparison
+            </h3>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                  <th style={{ padding: '12px 16px', color: '#94a3b8', textAlign: 'left' }}>Feature</th>
+                  <th style={{ padding: '12px 16px', color: '#fff', textAlign: 'center' }}>Free</th>
+                  <th style={{ padding: '12px 16px', color: '#22d3ee', textAlign: 'center' }}>HiFi Individual</th>
+                  <th style={{ padding: '12px 16px', color: '#a855f7', textAlign: 'center' }}>Duo</th>
+                  <th style={{ padding: '12px 16px', color: '#f59e0b', textAlign: 'center' }}>Family</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonMatrix.map((row, rIdx) => (
+                  <tr key={rIdx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                    <td style={{ padding: '12px 16px', color: '#e2e8f0', fontWeight: '600' }}>{row.feature}</td>
+                    <td style={{ padding: '12px 16px', color: '#94a3b8', textAlign: 'center' }}>{row.free}</td>
+                    <td style={{ padding: '12px 16px', color: '#22d3ee', fontWeight: '700', textAlign: 'center' }}>{row.ind}</td>
+                    <td style={{ padding: '12px 16px', color: '#c084fc', textAlign: 'center' }}>{row.duo}</td>
+                    <td style={{ padding: '12px 16px', color: '#fcd34d', textAlign: 'center' }}>{row.fam}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Plan FAQs Accordion */}
+          <div style={{
+            background: '#090d1f',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '3px',
+            padding: '32px',
+            maxWidth: '860px',
+            margin: '0 auto',
+            textAlign: 'left'
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: '0 0 20px 0', textAlign: 'center' }}>
+              Plan &amp; Billing Inquiries
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {planFaqs.map((faq, fIdx) => {
+                const isOpen = planFaqOpenIndex === fIdx;
+                return (
+                  <div
+                    key={fIdx}
+                    style={{
+                      background: isOpen ? 'rgba(34, 211, 238, 0.04)' : 'rgba(255, 255, 255, 0.02)',
+                      border: isOpen ? '1px solid rgba(34, 211, 238, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
+                      borderRadius: '3px',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setPlanFaqOpenIndex(isOpen ? -1 : fIdx)}
+                      style={{
+                        width: '100%',
+                        padding: '14px 18px',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        textAlign: 'left',
+                        color: '#fff',
+                        fontSize: '13.5px',
+                        fontWeight: '700',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <span>{faq.q}</span>
+                      <span style={{ color: '#22d3ee', fontSize: '16px', fontWeight: 'bold' }}>
+                        {isOpen ? '−' : '+'}
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <div style={{ padding: '0 18px 14px 18px', fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6' }}>
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      );
+    };
+
 
     const renderListen = () => {
       const singlesList = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
@@ -1323,6 +1803,9 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 )}
               />
             </section>
+
+            {/* Plans & Membership Access Options */}
+            {renderPlansSection()}
           </div>
         </>
       );
@@ -2326,72 +2809,22 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       );
     };
 
-    const renderHelp = () => {
-      const musicFaqs = [
-        { q: "How are my TuneStream credits deducted?", a: "Credits are shared across the Intermaven network. For Premium accounts, standard listening deducts 1 credit per stream in Western regions and 0.1 credits in other regions. Tipping creators deducts credits equivalent to the tip amount." },
-        { q: "How do I download music for offline listening?", a: "Long-press any album or playlist, then tap 'Download'. You can configure your local cache limit (up to 8GB) in the Player & Devices settings menu." },
-        { q: "Does tipping really go directly to the artist?", a: "Yes. Mid-listen tips bypass traditional streaming distributors. They enter the Compensation Engine split cascade instantly, and funds are settled directly to creator wallets within 24 hours." },
-        { q: "Can I use my account on multiple devices?", a: "Yes. Your shared credits vault, library, and settings sync automatically across web players and our native iOS/Android applications." }
-      ];
-
-      const forumTopics = [
-        { title: "Audio Quality: FLAC vs. AAC on cellular data", replies: "24 replies", category: "General Discussion" },
-        { title: "Tip jar suggestions for independent labels", replies: "15 replies", category: "Creator Support" },
-        { title: "Off-grid performance in remote regions", replies: "38 replies", category: "Technical Help" }
-      ];
-
+    const renderHelp = (tab = 'docs') => {
       return (
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginBottom: '50px', maxWidth: '900px', margin: '0 auto 50px' }}>
-            <div style={{ textAlign: 'left' }}>
-              <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: '800', marginBottom: '20px', textAlign: 'center' }}>Frequently Asked Questions</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {musicFaqs.map((faq, idx) => (
-                  <div key={idx} className="faq-item glass-panel" style={{ padding: '20px', borderRadius: '3px' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>{faq.q}</h4>
-                    <p style={{ fontSize: '12px', color: 'var(--mu)', lineHeight: '1.5', margin: 0 }}>{faq.a}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'left' }}>
-              <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: '800', marginBottom: '20px', textAlign: 'center' }}>Community Forum Discussions</h3>
-              <div className="glass-panel" style={{ padding: '24px', borderRadius: '3px', marginBottom: '30px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {forumTopics.map((topic, idx) => (
-                    <div key={idx} style={{ borderBottom: idx < forumTopics.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none', paddingBottom: idx < forumTopics.length - 1 ? '12px' : 0 }}>
-                      <span style={{ fontSize: '10px', color: 'var(--cyan)', textTransform: 'uppercase', fontWeight: 'bold' }}>{topic.category}</span>
-                      <h4 style={{ fontSize: '13px', color: '#fff', margin: '4px 0', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => alert(`Opening topic: ${topic.title}`)}>{topic.title}</h4>
-                      <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{topic.replies}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: '800', marginBottom: '20px', textAlign: 'center' }}>Submit a Support Ticket</h3>
-              <div className="glass-panel" style={{ padding: '24px', borderRadius: '3px' }}>
-                <form onSubmit={(e) => { e.preventDefault(); alert('TuneStream support ticket submitted successfully!'); }}>
-                  <div className="form-group" style={{ marginBottom: '12px' }}>
-                    <label className="form-label" style={{ fontSize: '12px', color: '#fff', display: 'block', marginBottom: '4px' }}>Subject</label>
-                    <input type="text" placeholder="E.g. Offline download issue" className="form-control" style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff' }} required />
-                  </div>
-                  <div className="form-group" style={{ marginBottom: '12px' }}>
-                    <label className="form-label" style={{ fontSize: '12px', color: '#fff', display: 'block', marginBottom: '4px' }}>Description</label>
-                    <textarea rows="3" placeholder="Explain the problem..." className="form-control" style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', resize: 'none' }} required></textarea>
-                  </div>
-                  <button type="submit" className="btn-primary" style={{ width: '100%', padding: '10px', border: 'none', cursor: 'pointer', background: 'var(--green)' }}>
-                    Submit Ticket
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ConsumerSupportCommunityView
+          sessionUser={sessionUser}
+          catalogTracks={tracks}
+          initialSection={tab}
+          onBackToExplore={() => {
+            const sp = new URLSearchParams(location.search);
+            sp.set('view', 'explore');
+            navigate(`?${sp.toString()}`);
+          }}
+        />
       );
     };
 
-      const handlePlaySong = (song) => {
+    const handlePlaySong = (song) => {
     const match = (tracks && tracks.find(t => t.id === song.id || t.isrc === song.isrc || t.title === song.title)) || song;
     setActiveHiFiTrack(match);
     setIsHiFiPlaying(true);
@@ -2434,8 +2867,20 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
           return renderFreePlan();
         case 'premium':
           return renderPremiumPlan();
+        case 'plans':
+          return (
+            <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
+              {renderPlansSection()}
+            </div>
+          );
+        case 'blog':
+          return renderHelp('blog');
+        case 'support':
+        case 'tickets':
+          return renderHelp('tickets');
         case 'help':
-          return renderHelp();
+        case 'docs':
+          return renderHelp('docs');
         case 'listen':
         default:
           return renderListen();
@@ -2873,9 +3318,9 @@ function LandingFooter({ view }) {
               <div className="footer-links">
                 <Link to="?view=listen" className="footer-link">Listen Now</Link>
                 <Link to="/stream" className="footer-link">Web Player</Link>
-                <a href="#features" className="footer-link" onClick={() => alert('Features details coming soon')}>Features</a>
-                <Link to="?view=premium" className="footer-link">Premium Plan</Link>
-                <a href="#about" className="footer-link" onClick={() => alert('About section coming soon')}>About</a>
+                <Link to="?view=plans" className="footer-link">Membership Plans</Link>
+                <Link to="?view=apps" className="footer-link">Ecosystem Apps</Link>
+                <Link to="?view=playlists" className="footer-link">Playlists &amp; Crates</Link>
               </div>
             </div>
           </div>
@@ -2883,13 +3328,13 @@ function LandingFooter({ view }) {
           {/* Company links */}
           <div className="footer-col">
             <div style={{ display: 'inline-block', textAlign: 'left' }}>
-              <h4>Community</h4>
+              <h4>Support &amp; Community</h4>
               <div className="footer-links">
                 <a href="https://tunemavens.com" className="footer-link" target="_blank" rel="noreferrer">For Creators</a>
                 <Link to="?view=explore" className="footer-link">Discover Artists</Link>
-                <Link to="?view=playlists" className="footer-link">Playlists</Link>
-                <Link to="?view=help" className="footer-link">Support &amp; Help</Link>
-                <Link to="?view=help" className="footer-link">Contact</Link>
+                <Link to="?view=help" className="footer-link">Knowledge Base &amp; Docs</Link>
+                <Link to="?view=blog" className="footer-link">Music &amp; Sound Blog</Link>
+                <Link to="?view=support" className="footer-link">Support Tickets Desk</Link>
               </div>
             </div>
           </div>

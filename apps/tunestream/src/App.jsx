@@ -1,3 +1,4 @@
+import ConsumerSupportCommunityView from './components/community/ConsumerSupportCommunityView.jsx';
 import HiFiAudioPlayer from './components/player/HiFiAudioPlayer.jsx';
 import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
@@ -150,6 +151,13 @@ function AppContent() {
           <Route path="/dashboard" element={<PlayerDashboard sessionUser={sessionUser} initialTab="home" onLogout={handleLogout} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
+          <Route path="/help" element={<Navigate to="/?view=help" replace />} />
+          <Route path="/docs" element={<Navigate to="/?view=help" replace />} />
+          <Route path="/support" element={<Navigate to="/?view=support" replace />} />
+          <Route path="/blog" element={<Navigate to="/?view=blog" replace />} />
+          <Route path="/community/blog" element={<Navigate to="/?view=blog" replace />} />
+          <Route path="/plans" element={<Navigate to="/?view=plans" replace />} />
+          <Route path="/pricing" element={<Navigate to="/?view=plans" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
@@ -2121,7 +2129,12 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       case 'apps':
         return <EcosystemAppsPanel setActiveTab={setActiveTab} />;
       case 'support':
-        return <SupportTicketsPanel sessionUser={activeUser} />;
+        return <ConsumerSupportCommunityView sessionUser={activeUser} catalogTracks={catalogTracks} initialSection="tickets" />;
+      case 'help':
+      case 'docs':
+        return <ConsumerSupportCommunityView sessionUser={activeUser} catalogTracks={catalogTracks} initialSection="docs" />;
+      case 'blog':
+        return <ConsumerSupportCommunityView sessionUser={activeUser} catalogTracks={catalogTracks} initialSection="blog" />;
       case 'settings':
         return <TuneStreamSettingsPanel sessionUser={activeUser} onSwitchRole={handleSwitchRole} />;
       default:

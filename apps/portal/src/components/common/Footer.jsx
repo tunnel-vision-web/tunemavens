@@ -72,9 +72,9 @@ export default function Footer() {
                 <div className="footer-links">
                   <Link to="/native-apps/tunestream?view=listen" className="footer-link">Listen Now</Link>
                   <Link to="/stream" className="footer-link">Web Player</Link>
-                  <Link to="/tunestream/features" className="footer-link">Features</Link>
-                  <Link to="/native-apps/tunestream?view=premium" className="footer-link">Premium</Link>
-                  <Link to="/tunestream/about" className="footer-link">About</Link>
+                  <Link to="/native-apps/tunestream?view=plans" className="footer-link">Membership Plans</Link>
+                  <Link to="/native-apps/tunestream?view=apps" className="footer-link">Ecosystem Apps</Link>
+                  <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists &amp; Crates</Link>
                 </div>
               </div>
             </div>
@@ -82,14 +82,12 @@ export default function Footer() {
             {/* Company links */}
             <div className="footer-col">
               <div style={{ display: 'inline-block', textAlign: 'left' }}>
-                <h4>Community</h4>
+                <h4>Support &amp; Community</h4>
                 <div className="footer-links">
-                  <Link to="/tunestream/creators" className="footer-link">For Creators</Link>
                   <Link to="/native-apps/tunestream?view=explore" className="footer-link">Discover Artists</Link>
-                  <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
-                  <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
-                  <Link to="/help" className="footer-link">Support Desk</Link>
-                  <Link to="/community/blog" className="footer-link">Blog &amp; Articles</Link>
+                  <Link to="/native-apps/tunestream?view=help" className="footer-link">Knowledge Base &amp; Docs</Link>
+                  <Link to="/native-apps/tunestream?view=blog" className="footer-link">Music &amp; Sound Blog</Link>
+                  <Link to="/native-apps/tunestream?view=support" className="footer-link">Support Tickets Desk</Link>
                   <Link to="/affiliates" className="footer-link">Affiliate Programme</Link>
                 </div>
               </div>
@@ -157,9 +155,9 @@ export default function Footer() {
                 <div className="footer-links">
                   <Link to="/native-apps/tunestream?view=listen" className="footer-link">Listen Now</Link>
                   <Link to="/stream" className="footer-link">Web Player</Link>
-                  <Link to="/tunestream/features" className="footer-link">Features</Link>
-                  <Link to="/native-apps/tunestream?view=premium" className="footer-link">Premium</Link>
-                  <Link to="/tunestream/about" className="footer-link">About</Link>
+                  <Link to="/native-apps/tunestream?view=plans" className="footer-link">Membership Plans</Link>
+                  <Link to="/native-apps/tunestream?view=apps" className="footer-link">Ecosystem Apps</Link>
+                  <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists &amp; Crates</Link>
                 </div>
               </div>
             </div>
@@ -167,14 +165,12 @@ export default function Footer() {
             {/* Company links */}
             <div className="footer-col">
               <div style={{ display: 'inline-block', textAlign: 'left' }}>
-                <h4>Community</h4>
+                <h4>Support &amp; Community</h4>
                 <div className="footer-links">
-                  <Link to="/tunestream/creators" className="footer-link">For Creators</Link>
                   <Link to="/native-apps/tunestream?view=explore" className="footer-link">Discover Artists</Link>
-                  <Link to="/native-apps/tunestream?view=playlists" className="footer-link">Playlists</Link>
-                  <Link to="/help" className="footer-link">Knowledge Base &amp; Help</Link>
-                  <Link to="/help" className="footer-link">Support Desk</Link>
-                  <Link to="/community/blog" className="footer-link">Blog &amp; Articles</Link>
+                  <Link to="/native-apps/tunestream?view=help" className="footer-link">Knowledge Base &amp; Docs</Link>
+                  <Link to="/native-apps/tunestream?view=blog" className="footer-link">Music &amp; Sound Blog</Link>
+                  <Link to="/native-apps/tunestream?view=support" className="footer-link">Support Tickets Desk</Link>
                   <Link to="/affiliates" className="footer-link">Affiliate Programme</Link>
                 </div>
               </div>
