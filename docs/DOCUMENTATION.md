@@ -1767,3 +1767,11 @@ Allows creators and administrators to update or regenerate custom headers via na
 1. **Dropdown Visibility**: Fixed genre and sorting dropdowns in `NativeAppLandingView.jsx` by establishing a comprehensive `BASE_GENRES` array fallback and applying explicit `#090d1f` background styling on `<select>` and `<option>` elements, preventing invisible text rendering on Windows/Chromium browsers.
 2. **Global Language Shift**: Replaced all instances of "AI-Powered" / "Ai-Powered" with "AI-Assisted" / "Ai-Assisted" across marketing copy, navigation items, tool descriptions, and landing page registries.
 
+### 9.44.5 Wrapped Profile Bio, Interactive Gallery Carousel & AI Header Tooling
+1. **Prominent Profile Picture with Text Wrap**: Expanded the creator profile picture to 230px with `float: left` and `2px solid #22d3ee` cyan neon glow, allowing biography text to wrap around the photo in an editorial magazine layout.
+2. **Interactive Photo Gallery Carousel Row**: Positioned below the biography, a horizontal scrolling carousel renders creator thumbnails (`creator.images`). Clicking any thumbnail immediately sets it as the active main profile picture.
+3. **Multi-Surface AI-Assisted Header Editor**:
+   - **CreatorProfileView**: Direct "AI Header Studio" toolbar button launching the prompt-driven editor modal.
+   - **LiveEpkCmsStudio**: Dedicated "Bespoke Retina Header (2560x854)" section in the "Brand & Header" tab with prompt textarea, style presets, and live preview.
+   - **DashboardCmsStudio**: Dedicated "Bespoke Retina Header Banner (AI-Assisted)" card in the "Page Header Banners" tab calling `POST /api/epk/{subdomain}/edit-header-ai`.
+

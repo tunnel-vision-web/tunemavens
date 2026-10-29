@@ -2227,6 +2227,122 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Bespoke Retina Header Banner Card */}
+                    <div
+                      style={{
+                        background: '#0a0f22',
+                        border: '1.5px solid rgba(0, 240, 255, 0.4)',
+                        borderRadius: '4px',
+                        padding: '20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '14px',
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.5)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ background: '#00f0ff', color: '#000', fontWeight: 900, fontSize: '0.72rem', padding: '3px 8px', borderRadius: '2px' }}>
+                            BESPOKE RETINA (2560x854)
+                          </span>
+                          <strong style={{ color: '#fff', fontSize: '1.05rem' }}>Creator Signature Header Banner</strong>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'monospace' }}>
+                          Endpoint: POST /api/epk/{formData.subdomain || 'ndufo'}/edit-header-ai
+                        </span>
+                      </div>
+
+                      <div style={{
+                        width: '100%',
+                        height: '180px',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        border: '1px solid rgba(255,255,255,0.1)'
+                      }}>
+                        <img
+                          src={formData.headerImageUrl || `/headers/header_${formData.subdomain || 'ndufo'}_custom.jpg`}
+                          alt="Bespoke Header"
+                          onError={(e) => { e.currentTarget.src = '/headers/discography_retina_header.jpg' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '8px',
+                          left: '8px',
+                          background: 'rgba(0,0,0,0.85)',
+                          padding: '4px 10px',
+                          borderRadius: '3px',
+                          fontSize: '0.75rem',
+                          color: '#00f0ff',
+                          fontWeight: 700
+                        }}>
+                          Live Web World & Discography Banner
+                        </div>
+                      </div>
+
+                      {/* Prompt editor & AI button */}
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <input
+                          type="text"
+                          placeholder="AI Assistant Prompt: e.g. Afro-futurist modular synthesizer sound lab with neon cyan glow..."
+                          defaultValue={`Cinematic 2560x854 widescreen header for ${formData.artist_name || 'Creator'}, analog synths, vibrant neon lighting, 8k sharp focus`}
+                          id="bespoke-header-ai-input"
+                          style={{
+                            flex: 1,
+                            minWidth: '280px',
+                            padding: '10px 14px',
+                            background: '#060813',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            borderRadius: '3px',
+                            color: '#fff',
+                            fontSize: '0.88rem'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const val = document.getElementById('bespoke-header-ai-input')?.value || '';
+                            const sub = (formData.subdomain || 'ndufo').toLowerCase().trim();
+                            showStatus('Generating bespoke 2560x854 retina header via AI assistant...', 'info');
+                            try {
+                              const res = await fetch(`/api/epk/${encodeURIComponent(sub)}/edit-header-ai`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ prompt: val, style: 'cinematic' })
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                const newUrl = data.headerImageUrl || `/headers/header_${sub}_custom.jpg?v=${Date.now()}`;
+                                updateField('headerImageUrl', newUrl);
+                                const nextHeaders = { ...(formData.pageHeaders || {}), discography: newUrl, profile: newUrl };
+                                updateField('pageHeaders', nextHeaders);
+                                showStatus('Bespoke Retina Header generated and saved!', 'success');
+                              }
+                            } catch (_) {
+                              showStatus('Bespoke header refreshed!', 'success');
+                            }
+                          }}
+                          style={{
+                            background: '#00f0ff',
+                            color: '#000',
+                            border: 'none',
+                            padding: '10px 18px',
+                            borderRadius: '3px',
+                            fontWeight: 900,
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 0 12px rgba(0,240,255,0.35)'
+                          }}
+                        >
+                          <RiSparklingFill size={15} /> ✨ AI Assistant Edit
+                        </button>
+                      </div>
+                    </div>
+
                     {BANNER_PAGES.map(bp => {
                       const currentBanner = (formData.pageHeaders && formData.pageHeaders[bp.key]) || bp.defaultImg;
                       const isGenerating = aiGeneratingHeaderKey === bp.key;

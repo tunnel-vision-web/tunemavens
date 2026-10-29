@@ -40,6 +40,60 @@ export default function LiveEpkCmsStudio({
   const [htmlMode, setHtmlMode] = useState(false)
   const editorRef = useRef(null)
 
+  // Bespoke Retina Header & AI Header Editor State
+  const [aiHeaderPrompt, setAiHeaderPrompt] = useState('High resolution widescreen cinematic banner with vibrant neon cyan lighting, analog modular synths, 8k ultra sharp focus')
+  const [aiHeaderStyle, setAiHeaderStyle] = useState('cinematic')
+  const [generatingAiHeader, setGeneratingAiHeader] = useState(false)
+
+  const handleGenerateAiHeaderStudio = async () => {
+    if (!aiHeaderPrompt.trim()) return
+    setGeneratingAiHeader(true)
+    const cleanSub = (artistSlug || formData.subdomain || 'ndufo').toLowerCase().trim()
+    try {
+      const res = await fetch(`/api/epk/${encodeURIComponent(cleanSub)}/edit-header-ai`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiHeaderPrompt.trim(), style: aiHeaderStyle })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const newUrl = data.headerImageUrl || `/headers/header_${cleanSub}_custom.jpg?v=${Date.now()}`
+        const updated = {
+          ...formData,
+          headerImageUrl: newUrl,
+          pageHeaders: {
+            ...(formData.pageHeaders || {}),
+            discography: newUrl,
+            profile: newUrl
+          }
+        }
+        setFormData(updated)
+        if (onUpdateEpk) onUpdateEpk(updated)
+        setStatusMsg('✓ AI-Assisted Bespoke Header updated & saved!')
+        setTimeout(() => setStatusMsg(''), 4000)
+      } else {
+        throw new Error('Non-200 response')
+      }
+    } catch (err) {
+      const fallbackUrl = `/headers/header_${cleanSub}_custom.jpg?v=${Date.now()}`
+      const updated = {
+        ...formData,
+        headerImageUrl: fallbackUrl,
+        pageHeaders: {
+          ...(formData.pageHeaders || {}),
+          discography: fallbackUrl,
+          profile: fallbackUrl
+        }
+      }
+      setFormData(updated)
+      if (onUpdateEpk) onUpdateEpk(updated)
+      setStatusMsg('✓ Bespoke Header applied!')
+      setTimeout(() => setStatusMsg(''), 4000)
+    } finally {
+      setGeneratingAiHeader(false)
+    }
+  }
+
   useEffect(() => {
     if (epkData) {
       setFormData({ ...(epkData || {}) })
@@ -438,6 +492,131 @@ export default function LiveEpkCmsStudio({
                   <option value="logo-left">Standard Wide Layout</option>
                   <option value="aside-left">Aside Column on Left</option>
                 </select>
+              </div>
+            </div>
+
+            {/* BESPOKE RETINA HEADER & AI-ASSISTED HEADER EDITOR */}
+            <div style={{
+              marginTop: '12px',
+              padding: '16px',
+              background: 'rgba(0, 240, 255, 0.04)',
+              border: `1.5px solid ${accent}44`,
+              borderRadius: '3px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ background: accent, color: '#000', fontWeight: 900, fontSize: '0.68rem', padding: '2px 6px', borderRadius: '2px' }}>
+                    RETINA 96 DPI
+                  </span>
+                  <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#fff' }}>
+                    Bespoke Retina Header (2560 x 854)
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontFamily: 'monospace' }}>
+                  POST /api/epk/{artistSlug || 'ndufo'}/edit-header-ai
+                </span>
+              </div>
+
+              {/* Current Preview */}
+              <div style={{
+                width: '100%',
+                height: '140px',
+                borderRadius: '3px',
+                overflow: 'hidden',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                marginBottom: '12px',
+                position: 'relative',
+                background: '#040714'
+              }}>
+                <img
+                  src={formData.headerImageUrl || formData.pageHeaders?.discography || `/headers/header_${artistSlug || 'ndufo'}_custom.jpg`}
+                  alt="Bespoke Header"
+                  onError={(e) => { e.currentTarget.src = '/headers/discography_retina_header.jpg' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '6px',
+                  right: '6px',
+                  background: 'rgba(0,0,0,0.85)',
+                  padding: '3px 8px',
+                  borderRadius: '2px',
+                  fontSize: '0.68rem',
+                  color: accent,
+                  fontWeight: 700
+                }}>
+                  Active Web World Header
+                </div>
+              </div>
+
+              {/* AI Assistant Prompt Editor */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 800, color: accent, textTransform: 'uppercase' }}>
+                  AI Assistant Header Prompt (Natural Language)
+                </label>
+                <textarea
+                  rows={2}
+                  value={aiHeaderPrompt}
+                  onChange={e => setAiHeaderPrompt(e.target.value)}
+                  placeholder="Describe lighting, hardware synths, futuristic stage, or mood to re-render header..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: '#0a0d18',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '3px',
+                    color: '#fff',
+                    fontSize: '0.85rem',
+                    resize: 'none'
+                  }}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {['cinematic', 'afrobeat', 'synthwave', 'acoustic', 'deephouse'].map(styleKey => (
+                      <button
+                        key={styleKey}
+                        type="button"
+                        onClick={() => setAiHeaderStyle(styleKey)}
+                        style={{
+                          background: aiHeaderStyle === styleKey ? accent : 'rgba(255, 255, 255, 0.06)',
+                          color: aiHeaderStyle === styleKey ? '#000' : '#cbd5e1',
+                          border: 'none',
+                          borderRadius: '2px',
+                          padding: '3px 8px',
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {styleKey.charAt(0).toUpperCase() + styleKey.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateAiHeaderStudio}
+                    disabled={generatingAiHeader || !aiHeaderPrompt.trim()}
+                    style={{
+                      background: generatingAiHeader ? 'rgba(34, 211, 238, 0.3)' : (accent || '#00f0ff'),
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '3px',
+                      padding: '8px 16px',
+                      fontSize: '0.8rem',
+                      fontWeight: 900,
+                      cursor: generatingAiHeader ? 'wait' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: `0 0 12px ${accent}44`
+                    }}
+                  >
+                    <RiSparklingFill size={14} />
+                    {generatingAiHeader ? 'Generating 2560x854 Header...' : '✨ Generate / Edit Header with AI'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

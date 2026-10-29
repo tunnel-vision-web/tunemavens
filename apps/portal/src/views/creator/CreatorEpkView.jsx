@@ -273,6 +273,9 @@ export function CreatorEpkView(props = {}) {
     if (epkData?.headerImage) return epkData.headerImage
     if (epkData?.header_image_url) return epkData.header_image_url
     if (Array.isArray(epkData?.headerImages) && epkData.headerImages.length > 0) return epkData.headerImages[0]
+    if (artistSlug) {
+      return `/headers/header_${artistSlug}_custom.jpg`
+    }
     return DEFAULT_PAGE_HEADERS[pageKey] || currentSlide?.img || heroSlide1
   }
 

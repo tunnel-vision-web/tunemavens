@@ -612,3 +612,8 @@ To reinforce our precision-engineered, tech-forward aesthetic:
 - **Strict Terminology Standard:** Platform-wide, all copy, tooltips, buttons, headlines, and descriptions must use the terminology **"AI-Assisted"** (or **"Ai-Assisted"**) rather than **"AI-Powered"** / **"Ai-Powered"**.
 - **Philosophy:** Our tools empower human creators, music supervisors, and administrators by augmenting and assisting their creative vision rather than replacing or claiming autonomous mastery over human craft.
 
+### C. Artist Profile Picture & Photo Gallery Architecture
+- **Editorial Wrapped Bio Layout:** In `CreatorProfileView.jsx`, the artist profile picture is rendered prominently at `230px x 230px` (sharp `3px` border radius, `2px solid #22d3ee`, neon cyan glow shadow), floated to the left (`float: left; margin: 0 22px 16px 0;`). The creator's biography and artistic statement wrap naturally around the image, creating a premium editorial magazine aesthetic.
+- **Creator Images Carousel Row:** Below the bio, an interactive horizontal photo gallery strip (`130px x 92px` thumbnails) provides navigation between alternate artist press shots, live tour stills, and studio sessions. Clicking any thumbnail dynamically updates the active main profile picture with instant visual indicator (`ACTIVE` badge, cyan glow) and high-contrast toast notification.
+- **AI Header Studio Integration:** Front-and-center AI Header Studio modal accessible directly from the creator profile toolbar and CMS panels, enabling prompt-based 2560x854 retina header re-generation.
+

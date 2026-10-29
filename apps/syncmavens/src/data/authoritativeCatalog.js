@@ -28,6 +28,13 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     },
     "is_default": true,
     "created_at": "2026-09-14T18:49:58.207000",
+    "images": [
+    "/heroes/ndufo_hero_slide1_retina.jpg",
+    "/headers/header_ndufo_custom.jpg",
+    "/heroes/ndufo_hero_slide2_retina.jpg",
+    "/heroes/ndufo_hero_slide3_retina.jpg",
+    "/headers/discography_retina_header.jpg"
+],
     "headerImageUrl": "/headers/header_ndufo_custom.jpg"
   },
   {
@@ -53,6 +60,13 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     },
     "is_default": false,
     "created_at": "2026-09-14T18:49:58.207000",
+    "images": [
+    "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
+    "/headers/header_khalid_custom.jpg",
+    "/heroes/ndufo_hero_slide2_retina.jpg",
+    "/headers/discography_retina_header.jpg",
+    "/heroes/ndufo_hero_slide1_retina.jpg"
+],
     "headerImageUrl": "/headers/header_khalid_custom.jpg"
   },
   {
@@ -78,6 +92,13 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     },
     "is_default": false,
     "created_at": "2026-09-14T18:49:58.207000",
+    "images": [
+    "/uploads/ai_assets/retina_art_1908250_2560x1440.jpg",
+    "/headers/header_aisha_custom.jpg",
+    "/heroes/ndufo_hero_slide3_retina.jpg",
+    "/headers/discography_retina_header.jpg",
+    "/heroes/ndufo_hero_slide2_retina.jpg"
+],
     "headerImageUrl": "/headers/header_aisha_custom.jpg"
   },
   {
@@ -102,6 +123,13 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     },
     "is_default": false,
     "created_at": "2026-09-14T18:49:58.207000",
+    "images": [
+    "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+    "/headers/header_brian_custom.jpg",
+    "/heroes/ndufo_hero_slide1_retina.jpg",
+    "/headers/discography_retina_header.jpg",
+    "/heroes/ndufo_hero_slide3_retina.jpg"
+],
     "headerImageUrl": "/headers/header_brian_custom.jpg"
   },
   {
@@ -128,6 +156,13 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     "created_at": "2026-09-14T21:02:16.481000",
     "owner_id": "6a58faf0c6664302e7bda673",
     "updated_at": "2026-09-14T21:02:16.481000",
+    "images": [
+    "/headers/discography_retina_header.jpg",
+    "/headers/header_kiprono_custom.jpg",
+    "/heroes/ndufo_hero_slide2_retina.jpg",
+    "/uploads/artwork/4134be1c-3837-4d7a-b223-faaa087aa55e.jpg",
+    "/heroes/ndufo_hero_slide1_retina.jpg"
+],
     "headerImageUrl": "/headers/header_kiprono_custom.jpg"
   },
   {
@@ -153,6 +188,13 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     },
     "is_default": false,
     "created_at": "2026-09-14T21:02:16.481000",
+    "images": [
+    "/uploads/artwork/8be9eb1b-f7ee-4a8e-a9d0-c3fe0ba4feea.jpg",
+    "/headers/header_nairobicyber_custom.jpg",
+    "/heroes/ndufo_hero_slide3_retina.jpg",
+    "/headers/discography_retina_header.jpg",
+    "/heroes/ndufo_hero_slide1_retina.jpg"
+],
     "headerImageUrl": "/headers/header_nairobicyber_custom.jpg"
   },
   {
@@ -177,6 +219,13 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     },
     "is_default": false,
     "created_at": "2026-09-14T21:02:16.481000",
+    "images": [
+    "/uploads/artwork/d48d0a32-15a9-467f-94ad-737bf601f7aa.jpg",
+    "/headers/header_intermavenpub_custom.jpg",
+    "/heroes/ndufo_hero_slide2_retina.jpg",
+    "/headers/discography_retina_header.jpg",
+    "/heroes/ndufo_hero_slide3_retina.jpg"
+],
     "headerImageUrl": "/headers/header_intermavenpub_custom.jpg"
   }
 ];
