@@ -2,7 +2,7 @@
 Write-Host "Starting TuneMavens Ecosystem Services..." -ForegroundColor Cyan
 
 # 1. FastAPI Backend (Port 8001)
-Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--port", "8001", "--reload" -WorkingDirectory "c:\BOCM\Apps\tunemavens\backend" -WindowStyle Hidden
+Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--reload" -WorkingDirectory "c:\BOCM\Apps\tunemavens" -WindowStyle Hidden
 
 # 2. Portal (Port 3000)
 Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\portal" -WindowStyle Hidden
