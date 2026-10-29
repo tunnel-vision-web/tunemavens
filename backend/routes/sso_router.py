@@ -175,3 +175,53 @@ def token_exchange(payload: TokenExchangeRequest):
     access_token = create_access_token(sub=str(user["_id"]))
     return TokenResponse(access_token=access_token)
 
+
+
+class SwitchRoleRequest(BaseModel):
+    role: str
+
+
+@router.get("/userinfo")
+def get_userinfo(current_user: dict = Depends(get_current_user)):
+    """OIDC UserInfo endpoint returning canonical user profile across all apps."""
+    return {
+        "sub": str(current_user["_id"]),
+        "id": str(current_user["_id"]),
+        "name": current_user.get("name"),
+        "email": current_user.get("email"),
+        "role": current_user.get("role", "creator"),
+        "roles": current_user.get("roles", ["creator"]),
+        "credits": current_user.get("credits", 0),
+        "country": current_user.get("country", "KE"),
+        "brand_name": current_user.get("brand_name"),
+        "apps": current_user.get("apps", []),
+    }
+
+
+@router.post("/switch-role")
+def switch_active_role(payload: SwitchRoleRequest, current_user: dict = Depends(get_current_user)):
+    """Switches active session role among user's allowed roles."""
+    target_role = payload.role.lower().strip()
+    allowed_roles = list(current_user.get("roles", [current_user.get("role", "creator")]))
+
+    valid_canonical = ["creator", "label", "dj", "media_house", "media-house", "exec", "supervisor", "consumer", "corporate", "admin"]
+    if target_role not in valid_canonical:
+        raise HTTPException(status_code=400, detail=f"Invalid persona role '{target_role}'")
+
+    if target_role not in allowed_roles:
+        allowed_roles.append(target_role)
+
+    db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"role": target_role, "roles": allowed_roles}}
+    )
+    current_user["role"] = target_role
+    current_user["roles"] = allowed_roles
+
+    refreshed_token = create_access_token(sub=str(current_user["_id"]))
+    return {
+        "ok": True,
+        "active_role": target_role,
+        "roles": allowed_roles,
+        "access_token": refreshed_token,
+    }

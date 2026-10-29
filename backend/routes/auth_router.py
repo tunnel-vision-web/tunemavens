@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from auth import create_access_token, get_current_user, hash_password, verify_password
+from auth import create_access_token, get_optional_user, get_current_user, hash_password, verify_password
 from config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     COOKIE_DOMAIN,
@@ -154,9 +154,14 @@ def me(current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(response: Response, current_user: Optional[dict] = Depends(get_optional_user)):
+    if current_user and current_user.get("_id"):
+        db.users.update_one(
+            {"_id": current_user["_id"]},
+            {"$set": {"logged_out_at": datetime.now(timezone.utc)}}
+        )
     response.delete_cookie(key="access_token", domain=COOKIE_DOMAIN, path="/")
-    return {"ok": True}
+    return {"ok": True, "logged_out": True}
 
 
 @router.post("/demo", response_model=AuthResponse)

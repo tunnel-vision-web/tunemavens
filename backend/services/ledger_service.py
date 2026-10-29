@@ -100,8 +100,8 @@ def record_transaction(
 
     ledger_entry = {
         "user_id": str(norm_id),
-        "amount": int(amount),
-        "balance_after": int(new_balance),
+        "amount": float(amount) if isinstance(amount, float) else int(amount),
+        "balance_after": float(new_balance) if isinstance(new_balance, float) else int(new_balance),
         "currency": "CREDITS",
         "entry_type": entry_type,
         "provider": provider,
@@ -114,8 +114,9 @@ def record_transaction(
 
     db.credit_ledger.insert_one(ledger_entry)
 
+    fmt_amount = f"{amount:+.4f}".rstrip('0').rstrip('.') if isinstance(amount, float) else f"{amount:+d}"
     logger.info(
-        f"[TuneLedger] Recorded {amount:+d} credits for user {norm_id} "
+        f"[TuneLedger] Recorded {fmt_amount} credits for user {norm_id} "
         f"({entry_type} via {provider}, ref: {provider_ref}). New balance: {new_balance}"
     )
 

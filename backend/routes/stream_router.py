@@ -16,7 +16,21 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request as FastAPIRequest
 from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 
-from auth import get_optional_user
+
+from pydantic import BaseModel, Field
+from auth import get_current_user, get_optional_user
+from services.stream_service import (
+    generate_stream_token,
+    verify_stream_token,
+    get_track_or_release,
+    validate_playback_rights,
+    get_stream_manifest,
+    record_stream_event,
+    get_creator_stream_analytics,
+    tip_creator_with_credits,
+    report_track_content,
+)
+
 from config import db
 
 logger = logging.getLogger(__name__)
@@ -92,34 +106,16 @@ def stream_catalog_track(
     clean_id = identifier.strip()
     target_track = None
 
-    # 1. Search in db.catalog_tracks
-    cat_cursor = db.catalog_tracks.find({})
-    for doc in cat_cursor:
-        for t in doc.get("tracks", []):
-            if (
-                str(t.get("isrc", "")).lower() == clean_id.lower() or
-                str(t.get("id", "")) == clean_id or
-                str(t.get("title", "")).lower() == clean_id.lower()
-            ):
-                target_track = t
-                break
-        if target_track:
-            break
-
-    # 2. Search in db.releases if not found
+    target_track = get_track_or_release(clean_id)
     if not target_track:
-        try:
-            from bson import ObjectId
-            query_id = ObjectId(clean_id)
-        except Exception:
-            query_id = clean_id
-        rel = db.releases.find_one({"$or": [{"_id": query_id}, {"title": {"$regex": f"^{clean_id}$", "$options": "i"}}]})
-        if rel:
-            target_track = {
-                "title": rel.get("title"),
-                "audioUrl": rel.get("audio_url") or rel.get("audioUrl"),
-                "isrc": (rel.get("isrcs") or ["KE-TM1-26-00001"])[0]
-            }
+        raise HTTPException(status_code=404, detail="Track not found")
+
+    client_country = "KE"
+    if request:
+        client_country = request.headers.get("cf-ipcountry") or request.headers.get("x-country") or "KE"
+    allowed, err_code, status_code = validate_playback_rights(target_track, client_country, current_user)
+    if not allowed:
+        raise HTTPException(status_code=status_code, detail={"error": err_code, "message": f"Playback prohibited: {err_code}"})
 
     # If track has an audio URL, attempt to stream it
     audio_url = target_track.get("audioUrl") or target_track.get("fileUrl") if target_track else None
@@ -275,3 +271,153 @@ def stream_audio(
         return StreamingResponse(remote_generator(), media_type="audio/mpeg")
 
     return RedirectResponse(url=audio_url)
+
+
+class StreamEventRequest(BaseModel):
+    track_id: str
+    duration_listened_sec: float
+    device_id: Optional[str] = None
+    country: Optional[str] = None
+
+
+class TipRequest(BaseModel):
+    creator_id: str
+    amount_credits: int
+    track_id: Optional[str] = None
+    message: Optional[str] = None
+    idempotency_key: Optional[str] = None
+
+
+class ReportContentRequest(BaseModel):
+    track_id: str
+    reason: str = "copyright_infringement"
+    notes: Optional[str] = None
+
+
+@router.get("/manifest/{identifier}")
+def stream_manifest(
+    identifier: str,
+    request: FastAPIRequest,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Generates adaptive audio streaming manifest with low-bitrate and lossless tiers (Spec §4)."""
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        client_ip = forwarded.split(",")[0].strip()
+    client_country = request.headers.get("cf-ipcountry") or request.headers.get("x-country") or "KE"
+
+    try:
+        manifest = get_stream_manifest(
+            identifier=identifier,
+            client_ip=client_ip,
+            client_country=client_country,
+            current_user=current_user,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    if not manifest.get("ok"):
+        raise HTTPException(
+            status_code=manifest.get("status_code", 403),
+            detail={"error": manifest.get("error"), "detail": manifest.get("detail")}
+        )
+    return manifest
+
+
+@router.get("/listen/{identifier}")
+def listen_stream(
+    identifier: str,
+    token: Optional[str] = None,
+    profile: str = "low",
+    request: FastAPIRequest = None,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Streams audio payload with signed token verification and range support."""
+    client_ip = request.client.host if request and request.client else "127.0.0.1"
+    forwarded = request.headers.get("x-forwarded-for") if request else None
+    if forwarded:
+        client_ip = forwarded.split(",")[0].strip()
+
+    if token:
+        if not verify_stream_token(identifier, token, client_ip):
+            raise HTTPException(status_code=403, detail="Invalid or expired stream token")
+
+    # Delegate to stream_catalog_track for range and file handling
+    return stream_catalog_track(identifier=identifier, request=request, current_user=current_user)
+
+
+@router.post("/event")
+def log_stream_event(
+    payload: StreamEventRequest,
+    request: FastAPIRequest,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Records stream play, performs anti-fraud check, and posts to TuneLedger."""
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        client_ip = forwarded.split(",")[0].strip()
+    user_agent = request.headers.get("user-agent", "Mozilla/5.0")
+    client_country = payload.country or request.headers.get("cf-ipcountry") or request.headers.get("x-country") or "KE"
+
+    listener_id = str(current_user["_id"]) if current_user else None
+
+    result = record_stream_event(
+        track_id=payload.track_id,
+        duration_listened_sec=payload.duration_listened_sec,
+        listener_id=listener_id,
+        client_ip=client_ip,
+        user_agent=user_agent,
+        client_country=client_country,
+        device_id=payload.device_id,
+    )
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    return result
+
+
+@router.get("/analytics/creator")
+def stream_creator_analytics(
+    current_user: dict = Depends(get_current_user),
+):
+    """Returns stream plays, qualified impressions, and earnings aggregated by country."""
+    creator_id = str(current_user["_id"])
+    return get_creator_stream_analytics(creator_id)
+
+
+@router.post("/tip")
+def tip_creator(
+    payload: TipRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Tips a creator using credits (95% to creator, 5% platform fee)."""
+    try:
+        result = tip_creator_with_credits(
+            fan_user=current_user,
+            creator_id=payload.creator_id,
+            amount_credits=payload.amount_credits,
+            track_id=payload.track_id,
+            message=payload.message,
+            idempotency_key=payload.idempotency_key,
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/report-content")
+def report_content(
+    payload: ReportContentRequest,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Submits community content / copyright report (Spec §4)."""
+    try:
+        return report_track_content(
+            track_id=payload.track_id,
+            reporting_user=current_user,
+            reason=payload.reason,
+            notes=payload.notes,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

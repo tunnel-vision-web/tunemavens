@@ -38,10 +38,15 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(sub: str, expires_delta: Optional[timedelta] = None) -> str:
-    expire = datetime.now(timezone.utc) + (
+    now = datetime.now(timezone.utc)
+    expire = now + (
         expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    payload = {"sub": sub, "exp": expire}
+    payload = {
+        "sub": sub,
+        "iat": int(now.timestamp()),
+        "exp": expire,
+    }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 
@@ -91,6 +96,24 @@ def get_current_user(request: Request) -> dict:
         if demo_user:
             return demo_user
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
+    # Global session revocation check (Spec §4 SSO logout propagation)
+    logged_out_at = user.get("logged_out_at")
+    if logged_out_at:
+        iat = payload.get("iat")
+        if iat is not None:
+            if isinstance(logged_out_at, datetime):
+                if logged_out_at.tzinfo is None:
+                    logged_out_at = logged_out_at.replace(tzinfo=timezone.utc)
+                logged_out_epoch = logged_out_at.timestamp()
+            else:
+                logged_out_epoch = float(logged_out_at)
+            if iat < logged_out_epoch - 0.1:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Session expired. Please log in again."
+                )
+
     return user
 
 
