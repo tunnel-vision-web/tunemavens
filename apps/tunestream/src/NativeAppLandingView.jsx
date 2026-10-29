@@ -8,7 +8,7 @@ import {
 import { normalizeMediaUrl } from './lib/api';
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill, RiSearchLine } from 'react-icons/ri'
+import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill, RiSearchLine, RiArrowDownSLine, RiCheckFill } from 'react-icons/ri'
 import tsLogo from './assets/tunestream-logo.png'
 import tcLogo from './assets/tunecompanion-logo.png'
 import tpLogo from './assets/tunepay-logo.png'
@@ -410,6 +410,121 @@ function HorizontalSlider({ items, renderItem }) {
   );
 }
 // ─────────────────────────────────────────────────────────────────────────────
+
+
+// Custom accessible high-contrast dropdown avoiding OS-level light popup bugs
+function ExploreCustomDropdown({ label, value, options, onChange }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value) || options[0];
+
+  return (
+    <div ref={dropdownRef} data-no-i18n="true" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+      {label && <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>{label}</span>}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+          padding: '8px 14px',
+          background: '#090d1f',
+          backgroundColor: '#090d1f',
+          border: isOpen ? '1.5px solid #22d3ee' : '1px solid rgba(0, 240, 255, 0.45)',
+          borderRadius: '3px',
+          color: '#ffffff',
+          fontSize: '12.5px',
+          fontWeight: '700',
+          cursor: 'pointer',
+          minWidth: '155px',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.6)',
+          transition: 'all 0.2s ease',
+          outline: 'none'
+        }}
+      >
+        <span style={{ color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {selectedOption?.label || value}
+        </span>
+        <RiArrowDownSLine size={16} color="#22d3ee" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', flexShrink: 0 }} />
+      </button>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            zIndex: 9999,
+            background: '#070c1e',
+            backgroundColor: '#070c1e',
+            border: '1.5px solid #22d3ee',
+            borderRadius: '3px',
+            boxShadow: '0 12px 36px rgba(0,0,0,0.95), 0 0 16px rgba(34, 211, 238, 0.25)',
+            maxHeight: '260px',
+            overflowY: 'auto',
+            minWidth: '190px',
+            padding: '4px 0'
+          }}
+        >
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <div
+                key={opt.value}
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                style={{
+                  padding: '9px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px',
+                  fontSize: '12px',
+                  fontWeight: isSelected ? '800' : '600',
+                  color: isSelected ? '#22d3ee' : '#ffffff',
+                  background: isSelected ? 'rgba(34, 211, 238, 0.15)' : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.color = '#22d3ee';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#ffffff';
+                  }
+                }}
+              >
+                <span>{opt.label}</span>
+                {isSelected && <RiCheckFill size={14} color="#22d3ee" />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = [], sessionUser = null, onLogout = null }) {
   const { slug: paramSlug } = useParams();
@@ -859,6 +974,65 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               </div>
             </div>
           </>
+        );
+      }
+
+      // If viewing a Creator Profile, render the creator's bespoke retina header in place of the page header!
+      if (selectedCreatorProfile) {
+        const creatorHeaderImg = selectedCreatorProfile.headerImageUrl || selectedCreatorProfile.banner || `/headers/header_${selectedCreatorProfile.subdomain}_custom.jpg`;
+        return (
+          <div 
+            className="page-header-banner creator-profile-page-header" 
+            style={{ 
+              backgroundImage: `url(${creatorHeaderImg})`, 
+              backgroundSize: 'cover', 
+              backgroundPosition: 'center', 
+              borderRadius: '0px', 
+              overflow: 'hidden', 
+              marginBottom: '32px',
+              boxShadow: '0 12px 36px rgba(0,0,0,0.85)',
+              position: 'relative',
+              minHeight: '340px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%'
+            }}
+          >
+            <div className="page-header-overlay" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6, 8, 19, 0.35) 0%, rgba(6, 8, 19, 0.88) 100%)', zIndex: 1 }} />
+            <div className="page-header-content" style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '60px 24px 20px', maxWidth: '850px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(34, 211, 238, 0.16)', border: '1px solid rgba(34, 211, 238, 0.45)', padding: '4px 14px', borderRadius: '3px', marginBottom: '14px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {selectedCreatorProfile.role || 'Verified Creator'}
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.4)' }}>•</span>
+                <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
+                  Verified Profile
+                </span>
+              </div>
+              <h1 className="page-header-title" style={{ fontSize: 'clamp(32px, 5vw, 50px)', fontWeight: '800', color: '#ffffff', margin: '0 0 12px', textShadow: '0 4px 20px rgba(0,0,0,0.85)', letterSpacing: '-0.02em' }}>
+                {selectedCreatorProfile.name}
+              </h1>
+              <div className="page-header-breadcrumb" style={{ marginTop: '12px', fontSize: '13px', color: '#94a3b8', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCreatorProfile(null);
+                    const sp = new URLSearchParams(location.search);
+                    sp.delete('creator');
+                    navigate(`?${sp.toString()}`, { replace: true });
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#22d3ee', cursor: 'pointer', fontWeight: '600', padding: 0, fontSize: '13px' }}
+                >
+                  Explore Creators
+                </button>
+                <span>/</span>
+                <span style={{ color: '#fff', fontWeight: '600' }}>{selectedCreatorProfile.name}</span>
+                <span>•</span>
+                <span style={{ color: '#10b981', fontFamily: 'monospace', fontWeight: '700' }}>@{selectedCreatorProfile.subdomain}</span>
+              </div>
+            </div>
+          </div>
         );
       }
 
@@ -1499,63 +1673,37 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
           </div>
 
           {/* Filtering & Sorting Controls (Genre & Date/Title/Popularity) */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginBottom: '28px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Genre:</span>
-              <select
-                value={exploreGenre}
-                onChange={(e) => {
-                  setExploreGenre(e.target.value);
-                  setExplorePage(1);
-                }}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '3px',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#fff',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="all">All Genres</option>
-                {allGenres.map(g => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginBottom: '28px', flexWrap: 'wrap' }}>
+            <ExploreCustomDropdown
+              label="Genre:"
+              value={exploreGenre}
+              options={[
+                { value: 'all', label: 'All Genres' },
+                ...allGenres.map(g => ({ value: g, label: g }))
+              ]}
+              onChange={(val) => {
+                setExploreGenre(val);
+                setExplorePage(1);
+              }}
+            />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Sort By:</span>
-              <select
-                value={exploreSort}
-                onChange={(e) => {
-                  setExploreSort(e.target.value);
-                  setExplorePage(1);
-                }}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '3px',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#fff',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="newest">Newest Releases (Date)</option>
-                <option value="oldest">Oldest Releases (Date)</option>
-                <option value="title">Title (A – Z)</option>
-                <option value="genre">Genre (A – Z)</option>
-                <option value="popularity">Most Popular</option>
-              </select>
-            </div>
+            <ExploreCustomDropdown
+              label="Sort By:"
+              value={exploreSort}
+              options={[
+                { value: 'newest', label: 'Newest Releases (Date)' },
+                { value: 'oldest', label: 'Oldest Releases (Date)' },
+                { value: 'title', label: 'Title (A – Z)' },
+                { value: 'genre', label: 'Genre (A – Z)' },
+                { value: 'popularity', label: 'Most Popular' }
+              ]}
+              onChange={(val) => {
+                setExploreSort(val);
+                setExplorePage(1);
+              }}
+            />
 
-            <span style={{ fontSize: '12px', color: 'var(--cyan)', fontWeight: 'bold' }}>
+            <span style={{ fontSize: '13px', color: 'var(--cyan)', fontWeight: 'bold' }}>
               {totalItems} {totalItems === 1 ? 'item' : 'items'} found
             </span>
           </div>
