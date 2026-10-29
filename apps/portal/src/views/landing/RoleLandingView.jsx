@@ -46,13 +46,13 @@ function PersonaSwitcherToolbar({ activeRole, search, isScrolled }) {
             to={`${r.href}${search || ''}`}
             data-testid={`role-switch-${r.key}`}
             style={{
-              padding: '5px 12px',
-              borderRadius: '999px',
+              padding: '6px 12px',
+              borderRadius: '3px',
               textDecoration: 'none',
               fontWeight: isActive ? 700 : 500,
               color: isActive ? '#060813' : '#e6edf3',
               background: isActive ? (r.color || 'var(--cyan, #00f0ff)') : 'rgba(255, 255, 255, 0.05)',
-              border: isActive ? `1px solid ${r.color || 'var(--cyan, #00f0ff)'}` : '1px solid rgba(255, 255, 255, 0.1)',
+              border: isActive ? `1px solid ${r.color || 'var(--cyan, #00f0ff)'}` : '1px solid rgba(255, 255, 255, 0.12)',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
               alignItems: 'center',
@@ -68,13 +68,17 @@ function PersonaSwitcherToolbar({ activeRole, search, isScrolled }) {
         to={`/for${search || ''}`}
         style={{
           marginLeft: 'auto',
-          padding: '5px 10px',
+          padding: '5px 12px',
+          borderRadius: '3px',
           color: 'var(--cyan, #00f0ff)',
+          border: '1px solid rgba(34, 211, 238, 0.25)',
+          background: 'rgba(34, 211, 238, 0.06)',
           textDecoration: 'none',
           fontWeight: 600,
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '4px'
+          gap: '4px',
+          transition: 'all 0.15s ease'
         }}
       >
         All Seats →
