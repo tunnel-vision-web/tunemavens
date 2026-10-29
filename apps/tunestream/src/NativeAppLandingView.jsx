@@ -1062,10 +1062,12 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         free: { title: 'TuneStream Free', breadcrumb: 'Plans / Free' },
         premium: { title: 'TuneStream Premium', breadcrumb: 'Plans / Premium' },
         plans: { title: 'Membership & Access Plans', breadcrumb: 'Plans' },
-        help: { title: 'Support & Community', breadcrumb: 'Support & Docs' },
-        blog: { title: 'Consumer Music & Sound Blog', breadcrumb: 'Community / Blog' },
-        support: { title: 'Support Tickets & Claims Desk', breadcrumb: 'Support Desk' },
-        tickets: { title: 'Support Tickets & Claims Desk', breadcrumb: 'Support Desk' }
+        help: { title: 'Help & Documentation', breadcrumb: 'Support / Documentation' },
+        docs: { title: 'Help & Documentation', breadcrumb: 'Support / Documentation' },
+        blog: { title: 'TuneStream Blog & Sound Forum', breadcrumb: 'Community / Blog & Forum' },
+        forum: { title: 'Community Discussions & Sound Forum', breadcrumb: 'Community / Forum' },
+        support: { title: 'Support Desk & Claims Resolution', breadcrumb: 'Support / Support Desk' },
+        tickets: { title: 'Support Desk & Claims Resolution', breadcrumb: 'Support / Support Desk' }
       };
 
       const meta = headerMeta[view] || { title: 'TuneStream', breadcrumb: 'Portal' };
@@ -3282,6 +3284,7 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
                   to="?view=blog"
                   className="dropdown-link"
                   onClick={() => {
+                    setView('blog');
                     setSupportDropdownOpen(false);
                     setMobileOpen(false);
                   }}
@@ -3294,6 +3297,7 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
                   to="?view=help"
                   className="dropdown-link"
                   onClick={() => {
+                    setView('help');
                     setSupportDropdownOpen(false);
                     setMobileOpen(false);
                   }}
@@ -3306,6 +3310,7 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
                   to="?view=support"
                   className="dropdown-link"
                   onClick={() => {
+                    setView('support');
                     setSupportDropdownOpen(false);
                     setMobileOpen(false);
                   }}

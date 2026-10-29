@@ -1825,3 +1825,6 @@ Allows creators and administrators to update or regenerate custom headers via na
 4. **Decoupled Dedicated Pages (No Unified Mega-Tabs)**:
    - Completely separated the 3 sections into independent page views (`ConsumerBlogForumView`, `ConsumerHelpDocsView`, and `ConsumerSupportDeskView`) instead of a single joint tabbed container.
    - Selecting any option from the "Support & Community" dropdown navigates directly to that dedicated page with bespoke headers, badges, and tools without tab pollution from the other sections.
+5. **Main Menu Dropdown Implementation Across Sub-App & Corporate Navigation**:
+   - Replaced static links in `Navbar.jsx` (including `/native-apps/tunestream`) with active dropdown containers rendering the 3 dedicated options: **Blog & Forum**, **Help & Documentation**, and **Support Desk**.
+   - Added desktop CSS hover support (`@media (min-width: 900px) { .dropdown-container:hover .dropdown-menu { display: flex; } }`) across both `App.css` and `Landing.css` ensuring immediate cursor discovery and access without requiring manual click toggling.

@@ -161,10 +161,59 @@ export default function Navbar({ sessionUser }) {
               Apps
             </Link>
           </li>
-          <li>
-            <Link to="/native-apps/tunestream?view=help" className="nav-link" onClick={() => setMobileOpen(false)}>
-              Support & Community
-            </Link>
+          <li className="dropdown-container" ref={dropdownRef}>
+            <button
+              type="button"
+              className={`nav-link dropdown-trigger ${location.search.includes('view=blog') || location.search.includes('view=forum') || location.search.includes('view=help') || location.search.includes('view=docs') || location.search.includes('view=support') || location.search.includes('view=tickets') ? 'active' : ''}`}
+              onClick={() => {
+                setAppsDropdownOpen(false);
+                setAboutDropdownOpen(false);
+                setServicesDropdownOpen(false);
+                setLibraryDropdownOpen(false);
+                setDropdownOpen(!dropdownOpen);
+              }}
+            >
+              Support &amp; Community
+              <RiArrowDownSFill size={14} />
+            </button>
+            <ul className={`dropdown-menu ${dropdownOpen ? 'open' : ''}`}>
+              <li>
+                <Link
+                  to="/native-apps/tunestream?view=blog"
+                  className="dropdown-link"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setMobileOpen(false);
+                  }}
+                >
+                  <RiFileList3Line size={16} /> Blog &amp; Forum
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/native-apps/tunestream?view=help"
+                  className="dropdown-link"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setMobileOpen(false);
+                  }}
+                >
+                  <RiBookOpenFill size={16} /> Help &amp; Documentation
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/native-apps/tunestream?view=support"
+                  className="dropdown-link"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setMobileOpen(false);
+                  }}
+                >
+                  <RiCustomerService2Fill size={16} /> Support Desk
+                </Link>
+              </li>
+            </ul>
           </li>
         </>
       );

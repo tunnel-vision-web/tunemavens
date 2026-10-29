@@ -123,6 +123,13 @@
   display: flex;
 }
 
+@media (min-width: 900px) {
+  .dropdown-container:hover .dropdown-menu {
+    display: flex;
+  }
+}
+
+
 .dropdown-link {
   display: flex;
   align-items: center;
