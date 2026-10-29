@@ -2792,7 +2792,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             </div>
           );
         case 'blog':
-          return renderHelp('blog');
+        case 'forum':
+          return renderHelp(view === 'forum' ? 'forum' : 'blog');
         case 'support':
         case 'tickets':
           return renderHelp('tickets');

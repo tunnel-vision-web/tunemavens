@@ -1805,3 +1805,20 @@ Allows creators and administrators to update or regenerate custom headers via na
      - **TuneStream Family**: $9.99/mo (or $7.99/mo annual), up to 6 independent accounts, parental controls & explicit lyrics filter, Family Mix playlist, 6 offline devices, 1,500 monthly credits.
    - Student 50% discount verification banner ($2.49/mo).
    - Full Feature Comparison matrix table and interactive billing FAQ accordion.
+
+### 9.44.8 Support & Community Dropdown Architecture & Consumer Sound Forum Integration
+1. **Top Navigation Dropdown Split (`LandingNavbar` & `Navbar.jsx`)**:
+   - Replaced single static links with a unified "Support & Community" dropdown menu across both `NativeAppLandingView.jsx` (TuneStream) and the platform-wide `Navbar.jsx` (Portal & TuneStream).
+   - 3 Dedicated First-Class Sections:
+     - 📰 **Blog & Forum** (`?view=blog` / `?view=forum` / `/community/blog` / `/forum`): Direct entry to editorial music journalism and community sound discussions.
+     - 📚 **Help & Documentation** (`?view=help` / `?view=docs` / `/help` / `/docs`): Instant access to consumer quickstart guides, 8 documentation categories, step-by-step instructions, and FAQs.
+     - 🎫 **Support Desk** (`?view=support` / `?view=tickets` / `/community/support` / `/tickets`): Direct entry to the 24/7 AI-Assisted support ticketing desk.
+2. **Interactive Consumer Sound Community Forum**:
+   - Integrated a dual-tab switcher inside the "Blog & Forum" section allowing users to toggle between **Editorial Stories & Articles** (8 articles with full reading mode, likes, and comment threads) and **Community Discussions & Forum**.
+   - **Forum Capabilities**:
+     - Categorization: *HiFi Gear & Setups*, *African & Global Discovery*, *Feature Requests & Off-Grid*, *Meet the Creators & Q&A*, and *General Sound Banter*.
+     - **Discussion Composer**: "+ Start New Discussion" button opens an interactive creation form validating topic title, category, and message body with immediate thread publication.
+     - **Upvoting Mechanism**: Live upvote counters with active highlight states.
+     - **Thread Viewer & Reply System**: Deep-dive into discussion threads showing author roles (Listener, Audiophile Member, Verified Creator, Core Team), full post context, and a live reply composer.
+3. **Full URL Route Normalization**:
+   - Updated `App.jsx` in `apps/tunestream` and `apps/portal` to handle `/forum`, `/community/forum`, `/tickets`, and `/support` redirects to maintain deep-linking state.

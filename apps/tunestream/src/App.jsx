@@ -154,8 +154,11 @@ function AppContent() {
           <Route path="/help" element={<Navigate to="/?view=help" replace />} />
           <Route path="/docs" element={<Navigate to="/?view=help" replace />} />
           <Route path="/support" element={<Navigate to="/?view=support" replace />} />
+          <Route path="/tickets" element={<Navigate to="/?view=support" replace />} />
           <Route path="/blog" element={<Navigate to="/?view=blog" replace />} />
+          <Route path="/forum" element={<Navigate to="/?view=forum" replace />} />
           <Route path="/community/blog" element={<Navigate to="/?view=blog" replace />} />
+          <Route path="/community/forum" element={<Navigate to="/?view=forum" replace />} />
           <Route path="/plans" element={<Navigate to="/?view=plans" replace />} />
           <Route path="/pricing" element={<Navigate to="/?view=plans" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />

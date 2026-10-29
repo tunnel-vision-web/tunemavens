@@ -24,7 +24,7 @@ const ROLE_LOGOS = {
 };
 
 // Inline FaqItem definition
-import { RiArrowDownSFill } from 'react-icons/ri'
+import { RiArrowDownSFill, RiFileList3Line, RiBookOpenFill, RiCustomerService2Fill } from 'react-icons/ri'
 function FaqItem({ q, a, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -2874,7 +2874,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             </div>
           );
         case 'blog':
-          return renderHelp('blog');
+        case 'forum':
+          return renderHelp(view === 'forum' ? 'forum' : 'blog');
         case 'support':
         case 'tickets':
           return renderHelp('tickets');
@@ -3148,8 +3149,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
 function LandingNavbar({ view, setView, sessionUser, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
+  const [supportDropdownOpen, setSupportDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const libraryDropdownRef = useRef(null);
+  const supportDropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -3162,6 +3165,9 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
     const handleOutsideClick = (e) => {
       if (libraryDropdownRef.current && !libraryDropdownRef.current.contains(e.target)) {
         setLibraryDropdownOpen(false);
+      }
+      if (supportDropdownRef.current && !supportDropdownRef.current.contains(e.target)) {
+        setSupportDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
@@ -3236,10 +3242,56 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
               Apps
             </Link>
           </li>
-          <li>
-            <Link to="?view=help" className={`nav-link ${view === 'help' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+          <li className="dropdown-container" ref={supportDropdownRef}>
+            <button
+              type="button"
+              className={`nav-link dropdown-trigger ${['help', 'docs', 'blog', 'forum', 'support', 'tickets'].includes(view) ? 'active' : ''}`}
+              onClick={() => {
+                setLibraryDropdownOpen(false);
+                setSupportDropdownOpen(!supportDropdownOpen);
+              }}
+            >
               Support &amp; Community
-            </Link>
+              <RiArrowDownSFill size={14} />
+            </button>
+            <ul className={`dropdown-menu ${supportDropdownOpen ? 'open' : ''}`}>
+              <li>
+                <Link
+                  to="?view=blog"
+                  className="dropdown-link"
+                  onClick={() => {
+                    setSupportDropdownOpen(false);
+                    setMobileOpen(false);
+                  }}
+                >
+                  <RiFileList3Line size={16} /> Blog &amp; Forum
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="?view=help"
+                  className="dropdown-link"
+                  onClick={() => {
+                    setSupportDropdownOpen(false);
+                    setMobileOpen(false);
+                  }}
+                >
+                  <RiBookOpenFill size={16} /> Help &amp; Documentation
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="?view=support"
+                  className="dropdown-link"
+                  onClick={() => {
+                    setSupportDropdownOpen(false);
+                    setMobileOpen(false);
+                  }}
+                >
+                  <RiCustomerService2Fill size={16} /> Support Desk
+                </Link>
+              </li>
+            </ul>
           </li>
 
           {/* Mobile: Region Switcher + CTAs */}

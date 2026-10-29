@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { RiArrowDownSFill, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill } from 'react-icons/ri'
+import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill } from 'react-icons/ri'
 import { ROLE_LOGOS, getServiceUrl } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -339,22 +339,22 @@ export default function Navbar({ sessionUser }) {
           </button>
           <ul className={`dropdown-menu ${dropdownOpen ? 'open' : ''}`}>
             <li>
-              <Link to="/community/support" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
-                <RiCustomerService2Fill size={16} /> Support &amp; Claims Desk
-              </Link>
-            </li>
-            <li>
-              <Link to="/help" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
-                <RiQuestionFill size={16} /> Help Center &amp; Guides
-              </Link>
-            </li>
-            <li>
               <Link 
                 to="/community/blog" 
                 className={`dropdown-link ${isActive('/community/blog') || isActive('/blog') || currentPath.startsWith('/community/blog') || currentPath.startsWith('/blog') ? 'active' : ''}`} 
                 onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}
               >
-                <RiBookOpenFill size={16} /> Blog &amp; Articles
+                <RiFileList3Line size={16} /> Blog &amp; Forum
+              </Link>
+            </li>
+            <li>
+              <Link to="/help" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
+                <RiBookOpenFill size={16} /> Help &amp; Documentation
+              </Link>
+            </li>
+            <li>
+              <Link to="/community/support" className="dropdown-link" onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}>
+                <RiCustomerService2Fill size={16} /> Support Desk
               </Link>
             </li>
             <li>
@@ -365,11 +365,6 @@ export default function Navbar({ sessionUser }) {
               >
                 <RiUserSharedFill size={16} /> Affiliate Programme
               </Link>
-            </li>
-            <li>
-              <a href="#forum" className="dropdown-link" onClick={() => { alert('TuneMavens Community Forum shares the Intermaven account profile and will launch in Phase 2.'); setDropdownOpen(false); setMobileOpen(false); }}>
-                <RiMessage2Fill size={16} /> Creator Forum
-              </a>
             </li>
           </ul>
         </li>
