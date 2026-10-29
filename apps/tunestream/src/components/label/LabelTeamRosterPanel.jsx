@@ -75,7 +75,18 @@ export const DEFAULT_LABEL_ROSTER_ARTISTS = [
     genre: 'Afro-House',
     bio: 'Pioneering Kenyan Afro-futurist soundscapes and deep Afro-House beats.',
     avatar: '/heroes/ndufo_hero_slide1_retina.jpg',
-    tracksCount: 4,
+    tracksCount: 14,
+    status: 'Active / Signed'
+  },
+  {
+    id: 'art_khalid',
+    subdomain: 'khalid',
+    name: 'Khalid Waves',
+    role: 'Electronic / DJ',
+    genre: 'Deep-House',
+    bio: 'Coastal ambient deep house producer crafting sunset anthems from Mombasa.',
+    avatar: 'https://picsum.photos/seed/khalid_avatar/400/400',
+    tracksCount: 2,
     status: 'Active / Signed'
   },
   {
@@ -97,7 +108,18 @@ export const DEFAULT_LABEL_ROSTER_ARTISTS = [
     genre: 'Amapiano',
     bio: 'High-energy Amapiano log drum architect and live sync composition specialist.',
     avatar: 'https://picsum.photos/seed/brian_avatar/400/400',
-    tracksCount: 1,
+    tracksCount: 2,
+    status: 'Active / Signed'
+  },
+  {
+    id: 'art_kiprono',
+    subdomain: 'kiprono',
+    name: 'Kiprono Beats',
+    role: 'Primary Artist',
+    genre: 'Kalenjin Folk-House',
+    bio: 'Rift Valley traditional acoustic loops combined with contemporary electronic production.',
+    avatar: 'https://picsum.photos/seed/kiprono_avatar/400/400',
+    tracksCount: 2,
     status: 'Active / Signed'
   }
 ];
@@ -181,6 +203,29 @@ export default function LabelTeamRosterPanel({
       localStorage.setItem('tunemavens_label_team_members', JSON.stringify(teamMembers));
     } catch (_) {}
   }, [teamMembers]);
+
+  // Live sync with backend catalog artists
+  useEffect(() => {
+    fetch('/api/catalog/artists')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.artists && Array.isArray(data.artists) && data.artists.length > 0) {
+          const mapped = data.artists.map(a => ({
+            id: a.id,
+            subdomain: a.subdomain,
+            name: a.name,
+            role: a.role || 'Signed Roster Artist',
+            genre: a.genre || 'Afro-House',
+            bio: a.bio || '',
+            avatar: a.avatar || `https://picsum.photos/seed/${a.id}/400/400`,
+            tracksCount: a.name === 'Ndufo' ? 14 : 2,
+            status: 'Active / Signed'
+          }));
+          setRosterArtists(mapped);
+        }
+      })
+      .catch(err => console.warn('Could not fetch backend artists for roster:', err));
+  }, []);
 
   // Persist roster artists
   useEffect(() => {

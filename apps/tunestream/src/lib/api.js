@@ -217,11 +217,36 @@ export const storageApi = {
 
 // --- Catalogue & Artwork Management ---
 export const catalogApi = {
+  getTracks: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.all) qs.append('all', 'true');
+    if (params.subdomain) qs.append('subdomain', params.subdomain);
+    if (params.page) qs.append('page', params.page);
+    if (params.limit) qs.append('limit', params.limit);
+    const qStr = qs.toString();
+    return request(`/api/catalog/tracks${qStr ? `?${qStr}` : ''}`);
+  },
+  getArtists: () => request('/api/catalog/artists'),
+  getAlbums: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.subdomain) qs.append('subdomain', params.subdomain);
+    const qStr = qs.toString();
+    return request(`/api/catalog/albums${qStr ? `?${qStr}` : ''}`);
+  },
+  ingestTrack: (payload, subdomain = 'ndufo') => 
+    request(`/api/catalog/tracks?subdomain=${encodeURIComponent(subdomain)}`, { method: 'POST', body: payload }),
   updateAlbumArtwork: (payload) => request('/api/catalog/albums/artwork', { method: 'POST', body: payload }),
   updateTrackAudio: (identifier, audioUrl, durationSeconds) => request(`/api/catalog/tracks/${encodeURIComponent(identifier)}/audio`, {
     method: 'PUT',
     body: { audio_url: audioUrl, duration_seconds: durationSeconds },
   }),
+};
+
+// --- Streaming & Tipping Engine ---
+export const streamApi = {
+  tipArtist: (payload) => request('/api/stream/tip', { method: 'POST', body: payload }),
+  logEvent: (payload) => request('/api/stream/event', { method: 'POST', body: payload }),
+  getManifest: (identifier) => request(`/api/stream/manifest/${encodeURIComponent(identifier)}`),
 };
 
 // --- Blog & Editorial Management ---

@@ -40,7 +40,14 @@ import TuneLedgerSplitCascadePanel from './components/splits/TuneLedgerSplitCasc
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx';
 import TuneCompanionApp from './components/companion/TuneCompanionApp.jsx';
 import MyContractsPanel from './components/contracts/MyContractsPanel.jsx';
-import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog';
+import { 
+  getUnifiedCatalog, 
+  saveUnifiedCatalog, 
+  AUTHORITATIVE_CATALOG_TRACKS,
+  AUTHORITATIVE_CATALOG_ARTISTS,
+  AUTHORITATIVE_CATALOG_ALBUMS
+} from './data/authoritativeCatalog';
+import { catalogApi, streamApi } from './lib/api';
 
 export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
@@ -126,6 +133,9 @@ function AppContent() {
         <Routes location={backgroundLocation}>
           <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} initialTab="explore" onLogout={handleLogout} />} />
+          <Route path="/singles" element={<PlayerDashboard sessionUser={sessionUser} initialTab="singles" onLogout={handleLogout} />} />
+          <Route path="/artists" element={<PlayerDashboard sessionUser={sessionUser} initialTab="artists" onLogout={handleLogout} />} />
+          <Route path="/catalog" element={<PlayerDashboard sessionUser={sessionUser} initialTab="my-catalog" onLogout={handleLogout} />} />
           <Route path="/sync" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/sync-marketplace" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/apps" element={<PlayerDashboard sessionUser={sessionUser} initialTab="apps" onLogout={handleLogout} />} />
@@ -399,7 +409,15 @@ const APP_TITLES = {
   settings: 'Profile & Security Settings'
 };
 
-function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, onPlayTrack }) {
+function formatTime(seconds) {
+  if (isNaN(seconds) || seconds === null || seconds === undefined) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredits, setActiveTab, onPlayTrack }) {
+  const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
   return (
     <div className="tunestream-home-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* KPI Overview Metrics */}
@@ -417,20 +435,20 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
 
         <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Monthly Stream Plays</span>
-            <RiCompass3Line size={18} style={{ color: '#a855f7' }} />
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Singles & EPs</span>
+            <RiMusicLine size={18} style={{ color: '#f59e0b' }} />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>4.9M Streams</div>
-          <div style={{ fontSize: '12px', color: '#a855f7', marginTop: '6px' }}>Across 142 Geographies</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>{singles.length} Singles</div>
+          <div style={{ fontSize: '12px', color: '#f59e0b', marginTop: '6px' }}>Pre-Cleared One-Stop Masters</div>
         </div>
 
         <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Accrued Balance</span>
-            <RiCoinsFill size={18} style={{ color: '#10b981' }} />
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Signed Artists</span>
+            <RiUserLine size={18} style={{ color: '#a855f7' }} />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#10b981' }}>$12,450.00</div>
-          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>Ready for M-Pesa / Bank Payout</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>{artists.length || 5} Creators</div>
+          <div style={{ fontSize: '12px', color: '#a855f7', marginTop: '6px' }}>Authoritative Roster Roster</div>
         </div>
 
         <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
@@ -439,7 +457,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
             <RiSparklingLine size={18} style={{ color: '#22d3ee' }} />
           </div>
           <div style={{ fontSize: '26px', fontWeight: '800', color: '#22d3ee' }}>{(userCredits ?? 600).toLocaleString()}</div>
-          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>Intermaven Network Vault</div>
+          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>Intermaven Shared Vault</div>
         </div>
       </div>
 
@@ -451,22 +469,42 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
           <button
             type="button"
-            onClick={() => setActiveTab('upload')}
+            onClick={() => setActiveTab('explore')}
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
-            <RiUpload2Line size={20} style={{ color: '#00f2fe' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>Ingest Audio</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Lossless FLAC/WAV upload</span>
+            <RiCompass3Line size={20} style={{ color: '#00f2fe' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Explore Streams</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Lossless catalogue stream</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('explore')}
+            onClick={() => setActiveTab('singles')}
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
-            <RiCompass3Line size={20} style={{ color: '#a855f7' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>Explore Streams</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Discover trending releases</span>
+            <RiMusicLine size={20} style={{ color: '#f59e0b' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Singles Showcase</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Individual master releases</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('artists')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiUserLine size={20} style={{ color: '#22d3ee' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Signed Artists</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Roster bios &amp; releases</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('upload')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiUpload2Line size={20} style={{ color: '#a855f7' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Ingest Audio</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Lossless FLAC/WAV upload</span>
           </button>
 
           <button
@@ -488,26 +526,6 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
             <span style={{ fontSize: '13px', fontWeight: '700' }}>TuneLedger Splits</span>
             <span style={{ fontSize: '11px', color: '#64748b' }}>Automated waterfall ledgers</span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('companion')}
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.25)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
-          >
-            <RiLineChartFill size={20} style={{ color: '#c084fc' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>TuneCompanion</span>
-            <span style={{ fontSize: '11px', color: '#c084fc' }}>Pocket split ledger &amp; radar</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('apps')}
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
-          >
-            <RiApps2Fill size={20} style={{ color: '#38bdf8' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>Ecosystem Apps</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>iOS, Android &amp; POS suites</span>
-          </button>
         </div>
       </div>
 
@@ -524,7 +542,7 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
           </button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {tracks.slice(0, 3).map((track, idx) => (
+          {tracks.slice(0, 5).map((track, idx) => (
             <div
               key={track.id}
               onClick={() => onPlayTrack && onPlayTrack(track)}
@@ -532,17 +550,17 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '12px', color: '#64748b', width: '16px', textAlign: 'center' }}>{idx + 1}</span>
-                <img src={track.cover} alt={track.title} style={{ width: '40px', height: '40px', borderRadius: '3px', objectFit: 'cover' }} />
+                <img src={track.cover || track.coverArt} alt={track.title} style={{ width: '40px', height: '40px', borderRadius: '3px', objectFit: 'cover' }} />
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{track.title}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{track.artist} · {track.album}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{track.artist} · {track.album || track.release}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '3px' }}>
-                  Splits: {track.splits || '100/0'}
+                  {track.releaseType || 'Single'}
                 </span>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>{track.plays} plays</span>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>{track.plays}</span>
                 <button
                   type="button"
                   style={{ background: '#00f2fe', border: 'none', color: '#000', padding: '6px 14px', borderRadius: '3px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -558,43 +576,380 @@ function TuneStreamHomePanel({ sessionUser, tracks, userCredits, setActiveTab, o
   );
 }
 
-function TuneStreamExplorePanel({ tracks, currentTrack, isPlaying, likes, onLike, onPlayTrack }) {
+function TuneStreamExplorePanel({ 
+  tracks = [], 
+  artists = [], 
+  currentTrack, 
+  isPlaying, 
+  likes = [], 
+  onLike, 
+  onPlayTrack,
+  initialFilter = 'all'
+}) {
+  const [filterMode, setFilterMode] = useState(initialFilter);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedArtist, setSelectedArtist] = useState(null);
+
+  const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
+  const albums = tracks.filter(t => t.releaseType !== 'Single' && !(t.release && t.release.toLowerCase().includes('single')));
+
+  // Filter computation
+  let displayedTracks = tracks;
+  if (filterMode === 'singles') displayedTracks = singles;
+  else if (filterMode === 'albums') displayedTracks = albums;
+
+  if (selectedArtist) {
+    displayedTracks = displayedTracks.filter(t => t.artist && t.artist.toLowerCase() === selectedArtist.toLowerCase());
+  }
+
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    displayedTracks = displayedTracks.filter(t => 
+      (t.title && t.title.toLowerCase().includes(q)) ||
+      (t.artist && t.artist.toLowerCase().includes(q)) ||
+      (t.release && t.release.toLowerCase().includes(q)) ||
+      (t.genre && t.genre.toLowerCase().includes(q)) ||
+      (t.isrc && t.isrc.toLowerCase().includes(q))
+    );
+  }
+
+  const spotlightTrack = tracks[0] || {
+    title: 'Nairobi Cyberwave (Master)',
+    artist: 'Ndufo',
+    release: 'Neon Safari EP',
+    genre: 'Afro-House',
+    duration: '3:45'
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <section className="ts-hero" style={{ height: '220px', marginBottom: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Authoritative Spotlight Hero */}
+      <section className="ts-hero" style={{ height: '220px', marginBottom: '4px', background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
         <div className="hero-overlay"></div>
-        <div className="hero-text" style={{ padding: '20px' }}>
-          <span className="hero-badge">SPOTLIGHT CREATOR</span>
-          <h1 style={{ fontSize: '28px', margin: '8px 0' }}>Lumina Wave</h1>
-          <p style={{ fontSize: '13px', marginBottom: '12px', maxWidth: '500px' }}>
-            Experience the latest high-fidelity ambient electronic tracks from Lumina Wave's latest release "Electric Dreams". Now streaming in Lossless Audio.
+        <div className="hero-text" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span className="hero-badge" style={{ background: '#00f2fe', color: '#000', fontWeight: '800', borderRadius: '3px', padding: '2px 8px', fontSize: '11px' }}>
+              SPOTLIGHT RELEASE
+            </span>
+            <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '3px', fontWeight: '600' }}>
+              ✓ Lossless 24-bit / 96kHz FLAC
+            </span>
+          </div>
+          <h1 style={{ fontSize: '26px', margin: '4px 0 6px', fontWeight: '800' }}>
+            {spotlightTrack.title}
+          </h1>
+          <p style={{ fontSize: '13px', marginBottom: '14px', maxWidth: '540px', color: '#cbd5e1', lineHeight: '1.5' }}>
+            By <strong style={{ color: '#fff' }}>{spotlightTrack.artist}</strong> · From "{spotlightTrack.album || spotlightTrack.release}". Authoritative Master streaming directly from the TuneMavens lossless cluster.
           </p>
-          <button className="btn-play-hero" onClick={() => onPlayTrack(tracks[0])} style={{ padding: '8px 20px' }}>
-            <RiPlayFill /> Play Album
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button 
+              className="btn-play-hero" 
+              onClick={() => onPlayTrack(spotlightTrack)} 
+              style={{ padding: '8px 20px', borderRadius: '3px', background: '#00f2fe', color: '#000', fontWeight: '800', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <RiPlayFill size={16} /> Play Master
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedArtist(spotlightTrack.artist)}
+              style={{ padding: '8px 16px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}
+            >
+              View Artist Releases
+            </button>
+          </div>
         </div>
       </section>
 
-      <section className="ts-music-section">
-        <div className="section-header" style={{ marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '16px' }}>Trending Right Now</h3>
+      {/* Filter Toolbar (Design Standards §14: 3px border-radius, flat colors) */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: '#090c16', padding: '14px 18px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={() => { setFilterMode('all'); setSelectedArtist(null); }}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '3px',
+              border: filterMode === 'all' && !selectedArtist ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
+              background: filterMode === 'all' && !selectedArtist ? '#00f2fe' : 'rgba(255,255,255,0.03)',
+              color: filterMode === 'all' && !selectedArtist ? '#000' : '#fff',
+              fontSize: '12px',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            All Catalogue ({tracks.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setFilterMode('singles'); setSelectedArtist(null); }}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '3px',
+              border: filterMode === 'singles' ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.08)',
+              background: filterMode === 'singles' ? '#f59e0b' : 'rgba(255,255,255,0.03)',
+              color: filterMode === 'singles' ? '#000' : '#fff',
+              fontSize: '12px',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            Singles ({singles.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setFilterMode('albums'); setSelectedArtist(null); }}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '3px',
+              border: filterMode === 'albums' ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.08)',
+              background: filterMode === 'albums' ? '#a855f7' : 'rgba(255,255,255,0.03)',
+              color: filterMode === 'albums' ? '#fff' : '#fff',
+              fontSize: '12px',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            Albums &amp; EPs ({albums.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setFilterMode('artists'); setSelectedArtist(null); }}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '3px',
+              border: filterMode === 'artists' ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
+              background: filterMode === 'artists' ? '#10b981' : 'rgba(255,255,255,0.03)',
+              color: filterMode === 'artists' ? '#000' : '#fff',
+              fontSize: '12px',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            Signed Artists ({artists.length || 5})
+          </button>
         </div>
-        
+
+        {/* Live Search Input */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '240px' }}>
+          <RiSearchLine size={16} style={{ color: '#64748b' }} />
+          <input
+            type="text"
+            placeholder="Search tracks, artists, ISRC..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              flex: 1,
+              padding: '6px 10px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '3px',
+              color: '#fff',
+              fontSize: '12px',
+              outline: 'none'
+            }}
+          />
+        </div>
+      </div>
+
+      {selectedArtist && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(0, 242, 254, 0.08)', border: '1px solid rgba(0, 242, 254, 0.25)', borderRadius: '3px' }}>
+          <span style={{ fontSize: '13px', color: '#00f2fe', fontWeight: '700' }}>
+            Filtering catalogue for artist: <strong>{selectedArtist}</strong>
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedArtist(null)}
+            style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}
+          >
+            ✕ Clear Filter
+          </button>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      {filterMode === 'artists' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          {artists.map((artist) => {
+            const artistTracks = tracks.filter(t => t.artist && t.artist.toLowerCase() === artist.name.toLowerCase());
+            return (
+              <div 
+                key={artist.id}
+                style={{ 
+                  background: '#090c16', 
+                  border: '1px solid rgba(255,255,255,0.08)', 
+                  borderRadius: '3px', 
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
+                    <img 
+                      src={artist.avatar || `https://picsum.photos/seed/${artist.id}/400/400`} 
+                      alt={artist.name} 
+                      style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} 
+                    />
+                    <div>
+                      <h4 style={{ margin: '0 0 4px', fontSize: '16px', color: '#fff', fontWeight: '800' }}>{artist.name}</h4>
+                      <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '3px', fontWeight: 'bold' }}>
+                        {artist.genre || 'Afro-fusion'}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#a855f7', fontWeight: '600', marginBottom: '8px' }}>
+                    {artist.role || 'Signed Roster Creator'}
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.5', margin: '0 0 16px', minHeight: '36px' }}>
+                    {artist.bio || 'Verified Intermaven Creator with active sync representation and losslessly transcoded masters.'}
+                  </p>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+                    <span>Catalogue: {artistTracks.length} tracks</span>
+                    <a 
+                      href={`http://localhost:3000/#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
+                      target="_blank" 
+                      rel="noreferrer"
+                      style={{ color: '#00f2fe', textDecoration: 'none', fontWeight: '700' }}
+                    >
+                      🌐 Web World &rarr;
+                    </a>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (artistTracks.length > 0) onPlayTrack(artistTracks[0]);
+                        else onPlayTrack(tracks[0]);
+                      }}
+                      style={{ flex: 1, padding: '8px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    >
+                      <RiPlayFill size={14} /> Listen
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedArtist(artist.name);
+                        setFilterMode('all');
+                      }}
+                      style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                    >
+                      Releases ({artistTracks.length})
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <section className="ts-music-section">
+          <div className="section-header" style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '16px' }}>
+              {filterMode === 'singles' ? 'Singles Showcase' : (filterMode === 'albums' ? 'Albums & EPs' : 'Authoritative Catalogue')} 
+              <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 'normal', marginLeft: '8px' }}>
+                ({displayedTracks.length} entries)
+              </span>
+            </h3>
+          </div>
+          
+          <div className="tracks-list">
+            {displayedTracks.length === 0 ? (
+              <div style={{ color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '3px' }}>
+                No releases match your active filter or search query.
+              </div>
+            ) : (
+              displayedTracks.map((track, idx) => (
+                <div 
+                  key={track.id} 
+                  className={`track-row ${currentTrack?.id === track.id ? 'active' : ''}`}
+                  onClick={() => onPlayTrack(track)}
+                >
+                  <div className="track-number">{idx + 1}</div>
+                  <img src={track.cover || track.coverArt} alt={track.title} className="track-cover" />
+                  <div className="track-details" style={{ width: '220px' }}>
+                    <span className="track-title">{track.title}</span>
+                    <span className="track-artist">{track.artist}</span>
+                  </div>
+                  <div className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
+                  <div style={{ width: '90px' }}>
+                    <span style={{ fontSize: '10px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 6px', borderRadius: '3px', fontWeight: 'bold' }}>
+                      {track.releaseType || 'Single'}
+                    </span>
+                  </div>
+                  <div style={{ color: '#64748b', fontSize: '11px', width: '130px', fontFamily: 'monospace' }}>
+                    {track.isrc || 'KE-TM1-26-00000'}
+                  </div>
+                  <div className="track-plays" style={{ color: '#64748b' }}>{track.plays}</div>
+                  <div className="track-duration" style={{ color: '#64748b' }}>{track.duration}</div>
+                  <button 
+                    className={`btn-like ${likes.includes(track.id) ? 'liked' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onLike(track.id);
+                    }}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                    title={likes.includes(track.id) ? "Remove from favorites" : "Save to favorites"}
+                  >
+                    <RiHeart3Fill />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function TuneStreamSinglesPanel({ tracks = [], currentTrack, isPlaying, likes = [], onLike, onPlayTrack }) {
+  const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div>
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0 }}>Authoritative Singles Showcase</h3>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
+              All {singles.length} standalone master releases entered in the TuneMavens backend, transcoded to Lossless 24-bit FLAC.
+            </p>
+          </div>
+          <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 10px', borderRadius: '3px', fontWeight: 'bold' }}>
+            ✓ 100% One-Stop Pre-Cleared
+          </span>
+        </div>
+      </div>
+
+      <section className="ts-music-section">
         <div className="tracks-list">
-          {tracks.map((track, idx) => (
+          {singles.map((track, idx) => (
             <div 
               key={track.id} 
               className={`track-row ${currentTrack?.id === track.id ? 'active' : ''}`}
               onClick={() => onPlayTrack(track)}
             >
               <div className="track-number">{idx + 1}</div>
-              <img src={track.cover} alt={track.title} className="track-cover" />
+              <img src={track.cover || track.coverArt} alt={track.title} className="track-cover" />
               <div className="track-details" style={{ width: '220px' }}>
                 <span className="track-title">{track.title}</span>
                 <span className="track-artist">{track.artist}</span>
               </div>
-              <div className="track-album" style={{ color: '#64748b' }}>{track.album}</div>
-              <div className="track-plays" style={{ color: '#64748b' }}>{track.plays} plays</div>
+              <div className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
+              <div style={{ color: '#00f2fe', width: '120px', fontSize: '11px', fontWeight: 'bold' }}>
+                Splits: {track.splits || '100/0'}
+              </div>
+              <div style={{ color: '#64748b', fontSize: '11px', width: '130px', fontFamily: 'monospace' }}>
+                {track.isrc}
+              </div>
+              <div className="track-plays" style={{ color: '#64748b' }}>{track.plays}</div>
               <div className="track-duration" style={{ color: '#64748b' }}>{track.duration}</div>
               <button 
                 className={`btn-like ${likes.includes(track.id) ? 'liked' : ''}`}
@@ -614,7 +969,104 @@ function TuneStreamExplorePanel({ tracks, currentTrack, isPlaying, likes, onLike
   );
 }
 
-function TuneStreamFavoritesPanel({ tracks, currentTrack, likes, onLike, onPlayTrack }) {
+function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPlayTrack, onLike, likes = [] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0 }}>Signed Roster Artists</h3>
+        <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
+          Exact {artists.length} signed creator roster entries registered in TuneMavens backend with automated split cascades and lossless streaming.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        {artists.map((artist) => {
+          const artistTracks = tracks.filter(t => t.artist && t.artist.toLowerCase() === artist.name.toLowerCase());
+          return (
+            <div 
+              key={artist.id} 
+              style={{ 
+                background: '#090c16', 
+                border: '1px solid rgba(255,255,255,0.08)', 
+                borderRadius: '3px', 
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '14px' }}>
+                  <img 
+                    src={artist.avatar || `https://picsum.photos/seed/${artist.id}/400/400`} 
+                    alt={artist.name} 
+                    style={{ width: '64px', height: '64px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} 
+                  />
+                  <div>
+                    <h4 style={{ margin: '0 0 4px', fontSize: '18px', color: '#fff', fontWeight: '800' }}>{artist.name}</h4>
+                    <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '3px', fontWeight: 'bold' }}>
+                      {artist.genre || 'Afro-fusion'}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: '12px', color: '#a855f7', fontWeight: '700', marginBottom: '8px' }}>
+                  {artist.role || 'Signed Roster Artist'}
+                </div>
+                <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', margin: '0 0 16px' }}>
+                  {artist.bio || 'Authoritative Intermaven creator.'}
+                </p>
+
+                {artistTracks.length > 0 && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '6px' }}>
+                      Releases ({artistTracks.length})
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {artistTracks.slice(0, 3).map(tr => (
+                        <div 
+                          key={tr.id}
+                          onClick={() => onPlayTrack(tr)}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', cursor: 'pointer', fontSize: '12px' }}
+                        >
+                          <span style={{ color: '#fff', fontWeight: '600' }}>{tr.title}</span>
+                          <span style={{ color: '#00f2fe', fontSize: '11px' }}>▶ Listen</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '14px', display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (artistTracks.length > 0) onPlayTrack(artistTracks[0]);
+                    else onPlayTrack(tracks[0]);
+                  }}
+                  style={{ flex: 1, padding: '8px 12px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <RiPlayFill size={16} /> Listen to Artist
+                </button>
+                <a
+                  href={`http://localhost:3000/#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', fontSize: '11px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+                >
+                  🌐 EPK
+                </a>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TuneStreamFavoritesPanel({ tracks = [], currentTrack, likes = [], onLike, onPlayTrack }) {
   const favoriteTracks = tracks.filter(t => likes.includes(t.id));
   return (
     <section className="ts-music-section">
@@ -634,13 +1086,13 @@ function TuneStreamFavoritesPanel({ tracks, currentTrack, likes, onLike, onPlayT
               onClick={() => onPlayTrack(track)}
             >
               <div className="track-number">{idx + 1}</div>
-              <img src={track.cover} alt={track.title} className="track-cover" />
+              <img src={track.cover || track.coverArt} alt={track.title} className="track-cover" />
               <div className="track-details" style={{ width: '220px' }}>
                 <span className="track-title">{track.title}</span>
                 <span className="track-artist">{track.artist}</span>
               </div>
-              <div className="track-album">{track.album}</div>
-              <div className="track-plays">{track.plays} plays</div>
+              <div className="track-album">{track.album || track.release}</div>
+              <div className="track-plays">{track.plays}</div>
               <div className="track-duration">{track.duration}</div>
               <button 
                 className="btn-like liked"
@@ -676,35 +1128,73 @@ function TuneStreamRadioPanel() {
   );
 }
 
-function TuneStreamCatalogPanel({ tracks, onPlayTrack, setActiveTab }) {
+function TuneStreamCatalogPanel({ tracks = [], onPlayTrack, setActiveTab }) {
+  const [filter, setFilter] = useState('all');
+  const filtered = filter === 'singles' 
+    ? tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')))
+    : (filter === 'albums' ? tracks.filter(t => t.releaseType !== 'Single') : tracks);
+
   return (
     <section className="ts-music-section">
       <div className="section-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '16px' }}>My Uploaded Catalog Repository</h3>
-        <button className="btn-play-hero" onClick={() => setActiveTab('upload')} style={{ padding: '6px 14px', fontSize: '12px' }}>
-          <RiUpload2Line /> Ingest New Track
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h3 style={{ fontSize: '16px', margin: 0 }}>My Lossless Catalog Repository</h3>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>({filtered.length} of {tracks.length} releases)</span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button 
+            type="button" 
+            onClick={() => setFilter('all')}
+            style={{ padding: '4px 10px', borderRadius: '3px', border: filter === 'all' ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.1)', background: filter === 'all' ? '#00f2fe' : 'transparent', color: filter === 'all' ? '#000' : '#fff', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+          >
+            All
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setFilter('singles')}
+            style={{ padding: '4px 10px', borderRadius: '3px', border: filter === 'singles' ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)', background: filter === 'singles' ? '#f59e0b' : 'transparent', color: filter === 'singles' ? '#000' : '#fff', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+          >
+            Singles
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setFilter('albums')}
+            style={{ padding: '4px 10px', borderRadius: '3px', border: filter === 'albums' ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)', background: filter === 'albums' ? '#a855f7' : 'transparent', color: filter === 'albums' ? '#fff' : '#fff', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+          >
+            Albums
+          </button>
+          <button 
+            className="btn-play-hero" 
+            onClick={() => setActiveTab('upload')} 
+            style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '3px', background: '#00f2fe', color: '#000', border: 'none', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            <RiUpload2Line /> Ingest New Track
+          </button>
+        </div>
       </div>
       
       <div className="tracks-list">
-        {tracks.map((track, idx) => (
+        {filtered.map((track, idx) => (
           <div key={track.id} className="track-row" style={{ cursor: 'default' }}>
             <div className="track-number">{idx + 1}</div>
-            <img src={track.cover} alt={track.title} className="track-cover" />
+            <img src={track.cover || track.coverArt} alt={track.title} className="track-cover" />
             <div className="track-details" style={{ width: '220px' }}>
               <span className="track-title">{track.title}</span>
               <span className="track-artist">{track.artist}</span>
             </div>
-            <div className="track-album" style={{ color: '#64748b' }}>{track.album}</div>
-            <div className="track-plays" style={{ color: '#64748b' }}>{track.plays} plays</div>
-            <div style={{ color: '#00f2fe', width: '100px', fontSize: '12px', fontWeight: 'bold' }}>
+            <div className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
+            <div style={{ color: '#64748b', fontSize: '11px', width: '130px', fontFamily: 'monospace' }}>
+              {track.isrc}
+            </div>
+            <div className="track-plays" style={{ color: '#64748b' }}>{track.plays}</div>
+            <div style={{ color: '#00f2fe', width: '100px', fontSize: '11px', fontWeight: 'bold' }}>
               Splits: {track.splits || "100/0"}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button 
                 className="btn-play-hero" 
                 onClick={() => onPlayTrack(track)}
-                style={{ padding: '4px 10px', fontSize: '11px' }}
+                style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '3px', background: '#00f2fe', color: '#000', border: 'none', fontWeight: '700', cursor: 'pointer' }}
               >
                 Listen
               </button>
@@ -730,13 +1220,13 @@ function TuneStreamUploadPanel({
 }) {
   return (
     <div className="dashboard-card" style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px' }}>
-      <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: '800', color: '#fff' }}>
         <RiUpload2Line style={{ color: '#00f2fe' }} /> Lossless Catalogue Audio Ingestion
       </h4>
       
       {uploadSuccess && (
         <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '12px', borderRadius: '3px', color: '#10b981', fontSize: '13px', marginBottom: '16px' }}>
-          ✓ Track successfully ingested and transcoded into Lossless cache system!
+          ✓ Track successfully ingested and synced to TuneMavens backend repository!
         </div>
       )}
 
@@ -762,7 +1252,7 @@ function TuneStreamUploadPanel({
             <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Primary Artist Name</label>
             <input 
               type="text" 
-              placeholder="e.g. Lumina Wave" 
+              placeholder="e.g. Ndufo" 
               value={uploadForm.artist} 
               onChange={e => setUploadForm({ ...uploadForm, artist: e.target.value })}
               style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
@@ -778,10 +1268,12 @@ function TuneStreamUploadPanel({
               onChange={e => setUploadForm({ ...uploadForm, genre: e.target.value })}
               style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
             >
-              <option value="Electronic">Electronic / Ambient</option>
-              <option value="Hip Hop">Hip Hop / Beats</option>
-              <option value="Pop">Indie Pop</option>
-              <option value="Classical">Neo-Classical</option>
+              <option value="Afro-House">Afro-House</option>
+              <option value="Amapiano">Amapiano</option>
+              <option value="Afrobeats">Afrobeats</option>
+              <option value="Deep-House">Deep-House</option>
+              <option value="Afro-fusion">Afro-fusion</option>
+              <option value="Synthwave">Synthwave</option>
             </select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -836,7 +1328,7 @@ function TuneStreamUploadPanel({
               style={{ display: 'none' }}
               id="file-upload-input"
             />
-            <label htmlFor="file-upload-input" style={{ display: 'inline-block', marginTop: '12px', padding: '6px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', fontSize: '11px', cursor: 'pointer' }}>
+            <label htmlFor="file-upload-input" style={{ display: 'inline-block', marginTop: '12px', padding: '6px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', color: '#fff' }}>
               Browse Local Storage
             </label>
           </div>
@@ -845,7 +1337,7 @@ function TuneStreamUploadPanel({
         <button 
           type="submit" 
           className="btn-play-hero" 
-          style={{ marginTop: '10px', justifyContent: 'center' }}
+          style={{ marginTop: '10px', justifyContent: 'center', padding: '10px', borderRadius: '3px', background: '#00f2fe', color: '#000', border: 'none', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
         >
           <RiUpload2Line /> Ingest &amp; Publish Track
         </button>
@@ -858,66 +1350,22 @@ function TuneStreamSettingsPanel({ sessionUser, onSwitchRole }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-        <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <RiSettings3Fill style={{ color: '#00f2fe' }} /> User Profile &amp; Network Identity
+        <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: '0 0 16px' }}>
+          Platform Session &amp; Identity Settings
         </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
           <div>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Account Name</span>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#fff', marginTop: '4px' }}>{sessionUser.name}</div>
+            <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold' }}>Current Role Persona</label>
+            <div style={{ color: '#00f2fe', fontWeight: '700', fontSize: '14px', marginTop: '2px' }}>
+              {sessionUser?.role || 'Creator'}
+            </div>
           </div>
           <div>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Email Address</span>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#fff', marginTop: '4px' }}>{sessionUser.email}</div>
+            <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold' }}>Unified Credits Balance</label>
+            <div style={{ color: '#10b981', fontWeight: '700', fontSize: '14px', marginTop: '2px' }}>
+              {(sessionUser?.credits ?? 600).toLocaleString()} Credits
+            </div>
           </div>
-          <div>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Current Role</span>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#00f2fe', marginTop: '4px', textTransform: 'uppercase' }}>{sessionUser.role}</div>
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Credits Vault</span>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#10b981', marginTop: '4px' }}>{sessionUser.credits} Credits</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-        <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <RiShieldFill style={{ color: '#a855f7' }} /> Persona Role Simulator (Admin Verification)
-        </h4>
-        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 16px', lineHeight: '1.5' }}>
-          Switch persona views in real time to verify navigation menus, catalog permissions, and role-gated tooling:
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-          {PERSONA_ROLES.map((roleItem) => {
-            const isActive = sessionUser.role === roleItem.id;
-            const RoleIcon = roleItem.icon;
-            return (
-              <button
-                key={roleItem.id}
-                type="button"
-                onClick={() => onSwitchRole(roleItem.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '12px',
-                  background: isActive ? 'rgba(0, 242, 254, 0.1)' : 'rgba(255,255,255,0.03)',
-                  border: isActive ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  textAlign: 'left'
-                }}
-              >
-                <RoleIcon size={16} style={{ color: roleItem.color }} />
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>{roleItem.shortLabel}</div>
-                  <div style={{ fontSize: '10px', color: '#64748b' }}>{roleItem.shortDesc}</div>
-                </div>
-                {isActive && <RiCheckLine size={14} style={{ color: '#10b981', marginLeft: 'auto' }} />}
-              </button>
-            );
-          })}
         </div>
       </div>
     </div>
@@ -926,11 +1374,25 @@ function TuneStreamSettingsPanel({ sessionUser, onSwitchRole }) {
 
 function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(SAMPLE_TRACKS[0]);
+  const [currentTrack, setCurrentTrack] = useState(() => SAMPLE_TRACKS[0]);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
-  const [likes, setLikes] = useState([1, 3]);
   const [volume, setVolume] = useState(80);
-  
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackError, setPlaybackError] = useState(null);
+  const [tipToast, setTipToast] = useState('');
+  const audioRef = useRef(null);
+  const eventLoggedRef = useRef(false);
+
+  const [likes, setLikes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tunestream_likes');
+      return saved ? JSON.parse(saved) : [1, 3];
+    } catch {
+      return [1, 3];
+    }
+  });
+
   // Unified Dashboard States
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab || 'home');
@@ -977,15 +1439,6 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       actionType: 'talent',
       read: false,
       at: '15m ago'
-    },
-    {
-      id: 'aff_guide',
-      title: 'Recommended Reading: Partner Playbook',
-      body: 'Commission matrix and promotional standards (Optional reading).',
-      actionText: 'Read Guide',
-      actionType: 'guide',
-      read: false,
-      at: '30m ago'
     }
   ]);
 
@@ -1049,11 +1502,60 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
   
   // Creator & Catalog states (unified across TuneMavens, TuneStream, and SyncMavens)
   const [catalogTracks, setCatalogTracks] = useState(getUnifiedCatalog);
-  const [uploadForm, setUploadForm] = useState({ title: '', artist: '', genre: 'Electronic', splits: '100/0' });
+  const [artists, setArtists] = useState(AUTHORITATIVE_CATALOG_ARTISTS);
+  const [albums, setAlbums] = useState(AUTHORITATIVE_CATALOG_ALBUMS);
+
+  const [uploadForm, setUploadForm] = useState({ title: '', artist: 'Ndufo', genre: 'Afro-House', splits: '100/0' });
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [fileName, setFileName] = useState('');
+
+  // Live fetch from backend API endpoints on mount
+  useEffect(() => {
+    // 1. Fetch live tracks from /api/catalog/tracks?all=true
+    fetch('/api/catalog/tracks?all=true')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
+          const mapped = data.tracks.map(t => ({
+            ...t,
+            cover: t.coverArt || t.cover || `https://picsum.photos/seed/${t.id}/500/500`,
+            coverArt: t.coverArt || t.cover || `https://picsum.photos/seed/${t.id}/500/500`,
+            album: t.release || t.album || 'Singles 2026',
+            release: t.release || t.album || 'Singles 2026',
+            releaseType: t.releaseType || (t.release && t.release.toLowerCase().includes('single') ? 'Single' : 'Album'),
+            plays: t.streams || t.plays || '1.2M',
+            streams: t.streams || t.plays || '1.2M',
+            splits: t.splits || t.split || t.publishingSplit || 'Artist (60%) / Producer (25%) / Label (15%)',
+            audioUrl: t.audioUrl || t.fileUrl || `/api/stream/track/${t.isrc || t.id}`
+          }));
+          setCatalogTracks(mapped);
+          saveUnifiedCatalog(mapped);
+        }
+      })
+      .catch(err => console.warn('Could not fetch backend tracks:', err));
+
+    // 2. Fetch live artists from /api/catalog/artists
+    fetch('/api/catalog/artists')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.artists && Array.isArray(data.artists) && data.artists.length > 0) {
+          setArtists(data.artists);
+        }
+      })
+      .catch(err => console.warn('Could not fetch backend artists:', err));
+
+    // 3. Fetch live albums from /api/catalog/albums
+    fetch('/api/catalog/albums')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.albums && Array.isArray(data.albums) && data.albums.length > 0) {
+          setAlbums(data.albums);
+        }
+      })
+      .catch(err => console.warn('Could not fetch backend albums:', err));
+  }, []);
 
   // Cross-app catalog synchronization listener
   useEffect(() => {
@@ -1083,20 +1585,130 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     } catch (_) {}
   };
 
-  const togglePlay = () => setIsPlaying(!isPlaying);
+  // Real Audio Playback Methods
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(err => {
+        console.warn('Playback error:', err);
+        setIsPlaying(false);
+      });
+    }
+  };
   
   const handleTrackSelect = (track) => {
+    if (!track) return;
     setCurrentTrack(track);
-    setIsPlaying(true);
     setIsPlayerOpen(true);
+    setIsPlaying(true);
+    eventLoggedRef.current = false;
+    setCurrentTime(0);
+
+    const streamSrc = track.audioUrl || track.audio_url || `/api/stream/track/${track.isrc || track.id}`;
+    if (audioRef.current) {
+      audioRef.current.src = streamSrc;
+      audioRef.current.load();
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(err => {
+        console.warn('Autoplay error:', err);
+      });
+    }
+  };
+
+  const handleNextTrack = () => {
+    if (!catalogTracks || catalogTracks.length === 0) return;
+    const currentIdx = catalogTracks.findIndex(t => t.id === currentTrack?.id || t.isrc === currentTrack?.isrc);
+    const nextIdx = (currentIdx + 1) % catalogTracks.length;
+    handleTrackSelect(catalogTracks[nextIdx]);
+  };
+
+  const handlePrevTrack = () => {
+    if (!catalogTracks || catalogTracks.length === 0) return;
+    const currentIdx = catalogTracks.findIndex(t => t.id === currentTrack?.id || t.isrc === currentTrack?.isrc);
+    const prevIdx = (currentIdx - 1 + catalogTracks.length) % catalogTracks.length;
+    handleTrackSelect(catalogTracks[prevIdx]);
+  };
+
+  const handleSeek = (e) => {
+    if (!audioRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickRatio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const newTime = clickRatio * duration;
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current) return;
+    const ct = audioRef.current.currentTime;
+    setCurrentTime(ct);
+    
+    // Anti-fraud stream event logging after 30 seconds of listening
+    if (ct >= 30 && !eventLoggedRef.current && currentTrack) {
+      eventLoggedRef.current = true;
+      try {
+        fetch('/api/stream/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            track_id: String(currentTrack.isrc || currentTrack.id),
+            duration_listened_sec: Math.floor(ct)
+          })
+        }).catch(() => {});
+      } catch (_) {}
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current && audioRef.current.duration) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = (volume || 80) / 100;
+    }
+  }, [volume]);
+
+  const handleTipArtist = async () => {
+    if (!currentTrack) return;
+    const tipAmount = 50; // 50 credits = $5.00
+    if (userCredits < tipAmount) {
+      setIsCreditReloadOpen(true);
+      return;
+    }
+
+    const newCredits = userCredits - tipAmount;
+    setUserCredits(newCredits);
+    localStorage.setItem('tunemavens_user_credits', newCredits.toString());
+
+    try {
+      await fetch('/api/stream/tip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creator_id: currentTrack.artist || 'Ndufo',
+          amount_credits: tipAmount,
+          track_id: String(currentTrack.isrc || currentTrack.id)
+        })
+      });
+    } catch (err) {
+      console.warn('Tip API note:', err);
+    }
+
+    setTipToast(`Tipped 50 credits ($5.00) to ${currentTrack.artist} — settled into TuneLedger splits!`);
+    setTimeout(() => setTipToast(''), 4500);
   };
 
   const handleLike = (id) => {
-    if (likes.includes(id)) {
-      setLikes(likes.filter(item => item !== id));
-    } else {
-      setLikes([...likes, id]);
-    }
+    setLikes(prev => {
+      const updated = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      try { localStorage.setItem('tunestream_likes', JSON.stringify(updated)); } catch (_) {}
+      return updated;
+    });
   };
 
   const getCategorizedMenu = () => {
@@ -1117,8 +1729,10 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       badge: 'COPILOT' 
     });
 
-    // Discover & Audio
+    // Discover & Audio (Catalogue, Singles, Artists, Favorites, Radio)
     add('Discover & Audio', { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Line });
+    add('Discover & Audio', { id: 'singles', label: 'Singles Showcase', icon: RiMusicLine });
+    add('Discover & Audio', { id: 'artists', label: 'Roster Artists', icon: RiUserLine });
     add('Discover & Audio', { id: 'favorites', label: 'Favorites', icon: RiHeart3Fill });
     add('Discover & Audio', { id: 'radio', label: 'Live Radio Node', icon: RiRadioLine });
 
@@ -1158,7 +1772,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     return categories;
   };
 
-  const handleUploadSubmit = (e) => {
+  const handleUploadSubmit = async (e) => {
     e.preventDefault();
     setUploadError('');
     setUploadSuccess(false);
@@ -1176,10 +1790,10 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       return;
     }
 
-    // Add track to unified catalog and persist across all 3 platforms
+    const newIsrc = `KE-TM1-26-${Math.floor(10000 + Math.random() * 89999)}`;
     const newTrack = {
       id: Date.now(),
-      isrc: `KEN922600${Math.floor(100 + Math.random() * 900)}`,
+      isrc: newIsrc,
       iswc: `T-${Math.floor(100 + Math.random() * 900)}.${Math.floor(100 + Math.random() * 900)}.001-1`,
       title: uploadForm.title,
       artist: uploadForm.artist,
@@ -1187,7 +1801,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       release: uploadForm.title,
       releaseType: 'Single',
       year: '2026',
-      genre: uploadForm.genre || 'Electronic',
+      genre: uploadForm.genre || 'Afro-House',
       duration: '3:30',
       plays: '1 play',
       streams: '1 play',
@@ -1196,18 +1810,28 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       coverArt: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
       coverText: uploadForm.title.slice(0, 10),
       coverBg: 'linear-gradient(135deg, #00f2fe 0%, #a855f7 100%)',
-      splits: uploadForm.splits,
-      split: uploadForm.splits,
+      splits: uploadForm.splits || '100/0',
+      split: uploadForm.splits || '100/0',
       status: 'Approved',
-      audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+      audioUrl: `/api/stream/track/${newIsrc}`
     };
+
+    try {
+      await fetch('/api/catalog/tracks?subdomain=ndufo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTrack)
+      });
+    } catch (err) {
+      console.warn('Backend sync note:', err);
+    }
 
     const updated = [newTrack, ...catalogTracks];
     setCatalogTracks(updated);
     saveUnifiedCatalog(updated);
     setUploadSuccess(true);
     setFileName('');
-    setUploadForm({ title: '', artist: '', genre: 'Electronic', splits: '100/0' });
+    setUploadForm({ title: '', artist: 'Ndufo', genre: 'Afro-House', splits: '100/0' });
   };
 
   const handleDrag = (e) => {
@@ -1241,6 +1865,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
           <TuneStreamHomePanel
             sessionUser={activeUser}
             tracks={catalogTracks}
+            artists={artists}
             userCredits={userCredits}
             setActiveTab={setActiveTab}
             onPlayTrack={handleTrackSelect}
@@ -1250,10 +1875,36 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         return (
           <TuneStreamExplorePanel
             tracks={catalogTracks}
+            artists={artists}
             currentTrack={currentTrack}
+            isPlaying={isPlaying}
             likes={likes}
             onPlayTrack={handleTrackSelect}
             onToggleLike={handleLike}
+            onLike={handleLike}
+          />
+        );
+      case 'singles':
+        return (
+          <TuneStreamSinglesPanel
+            tracks={catalogTracks}
+            currentTrack={currentTrack}
+            isPlaying={isPlaying}
+            likes={likes}
+            onPlayTrack={handleTrackSelect}
+            onLike={handleLike}
+          />
+        );
+      case 'artists':
+        return (
+          <TuneStreamArtistsPanel
+            artists={artists}
+            tracks={catalogTracks}
+            currentTrack={currentTrack}
+            isPlaying={isPlaying}
+            likes={likes}
+            onPlayTrack={handleTrackSelect}
+            onLike={handleLike}
           />
         );
       case 'favorites':
@@ -1263,7 +1914,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             currentTrack={currentTrack}
             likes={likes}
             onPlayTrack={handleTrackSelect}
-            onToggleLike={handleLike}
+            onLike={handleLike}
           />
         );
       case 'radio':
@@ -1338,6 +1989,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
           <TuneStreamHomePanel
             sessionUser={activeUser}
             tracks={catalogTracks}
+            artists={artists}
             userCredits={userCredits}
             setActiveTab={setActiveTab}
             onPlayTrack={handleTrackSelect}
@@ -1348,186 +2000,113 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar Navigation */}
-      <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
-        <div className="dashboard-sidebar-scroll">
-          <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
-            <Link to="/" title="Back to TuneStream public site" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
-              {collapsed ? (
-                <img 
-                  src="/favicon.png" 
-                  alt="TuneStream Icon" 
-                  style={{ height: '32px', width: 'auto', display: 'block' }} 
-                />
-              ) : (
-                <img 
-                  src={tsLogo} 
-                  alt="TuneStream Logo" 
-                  style={{ height: '36px', width: 'auto', display: 'block', margin: '0 auto' }} 
-                />
-              )}
-            </Link>
-          </div>
+      {/* Tip Toast Notification */}
+      {tipToast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '24px',
+          zIndex: 9999,
+          background: 'rgba(16, 185, 129, 0.95)',
+          color: '#fff',
+          padding: '12px 20px',
+          borderRadius: '3px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '13px',
+          fontWeight: '700'
+        }}>
+          <RiCoinsFill size={18} />
+          <span>{tipToast}</span>
+        </div>
+      )}
 
+      {/* Left Sidebar */}
+      <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
+        <div className="sidebar-brand-wrapper">
+          <Link to="/" className="sidebar-logo">
+            <img src={tsLogo} alt="TuneStream" className="sidebar-logo-img" />
+          </Link>
           <button 
-            onClick={() => setCollapsed(!collapsed)} 
-            className="dashboard-nav-item collapse-toggle-btn"
-            style={{ border: 'none', background: 'transparent', padding: '6px', justifyContent: 'center', width: '100%', marginBottom: '16px', color: '#94a3b8' }}
+            type="button" 
+            className="sidebar-collapse-btn" 
+            onClick={() => setCollapsed(!collapsed)}
             title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
+            {collapsed ? <RiArrowRightSFill /> : <RiArrowLeftSFill />}
           </button>
-
-          {Object.entries(getCategorizedMenu()).map(([category, items]) => (
-            <div key={category} className="sidebar-category-group" style={{ marginBottom: '12px' }}>
-              {!collapsed && (
-                <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
-                  {category}
-                </div>
-              )}
-              <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
-                {items.map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
-                    <li key={`${item.id}-${idx}`}>
-                      <button 
-                        onClick={() => setActiveTab(item.id)} 
-                        className={`dashboard-nav-item ${activeTab === item.id ? 'active' : ''}`}
-                        title={item.label}
-                        style={{
-                          borderRadius: '3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: collapsed ? 'center' : 'space-between',
-                          width: '100%'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          {item.iconImg ? (
-                            <img src={item.iconImg} alt={item.label} style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
-                          ) : (
-                            <Icon size={16} style={item.color ? { color: item.color } : {}} />
-                          )}
-                          {!collapsed && <span>{item.label}</span>}
-                        </div>
-                        {!collapsed && item.badge && (
-                          <span style={{
-                            fontSize: '9px',
-                            fontWeight: 800,
-                            padding: '2px 5px',
-                            borderRadius: '3px',
-                            background: item.badge === 'LIVE' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(168, 85, 247, 0.25)',
-                            color: item.badge === 'LIVE' ? '#10b981' : '#c084fc',
-                            border: `1px solid ${item.badge === 'LIVE' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(168, 85, 247, 0.4)'}`,
-                            letterSpacing: '0.5px'
-                          }}>
-                            {item.badge}
-                          </span>
-                        )}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-
-          {/* TuneCompanion Prominent Quick Launcher Widget */}
-          {!collapsed ? (
-            <div 
-              onClick={() => setActiveTab('companion')}
-              style={{
-                margin: '14px 4px 6px',
-                padding: '12px 14px',
-                background: activeTab === 'companion' 
-                  ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(15, 23, 42, 0.95) 100%)' 
-                  : 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)',
-                border: activeTab === 'companion' ? '1px solid #c084fc' : '1px solid rgba(168, 85, 247, 0.35)',
-                borderRadius: '3px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-                transition: 'all 0.2s ease'
-              }}
-              title="Launch TuneCompanion App & Split Ledger"
-            >
-              <img src={tcLogo} alt="TuneCompanion" style={{ width: '26px', height: '26px', objectFit: 'contain' }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '12px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  TuneCompanion
-                  <span style={{ fontSize: '8px', background: '#a855f7', color: '#fff', padding: '1px 5px', borderRadius: '3px', fontWeight: 800 }}>LIVE</span>
-                </div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  Pocket Split & Sync Copilot
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div 
-              onClick={() => setActiveTab('companion')}
-              style={{
-                margin: '12px auto',
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: activeTab === 'companion' ? 'rgba(168, 85, 247, 0.35)' : 'rgba(168, 85, 247, 0.15)',
-                border: activeTab === 'companion' ? '1px solid #c084fc' : '1px solid rgba(168, 85, 247, 0.35)',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}
-              title="TuneCompanion Copilot"
-            >
-              <img src={tcLogo} alt="TuneCompanion" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
-            </div>
-          )}
-
-          <ul className="dashboard-nav-list" style={{ marginTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px' }}>
-            <li>
-              <Link 
-                to="/" 
-                className="dashboard-nav-item"
-                style={{ textDecoration: 'none' }}
-                title="Back to Home Site"
-              >
-                <RiArrowLeftFill size={16} />
-                {!collapsed && "Back to Home Site"}
-              </Link>
-            </li>
-          </ul>
         </div>
 
-        <div className="dashboard-sidebar-footer">
-          <div className="dashboard-profile-card">
-            <div className="dashboard-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 242, 254, 0.1)', color: '#00f2fe', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
-              {activeUser.name ? activeUser.name.charAt(0).toUpperCase() : 'T'}
-            </div>
-            {!collapsed && (
-              <div className="dashboard-profile-info">
-                <h5>{activeUser.name}</h5>
-                <span 
-                  onClick={() => setAccountOpen(true)}
-                  title="Click to switch persona role"
-                  style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', display: 'inline-block', marginTop: '2px', color: '#00f2fe' }}
-                >
-                  ⚙️ {userRole}
-                </span>
-              </div>
-            )}
+        {/* User Role Card */}
+        <div className="sidebar-persona-badge-card" style={{ borderColor: currentRoleObj.color }}>
+          <div className="persona-badge-icon" style={{ background: currentRoleObj.color }}>
+            <currentRoleObj.icon size={16} color="#060813" />
           </div>
-          <button 
-            onClick={() => {
-              if (onLogout) onLogout();
-            }} 
-            className="dashboard-nav-item" 
-            style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px' }}
-            title="Log Out"
+          <div className="persona-badge-text">
+            <span className="persona-badge-name">{currentRoleObj.shortLabel}</span>
+            <span className="persona-badge-desc">{currentRoleObj.shortDesc}</span>
+          </div>
+        </div>
+
+        {/* Categorized Navigation */}
+        <div className="sidebar-categorized-menu">
+          {Object.entries(getCategorizedMenu()).map(([category, items]) => (
+            <div key={category} className="sidebar-menu-category">
+              <div className="sidebar-category-header">{category}</div>
+              <nav className="sidebar-nav">
+                {items.map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
+                      onClick={() => setActiveTab(item.id)}
+                    >
+                      {item.iconImg ? (
+                        <img src={item.iconImg} alt="" className="sidebar-nav-custom-img" style={{ height: '16px', width: 'auto' }} />
+                      ) : (
+                        <Icon size={18} className="sidebar-nav-icon" style={{ color: isActive ? '#00f2fe' : item.color || 'inherit' }} />
+                      )}
+                      <span className="sidebar-nav-label">{item.label}</span>
+                      {item.badge && (
+                        <span className="sidebar-nav-badge" style={{ background: item.color || '#00f2fe' }}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          ))}
+        </div>
+
+        {/* Back to Home CTA */}
+        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('explore')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 12px',
+              background: 'rgba(0, 240, 255, 0.06)',
+              border: '1px solid rgba(0, 240, 255, 0.2)',
+              borderRadius: '3px',
+              color: '#00f2fe',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              textAlign: 'left'
+            }}
           >
-            <RiLogoutBoxRFill size={14} style={{ marginRight: collapsed ? 0 : 8 }} />
-            {!collapsed && "Log Out"}
+            <RiCompass3Line size={14} />
+            <span>TuneStream Explore</span>
           </button>
         </div>
       </aside>
@@ -1535,424 +2114,160 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       {/* Main Content Pane */}
       <main className="dashboard-main-content">
         <header className="dashboard-topbar">
-          <div className="dashboard-topbar-title">
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Stream Console</span>
-            <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
-              {activeUser?.brand_name || activeUser?.name || 'TuneStream'}
-            </h1>
+          <div className="topbar-left">
+            <h2 className="topbar-page-title" style={{ textTransform: 'capitalize' }}>
+              {activeTab.replace('-', ' ')}
+            </h2>
+            <div className="topbar-status-chip">
+              <span className="chip-indicator"></span>
+              Lossless Edge Active
+            </div>
           </div>
-          <div className="dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div className="search-bar" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <RiSearchLine />
-              <input type="text" placeholder="Search track, catalog, splits..." style={{ fontSize: '13px' }} />
-            </div>
 
-            {/* Persona Simulation Badge */}
-            {isAdminSimulated && (
-              <div
-                className="topbar-simulation-badge"
-                onClick={() => setAccountOpen(true)}
-                title="Simulating persona for admin verification. Click account dropdown to switch or reset."
-              >
-                <span className="topbar-simulation-dot" />
-                <span className="topbar-simulation-text">
-                  Verifying: <strong>{currentRoleObj.shortLabel}</strong>
-                </span>
-                <button
-                  type="button"
-                  className="topbar-quick-reset-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSwitchRole('admin');
-                  }}
-                  title="Reset to Administrator view"
-                >
-                  <RiShieldFill size={11} />
-                  <span>Reset</span>
-                </button>
-              </div>
-            )}
-
-            {/* Unified Credits Badge & Reload Trigger on Topbar */}
-            {(() => {
-              const isAffiliate = userRole === 'affiliate' || activeTab === 'affiliates';
-              const creditsCount = userCredits ?? 0;
-              return (
-                <button
-                  type="button"
-                  onClick={() => setIsCreditReloadOpen(true)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    background: isAffiliate
-                      ? 'rgba(34, 211, 238, 0.1)'
-                      : (creditsCount < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)'),
-                    border: isAffiliate
-                      ? '1px solid rgba(34, 211, 238, 0.35)'
-                      : (creditsCount < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)'),
-                    color: isAffiliate
-                      ? '#22d3ee'
-                      : (creditsCount < 50 ? '#ef4444' : '#10b981'),
-                    padding: '5px 11px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                  title={isAffiliate 
-                    ? "Unified Credits: Applies only if you use creator tools (MasterLab AI, Sync briefs, etc.). The Affiliate Dashboard requires 0 credits." 
-                    : "Click to reload unified platform credits (Zero monthly charges)"}
-                >
-                  <RiCoinsFill size={15} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
-                  <span>{creditsCount.toLocaleString()} Credits</span>
-                  <span style={{
-                    fontSize: '10px',
-                    background: isAffiliate ? 'rgba(34, 211, 238, 0.25)' : (creditsCount < 50 ? '#ef4444' : '#10b981'),
-                    color: isAffiliate ? '#22d3ee' : '#ffffff',
-                    padding: '1px 5px',
-                    borderRadius: '2px',
-                    fontWeight: 800,
-                    textTransform: 'uppercase'
-                  }}>
-                    {isAffiliate ? 'Studio Tools' : 'Top Up'}
-                  </span>
-                </button>
-              );
-            })()}
-
-            {/* Back to public site button */}
-            <Link
-              to="/"
-              className="topbar-back-to-site"
-              title="Back to public site"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '999px',
-                border: '1px solid rgba(0, 242, 254, 0.25)',
-                background: 'rgba(0, 242, 254, 0.06)',
-                color: '#00f2fe',
-                fontSize: '12px',
-                fontWeight: '700',
-                textDecoration: 'none',
-                letterSpacing: '0.3px',
-                transition: 'all 0.15s ease'
-              }}
+          <div className="topbar-right">
+            {/* Unified Credits Vault */}
+            <button 
+              type="button" 
+              className="topbar-credits-btn"
+              onClick={() => setIsCreditReloadOpen(true)}
+              title="Click to reload unified credits"
             >
-              <span>Back to Site</span>
-            </Link>
+              <RiSparklingLine size={16} color="#00f2fe" />
+              <span className="credits-amount">{(userCredits ?? 600).toLocaleString()} Credits</span>
+              <span className="credits-reload-action">+</span>
+            </button>
 
-            <div className="dashboard-topbar-item">
-              <RegionSwitcher />
-            </div>
-
-            {/* Notifications */}
-            <div className="dashboard-topbar-item" ref={notifRef}>
-              <button
+            {/* Notification Dropdown */}
+            <div className="topbar-popover-container" ref={notifRef}>
+              <button 
+                type="button" 
                 className="topbar-icon-btn"
-                onClick={() => { setNotifOpen(o => !o); setAccountOpen(false); }}
+                onClick={() => setNotifOpen(!notifOpen)}
                 title="Notifications"
               >
                 <RiBellFill size={18} />
-                {notifications.filter(n => !n.read).length > 0 && (
-                  <span className="topbar-badge">{notifications.filter(n => !n.read).length}</span>
-                )}
+                {notifications.some(n => !n.read) && <span className="topbar-notif-dot"></span>}
               </button>
+
               {notifOpen && (
-                <div className="topbar-dropdown" style={{ top: 'calc(100% + 8px)' }}>
-                  <div className="topbar-dropdown-header">
-                    <strong>Notifications</strong>
-                    {notifications.filter(n => !n.read).length > 0 && (
-                      <button className="topbar-link-btn" onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}>
-                        Mark all read
-                      </button>
-                    )}
+                <div className="topbar-dropdown notif-dropdown">
+                  <div className="dropdown-header">
+                    <span className="dropdown-header-title">Notifications</span>
+                    <button 
+                      type="button" 
+                      className="dropdown-header-action"
+                      onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
+                    >
+                      Mark all read
+                    </button>
                   </div>
-                  <ul className="topbar-notif-list">
-                    {notifications.length === 0 && (
-                      <li className="topbar-notif-empty">You're all caught up.</li>
-                    )}
+                  <div className="dropdown-body">
                     {notifications.map(n => (
-                      <li key={n.id} className={`topbar-notif-item ${n.read ? 'read' : 'unread'}`} style={{ display: 'flex', gap: '8px', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <div className="topbar-notif-dot" />
-                        <div className="topbar-notif-body">
-                          <div className="topbar-notif-title" style={{ fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{n.title}</div>
-                          <div className="topbar-notif-text" style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px', lineHeight: '1.4' }}>{n.body}</div>
-                          <div className="topbar-notif-time" style={{ fontSize: '10px', color: '#64748b', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{n.at}</div>
-                          {n.actionText && (
-                            <div style={{ marginTop: '6px' }}>
-                              <button
-                                type="button"
-                                className="topbar-notif-action-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setNotifOpen(false);
-                                  if (n.actionType === 'payout') {
-                                    setIsPayoutSettingsModalOpen(true);
-                                  } else if (n.actionType === 'link') {
-                                    setIsReferralLinkModalOpen(true);
-                                  } else if (n.actionType === 'talent') {
-                                    setIsDirectTalentModalOpen(true);
-                                  } else if (n.actionType === 'guide') {
-                                    setActiveTab('affiliates');
-                                  }
-                                  setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
-                                }}
-                                style={{
-                                  background: 'rgba(34, 211, 238, 0.15)',
-                                  border: '1px solid rgba(34, 211, 238, 0.4)',
-                                  color: '#22d3ee',
-                                  padding: '3px 8px',
-                                  borderRadius: '3px',
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px'
-                                }}
-                              >
-                                {n.actionText} <RiArrowRightSFill size={11} />
-                              </button>
-                            </div>
-                          )}
+                      <div key={n.id} className={`dropdown-item ${!n.read ? 'unread' : ''}`}>
+                        <div className="dropdown-item-content">
+                          <div className="dropdown-item-title">{n.title}</div>
+                          <div className="dropdown-item-sub">{n.body}</div>
                         </div>
-                      </li>
+                        <span className="dropdown-item-time">{n.at}</span>
+                      </div>
                     ))}
-                  </ul>
-                  <div className="topbar-dropdown-footer">
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>
-                      Live notifications coming soon.
-                    </span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Account Dropdown */}
-            <div className="dashboard-topbar-item" ref={accountRef}>
-              <button
-                className="topbar-account-btn"
-                onClick={() => { setAccountOpen(o => !o); setNotifOpen(false); }}
-                title="Account"
+            {/* User Profile Dropdown */}
+            <div className="topbar-popover-container" ref={accountRef}>
+              <button 
+                type="button" 
+                className="topbar-user-profile-btn"
+                onClick={() => setAccountOpen(!accountOpen)}
               >
-                <span className="topbar-avatar">{activeUser.name.charAt(0).toUpperCase()}</span>
-                <span className="topbar-account-name">{activeUser.name}</span>
-                <RiArrowDownSFill size={14} />
+                <div className="dashboard-avatar" style={{ background: currentRoleObj.color }}>
+                  {activeUser.name.slice(0, 1).toUpperCase()}
+                </div>
+                <div className="topbar-user-meta">
+                  <span className="topbar-user-name">{activeUser.name}</span>
+                  <span className="topbar-user-role" style={{ color: currentRoleObj.color }}>
+                    {currentRoleObj.shortLabel}
+                  </span>
+                </div>
+                <RiArrowDownSFill size={14} className="topbar-dropdown-caret" />
               </button>
+
               {accountOpen && (
-                <div className="topbar-dropdown topbar-dropdown-account" style={{ top: 'calc(100% + 8px)' }}>
-                  <div className="topbar-account-summary">
-                    <div className="topbar-avatar large">{activeUser.name.charAt(0).toUpperCase()}</div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#f1f5f9' }}>{activeUser.name}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{activeUser.email}</div>
-                      <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px' }}>
-                        {userRole} · verified
-                      </div>
-                    </div>
+                <div className="topbar-dropdown account-dropdown">
+                  <div className="dropdown-header">
+                    <span className="dropdown-header-title">Switch Persona Mode</span>
                   </div>
-
-                  <div style={{ padding: '0 16px 12px 16px' }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountOpen(false);
-                        setIsCreditReloadOpen(true);
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        width: '100%',
-                        padding: '7px 12px',
-                        background: '#10b981',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <RiCoinsFill size={14} />
-                      <span>Reload Unified Credits</span>
-                    </button>
-                  </div>
-
-                  <div className="topbar-dropdown-divider" />
-
-                  {/* Admin Persona Role Switcher Section */}
-                  {activeUser.is_admin ? (
-                    <div className="topbar-persona-section" data-testid="topbar-persona-switcher">
-                      <div className="topbar-persona-header">
-                        <div className="topbar-persona-title">
-                          <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
-                          <span>Switch Persona View</span>
+                  <div className="dropdown-body">
+                    {PERSONA_ROLES.map(role => (
+                      <button
+                        key={role.id}
+                        type="button"
+                        className={`dropdown-persona-row ${userRole === role.id ? 'active' : ''}`}
+                        onClick={() => handleSwitchRole(role.id)}
+                      >
+                        <div className="persona-row-icon" style={{ background: role.color }}>
+                          <role.icon size={14} color="#060813" />
                         </div>
-                        {userRole !== 'admin' && (
-                          <button
-                            type="button"
-                            className="topbar-reset-link"
-                            onClick={() => handleSwitchRole('admin')}
-                            title="Return to full Administrator role"
-                          >
-                            Reset to Admin
-                          </button>
-                        )}
-                      </div>
-                      <div className="topbar-persona-sub">
-                        Verify visible apps, tools &amp; permissions for each user role:
-                      </div>
-
-                      <div className="topbar-role-grid">
-                        {PERSONA_ROLES.map((roleItem) => {
-                          const isActive = userRole === roleItem.id;
-                          const RoleIcon = roleItem.icon;
-                          return (
-                            <button
-                              key={roleItem.id}
-                              type="button"
-                              className={`topbar-role-tile ${isActive ? 'active' : ''}`}
-                              onClick={() => handleSwitchRole(roleItem.id)}
-                              title={`${roleItem.label}: ${roleItem.shortDesc}`}
-                            >
-                              <div className="topbar-role-tile-top">
-                                <span className="topbar-role-icon" style={{ color: roleItem.color }}>
-                                  <RoleIcon size={14} />
-                                </span>
-                                {isActive && <RiCheckLine size={13} style={{ color: '#10b981', marginLeft: 'auto' }} />}
-                              </div>
-                              <div className="topbar-role-tile-name">{roleItem.shortLabel}</div>
-                              <div className="topbar-role-tile-desc">{roleItem.shortDesc}</div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      className="topbar-menu-item"
-                      style={{ color: '#0ea5e9' }}
-                      onClick={() => handleSwitchRole('admin')}
+                        <div className="persona-row-meta">
+                          <span className="persona-row-label">{role.label}</span>
+                          <span className="persona-row-desc">{role.shortDesc}</span>
+                        </div>
+                        {userRole === role.id && <RiCheckLine size={16} style={{ color: '#00f2fe' }} />}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="dropdown-footer">
+                    <button 
+                      type="button" 
+                      className="dropdown-logout-btn"
+                      onClick={() => onLogout && onLogout()}
                     >
-                      <RiShieldFill size={14} />
-                      <span>Sandbox: Elevate to Admin (Unlock Role Switcher)</span>
+                      <RiLogoutBoxRFill size={15} /> Log Out
                     </button>
-                  )}
-
-                  <div className="topbar-dropdown-divider" />
-
-                  <button
-                    className="topbar-menu-item topbar-menu-item-danger"
-                    onClick={() => {
-                      setAccountOpen(false);
-                      if (onLogout) onLogout();
-                    }}
-                  >
-                    <RiLogoutBoxRFill size={14} style={{ color: '#f87171' }} />
-                    <span style={{ color: '#f87171' }}>Log Out</span>
-                  </button>
+                  </div>
                 </div>
               )}
             </div>
-
           </div>
         </header>
 
-        <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
-          {/* Low unified credits prompt banner - Excludes affiliates since affiliate dashboard requires 0 credits */}
-          {userCredits < 50 && userRole !== 'affiliate' && activeTab !== 'affiliates' && (
-            <div
-              style={{
-                background: 'rgba(239, 68, 68, 0.12)',
-                border: '1px solid #ef4444',
-                borderRadius: '6px',
-                padding: '10px 16px',
-                marginBottom: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '12px'
-              }}
-              data-testid="low-credits-alert-banner"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <RiCoinsFill size={18} style={{ color: '#ef4444' }} />
-                <div>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#fca5a5' }}>
-                    Low Credit Balance: {userCredits} Credits remaining.
-                  </span>
-                  <span style={{ fontSize: '12px', color: '#cbd5e1', marginLeft: '6px' }}>
-                    Reload unified platform credits to unlock continuous AI mastering, stem downloads, and split cascades. Zero monthly fees.
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCreditReloadOpen(true)}
-                style={{
-                  background: '#ef4444',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '6px 14px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-                data-testid="low-credits-reload-btn"
-              >
-                Reload Now
-              </button>
-            </div>
-          )}
-
-          <div className="admin-app-wrapper" style={{ position: 'relative' }}>
-            <div className="admin-app-header-bar" data-testid="admin-app-header-bar">
-              <div className="admin-app-header-left">
-                <span className="admin-app-badge">App Workspace</span>
-                <h2 className="admin-app-title">
-                  {APP_TITLES[activeTab] || 'TuneStream Workspace'}
-                </h2>
-              </div>
-              <div className="admin-app-header-right">
-                <AppHelpAiControls
-                  activeTab={activeTab}
-                  sessionUser={activeUser}
-                />
-              </div>
-            </div>
-
+        {/* Dashboard Main Content Area */}
+        <div className="dashboard-main-scroll">
+          <div className="dashboard-inner-wrap">
             {renderActivePanel()}
           </div>
-
-          {/* Unified Dashboard Footer Copyright Strip */}
-          <div className="dashboard-copyright-strip" style={{ background: 'rgba(11, 15, 30, 0.95)', marginTop: '24px' }}>
-            <span>© {new Date().getFullYear()} TuneMavens Ltd. All rights reserved.</span>
-            <span className="dashboard-copyright-divider">·</span>
-            <span>Operating on the shared Intermaven network.</span>
+          <div className="dashboard-footer-badge" style={{ padding: '24px 32px', textAlign: 'center', color: '#64748b', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <span>TuneStream Lossless Audio Network · 100% Unified Credits Model · Zero Monthly Subscriptions</span>
           </div>
         </div>
       </main>
 
+      {/* Real HTML5 Audio Element for live stream decoding */}
+      <audio
+        ref={audioRef}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleNextTrack}
+        onError={() => setPlaybackError('Stream fallback active')}
+      />
+
       {/* Docked Audio Player Bar (only visible when a track is selected / playing) */}
       {isPlayerOpen && currentTrack && (
-        <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)', zIndex: 1000 }}>
+        <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)', zIndex: 1000, background: '#070a14' }}>
           <div className="player-track-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src={currentTrack.cover} alt={currentTrack.title} className="player-cover" />
+            <img src={currentTrack.cover || currentTrack.coverArt} alt={currentTrack.title} className="player-cover" style={{ width: '48px', height: '48px', borderRadius: '3px', objectFit: 'cover' }} />
             <div className="player-metadata">
-              <span className="player-title">{currentTrack.title}</span>
+              <span className="player-title" style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{currentTrack.title}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="player-artist">{currentTrack.artist}</span>
+                <span className="player-artist" style={{ fontSize: '11px', color: '#94a3b8' }}>{currentTrack.artist}</span>
+                <span style={{ fontSize: '10px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '1px 6px', borderRadius: '3px' }}>
+                  {currentTrack.releaseType || 'Single'}
+                </span>
                 <a 
-                  href={`http://localhost:3000/#/epk/${currentTrack.artist.toLowerCase().replace(/\s+/g, '')}`}
+                  href={`http://localhost:3000/#/epk/${currentTrack.artist ? currentTrack.artist.toLowerCase().replace(/\s+/g, '') : 'ndufo'}`}
                   target="_blank" 
                   rel="noreferrer"
                   style={{ fontSize: '10px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f2fe', padding: '2px 6px', borderRadius: '3px', textDecoration: 'none', fontWeight: 600 }}
@@ -1963,51 +2278,72 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             </div>
           </div>
 
-          <div className="player-controls">
-            <div className="control-buttons" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button className="btn-control"><RiSkipBackFill /></button>
-              <button className="btn-control btn-play-pause" onClick={togglePlay}>
+          <div className="player-controls" style={{ flex: 1, maxWidth: '640px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+            <div className="control-buttons" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <button className="btn-control" onClick={handlePrevTrack} title="Previous Track" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '18px' }}>
+                <RiSkipBackFill />
+              </button>
+              <button className="btn-control btn-play-pause" onClick={togglePlay} title={isPlaying ? "Pause" : "Play"} style={{ width: '36px', height: '36px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px' }}>
                 {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
               </button>
-              <button className="btn-control"><RiSkipForwardFill /></button>
+              <button className="btn-control" onClick={handleNextTrack} title="Next Track" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '18px' }}>
+                <RiSkipForwardFill />
+              </button>
 
-              {/* Plan-Based Audio Stream Gating Tag */}
-              <span style={{ fontSize: '10px', fontWeight: 'bold', background: 'rgba(255,183,3,0.15)', color: '#ffb703', border: '1px solid #ffb70344', padding: '2px 8px', borderRadius: '3px' }}>
+              <span style={{ fontSize: '10px', fontWeight: 'bold', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 8px', borderRadius: '3px' }}>
                 🎧 Lossless FLAC Stream • Intermaven Shared Pool
               </span>
             </div>
 
-            <div className="playback-bar">
-              <span className="time-stamp">1:24</span>
-              <div className="progress-bar-container">
-                <div className="progress-bar-fill" style={{ width: '40%' }}></div>
+            <div className="playback-bar" style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+              <span className="time-stamp" style={{ fontSize: '11px', color: '#94a3b8', minWidth: '32px' }}>
+                {formatTime(currentTime)}
+              </span>
+              <div 
+                className="progress-bar-container" 
+                onClick={handleSeek} 
+                title="Click to seek timeline"
+                style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', cursor: 'pointer', position: 'relative' }}
+              >
+                <div 
+                  className="progress-bar-fill" 
+                  style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, height: '100%', background: '#00f2fe', borderRadius: '3px', transition: 'width 0.1s linear' }}
+                />
               </div>
-              <span className="time-stamp">{currentTrack.duration}</span>
+              <span className="time-stamp" style={{ fontSize: '11px', color: '#94a3b8', minWidth: '32px' }}>
+                {duration > 0 ? formatTime(duration) : (currentTrack.duration || '3:30')}
+              </span>
             </div>
           </div>
 
           <div className="player-volume" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Direct Artist Tip Button */}
             <button 
-              onClick={() => alert(`Sent $5.00 tip to ${currentTrack.artist} via Intermaven Credit Bank!`)}
-              style={{ background: 'linear-gradient(135deg, #ff007f 0%, #7928ca 100%)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              type="button"
+              onClick={handleTipArtist}
+              style={{ background: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              title="Send 1-tap tip using unified credits"
             >
               <RiCoinsLine /> Tip Artist $5
             </button>
 
-            <RiVolumeUpFill className="volume-icon" />
+            <RiVolumeUpFill className="volume-icon" style={{ color: '#94a3b8', fontSize: '18px' }} />
             <input 
               type="range" 
               min="0" 
               max="100" 
               value={volume}
-              onChange={(e) => setVolume(e.target.value)} 
+              onChange={(e) => setVolume(Number(e.target.value))} 
               className="volume-slider"
+              style={{ width: '80px', accentColor: '#00f2fe', cursor: 'pointer' }}
             />
 
             <button
               type="button"
-              onClick={() => setIsPlayerOpen(false)}
+              onClick={() => {
+                if (audioRef.current) audioRef.current.pause();
+                setIsPlaying(false);
+                setIsPlayerOpen(false);
+              }}
               style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
               title="Close Player"
             >
@@ -2041,7 +2377,6 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         onClose={() => setIsDirectTalentModalOpen(false)}
         sessionUser={activeUser}
       />
-
     </div>
   );
 }
