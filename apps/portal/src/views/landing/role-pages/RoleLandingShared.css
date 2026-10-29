@@ -8,6 +8,12 @@
    - +40% Header Banner Luminance Boost (filter: brightness(1.4))
 ============================================================================== */
 
+.role-landing-container {
+  padding-top: 80px;
+  position: relative;
+  width: 100%;
+}
+
 .role-page-wrapper {
   background: var(--bg, #060813);
   color: var(--tx, #f8fafc);
@@ -535,7 +541,7 @@
   min-height: 85vh;
   overflow: hidden;
   margin-top: 0;
-  padding-top: 70px;
+  padding-top: 24px;
 }
 
 .role-hero-stage {

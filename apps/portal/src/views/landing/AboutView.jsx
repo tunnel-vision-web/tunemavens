@@ -407,7 +407,7 @@ export default function AboutView() {
                 <Link to="/for/media-house" className="about-persona-link" style={{ color: '#3b82f6' }}>
                   Explore Media House Suite <RiArrowRightLine size={14} />
                 </Link>
-                <Link to="/register?role=media_house" className="about-persona-secondary-link">
+                <Link to="/register?role=media" className="about-persona-secondary-link">
                   Request Station Pass
                 </Link>
               </div>

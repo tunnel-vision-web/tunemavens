@@ -35,7 +35,9 @@ export default function RegisterView({ onLogin }) {
 
   const [roles, setRoles] = useState(() => {
     const sp = new URLSearchParams(location.search);
-    const paramRole = sp.get('role');
+    let paramRole = sp.get('role');
+    if (paramRole === 'media_house' || paramRole === 'media-house') paramRole = 'media';
+    if (paramRole === 'supervisor') paramRole = 'studio';
     const tp = sp.get('tool') || sessionStorage.getItem('signup_interest_tool');
     const toolMeta = getToolById(tp);
     const resolvedRole = paramRole || toolMeta?.role;
@@ -149,6 +151,10 @@ export default function RegisterView({ onLogin }) {
       preselected = [toolMeta.role];
     } else if (roleParam && ['consumer', 'creator', 'label', 'dj', 'studio', 'corporate', 'media'].includes(roleParam)) {
       preselected = [roleParam];
+    } else if (roleParam === 'media_house' || roleParam === 'media-house') {
+      preselected = ['media'];
+    } else if (roleParam === 'supervisor') {
+      preselected = ['studio'];
     } else {
       const fromPath = location.state?.from || '';
       preselected = getPreselectedRolesForPath(fromPath);

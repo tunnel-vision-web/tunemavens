@@ -378,7 +378,7 @@ export default function Navbar({ sessionUser }) {
   };
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${isSubAppPath(currentPath) ? "navbar-role" : ""}`.trim()}>
       <div className="nav-inner-container">
         {activeRoleLogo ? (
           <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', padding: '6px 0' }}>

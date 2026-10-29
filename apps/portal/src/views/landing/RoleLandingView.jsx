@@ -10,7 +10,7 @@ import MediaHouseLandingPage from './role-pages/MediaHouseLandingPage.jsx'
 import CorporateLandingPage from './role-pages/CorporateLandingPage.jsx'
 import { CANONICAL_ROLES } from '../../data/landingPageRegistry.js'
 
-function PersonaSwitcherToolbar({ activeRole, search }) {
+function PersonaSwitcherToolbar({ activeRole, search, isScrolled }) {
   return (
     <nav 
       className="role-switcher-bar" 
@@ -18,13 +18,13 @@ function PersonaSwitcherToolbar({ activeRole, search }) {
       data-testid="role-switcher-toolbar" 
       style={{
         position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        background: 'rgba(6, 8, 19, 0.94)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        padding: '8px 16px',
+        top: isScrolled ? '70px' : '80px',
+        zIndex: 99,
+        background: 'rgba(6, 8, 19, 0.96)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '10px 24px',
         overflowX: 'auto',
         whiteSpace: 'nowrap',
         display: 'flex',
@@ -32,6 +32,7 @@ function PersonaSwitcherToolbar({ activeRole, search }) {
         gap: '8px',
         fontSize: '12px',
         scrollbarWidth: 'none',
+        transition: 'top 0.25s ease',
       }}
     >
       <span style={{ color: 'var(--mu, #8b949e)', fontWeight: 600, marginRight: '4px', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em' }}>
@@ -86,6 +87,16 @@ export default function RoleLandingView() {
   const { role } = useParams();
   const location = useLocation();
   const normalized = (role || '').toLowerCase().trim();
+  const [isScrolled, setIsScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Normalize aliases to canonical role keys
   let canonicalKey = normalized;
@@ -149,7 +160,7 @@ export default function RoleLandingView() {
 
   return (
     <div className="role-landing-container">
-      <PersonaSwitcherToolbar activeRole={canonicalKey} search={location.search} />
+      <PersonaSwitcherToolbar activeRole={canonicalKey} search={location.search} isScrolled={isScrolled} />
       {renderContent()}
     </div>
   );

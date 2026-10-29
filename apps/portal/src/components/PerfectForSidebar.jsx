@@ -67,6 +67,7 @@ export const ROLE_LOGOS = {
   label: distributeLogo,
   dj: bookingLogo,
   media_house: managementLogo,
+  'media-house': managementLogo,
   supervisor: syncLogo,
   consumer: listenLogo,
   corporate: tunepayLogo,
