@@ -1,3 +1,6 @@
+import ConsumerBlogForumView from './components/community/ConsumerBlogForumView.jsx';
+import ConsumerHelpDocsView from './components/community/ConsumerHelpDocsView.jsx';
+import ConsumerSupportDeskView from './components/community/ConsumerSupportDeskView.jsx';
 import ConsumerSupportCommunityView from './components/community/ConsumerSupportCommunityView.jsx';
 import HiFiAudioPlayer from './components/player/HiFiAudioPlayer.jsx';
 import CreatorProfileView from './components/creator/CreatorProfileView.jsx';
@@ -2810,14 +2813,33 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     };
 
     const renderHelp = (tab = 'docs') => {
+      if (tab === 'blog' || tab === 'forum') {
+        return (
+          <ConsumerBlogForumView
+            sessionUser={sessionUser}
+            initialSubTab={tab === 'forum' ? 'forum' : 'editorial'}
+            onBackToExplore={() => {
+              const sp = new URLSearchParams(location.search);
+              sp.set('view', 'explore');
+              navigate(`?${sp.toString()}`);
+            }}
+          />
+        );
+      }
+      if (tab === 'tickets' || tab === 'support') {
+        return (
+          <ConsumerSupportDeskView
+            sessionUser={sessionUser}
+            catalogTracks={tracks}
+          />
+        );
+      }
       return (
-        <ConsumerSupportCommunityView
+        <ConsumerHelpDocsView
           sessionUser={sessionUser}
-          catalogTracks={tracks}
-          initialSection={tab}
-          onBackToExplore={() => {
+          onNavigateToSupport={() => {
             const sp = new URLSearchParams(location.search);
-            sp.set('view', 'explore');
+            sp.set('view', 'support');
             navigate(`?${sp.toString()}`);
           }}
         />

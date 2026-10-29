@@ -1822,3 +1822,6 @@ Allows creators and administrators to update or regenerate custom headers via na
      - **Thread Viewer & Reply System**: Deep-dive into discussion threads showing author roles (Listener, Audiophile Member, Verified Creator, Core Team), full post context, and a live reply composer.
 3. **Full URL Route Normalization**:
    - Updated `App.jsx` in `apps/tunestream` and `apps/portal` to handle `/forum`, `/community/forum`, `/tickets`, and `/support` redirects to maintain deep-linking state.
+4. **Decoupled Dedicated Pages (No Unified Mega-Tabs)**:
+   - Completely separated the 3 sections into independent page views (`ConsumerBlogForumView`, `ConsumerHelpDocsView`, and `ConsumerSupportDeskView`) instead of a single joint tabbed container.
+   - Selecting any option from the "Support & Community" dropdown navigates directly to that dedicated page with bespoke headers, badges, and tools without tab pollution from the other sections.
