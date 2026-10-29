@@ -84,7 +84,7 @@ const FALLBACK_LABEL_RATES = [
   }
 ];
 
-export default function LabelLandingPage() {
+export default function LabelLandingPage({ switcher }) {
   const accent = '#8b5cf6';
 
   // ================= HERO Slide Carousel State =================
@@ -477,6 +477,8 @@ export default function LabelLandingPage() {
           </div>
         </div>
       </section>
+
+      {switcher}
 
       {/* ================= 2. Main Content ================= */}
       <div className="role-container">

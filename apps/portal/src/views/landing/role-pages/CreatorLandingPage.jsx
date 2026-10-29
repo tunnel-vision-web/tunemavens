@@ -103,7 +103,7 @@ const FALLBACK_CREATOR_RATES = [
   }
 ];
 
-export default function CreatorLandingPage() {
+export default function CreatorLandingPage({ switcher }) {
   const accent = '#06b6d4';
   const syncMavensUrl = getServiceUrl('syncmavens');
 
@@ -500,6 +500,8 @@ export default function CreatorLandingPage() {
           </div>
         </div>
       </section>
+
+      {switcher}
 
       {/* ================= 2. Main Content ================= */}
       <div className="role-container">

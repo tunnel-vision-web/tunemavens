@@ -108,28 +108,36 @@ export default function RoleLandingView() {
   if (['media_house', 'media', 'broadcaster'].includes(normalized)) canonicalKey = 'media-house';
   if (['brand', 'brands'].includes(normalized)) canonicalKey = 'corporate';
 
+  const switcher = (
+    <PersonaSwitcherToolbar
+      activeRole={canonicalKey}
+      search={location.search}
+      isScrolled={isScrolled}
+    />
+  );
+
   const renderContent = () => {
     switch (canonicalKey) {
       case 'creator':
-        return <CreatorLandingPage />;
+        return <CreatorLandingPage switcher={switcher} />;
 
       case 'label':
-        return <LabelLandingPage />;
+        return <LabelLandingPage switcher={switcher} />;
 
       case 'dj':
-        return <DjLandingPage />;
+        return <DjLandingPage switcher={switcher} />;
 
       case 'supervisor':
-        return <SupervisorLandingPage />;
+        return <SupervisorLandingPage switcher={switcher} />;
 
       case 'consumer':
-        return <ConsumerLandingPage />;
+        return <ConsumerLandingPage switcher={switcher} />;
 
       case 'media-house':
-        return <MediaHouseLandingPage />;
+        return <MediaHouseLandingPage switcher={switcher} />;
 
       case 'corporate':
-        return <CorporateLandingPage />;
+        return <CorporateLandingPage switcher={switcher} />;
 
       default:
         return (
@@ -160,7 +168,6 @@ export default function RoleLandingView() {
 
   return (
     <div className="role-landing-container">
-      <PersonaSwitcherToolbar activeRole={canonicalKey} search={location.search} isScrolled={isScrolled} />
       {renderContent()}
     </div>
   );

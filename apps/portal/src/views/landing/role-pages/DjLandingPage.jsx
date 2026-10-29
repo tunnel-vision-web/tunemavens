@@ -82,7 +82,7 @@ const FALLBACK_DJ_RATES = [
   }
 ];
 
-export default function DjLandingPage() {
+export default function DjLandingPage({ switcher }) {
   const accent = '#14b8a6';
 
   // ================= HERO Slide Carousel State =================
@@ -474,6 +474,8 @@ export default function DjLandingPage() {
           </div>
         </div>
       </section>
+
+      {switcher}
 
       {/* ================= 2. Main Content ================= */}
       <div className="role-container">

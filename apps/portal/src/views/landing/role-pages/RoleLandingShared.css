@@ -9,9 +9,29 @@
 ============================================================================== */
 
 .role-landing-container {
-  padding-top: 80px;
   position: relative;
   width: 100%;
+}
+
+.role-switcher-bar {
+  position: sticky;
+  top: 70px;
+  z-index: 90;
+  background: rgba(6, 8, 19, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  scrollbar-width: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: top 0.2s ease;
 }
 
 .role-page-wrapper {
@@ -541,7 +561,7 @@
   min-height: 85vh;
   overflow: hidden;
   margin-top: 0;
-  padding-top: 24px;
+  padding-top: 70px;
 }
 
 .role-hero-stage {

@@ -128,7 +128,7 @@ const FALLBACK_RATES = [
   }
 ]
 
-export default function CorporateLandingPage() {
+export default function CorporateLandingPage({ switcher }) {
   const accent = '#ef4444';
 
   // ================= HERO Slide Carousel State =================
@@ -545,6 +545,8 @@ export default function CorporateLandingPage() {
           </div>
         </div>
       </section>
+
+      {switcher}
 
       {/* ================= 2. Main Content (Strictly Constricted to 1240px) ================= */}
       <div className="role-container">

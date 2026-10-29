@@ -84,7 +84,7 @@ const FALLBACK_SUPERVISOR_RATES = [
   }
 ];
 
-export default function SupervisorLandingPage() {
+export default function SupervisorLandingPage({ switcher }) {
   const accent = '#10b981';
   const syncMavensUrl = getServiceUrl('syncmavens');
 
@@ -472,6 +472,8 @@ export default function SupervisorLandingPage() {
           </div>
         </div>
       </section>
+
+      {switcher}
 
       {/* ================= 2. Main Content ================= */}
       <div className="role-container">

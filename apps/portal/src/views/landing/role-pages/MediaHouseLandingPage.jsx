@@ -82,7 +82,7 @@ const FALLBACK_MEDIA_RATES = [
   }
 ];
 
-export default function MediaHouseLandingPage() {
+export default function MediaHouseLandingPage({ switcher }) {
   const accent = '#3b82f6';
 
   // ================= HERO Slide Carousel State =================
@@ -475,6 +475,8 @@ export default function MediaHouseLandingPage() {
           </div>
         </div>
       </section>
+
+      {switcher}
 
       {/* ================= 2. Main Content ================= */}
       <div className="role-container">

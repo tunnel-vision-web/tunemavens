@@ -84,7 +84,7 @@ const FALLBACK_CONSUMER_RATES = [
   }
 ];
 
-export default function ConsumerLandingPage() {
+export default function ConsumerLandingPage({ switcher }) {
   const accent = '#ec4899';
   const tuneStreamUrl = getServiceUrl('tunestream');
 
@@ -481,6 +481,8 @@ export default function ConsumerLandingPage() {
           </div>
         </div>
       </section>
+
+      {switcher}
 
       {/* ================= 2. Main Content ================= */}
       <div className="role-container">
