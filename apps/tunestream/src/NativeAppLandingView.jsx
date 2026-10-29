@@ -6,7 +6,7 @@ import {
 import { normalizeMediaUrl } from './lib/api';
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill } from 'react-icons/ri'
+import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill, RiSearchLine } from 'react-icons/ri'
 import tsLogo from './assets/tunestream-logo.png'
 import tcLogo from './assets/tunecompanion-logo.png'
 import tpLogo from './assets/tunepay-logo.png'
@@ -1023,8 +1023,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                         <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>Lossless</span>
                       </div>
                     </div>
-                    <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</h3>
-                    <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.artist}</p>
+                    <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</h3>
+                    <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.artist}</p>
                     <span style={{ fontSize: '11px', color: 'var(--cyan)' }}>{song.streams}</span>
                   </div>
                 )}
@@ -1043,7 +1043,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   <div 
                     className="landing-feature-card" 
                     style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
-                    onClick={() => window.open(`http://localhost:3000/#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\\s+/g, '')}`, '_blank')}
+                    onClick={() => window.open(`http://localhost:3000/#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`, '_blank')}
                   >
                     <div style={{ width: '90px', height: '90px', borderRadius: '3px', margin: '0 auto 12px', overflow: 'hidden', background: '#0e1424', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <img 
@@ -1053,7 +1053,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                         onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${artist.id}/400/400`; }}
                       />
                     </div>
-                    <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{artist.name}</h3>
+                    <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{artist.name}</h3>
                     <span style={{ fontSize: '11px', color: 'var(--cyan)', display: 'block', marginBottom: '4px' }}>{artist.genre}</span>
                     <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{artist.listeners}</span>
                   </div>
@@ -1086,8 +1086,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                         <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>Single</span>
                       </div>
                     </div>
-                    <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{single.title}</h3>
-                    <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{single.artist}</p>
+                    <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{single.title}</h3>
+                    <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{single.artist}</p>
                     <span style={{ fontSize: '11px', color: 'var(--cyan)' }}>{single.dls}</span>
                   </div>
                 )}
@@ -1119,8 +1119,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                         <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>{album.type || 'Album'}</span>
                       </div>
                     </div>
-                    <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.title}</h3>
-                    <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.artist} · {album.year}</p>
+                    <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.title}</h3>
+                    <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.artist} · {album.year}</p>
                     <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{album.tracksCount} tracks</span>
                   </div>
                 )}
@@ -1211,16 +1211,41 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               }}
               style={{
                 width: '100%',
-                padding: '12px 16px 12px 44px',
+                padding: '12px 38px 12px 44px',
                 background: 'rgba(255,255,255,0.04)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: '3px',
                 color: '#fff',
                 outline: 'none',
                 textAlign: 'left',
-                fontSize: '13px'
+                fontSize: '13px',
+                boxSizing: 'border-box'
               }}
             />
+            {exploreSearch && (
+              <button
+                type="button"
+                data-no-i18n="true"
+                aria-label="Clear search"
+                data-testid="clear-search-btn"
+                onClick={() => setExploreSearch('')}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  padding: 0
+                }}
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           {/* Filter Pills */}
@@ -1298,7 +1323,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 key={`art_${idx}`} 
                 className="landing-feature-card" 
                 style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} 
-                onClick={() => window.open(`http://localhost:3000/#/epk/${c.subdomain || c.name.toLowerCase().replace(/\\s+/g, '')}`, '_blank')}
+                onClick={() => window.open(`http://localhost:3000/#/epk/${c.subdomain || c.name.toLowerCase().replace(/\s+/g, '')}`, '_blank')}
               >
                 <div style={{ width: '100%', height: '140px', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '14px', background: '#0e1424' }}>
                   <img 
@@ -1311,8 +1336,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                     CREATOR WEB WORLD
                   </span>
                 </div>
-                <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{c.name}</h3>
-                <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{c.genre} · {c.role}</p>
+                <h3 data-no-i18n="true" style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{c.name}</h3>
+                <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{c.genre} · {c.role}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
                   <span style={{ color: 'var(--mu)' }}>{c.listeners}</span>
                   <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Enter Web World 🌐 →</span>
@@ -1338,8 +1363,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                     SINGLE RELEASE
                   </span>
                 </div>
-                <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{s.title}</h3>
-                <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{s.artist}</p>
+                <h3 data-no-i18n="true" style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{s.title}</h3>
+                <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{s.artist}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
                   <span style={{ color: 'var(--mu)', fontFamily: 'monospace' }}>{s.isrc}</span>
                   <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>Listen ▶</span>
@@ -1365,8 +1390,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                     {al.type || 'ALBUM'}
                   </span>
                 </div>
-                <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{al.title}</h3>
-                <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{al.artist} · {al.year}</p>
+                <h3 data-no-i18n="true" style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{al.title}</h3>
+                <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{al.artist} · {al.year}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
                   <span style={{ color: 'var(--mu)' }}>{al.tracksCount} tracks</span>
                   <span style={{ color: '#c084fc', fontWeight: 'bold' }}>View Collection &rarr;</span>

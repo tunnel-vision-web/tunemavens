@@ -292,3 +292,21 @@ export const affiliatesApi = {
   }
 };
 
+/**
+ * Normalizes backend media and artwork URLs to support relative same-origin reverse-proxying.
+ * Converts absolute http://localhost:8001/uploads/... or http://127.0.0.1:8001/... to /uploads/...
+ */
+export function normalizeMediaUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (trimmed.includes(':8001/uploads/')) {
+    return trimmed.substring(trimmed.indexOf('/uploads/'));
+  }
+  if (trimmed.includes(':8001/heroes/')) {
+    return trimmed.substring(trimmed.indexOf('/heroes/'));
+  }
+  if (trimmed.includes(':8001/headers/')) {
+    return trimmed.substring(trimmed.indexOf('/headers/'));
+  }
+  return trimmed;
+}

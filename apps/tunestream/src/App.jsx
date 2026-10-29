@@ -814,7 +814,7 @@ function TuneStreamExplorePanel({
                       style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} 
                     />
                     <div>
-                      <h4 style={{ margin: '0 0 4px', fontSize: '16px', color: '#fff', fontWeight: '800' }}>{artist.name}</h4>
+                      <h4 data-no-i18n="true" style={{ margin: '0 0 4px', fontSize: '16px', color: '#fff', fontWeight: '800' }}>{artist.name}</h4>
                       <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '3px', fontWeight: 'bold' }}>
                         {artist.genre || 'Afro-fusion'}
                       </span>
@@ -894,11 +894,11 @@ function TuneStreamExplorePanel({
                 >
                   <div className="track-number">{idx + 1}</div>
                   <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
-                  <div className="track-details" style={{ width: '220px' }}>
+                  <div data-no-i18n="true" className="track-details" style={{ width: '220px' }}>
                     <span className="track-title">{track.title}</span>
                     <span className="track-artist">{track.artist}</span>
                   </div>
-                  <div className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
+                  <div data-no-i18n="true" className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
                   <div style={{ width: '90px' }}>
                     <span style={{ fontSize: '10px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 6px', borderRadius: '3px', fontWeight: 'bold' }}>
                       {track.releaseType || 'Single'}
@@ -997,11 +997,11 @@ function TuneStreamSinglesPanel({ tracks = [], currentTrack, isPlaying, likes = 
             >
               <div className="track-number">{idx + 1}</div>
               <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
-              <div className="track-details" style={{ width: '220px' }}>
+              <div data-no-i18n="true" className="track-details" style={{ width: '220px' }}>
                 <span className="track-title">{track.title}</span>
                 <span className="track-artist">{track.artist}</span>
               </div>
-              <div className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
+              <div data-no-i18n="true" className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
               <div style={{ color: '#00f2fe', width: '120px', fontSize: '11px', fontWeight: 'bold' }}>
                 Splits: {track.splits || '100/0'}
               </div>
@@ -1105,7 +1105,7 @@ function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPla
                     style={{ width: '64px', height: '64px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} 
                   />
                   <div>
-                    <h4 style={{ margin: '0 0 4px', fontSize: '18px', color: '#fff', fontWeight: '800' }}>{artist.name}</h4>
+                    <h4 data-no-i18n="true" style={{ margin: '0 0 4px', fontSize: '18px', color: '#fff', fontWeight: '800' }}>{artist.name}</h4>
                     <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '3px', fontWeight: 'bold' }}>
                       {artist.genre || 'Afro-fusion'}
                     </span>
@@ -1131,7 +1131,7 @@ function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPla
                           onClick={() => onPlayTrack(tr)}
                           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', cursor: 'pointer', fontSize: '12px' }}
                         >
-                          <span style={{ color: '#fff', fontWeight: '600' }}>{tr.title}</span>
+                          <span data-no-i18n="true" style={{ color: '#fff', fontWeight: '600' }}>{tr.title}</span>
                           <span style={{ color: '#00f2fe', fontSize: '11px' }}>▶ Listen</span>
                         </div>
                       ))}
@@ -1190,11 +1190,11 @@ function TuneStreamFavoritesPanel({ tracks = [], currentTrack, likes = [], onLik
             >
               <div className="track-number">{idx + 1}</div>
               <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
-              <div className="track-details" style={{ width: '220px' }}>
+              <div data-no-i18n="true" className="track-details" style={{ width: '220px' }}>
                 <span className="track-title">{track.title}</span>
                 <span className="track-artist">{track.artist}</span>
               </div>
-              <div className="track-album">{track.album || track.release}</div>
+              <div data-no-i18n="true" className="track-album">{track.album || track.release}</div>
               <div className="track-plays">{track.plays}</div>
               <div className="track-duration">{track.duration}</div>
               <button 
@@ -1294,11 +1294,11 @@ function TuneStreamCatalogPanel({ tracks = [], onPlayTrack, setActiveTab }) {
           <div key={track.id} className="track-row" style={{ cursor: 'default' }}>
             <div className="track-number">{idx + 1}</div>
             <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
-            <div className="track-details" style={{ width: '220px' }}>
+            <div data-no-i18n="true" className="track-details" style={{ width: '220px' }}>
               <span className="track-title">{track.title}</span>
               <span className="track-artist">{track.artist}</span>
             </div>
-            <div className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
+            <div data-no-i18n="true" className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
             <div style={{ color: '#64748b', fontSize: '11px', width: '130px', fontFamily: 'monospace' }}>
               {track.isrc}
             </div>
@@ -2422,7 +2422,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)', zIndex: 1000, background: '#070a14' }}>
           <div className="player-track-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img src={normalizeMediaUrl(currentTrack.cover || currentTrack.coverArt)} alt={currentTrack.title} className="player-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200'; }} style={{ width: '48px', height: '48px', borderRadius: '3px', objectFit: 'cover' }} />
-            <div className="player-metadata">
+            <div data-no-i18n="true" className="player-metadata">
               <span className="player-title" style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{currentTrack.title}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="player-artist" style={{ fontSize: '11px', color: '#94a3b8' }}>{currentTrack.artist}</span>

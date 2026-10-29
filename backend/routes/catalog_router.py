@@ -13,6 +13,21 @@ from pydantic import BaseModel, Field
 from config import db
 from auth import get_optional_user
 
+
+DEFAULT_ARTWORK_URLS = [
+    "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+    "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
+    "/uploads/ai_assets/retina_art_1908250_2560x1440.jpg",
+    "/heroes/ndufo_hero_slide1_retina.jpg",
+    "/heroes/ndufo_hero_slide2_retina.jpg",
+    "/heroes/ndufo_hero_slide3_retina.jpg",
+    "/headers/discography_retina_header.jpg"
+]
+
+def get_authoritative_cover(seed: str) -> str:
+    idx = abs(hash(str(seed))) % len(DEFAULT_ARTWORK_URLS)
+    return DEFAULT_ARTWORK_URLS[idx]
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/catalog", tags=["Catalogue"])
@@ -74,7 +89,7 @@ DEFAULT_ARTISTS = [
         "role": "Singer-Songwriter / Afro-Soul",
         "genre": "Afro-fusion",
         "bio": "Soulful Nairobi acoustic melodies blended with traditional Swahili poetry and contemporary Afro-pop rhythms.",
-        "avatar": "https://picsum.photos/seed/aisha_avatar/400/400",
+        "avatar": "/heroes/ndufo_hero_slide2_retina.jpg",
         "is_default": False
     },
     {
@@ -84,7 +99,7 @@ DEFAULT_ARTISTS = [
         "role": "Multi-instrumentalist / Producer",
         "genre": "Amapiano",
         "bio": "High-energy Amapiano log drum architect and live sync composition specialist.",
-        "avatar": "https://picsum.photos/seed/brian_avatar/400/400",
+        "avatar": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
         "is_default": False
     },
     {
@@ -94,7 +109,7 @@ DEFAULT_ARTISTS = [
         "role": "Electronic / DJ",
         "genre": "Deep-House",
         "bio": "Coastal ambient deep house producer crafting sunset anthems from Mombasa to the world.",
-        "avatar": "https://picsum.photos/seed/khalid_avatar/400/400",
+        "avatar": "/heroes/ndufo_hero_slide3_retina.jpg",
         "is_default": False
     }
 ]
@@ -150,7 +165,7 @@ def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any
             "duration": "3:45",
             "streams": "3.4M",
             "priceCredits": 50,
-            "coverArt": "https://picsum.photos/seed/cyberwave_cover/600/600",
+            "coverArt": "/uploads/ai_assets/retina_art_1908250_2560x1440.jpg",
             "coverText": "Cyberwave",
             "coverBg": "linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)",
             "status": "valid",
@@ -174,7 +189,7 @@ def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any
             "duration": "4:12",
             "streams": "1.8M",
             "priceCredits": 50,
-            "coverArt": "https://picsum.photos/seed/riftvalley_cover/600/600",
+            "coverArt": "/headers/discography_retina_header.jpg",
             "coverText": "Sunset",
             "coverBg": "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
             "status": "valid",
@@ -198,7 +213,7 @@ def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any
             "duration": "3:18",
             "streams": "940K",
             "priceCredits": 40,
-            "coverArt": "https://picsum.photos/seed/afrosynth_cover/600/600",
+            "coverArt": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
             "coverText": "Cascade",
             "coverBg": "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)",
             "status": "valid",
@@ -222,7 +237,7 @@ def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any
             "duration": "5:02",
             "streams": "2.1M",
             "priceCredits": 60,
-            "coverArt": "https://picsum.photos/seed/mara_cover/600/600",
+            "coverArt": "/heroes/ndufo_hero_slide2_retina.jpg",
             "coverText": "Mara",
             "coverBg": "linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)",
             "status": "valid",
@@ -283,7 +298,7 @@ DEFAULT_ALBUMS = [
         "type": "Album",
         "genre": "Afro-House",
         "tracksCount": 12,
-        "cover": "https://picsum.photos/seed/album1_epk/400",
+        "cover": "/uploads/ai_assets/retina_art_1908250_2560x1440.jpg",
         "streams": "3.4M",
         "isrc": "KE-TM1-26-00042",
         "priceCredits": 50,
@@ -296,7 +311,7 @@ DEFAULT_ALBUMS = [
         "type": "Album",
         "genre": "Amapiano",
         "tracksCount": 10,
-        "cover": "https://picsum.photos/seed/album2_epk/400",
+        "cover": "/headers/discography_retina_header.jpg",
         "streams": "1.8M",
         "isrc": "KE-TM1-26-00043",
         "priceCredits": 50,
@@ -309,7 +324,7 @@ DEFAULT_ALBUMS = [
         "type": "Single",
         "genre": "Deep-House",
         "tracksCount": 2,
-        "cover": "https://picsum.photos/seed/album3_epk/400",
+        "cover": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
         "streams": "940K",
         "isrc": "KE-TM1-26-00044",
         "priceCredits": 40,
@@ -322,7 +337,7 @@ DEFAULT_ALBUMS = [
         "type": "EP",
         "genre": "Afrobeats",
         "tracksCount": 5,
-        "cover": "https://picsum.photos/seed/album4_epk/400",
+        "cover": "/heroes/ndufo_hero_slide2_retina.jpg",
         "streams": "2.1M",
         "isrc": "KE-TM1-26-00045",
         "priceCredits": 45,
@@ -383,7 +398,7 @@ def build_creator_albums(subdomain: str, tracks: List[Dict[str, Any]]) -> List[D
         key = rel_title.lower()
         if key not in albums_map:
             matching = [tr for tr in tracks if (tr.get("release") or "").lower().strip() == key]
-            cover = t.get("coverArt") or f"https://picsum.photos/seed/{abs(hash(rel_title))}/400"
+            cover = t.get("coverArt") or get_authoritative_cover(rel_title)
             albums_map[key] = {
                 "id": f"trk-rel-{abs(hash(rel_title))}",
                 "title": rel_title,
@@ -463,6 +478,10 @@ def get_catalog_tracks(
         # 1. Pull from db.catalog_tracks
         for doc in db.catalog_tracks.find({}):
             for t in doc.get("tracks", []):
+                cover = t.get("coverArt") or t.get("cover")
+                if not cover or "picsum.photos" in cover:
+                    t["coverArt"] = get_authoritative_cover(t.get("title") or t.get("isrc") or "")
+                    t["cover"] = t["coverArt"]
                 isrc = t.get("isrc")
                 if isrc and isrc not in seen_isrcs:
                     seen_isrcs.add(isrc)
@@ -517,6 +536,11 @@ def get_catalog_tracks(
     # Check dedicated catalog_tracks collection
     doc = db.catalog_tracks.find_one({"subdomain": clean})
     if doc and doc.get("tracks") and len(doc["tracks"]) > 0:
+        for t in doc["tracks"]:
+            cover = t.get("coverArt") or t.get("cover")
+            if not cover or "picsum.photos" in cover:
+                t["coverArt"] = get_authoritative_cover(t.get("title") or t.get("isrc") or "")
+                t["cover"] = t["coverArt"]
         if not doc.get("albums") or len(doc.get("albums")) == 0:
             _sync_tracks_to_all_collections(clean, doc["tracks"])
         return {"subdomain": clean, "count": len(doc["tracks"]), "tracks": doc["tracks"]}
@@ -549,6 +573,11 @@ def get_catalog_albums(subdomain: str = Query("ndufo")):
     tracks_res = get_catalog_tracks(subdomain=clean)
     tracks = tracks_res.get("tracks", [])
     albums = build_creator_albums(clean, tracks)
+    for alb in albums:
+        cover = alb.get("cover") or alb.get("coverArt")
+        if not cover or "picsum.photos" in cover:
+            alb["cover"] = get_authoritative_cover(alb.get("title") or "")
+            alb["coverArt"] = alb["cover"]
     return {
         "subdomain": clean,
         "count": len(albums),
@@ -575,7 +604,7 @@ def add_catalog_track(payload: Dict[str, Any], subdomain: str = Query("ndufo")):
         item["isrc"] = isrc
         item["status"] = item.get("status", "valid")
         if not item.get("coverArt"):
-            item["coverArt"] = f"https://picsum.photos/seed/{abs(hash(item.get('title', 'track')))}/600/600"
+            item["coverArt"] = get_authoritative_cover(item.get("title", "track"))
         
         # Replace if ISRC exists, otherwise prepend
         if isrc in existing_isrcs:
@@ -613,7 +642,7 @@ def wizard_ingest_release(payload: WizardIngestPayload):
     album_type = project.get("type") or "Album"
     album_genre = project.get("genre") or "Afro-House"
     album_year = project.get("year") or str(datetime.now().year)
-    album_cover = project.get("coverArt") or f"https://picsum.photos/seed/{abs(hash(album_title))}/600/600"
+    album_cover = project.get("coverArt") or get_authoritative_cover(album_title)
     album_artist = project.get("artist") or clean.capitalize()
 
     ingested_tracks = []
@@ -1013,6 +1042,9 @@ def get_artists_roster(
     for doc in cursor:
         doc["id"] = str(doc.get("id") or doc.get("_id"))
         doc.pop("_id", None)
+        avatar = doc.get("avatar")
+        if not avatar or "picsum.photos" in avatar:
+            doc["avatar"] = get_authoritative_cover(doc.get("name") or doc.get("subdomain") or "")
         artists.append(doc)
 
     return {
@@ -1043,7 +1075,7 @@ def create_or_add_artist(
         "role": payload.role or "Primary Artist",
         "genre": payload.genre or "Afro-fusion",
         "bio": payload.bio or f"Official artist profile for {payload.name}.",
-        "avatar": payload.avatar or f"https://picsum.photos/seed/{clean_sub}_avatar/400/400",
+        "avatar": payload.avatar or get_authoritative_cover(clean_sub),
         "is_default": payload.is_default or False,
         "owner_id": owner_id,
         "updated_at": now
@@ -1225,7 +1257,7 @@ def bulk_ingest_catalog(
             "duration": t.get("duration") or "3:30",
             "streams": t.get("streams") or "0",
             "priceCredits": int(t.get("priceCredits") or 50),
-            "coverArt": t.get("coverArt") or f"https://picsum.photos/seed/{abs(hash(title))}/600/600",
+            "coverArt": t.get("coverArt") or get_authoritative_cover(title),
             "coverBg": t.get("coverBg") or "linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)",
             "coverText": t.get("coverText") or title.split(" ")[0],
             "audioUrl": t.get("audioUrl"),

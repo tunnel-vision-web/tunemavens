@@ -8899,17 +8899,28 @@ function App() {
 
   // Persistent catalogue track synchronization from backend API
   useEffect(() => {
-    const sub = sessionUser?.username || 'ndufo';
-    fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`)
+    fetch('/api/catalog/tracks?all=true')
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && Array.isArray(data.tracks) && data.tracks.length > 0) {
-          setCatalogTracks(data.tracks);
-          saveUnifiedCatalog(data.tracks);
+          const mapped = data.tracks.map(t => ({
+            ...t,
+            cover: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id}/500/500`,
+            coverArt: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id}/500/500`,
+            album: t.release || t.album || 'Singles 2026',
+            release: t.release || t.album || 'Singles 2026',
+            releaseType: t.releaseType || (t.release && t.release.toLowerCase().includes('single') ? 'Single' : 'Album'),
+            plays: t.streams || t.plays || '1.2M',
+            streams: t.streams || t.plays || '1.2M',
+            splits: t.splits || t.split || t.publishingSplit || 'Artist (60%) / Producer (25%) / Label (15%)',
+            audioUrl: t.audioUrl || t.fileUrl || `/api/stream/track/${t.isrc || t.id}`
+          }));
+          setCatalogTracks(mapped);
+          saveUnifiedCatalog(mapped);
         }
       })
       .catch(err => console.warn('Catalogue sync fallback to local cache:', err));
-  }, [sessionUser?.username]);
+  }, []);
 
   // Keep localStorage and cross-app event updated whenever catalogTracks changes
   useEffect(() => {

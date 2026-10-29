@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { RiSmartphoneFill } from 'react-icons/ri'
+import { RiSmartphoneFill, RiSearchLine } from 'react-icons/ri'
+import { normalizeMediaUrl } from '../../lib/api.js'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
 import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
@@ -22,6 +23,18 @@ export default function StreamView({
 }) {
   const { country } = useRegion();
   const navigate = useNavigate();
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const displayedTracks = searchQuery.trim()
+    ? catalogTracks.filter(t => {
+        const q = searchQuery.toLowerCase();
+        return (t.title && t.title.toLowerCase().includes(q)) ||
+               (t.artist && t.artist.toLowerCase().includes(q)) ||
+               (t.isrc && t.isrc.toLowerCase().includes(q)) ||
+               (t.genre && t.genre.toLowerCase().includes(q));
+      })
+    : catalogTracks;
 
   // Tipping states
   const [tipVal, setTipVal] = useState(50);
@@ -167,6 +180,15 @@ export default function StreamView({
                   boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
                   transition: 'background 0.5s ease'
                 }}>
+                  {(globalTrack.cover || globalTrack.coverArt) && (
+                    <img 
+                      src={normalizeMediaUrl(globalTrack.cover || globalTrack.coverArt)} 
+                      alt={globalTrack.title}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  )}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.4) 100%)' }} />
                   {/* Vinyl Groove Rings Overlay */}
                   <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '60%', height: '60%', borderRadius: '50%', border: '6px double rgba(255,255,255,0.05)', opacity: 0.8 }} />
                   <div style={{ position: 'absolute', top: '15%', left: '15%', width: '70%', height: '70%', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.03)', pointerEvents: 'none' }} />
@@ -270,14 +292,49 @@ export default function StreamView({
             
             {/* Catalogue Selector */}
             <div className="dashboard-card" style={{ padding: '24px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff', textAlign: 'left' }}>Ingested Catalogue Select</h3>
-              {catalogTracks.length === 0 ? (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', margin: 0, textAlign: 'left' }}>Ingested Catalogue Select</h3>
+                <span style={{ fontSize: '11px', color: 'var(--cyan)' }}>{displayedTracks.length} tracks</span>
+              </div>
+
+              {/* Live Search Input */}
+              <div style={{ position: 'relative', marginBottom: '12px' }}>
+                <RiSearchLine size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                <input 
+                  type="text" 
+                  placeholder="Search tracks, artists, ISRC..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '7px 28px 7px 30px',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '3px',
+                    color: '#fff',
+                    fontSize: '12px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '12px', padding: 0 }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {displayedTracks.length === 0 ? (
                 <div style={{ padding: '30px 0', textAlign: 'center', fontSize: '12px', color: 'var(--mu)' }}>
-                  No catalogue tracks found.
+                  No catalogue tracks match "{searchQuery}".
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {catalogTracks.map((tr) => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '420px', overflowY: 'auto' }}>
+                  {displayedTracks.map((tr) => (
                     <div 
                       key={tr.isrc}
                       onClick={() => setGlobalTrack(tr)}
@@ -293,29 +350,15 @@ export default function StreamView({
                         transition: 'all 0.2s ease'
                       }}
                     >
-                      <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '3px',
-                        background: tr.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '7px',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                        overflow: 'hidden',
-                        padding: '2px',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {tr.coverText || 'Art'}
-                      </div>
+                      <img 
+                        src={normalizeMediaUrl(tr.cover || tr.coverArt) || `https://picsum.photos/seed/${tr.id || tr.isrc}/300/300`} 
+                        alt={tr.title} 
+                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200'; }}
+                        style={{ width: '38px', height: '38px', borderRadius: '3px', objectFit: 'cover', flexShrink: 0 }}
+                      />
                       <div style={{ textAlign: 'left', flex: 1 }}>
-                        <strong style={{ display: 'block', color: '#fff', fontSize: '12px' }}>{tr.title}</strong>
-                        <span style={{ fontSize: '10.5px', color: 'var(--mu)' }}>{tr.artist} • {tr.isrc}</span>
+                        <strong data-no-i18n="true" style={{ display: 'block', color: '#fff', fontSize: '12px' }}>{tr.title}</strong>
+                        <span data-no-i18n="true" style={{ fontSize: '10.5px', color: 'var(--mu)' }}>{tr.artist} • {tr.isrc}</span>
                       </div>
                     </div>
                   ))}
