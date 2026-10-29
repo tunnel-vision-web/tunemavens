@@ -1,3 +1,9 @@
+import { 
+  AUTHORITATIVE_CATALOG_TRACKS, 
+  AUTHORITATIVE_CATALOG_ARTISTS, 
+  AUTHORITATIVE_CATALOG_ALBUMS 
+} from './data/authoritativeCatalog';
+import { normalizeMediaUrl } from './lib/api';
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill } from 'react-icons/ri'
@@ -413,6 +419,40 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   let pageContent;
 
   const [selectedEpk, setSelectedEpk] = useState(null);
+  const [tracks, setTracks] = useState(() => (catalogTracks && catalogTracks.length > 0) ? catalogTracks : AUTHORITATIVE_CATALOG_TRACKS);
+  const [artists, setArtists] = useState(AUTHORITATIVE_CATALOG_ARTISTS);
+  const [albums, setAlbums] = useState(AUTHORITATIVE_CATALOG_ALBUMS);
+  const [exploreSearch, setExploreSearch] = useState('');
+  const [exploreFilter, setExploreFilter] = useState('all');
+
+  useEffect(() => {
+    fetch('/api/catalog/tracks?all=true')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
+          setTracks(data.tracks);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/catalog/artists')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.artists && Array.isArray(data.artists) && data.artists.length > 0) {
+          setArtists(data.artists);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/catalog/albums')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.albums && Array.isArray(data.albums) && data.albums.length > 0) {
+          setAlbums(data.albums);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const [playlists, setPlaylists] = useState(() => {
     try {
@@ -910,77 +950,77 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     };
 
     const renderListen = () => {
-      const trendingSongs = [
-        { id: 't1', title: 'Midnight Cruise', artist: 'Alex Rivera', streams: '1.2M streams', bg: 'linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%)' },
-        { id: 't2', title: 'Lagos Vibe', artist: 'Tunde & Friends', streams: '890K streams', bg: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)' },
-        { id: 't3', title: 'Sunset in Nairobi', artist: 'Mercy Wangari', streams: '620K streams', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-        { id: 't4', title: 'Desert Wind', artist: 'Youssef Bilal', streams: '450K streams', bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-        { id: 't5', title: 'Table Mountain Sunrise', artist: 'Zola K.', streams: '310K streams', bg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' },
-        { id: 't6', title: 'Highlife Summer', artist: 'Kofi Mensah', streams: '290K streams', bg: 'linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)' },
-        { id: 't7', title: 'Amapiano Horizon', artist: 'DJ Maphor', streams: '270K streams', bg: 'linear-gradient(135deg, #f43f5e 0%, #8b5cf6 100%)' },
-        { id: 't8', title: 'Sahel Journey', artist: 'Fatoumata D.', streams: '250K streams', bg: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)' },
-        { id: 't9', title: 'Rift Valley Sunset', artist: 'Sauti Band', streams: '210K streams', bg: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)' },
-        { id: 't10', title: 'Bongo Flava Chill', artist: 'Kidest G.', streams: '180K streams', bg: 'linear-gradient(135deg, #22d3ee 0%, #d97706 100%)' },
-      ];
+      const singlesList = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
+      const trendingSongs = tracks.slice(0, 10).map((t, idx) => ({
+        id: t.id || t.isrc || `t_${idx}`,
+        title: t.title,
+        artist: t.artist || 'Ndufo',
+        streams: `${t.streams || t.plays || '1.2M'} plays`,
+        cover: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id || idx}/400/400`,
+        track: t
+      }));
 
-      const popularCreators = [
-        { name: 'Alex Rivera', listeners: '1.5M listeners', avatar: '🎙️', bg: '#8b5cf6' },
-        { name: 'Tunde & Friends', listeners: '1.1M listeners', avatar: '🥁', bg: '#ec4899' },
-        { name: 'Mercy Wangari', listeners: '900K listeners', avatar: '🎤', bg: '#10b981' },
-        { name: 'Youssef Bilal', listeners: '800K listeners', avatar: '🎸', bg: '#f59e0b' },
-        { name: 'Zola K.', listeners: '500K listeners', avatar: '🎷', bg: '#3b82f6' },
-        { name: 'Kofi Mensah', listeners: '450K listeners', avatar: '🪘', bg: '#0ea5e9' },
-        { name: 'DJ Maphor', listeners: '400K listeners', avatar: '🎛️', bg: '#8b5cf6' },
-        { name: 'Fatoumata D.', listeners: '350K listeners', avatar: '🎻', bg: '#f43f5e' },
-        { name: 'Sauti Band', listeners: '300K listeners', avatar: '🎺', bg: '#10b981' },
-        { name: 'Kidest G.', listeners: '250K listeners', avatar: '🎹', bg: '#22d3ee' },
-      ];
+      const popularCreators = artists.map(a => ({
+        id: a.id,
+        name: a.name,
+        role: a.role || 'Signed Creator',
+        genre: a.genre || 'Afro-fusion',
+        listeners: a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners',
+        avatar: normalizeMediaUrl(a.avatar) || `https://picsum.photos/seed/${a.id}/400/400`,
+        subdomain: a.subdomain
+      }));
 
-      const popularSingles = [
-        { title: 'City Lights', artist: 'Alex Rivera', dls: '400K downloads', bg: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)' },
-        { title: 'Amapiano Bounce', artist: 'Zola K.', dls: '320K downloads', bg: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)' },
-        { title: 'Zilizopendwa Remix', artist: 'Mercy Wangari', dls: '280K downloads', bg: 'linear-gradient(135deg, #6d28d9 0%, #10b981 100%)' },
-        { title: 'Highlife High', artist: 'Tunde & Friends', dls: '210K downloads', bg: 'linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%)' },
-        { title: 'Bongo Flava Anthem', artist: 'Zola K.', dls: '190K downloads', bg: 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)' },
-        { title: 'Sahel Wind', artist: 'Youssef Bilal', dls: '170K downloads', bg: 'linear-gradient(135deg, #8b5cf6 0%, #10b981 100%)' },
-        { title: 'Rift Valley Groove', artist: 'Sauti Band', dls: '150K downloads', bg: 'linear-gradient(135deg, #ec4899 0%, #22d3ee 100%)' },
-        { title: 'Cape Town Chill', artist: 'Zola K.', dls: '130K downloads', bg: 'linear-gradient(135deg, #3b82f6 0%, #f59e0b 100%)' },
-        { title: 'Lagos Night', artist: 'Tunde & Friends', dls: '110K downloads', bg: 'linear-gradient(135deg, #10b981 0%, #ec4899 100%)' },
-        { title: 'Sahara Wind', artist: 'Youssef Bilal', dls: '95K downloads', bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-      ];
+      const popularSingles = singlesList.map((t, idx) => ({
+        id: t.id || t.isrc || `s_${idx}`,
+        title: t.title,
+        artist: t.artist || 'Ndufo',
+        dls: `${t.streams || t.plays || '1.0M'} streams`,
+        cover: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id || idx}/400/400`,
+        isrc: t.isrc,
+        track: t
+      }));
 
-      const popularAlbums = [
-        { title: 'Afro-Futurism Vol. 1', artist: 'Alex Rivera', year: '2026', bg: 'linear-gradient(135deg, #2563eb 0%, #ec4899 100%)' },
-        { title: 'Nairobi Nights', artist: 'Mercy Wangari', year: '2025', bg: 'linear-gradient(135deg, #059669 0%, #d97706 100%)' },
-        { title: 'Lagos to London', artist: 'Tunde & Friends', year: '2026', bg: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)' },
-        { title: 'Sahara Groove', artist: 'Youssef Bilal', year: '2024', bg: 'linear-gradient(135deg, #b91c1c 0%, #d97706 100%)' },
-        { title: 'Cape Town Chill', artist: 'Zola K.', year: '2026', bg: 'linear-gradient(135deg, #0891b2 0%, #4f46e5 100%)' },
-        { title: 'Highlife Legacy', artist: 'Kofi Mensah', year: '2025', bg: 'linear-gradient(135deg, #10b981 0%, #8b5cf6 100%)' },
-        { title: 'Amapiano Sessions', artist: 'DJ Maphor', year: '2026', bg: 'linear-gradient(135deg, #ec4899 0%, #22d3ee 100%)' },
-        { title: 'Sahel Soul', artist: 'Fatoumata D.', year: '2025', bg: 'linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%)' },
-        { title: 'Rift Valley Sessions', artist: 'Sauti Band', year: '2026', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-        { title: 'Ethio-Jazz Anthology', artist: 'Kidest G.', year: '2024', bg: 'linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%)' },
-      ];
+      const popularAlbums = albums.map((a, idx) => ({
+        id: a.id || `alb_${idx}`,
+        title: a.title,
+        artist: a.artist || 'Ndufo',
+        year: a.year || '2026',
+        tracksCount: a.tracksCount || (a.tracks ? a.tracks.length : 1),
+        cover: normalizeMediaUrl(a.cover || a.coverArt) || `https://picsum.photos/seed/${a.id || idx}/400/400`,
+        type: a.type || 'Album'
+      }));
 
       return (
         <>
-          <div style={{ background: 'rgba(34, 211, 238, 0.08)', borderBottom: '1px solid rgba(34, 211, 238, 0.15)', padding: '12px 24px', borderRadius: '8px', textAlign: 'center', fontSize: '13px', color: '#cbd5e1', marginBottom: '40px' }}>
-            🌐 TuneStream platform resolves natively to: <strong style={{ color: '#fff' }}>streams.tunemavens.com</strong>. Map containers securely in the <Link to="/dashboard" style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Domain Mappings Admin Console</Link>.
+          <div style={{ background: 'rgba(34, 211, 238, 0.08)', borderBottom: '1px solid rgba(34, 211, 238, 0.15)', padding: '12px 24px', borderRadius: '3px', textAlign: 'center', fontSize: '13px', color: '#cbd5e1', marginBottom: '40px' }}>
+            🌐 TuneStream platform resolves natively to: <strong style={{ color: '#fff' }}>streams.tunemavens.com</strong>. Lossless master audio streams synchronized with TuneMavens backend.
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '50px' }}>
+            {/* Trending Songs Section */}
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Trending Songs</h2>
-                <Link to="/native-apps/tunestream?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all</Link>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Trending Releases</h2>
+                <Link to="?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all releases &rarr;</Link>
               </div>
               <HorizontalSlider 
                 items={trendingSongs}
                 renderItem={(song) => (
-                  <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} onClick={() => alert(`Playing: ${song.title} by ${song.artist}`)}>
-                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: song.bg, position: 'relative', marginBottom: '12px' }}>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <RiMusicFill size={32} style={{ color: '#fff', opacity: 0.85 }} />
+                  <div 
+                    className="landing-feature-card" 
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
+                    onClick={() => navigate('/stream')}
+                  >
+                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', position: 'relative', marginBottom: '12px', overflow: 'hidden', background: '#0e1424' }}>
+                      <img 
+                        src={song.cover} 
+                        alt={song.title} 
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                        onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${song.id}/400/400`; }}
+                      />
+                      <div style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.7)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <RiPlayFill size={10} color="#00f2fe" />
+                        <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>Lossless</span>
                       </div>
                     </div>
                     <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</h3>
@@ -991,35 +1031,59 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               />
             </section>
 
+            {/* Popular Creators Section */}
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Popular Creators</h2>
-                <Link to="/native-apps/tunestream?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all</Link>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Signed Roster Artists</h2>
+                <Link to="?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all artists &rarr;</Link>
               </div>
               <HorizontalSlider 
                 items={popularCreators}
                 renderItem={(artist) => (
-                  <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} onClick={() => alert(`Opening ${artist.name}'s Profile`)}>
-                    <div style={{ width: '100px', height: '100px', borderRadius: '3px', background: artist.bg, margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>{artist.avatar}</div>
+                  <div 
+                    className="landing-feature-card" 
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
+                    onClick={() => window.open(`http://localhost:3000/#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\\s+/g, '')}`, '_blank')}
+                  >
+                    <div style={{ width: '90px', height: '90px', borderRadius: '3px', margin: '0 auto 12px', overflow: 'hidden', background: '#0e1424', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <img 
+                        src={artist.avatar} 
+                        alt={artist.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                        onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${artist.id}/400/400`; }}
+                      />
+                    </div>
                     <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{artist.name}</h3>
+                    <span style={{ fontSize: '11px', color: 'var(--cyan)', display: 'block', marginBottom: '4px' }}>{artist.genre}</span>
                     <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{artist.listeners}</span>
                   </div>
                 )}
               />
             </section>
 
+            {/* Popular Singles Section */}
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Popular Singles</h2>
-                <Link to="/native-apps/tunestream?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all</Link>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Authoritative Singles</h2>
+                <Link to="?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all singles &rarr;</Link>
               </div>
               <HorizontalSlider 
                 items={popularSingles}
                 renderItem={(single) => (
-                  <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} onClick={() => alert(`Playing: ${single.title}`)}>
-                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: single.bg, position: 'relative', marginBottom: '12px' }}>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <RiDiscFill size={32} style={{ color: '#fff', opacity: 0.85 }} />
+                  <div 
+                    className="landing-feature-card" 
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
+                    onClick={() => navigate('/stream')}
+                  >
+                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', position: 'relative', marginBottom: '12px', overflow: 'hidden', background: '#0e1424' }}>
+                      <img 
+                        src={single.cover} 
+                        alt={single.title} 
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                        onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${single.id}/400/400`; }}
+                      />
+                      <div style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(16, 185, 129, 0.85)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>Single</span>
                       </div>
                     </div>
                     <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{single.title}</h3>
@@ -1030,191 +1094,289 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               />
             </section>
 
+            {/* Popular Albums Section */}
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Popular Albums</h2>
-                <Link to="/native-apps/tunestream?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all</Link>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Authoritative Albums &amp; EPs</h2>
+                <Link to="?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all albums &rarr;</Link>
               </div>
               <HorizontalSlider 
                 items={popularAlbums}
                 renderItem={(album) => (
-                  <div className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} onClick={() => alert(`Opening Album: ${album.title}`)}>
-                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: album.bg, position: 'relative', marginBottom: '12px' }}>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <RiDatabase2Fill size={32} style={{ color: '#fff', opacity: 0.85 }} />
+                  <div 
+                    className="landing-feature-card" 
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
+                    onClick={() => navigate('/stream')}
+                  >
+                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', position: 'relative', marginBottom: '12px', overflow: 'hidden', background: '#0e1424' }}>
+                      <img 
+                        src={album.cover} 
+                        alt={album.title} 
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                        onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${album.id}/400/400`; }}
+                      />
+                      <div style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(168, 85, 247, 0.85)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>{album.type || 'Album'}</span>
                       </div>
                     </div>
                     <h3 style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.title}</h3>
-                    <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.artist}</p>
-                    <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{album.year} · Album</span>
+                    <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.artist} · {album.year}</p>
+                    <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{album.tracksCount} tracks</span>
                   </div>
                 )}
               />
             </section>
-
-            <section>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Featured Charts</h2>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
-                {[
-                  { name: 'Top 50 Global', desc: 'The most streamed tracks globally on TuneStream.', bg: 'linear-gradient(135deg, #f43f5e 0%, #10b981 100%)' },
-                  { name: 'Naija Hot 20', desc: 'The biggest tracks out of Nigeria this week.', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-                  { name: 'East Africa Hits', desc: 'Top charting tracks from Kenya, Uganda, Tanzania.', bg: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' },
-                  { name: 'Amapiano Kings', desc: 'Curated mix of the hottest South African sounds.', bg: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)' },
-                  { name: 'Alternative Africa', desc: 'Discover the best indie and electronic talent.', bg: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' },
-                ].map((chart, idx) => (
-                  <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer' }} onClick={() => alert(`Opening Chart: ${chart.name}`)}>
-                    <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', background: chart.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', padding: '12px', boxSizing: 'border-box' }}>
-                      <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', textAlign: 'center', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{chart.name}</span>
-                    </div>
-                    <p style={{ fontSize: '11px', color: 'var(--mu)', margin: 0 }}>{chart.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
           </div>
-
-          <section id="plans-section" style={{ padding: '80px 0', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '60px', textAlign: 'center' }}>
-            <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-              <span className="landing-section-eyebrow" style={{ color: 'var(--green)' }}>Choose Your Vibe</span>
-              <h2 className="landing-section-title" style={{ color: '#fff', fontSize: '32px', fontWeight: '800', textAlign: 'center', margin: '0 auto 0' }}>TuneStream Listening Plans</h2>
-              <p style={{ color: 'var(--mu)', fontSize: '14px', maxWidth: '600px', margin: '0 auto' }}>Flexible plans built around the shared Intermaven Network ecosystem.</p>
-            </div>
-            
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '30px', maxWidth: '800px', margin: '0 auto' }}>
-              <div className="glass-panel" style={{ flex: '1 1 300px', maxWidth: '380px', padding: '32px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)' }}>
-                <div>
-                  <span style={{ color: 'var(--green)', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.05em' }}>Free Tier</span>
-                  <h3 style={{ fontSize: '24px', color: '#fff', margin: '8px 0 16px', fontWeight: '800' }}>TuneStream Free</h3>
-                  <p style={{ fontSize: '14px', color: 'var(--mu)', marginBottom: '24px' }}>Ad-supported music streaming. No commitment, completely free, no credit card required.</p>
-                  
-                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0' }} />
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', fontSize: '13px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
-                    <li>✓ 150 shared Intermaven credits at signup</li>
-                    <li>✓ Unlimited music streaming (web and mobile)</li>
-                    <li>✓ Basic quality audio</li>
-                    <li>✓ Ad-supported</li>
-                  </ul>
-                </div>
-                
-                <Link to="/native-apps/tunestream?view=free" className="btn-primary" style={{ textAlign: 'center', width: '100%', padding: '12px' }}>
-                  Learn More
-                </Link>
-              </div>
-
-              <div className="glass-panel" style={{ flex: '1 1 300px', maxWidth: '380px', padding: '32px', border: '1px solid var(--green)', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'rgba(16,185,129,0.02)', boxShadow: '0 8px 30px rgba(16,185,129,0.08)' }}>
-                <div>
-                  <span style={{ color: 'var(--cyan)', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.05em' }}>Premium Tier</span>
-                  <h3 style={{ fontSize: '24px', color: '#fff', margin: '8px 0 16px', fontWeight: '800' }}>TuneStream Premium</h3>
-                  <p style={{ fontSize: '14px', color: 'var(--mu)', marginBottom: '24px' }}>Ad-free listening. High-fidelity lossless audio and offline caching. Paid via credits.</p>
-                  
-                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0' }} />
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', fontSize: '13px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
-                    <li>✓ Zero Ads for uninterrupted listening</li>
-                    <li>✓ Lossless FLAC audio (24-bit / 96kHz)</li>
-                    <li>✓ Offline downloads up to 8GB cache</li>
-                    <li>✓ One-tap tipping to independent artists</li>
-                    <li>✓ Deducts credits automatically per listen</li>
-                  </ul>
-                </div>
-                
-                <Link to="/native-apps/tunestream?view=premium" className="btn-primary" style={{ textAlign: 'center', width: '100%', padding: '12px', background: '#3b82f6', backgroundImage: 'none', border: 'none' }}>
-                  Go Premium
-                </Link>
-              </div>
-            </div>
-          </section>
         </>
       );
     };
 
     const renderExplore = () => {
-      const creators = [
-        { name: 'Aisha Okoro', genre: 'Afro-House', location: 'Nairobi, Kenya', streams: '3.5M', bg: creatorEpk?.themeBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', isCustom: true },
-        { name: 'Alex Rivera', genre: 'Afrobeats', location: 'Lagos, Nigeria', streams: '1.2M', avatar: '🎙️', bg: '#8b5cf6' },
-        { name: 'Tunde & Friends', genre: 'Highlife', location: 'Accra, Ghana', streams: '890K', avatar: '🥁', bg: '#ec4899' },
-        { name: 'Mercy Wangari', genre: 'Afrosoul', location: 'Nairobi, Kenya', streams: '620K', avatar: '🎤', bg: '#10b981' },
-        { name: 'Youssef Bilal', genre: 'Desert Blues', location: 'Marrakech, Morocco', streams: '450K', avatar: '🎸', bg: '#f59e0b' },
-        { name: 'Zola K.', genre: 'Amapiano', location: 'Soweto, South Africa', streams: '310K', avatar: '🎷', bg: '#3b82f6' },
-        { name: 'Fatoumata D.', genre: 'Wassoulou', location: 'Bamako, Mali', streams: '280K', avatar: '🎻', bg: '#06b6d4' },
-        { name: 'Sauti Band', genre: 'Afropop', location: 'Dar es Salaam', streams: '190K', avatar: '🎺', bg: '#f43f5e' },
-        { name: 'Kidest G.', genre: 'Ethio-Jazz', location: 'Addis Ababa', streams: '150K', avatar: '🎹', bg: '#10b981' },
-        { name: 'Desta A.', genre: 'Ethio-Soul', location: 'Bahir Dar', streams: '120K', avatar: '🎙️', bg: '#8b5cf6' },
-        { name: 'Kwame O.', genre: 'Hiplife', location: 'Kumasi', streams: '110K', avatar: '🥁', bg: '#ec4899' },
-        { name: 'Chioma B.', genre: 'Igbo Rap', location: 'Enugu', streams: '95K', avatar: '🎤', bg: '#10b981' },
-        { name: 'Moctar S.', genre: 'Tuareg Rock', location: 'Agadez', streams: '85K', avatar: '🎸', bg: '#f59e0b' }
-      ];
+      const singlesList = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
+      const popularSingles = singlesList.map((t, idx) => ({
+        id: t.id || t.isrc || `s_${idx}`,
+        title: t.title,
+        artist: t.artist || 'Ndufo',
+        dls: `${t.streams || t.plays || '1.0M'} streams`,
+        cover: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id || idx}/400/400`,
+        isrc: t.isrc,
+        track: t
+      }));
 
-      const itemsPerPage = 16;
-      const indexOfLast = explorePage * itemsPerPage;
-      const indexOfFirst = indexOfLast - itemsPerPage;
-      const currentCreators = creators.slice(indexOfFirst, indexOfLast);
+      const popularAlbums = albums.map((a, idx) => ({
+        id: a.id || `alb_${idx}`,
+        title: a.title,
+        artist: a.artist || 'Ndufo',
+        year: a.year || '2026',
+        tracksCount: a.tracksCount || (a.tracks ? a.tracks.length : 1),
+        cover: normalizeMediaUrl(a.cover || a.coverArt) || `https://picsum.photos/seed/${a.id || idx}/400/400`,
+        type: a.type || 'Album'
+      }));
 
-      const handleViewEpk = (c) => {
-        const username = c.isCustom ? 'aisha' : (c.name || 'artist').toLowerCase().replace(/[^a-z0-9]/g, '');
-        window.open(`http://localhost:3000/#/epk/${username}`, '_blank');
-      };
+      const popularCreators = artists.map(a => ({
+        id: a.id,
+        name: a.name,
+        role: a.role || 'Signed Creator',
+        genre: a.genre || 'Afro-fusion',
+        listeners: a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners',
+        avatar: normalizeMediaUrl(a.avatar) || `https://picsum.photos/seed/${a.id}/400/400`,
+        subdomain: a.subdomain
+      }));
+
+      const q = exploreSearch.toLowerCase().trim();
+
+      const filteredArtists = popularCreators.filter(a => {
+        if (!q) return true;
+        return (
+          (a.name && a.name.toLowerCase().includes(q)) ||
+          (a.genre && a.genre.toLowerCase().includes(q)) ||
+          (a.role && a.role.toLowerCase().includes(q))
+        );
+      });
+
+      const filteredSingles = popularSingles.filter(s => {
+        if (!q) return true;
+        return (
+          (s.title && s.title.toLowerCase().includes(q)) ||
+          (s.artist && s.artist.toLowerCase().includes(q)) ||
+          (s.isrc && s.isrc.toLowerCase().includes(q))
+        );
+      });
+
+      const filteredAlbums = popularAlbums.filter(al => {
+        if (!q) return true;
+        return (
+          (al.title && al.title.toLowerCase().includes(q)) ||
+          (al.artist && al.artist.toLowerCase().includes(q)) ||
+          (al.year && String(al.year).includes(q))
+        );
+      });
 
       return (
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>Discover new talent and explore their standalone Creator Web Worlds across the Intermaven network.</p>
-          
-          <div style={{ marginBottom: '30px', position: 'relative', maxWidth: '400px', margin: '0 auto' }}>
+          <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
+            Discover and search across signed creators, singles, and albums entered in the TuneMavens backend.
+          </p>
+
+          {/* Working Search Bar */}
+          <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '480px', margin: '0 auto 20px' }}>
+            <RiSearchLine size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
             <input 
               type="text" 
-              placeholder="Search creators, genres, or locations..." 
-              style={{ width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none', textAlign: 'center' }}
+              placeholder="Search creators, tracks, singles, albums, genres..." 
+              value={exploreSearch}
+              onChange={(e) => {
+                setExploreSearch(e.target.value);
+                setExplorePage(1);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px 12px 44px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '3px',
+                color: '#fff',
+                outline: 'none',
+                textAlign: 'left',
+                fontSize: '13px'
+              }}
             />
           </div>
 
+          {/* Filter Pills */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setExploreFilter('all')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'all' ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'all' ? '#00f2fe' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'all' ? '#000' : '#fff',
+                fontWeight: '700',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              All Results
+            </button>
+            <button
+              type="button"
+              onClick={() => setExploreFilter('creators')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'creators' ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'creators' ? '#10b981' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'creators' ? '#000' : '#fff',
+                fontWeight: '700',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              Signed Artists ({filteredArtists.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setExploreFilter('singles')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'singles' ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'singles' ? '#f59e0b' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'singles' ? '#000' : '#fff',
+                fontWeight: '700',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              Singles ({filteredSingles.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setExploreFilter('albums')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'albums' ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'albums' ? '#a855f7' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'albums' ? '#fff' : '#fff',
+                fontWeight: '700',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              Albums &amp; EPs ({filteredAlbums.length})
+            </button>
+          </div>
+
+          {/* Grid display */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
-            {currentCreators.map((c, idx) => (
-              <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} onClick={() => handleViewEpk(c)}>
-                {/* Album/single sleeve art card */}
-                <div style={{ 
-                  width: '100%', 
-                  height: '140px', 
-                  borderRadius: '3px', 
-                  background: c.bg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  justifyContent: 'space-between', 
-                  padding: '12px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  marginBottom: '16px',
-                  boxShadow: '0 6px 12px rgba(0,0,0,0.3)',
-                  textAlign: 'left'
-                }}>
-                  <div style={{ position: 'absolute', top: '-15px', right: '-15px', width: '60px', height: '60px', borderRadius: '50%', border: '4px double rgba(255,255,255,0.04)', opacity: 0.8 }} />
-                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>CREATOR WEB WORLD</span>
-                  <div style={{ zIndex: 2 }}>
-                    <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '900', color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{c.name}</h4>
-                    <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>{c.genre}</p>
-                  </div>
+            {(exploreFilter === 'all' || exploreFilter === 'creators') && filteredArtists.map((c, idx) => (
+              <div 
+                key={`art_${idx}`} 
+                className="landing-feature-card" 
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} 
+                onClick={() => window.open(`http://localhost:3000/#/epk/${c.subdomain || c.name.toLowerCase().replace(/\\s+/g, '')}`, '_blank')}
+              >
+                <div style={{ width: '100%', height: '140px', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '14px', background: '#0e1424' }}>
+                  <img 
+                    src={c.avatar} 
+                    alt={c.name} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                    onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${c.id}/400/400`; }}
+                  />
+                  <span style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '9px', fontWeight: 'bold', background: 'rgba(0,0,0,0.7)', color: '#00f2fe', padding: '2px 6px', borderRadius: '3px' }}>
+                    CREATOR WEB WORLD
+                  </span>
                 </div>
                 <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{c.name}</h3>
-                <p style={{ fontSize: '13px', color: 'var(--mu)', margin: '0 0 8px' }}>{c.genre} · {c.location}</p>
+                <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{c.genre} · {c.role}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                  <span style={{ color: 'var(--mu)' }}>{c.streams} streams</span>
+                  <span style={{ color: 'var(--mu)' }}>{c.listeners}</span>
                   <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Enter Web World 🌐 →</span>
                 </div>
               </div>
             ))}
-          </div>
 
-          <Pagination
-            currentPage={explorePage}
-            totalItems={creators.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={(page) => { setExplorePage(page); }}
-          />
+            {(exploreFilter === 'all' || exploreFilter === 'singles') && filteredSingles.map((s, idx) => (
+              <div 
+                key={`sing_${idx}`} 
+                className="landing-feature-card" 
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} 
+                onClick={() => navigate('/stream')}
+              >
+                <div style={{ width: '100%', height: '140px', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '14px', background: '#0e1424' }}>
+                  <img 
+                    src={s.cover} 
+                    alt={s.title} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                    onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${s.id}/400/400`; }}
+                  />
+                  <span style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '9px', fontWeight: 'bold', background: 'rgba(16,185,129,0.85)', color: '#fff', padding: '2px 6px', borderRadius: '3px' }}>
+                    SINGLE RELEASE
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{s.title}</h3>
+                <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{s.artist}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                  <span style={{ color: 'var(--mu)', fontFamily: 'monospace' }}>{s.isrc}</span>
+                  <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>Listen ▶</span>
+                </div>
+              </div>
+            ))}
+
+            {(exploreFilter === 'all' || exploreFilter === 'albums') && filteredAlbums.map((al, idx) => (
+              <div 
+                key={`alb_${idx}`} 
+                className="landing-feature-card" 
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} 
+                onClick={() => navigate('/stream')}
+              >
+                <div style={{ width: '100%', height: '140px', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '14px', background: '#0e1424' }}>
+                  <img 
+                    src={al.cover} 
+                    alt={al.title} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                    onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${al.id}/400/400`; }}
+                  />
+                  <span style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '9px', fontWeight: 'bold', background: 'rgba(168,85,247,0.85)', color: '#fff', padding: '2px 6px', borderRadius: '3px' }}>
+                    {al.type || 'ALBUM'}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{al.title}</h3>
+                <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{al.artist} · {al.year}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                  <span style={{ color: 'var(--mu)' }}>{al.tracksCount} tracks</span>
+                  <span style={{ color: '#c084fc', fontWeight: 'bold' }}>View Collection &rarr;</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       );
     };
-
-
     const renderPlaylists = () => {
       return (
         <div style={{ textAlign: 'center' }}>

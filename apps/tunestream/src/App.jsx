@@ -47,7 +47,7 @@ import {
   AUTHORITATIVE_CATALOG_ARTISTS,
   AUTHORITATIVE_CATALOG_ALBUMS
 } from './data/authoritativeCatalog';
-import { catalogApi, streamApi } from './lib/api';
+import { catalogApi, streamApi, normalizeMediaUrl } from './lib/api';
 
 export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
@@ -550,7 +550,7 @@ function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredi
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '12px', color: '#64748b', width: '16px', textAlign: 'center' }}>{idx + 1}</span>
-                <img src={track.cover || track.coverArt} alt={track.title} style={{ width: '40px', height: '40px', borderRadius: '3px', objectFit: 'cover' }} />
+                <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} style={{ width: '40px', height: '40px', borderRadius: '3px', objectFit: 'cover' }} />
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{track.title}</div>
                   <div style={{ fontSize: '11px', color: '#94a3b8' }}>{track.artist} · {track.album || track.release}</div>
@@ -584,10 +584,14 @@ function TuneStreamExplorePanel({
   likes = [], 
   onLike, 
   onPlayTrack,
-  initialFilter = 'all'
+  initialFilter = 'all',
+  searchQuery: externalSearchQuery,
+  onSearchChange
 }) {
   const [filterMode, setFilterMode] = useState(initialFilter);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [internalSearchQuery, setInternalSearchQuery] = useState('');
+  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
+  const setSearchQuery = onSearchChange || setInternalSearchQuery;
   const [selectedArtist, setSelectedArtist] = useState(null);
 
   const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
@@ -602,14 +606,23 @@ function TuneStreamExplorePanel({
     displayedTracks = displayedTracks.filter(t => t.artist && t.artist.toLowerCase() === selectedArtist.toLowerCase());
   }
 
+  let displayedArtists = artists;
+
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
     displayedTracks = displayedTracks.filter(t => 
       (t.title && t.title.toLowerCase().includes(q)) ||
       (t.artist && t.artist.toLowerCase().includes(q)) ||
       (t.release && t.release.toLowerCase().includes(q)) ||
+      (t.album && t.album.toLowerCase().includes(q)) ||
       (t.genre && t.genre.toLowerCase().includes(q)) ||
       (t.isrc && t.isrc.toLowerCase().includes(q))
+    );
+    displayedArtists = artists.filter(a =>
+      (a.name && a.name.toLowerCase().includes(q)) ||
+      (a.genre && a.genre.toLowerCase().includes(q)) ||
+      (a.bio && a.bio.toLowerCase().includes(q)) ||
+      (a.role && a.role.toLowerCase().includes(q))
     );
   }
 
@@ -772,7 +785,12 @@ function TuneStreamExplorePanel({
       {/* Main Content Area */}
       {filterMode === 'artists' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-          {artists.map((artist) => {
+          {displayedArtists.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '3px' }}>
+              No artists match your search query "{searchQuery}".
+            </div>
+          ) : (
+            displayedArtists.map((artist) => {
             const artistTracks = tracks.filter(t => t.artist && t.artist.toLowerCase() === artist.name.toLowerCase());
             return (
               <div 
@@ -790,8 +808,9 @@ function TuneStreamExplorePanel({
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
                     <img 
-                      src={artist.avatar || `https://picsum.photos/seed/${artist.id}/400/400`} 
+                      src={normalizeMediaUrl(artist.avatar) || `https://picsum.photos/seed/${artist.id}/400/400`} 
                       alt={artist.name} 
+                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400'; }}
                       style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} 
                     />
                     <div>
@@ -847,7 +866,8 @@ function TuneStreamExplorePanel({
                 </div>
               </div>
             );
-          })}
+          })
+        )}
         </div>
       ) : (
         <section className="ts-music-section">
@@ -873,7 +893,7 @@ function TuneStreamExplorePanel({
                   onClick={() => onPlayTrack(track)}
                 >
                   <div className="track-number">{idx + 1}</div>
-                  <img src={track.cover || track.coverArt} alt={track.title} className="track-cover" />
+                  <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
                   <div className="track-details" style={{ width: '220px' }}>
                     <span className="track-title">{track.title}</span>
                     <span className="track-artist">{track.artist}</span>
@@ -911,33 +931,72 @@ function TuneStreamExplorePanel({
 }
 
 function TuneStreamSinglesPanel({ tracks = [], currentTrack, isPlaying, likes = [], onLike, onPlayTrack }) {
-  const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
+  const [searchQuery, setSearchQuery] = useState('');
+  const allSingles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
+  
+  const displayedSingles = searchQuery.trim()
+    ? allSingles.filter(t => {
+        const q = searchQuery.toLowerCase();
+        return (t.title && t.title.toLowerCase().includes(q)) ||
+               (t.artist && t.artist.toLowerCase().includes(q)) ||
+               (t.genre && t.genre.toLowerCase().includes(q)) ||
+               (t.isrc && t.isrc.toLowerCase().includes(q));
+      })
+    : allSingles;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0 }}>Authoritative Singles Showcase</h3>
             <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
-              All {singles.length} standalone master releases entered in the TuneMavens backend, transcoded to Lossless 24-bit FLAC.
+              All {allSingles.length} standalone master releases entered in the TuneMavens backend, transcoded to Lossless 24-bit FLAC.
             </p>
           </div>
           <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 10px', borderRadius: '3px', fontWeight: 'bold' }}>
             ✓ 100% One-Stop Pre-Cleared
           </span>
         </div>
+
+        {/* Live Filter Search Bar */}
+        <div style={{ marginTop: '14px', position: 'relative', maxWidth: '360px' }}>
+          <RiSearchLine size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+          <input 
+            type="text" 
+            placeholder="Search singles, artists, ISRC..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '7px 12px 7px 34px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '3px',
+              color: '#fff',
+              fontSize: '12px',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
       </div>
 
       <section className="ts-music-section">
         <div className="tracks-list">
-          {singles.map((track, idx) => (
+          {displayedSingles.length === 0 ? (
+            <div style={{ color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '3px' }}>
+              No singles match "{searchQuery}".
+            </div>
+          ) : (
+            displayedSingles.map((track, idx) => (
             <div 
               key={track.id} 
               className={`track-row ${currentTrack?.id === track.id ? 'active' : ''}`}
               onClick={() => onPlayTrack(track)}
             >
               <div className="track-number">{idx + 1}</div>
-              <img src={track.cover || track.coverArt} alt={track.title} className="track-cover" />
+              <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
               <div className="track-details" style={{ width: '220px' }}>
                 <span className="track-title">{track.title}</span>
                 <span className="track-artist">{track.artist}</span>
@@ -962,7 +1021,8 @@ function TuneStreamSinglesPanel({ tracks = [], currentTrack, isPlaying, likes = 
                 <RiHeart3Fill />
               </button>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </section>
     </div>
@@ -970,17 +1030,59 @@ function TuneStreamSinglesPanel({ tracks = [], currentTrack, isPlaying, likes = 
 }
 
 function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPlayTrack, onLike, likes = [] }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const displayedArtists = searchQuery.trim()
+    ? artists.filter(a => {
+        const q = searchQuery.toLowerCase();
+        return (a.name && a.name.toLowerCase().includes(q)) ||
+               (a.genre && a.genre.toLowerCase().includes(q)) ||
+               (a.bio && a.bio.toLowerCase().includes(q)) ||
+               (a.role && a.role.toLowerCase().includes(q));
+      })
+    : artists;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0 }}>Signed Roster Artists</h3>
-        <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
-          Exact {artists.length} signed creator roster entries registered in TuneMavens backend with automated split cascades and lossless streaming.
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0 }}>Signed Roster Artists</h3>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
+              Exact {artists.length} signed creator roster entries registered in TuneMavens backend with automated split cascades and lossless streaming.
+            </p>
+          </div>
+        </div>
+
+        {/* Live Filter Search Bar */}
+        <div style={{ marginTop: '14px', position: 'relative', maxWidth: '360px' }}>
+          <RiSearchLine size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+          <input 
+            type="text" 
+            placeholder="Search artists, genres, roles..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '7px 12px 7px 34px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '3px',
+              color: '#fff',
+              fontSize: '12px',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-        {artists.map((artist) => {
+        {displayedArtists.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '3px' }}>
+            No signed artists match "{searchQuery}".
+          </div>
+        ) : (
+          displayedArtists.map((artist) => {
           const artistTracks = tracks.filter(t => t.artist && t.artist.toLowerCase() === artist.name.toLowerCase());
           return (
             <div 
@@ -1060,7 +1162,8 @@ function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPla
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
     </div>
   );
@@ -1086,7 +1189,7 @@ function TuneStreamFavoritesPanel({ tracks = [], currentTrack, likes = [], onLik
               onClick={() => onPlayTrack(track)}
             >
               <div className="track-number">{idx + 1}</div>
-              <img src={track.cover || track.coverArt} alt={track.title} className="track-cover" />
+              <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
               <div className="track-details" style={{ width: '220px' }}>
                 <span className="track-title">{track.title}</span>
                 <span className="track-artist">{track.artist}</span>
@@ -1130,9 +1233,22 @@ function TuneStreamRadioPanel() {
 
 function TuneStreamCatalogPanel({ tracks = [], onPlayTrack, setActiveTab }) {
   const [filter, setFilter] = useState('all');
-  const filtered = filter === 'singles' 
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  let filtered = filter === 'singles' 
     ? tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')))
     : (filter === 'albums' ? tracks.filter(t => t.releaseType !== 'Single') : tracks);
+
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(t => 
+      (t.title && t.title.toLowerCase().includes(q)) ||
+      (t.artist && t.artist.toLowerCase().includes(q)) ||
+      (t.release && t.release.toLowerCase().includes(q)) ||
+      (t.genre && t.genre.toLowerCase().includes(q)) ||
+      (t.isrc && t.isrc.toLowerCase().includes(q))
+    );
+  }
 
   return (
     <section className="ts-music-section">
@@ -1177,7 +1293,7 @@ function TuneStreamCatalogPanel({ tracks = [], onPlayTrack, setActiveTab }) {
         {filtered.map((track, idx) => (
           <div key={track.id} className="track-row" style={{ cursor: 'default' }}>
             <div className="track-number">{idx + 1}</div>
-            <img src={track.cover || track.coverArt} alt={track.title} className="track-cover" />
+            <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
             <div className="track-details" style={{ width: '220px' }}>
               <span className="track-title">{track.title}</span>
               <span className="track-artist">{track.artist}</span>
@@ -1396,6 +1512,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
   // Unified Dashboard States
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab || 'home');
+  const [globalSearch, setGlobalSearch] = useState('');
 
   const [userRole, setUserRole] = useState(() => localStorage.getItem('tunestream_user_role') || (sessionUser?.role || 'creator'));
   const [userCredits, setUserCredits] = useState(() => {
@@ -1520,8 +1637,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         if (data && data.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
           const mapped = data.tracks.map(t => ({
             ...t,
-            cover: t.coverArt || t.cover || `https://picsum.photos/seed/${t.id}/500/500`,
-            coverArt: t.coverArt || t.cover || `https://picsum.photos/seed/${t.id}/500/500`,
+            cover: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id}/500/500`,
+            coverArt: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id}/500/500`,
             album: t.release || t.album || 'Singles 2026',
             release: t.release || t.album || 'Singles 2026',
             releaseType: t.releaseType || (t.release && t.release.toLowerCase().includes('single') ? 'Single' : 'Album'),
@@ -1541,7 +1658,11 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       .then(res => res.json())
       .then(data => {
         if (data && data.artists && Array.isArray(data.artists) && data.artists.length > 0) {
-          setArtists(data.artists);
+          const mapped = data.artists.map(a => ({
+            ...a,
+            avatar: normalizeMediaUrl(a.avatar || a.image)
+          }));
+          setArtists(mapped);
         }
       })
       .catch(err => console.warn('Could not fetch backend artists:', err));
@@ -1551,7 +1672,11 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       .then(res => res.json())
       .then(data => {
         if (data && data.albums && Array.isArray(data.albums) && data.albums.length > 0) {
-          setAlbums(data.albums);
+          const mapped = data.albums.map(a => ({
+            ...a,
+            cover: normalizeMediaUrl(a.cover || a.coverArt)
+          }));
+          setAlbums(mapped);
         }
       })
       .catch(err => console.warn('Could not fetch backend albums:', err));
@@ -1882,6 +2007,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             onPlayTrack={handleTrackSelect}
             onToggleLike={handleLike}
             onLike={handleLike}
+            searchQuery={globalSearch}
+            onSearchChange={setGlobalSearch}
           />
         );
       case 'singles':
@@ -2124,6 +2251,42 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             </div>
           </div>
 
+          {/* Global Search Bar */}
+          <div style={{ flex: 1, maxWidth: '440px', margin: '0 20px', position: 'relative' }}>
+            <RiSearchLine size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+            <input 
+              type="text"
+              placeholder="Search tracks, artists, albums, ISRC..."
+              value={globalSearch}
+              onChange={(e) => {
+                setGlobalSearch(e.target.value);
+                if (activeTab !== 'explore' && activeTab !== 'singles' && activeTab !== 'artists') {
+                  setActiveTab('explore');
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '7px 32px 7px 34px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '3px',
+                color: '#fff',
+                fontSize: '12px',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+            {globalSearch && (
+              <button
+                type="button"
+                onClick={() => setGlobalSearch('')}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '12px', padding: 0 }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
           <div className="topbar-right">
             {/* Unified Credits Vault */}
             <button 
@@ -2258,7 +2421,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       {isPlayerOpen && currentTrack && (
         <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)', zIndex: 1000, background: '#070a14' }}>
           <div className="player-track-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src={currentTrack.cover || currentTrack.coverArt} alt={currentTrack.title} className="player-cover" style={{ width: '48px', height: '48px', borderRadius: '3px', objectFit: 'cover' }} />
+            <img src={normalizeMediaUrl(currentTrack.cover || currentTrack.coverArt)} alt={currentTrack.title} className="player-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200'; }} style={{ width: '48px', height: '48px', borderRadius: '3px', objectFit: 'cover' }} />
             <div className="player-metadata">
               <span className="player-title" style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{currentTrack.title}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
