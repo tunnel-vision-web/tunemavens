@@ -2,6 +2,7 @@
 
 /* Button Stack in Top Right Corner */
 .app-help-ai-controls {
+  display: none !important;
   display: flex;
   flex-direction: column;
   gap: 6px;

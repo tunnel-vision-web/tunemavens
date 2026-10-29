@@ -254,33 +254,7 @@ export default function AppHelpAiControls({
 
   return (
     <>
-      {/* Top Right Corner Action Button Stack (Specifically inside the app workspace) */}
-      <div className={`app-help-ai-controls ${floating ? 'floating' : ''}`} data-testid="app-help-ai-controls">
-        {/* Button 1: need help - view docs (Opens in-app modal overlay without leaving user's app) */}
-        <button
-          type="button"
-          onClick={handleOpenDocModal}
-          className="app-help-ai-btn btn-view-docs"
-          title={`Need help? View docs for ${relevantDoc.appTitle}`}
-          data-testid="btn-need-help-view-docs"
-        >
-          <RiBookOpenLine className="doc-icon" />
-          <span>need help - view docs</span>
-        </button>
-
-        {/* Button 2: ask ai (placed directly below Button 1) */}
-        <button
-          type="button"
-          className="app-help-ai-btn btn-ask-ai"
-          onClick={() => setAiOverlayOpen(true)}
-          title="Open AI Prompt Assistant (Lifecycle Memory Active)"
-          data-testid="btn-ask-ai"
-        >
-          <RiSparklingLine className="ai-sparkle-icon" />
-          <span>ask ai</span>
-          <span className="ai-memory-badge" title="AI Lifecycle Memory Synced" />
-        </button>
-      </div>
+      {/* Top Right Corner Buttons removed as requested */}
 
       {/* ========================================================================= */}
       {/* 1. IN-APP CONTEXTUAL DOC READER MODAL OVERLAY                              */}

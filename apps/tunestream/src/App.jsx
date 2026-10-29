@@ -1,3 +1,4 @@
+import HiFiAudioPlayer from './components/player/HiFiAudioPlayer.jsx';
 import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import LoginView from './views/auth/LoginView';
@@ -25,6 +26,7 @@ import './App.css';
 import listenHero from './assets/images/listen_hero.png';
 
 import NativeAppLandingView from './NativeAppLandingView';
+import CreatorEpkView from './views/creator/CreatorEpkView.jsx';
 import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx';
 import CreditReloadModal from './components/common/CreditReloadModal.jsx';
 import AppHelpAiControls from './components/common/AppHelpAiControls.jsx';
@@ -144,6 +146,8 @@ function AppContent() {
           <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/dashboard" element={<PlayerDashboard sessionUser={sessionUser} initialTab="home" onLogout={handleLogout} />} />
+          <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
+          <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
@@ -832,8 +836,8 @@ function TuneStreamExplorePanel({
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
                     <span>Catalogue: {artistTracks.length} tracks</span>
                     <a 
-                      href={`http://localhost:3000/#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
-                      target="_blank" 
+                      href={`#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
+                       
                       rel="noreferrer"
                       style={{ color: '#00f2fe', textDecoration: 'none', fontWeight: '700' }}
                     >
@@ -1152,8 +1156,8 @@ function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPla
                   <RiPlayFill size={16} /> Listen to Artist
                 </button>
                 <a
-                  href={`http://localhost:3000/#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
-                  target="_blank"
+                  href={`#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
+                  
                   rel="noreferrer"
                   style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', fontSize: '11px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center' }}
                 >
@@ -2153,8 +2157,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       {/* Left Sidebar */}
       <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand-wrapper">
-          <Link to="/" className="sidebar-logo">
+          <Link to="/" className="sidebar-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none' }}>
             <img src={tsLogo} alt="TuneStream" className="sidebar-logo-img" />
+            {!collapsed && (
+              <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase', marginTop: '2px' }}>
+                a tunemavens utility
+              </span>
+            )}
           </Link>
           <button 
             type="button" 
@@ -2417,8 +2426,22 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         onError={() => setPlaybackError('Stream fallback active')}
       />
 
-      {/* Docked Audio Player Bar (only visible when a track is selected / playing) */}
+      {/* EPK-Style Floating Hi-Fi Audio Player Overlay */}
       {isPlayerOpen && currentTrack && (
+        <HiFiAudioPlayer
+          track={currentTrack}
+          tracks={catalogTracks}
+          isPlaying={isPlaying}
+          onTogglePlay={(p) => setIsPlaying(typeof p === 'boolean' ? p : !isPlaying)}
+          onTrackSelect={(t) => handleTrackSelect(t)}
+          onClose={() => {
+            setIsPlaying(false);
+            setIsPlayerOpen(false);
+          }}
+        />
+      )}
+      {/* Old Docked Audio Player Bar */}
+      {false && isPlayerOpen && currentTrack && (
         <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)', zIndex: 1000, background: '#070a14' }}>
           <div className="player-track-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img src={normalizeMediaUrl(currentTrack.cover || currentTrack.coverArt)} alt={currentTrack.title} className="player-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200'; }} style={{ width: '48px', height: '48px', borderRadius: '3px', objectFit: 'cover' }} />
@@ -2430,8 +2453,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
                   {currentTrack.releaseType || 'Single'}
                 </span>
                 <a 
-                  href={`http://localhost:3000/#/epk/${currentTrack.artist ? currentTrack.artist.toLowerCase().replace(/\s+/g, '') : 'ndufo'}`}
-                  target="_blank" 
+                  href={`#/epk/${currentTrack.artist ? currentTrack.artist.toLowerCase().replace(/\s+/g, '') : 'ndufo'}`}
+                   
                   rel="noreferrer"
                   style={{ fontSize: '10px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f2fe', padding: '2px 6px', borderRadius: '3px', textDecoration: 'none', fontWeight: 600 }}
                 >

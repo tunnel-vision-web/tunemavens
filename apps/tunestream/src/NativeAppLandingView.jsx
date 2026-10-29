@@ -1,3 +1,4 @@
+import HiFiAudioPlayer from './components/player/HiFiAudioPlayer.jsx';
 import { 
   AUTHORITATIVE_CATALOG_TRACKS, 
   AUTHORITATIVE_CATALOG_ARTISTS, 
@@ -328,10 +329,11 @@ function HorizontalSlider({ items, renderItem }) {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', overflow: 'visible', padding: '0 28px' }}>
+    <div style={{ position: 'relative', width: '100%', maxWidth: '1240px', margin: '0 auto', overflow: 'hidden', padding: '0 42px', boxSizing: 'border-box' }}>
       <button
         type="button"
         onClick={() => scroll('left')}
+        aria-label="Previous items"
         style={{
           position: 'absolute',
           left: '0',
@@ -341,15 +343,15 @@ function HorizontalSlider({ items, renderItem }) {
           background: 'rgba(7, 14, 27, 0.95)',
           border: '1px solid rgba(255,255,255,0.2)',
           color: '#fff',
-          width: '38px',
-          height: '38px',
-          borderRadius: '50%',
+          width: '34px',
+          height: '34px',
+          borderRadius: '3px',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
-          fontSize: '22px',
+          fontSize: '20px',
           fontWeight: 'bold',
           pointerEvents: 'auto'
         }}
@@ -379,6 +381,7 @@ function HorizontalSlider({ items, renderItem }) {
       <button
         type="button"
         onClick={() => scroll('right')}
+        aria-label="Next items"
         style={{
           position: 'absolute',
           right: '0',
@@ -388,15 +391,15 @@ function HorizontalSlider({ items, renderItem }) {
           background: 'rgba(7, 14, 27, 0.95)',
           border: '1px solid rgba(255,255,255,0.2)',
           color: '#fff',
-          width: '38px',
-          height: '38px',
-          borderRadius: '50%',
+          width: '34px',
+          height: '34px',
+          borderRadius: '3px',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
-          fontSize: '22px',
+          fontSize: '20px',
           fontWeight: 'bold',
           pointerEvents: 'auto'
         }}
@@ -424,6 +427,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const [albums, setAlbums] = useState(AUTHORITATIVE_CATALOG_ALBUMS);
   const [exploreSearch, setExploreSearch] = useState('');
   const [exploreFilter, setExploreFilter] = useState('all');
+  const [exploreGenre, setExploreGenre] = useState('all');
+  const [exploreSort, setExploreSort] = useState('newest');
+  const [activeHiFiTrack, setActiveHiFiTrack] = useState(null);
+  const [isHiFiPlaying, setIsHiFiPlaying] = useState(false);
 
   useEffect(() => {
     fetch('/api/catalog/tracks?all=true')
@@ -1009,7 +1016,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   <div 
                     className="landing-feature-card" 
                     style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
-                    onClick={() => navigate('/stream')}
+                    onClick={() => handlePlaySong(song)}
                   >
                     <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', position: 'relative', marginBottom: '12px', overflow: 'hidden', background: '#0e1424' }}>
                       <img 
@@ -1043,7 +1050,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   <div 
                     className="landing-feature-card" 
                     style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
-                    onClick={() => window.open(`http://localhost:3000/#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`, '_blank')}
+                    onClick={() => handleArtistClick(artist)}
                   >
                     <div style={{ width: '90px', height: '90px', borderRadius: '3px', margin: '0 auto 12px', overflow: 'hidden', background: '#0e1424', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <img 
@@ -1073,7 +1080,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   <div 
                     className="landing-feature-card" 
                     style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
-                    onClick={() => navigate('/stream')}
+                    onClick={() => handlePlaySong(single)}
                   >
                     <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', position: 'relative', marginBottom: '12px', overflow: 'hidden', background: '#0e1424' }}>
                       <img 
@@ -1106,7 +1113,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   <div 
                     className="landing-feature-card" 
                     style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
-                    onClick={() => navigate('/stream')}
+                    onClick={() => handlePlayAlbum(album)}
                   >
                     <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', position: 'relative', marginBottom: '12px', overflow: 'hidden', background: '#0e1424' }}>
                       <img 
@@ -1131,15 +1138,28 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       );
     };
 
-    const renderExplore = () => {
+            const renderExplore = () => {
+      const popularCreators = (artists && artists.length > 0 ? artists : AUTHORITATIVE_CATALOG_ARTISTS).map(a => ({
+        id: a.id,
+        name: a.name,
+        role: a.role || 'Signed Creator',
+        genre: a.genre || 'Afro-fusion',
+        listeners: a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners',
+        avatar: normalizeMediaUrl(a.avatar) || `/uploads/artwork/ndufo_cover.jpg`,
+        subdomain: a.subdomain
+      }));
+
       const singlesList = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
       const popularSingles = singlesList.map((t, idx) => ({
         id: t.id || t.isrc || `s_${idx}`,
         title: t.title,
         artist: t.artist || 'Ndufo',
         dls: `${t.streams || t.plays || '1.0M'} streams`,
-        cover: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id || idx}/400/400`,
+        cover: normalizeMediaUrl(t.coverArt || t.cover) || `/uploads/artwork/ndufo_cover.jpg`,
         isrc: t.isrc,
+        genre: t.genre || 'Afrobeats',
+        year: t.year || 2026,
+        releaseDate: t.releaseDate || '2026-03-01',
         track: t
       }));
 
@@ -1148,58 +1168,127 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         title: a.title,
         artist: a.artist || 'Ndufo',
         year: a.year || '2026',
+        genre: a.genre || 'Afro-Fusion',
         tracksCount: a.tracksCount || (a.tracks ? a.tracks.length : 1),
-        cover: normalizeMediaUrl(a.cover || a.coverArt) || `https://picsum.photos/seed/${a.id || idx}/400/400`,
+        cover: normalizeMediaUrl(a.cover || a.coverArt) || `/uploads/artwork/ndufo_cover.jpg`,
         type: a.type || 'Album'
-      }));
-
-      const popularCreators = artists.map(a => ({
-        id: a.id,
-        name: a.name,
-        role: a.role || 'Signed Creator',
-        genre: a.genre || 'Afro-fusion',
-        listeners: a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners',
-        avatar: normalizeMediaUrl(a.avatar) || `https://picsum.photos/seed/${a.id}/400/400`,
-        subdomain: a.subdomain
       }));
 
       const q = exploreSearch.toLowerCase().trim();
 
-      const filteredArtists = popularCreators.filter(a => {
-        if (!q) return true;
-        return (
-          (a.name && a.name.toLowerCase().includes(q)) ||
-          (a.genre && a.genre.toLowerCase().includes(q)) ||
-          (a.role && a.role.toLowerCase().includes(q))
+      // Collect available unique genres for filter dropdown
+      const allGenres = Array.from(new Set([
+        ...popularCreators.map(a => a.genre),
+        ...popularSingles.map(s => s.genre),
+        ...popularAlbums.map(al => al.genre)
+      ].filter(Boolean)));
+
+      // Build unified collection
+      let combinedItems = [];
+
+      if (exploreFilter === 'all' || exploreFilter === 'creators') {
+        combinedItems = combinedItems.concat(popularCreators.map(c => ({
+          kind: 'creator',
+          id: c.id,
+          title: c.name,
+          subtitle: `${c.genre} · ${c.role}`,
+          genre: c.genre || 'Afrobeats',
+          metaLeft: c.listeners,
+          metaRight: 'Enter Web World 🌐 →',
+          cover: c.avatar,
+          year: 2026,
+          date: '2026-01-01',
+          data: c
+        })));
+      }
+
+      if (exploreFilter === 'all' || exploreFilter === 'singles') {
+        combinedItems = combinedItems.concat(popularSingles.map(s => ({
+          kind: 'single',
+          id: s.id,
+          title: s.title,
+          subtitle: s.artist,
+          genre: s.genre || 'Afrobeats',
+          metaLeft: s.isrc,
+          metaRight: 'Listen ▶',
+          cover: s.cover,
+          year: Number(s.year) || 2026,
+          date: s.releaseDate || '2026-02-15',
+          data: s
+        })));
+      }
+
+      if (exploreFilter === 'all' || exploreFilter === 'albums') {
+        combinedItems = combinedItems.concat(popularAlbums.map(al => ({
+          kind: 'album',
+          id: al.id,
+          title: al.title,
+          subtitle: `${al.artist} · ${al.year}`,
+          genre: al.genre || 'Afro-Fusion',
+          metaLeft: `${al.tracksCount} tracks`,
+          metaRight: 'Play Collection ▶',
+          cover: al.cover,
+          year: Number(al.year) || 2026,
+          date: `${al.year || 2026}-01-01`,
+          data: al
+        })));
+      }
+
+      // 1. Text Search Filter (q)
+      if (q) {
+        combinedItems = combinedItems.filter(item => {
+          return (
+            (item.title && item.title.toLowerCase().includes(q)) ||
+            (item.subtitle && item.subtitle.toLowerCase().includes(q)) ||
+            (item.genre && item.genre.toLowerCase().includes(q)) ||
+            (item.metaLeft && String(item.metaLeft).toLowerCase().includes(q))
+          );
+        });
+      }
+
+      // 2. Genre Filter
+      if (exploreGenre !== 'all') {
+        combinedItems = combinedItems.filter(item => 
+          item.genre && item.genre.toLowerCase().includes(exploreGenre.toLowerCase())
         );
+      }
+
+      // 3. Sorting (Date, Genre, Title, Popularity)
+      combinedItems.sort((a, b) => {
+        if (exploreSort === 'newest') {
+          return (b.year || 2026) - (a.year || 2026) || (b.title || '').localeCompare(a.title || '');
+        }
+        if (exploreSort === 'oldest') {
+          return (a.year || 2026) - (b.year || 2026) || (a.title || '').localeCompare(b.title || '');
+        }
+        if (exploreSort === 'genre') {
+          return (a.genre || '').localeCompare(b.genre || '');
+        }
+        if (exploreSort === 'title') {
+          return (a.title || '').localeCompare(b.title || '');
+        }
+        if (exploreSort === 'popularity') {
+          return String(b.id || '').localeCompare(String(a.id || ''));
+        }
+        return 0;
       });
 
-      const filteredSingles = popularSingles.filter(s => {
-        if (!q) return true;
-        return (
-          (s.title && s.title.toLowerCase().includes(q)) ||
-          (s.artist && s.artist.toLowerCase().includes(q)) ||
-          (s.isrc && s.isrc.toLowerCase().includes(q))
-        );
-      });
-
-      const filteredAlbums = popularAlbums.filter(al => {
-        if (!q) return true;
-        return (
-          (al.title && al.title.toLowerCase().includes(q)) ||
-          (al.artist && al.artist.toLowerCase().includes(q)) ||
-          (al.year && String(al.year).includes(q))
-        );
-      });
+      // 4. Pagination: 4 columns x 4 rows = 16 items per page
+      const ITEMS_PER_PAGE = 16;
+      const totalItems = combinedItems.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+      const currentPage = Math.min(Math.max(1, explorePage), totalPages);
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const pageItems = combinedItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
       return (
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', width: '100%', maxWidth: '1240px', margin: '0 auto', boxSizing: 'border-box' }}>
           <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
-            Discover and search across signed creators, singles, and albums entered in the TuneMavens backend.
+            Discover, filter, and stream across signed creators, singles, and albums entered in the TuneMavens backend.
           </p>
 
           {/* Working Search Bar */}
-          <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '480px', margin: '0 auto 20px' }}>
+          <div style={{ marginBottom: '16px', position: 'relative', maxWidth: '480px', margin: '0 auto 16px' }}>
             <RiSearchLine size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
             <input 
               type="text" 
@@ -1228,7 +1317,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 data-no-i18n="true"
                 aria-label="Clear search"
                 data-testid="clear-search-btn"
-                onClick={() => setExploreSearch('')}
+                onClick={() => {
+                  setExploreSearch('');
+                  setExplorePage(1);
+                }}
                 style={{
                   position: 'absolute',
                   right: '12px',
@@ -1249,10 +1341,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
           </div>
 
           {/* Filter Pills */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
             <button
               type="button"
-              onClick={() => setExploreFilter('all')}
+              onClick={() => { setExploreFilter('all'); setExplorePage(1); }}
               style={{
                 padding: '6px 14px',
                 borderRadius: '3px',
@@ -1268,7 +1360,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             </button>
             <button
               type="button"
-              onClick={() => setExploreFilter('creators')}
+              onClick={() => { setExploreFilter('creators'); setExplorePage(1); }}
               style={{
                 padding: '6px 14px',
                 borderRadius: '3px',
@@ -1280,11 +1372,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 cursor: 'pointer'
               }}
             >
-              Signed Artists ({filteredArtists.length})
+              Signed Artists ({popularCreators.length})
             </button>
             <button
               type="button"
-              onClick={() => setExploreFilter('singles')}
+              onClick={() => { setExploreFilter('singles'); setExplorePage(1); }}
               style={{
                 padding: '6px 14px',
                 borderRadius: '3px',
@@ -1296,11 +1388,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 cursor: 'pointer'
               }}
             >
-              Singles ({filteredSingles.length})
+              Singles ({popularSingles.length})
             </button>
             <button
               type="button"
-              onClick={() => setExploreFilter('albums')}
+              onClick={() => { setExploreFilter('albums'); setExplorePage(1); }}
               style={{
                 padding: '6px 14px',
                 borderRadius: '3px',
@@ -1312,96 +1404,217 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 cursor: 'pointer'
               }}
             >
-              Albums &amp; EPs ({filteredAlbums.length})
+              Albums &amp; EPs ({popularAlbums.length})
             </button>
           </div>
 
-          {/* Grid display */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
-            {(exploreFilter === 'all' || exploreFilter === 'creators') && filteredArtists.map((c, idx) => (
-              <div 
-                key={`art_${idx}`} 
-                className="landing-feature-card" 
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} 
-                onClick={() => window.open(`http://localhost:3000/#/epk/${c.subdomain || c.name.toLowerCase().replace(/\s+/g, '')}`, '_blank')}
+          {/* Filtering & Sorting Controls (Genre & Date/Title/Popularity) */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginBottom: '28px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Genre:</span>
+              <select
+                value={exploreGenre}
+                onChange={(e) => {
+                  setExploreGenre(e.target.value);
+                  setExplorePage(1);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '3px',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
               >
-                <div style={{ width: '100%', height: '140px', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '14px', background: '#0e1424' }}>
-                  <img 
-                    src={c.avatar} 
-                    alt={c.name} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
-                    onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${c.id}/400/400`; }}
-                  />
-                  <span style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '9px', fontWeight: 'bold', background: 'rgba(0,0,0,0.7)', color: '#00f2fe', padding: '2px 6px', borderRadius: '3px' }}>
-                    CREATOR WEB WORLD
-                  </span>
-                </div>
-                <h3 data-no-i18n="true" style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{c.name}</h3>
-                <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{c.genre} · {c.role}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                  <span style={{ color: 'var(--mu)' }}>{c.listeners}</span>
-                  <span style={{ color: 'var(--cyan)', fontWeight: 'bold' }}>Enter Web World 🌐 →</span>
-                </div>
-              </div>
-            ))}
+                <option value="all">All Genres</option>
+                {allGenres.map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
 
-            {(exploreFilter === 'all' || exploreFilter === 'singles') && filteredSingles.map((s, idx) => (
-              <div 
-                key={`sing_${idx}`} 
-                className="landing-feature-card" 
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} 
-                onClick={() => navigate('/stream')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Sort By:</span>
+              <select
+                value={exploreSort}
+                onChange={(e) => {
+                  setExploreSort(e.target.value);
+                  setExplorePage(1);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '3px',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
               >
-                <div style={{ width: '100%', height: '140px', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '14px', background: '#0e1424' }}>
-                  <img 
-                    src={s.cover} 
-                    alt={s.title} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
-                    onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${s.id}/400/400`; }}
-                  />
-                  <span style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '9px', fontWeight: 'bold', background: 'rgba(16,185,129,0.85)', color: '#fff', padding: '2px 6px', borderRadius: '3px' }}>
-                    SINGLE RELEASE
-                  </span>
-                </div>
-                <h3 data-no-i18n="true" style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{s.title}</h3>
-                <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{s.artist}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                  <span style={{ color: 'var(--mu)', fontFamily: 'monospace' }}>{s.isrc}</span>
-                  <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>Listen ▶</span>
-                </div>
-              </div>
-            ))}
+                <option value="newest">Newest Releases (Date)</option>
+                <option value="oldest">Oldest Releases (Date)</option>
+                <option value="title">Title (A – Z)</option>
+                <option value="genre">Genre (A – Z)</option>
+                <option value="popularity">Most Popular</option>
+              </select>
+            </div>
 
-            {(exploreFilter === 'all' || exploreFilter === 'albums') && filteredAlbums.map((al, idx) => (
-              <div 
-                key={`alb_${idx}`} 
-                className="landing-feature-card" 
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} 
-                onClick={() => navigate('/stream')}
-              >
-                <div style={{ width: '100%', height: '140px', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '14px', background: '#0e1424' }}>
-                  <img 
-                    src={al.cover} 
-                    alt={al.title} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
-                    onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${al.id}/400/400`; }}
-                  />
-                  <span style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '9px', fontWeight: 'bold', background: 'rgba(168,85,247,0.85)', color: '#fff', padding: '2px 6px', borderRadius: '3px' }}>
-                    {al.type || 'ALBUM'}
-                  </span>
-                </div>
-                <h3 data-no-i18n="true" style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700' }}>{al.title}</h3>
-                <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 8px' }}>{al.artist} · {al.year}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                  <span style={{ color: 'var(--mu)' }}>{al.tracksCount} tracks</span>
-                  <span style={{ color: '#c084fc', fontWeight: 'bold' }}>View Collection &rarr;</span>
-                </div>
-              </div>
-            ))}
+            <span style={{ fontSize: '12px', color: 'var(--cyan)', fontWeight: 'bold' }}>
+              {totalItems} {totalItems === 1 ? 'item' : 'items'} found
+            </span>
           </div>
+
+          {/* 4 Columns x 4 Rows = 16 Items Grid */}
+          {pageItems.length === 0 ? (
+            <div style={{ padding: '48px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', border: '1px dashed rgba(255,255,255,0.1)', marginBottom: '32px' }}>
+              <p style={{ color: '#94a3b8', margin: '0 0 12px' }}>No catalogue entries matched your current filter.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setExploreSearch('');
+                  setExploreGenre('all');
+                  setExploreFilter('all');
+                  setExplorePage(1);
+                }}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '3px',
+                  border: '1px solid #00f2fe',
+                  background: 'transparent',
+                  color: '#00f2fe',
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                Reset All Filters
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '20px', marginBottom: '32px' }}>
+              {pageItems.map((item, idx) => (
+                <div 
+                  key={`${item.kind}_${item.id}_${idx}`} 
+                  className="landing-feature-card" 
+                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }} 
+                  onClick={() => {
+                    if (item.kind === 'creator') handleArtistClick(item.data);
+                    else if (item.kind === 'album') handlePlayAlbum(item.data);
+                    else handlePlaySong(item.data);
+                  }}
+                >
+                  <div style={{ width: '100%', paddingBottom: '100%', borderRadius: '3px', overflow: 'hidden', position: 'relative', marginBottom: '12px', background: '#0e1424' }}>
+                    <img 
+                      src={item.cover} 
+                      alt={item.title} 
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
+                      onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
+                    />
+                    <span style={{ 
+                      position: 'absolute', 
+                      top: '8px', 
+                      left: '8px', 
+                      fontSize: '9px', 
+                      fontWeight: 'bold', 
+                      background: item.kind === 'creator' ? 'rgba(0,0,0,0.7)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
+                      color: item.kind === 'creator' ? '#00f2fe' : '#fff', 
+                      padding: '2px 6px', 
+                      borderRadius: '3px' 
+                    }}>
+                      {item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
+                    </span>
+                    {item.kind !== 'creator' && (
+                      <span style={{ position: 'absolute', bottom: '8px', right: '8px', width: '26px', height: '26px', borderRadius: '3px', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <RiPlayFill size={15} color="#00f2fe" />
+                      </span>
+                    )}
+                  </div>
+                  <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: '700', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</h3>
+                  <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subtitle}</p>
+                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                    <span style={{ color: 'var(--mu)', fontFamily: item.kind === 'single' ? 'monospace' : 'inherit' }}>{item.metaLeft}</span>
+                    <span style={{ color: item.kind === 'creator' ? 'var(--cyan)' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold' }}>{item.metaRight}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination Controls (4 Columns x 4 Rows = 16 Items) */}
+          {totalItems > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => setExplorePage(p => Math.max(1, p - 1))}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: currentPage <= 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)',
+                  color: currentPage <= 1 ? '#64748b' : '#fff',
+                  cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}
+              >
+                ‹ Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setExplorePage(page)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '3px',
+                    border: currentPage === page ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.15)',
+                    background: currentPage === page ? '#00f2fe' : 'rgba(255,255,255,0.04)',
+                    color: currentPage === page ? '#000' : '#fff',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => setExplorePage(p => Math.min(totalPages, p + 1))}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: currentPage >= totalPages ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)',
+                  color: currentPage >= totalPages ? '#64748b' : '#fff',
+                  cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Next ›
+              </button>
+              <span style={{ fontSize: '12px', color: 'var(--mu)', marginLeft: '12px' }}>
+                Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} of {totalItems} items (4 × 4)
+              </span>
+            </div>
+          )}
         </div>
       );
     };
+
+    
+
+    
     const renderPlaylists = () => {
       return (
         <div style={{ textAlign: 'center' }}>
@@ -1935,7 +2148,31 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       );
     };
 
-    const renderContent = () => {
+      const handlePlaySong = (song) => {
+    const match = (tracks && tracks.find(t => t.id === song.id || t.isrc === song.isrc || t.title === song.title)) || song;
+    setActiveHiFiTrack(match);
+    setIsHiFiPlaying(true);
+  };
+
+  const handleArtistClick = (artist) => {
+    const sub = artist.subdomain || (artist.name ? artist.name.toLowerCase().replace(/\s+/g, '') : 'ndufo');
+    navigate(`/epk/${sub}`);
+  };
+
+  const handlePlayAlbum = (album) => {
+    const albumTrack = (tracks && tracks.find(t => t.album === album.title || t.albumId === album.id)) || {
+      id: album.id,
+      title: `${album.title} (Track 1)`,
+      artist: album.artist,
+      cover: album.cover,
+      isrc: album.isrc || 'KE-TM1-26-00042',
+      audioUrl: `/api/stream/track/${encodeURIComponent(album.title)}`
+    };
+    setActiveHiFiTrack(albumTrack);
+    setIsHiFiPlaying(true);
+  };
+
+  const renderContent = () => {
       switch (view) {
         case 'explore':
           return renderExplore();
@@ -1965,7 +2202,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         style={{ background: getLandingBackground('tunestream'), color: '#f1f5f9', minHeight: '100vh', padding: '0 0 162px' }}
       >
         {renderTopHeader()}
-        <div className={`container ${view === 'apps' ? 'full-width-apps' : ''}`} style={{ marginTop: view === 'listen' ? '40px' : '0', maxWidth: view === 'apps' ? '100%' : '1200px', width: view === 'apps' ? '100%' : undefined, padding: view === 'apps' ? '0 32px' : '0 24px', boxSizing: 'border-box' }}>
+        <div className="container" style={{ marginTop: view === 'listen' ? '40px' : '0', maxWidth: '1240px', width: '100%', margin: '0 auto', padding: '0 24px', boxSizing: 'border-box' }}>
           {renderContent()}
         </div>
       </div>
@@ -2198,6 +2435,16 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       <div style={{ flex: 1 }}>
         {pageContent}
       </div>
+            {activeHiFiTrack && (
+        <HiFiAudioPlayer
+          track={activeHiFiTrack}
+          tracks={tracks}
+          isPlaying={isHiFiPlaying}
+          onTogglePlay={setIsHiFiPlaying}
+          onTrackSelect={setActiveHiFiTrack}
+          onClose={() => setIsHiFiPlaying(false)}
+        />
+      )}
       <LandingFooter view={view} />
     </div>
   );
