@@ -3,7 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { RiRefreshFill } from 'react-icons/ri'
 import { authApi, tokenStore } from '../../lib/api.js'
 import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
-import { reconcileUserApps } from '../../lib/activatedApps.js'
+import { reconcileUserApps, persistAppActivation } from '../../lib/activatedApps.js'
+import { getToolById } from '../../data/toolsCatalog.js'
 
 export default function RegisterView({ onLogin }) {
   const navigate = useNavigate();
@@ -28,15 +29,22 @@ export default function RegisterView({ onLogin }) {
     }
   };
   
+  const searchParams = new URLSearchParams(location.search);
+  const toolParam = searchParams.get('tool') || sessionStorage.getItem('signup_interest_tool');
+  const activeTool = getToolById(toolParam);
+
   const [roles, setRoles] = useState(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const paramRole = searchParams.get('role');
-    if (paramRole) return [paramRole];
+    const sp = new URLSearchParams(location.search);
+    const paramRole = sp.get('role');
+    const tp = sp.get('tool') || sessionStorage.getItem('signup_interest_tool');
+    const toolMeta = getToolById(tp);
+    const resolvedRole = paramRole || toolMeta?.role;
+    if (resolvedRole) return [resolvedRole];
 
     const saved = sessionStorage.getItem('signup_roles');
     if (saved) {
       const parsed = safeParseArray(saved, null);
-      if (parsed) return parsed;
+      if (parsed && parsed.length > 0) return parsed;
     }
     const legacy = sessionStorage.getItem('signup_role');
     return legacy ? [legacy] : [];
@@ -133,8 +141,13 @@ export default function RegisterView({ onLogin }) {
       return [];
     };
 
+    const tp = params.get('tool') || sessionStorage.getItem('signup_interest_tool');
+    const toolMeta = getToolById(tp);
+
     let preselected = [];
-    if (roleParam && ['consumer', 'creator', 'label', 'dj', 'studio', 'corporate', 'media'].includes(roleParam)) {
+    if (toolMeta && toolMeta.role) {
+      preselected = [toolMeta.role];
+    } else if (roleParam && ['consumer', 'creator', 'label', 'dj', 'studio', 'corporate', 'media'].includes(roleParam)) {
       preselected = [roleParam];
     } else {
       const fromPath = location.state?.from || '';
@@ -156,7 +169,10 @@ export default function RegisterView({ onLogin }) {
         });
         return merged;
       });
-      setStep(prev => prev === 0 ? 1 : prev);
+      // If user came specifically exploring a tool, keep step 0 so they clearly see their pre-selected role
+      if (!toolMeta) {
+        setStep(prev => prev === 0 ? 1 : prev);
+      }
     }
   }, [location]);
 
@@ -312,7 +328,13 @@ export default function RegisterView({ onLogin }) {
   };
 
   const handleBypassOnboarding = () => {
-    const bypassRoles = ['creator', 'label'];
+    const sp = new URLSearchParams(location.search);
+    const tp = sp.get('tool') || sessionStorage.getItem('signup_interest_tool');
+    const toolMeta = getToolById(tp);
+    const targetApp = sp.get('app') || toolMeta?.appSlug;
+    const targetTab = sp.get('tab') || toolMeta?.tab || sessionStorage.getItem('preferred_dashboard_tab');
+
+    const bypassRoles = activeTool ? [activeTool.role] : ['creator', 'label'];
     setRoles(bypassRoles);
     setName('Alex Rivera');
     setEmail('alex.rivera@tunemavens.com');
@@ -322,26 +344,43 @@ export default function RegisterView({ onLogin }) {
       email: 'alex.rivera@tunemavens.com',
       password: 'sandbox123456',
       name: 'Alex Rivera',
-      role: 'creator',
+      role: activeTool?.role || 'creator',
       brand_name: 'Alex Rivera Productions',
       country: 'KE',
     }).then(({ user, access_token }) => {
       tokenStore.set(access_token);
-      onLogin(user);
+      if (targetApp) {
+        try { persistAppActivation(targetApp, user); } catch(e){}
+      }
+      onLogin(reconcileUserApps(user));
       clearSignupMemory();
-      navigate('/dashboard');
+      if (targetTab) {
+        sessionStorage.setItem('preferred_dashboard_tab', targetTab);
+        navigate(`/dashboard?tab=${targetTab}${tp ? `&tool=${tp}` : ''}`);
+      } else {
+        navigate('/dashboard');
+      }
     }).catch(() => {
-      onLogin({
+      const fallbackUser = {
         email: 'alex.rivera@tunemavens.com',
         name: 'Alex Rivera',
-        role: 'creator',
+        role: activeTool?.role || 'creator',
         credits: 600,
         plan: 'creator',
         brand_name: 'Alex Rivera Productions',
         country: 'KE',
-      });
+      };
+      if (targetApp) {
+        try { persistAppActivation(targetApp, fallbackUser); } catch(e){}
+      }
+      onLogin(reconcileUserApps(fallbackUser));
       clearSignupMemory();
-      navigate('/dashboard');
+      if (targetTab) {
+        sessionStorage.setItem('preferred_dashboard_tab', targetTab);
+        navigate(`/dashboard?tab=${targetTab}${tp ? `&tool=${tp}` : ''}`);
+      } else {
+        navigate('/dashboard');
+      }
     });
   };
 
@@ -499,6 +538,11 @@ export default function RegisterView({ onLogin }) {
       const utm_medium = searchParams.get('utm_medium') || sessionStorage.getItem('utm_medium') || undefined;
       const utm_campaign = searchParams.get('utm_campaign') || sessionStorage.getItem('utm_campaign') || undefined;
 
+      const toolId = searchParams.get('tool') || sessionStorage.getItem('signup_interest_tool');
+      const toolMeta = getToolById(toolId);
+      const targetApp = searchParams.get('app') || toolMeta?.appSlug;
+      const targetTab = searchParams.get('tab') || toolMeta?.tab || sessionStorage.getItem('preferred_dashboard_tab');
+
       const { user, access_token } = await authApi.register({
         email,
         password,
@@ -512,10 +556,25 @@ export default function RegisterView({ onLogin }) {
         utm_campaign,
       });
       tokenStore.set(access_token);
+
+      if (targetApp) {
+        try {
+          persistAppActivation(targetApp, user);
+        } catch (e) {
+          console.warn('Failed to persist app activation:', e);
+        }
+      }
+
       onLogin(reconcileUserApps(user));
       alert(`SSO registration successfully complete! Welcome, ${name}!`);
       clearSignupMemory();
-      navigate('/dashboard');
+
+      if (targetTab) {
+        sessionStorage.setItem('preferred_dashboard_tab', targetTab);
+        navigate(`/dashboard?tab=${targetTab}${toolId ? `&tool=${toolId}` : ''}`);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       alert(err.message || 'Registration failed');
     }
@@ -549,6 +608,47 @@ export default function RegisterView({ onLogin }) {
           {isAiMode ? 'Talk with Ayo to onboard' : `Step ${step + 1} of ${steps.length}: ${steps[step] || ''}`}
         </p>
       </div>
+
+      {activeTool && (
+        <div 
+          data-testid="tool-guidance-banner"
+          style={{
+            background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(168, 85, 247, 0.12))',
+            border: '1px solid rgba(34, 211, 238, 0.35)',
+            borderRadius: '8px',
+            padding: '12px 14px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            textAlign: 'left'
+          }}
+        >
+          {React.createElement(activeTool.icon, {
+            size: 22,
+            style: { color: 'var(--cyan)', flexShrink: 0, marginTop: '2px' }
+          })}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span>Intelligent Guidance: {activeTool.name}</span>
+              <span style={{
+                fontSize: '10px',
+                fontWeight: '700',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                background: 'rgba(34, 211, 238, 0.2)',
+                color: 'var(--cyan)',
+                border: '1px solid rgba(34, 211, 238, 0.4)'
+              }}>
+                {activeTool.cost}
+              </span>
+            </div>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.4 }}>
+              {activeTool.guidance || `Your workspace will launch with ${activeTool.name} pre-configured for the ${activeTool.roleLabel} role.`}
+            </p>
+          </div>
+        </div>
+      )}
 
       {!isAiMode && (
         <div className="wizard-steps-indicator" style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
@@ -728,6 +828,24 @@ export default function RegisterView({ onLogin }) {
                   </span>
                 ))}
               </div>
+
+              {activeTool && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  background: 'rgba(34, 211, 238, 0.08)',
+                  border: '1px solid rgba(34, 211, 238, 0.25)',
+                  color: 'var(--cyan)',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  marginBottom: '16px'
+                }}>
+                  <span>✓ Pre-selected for <strong>{activeTool.name}</strong> ({activeTool.roleLabel})</span>
+                </div>
+              )}
             </div>
           )}
 
