@@ -64,9 +64,17 @@ class User(BaseDocument):
     credits: int = 0
     brand_name: Optional[str] = None
     country: Optional[str] = None
+    signup_page: Optional[str] = None
+    signup_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
     bio: Optional[str] = None
     apps: List[str] = Field(default_factory=list)  # existing field — App Marketplace activation
     dashboard_layout: Optional[dict] = None  # §9.6 — per-user panel arrangement
+    signup_page: Optional[str] = None        # Spec §3 — originating landing page attribution
+    signup_source: Optional[str] = None      # Spec §3 — UTM source or referrer
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -83,9 +91,15 @@ class UserPublic(BaseModel):
     credits: int = 0
     brand_name: Optional[str] = None
     country: Optional[str] = None
+    signup_page: Optional[str] = None
+    signup_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
     bio: Optional[str] = None
     apps: List[str] = Field(default_factory=list)
     dashboard_layout: Optional[dict] = None
+    signup_page: Optional[str] = None
+    signup_source: Optional[str] = None
 
 
 # ======================================================================
@@ -99,6 +113,10 @@ class RegisterRequest(BaseModel):
     roles: Optional[List[str]] = None
     brand_name: Optional[str] = None
     country: Optional[str] = None
+    signup_page: Optional[str] = None
+    signup_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
 
 
 class LoginRequest(BaseModel):

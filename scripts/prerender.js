@@ -138,6 +138,39 @@ const TUNEMAVENS_ROUTES = [
   }
 ];
 
+
+function loadRegistryRoutes() {
+  const regPath = path.resolve('shared', 'landing_page_registry.json');
+  if (!fs.existsSync(regPath)) return [];
+  try {
+    const raw = JSON.parse(fs.readFileSync(regPath, 'utf-8'));
+    return raw.map(entry => {
+      const isHub = entry.slug === 'who-is-it-for';
+      const rPath = isHub ? '/for' : `/for/${entry.slug}`;
+      const rSlug = isHub ? 'for' : `for/${entry.slug}`;
+      const audienceShort = (entry.audience || 'Music Professionals').split('&')[0].trim();
+      return {
+        path: rPath,
+        slug: rSlug,
+        title: `${entry.headline} — TuneMavens for ${audienceShort}`,
+        description: entry.subhead,
+        h1: entry.headline,
+        subhead: entry.subhead,
+        canonical: entry.canonical_url,
+        ogImage: entry.og_image || 'https://tunemavens.com/headers/discography_retina_header.jpg',
+        ctaText: entry.primary_cta ? entry.primary_cta.text : 'Get Started',
+        ctaHref: entry.primary_cta ? entry.primary_cta.href : '/register',
+        features: entry.proof_points || [],
+        isRoleLanding: true,
+        roleKey: entry.slug
+      };
+    });
+  } catch (err) {
+    console.error('Failed to load landing_page_registry.json in prerender:', err);
+    return [];
+  }
+}
+
 const TUNESTREAM_ROUTES = [
   {
     path: '/',
@@ -174,6 +207,20 @@ const SYNCMAVENS_ROUTES = [
     ]
   }
 ];
+
+
+function getCleanTemplate(rawTemplate) {
+  let clean = rawTemplate;
+  // Strip previous injected meta and link tags
+  clean = clean.replace(/<meta name="description"[^>]*>/gi, '');
+  clean = clean.replace(/<link rel="canonical"[^>]*>/gi, '');
+  clean = clean.replace(/<meta property="og:[^>]*>/gi, '');
+  clean = clean.replace(/<meta name="twitter:[^>]*>/gi, '');
+  clean = clean.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, '');
+  // Clear root to empty <div id="root"></div>
+  clean = clean.replace(/<div id="root">[\s\S]*?<\/div>/i, '<div id="root"></div>');
+  return clean;
+}
 
 function generateHtml(route, baseHtmlTemplate) {
   const schemaOrg = {
@@ -217,6 +264,19 @@ function generateHtml(route, baseHtmlTemplate) {
         </nav>
       </header>
 
+      <!-- 1-Tap Persona Switcher Toolbar per Spec §3 -->
+      <nav data-testid="role-switcher-toolbar" style="display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px; align-items: center;">
+        <span style="color: #8b949e; margin-right: 4px; font-size: 11px; text-transform: uppercase; font-weight: 700;">Seat:</span>
+        <a href="/for/creator" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Creators</a>
+        <a href="/for/label" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Record Labels</a>
+        <a href="/for/dj" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">DJs</a>
+        <a href="/for/media-house" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Media Houses</a>
+        <a href="/for/supervisor" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Music Supervisors</a>
+        <a href="/for/consumer" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Listeners</a>
+        <a href="/for/corporate" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Corporate</a>
+        <a href="/for" style="margin-left: auto; color: #00f0ff; text-decoration: none; font-weight: 600;">All Seats →</a>
+      </nav>
+
       <main>
         <section style="margin: 40px 0 60px 0;">
           <h1 style="font-size: 38px; line-height: 1.2; font-weight: 800; margin-bottom: 16px; color: #ffffff;">
@@ -226,8 +286,8 @@ function generateHtml(route, baseHtmlTemplate) {
             ${route.subhead}
           </p>
           <div style="display: flex; gap: 16px;">
-            <a href="/pricing" style="display: inline-block; background: #00f0ff; color: #0b0f19; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none;">
-              Get Started with Unified Credits
+            <a href="${route.ctaHref || '/pricing'}" style="display: inline-block; background: #00f0ff; color: #0b0f19; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none;">
+              ${route.ctaText || 'Get Started with Unified Credits'}
             </a>
             <a href="/about" style="display: inline-block; background: rgba(255,255,255,0.08); color: #ffffff; padding: 12px 24px; border-radius: 8px; font-weight: 600; text-decoration: none;">
               Learn More
@@ -255,7 +315,7 @@ function generateHtml(route, baseHtmlTemplate) {
   `;
 
   // Inject meta tags and semantic body
-  let html = baseHtmlTemplate;
+  let html = getCleanTemplate(baseHtmlTemplate);
 
   // 1. Replace or update <title>
   html = html.replace(/<title>.*?<\/title>/i, `<title>${route.title}</title>`);
@@ -324,8 +384,11 @@ function generate404Html(baseTemplate) {
 export function prerenderAll() {
   console.log('--- Starting TuneMavens Multi-Domain Prerender & Head Tag Ingestion ---');
 
+  const registryRoutes = loadRegistryRoutes();
+  const portalRoutes = [...TUNEMAVENS_ROUTES, ...registryRoutes];
+
   const apps = [
-    { name: 'portal', routes: TUNEMAVENS_ROUTES, domain: 'tunemavens.com' },
+    { name: 'portal', routes: portalRoutes, domain: 'tunemavens.com' },
     { name: 'tunestream', routes: TUNESTREAM_ROUTES, domain: 'tunestream.co' },
     { name: 'syncmavens', routes: SYNCMAVENS_ROUTES, domain: 'syncmavens.com' }
   ];
@@ -356,8 +419,7 @@ export function prerenderAll() {
       const rendered = generateHtml(route, template);
 
       if (route.slug === 'index') {
-        // Also update index.html in app root to have real initial content
-        fs.writeFileSync(indexHtmlPath, rendered, 'utf-8');
+        // Write prerendered index to public/ and dist/
         fs.writeFileSync(path.join(publicDir, 'index.html'), rendered, 'utf-8');
         console.log(`[${app.name}] ✔ Prerendered ${route.path} -> index.html (H1 + Head + OG Tags)`);
       } else {
@@ -366,6 +428,17 @@ export function prerenderAll() {
           fs.mkdirSync(routeSubdir, { recursive: true });
         }
         fs.writeFileSync(path.join(routeSubdir, 'index.html'), rendered, 'utf-8');
+
+        // Also sync to dist/ if dist directory already exists
+        const distDir = path.join(appDir, 'dist');
+        if (fs.existsSync(distDir)) {
+          const distSubdir = path.join(distDir, route.slug);
+          if (!fs.existsSync(distSubdir)) {
+            fs.mkdirSync(distSubdir, { recursive: true });
+          }
+          fs.writeFileSync(path.join(distSubdir, 'index.html'), rendered, 'utf-8');
+        }
+
         console.log(`[${app.name}] ✔ Prerendered ${route.path} -> ${route.slug}/index.html`);
       }
     }

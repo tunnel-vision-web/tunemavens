@@ -55,6 +55,8 @@ def _to_public(user: dict) -> UserPublic:
         bio=resolved_bio,
         apps=apps,
         dashboard_layout=user.get("dashboard_layout"),
+        signup_page=user.get("signup_page"),
+        signup_source=user.get("signup_source"),
     )
 
 
@@ -116,6 +118,10 @@ def register(payload: RegisterRequest, response: Response):
         plan="starter",
         brand_name=payload.brand_name,
         country=payload.country,
+        signup_page=payload.signup_page,
+        signup_source=payload.signup_source,
+        utm_medium=payload.utm_medium,
+        utm_campaign=payload.utm_campaign,
         credits=600,  # default sandbox credit grant
         apps=["epk-builder", "catalog-porting"] if primary_role in ("creator", "label", "admin") else [],
     ).to_mongo()

@@ -93,6 +93,20 @@ export default function RegisterView({ onLogin }) {
   const [payoutBankName, setPayoutBankName] = useState(() => sessionStorage.getItem('signup_payout_bank_name') || '');
   const [payoutAccountNum, setPayoutAccountNum] = useState(() => sessionStorage.getItem('signup_payout_account_num') || '');
   const [payoutRoutingNum, setPayoutRoutingNum] = useState(() => sessionStorage.getItem('signup_payout_routing_num') || '');
+
+  // Attribution capture per Spec §3
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const page = searchParams.get('signup_page') || searchParams.get('from') || (document.referrer || null);
+    const source = searchParams.get('utm_source') || searchParams.get('ref') || null;
+    const medium = searchParams.get('utm_medium') || null;
+    const campaign = searchParams.get('utm_campaign') || null;
+
+    if (page && !sessionStorage.getItem('signup_page')) sessionStorage.setItem('signup_page', page);
+    if (source && !sessionStorage.getItem('signup_source')) sessionStorage.setItem('signup_source', source);
+    if (medium && !sessionStorage.getItem('utm_medium')) sessionStorage.setItem('utm_medium', medium);
+    if (campaign && !sessionStorage.getItem('utm_campaign')) sessionStorage.setItem('utm_campaign', campaign);
+  }, [location.search]);
   const [payoutCardNum, setPayoutCardNum] = useState(() => sessionStorage.getItem('signup_payout_card_num') || '');
   const [payoutMobilePhone, setPayoutMobilePhone] = useState(() => sessionStorage.getItem('signup_payout_mobile_phone') || '');
   const [payoutMobileProvider, setPayoutMobileProvider] = useState(() => sessionStorage.getItem('signup_payout_mobile_provider') || 'M-Pesa');
@@ -440,6 +454,10 @@ export default function RegisterView({ onLogin }) {
     sessionStorage.removeItem('signup_corp_brand');
     sessionStorage.removeItem('signup_corp_budget');
     sessionStorage.removeItem('signup_media_network');
+    sessionStorage.removeItem('signup_page');
+    sessionStorage.removeItem('signup_source');
+    sessionStorage.removeItem('utm_medium');
+    sessionStorage.removeItem('utm_campaign');
   };
 
   const handleResetRegistration = () => {
@@ -475,6 +493,12 @@ export default function RegisterView({ onLogin }) {
     }
     const userRole = roles[0] || 'creator';
     try {
+      const searchParams = new URLSearchParams(location.search);
+      const signup_page = searchParams.get('signup_page') || sessionStorage.getItem('signup_page') || undefined;
+      const signup_source = searchParams.get('utm_source') || searchParams.get('ref') || sessionStorage.getItem('signup_source') || undefined;
+      const utm_medium = searchParams.get('utm_medium') || sessionStorage.getItem('utm_medium') || undefined;
+      const utm_campaign = searchParams.get('utm_campaign') || sessionStorage.getItem('utm_campaign') || undefined;
+
       const { user, access_token } = await authApi.register({
         email,
         password,
@@ -482,6 +506,10 @@ export default function RegisterView({ onLogin }) {
         role: userRole,
         brand_name: name + ' Productions',
         country: 'KE',
+        signup_page,
+        signup_source,
+        utm_medium,
+        utm_campaign,
       });
       tokenStore.set(access_token);
       onLogin(reconcileUserApps(user));

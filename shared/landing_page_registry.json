@@ -1,0 +1,205 @@
+[
+  {
+    "slug": "creator",
+    "aliases": ["for-creators", "for/creator", "for/artist"],
+    "product": "tunemavens",
+    "audience": "Independent Creators, Songwriters & Producers",
+    "headline": "Take Command of Your Masters, Splits & Sync Pitching",
+    "subhead": "The dedicated operating system for East African and diaspora music creators. Build interactive EPK web worlds, lock in basis point split sheets, and pitch directly to global sync briefs.",
+    "proof_points": [
+      "Immutable split sheets with integer basis points (totaling exactly 10,000)",
+      "Interactive EPK builder hosted on your personal subdomain (username.tunemavens.com)",
+      "Direct sync brief submissions to verified film and TV supervisors",
+      "Instant earnings settlement via M-Pesa and international card rails with zero monthly subscription fees"
+    ],
+    "primary_cta": {
+      "text": "Start Free Creator Hub",
+      "href": "/register?role=creator"
+    },
+    "signup_role": "creator",
+    "default_currency": "KES",
+    "default_locale": "en-KE",
+    "canonical_url": "https://tunemavens.com/for/creator",
+    "og_image": "https://tunemavens.com/headers/discography_retina_header.jpg",
+    "sitemap_flag": true,
+    "subdomain": "creators.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
+    "slug": "label",
+    "aliases": ["for-labels", "for/label", "for/exec"],
+    "product": "tunemavens",
+    "audience": "Independent Record Labels & Imprints",
+    "headline": "Automated Waterfall Recoupments & Multi-Artist Roster Management",
+    "subhead": "Enterprise-grade infrastructure for independent labels managing catalog, master stems, and multi-party contributor waterfall accounting without 180-day statement delays.",
+    "proof_points": [
+      "Multi-seat collaborator console with isolated permissions for A&R, Legal, and Finance",
+      "Automated recoupment deductions before split cascade distribution",
+      "White-glove DDEX ERN 4.3 batch ingestion and delivery to global DSPs",
+      "Direct rail bulk payouts via Safaricom Daraja B2C and SWIFT"
+    ],
+    "primary_cta": {
+      "text": "Deploy Label Console",
+      "href": "/register?role=label"
+    },
+    "signup_role": "label",
+    "default_currency": "USD",
+    "default_locale": "en-US",
+    "canonical_url": "https://tunemavens.com/for/label",
+    "og_image": "https://tunemavens.com/headers/discography_retina_header.jpg",
+    "sitemap_flag": true,
+    "subdomain": "labels.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
+    "slug": "dj",
+    "aliases": ["for-djs", "for/dj"],
+    "product": "tunemavens",
+    "audience": "Club, Radio & Festival DJs",
+    "headline": "Lossless Promo Pool Drops & Verified Mixtape Clearances",
+    "subhead": "Get exclusive early access to pre-cleared high-fidelity audio drops from verified African producers, with legal clearance escrow for digital mixtapes.",
+    "proof_points": [
+      "High-bitrate lossless WAV/FLAC audio drops with key and BPM metadata",
+      "Smart escrow contracts for pre-cleared commercial mixtape drops",
+      "Direct play attribution and royalty reporting back to creators"
+    ],
+    "primary_cta": {
+      "text": "Access DJ Pool",
+      "href": "/register?role=dj"
+    },
+    "signup_role": "dj",
+    "default_currency": "KES",
+    "default_locale": "en-KE",
+    "canonical_url": "https://tunemavens.com/for/dj",
+    "og_image": "https://tunemavens.com/headers/discography_retina_header.jpg",
+    "sitemap_flag": true,
+    "subdomain": "djs.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
+    "slug": "media-house",
+    "aliases": ["for-mediahouses", "for/media-house", "for/media"],
+    "product": "tunemavens",
+    "audience": "Broadcasters, TV Stations & Media Networks",
+    "headline": "Broadcast Stems & Direct Sync Licensing Ingestion",
+    "subhead": "Instant pre-cleared music licensing for commercial broadcasts, television series, and streaming networks with automated cue sheet compliance.",
+    "proof_points": [
+      "100% pre-cleared master and publishing catalog with verified split sheets",
+      "Standard cue sheet export formats for global CMO reporting",
+      "Guaranteed legal indemnification and zero copyright infringement risk"
+    ],
+    "primary_cta": {
+      "text": "Register Media House",
+      "href": "/register?role=media_house"
+    },
+    "signup_role": "media_house",
+    "default_currency": "USD",
+    "default_locale": "en-US",
+    "canonical_url": "https://tunemavens.com/for/media-house",
+    "og_image": "https://tunemavens.com/headers/discography_retina_header.jpg",
+    "sitemap_flag": true,
+    "subdomain": "media.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
+    "slug": "supervisor",
+    "aliases": ["for-supervisors", "for/supervisor"],
+    "product": "syncmavens",
+    "audience": "Film, TV & Gaming Music Supervisors",
+    "headline": "AI-Powered One-Stop Sync Licensing from Africa & Diaspora",
+    "subhead": "Directly source authentic sounds and cinematic compositions with executed split sheets, instantaneous quotes, and one-stop sync clearances.",
+    "proof_points": [
+      "Direct sync brief submissions to verified artists and catalog owners",
+      "Transparent basis point split sheets with signed writer attestations",
+      "Automated agreement generation matching the platform calculator"
+    ],
+    "primary_cta": {
+      "text": "Source Sync Catalog",
+      "href": "/register?role=supervisor"
+    },
+    "signup_role": "supervisor",
+    "default_currency": "USD",
+    "default_locale": "en-US",
+    "canonical_url": "https://tunemavens.com/for/supervisor",
+    "og_image": "https://tunemavens.com/headers/discography_retina_header.jpg",
+    "sitemap_flag": true,
+    "subdomain": "supervisors.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
+    "slug": "consumer",
+    "aliases": ["for/consumer", "for/listener"],
+    "product": "tunestream",
+    "audience": "Everyday Listeners & Music Enthusiasts",
+    "headline": "Music Streaming Built for Creators — 95% Direct Fan Tipping",
+    "subhead": "Experience next-generation music streaming built on the Intermaven network. Support your favorite creators with direct credit tips and listen in lossless fidelity.",
+    "proof_points": [
+      "Direct fan credit tipping — 95% of proceeds flow to the artist ledger",
+      "Adaptive low-bitrate streaming engineered for mobile data in Nairobi",
+      "Lossless studio-grade FLAC playback when connected to Wi-Fi",
+      "Verified play accounting with strict anti-bot and fraud filtering"
+    ],
+    "primary_cta": {
+      "text": "Start Streaming Free",
+      "href": "https://tunestream.co"
+    },
+    "signup_role": "consumer",
+    "default_currency": "KES",
+    "default_locale": "en-KE",
+    "canonical_url": "https://tunemavens.com/for/consumer",
+    "og_image": "https://tunestream.co/headers/discography_retina_header.jpg",
+    "sitemap_flag": true,
+    "subdomain": "stream.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
+    "slug": "corporate",
+    "aliases": ["for-corporate", "for/corporate"],
+    "product": "tunemavens",
+    "audience": "Brand Marketers, Advertisers & Sponsors",
+    "headline": "High-Impact Audio Sponsorships & Targeted Creator Campaigns",
+    "subhead": "Connect your brand with passionate music audiences across Nairobi and the global diaspora through non-intrusive, pre-cleared audio spots.",
+    "proof_points": [
+      "Verified telemetry tracking for impressions, completions, and click-through rates",
+      "Direct settlement in KES or USD via invoice, M-Pesa, or corporate card",
+      "Geo-targeted campaign delivery across mobile and web worlds"
+    ],
+    "primary_cta": {
+      "text": "Book Ad Campaign",
+      "href": "/register?role=corporate"
+    },
+    "signup_role": "corporate",
+    "default_currency": "KES",
+    "default_locale": "en-KE",
+    "canonical_url": "https://tunemavens.com/for/corporate",
+    "og_image": "https://tunemavens.com/headers/discography_retina_header.jpg",
+    "sitemap_flag": true,
+    "subdomain": "corporate.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
+    "slug": "who-is-it-for",
+    "aliases": ["for", "who-is-it-for"],
+    "product": "tunemavens",
+    "audience": "Music Industry Ecosystem",
+    "headline": "Who is TuneMavens For? Dedicated Infrastructure for Every Industry Seat",
+    "subhead": "TuneMavens unifies the 7 essential roles in music into one interoperable operating system. Select your seat below to explore features tailored specifically for your workflow.",
+    "proof_points": [
+      "7 Specialized Seats: Creator, Record Label, DJ, Media House, Supervisor, Consumer, and Corporate",
+      "Seamless 1-tap switching between personas with preserved context",
+      "Zero monthly subscriptions — 100% unified non-expiring credit ledger"
+    ],
+    "primary_cta": {
+      "text": "Explore All 7 Seats",
+      "href": "/for"
+    },
+    "signup_role": "creator",
+    "default_currency": "USD",
+    "default_locale": "en-US",
+    "canonical_url": "https://tunemavens.com/for",
+    "og_image": "https://tunemavens.com/headers/discography_retina_header.jpg",
+    "sitemap_flag": true,
+    "subdomain": "tunemavens.com",
+    "partner_claims_approved": true
+  }
+]

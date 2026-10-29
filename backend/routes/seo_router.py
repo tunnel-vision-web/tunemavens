@@ -12,6 +12,7 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException, Request, Response
 from config import db
+from services.landing_registry_service import load_registry
 
 logger = logging.getLogger("seo_router")
 
@@ -83,7 +84,24 @@ def get_sitemap(request: Request):
         target_host_key = "syncmavens.com"
 
     base_url = f"{scheme}://{host}"
-    routes = HOST_ROUTES.get(target_host_key, HOST_ROUTES["tunemavens.com"])
+    routes = [dict(r) for r in HOST_ROUTES.get(target_host_key, HOST_ROUTES["tunemavens.com"])]
+
+    # Dynamically inject landing pages from registry for matching target host
+    try:
+        registry_pages = load_registry()
+        for p in registry_pages:
+            if p.get("sitemap_flag", True):
+                canonical = p.get("canonical_url", "")
+                if target_host_key in canonical:
+                    parsed_path = canonical.split(target_host_key, 1)[-1]
+                    if not any(r["path"] == parsed_path for r in routes):
+                        routes.append({
+                            "path": parsed_path,
+                            "changefreq": "weekly",
+                            "priority": "0.9"
+                        })
+    except Exception as e:
+        logger.warning(f"Failed to append registry pages to sitemap: {e}")
 
     xml_lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
