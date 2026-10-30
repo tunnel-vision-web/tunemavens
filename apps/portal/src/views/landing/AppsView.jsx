@@ -10,7 +10,6 @@ import {
   RiDatabase2Fill,
   RiArrowRightLine,
   RiArrowLeftLine,
-  RiExternalLinkLine,
   RiCheckDoubleFill,
   RiPlayFill,
   RiUploadCloud2Line,
@@ -23,12 +22,13 @@ import {
 } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import SmartCrmStudioPanel from '../../components/SmartCrmStudioPanel.jsx'
+import CatalogueWizard from '../../components/CatalogueWizard.jsx'
 import MpesaPosTerminal from '../../components/demos/MpesaPosTerminal.jsx'
 import SplitCascadeLedgerApp from '../../components/demos/SplitCascadeLedgerApp.jsx'
 import DistributionTrackerApp from '../../components/demos/DistributionTrackerApp.jsx'
 import HostingManagerApp from '../../components/demos/HostingManagerApp.jsx'
 import ComingSoonApp from '../../components/demos/ComingSoonApp.jsx'
-import { getIntermavenUrl } from '../../components/PerfectForSidebar.jsx'
 
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
@@ -215,8 +215,24 @@ export default function AppsView({ sessionUser }) {
           </div>
 
           <div className="subapp-overview-card" style={{ borderColor: 'rgba(34, 211, 238, 0.25)' }}>
-            <span className="subapp-tag" style={{ color: 'var(--cyan)' }}>Standalone Creator Application</span>
-            <h2 className="subapp-title">Interactive Electronic Press Kit Studio</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
+              <div>
+                <span className="subapp-tag" style={{ color: 'var(--cyan)' }}>Standalone Creator Application</span>
+                <h2 className="subapp-title">Interactive Electronic Press Kit Studio</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <Link 
+                  to={sessionUser ? "/dashboard?tab=epk-builder" : "/epk"} 
+                  className="btn-primary" 
+                  style={{ padding: '10px 22px', fontSize: '13px' }}
+                >
+                  Launch EPK Studio <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </Link>
+                <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
+                  Creator Hub
+                </Link>
+              </div>
+            </div>
             
             <p className="subapp-p">
               The TuneMavens EPK Builder Studio is an end-to-end digital press kit creator engineered specifically for independent artists, producers, and managers who need to stand out to festival talent buyers, label A&amp;Rs, music supervisors, and journalists. Static PDF press kits are frequently ignored, suffer from broken links, and fail to adapt to mobile screens.
@@ -274,7 +290,11 @@ export default function AppsView({ sessionUser }) {
               </div>
             </div>
             <div className="cta-actions">
-              <Link to="/epk" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px' }}>
+              <Link 
+                to={sessionUser ? "/dashboard?tab=epk-builder" : "/epk"} 
+                className="btn-primary" 
+                style={{ padding: '10px 22px', fontSize: '13px' }}
+              >
                 Launch EPK Studio <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
@@ -287,7 +307,7 @@ export default function AppsView({ sessionUser }) {
     );
   }
 
-  // 2. Interactive Smart CRM Sub-View
+  // 2. Interactive Smart CRM Sub-View (Native TuneMavens CRM)
   if (activeApp === 'crm') {
     const appData = apps.find(a => a.id === 'crm');
     return (
@@ -305,8 +325,31 @@ export default function AppsView({ sessionUser }) {
           </div>
 
           <div className="subapp-overview-card" style={{ borderColor: 'rgba(16, 185, 129, 0.25)' }}>
-            <span className="subapp-tag" style={{ color: '#10b981' }}>Audience Intelligence &amp; Retention</span>
-            <h2 className="subapp-title">Smart CRM &amp; Fan Relationship Engine</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
+              <div>
+                <span className="subapp-tag" style={{ color: '#10b981' }}>Audience Intelligence &amp; Retention</span>
+                <h2 className="subapp-title">Smart CRM &amp; Fan Relationship Engine</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => {
+                    const el = document.getElementById('smart-crm-console');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }} 
+                  className="btn-primary" 
+                  style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981', cursor: 'pointer' }}
+                >
+                  Open Smart CRM <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </button>
+                <Link 
+                  to={sessionUser ? "/dashboard?tab=crm" : "/dashboard?tab=crm&role=creator"} 
+                  className="btn-secondary" 
+                  style={{ padding: '10px 20px', fontSize: '13px' }}
+                >
+                  Dashboard CRM
+                </Link>
+              </div>
+            </div>
             
             <p className="subapp-p">
               Relying on social media algorithms to reach your fans means paying to reach followers you already earned. The TuneMavens Smart CRM returns complete ownership of your fan database to you and your management team. Every single pre-save campaign, merchandise order, ticket reservation, and streaming tip flows into a centralized, searchable audience vault.
@@ -348,27 +391,53 @@ export default function AppsView({ sessionUser }) {
             </div>
           </div>
 
+          {/* Embedded Native TuneMavens Smart CRM Studio */}
+          <div id="smart-crm-console" style={{ marginTop: '36px', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#10b981', display: 'block', marginBottom: '4px' }}>
+                  TuneMavens Native Studio
+                </span>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: 0, fontFamily: 'Sansation, sans-serif' }}>
+                  Smart CRM Contacts &amp; Broadcast Console
+                </h3>
+              </div>
+              <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
+                Live CRM Console
+              </span>
+            </div>
+            <div style={{ background: '#070a13', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '3px', overflow: 'hidden' }}>
+              <SmartCrmStudioPanel sessionUser={sessionUser} />
+            </div>
+          </div>
+
           {/* Sticky CTA Bar for Smart CRM */}
           <div className="sticky-app-cta-bar">
             <div className="cta-meta">
               <div className="cta-pulse-dot" style={{ background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
               <div>
-                <h4 className="cta-title">Connect your fan database directly to Intermaven</h4>
-                <p className="cta-sub">Sync contacts, broadcast pre-sale announcements, and grow your subscriber base.</p>
+                <h4 className="cta-title">Activate your direct fan database within TuneMavens</h4>
+                <p className="cta-sub">Sync contacts, broadcast pre-sale announcements, and grow your subscriber base with zero algorithmic throttling.</p>
               </div>
             </div>
             <div className="cta-actions">
-              <a 
-                href={getIntermavenUrl('intermaven-smart-crm')} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <button 
+                onClick={() => {
+                  const el = document.getElementById('smart-crm-console');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }} 
                 className="btn-primary" 
-                style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}
+                style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981', cursor: 'pointer' }}
               >
-                Open Smart CRM <RiExternalLinkLine size={14} style={{ marginLeft: '4px' }} />
-              </a>
-              <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
-                Label Audiences
+                Open Smart CRM <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+              </button>
+              <Link 
+                to={sessionUser ? "/dashboard?tab=crm" : "/dashboard?tab=crm&role=creator"} 
+                className="btn-secondary" 
+                style={{ padding: '10px 18px', fontSize: '13px' }}
+              >
+                Dashboard CRM
               </Link>
             </div>
           </div>
@@ -377,7 +446,7 @@ export default function AppsView({ sessionUser }) {
     );
   }
 
-  // 3. Interactive Catalogue Machine Sub-View
+  // 3. Interactive Catalogue Machine Sub-View (Native TuneMavens Ingestion Engine)
   if (activeApp === 'catalogue-machine') {
     const appData = apps.find(a => a.id === 'catalogue-machine');
     return (
@@ -395,8 +464,31 @@ export default function AppsView({ sessionUser }) {
           </div>
 
           <div className="subapp-overview-card" style={{ borderColor: 'rgba(168, 85, 247, 0.25)' }}>
-            <span className="subapp-tag" style={{ color: '#a855f7' }}>Catalog Operations &amp; Roster Management</span>
-            <h2 className="subapp-title">Catalogue Machine &amp; Release Engine</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
+              <div>
+                <span className="subapp-tag" style={{ color: '#a855f7' }}>Catalog Operations &amp; Roster Management</span>
+                <h2 className="subapp-title">Catalogue Machine &amp; Release Engine</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => {
+                    const el = document.getElementById('ingestion-engine');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }} 
+                  className="btn-primary" 
+                  style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7', cursor: 'pointer' }}
+                >
+                  Open Ingestion Engine <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </button>
+                <Link 
+                  to={sessionUser ? "/dashboard?tab=catalog&role=label" : "/dashboard?tab=catalog&role=creator"} 
+                  className="btn-secondary" 
+                  style={{ padding: '10px 20px', fontSize: '13px' }}
+                >
+                  Dashboard Catalog
+                </Link>
+              </div>
+            </div>
             
             <p className="subapp-p">
               Managing large discographies across diverse rosters requires rigorous metadata hygiene and flawless track ingestion. The Catalogue Machine transforms fragmented spreadsheets and scattered audio drives into an authoritative, cloud-based catalog operations center.
@@ -445,20 +537,56 @@ export default function AppsView({ sessionUser }) {
             </div>
           </div>
 
+          {/* Embedded Native TuneMavens Ingestion Engine / Catalogue Wizard */}
+          <div id="ingestion-engine" style={{ marginTop: '36px', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#a855f7', display: 'block', marginBottom: '4px' }}>
+                  TuneMavens Release Console
+                </span>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: 0, fontFamily: 'Sansation, sans-serif' }}>
+                  Live Catalogue Release &amp; Ingestion Engine
+                </h3>
+              </div>
+              <span style={{ fontSize: '12px', color: '#a855f7', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#a855f7', display: 'inline-block' }}></span>
+                Live Ingestion App
+              </span>
+            </div>
+            <div style={{ background: '#090d1f', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '3px', padding: '24px' }}>
+              <CatalogueWizard 
+                sessionUser={sessionUser}
+                creatorEpk={{}}
+                onIngestComplete={() => alert('Release and tracks successfully ingested into TuneMavens catalogue!')}
+              />
+            </div>
+          </div>
+
           {/* Sticky CTA Bar for Catalogue Machine */}
           <div className="sticky-app-cta-bar">
             <div className="cta-meta">
               <div className="cta-pulse-dot" style={{ background: '#a855f7', boxShadow: '0 0 10px #a855f7' }} />
               <div>
                 <h4 className="cta-title">Automate your label catalog ingestion</h4>
-                <p className="cta-sub">Validate ISRC identifiers, verify splits, and syndicate tracks into SyncMavens.</p>
+                <p className="cta-sub">Validate ISRC identifiers, upload stem archives, and syndicate tracks into SyncMavens.</p>
               </div>
             </div>
             <div className="cta-actions">
-              <Link to={sessionUser ? "/dashboard?tab=catalog&role=label" : "/register?role=label"} className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7' }}>
-                Open Ingestion Console <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
-              </Link>
-              <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
+              <button 
+                onClick={() => {
+                  const el = document.getElementById('ingestion-engine');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }} 
+                className="btn-primary" 
+                style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7', cursor: 'pointer' }}
+              >
+                Open Ingestion Engine <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+              </button>
+              <Link 
+                to={sessionUser ? "/dashboard?tab=catalog&role=label" : "/for/label"} 
+                className="btn-secondary" 
+                style={{ padding: '10px 18px', fontSize: '13px' }}
+              >
                 Label Ingest Specs
               </Link>
             </div>
@@ -522,10 +650,14 @@ export default function AppsView({ sessionUser }) {
               </div>
             </div>
             <div className="cta-actions">
-              <Link to="/register?role=venue" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}>
+              <Link 
+                to={sessionUser ? "/dashboard?tab=pos-inventory" : "/register?role=label"} 
+                className="btn-primary" 
+                style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}
+              >
                 Deploy Venue POS <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
-              <Link to="/for/venue" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
+              <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
                 Venue Specs
               </Link>
             </div>
@@ -589,7 +721,11 @@ export default function AppsView({ sessionUser }) {
               </div>
             </div>
             <div className="cta-actions">
-              <Link to="/register?role=label" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px' }}>
+              <Link 
+                to={sessionUser ? "/dashboard?tab=splits" : "/register?role=creator"} 
+                className="btn-primary" 
+                style={{ padding: '10px 22px', fontSize: '13px' }}
+              >
                 Configure Release Splits <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
@@ -656,7 +792,11 @@ export default function AppsView({ sessionUser }) {
               </div>
             </div>
             <div className="cta-actions">
-              <Link to="/register?role=creator" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#f59e0b', color: '#090d1f' }}>
+              <Link 
+                to={sessionUser ? "/dashboard?tab=distribution-election" : "/register?role=creator"} 
+                className="btn-primary" 
+                style={{ padding: '10px 22px', fontSize: '13px', background: '#f59e0b', color: '#090d1f' }}
+              >
                 Track Your Next Release <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
@@ -723,8 +863,12 @@ export default function AppsView({ sessionUser }) {
               </div>
             </div>
             <div className="cta-actions">
-              <Link to="/register?role=creator" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#3b82f6' }}>
-                Register Your Custom Domain <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+              <Link 
+                to={sessionUser ? "/dashboard?tab=domain-mappings" : "/register?role=creator"} 
+                className="btn-primary" 
+                style={{ padding: '10px 22px', fontSize: '13px', background: '#3b82f6' }}
+              >
+                Configure Custom Domains <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
                 Explore Solutions
@@ -766,7 +910,7 @@ export default function AppsView({ sessionUser }) {
           Each standalone app operates as a specialized powerhouse for artist promotion, live commerce, audience intelligence, and multi-tier royalty accounting. Explore the features and operational benefits of each application below.
         </p>
 
-        {/* Detailed Apps Grid */}
+        {/* Apps Grid - Clean Descriptions, No Bullets */}
         <div className="apps-grid-detailed">
           {apps.map((a) => {
             const Icon = a.icon;

@@ -1888,3 +1888,22 @@ Allows creators and administrators to update or regenerate custom headers via na
 2. **Dashboard CTA & Header Branding Alignment**:
    - Corrected the dashboard sidebar header in [`App.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/App.jsx): replaced the previous `['consumer', 'creator'].includes(sessionUser?.role)` condition with `sessionUser?.role === 'consumer'`. Creators, managers, labels, DJs, and admins now correctly display the authoritative **TuneMavens** branding (`/tunemavens-logo-white.png`) and title rather than the consumer TuneStream utility logo.
    - Updated the persistent viewport sticky CTA button on the main Apps page to route explicitly to `/dashboard?role=creator` labeled "Open TuneMavens Dashboard", preventing any accidental fallback to a consumer-gated session.
+
+### 9.44.13 Native Smart CRM & Release Ingestion Engine Embedding with Intelligent App Routing
+1. **Native Smart CRM Integration & Intermaven Redirect Elimination**:
+   - Removed legacy `getIntermavenUrl('intermaven-smart-crm')` external browser redirect in [`AppsView.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/AppsView.jsx).
+   - Embedded the live [`SmartCrmStudioPanel.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/SmartCrmStudioPanel.jsx) directly into the `#smart-crm-console` anchor of the Smart CRM sub-page.
+   - Configured the top overview and sticky viewport CTAs to smoothly scroll to the embedded CRM studio, or navigate directly to `/dashboard?tab=crm` for authenticated sessions, keeping users within the native TuneMavens ecosystem.
+2. **Interactive Catalogue Ingestion Engine Direct Access**:
+   - Embedded the live 4-step [`CatalogueWizard.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/CatalogueWizard.jsx) directly into the `#ingestion-engine` anchor of the Catalogue Machine sub-page.
+   - Updated primary action CTAs to "Open Ingestion Engine", instantly scrolling to the interactive upload and metadata tagging wizard, with secondary routing to `/dashboard?tab=catalog&role=label`.
+3. **Comprehensive Intelligent CTA Protocol & Navigation Review**:
+   - Audited all 7 standalone app views to ensure protocol-safe internal routing with conditional authentication handling:
+     - **EPK Builder Studio**: Top and sticky CTAs route to `/dashboard?tab=epk-builder` (if logged in) or `/epk` with secondary link to `/for/creator`.
+     - **Smart CRM**: Primary action triggers `#smart-crm-console` smooth scroll, with secondary action to `/dashboard?tab=crm` or `/register?role=creator`.
+     - **Catalogue Machine**: Primary action triggers `#ingestion-engine` smooth scroll, with secondary action to `/dashboard?tab=catalog&role=label` or `/for/label`.
+     - **Point-of-Sale (POS)**: Primary action routes to `/dashboard?tab=pos-inventory` (or `/register?role=label`), fixing the broken `/for/venue` link to canonical `/for/label`.
+     - **Split Cascade Ledger**: Primary action routes to `/dashboard?tab=splits` (or `/register?role=creator`), with secondary link to `/for/label`.
+     - **Distribution Tracker**: Primary action routes to `/dashboard?tab=distribution-election` (or `/register?role=creator`), with secondary link to `/for/creator`.
+     - **Hosting & Domain Manager**: Primary action routes to `/dashboard?tab=domain-mappings` (or `/register?role=creator`), with secondary link to `/for`.
+   - Verified that all sticky action bars maintain the required 3px border radius and deep midnight background styling (`#090d1f`).
