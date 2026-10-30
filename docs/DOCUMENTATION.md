@@ -2152,3 +2152,27 @@ Allows creators and administrators to update or regenerate custom headers via na
      3. `Tour Venture Capital Vault` (`/tour-capital`)
    - Updated `VcLandingPage.jsx` CTA to link directly to `/tour-capital`.
    - Sticky bottom quick-access bar provides instant switching between "Submit Tour Pitch" and "Tour VC Capital Vault".
+
+
+### 9.44.23 TuneStream "My Suite" Evolution & Parity Integration of Tours, Ticketing & Events
+1. **Header Rebrand & Navigation Modernization ("My Library" → "My Suite")**:
+   - Upgraded TuneStream navigation bar across both standalone and portal host environments (`apps/portal/src/components/common/Navbar.jsx`, `apps/tunestream/src/components/common/Navbar.jsx`, and `apps/syncmavens/src/components/common/Navbar.jsx`):
+     - Renamed the core consumer utility dropdown from **"My Library"** to **"My Suite"** (with Swahili automatic localization to **"Yangu Mkusanyiko wa programu"**).
+     - Added **"Tours and Events"** as a direct dropdown option under **"My Suite"** linking directly to `?view=tours` (`/native-apps/tunestream?view=tours`).
+     - Preserved adjacent links: Playlists (`?view=playlists`), Create Playlist (`?view=create-playlist`), and Browse Podcasts (`?view=browse-podcasts`).
+     - Updated breadcrumbs across TuneStream views (`headerMeta`) to reflect `'My Suite / Playlists'`, `'My Suite / Create'`, `'My Suite / Podcasts'`, and `'My Suite / Tours and Events'`.
+2. **Complete Tour Info & Functionality Parity with TuneMavens**:
+   - Integrated the complete, full-featured `ToursView` into TuneStream (`apps/tunestream/src/views/landing/ToursView.jsx` and `apps/portal/src/views/landing/NativeAppLandingView.jsx`):
+     - **Live Concerts, In-Progress Shows & Masterclasses (`LiveEventsSection`)**: Filter by live tonight, upcoming tours, and masterclasses; search by artist or venue; instant M-Pesa STK push and TunePay card ticketing; real-time ticket tier inventory; cryptographic QR access pass generator; and superfan waitlist.
+     - **Artist Tour Incubation & International Routing Blueprint**: 6-phase global routing blueprint (Nairobi/Lagos to London/NYC), visa/carnet milestone checklist, and interactive **Submit Tour Pitch modal**.
+     - **Daytime Creative Masterclasses & Workshops**: Hands-on stage audio engineering, intelligent DMX lighting, tour rider negotiation, and one-click seat registration modals.
+     - **Tour Tech Stack & Production POS**: Offline-first RFID wristbands, box office telemetry, sync audio routing, and automated Split Cascade settlement.
+     - **Dedicated Tour Venture Capital Vault Callout**: High-contrast card directing institutional underwriters to `#/tour-capital` with full term sheet preview.
+     - **Audio Player Integration**: TuneStream Hi-Fi Audio Player remains persistent at the base of the viewport, allowing listeners to play high-fidelity master tracks while exploring tour stops, registering for masterclasses, and purchasing tickets.
+3. **Standalone TuneStream Routing & Asset Parity**:
+   - Deployed `ToursView.jsx`, `ToursView.css`, `AppsView.css`, and `TourCapitalView.jsx` into `apps/tunestream/src/views/landing/`.
+   - Synchronized high-resolution tour imagery into `apps/tunestream/src/assets/images/` (`header_tours.png`, `header_tours_western.png`, `tour_dashboard_actual_en.png`, `tour_dashboard_actual_sw.png`, `vc_dashboard_actual_en.png`, `vc_dashboard_actual_sw.png`).
+   - Updated `apps/tunestream/src/App.jsx` route handlers to route `/tours`, `/events`, and `/concerts` to `/?view=tours`, and mounted `/tour-capital` for standalone VC vault access.
+4. **Verification**:
+   - Verified 0-error builds on both `apps/portal` (`vite build` in 1.00s) and `apps/tunestream` (`vite build` in 507ms).
+   - Visual headless browser verification confirmed "My Suite" dropdown render, clicking "Tours and Events", and complete tours dashboard rendering with localized banners and interactive tabs.

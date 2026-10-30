@@ -135,7 +135,7 @@ export default function Navbar({ sessionUser }) {
                 setLibraryDropdownOpen(!libraryDropdownOpen);
               }}
             >
-              My Library
+              My Suite
               <RiArrowDownSFill size={14} />
             </button>
             <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`}>
@@ -152,6 +152,11 @@ export default function Navbar({ sessionUser }) {
               <li>
                 <Link to="/native-apps/tunestream?view=browse-podcasts" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
                   Browse Podcasts
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=tours" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  Tours and Events
                 </Link>
               </li>
             </ul>

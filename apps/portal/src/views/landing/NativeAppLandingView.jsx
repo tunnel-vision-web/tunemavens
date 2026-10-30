@@ -35,6 +35,7 @@ import appsLedgerImg from '../../assets/images/apps_ledger.png'
 import userManagerImg from '../../assets/images/user_manager.png'
 import appsSyncImg from '../../assets/images/apps_sync.png'
 import LiveEventsSection from '../../components/events/LiveEventsSection.jsx'
+import ToursView from './ToursView.jsx'
 
 const NATIVE_APP_LANDING_DATA = {
   tunestream: {
@@ -1032,9 +1033,12 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
 
       const headerMeta = {
         explore: { title: 'Explore Creators', breadcrumb: 'Explore' },
-        playlists: { title: 'My Playlists', breadcrumb: 'Library / Playlists' },
-        'create-playlist': { title: 'Create Playlist', breadcrumb: 'Library / Create' },
-        'browse-podcasts': { title: 'Browse Podcasts', breadcrumb: 'Library / Podcasts' },
+        playlists: { title: 'My Playlists', breadcrumb: 'My Suite / Playlists' },
+        'create-playlist': { title: 'Create Playlist', breadcrumb: 'My Suite / Create' },
+        'browse-podcasts': { title: 'Browse Podcasts', breadcrumb: 'My Suite / Podcasts' },
+        tours: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
+        events: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
+        concerts: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
         apps: { title: 'TuneStream Apps', breadcrumb: 'Apps' },
         free: { title: 'TuneStream Free', breadcrumb: 'Plans / Free' },
         premium: { title: 'TuneStream Premium', breadcrumb: 'Plans / Premium' },
@@ -2830,12 +2834,13 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         case 'help':
         case 'docs':
           return renderHelp('docs');
+        case 'tours':
         case 'concerts':
         case 'events':
         case 'live':
           return (
-            <div style={{ marginTop: '30px', marginBottom: '40px' }}>
-              <LiveEventsSection sessionUser={sessionUser} />
+            <div style={{ marginTop: '10px', marginBottom: '40px' }}>
+              <ToursView sessionUser={sessionUser} initialTab={searchParams.get('tab') || 'concerts'} />
             </div>
           );
         case 'listen':
@@ -2843,6 +2848,26 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
           return renderListen();
       }
     };
+
+    if (['tours', 'events', 'concerts', 'live'].includes(view)) {
+      return (
+        <div 
+          className="native-app-landing tunestream-landing" 
+          style={{ background: getLandingBackground('tunestream'), color: '#f1f5f9', minHeight: '100vh', padding: '0 0 162px' }}
+        >
+          <ToursView sessionUser={sessionUser} initialTab={searchParams.get('tab') || 'concerts'} />
+          {activeHiFiTrack && (
+            <HiFiAudioPlayer
+              track={activeHiFiTrack}
+              tracks={tracks}
+              isPlaying={isHiFiPlaying}
+              onTogglePlay={() => setIsHiFiPlaying(!isHiFiPlaying)}
+              onClose={() => setActiveHiFiTrack(null)}
+            />
+          )}
+        </div>
+      );
+    }
 
     return (
       <div 

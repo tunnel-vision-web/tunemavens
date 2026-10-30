@@ -27,6 +27,8 @@ import './App.css';
 import listenHero from './assets/images/listen_hero.png';
 
 import NativeAppLandingView from './NativeAppLandingView';
+import TourCapitalView from './views/landing/TourCapitalView.jsx';
+import ToursView from './views/landing/ToursView.jsx';
 import CreatorEpkView from './views/creator/CreatorEpkView.jsx';
 import CreatorProfileView from './components/creator/CreatorProfileView.jsx';
 import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx';
@@ -139,9 +141,11 @@ function AppContent() {
         <Routes location={backgroundLocation}>
           <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/explore" element={<Navigate to="/?view=explore" replace />} />
-          <Route path="/concerts" element={<Navigate to="/?view=concerts" replace />} />
-          <Route path="/events" element={<Navigate to="/?view=concerts" replace />} />
-          <Route path="/tours" element={<Navigate to="/?view=concerts" replace />} />
+          <Route path="/concerts" element={<Navigate to="/?view=tours" replace />} />
+          <Route path="/events" element={<Navigate to="/?view=tours" replace />} />
+          <Route path="/tours" element={<Navigate to="/?view=tours" replace />} />
+          <Route path="/tour-capital" element={<TourCapitalView sessionUser={sessionUser} />} />
+          <Route path="/vc-capital" element={<Navigate to="/tour-capital" replace />} />
           <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} initialTab="explore" onLogout={handleLogout} />} />
           <Route path="/singles" element={<PlayerDashboard sessionUser={sessionUser} initialTab="singles" onLogout={handleLogout} />} />
           <Route path="/artists" element={<PlayerDashboard sessionUser={sessionUser} initialTab="artists" onLogout={handleLogout} />} />

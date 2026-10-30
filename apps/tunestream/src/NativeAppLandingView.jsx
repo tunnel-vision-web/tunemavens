@@ -1056,9 +1056,12 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
 
       const headerMeta = {
         explore: { title: 'Explore Creators', breadcrumb: 'Explore' },
-        playlists: { title: 'My Playlists', breadcrumb: 'Library / Playlists' },
-        'create-playlist': { title: 'Create Playlist', breadcrumb: 'Library / Create' },
-        'browse-podcasts': { title: 'Browse Podcasts', breadcrumb: 'Library / Podcasts' },
+        playlists: { title: 'My Playlists', breadcrumb: 'My Suite / Playlists' },
+        'create-playlist': { title: 'Create Playlist', breadcrumb: 'My Suite / Create' },
+        'browse-podcasts': { title: 'Browse Podcasts', breadcrumb: 'My Suite / Podcasts' },
+        tours: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
+        events: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
+        concerts: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
         apps: { title: 'TuneStream Apps', breadcrumb: 'Apps' },
         free: { title: 'TuneStream Free', breadcrumb: 'Plans / Free' },
         premium: { title: 'TuneStream Premium', breadcrumb: 'Plans / Premium' },
@@ -2912,12 +2915,13 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         case 'help':
         case 'docs':
           return renderHelp('docs');
+        case 'tours':
         case 'concerts':
         case 'events':
         case 'live':
           return (
-            <div style={{ marginTop: '30px', marginBottom: '40px' }}>
-              <LiveEventsSection sessionUser={sessionUser} />
+            <div style={{ marginTop: '10px', marginBottom: '40px' }}>
+              <ToursView sessionUser={sessionUser} initialTab={searchParams.get('tab') || 'concerts'} />
             </div>
           );
         case 'listen':
@@ -3254,7 +3258,7 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
               className="nav-link dropdown-trigger"
               onClick={() => setLibraryDropdownOpen(!libraryDropdownOpen)}
             >
-              My Library
+              My Suite
               <RiArrowDownSFill size={14} />
             </button>
             <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`}>
@@ -3271,6 +3275,11 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
               <li>
                 <Link to="?view=browse-podcasts" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
                   Browse Podcasts
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=tours" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  Tours and Events
                 </Link>
               </li>
             </ul>
