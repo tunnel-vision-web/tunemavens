@@ -298,10 +298,12 @@ export default function ToursView({ sessionUser }) {
       />
 
       <PageHeader 
-        heroImage={headerAppsImg}
-        westernHeroImage={headerAppsWesternImg}
-        title="GLOBAL TOURS, MASTERCLASSES &amp; TOUR VENTURE CAPITAL"
-        subtitle="Taking Artists from Anywhere in the World to Everywhere A Backed by Data, Industry Relationships &amp; Automated Settlement"
+        title="Tours, ticketing, VC Capital & Masterclasses"
+        bgImage={headerAppsImg}
+        bgImageWestern={headerAppsWesternImg}
+        breadcrumb="Tours"
+        titleStyle={{ fontSize: 'clamp(21px, 2.8vw, 31px)', fontWeight: 800, letterSpacing: '-0.3px' }}
+        subtitle="Taking Artists from Anywhere in the World to Everywhere — Backed by Data, Industry Relationships & Automated Settlement"
       />
 
       <div className="landing-body tours-container">
@@ -1566,38 +1568,40 @@ export default function ToursView({ sessionUser }) {
 
       {/* Persistent Viewport Sticky Bottom Action Bar */}
       <div className="tours-sticky-cta-bar">
-        <div className="tours-sticky-cta-left">
-          <span style={{ fontSize: '13px', color: '#fff', fontWeight: 700 }}>
-            <RiGlobalFill size={15} style={{ display: 'inline', marginRight: '6px', color: 'var(--cyan)' }} />
-            Taking Artists Anywhere to Everywhere
-          </span>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-            Data-Underwritten VC A Integrated POS &amp; Split Cascade Settlement
-          </span>
-        </div>
-        <div className="tours-sticky-cta-right">
-          <button 
-            onClick={() => setPitchModalOpen(true)}
-            className="btn-primary"
-            style={{ padding: '8px 16px', fontSize: '12px', background: '#8b5cf6', borderColor: '#8b5cf6' }}
-          >
-            <RiUserVoiceFill size={14} style={{ marginRight: '4px' }} /> Submit Tour Pitch
-          </button>
-          <button 
-            onClick={() => {
-              setActiveTab('vc-backing');
-              if (!onboardedInvestor) {
-                setVcOnboardModalOpen(true);
-              } else {
-                setCarouselIndex(0);
-              }
-            }}
-            className="btn-primary"
-            style={{ padding: '8px 16px', fontSize: '12px', background: '#10b981', borderColor: '#10b981', color: '#fff' }}
-          >
-            <RiFundsBoxFill size={14} style={{ marginRight: '4px' }} />
-            {onboardedInvestor ? 'View Vault Deals' : 'VC Onboarding & Vault'}
-          </button>
+        <div className="tours-sticky-cta-inner">
+          <div className="tours-sticky-cta-left">
+            <span style={{ fontSize: '13px', color: '#fff', fontWeight: 700 }}>
+              <RiGlobalFill size={15} style={{ display: 'inline', marginRight: '6px', color: 'var(--cyan)' }} />
+              Taking Artists Anywhere to Everywhere
+            </span>
+            <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+              Data-Underwritten VC • Integrated POS &amp; Split Cascade Settlement
+            </span>
+          </div>
+          <div className="tours-sticky-cta-right">
+            <button 
+              onClick={() => setPitchModalOpen(true)}
+              className="btn-primary"
+              style={{ padding: '8px 16px', fontSize: '12px', background: '#8b5cf6', borderColor: '#8b5cf6' }}
+            >
+              <RiUserVoiceFill size={14} style={{ marginRight: '4px' }} /> Submit Tour Pitch
+            </button>
+            <button 
+              onClick={() => {
+                setActiveTab('vc-backing');
+                if (!onboardedInvestor) {
+                  setVcOnboardModalOpen(true);
+                } else {
+                  setCarouselIndex(0);
+                }
+              }}
+              className="btn-primary"
+              style={{ padding: '8px 16px', fontSize: '12px', background: '#10b981', borderColor: '#10b981', color: '#fff' }}
+            >
+              <RiFundsBoxFill size={14} style={{ marginRight: '4px' }} />
+              {onboardedInvestor ? 'View Vault Deals' : 'VC Onboarding & Vault'}
+            </button>
+          </div>
         </div>
       </div>
     </>

@@ -4,8 +4,23 @@
    ========================================================================= */
 
 .tours-container {
+  max-width: 1240px;
+  margin: 36px auto 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
   padding-bottom: 120px;
-  margin-top: 36px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all sections remain tightly restrained to 1240px */
+.tours-audience-segmenter,
+.tours-metrics-bar,
+.tours-mode-tabs,
+.tours-feature-section,
+.tours-carousel-container {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* -------------------------------------------------------------------------
@@ -954,12 +969,19 @@
   background: rgba(9, 13, 31, 0.94);
   backdrop-filter: blur(12px);
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 14px 24px;
+  padding: 12px 20px;
+  z-index: 1000;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.tours-sticky-cta-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 1000;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
 }
 
 .tours-sticky-cta-left {
