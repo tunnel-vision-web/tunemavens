@@ -98,12 +98,42 @@ export const APP_DOC_MAPPINGS = {
     label: 'Metadata, ISRC & DSP Distribution Guide',
     appTitle: 'Distribution Portal'
   },
-  // Tours & Live Bookings
+  // Tours & Live Bookings, Concerts & VC Underwriting
   'tours': {
-    articleId: 'live-touring-guarantees-riders-settlements',
-    fallbackArticleId: 'studio-split-sheets-guide',
-    label: 'Live Touring, Riders & Settlements Guide',
-    appTitle: 'TuneBookings & Tour Manager'
+    articleId: 'global-tours-live-concerts-ticketing',
+    fallbackArticleId: 'tour-vc-underwriting-career-sponsorship',
+    label: 'Global Tours, Concert Ticketing & TunePay POS Guide',
+    appTitle: 'Tours & Concerts Suite'
+  },
+  'events': {
+    articleId: 'global-tours-live-concerts-ticketing',
+    fallbackArticleId: 'masterclasses-and-creator-workshops',
+    label: 'Live Concerts & Ticketing Guide',
+    appTitle: 'Live Events & Concerts'
+  },
+  'concerts': {
+    articleId: 'global-tours-live-concerts-ticketing',
+    fallbackArticleId: 'masterclasses-and-creator-workshops',
+    label: 'Live Concerts & Ticketing Guide',
+    appTitle: 'Live Events & Concerts'
+  },
+  'vc-portfolio': {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    fallbackArticleId: 'global-tours-live-concerts-ticketing',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'VC Portfolio & Yield'
+  },
+  'vc-sponsorship': {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Creator Career Sponsorship & Recoupment Guide',
+    appTitle: 'VC Career Sponsorship'
+  },
+  'tours-vault': {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    fallbackArticleId: 'global-tours-live-concerts-ticketing',
+    label: 'Live Tour Underwriting Vault Guide',
+    appTitle: 'Tour Capital Vault'
   },
   'booking': {
     articleId: 'live-touring-guarantees-riders-settlements',

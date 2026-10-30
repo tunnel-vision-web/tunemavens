@@ -2074,3 +2074,27 @@ Allows creators and administrators to update or regenerate custom headers via na
      - `apps/portal/src/assets/images/tour_dashboard_actual.png`: Authentic capture of the Tour Underwriting Vault and live metrics.
    - Replaced placeholder mockups on the Tours landing page (`ToursView.jsx`), the VC Role page (`VcLandingPage.jsx`), and the Perfect For directory (`PerfectForPageView.jsx`).
    - Integrated clickable zoom lightboxes on the Tours page and Role landing views to allow prospective VCs and artists to inspect full, authentic dashboard interfaces in detail.
+
+### 9.44.20 Live Concerts, In-Progress Shows & Masterclasses Suite, Ticketing Architecture & Help Ecosystem
+1. **Live Concerts, In-Progress Shows & Masterclasses Showcase**:
+   - Engineered a high-impact, real-time events directory (`apps/portal/src/components/events/LiveEventsSection.jsx` & `LiveEventsSection.css`):
+     - **Real-Time Macro Telemetry Ribbon**: Displays live shows tonight, upcoming tour stops across international corridors (London, Berlin, Paris, Tokyo), creative masterclasses, and overall circuit occupancy rate (89.2% capacity sold).
+     - **Live Status Filtering**: Instant tab toggling between `All Events`, `Live Tonight (In Progress)` with red pulsing indicators, `Upcoming Tours`, and `Masterclasses`.
+     - **Multi-Vector Search & City Filtering**: Filter by artist name, venue, city (Nairobi, Kigali, London, Berlin, Paris, Tokyo), and musical genre (Afro-Electronic, Modular Synth, Contemporary Soul, Benga Rock, Afro-House).
+     - **Live Event Cards**: Detailed venue specifications, door times, capacity progress meters, starting ticket prices, and multi-action triggers (Book Tickets, Join VIP Waitlist, and Watch Live Digital Stream Broadcast).
+2. **Integrated Backend Events & Ticketing Engine (`backend/routes/events_router.py`)**:
+   - Built and registered under `/api/events` in `backend/server.py` and `backend/routes/__init__.py`:
+     - `GET /api/events`: Delivers live in-progress and upcoming concert listings with dynamic status and city filters.
+     - `GET /api/events/{event_id}`: Event specification with tier breakdowns and inventory tracking.
+     - `POST /api/events/tickets/book`: Instant ticket reservation engine with support for **M-Pesa STK Push** (instant phone prompt in Kenya and East Africa) and **TunePay / Card** (global). Automatically deducts tier inventory, logs booking records to `db.ticket_bookings`, generates unique ticket IDs (`TKT-YYYYMM-XXXXXX`), and issues cryptographically verifiable QR ticket passes.
+     - `POST /api/events/rsvp`: 1-click fan waitlist registration that syncs directly with the **Smart CRM superfan graph** (`db.crm_fans`), incrementing engagement scores and adding fans to tour drop alert segments.
+3. **Comprehensive Knowledge Base Help Articles & In-App Doc Modals**:
+   - Created a dedicated Help Category in `apps/portal/src/data/helpArticles.js`:
+     - `tours`: **Tours, Concerts & Live Ticketing** (`RiTicket2Line`).
+   - Authored 3 comprehensive, industry-grade knowledge base articles:
+     1. [`global-tours-live-concerts-ticketing`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/data/helpArticles.js): *Global Tours, Concert Ticketing & TunePay POS Architecture* (covering international tour incubation corridors, M-Pesa STK push, cryptographic QR passes, TunePay door POS terminals, and 7-tier Split Cascade recoupment).
+     2. [`tour-vc-underwriting-career-sponsorship`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/data/helpArticles.js): *Venture Capital in Live Music: Tour Advances, Career Sponsorship & Senior Recoupment* (covering non-dilutive live music debt, 1-click product/service sponsorship, and senior-secured first-dollar waterfalls).
+     3. [`masterclasses-and-creator-workshops`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/data/helpArticles.js): *Creative Masterclasses & Live Artist Workshops: Monetization & Hybrid Streaming* (covering backstage daytime workshop revenue multipliers and low-latency interactive streams).
+   - Wired contextual in-app help triggers into `LiveEventsSection`, `ToursView`, and `VcDashboardPanel`, mapping directly to `InAppDocModal` and `userLifecycleMemory.js` (`APP_DOC_MAPPINGS`).
+4. **Standalone Route Registration**:
+   - Registered direct landing routes in `apps/portal/src/App.jsx` for `/events` and `/concerts`, deep-linking directly to `ToursView` with `initialTab="concerts"`.

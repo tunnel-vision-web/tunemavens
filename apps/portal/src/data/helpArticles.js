@@ -14,6 +14,7 @@ export const HELP_CATEGORIES = [
   { id: 'account', label: 'Credits & Security', icon: 'RiShieldCheckLine' },
   { id: 'affiliates', label: 'Affiliates & Creator Onboarding', icon: 'RiUserSharedFill' },
   { id: 'support', label: 'Support & AI Claims Desk', icon: 'RiCustomerService2Fill' },
+  { id: 'tours', label: 'Tours, Concerts & Live Ticketing', icon: 'RiTicket2Line' },
 ];
 
 export const HELP_ARTICLES = [
@@ -1180,6 +1181,117 @@ Because there are no recurring subscriptions, support claims regarding billing a
 * Credits are deposited into your wallet instantly via the platform's \`tunemavens-credits-reloaded\` event.
 * Your topbar credit counter updates immediately without requiring a browser refresh.
 * Full itemized transaction records appear in your Dashboard Settings ledger.`
+      }
+    ]
+  }
+,
+  // =========================================================================
+  // CATEGORY: TOURS, CONCERTS & LIVE TICKETING
+  // =========================================================================
+  {
+    id: 'global-tours-live-concerts-ticketing',
+    category: 'tours',
+    title: 'Global Tours, Concert Ticketing & TunePay POS Architecture',
+    readingTime: '8 min read',
+    excerpt: 'Complete operational blueprint for routing international tours, running door box offices with TunePay contactless card and M-Pesa POS terminals, real-time ticket scanning, and programmatic Split Cascade tour recoupment.',
+    tags: ['Live Tours', 'Concert Ticketing', 'TunePay POS', 'M-Pesa STK', 'Split Cascade'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['creator', 'label', 'vc', 'investor'],
+    toolLink: { label: 'Open Tours & Concerts Suite', path: '/tours' },
+    sections: [
+      {
+        heading: 'International Tour Routing & Incubation Corridor',
+        content: `TuneMavens operates a complete 6-phase artist incubation and live tour management pipeline. Taking an artist from Nairobi, Lagos, or London and mounting a high-yield international run requires unifying PR, marketing, logistics, immigration visas, booking agents, and venue technical riders.
+
+Every tour mounted through TuneMavens connects directly to our verified global venue network (The Alchemist Nairobi, Village Underground London, SO36 Berlin, La Gaîté Lyrique Paris, Contact Shibuya Tokyo). Routing is algorithmic: listener density from TuneStream and superfan telemetry from Smart CRM dictate venue sizes, reducing un-ticketed seat risk.`
+      },
+      {
+        heading: 'Integrated Ticketing: Onsale, VIP Passes & M-Pesa STK Push',
+        content: `Fans can reserve passes directly on the platform with local payment rails:
+* **M-Pesa STK Mobile Push**: Instant checkout across East Africa with automatic mobile confirmation and SMS pass dispatch.
+* **TunePay Card & Apple Pay**: Low-friction global checkout with zero hidden currency fees.
+* **Cryptographic QR Passes**: Every ticket contains a cryptographically signed QR code hash that prevents duplicate door admissions.
+* **Smart CRM Integration**: Purchasing a ticket or joining a tour waitlist automatically updates fan lifetime value and adds the superfan to the artist's priority communication segment.`
+      },
+      {
+        heading: 'Live Door Operations & Merch Box Office POS Terminals',
+        content: `On show day, touring teams utilize the **TunePay M-Pesa POS Terminal** and mobile companion devices:
+* **Sub-Second Door Scanning**: Validate digital passes offline and online at venue turnstiles.
+* **Physical Merch Settlement**: Accept contactless cards, vinyl sales, and mobile money at the merch table with automatic inventory reconciliation.
+* **Immediate Nightly Cashout**: Box office and merch receipts flow directly into the tour's Split Cascade ledger.`
+      },
+      {
+        heading: 'Programmatic Recoupment & Night-by-Night Settlement Ledgers',
+        content: `Tour revenues are partitioned through the TuneMavens 7-tier waterfall:
+1. **Tier 1 (Venue & Local Production)**: Sound engineers, lighting technicians, and hall rentals are cleared first.
+2. **Tier 2 (Senior VC Tour Advance)**: Investor capital advances are recouped on a first-dollar senior basis.
+3. **Tier 3 (Band & Crew Per Diems)**: Touring musicians and road crew receive guaranteed per diems.
+4. **Tier 4 (Perpetual Master & Writer Splits)**: Remaining net proceeds distribute automatically to artist and songwriter wallets.`
+      }
+    ]
+  },
+  {
+    id: 'tour-vc-underwriting-career-sponsorship',
+    category: 'tours',
+    title: 'Venture Capital in Live Music: Tour Advances, Career Sponsorship & Senior Recoupment',
+    readingTime: '9 min read',
+    excerpt: 'Institutional guide for venture capital funds and angel syndicates to underwrite non-dilutive live tour advances and directly sponsor creator platform costs (DSP distro, EPK, mastering, CRM) with senior-secured Split Cascade recoupment liens.',
+    tags: ['Venture Capital', 'Tour Advance', 'Creator Sponsorship', 'Non-Dilutive Financing', 'IRR Yield'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['vc', 'investor', 'label', 'creator'],
+    toolLink: { label: 'Open VC Command Center', path: '/dashboard?tab=vc-portfolio&role=vc' },
+    sections: [
+      {
+        heading: 'The Non-Dilutive Live Music Investment Thesis',
+        content: `Traditional venture capital often struggled with music due to long copyright royalty amortization cycles and record label equity dilution. TuneMavens solves this through **data-backed, non-dilutive tour advances and creator career sponsorship**.
+
+Rather than purchasing master catalogs or demanding artist equity, accredited VCs provide liquidity advances for live international tours and pay direct costs for mission-critical platform services (Global DSP Distribution, EPK Pro Hosting, Studio Stem Mastering, SyncMavens Representation, and Smart CRM credits).`
+      },
+      {
+        heading: '1-Click Creator Career Sponsorship Engine',
+        content: `Inside the **VC Command Center**, institutional partners can browse vetted creators seeking product and service facilitation:
+* VCs click **Sponsor Service Costs** on any verified artist card.
+* TuneMavens covers the service fees immediately, unblocking the creator's music releases and marketing campaigns.
+* An automated **Split Cascade Recoupment Lien** is attached to the artist's royalty pipeline, ensuring the VC recoups principal plus agreed yield from incoming streaming and live commerce before non-essential distributions.`
+      },
+      {
+        heading: 'Senior-Secured First-Dollar Waterfall Recoupment',
+        content: `All VC capital commitments in the Tour Vault are protected by senior-secured status:
+* **Nightly Box Office Sweep**: Box office and digital ticket revenues flow through TuneMavens escrow wallets.
+* **Pre-Set Recoupment Cap**: Returns are capped at contractual multiples (e.g. 1.25x to 1.40x advance cap), delivering target IRRs between 18% and 26% within 60 to 120 days.
+* **Instant Wallet Settlement**: Recouped capital is pushed directly to the investor's Split Cascade settlement wallet without invoice disputes.`
+      }
+    ]
+  },
+  {
+    id: 'masterclasses-and-creator-workshops',
+    category: 'tours',
+    title: 'Creative Masterclasses & Live Artist Workshops: Monetization & Hybrid Streaming',
+    readingTime: '6 min read',
+    excerpt: 'How creators and touring bands leverage backstage masterclasses, hands-on production labs, and hybrid interactive livestreaming to double per-city gross revenue and cultivate high-value superfans.',
+    tags: ['Masterclasses', 'Artist Workshops', 'Hybrid Streaming', 'Superfan Monetization', 'Eurorack Labs'],
+    popular: false,
+    recommendedReading: false,
+    requiredReading: false,
+    assignedRoles: ['creator', 'label', 'consumer'],
+    toolLink: { label: 'Explore Live Concerts & Masterclasses', path: '/tours?tab=workshops' },
+    sections: [
+      {
+        heading: 'The Masterclass Revenue Multiplier',
+        content: `Touring artists often face empty afternoon hours between morning travel and evening soundcheck. By programming **hands-on 2 to 4-hour creative masterclasses** (e.g. modular synth sound design, Benga guitar arrangements, mixing in Dolby Atmos), artists generate significant ancillary revenue from dedicated producers and superfans.
+
+Masterclass seats are capped at 15 to 30 attendees per stop, commanding premium ticket prices ($80 to $150) that frequently cover daytime hospitality and local travel expenses for the entire band.`
+      },
+      {
+        heading: 'Hybrid Interactive Livestreaming',
+        content: `Every masterclass hosted on the TuneMavens tour circuit supports dual-mode attendance:
+* **In-Person Lab Pass**: Dedicated hardware workstations, hands-on patching, and direct mentorship from touring musicians.
+* **Interactive Livestream Pass**: Low-latency HD streaming via the TuneStream web world, complete with two-way Q&A and session stem downloads.
+Global fans who cannot attend the physical tour stop can still participate, expanding the audience from dozens in a studio to thousands worldwide.`
       }
     ]
   }

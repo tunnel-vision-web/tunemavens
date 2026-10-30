@@ -8845,6 +8845,8 @@ function AppContent({
           <Route path="/publishing" element={<PublishingView sessionUser={sessionUser} />} />
           <Route path="/distribution" element={<DistributionView sessionUser={sessionUser} />} />
           <Route path="/tours" element={<ToursView sessionUser={sessionUser} />} />
+          <Route path="/events" element={<ToursView sessionUser={sessionUser} initialTab="concerts" />} />
+          <Route path="/concerts" element={<ToursView sessionUser={sessionUser} initialTab="concerts" />} />
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/affiliates" element={<AffiliatesView sessionUser={sessionUser} />} />

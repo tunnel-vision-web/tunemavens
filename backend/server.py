@@ -21,7 +21,7 @@ from routes import (
     match_router, social_ai_router, crm_router, cms_router, seo_router,
     djpool_router, storage_router, epk_router, catalog_router,
     corporate_ads_router, role_tiers_router, support_router, blog_router,
-    affiliate_router, tours_router, vc_router
+    affiliate_router, tours_router, vc_router, events_router
 )
 from routes.admin_router import seed_domain_mappings_if_empty
 
@@ -112,6 +112,7 @@ app.include_router(blog_router)
 app.include_router(affiliate_router)
 app.include_router(tours_router)
 app.include_router(vc_router)
+app.include_router(events_router)
 
 
 @app.exception_handler(StarletteHTTPException)

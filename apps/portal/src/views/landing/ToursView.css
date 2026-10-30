@@ -222,6 +222,13 @@
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
 }
 
+.tours-mode-tab-btn.active-live {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
 /* Feature Sections */
 .tours-feature-section {
   background: #090d1f;

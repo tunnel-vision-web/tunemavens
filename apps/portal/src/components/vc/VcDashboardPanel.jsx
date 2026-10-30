@@ -16,9 +16,11 @@ import {
   RiBankCardFill,
   RiTimeLine,
   RiInformationFill,
-  RiCloseLine
+  RiCloseLine,
+  RiBookOpenLine
 } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
+import InAppDocModal from '../common/InAppDocModal.jsx'
 import './VcDashboardPanel.css'
 
 export default function VcDashboardPanel({ sessionUser, initialTab = 'portfolio', setActiveDashboardTab }) {
@@ -34,6 +36,7 @@ export default function VcDashboardPanel({ sessionUser, initialTab = 'portfolio'
   const [loading, setLoading] = useState(true);
 
   // Sponsorship Modal State
+  const [docModalOpen, setDocModalOpen] = useState(false);
   const [sponsorModalOpen, setSponsorModalOpen] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [selectedServiceSlug, setSelectedServiceSlug] = useState('distribution');
@@ -146,7 +149,26 @@ export default function VcDashboardPanel({ sessionUser, initialTab = 'portfolio'
             Underwrite live tour advances, sponsor creator product &amp; service costs, and monitor programmatic Split Cascade recoupment.
           </p>
         </div>
-        <div className="vc-identity-right">
+        <div className="vc-identity-right" style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+          <button 
+            type="button"
+            onClick={() => setDocModalOpen(true)}
+            style={{
+              background: 'rgba(56, 189, 248, 0.12)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              color: '#38bdf8',
+              borderRadius: '3px',
+              padding: '6px 12px',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <RiBookOpenLine size={14} /> VC &amp; Recoupment Guide
+          </button>
           <div className="vc-wallet-card">
             <span className="lbl">Split Cascade Settlement Wallet</span>
             <code className="val">tm_split_0x9a84...d21b</code>
@@ -574,6 +596,12 @@ export default function VcDashboardPanel({ sessionUser, initialTab = 'portfolio'
           </div>
         </div>
       )}
+      {/* Contextual VC In-App Knowledge Base Doc Modal */}
+      <InAppDocModal 
+        isOpen={docModalOpen}
+        onClose={() => setDocModalOpen(false)}
+        initialArticleId="tour-vc-underwriting-career-sponsorship"
+      />
     </div>
   );
 }

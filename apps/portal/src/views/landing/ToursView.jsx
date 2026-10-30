@@ -33,12 +33,14 @@ import {
   RiArrowLeftSLine,
   RiArrowRightSLine,
   RiInformationFill,
-  RiPulseFill
+  RiPulseFill,
+  RiLiveFill
 } from 'react-icons/ri'
 import PageHeader from '../../components/common/PageHeader.jsx'
 import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
 import SEO from '../../components/common/SEO.jsx'
 import { useRegion } from '../../RegionContext.jsx'
+import LiveEventsSection from '../../components/events/LiveEventsSection.jsx'
 
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
@@ -47,14 +49,14 @@ import tourDashboardActual from '../../assets/images/tour_dashboard_actual.png'
 import './ToursView.css'
 import './AppsView.css'
 
-export default function ToursView({ sessionUser }) {
+export default function ToursView({ sessionUser, initialTab }) {
   const { country, currencyInfo } = useRegion();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const tabQuery = searchParams.get('tab');
   
-  // Navigation tabs: 'incubation' | 'vc-backing' | 'workshops' | 'tech-stack'
-  const [activeTab, setActiveTab] = useState(tabQuery || 'vc-backing');
+  // Navigation tabs: 'concerts' | 'vc-backing' | 'incubation' | 'workshops' | 'tech-stack'
+  const [activeTab, setActiveTab] = useState(tabQuery || initialTab || 'concerts');
 
   useEffect(() => {
     const t = searchParams.get('tab');
@@ -402,6 +404,12 @@ export default function ToursView({ sessionUser }) {
         {/* Navigation Mode Switcher */}
         <div className="tours-mode-tabs">
           <button 
+            className={`tours-mode-tab-btn ${activeTab === 'concerts' ? 'active-live' : ''}`}
+            onClick={() => setActiveTab('concerts')}
+          >
+            <RiLiveFill size={16} /> Live Concerts &amp; Masterclasses
+          </button>
+          <button 
             className={`tours-mode-tab-btn ${activeTab === 'vc-backing' ? 'active-vc' : ''}`}
             onClick={() => setActiveTab('vc-backing')}
           >
@@ -433,6 +441,15 @@ export default function ToursView({ sessionUser }) {
             <RiBookOpenFill size={16} /> VC &amp; Artist Handbook / Docs
           </button>
         </div>
+
+        {/* -------------------------------------------------------------
+            TAB 0: LIVE CONCERTS, TOURS & MASTERCLASSES SHOWCASE
+            ------------------------------------------------------------- */}
+        {activeTab === 'concerts' && (
+          <div style={{ marginTop: '20px' }}>
+            <LiveEventsSection sessionUser={sessionUser} />
+          </div>
+        )}
 
         {/* -------------------------------------------------------------
             TAB 1: TOUR VENTURE CAPITAL & VAULT CAROUSEL
