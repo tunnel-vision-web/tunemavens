@@ -1863,3 +1863,20 @@ Allows creators and administrators to update or regenerate custom headers via na
    - Pinned across the main Standalone Apps pool page and every single individual sub-app page, ensuring primary conversion buttons ("Launch EPK Studio", "Deploy Venue POS", "Track Your Next Release", "Open Ingestion Console", "Get Started Free") remain persistently accessible throughout long scroll flows.
 4. **Companion Native Apps Expansion (`NativeAppsView.jsx`)**:
    - Expanded feature/benefit bullets with double-check icons and added a sticky CTA action bar for mobile beta registration across `tunestream`, `tunecompanion`, and `tunepay`.
+
+### 9.44.11 Live System Dashboard Screen Captures & Enhanced Modal Preview (`/for`)
+1. **Pristine Live Dashboard Screen Captures**:
+   - Replaced static marketing placeholder graphics on [`PerfectForPageView.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/PerfectForPageView.jsx) with authentic, high-resolution (1680x1050) system screenshots captured directly from the live running instances:
+     - **Creators** (`creator_dashboard_actual.png`): Creator studio dashboard featuring live credit metrics, catalog ingestion status, recent tracks, and split sheets summary.
+     - **Record Labels** (`label_dashboard_actual.png`): Label discography and multi-artist catalog ingestion console with ISRC tags, albums, and EP tracking.
+     - **DJs** (`dj_dashboard_actual.png`): DJ Pool & Dancefloor Drop Clearances Hub displaying promo pools, BPM/key search, reviews, and stem licensing clearances.
+     - **Media Houses** (`mediahouse_dashboard_actual.png`): Broadcast compliance, audio queue control, and targeted advertising campaign slots.
+     - **Music Supervisors** (`supervisor_dashboard_actual.png`): Live SyncMavens sync licensing portal with AI scene search, curated watermarked catalog auditioning, and brief management.
+     - **Consumers (TuneStream)** (`consumer_dashboard_actual.png`): TuneStream Hi-Fi player interface with editorial playlists, lossless stream modes, and direct creator tipping.
+     - **Corporate** (`corporate_dashboard_actual.png`): Corporate advertising manager with campaign configuration, CPM rate cards, and budget delivery tracking.
+2. **40%+ Larger Preview Modal & Vertical Scrolling**:
+   - Upgraded modal layout in [`PerfectForSidebar.css`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/PerfectForSidebar.css) and [`components/PerfectForSidebar.css`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/PerfectForSidebar.css):
+     - Container expanded to `max-width: 1400px; width: 95vw; max-height: 92vh;` (40%+ larger than previous restricted dimensions).
+     - Image styled with `width: 100%; height: auto; max-height: none;` removing arbitrary 80vh constraints and maintaining crystal-clear native dashboard pixel density.
+     - Implemented vertical scrolling via `.pf-modal-scroll-body { overflow-y: auto; max-height: calc(92vh - 56px); }`.
+     - Docked top header bar (`.pf-modal-header-bar`) displaying the green "● LIVE SYSTEM CAPTURE" indicator, role title, and sticky close button.

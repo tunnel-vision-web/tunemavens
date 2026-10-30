@@ -3,17 +3,17 @@ import { Link } from 'react-router-dom'
 import { ROLE_LOGOS, getServiceUrl } from '../../components/PerfectForSidebar.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
 
-import creatorDashboardImg from '../../assets/images/creator_dashboard.png'
-import distributeHeroImg from '../../assets/images/distribute_hero.png'
-import userSupervisorImg from '../../assets/images/user_supervisor.png'
-import consumerAppImg from '../../assets/images/consumer_app.png'
-import appsLedgerImg from '../../assets/images/apps_ledger.png'
-import userManagerImg from '../../assets/images/user_manager.png'
-import appsSyncImg from '../../assets/images/apps_sync.png'
+import creatorDashActualImg from '../../assets/images/creator_dashboard_actual.png'
+import labelDashActualImg from '../../assets/images/label_dashboard_actual.png'
+import djDashActualImg from '../../assets/images/dj_dashboard_actual.png'
+import mediahouseDashActualImg from '../../assets/images/mediahouse_dashboard_actual.png'
+import supervisorDashActualImg from '../../assets/images/supervisor_dashboard_actual.png'
+import consumerDashActualImg from '../../assets/images/consumer_dashboard_actual.png'
+import corporateDashActualImg from '../../assets/images/corporate_dashboard_actual.png'
 import perfectForHeaderImg from '../../assets/images/perfect_for_header.png'
 
 export default function PerfectForPageView() {
-  const [previewImage, setPreviewImage] = useState(null);
+  const [previewModal, setPreviewModal] = useState(null);
 
   const metaRoles = [
     {
@@ -24,7 +24,8 @@ export default function PerfectForPageView() {
       logo: ROLE_LOGOS['creator'],
       accent: 'var(--cyan)',
       desc: 'Designed for artists and producers. Calculate split sheets, manage your music library, and pitch your tracks under a single console.',
-      preview: creatorDashboardImg
+      preview: creatorDashActualImg,
+      previewTitle: 'Creator Studio Dashboard & Split Sheets'
     },
     {
       key: 'label',
@@ -34,7 +35,8 @@ export default function PerfectForPageView() {
       logo: ROLE_LOGOS['label'],
       accent: 'var(--purple)',
       desc: 'For record labels, A&R managers, and industry leaders. Manage your entire artist catalog, track splits, and coordinate roster-wide releases.',
-      preview: distributeHeroImg
+      preview: labelDashActualImg,
+      previewTitle: 'Record Label Catalog & Ingestion Console'
     },
     {
       key: 'dj',
@@ -44,7 +46,8 @@ export default function PerfectForPageView() {
       logo: ROLE_LOGOS['dj'],
       accent: '#14b8a6',
       desc: 'The next-generation pool engine. Access lossless audio files, queue pools, and secure stem clearances for live sets.',
-      preview: appsLedgerImg
+      preview: djDashActualImg,
+      previewTitle: 'DJ Pool & Dancefloor Drop Clearances Hub'
     },
     {
       key: 'media_house',
@@ -54,7 +57,8 @@ export default function PerfectForPageView() {
       logo: ROLE_LOGOS['media_house'],
       accent: 'var(--blue)',
       desc: 'Broadcasting and queue routing tools. Access authorized compliance directories and manage music scheduling for broadcast channels.',
-      preview: appsLedgerImg
+      preview: mediahouseDashActualImg,
+      previewTitle: 'Media House Broadcast & Compliance Queue'
     },
     {
       key: 'supervisor',
@@ -66,7 +70,8 @@ export default function PerfectForPageView() {
       logo: ROLE_LOGOS['supervisor'],
       accent: 'var(--am)',
       desc: 'Sync licensing and AI scene-tagging made simple. Search our curated catalog of watermarked tracks and find the perfect vibe for your film or TV project.',
-      preview: appsSyncImg
+      preview: supervisorDashActualImg,
+      previewTitle: 'SyncMavens Sync Licensing & AI Scene Search'
     },
     {
       key: 'consumer',
@@ -78,7 +83,8 @@ export default function PerfectForPageView() {
       logo: ROLE_LOGOS['consumer'],
       accent: '#10b981',
       desc: 'Our consumer streaming app. Listen to your favorite tracks, support creators directly with direct-tipping, and sync your music offline.',
-      preview: consumerAppImg
+      preview: consumerDashActualImg,
+      previewTitle: 'TuneStream Hi-Fi Music Streaming Application'
     },
     {
       key: 'corporate',
@@ -88,7 +94,8 @@ export default function PerfectForPageView() {
       logo: ROLE_LOGOS['corporate'],
       accent: '#ef4444',
       desc: 'Connect brands with target audiences. Run campaigns, sponsor curators, and manage native audio ad placements.',
-      preview: userManagerImg
+      preview: corporateDashActualImg,
+      previewTitle: 'Corporate Advertising & Sponsorships Console'
     }
   ];
 
@@ -137,9 +144,15 @@ export default function PerfectForPageView() {
                   </a>
                 )}
                 <button 
-                  onClick={() => setPreviewImage(role.preview)} 
+                  onClick={() => setPreviewModal({ 
+                    image: role.preview, 
+                    title: role.previewTitle, 
+                    roleName: role.label, 
+                    accent: role.accent 
+                  })} 
                   className="btn pf-card-cta outline"
                   style={{ '--pf-accent': role.accent, cursor: 'pointer', background: 'transparent' }}
+                  data-testid={`dash-preview-btn-${role.key}`}
                 >
                   Dash Preview
                 </button>
@@ -149,11 +162,34 @@ export default function PerfectForPageView() {
         </div>
       </div>
 
-      {previewImage && (
-        <div className="pf-modal-overlay" onClick={() => setPreviewImage(null)}>
+      {previewModal && (
+        <div className="pf-modal-overlay" onClick={() => setPreviewModal(null)}>
           <div className="pf-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="pf-modal-close" onClick={() => setPreviewImage(null)}>×</button>
-            <img src={previewImage} alt="Dashboard Preview" className="pf-modal-img" />
+            <div className="pf-modal-header-bar">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span className="pf-modal-live-tag">
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
+                  Live System Capture
+                </span>
+                <span className="pf-modal-title">
+                  {previewModal.roleName}  -  {previewModal.title}
+                </span>
+              </div>
+              <button 
+                className="pf-modal-close" 
+                onClick={() => setPreviewModal(null)}
+                aria-label="Close dashboard preview modal"
+              >
+                ×
+              </button>
+            </div>
+            <div className="pf-modal-scroll-body">
+              <img 
+                src={previewModal.image} 
+                alt={`${previewModal.roleName} Dashboard Preview`} 
+                className="pf-modal-img" 
+              />
+            </div>
           </div>
         </div>
       )}
