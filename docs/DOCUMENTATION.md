@@ -1844,3 +1844,22 @@ Allows creators and administrators to update or regenerate custom headers via na
      - **Media House**: [`MediaHouseLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/MediaHouseLandingPage.jsx)
      - **Supervisor**: [`SupervisorLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/SupervisorLandingPage.jsx)
    - All rate cards, booking modal estimated budgets, and select option labels now dynamically reflect the user's active region and currency choice.
+
+### 9.44.10 Standalone Apps Pool Content Expansion & Viewport-Persistent Sticky CTAs
+1. **Standalone Apps Pool Detailed Copy & Benefit Matrix (`AppsView.jsx` & `AppsView.css`)**:
+   - Upgraded all 7 standalone applications in the Apps pool (`http://localhost:3000/#/apps`) with comprehensive multi-paragraph explanations and structured feature & benefit bullet points:
+     - **EPK Builder Studio**: Comprehensive bio editing, 60fps lossless waveform player embeds, unreleased track pre-saving, verified gig calendars, direct promoter booking forms, and apex custom domain routing with free automated SSL.
+     - **Smart CRM & Audience Engine**: Direct fan relationship ownership free from social algorithm throttling, geo-targeted tour pre-sale announcements, automated superfan tiering based on LTV and tip volume, and high-deliverability HTML broadcast campaigns.
+     - **Catalogue Machine & Release Engine**: Centralized discography management, bulk CSV/XLS statement ingestion, automated ISRC/ISWC verification, 24-bit uncompressed lossless master and stem archiving, and one-click syndication to SyncMavens.
+     - **Split Cascade Ledger**: Multi-tier waterfall accounting, priority advance recoupment thresholds, self-service collaborator statement portals, bulk DSP report reconciliation, and multi-currency payouts including localized African Mobile Money (M-Pesa, Airtel Money).
+     - **Point-of-Sale (POS) Terminal** (*M-Pesa POS Terminal / Mobile Money / Stripe POS*): Offline-resilient live venue point of sale, localized M-Pesa STK push and contactless card processing, multi-booth inventory tracking, direct Split Ledger settlement, and instant SMS/email digital receipts for fan CRM growth.
+     - **Distribution Tracker**: Real-time delivery radar tracking 150+ global streaming platforms, editorial playlist submission countdowns (7-day / 14-day pitching windows), ISRC & Shazam acoustic fingerprint verification, global coordinated midnight rollouts, and immediate rejection diagnostics.
+     - **Hosting & Domain Manager**: Enterprise music web hosting, one-click apex domain registration, global edge CDN caching across 270+ nodes, automated daily backups with one-click rollbacks, and unified DNS zone management (MX, CNAME, TXT).
+2. **Sub-App Detailed Overview Panels & Demos**:
+   - Redesigned sub-app views (`epk-builder`, `crm`, `catalogue-machine`, `pos`, `ledger`, `tracker`, `hosting`) with high-contrast overview cards (`.subapp-overview-card`), spaced paragraphs (`.subapp-p`), and SVG double-checkmark bullet lists (`.subapp-bullets-list`).
+   - Seamlessly integrated existing interactive components (`MpesaPosTerminal`, `SplitCascadeLedgerApp`, `DistributionTrackerApp`, `HostingManagerApp`) alongside deep explanatory copy.
+3. **Viewport-Persistent Sticky Action Bars (`.sticky-app-cta-bar`)**:
+   - Engineered persistent action bars anchored at `bottom: 20px; z-index: 990; position: sticky;` with `backdrop-filter: blur(16px)` and `#090d1f` background.
+   - Pinned across the main Standalone Apps pool page and every single individual sub-app page, ensuring primary conversion buttons ("Launch EPK Studio", "Deploy Venue POS", "Track Your Next Release", "Open Ingestion Console", "Get Started Free") remain persistently accessible throughout long scroll flows.
+4. **Companion Native Apps Expansion (`NativeAppsView.jsx`)**:
+   - Expanded feature/benefit bullets with double-check icons and added a sticky CTA action bar for mobile beta registration across `tunestream`, `tunecompanion`, and `tunepay`.
