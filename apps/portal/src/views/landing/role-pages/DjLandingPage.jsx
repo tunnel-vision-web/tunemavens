@@ -18,6 +18,7 @@ import {
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
+import { useRegion } from '../../../RegionContext.jsx'
 import headerImg from '../../../assets/images/header_tools.png'
 import appsLedgerImg from '../../../assets/images/apps_ledger.png'
 import heroMusic4Img from '../../../assets/images/hero_music_4.png'
@@ -83,6 +84,7 @@ const FALLBACK_DJ_RATES = [
 ];
 
 export default function DjLandingPage({ switcher }) {
+  const { formatPrice } = useRegion();
   const accent = '#14b8a6';
 
   // ================= HERO Slide Carousel State =================
@@ -259,7 +261,7 @@ export default function DjLandingPage({ switcher }) {
     setBookingForm(prev => ({
       ...prev,
       tier_slug: tier.slug,
-      estimated_budget: `$${tier.price_usd?.toLocaleString()} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
+      estimated_budget: `${formatPrice(tier.price_usd)} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -654,7 +656,7 @@ export default function DjLandingPage({ switcher }) {
                 <h4 className="role-rate-title">{rate.name}</h4>
 
                 <div className="role-rate-price-box">
-                  <span className="role-rate-price">${rate.price_usd?.toLocaleString()}</span>
+                  <span className="role-rate-price">{formatPrice(rate.price_usd)}</span>
                   <span className="role-rate-period">one-time credit reload</span>
                 </div>
 
@@ -906,14 +908,14 @@ export default function DjLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} one-time credit reload` : '$49 one-time credit reload'
+                            estimated_budget: found ? `${formatPrice(found.price_usd)} one-time credit reload` : `${formatPrice(49)} one-time credit reload`
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
-                        <option value="dj-resident">Club Resident Load — $19 one-time (200 Credits) · 50 Downloads</option>
-                        <option value="dj-touring">Touring Pro DJ Load — $49 one-time (600 Credits) · Unlimited WAV &amp; Stems</option>
-                        <option value="dj-headliner">Headliner &amp; Festival Curator Load — $129 one-time (1,800 Credits) · Dubplates</option>
+                        <option value="dj-resident">Club Resident Load — {formatPrice(19)} one-time (200 Credits) · 50 Downloads</option>
+                        <option value="dj-touring">Touring Pro DJ Load — {formatPrice(49)} one-time (600 Credits) · Unlimited WAV &amp; Stems</option>
+                        <option value="dj-headliner">Headliner &amp; Festival Curator Load — {formatPrice(129)} one-time (1,800 Credits) · Dubplates</option>
                       </select>
                     </div>
 

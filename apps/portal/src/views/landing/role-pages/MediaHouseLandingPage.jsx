@@ -17,6 +17,7 @@ import {
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
+import { useRegion } from '../../../RegionContext.jsx'
 import headerImg from '../../../assets/images/header_apps.png'
 import publishingMockupImg from '../../../assets/images/publishing_dashboard_mockup.png'
 import tunestreamHeader3Img from '../../../assets/images/tunestream_header_3.png'
@@ -83,6 +84,7 @@ const FALLBACK_MEDIA_RATES = [
 ];
 
 export default function MediaHouseLandingPage({ switcher }) {
+  const { formatPrice } = useRegion();
   const accent = '#3b82f6';
 
   // ================= HERO Slide Carousel State =================
@@ -259,7 +261,7 @@ export default function MediaHouseLandingPage({ switcher }) {
     setBookingForm(prev => ({
       ...prev,
       tier_slug: tier.slug,
-      estimated_budget: `$${tier.price_usd?.toLocaleString()} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
+      estimated_budget: `${formatPrice(tier.price_usd)} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -655,7 +657,7 @@ export default function MediaHouseLandingPage({ switcher }) {
                 <h4 className="role-rate-title">{rate.name}</h4>
 
                 <div className="role-rate-price-box">
-                  <span className="role-rate-price">${rate.price_usd?.toLocaleString()}</span>
+                  <span className="role-rate-price">{formatPrice(rate.price_usd)}</span>
                   <span className="role-rate-period">one-time credit reload</span>
                 </div>
 
@@ -907,14 +909,14 @@ export default function MediaHouseLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} one-time credit reload` : '$599 one-time credit reload'
+                            estimated_budget: found ? `${formatPrice(found.price_usd)} one-time credit reload` : `${formatPrice(599)} one-time credit reload`
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
-                        <option value="media-station">Single Station Load — $199 one-time (2,000 Credits) · 2 Channels</option>
-                        <option value="media-network">Broadcaster Network Suite Load — $599 one-time (7,500 Credits) · 10 Stations</option>
-                        <option value="media-conglomerate">Enterprise Media Conglomerate Load — $1,499 one-time (20,000 Credits) · Unlimited Channels</option>
+                        <option value="media-station">Single Station Load — {formatPrice(199)} one-time (2,000 Credits) · 2 Channels</option>
+                        <option value="media-network">Broadcaster Network Suite Load — {formatPrice(599)} one-time (7,500 Credits) · 10 Stations</option>
+                        <option value="media-conglomerate">Enterprise Media Conglomerate Load — {formatPrice(1499)} one-time (20,000 Credits) · Unlimited Channels</option>
                       </select>
                     </div>
 

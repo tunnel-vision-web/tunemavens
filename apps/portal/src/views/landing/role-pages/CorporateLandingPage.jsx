@@ -20,6 +20,7 @@ import {
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
+import { useRegion } from '../../../RegionContext.jsx'
 import headerImg from '../../../assets/images/header_pricing.png'
 import headerAppsImg from '../../../assets/images/header_apps.png'
 import userManagerImg from '../../../assets/images/user_manager.png'
@@ -129,6 +130,7 @@ const FALLBACK_RATES = [
 ]
 
 export default function CorporateLandingPage({ switcher }) {
+  const { formatPrice, currencyInfo } = useRegion();
   const accent = '#ef4444';
 
   // ================= HERO Slide Carousel State =================
@@ -311,7 +313,7 @@ export default function CorporateLandingPage({ switcher }) {
     setBookingForm(prev => ({
       ...prev,
       tier_slug: rate.slug,
-      estimated_budget: `$${rate.price_usd?.toLocaleString()} (${rate.credits?.toLocaleString()} Credits)`
+      estimated_budget: `${formatPrice(rate.price_usd)} (${rate.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -727,7 +729,7 @@ export default function CorporateLandingPage({ switcher }) {
                 <h4 className="corporate-rate-title">{rate.name}</h4>
 
                 <div className="corporate-rate-price-box">
-                  <span className="corporate-rate-price">${rate.price_usd?.toLocaleString()}</span>
+                  <span className="corporate-rate-price">{formatPrice(rate.price_usd)}</span>
                   <span className="corporate-rate-period">/ {rate.duration_days} days</span>
                 </div>
 
@@ -737,7 +739,7 @@ export default function CorporateLandingPage({ switcher }) {
                   </span>
                   <span style={{ color: '#64748b' }}>·</span>
                   <span style={{ color: '#00f0ff', fontWeight: 600 }}>
-                    ${rate.cpm_usd} CPM
+                    {formatPrice(rate.cpm_usd)} CPM
                   </span>
                 </div>
 
@@ -746,12 +748,15 @@ export default function CorporateLandingPage({ switcher }) {
                 </div>
 
                 <ul className="corporate-rate-features">
-                  {(rate.features || []).map((feature, i) => (
+                  {(rate.features || []).map((feature, i) => {
+                    const displayFeature = feature.replace(/~\$[0-9.]+\s+CPM/, `~${formatPrice(rate.cpm_usd)} CPM`);
+                    return (
                     <li key={i} className="corporate-rate-feature-item">
                       <RiCheckFill size={16} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
-                      <span>{feature}</span>
+                      <span>{displayFeature}</span>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
 
                 <button
@@ -983,15 +988,15 @@ export default function CorporateLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? `$${found.price_usd?.toLocaleString()} (${found.credits?.toLocaleString()} Credits)` : '$1,499'
+                            estimated_budget: found ? `${formatPrice(found.price_usd)} (${found.credits?.toLocaleString()} Credits)` : `${formatPrice(1499)} (7,500 Credits)`
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
-                        <option value="pulse">Pulse — $499 (2,500 Credits) · 25k Listens</option>
-                        <option value="amplified">Amplified — $1,499 (7,500 Credits) · 100k Listens</option>
-                        <option value="culture-lead">Culture Lead — $3,999 (20,000 Credits) · 300k Fans</option>
-                        <option value="titan">Titan — $9,999+ (50,000 Credits) · 1M+ Reach</option>
+                        <option value="pulse">Pulse — {formatPrice(499)} (2,500 Credits) · 25k Listens</option>
+                        <option value="amplified">Amplified — {formatPrice(1499)} (7,500 Credits) · 100k Listens</option>
+                        <option value="culture-lead">Culture Lead — {formatPrice(3999)} (20,000 Credits) · 300k Fans</option>
+                        <option value="titan">Titan — {formatPrice(9999)}+ (50,000 Credits) · 1M+ Reach</option>
                       </select>
                     </div>
 

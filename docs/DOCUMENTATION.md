@@ -1828,3 +1828,19 @@ Allows creators and administrators to update or regenerate custom headers via na
 5. **Main Menu Dropdown Implementation Across Sub-App & Corporate Navigation**:
    - Replaced static links in `Navbar.jsx` (including `/native-apps/tunestream`) with active dropdown containers rendering the 3 dedicated options: **Blog & Forum**, **Help & Documentation**, and **Support Desk**.
    - Added desktop CSS hover support (`@media (min-width: 900px) { .dropdown-container:hover .dropdown-menu { display: flex; } }`) across both `App.css` and `Landing.css` ensuring immediate cursor discovery and access without requiring manual click toggling.
+
+### 9.44.9 Comprehensive Price Localization Across Corporate & Role Landing Pages
+1. **Dynamic Currency & Locale Resolution via `useRegion`**:
+   - Integrated the `useRegion` hook across [`CorporateLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/CorporateLandingPage.jsx) and the [`CorporateAdsPanel.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/CorporateAdsPanel.jsx) dashboard component.
+   - Replaced all hardcoded `$USD` symbols, rates, and CPM displays with dynamic `formatPrice(...)` calculations.
+   - When the user selects **KSh (Kenya)**, corporate rates dynamically render as `KSh 64,870 / 30 days`, `KSh 194,870 / 30 days`, `KSh 519,870 / 60 days`, and `KSh 1,299,870 / 90 days`, with corresponding localized CPM amounts (`KSh 2,595 CPM`, `KSh 1,949 CPM`, etc.).
+2. **Platform-Wide Role Pages Coverage**:
+   - Audited and updated all 7 role-specific landing pages under `apps/portal/src/views/landing/role-pages/`:
+     - **Corporate**: [`CorporateLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/CorporateLandingPage.jsx)
+     - **Consumer**: [`ConsumerLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/ConsumerLandingPage.jsx)
+     - **Creator**: [`CreatorLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/CreatorLandingPage.jsx)
+     - **DJ**: [`DjLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/DjLandingPage.jsx)
+     - **Label**: [`LabelLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/LabelLandingPage.jsx)
+     - **Media House**: [`MediaHouseLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/MediaHouseLandingPage.jsx)
+     - **Supervisor**: [`SupervisorLandingPage.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/role-pages/SupervisorLandingPage.jsx)
+   - All rate cards, booking modal estimated budgets, and select option labels now dynamically reflect the user's active region and currency choice.

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useRegion } from '../RegionContext.jsx'
 import {
   RiMegaphoneFill,
   RiBarChartBoxFill,
@@ -17,6 +18,7 @@ import {
 } from 'react-icons/ri'
 
 export default function CorporateAdsPanel({ sessionUser, setActiveTab }) {
+  const { formatPrice } = useRegion();
   const [rates, setRates] = useState([])
   const [campaigns, setCampaigns] = useState([])
   const [stats, setStats] = useState(null)
@@ -491,7 +493,7 @@ export default function CorporateAdsPanel({ sessionUser, setActiveTab }) {
 
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
                   <span style={{ fontSize: '32px', fontWeight: 800, color: '#fff', fontFamily: 'Sansation, sans-serif' }}>
-                    ${rate.price_usd?.toLocaleString()}
+                    {formatPrice(rate.price_usd)}
                   </span>
                   <span style={{ fontSize: '13px', color: '#94a3b8' }}>/ {rate.duration_days} days</span>
                 </div>
@@ -502,7 +504,7 @@ export default function CorporateAdsPanel({ sessionUser, setActiveTab }) {
                   </span>
                   <span style={{ fontSize: '12px', color: '#94a3b8' }}>·</span>
                   <span style={{ fontSize: '12px', color: '#00f0ff', fontWeight: 600 }}>
-                    ${rate.cpm_usd} CPM
+                    {formatPrice(rate.cpm_usd)} CPM
                   </span>
                 </div>
 
@@ -654,10 +656,10 @@ export default function CorporateAdsPanel({ sessionUser, setActiveTab }) {
                     }}
                     style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                   >
-                    <option value="pulse">Pulse — $499 (2,500 Credits) · 25k Listens</option>
-                    <option value="amplified">Amplified — $1,499 (7,500 Credits) · 100k Listens</option>
-                    <option value="culture-lead">Culture Lead — $3,999 (20,000 Credits) · 300k Fans</option>
-                    <option value="titan">Titan — $9,999+ (50,000 Credits) · 1M+ Reach</option>
+                    <option value="pulse">Pulse — {formatPrice(499)} (2,500 Credits) · 25k Listens</option>
+                    <option value="amplified">Amplified — {formatPrice(1499)} (7,500 Credits) · 100k Listens</option>
+                    <option value="culture-lead">Culture Lead — {formatPrice(3999)} (20,000 Credits) · 300k Fans</option>
+                    <option value="titan">Titan — {formatPrice(9999)}+ (50,000 Credits) · 1M+ Reach</option>
                   </select>
                 </div>
                 <div>

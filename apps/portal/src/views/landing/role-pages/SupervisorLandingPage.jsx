@@ -18,6 +18,7 @@ import {
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
+import { useRegion } from '../../../RegionContext.jsx'
 import { getServiceUrl } from '../../../components/PerfectForSidebar.jsx'
 import syncHeaderImg from '../../../assets/images/sync_header.png'
 import userSupervisorImg from '../../../assets/images/user_supervisor.png'
@@ -85,6 +86,7 @@ const FALLBACK_SUPERVISOR_RATES = [
 ];
 
 export default function SupervisorLandingPage({ switcher }) {
+  const { formatPrice } = useRegion();
   const accent = '#10b981';
   const syncMavensUrl = getServiceUrl('syncmavens');
 
@@ -263,7 +265,7 @@ export default function SupervisorLandingPage({ switcher }) {
       tier_slug: tier.slug,
       estimated_budget: tier.price_usd === 0 
         ? 'Free Forever' 
-        : `$${tier.price_usd?.toLocaleString()} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
+        : `${formatPrice(tier.price_usd)} one-time credit reload (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -653,7 +655,7 @@ export default function SupervisorLandingPage({ switcher }) {
 
                 <div className="role-rate-price-box">
                   <span className="role-rate-price">
-                    {rate.price_usd === 0 ? '$0' : `$${rate.price_usd?.toLocaleString()}`}
+                    {rate.price_usd === 0 ? '$0 / Free' : formatPrice(rate.price_usd)}
                   </span>
                   <span className="role-rate-period">{rate.price_usd === 0 ? 'free access' : 'one-time credit reload'}</span>
                 </div>
@@ -906,14 +908,14 @@ export default function SupervisorLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `$${found.price_usd?.toLocaleString()} one-time credit reload`) : '$149 one-time credit reload'
+                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `${formatPrice(found.price_usd)} one-time credit reload`) : `${formatPrice(149)} one-time credit reload`
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
                         <option value="supervisor-discovery">Indie Discovery — $0 / Free · 50k+ Search</option>
-                        <option value="supervisor-production">Production Studio Pro Load — $149 one-time (1,500 Credits) · Stems &amp; Cues</option>
-                        <option value="supervisor-broadcast">Network Enterprise Load — $499 one-time (6,000 Credits) · Worldwide Indemnity</option>
+                        <option value="supervisor-production">Production Studio Pro Load — {formatPrice(149)} one-time (1,500 Credits) · Stems &amp; Cues</option>
+                        <option value="supervisor-broadcast">Network Enterprise Load — {formatPrice(499)} one-time (6,000 Credits) · Worldwide Indemnity</option>
                       </select>
                     </div>
 

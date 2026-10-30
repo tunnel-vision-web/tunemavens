@@ -18,6 +18,7 @@ import {
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
+import { useRegion } from '../../../RegionContext.jsx'
 import { getServiceUrl } from '../../../components/PerfectForSidebar.jsx'
 import listenHeroImg from '../../../assets/images/listen_hero.png'
 import consumerAppImg from '../../../assets/images/consumer_app.png'
@@ -85,6 +86,7 @@ const FALLBACK_CONSUMER_RATES = [
 ];
 
 export default function ConsumerLandingPage({ switcher }) {
+  const { formatPrice } = useRegion();
   const accent = '#ec4899';
   const tuneStreamUrl = getServiceUrl('tunestream');
 
@@ -263,7 +265,7 @@ export default function ConsumerLandingPage({ switcher }) {
       tier_slug: tier.slug,
       estimated_budget: tier.price_usd === 0 
         ? 'Free Forever' 
-        : `$${tier.price_usd?.toLocaleString()} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
+        : `${formatPrice(tier.price_usd)} / ${tier.billing_period || 'month'} (${tier.credits?.toLocaleString()} Credits)`
     }));
     setInquirySuccess(null);
     setModalOpen(true);
@@ -662,7 +664,7 @@ export default function ConsumerLandingPage({ switcher }) {
 
                 <div className="role-rate-price-box">
                   <span className="role-rate-price">
-                    {rate.price_usd === 0 ? '$0' : `$${rate.price_usd?.toLocaleString()}`}
+                    {rate.price_usd === 0 ? '$0 / Free' : formatPrice(rate.price_usd)}
                   </span>
                   <span className="role-rate-period">/ {rate.billing_period || 'month'}</span>
                 </div>
@@ -914,14 +916,14 @@ export default function ConsumerLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `$${found.price_usd?.toLocaleString()} / ${found.billing_period || 'month'}`) : '$4.99 / month'
+                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `${formatPrice(found.price_usd)} / ${found.billing_period || 'month'}`) : `${formatPrice(4.99)} / month`
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
                         <option value="listener-free">Listener Free — $0 / Free · High-Fidelity Web Stream</option>
-                        <option value="listener-vip">TuneStream VIP Audiophile — $4.99/mo (50 Credits) · Ad-Free FLAC</option>
-                        <option value="listener-patron">Patron of the Arts — $14.99/mo (200 Credits) · VIP Tour Passes</option>
+                        <option value="listener-vip">TuneStream VIP Audiophile — {formatPrice(4.99)}/mo (50 Credits) · Ad-Free FLAC</option>
+                        <option value="listener-patron">Patron of the Arts — {formatPrice(14.99)}/mo (200 Credits) · VIP Tour Passes</option>
                       </select>
                     </div>
 
