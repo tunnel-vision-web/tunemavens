@@ -144,6 +144,9 @@ import {
 } from './components/affiliates/AffiliateActionModals.jsx'
 import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx'
 import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog.js'
+import MpesaPosTerminal from './components/demos/MpesaPosTerminal.jsx'
+import DistributionTrackerApp from './components/demos/DistributionTrackerApp.jsx'
+import HostingManagerApp from './components/demos/HostingManagerApp.jsx'
 
 // ================= Dashboard Apps View =================
 // ================= Dashboard Apps Sub-Components =================
@@ -898,6 +901,7 @@ function DashboardView({
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialTabQuery = searchParams.get('tab');
+  const reqRoleParam = searchParams.get('role');
 
   // Provide an immediate active fallback demo session so users entering via standalone apps or direct tab links are never blocked by a login wall
   const demoFallbackUser = useMemo(() => {
@@ -918,19 +922,40 @@ function DashboardView({
     });
   }, [location.search]);
 
+  // Compute effective role immediately on first render to prevent any consumer backend redirection
+  const effectiveRole = useMemo(() => {
+    if (reqRoleParam) return reqRoleParam;
+    if (initialTabQuery && !['library', 'tips', 'stream-controls', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
+      if (sessionUser?.role === 'consumer') {
+        return 'creator';
+      }
+    }
+    return sessionUser?.role || 'creator';
+  }, [sessionUser?.role, reqRoleParam, initialTabQuery]);
+
+  const activeUser = useMemo(() => {
+    const base = sessionUser || demoFallbackUser;
+    if (effectiveRole && base.role !== effectiveRole) {
+      return {
+        ...base,
+        role: effectiveRole,
+        apps: Array.from(new Set([...(base.apps || []), ...(DEFAULT_ACTIVE_APPS_BY_ROLE[effectiveRole] || [])]))
+      };
+    }
+    return base;
+  }, [sessionUser, demoFallbackUser, effectiveRole]);
+
   useEffect(() => {
-    if (!sessionUser) {
+    if (!sessionUser || (activeUser && sessionUser.role !== activeUser.role)) {
       if (typeof onUpdateUser === 'function') {
-        onUpdateUser(demoFallbackUser);
+        onUpdateUser(activeUser);
       }
       try {
-        sessionStorage.setItem('tunemavens_session', JSON.stringify(demoFallbackUser));
-        localStorage.setItem('tunemavens_saved_user', JSON.stringify(demoFallbackUser));
+        sessionStorage.setItem('tunemavens_session', JSON.stringify(activeUser));
+        localStorage.setItem('tunemavens_saved_user', JSON.stringify(activeUser));
       } catch (_) {}
     }
-  }, [sessionUser, onUpdateUser, demoFallbackUser]);
-
-  const activeUser = sessionUser || demoFallbackUser;
+  }, [sessionUser, activeUser, onUpdateUser]);
 
   const [activeTab, setActiveTab] = useState(() => {
     if (initialTabQuery) return initialTabQuery;
@@ -950,13 +975,18 @@ function DashboardView({
     }
     const r = params.get('role');
     if (r && activeUser && activeUser.role !== r && onUpdateUser) {
-      onUpdateUser({ ...activeUser, role: r });
-    } else if (activeUser && activeUser.role === 'consumer' && t && !['library', 'tips', 'stream-controls', 'profile', 'settings', 'support'].includes(t)) {
-      if (onUpdateUser) {
-        onUpdateUser({ ...activeUser, role: 'creator' });
-      }
+      const updated = {
+        ...activeUser,
+        role: r,
+        apps: Array.from(new Set([...(activeUser.apps || []), ...(DEFAULT_ACTIVE_APPS_BY_ROLE[r] || [])]))
+      };
+      onUpdateUser(updated);
+      try {
+        sessionStorage.setItem('tunemavens_session', JSON.stringify(updated));
+        localStorage.setItem('tunemavens_saved_user', JSON.stringify(updated));
+      } catch (_) {}
     }
-  }, [location.search]);
+  }, [location.search, activeTab]);
 
   // Ensure activated app choice is remembered whenever viewed or active
   useEffect(() => {
@@ -966,6 +996,7 @@ function DashboardView({
       splits: 'split-cascade',
       'publishing-election': 'publishing-election',
       'distribution-election': 'distribution-election',
+      'distribution-tracker': 'distribution-election',
       djpool: 'djpool',
       sync: 'sync-marketplace',
       escrow: 'escrow-contracts',
@@ -974,10 +1005,12 @@ function DashboardView({
       'pos-inventory': 'tunepay-inventory',
       'pos-settlement': 'tunepay-settlement',
       'pos-devices': 'tunepay-devices',
+      'pos-terminal': 'tunepay-inventory',
       'epk-builder': 'epk-builder',
       'social-ai': 'intermaven-social-ai',
       crm: 'intermaven-smart-crm',
-      'domain-mappings': 'domain-mappings'
+      'domain-mappings': 'domain-mappings',
+      'hosting-manager': 'domain-mappings'
     };
     const slug = APP_SLUG_MAP[activeTab];
     if (slug) {
@@ -1187,17 +1220,17 @@ function DashboardView({
     // Role-based permission guard ensuring users only access authorized apps
     const userRole = activeUser?.role || 'creator';
     const roleAllowed = {
-      admin: ['home', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
-      corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings'],
-      media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings'],
-      media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings'],
-      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'profile', 'settings', 'label-team', 'affiliates', 'support'],
+      admin: ['home', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
+      corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'label-team', 'affiliates', 'support'],
       dj: ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
       studio: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
       supervisor: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
       consumer: ['home', 'library', 'tips', 'stream-controls', 'profile', 'settings', 'support', 'crm'],
       affiliate: ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
-      creator: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'profile', 'settings', 'affiliates', 'support']
+      creator: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
     if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
@@ -1301,20 +1334,122 @@ function DashboardView({
         return <ConsumerTipsPanel />;
       case 'stream-controls':
         return <ConsumerStreamControlsPanel />;
+      case 'pos-terminal':
+        return (
+          <div style={{ padding: '24px 32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Live Event Commerce</span>
+                <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: '4px 0 0', fontFamily: 'Sansation, sans-serif' }}>Point-of-Sale Terminal</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => setActiveTab('pos-inventory')} 
+                  className="btn-secondary" 
+                  style={{ padding: '8px 16px', fontSize: '12px' }}
+                >
+                  Manage SKU Inventory
+                </button>
+              </div>
+            </div>
+            <MpesaPosTerminal sessionUser={activeUser} />
+          </div>
+        );
       case 'pos-inventory':
-        return <PosInventoryPanel />;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setActiveTab('pos-terminal')} 
+                className="btn-primary" 
+                style={{ padding: '8px 16px', fontSize: '12px', background: '#10b981', color: '#fff' }}
+              >
+                Launch Live POS Terminal
+              </button>
+            </div>
+            <PosInventoryPanel />
+          </div>
+        );
       case 'pos-settlement':
         return <PosSettlementPanel />;
       case 'pos-devices':
         return <PosDevicesPanel />;
+      case 'distribution-tracker':
+        return (
+          <div style={{ padding: '24px 32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Global Delivery Radar</span>
+                <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: '4px 0 0', fontFamily: 'Sansation, sans-serif' }}>Distribution Tracker</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => setActiveTab('distribution-election')} 
+                  className="btn-secondary" 
+                  style={{ padding: '8px 16px', fontSize: '12px' }}
+                >
+                  Deal Election Contracts
+                </button>
+              </div>
+            </div>
+            <DistributionTrackerApp sessionUser={activeUser} />
+          </div>
+        );
+      case 'distribution-election':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setActiveTab('distribution-tracker')} 
+                className="btn-primary" 
+                style={{ padding: '8px 16px', fontSize: '12px', background: '#f59e0b', color: '#090d1f', fontWeight: 700 }}
+              >
+                Open Distribution Radar
+              </button>
+            </div>
+            <DistributionElectionPanel sessionUser={activeUser} />
+          </div>
+        );
+      case 'hosting-manager':
+        return (
+          <div style={{ padding: '24px 32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Cloud Infrastructure</span>
+                <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: '4px 0 0', fontFamily: 'Sansation, sans-serif' }}>Hosting & Domain Manager</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => setActiveTab('domain-mappings')} 
+                  className="btn-secondary" 
+                  style={{ padding: '8px 16px', fontSize: '12px' }}
+                >
+                  Domain Mappings Table
+                </button>
+              </div>
+            </div>
+            <HostingManagerApp sessionUser={activeUser} />
+          </div>
+        );
       case 'domain-mappings':
-        return <DomainMappingsPanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} />;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setActiveTab('hosting-manager')} 
+                className="btn-primary" 
+                style={{ padding: '8px 16px', fontSize: '12px', background: '#3b82f6', color: '#fff' }}
+              >
+                Open Hosting Infrastructure
+              </button>
+            </div>
+            <DomainMappingsPanel sessionUser={activeUser} onUpdateUser={onUpdateUser} />
+          </div>
+        );
       case 'promoted-acts':
         return <PromotedActsAdminPanel />;
       case 'publishing-election':
-        return <PublishingElectionPanel sessionUser={sessionUser} />;
-      case 'distribution-election':
-        return <DistributionElectionPanel sessionUser={sessionUser} />;
+        return <PublishingElectionPanel sessionUser={activeUser} />;
       case 'social-ai':
         return (
           <SocialAiPanel 
@@ -1324,7 +1459,7 @@ function DashboardView({
           />
         );
       case 'crm':
-        return <CrmPanel sessionUser={sessionUser} />;
+        return <CrmPanel sessionUser={activeUser} />;
       case 'cms':
         return <CmsPanel sessionUser={sessionUser} epk={creatorEpk} setEpk={setCreatorEpk} tracks={catalogTracks} initialTab={cmsInitialTab} onSwitchToWizard={() => setActiveTab('catalog')} />;
       case 'epk-builder':
@@ -1333,7 +1468,7 @@ function DashboardView({
             tracks={catalogTracks}
             epk={creatorEpk}
             setEpk={setCreatorEpk}
-            sessionUser={sessionUser}
+            sessionUser={activeUser}
             setActiveTab={setActiveTab}
             activeArtist={activeArtist}
             onSelectArtist={handleSwitchArtist}
@@ -1360,7 +1495,7 @@ function DashboardView({
   };
 
   const getCategorizedMenu = () => {
-    const role = sessionUser?.role || 'creator';
+    const role = activeUser?.role || 'creator';
     
     const allItems = {
       home: { id: 'home', label: 'Overview', icon: RiBarChartFill, category: 'Dashboard' },
@@ -1377,6 +1512,9 @@ function DashboardView({
       library: { id: 'library', label: 'My Library', icon: RiMusicFill, category: 'tunestream' },
       tips: { id: 'tips', label: 'Tips & Purchases', icon: RiCoinsFill, category: 'tunestream' },
       'stream-controls': { id: 'stream-controls', label: 'Player & Devices', icon: RiHeadphoneFill, category: 'tunestream' },
+      'pos-terminal': { id: 'pos-terminal', label: 'POS Terminal', icon: RiBankCardFill, category: 'Live Commerce' },
+      'distribution-tracker': { id: 'distribution-tracker', label: 'Distribution Radar', icon: RiBarChartFill, category: 'Distribution' },
+      'hosting-manager': { id: 'hosting-manager', label: 'Hosting & Domains', icon: RiGlobalFill, category: 'Infrastructure' },
       'pos-inventory': { id: 'pos-inventory', label: 'POS Inventory', icon: RiDatabase2Fill, category: 'tunepay' },
       'pos-settlement': { id: 'pos-settlement', label: 'POS Settlement', icon: RiCoinsFill, category: 'tunepay' },
       'pos-devices': { id: 'pos-devices', label: 'POS Devices', icon: RiSmartphoneFill, category: 'tunepay' },
@@ -1409,7 +1547,7 @@ function DashboardView({
         visibleKeys = ['home', 'corporate-ads', 'affiliates', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'profile', 'support', 'label-team', 'affiliates'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
         break;
       case 'dj':
         visibleKeys = ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
@@ -1423,7 +1561,7 @@ function DashboardView({
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'profile', 'affiliates', 'support'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
         break;
     }
 
@@ -1449,7 +1587,7 @@ function DashboardView({
     const categories = {};
     visibleKeys.forEach(k => {
       // Check if this tab is a marketplace app, and if so, only show if activated (CRM and Corporate Ads are always available).
-      if (APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads') {
+      if (APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads' && k !== 'pos-terminal' && k !== 'distribution-tracker' && k !== 'hosting-manager') {
         const activeApps = sessionUser?.apps || getStoredActivatedApps(sessionUser) || [];
         if (!activeApps.includes(APP_SLUGS[k])) {
           return;
@@ -1475,15 +1613,15 @@ function DashboardView({
           onScroll={() => setHoveredNavItem(null)}
         >
           <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
-            <Link to="/" title={sessionUser?.role === 'consumer' ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site"} data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
+            <Link to="/" title={(activeUser?.role === 'consumer' && ['library', 'tips', 'stream-controls'].includes(activeTab)) ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site"} data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
               {collapsed ? (
-                sessionUser?.role === 'consumer' ? (
+                (activeUser?.role === 'consumer' && ['library', 'tips', 'stream-controls'].includes(activeTab)) ? (
                   <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Icon" style={{ height: '28px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/favicon.png'; }} />
                 ) : (
                   <img src="/favicon.png" alt="TuneMavens Icon" style={{ height: '32px', width: 'auto', display: 'block' }} />
                 )
               ) : (
-                sessionUser?.role === 'consumer' ? (
+                (activeUser?.role === 'consumer' && ['library', 'tips', 'stream-controls'].includes(activeTab)) ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
                     <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: '32px', width: 'auto', display: 'block', margin: '0 auto' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
                     <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase' }}>a tunemavens utility</span>

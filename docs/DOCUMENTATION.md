@@ -1927,3 +1927,37 @@ Allows creators and administrators to update or regenerate custom headers via na
 3. **Deep Link State Preservation in Catalogue Engine & Auth**:
    - Updated [`CataloguePanel`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/App.jsx) to dynamically evaluate `mode=wizard`, `sub=ingest`, or `tool=catalogue-machine` query parameters, ensuring clicking **"Open Ingestion Engine"** immediately renders the interactive 4-step `CatalogueWizard` rather than the default catalog table.
    - Updated [`LoginView.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/auth/LoginView.jsx) to check `preferred_dashboard_tab` upon authentication so return destinations are preserved.
+
+### 9.44.15 Authoritative In-Dashboard App Targeting & TuneStream Backend Decoupling
+1. **Diagnosis & Root-Cause Elimination of TuneStream Backend Bleed**:
+   - Diagnosed root-cause where users with cached `role: 'consumer'` in storage who clicked standalone apps were routed into the TuneStream consumer dashboard (`Listener Experience Dashboard`) with TuneStream utility sidebar branding (`a tunemavens utility`), rather than the authoritative TuneMavens creator/label dashboard.
+   - Identified that `roleAllowed['consumer']` prohibited business tabs (`pos-terminal`, `distribution-tracker`, `hosting-manager`, `splits`, `catalog`, `epk-builder`), causing `DashboardView` to fall back to `DashboardHome` in consumer mode.
+2. **Immediate Effective Role Resolution (`DashboardView` in `App.jsx`)**:
+   - Implemented `effectiveRole` using `useMemo` in `DashboardView` to compute the user's role on the very first render cycle based on URL query parameter `?role=...` or business tab requirements.
+   - If a user enters with `sessionUser.role === 'consumer'` but requests any creator/label application tab (`epk-builder`, `crm`, `catalog`, `splits`, `pos-terminal`, `distribution-tracker`, `hosting-manager`), their role is immediately elevated to `creator` or `label` before render, preventing any consumer fallback.
+   - Added automatic role and app synchronization back into `sessionUser`, `sessionStorage`, and `localStorage`.
+3. **Dedicated Interactive Standalone App Integration in Dashboard Panels**:
+   - Imported and mounted dedicated application components into `DashboardView`'s `renderActivePanel`:
+     - **Point-of-Sale Terminal**: `tab=pos-terminal` now renders the full interactive [`MpesaPosTerminal.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/demos/MpesaPosTerminal.jsx) with quick toggling to SKU inventory.
+     - **Distribution Tracker**: `tab=distribution-tracker` now renders [`DistributionTrackerApp.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/demos/DistributionTrackerApp.jsx) (real-time 150+ DSP delivery radar) with quick toggling to deal election contracts.
+     - **Hosting & Domain Manager**: `tab=hosting-manager` now renders [`HostingManagerApp.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/demos/HostingManagerApp.jsx) with quick toggling to domain mappings table.
+     - **EPK Builder Studio**: `tab=epk-builder` renders [`EPKBuilderPanel`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/App.jsx).
+     - **Smart CRM**: `tab=crm` renders [`SmartCrmStudioPanel`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/SmartCrmStudioPanel.jsx).
+     - **Catalogue Machine**: `tab=catalog&mode=wizard` renders [`CataloguePanel`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/App.jsx) with wizard mode automatically activated.
+     - **Split Cascade Ledger**: `tab=splits` renders [`SplitCascadePanel`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/splits/TuneLedgerSplitCascadePanel.jsx).
+4. **Authoritative TuneMavens Branding & Sidebar Consistency**:
+   - Refactored `dashboard-sidebar-header` (`App.jsx:1478`): the TuneStream logo (`a tunemavens utility`) is now strictly constrained to consumer mode on consumer streaming tabs (`['library', 'tips', 'stream-controls']`). For all standalone apps and business modules, the sidebar header renders the authoritative TuneMavens logo (`/tunemavens-logo-white.png`).
+   - Added `pos-terminal`, `distribution-tracker`, and `hosting-manager` to `roleAllowed` for `creator`, `label`, and `admin`, and added dedicated categorized entries into the sidebar menu.
+5. **Exact URL Targeting in Standalone Apps Directory (`AppsView.jsx`)**:
+   - Updated all card CTAs, header buttons, and sticky viewport action bars across all 7 applications to target the exact tab and role parameters:
+     - EPK: `/dashboard?tab=epk-builder&role=creator`
+     - CRM: `/dashboard?tab=crm&role=creator`
+     - Catalogue Machine: `/dashboard?tab=catalog&mode=wizard&role=label`
+     - Split Ledger: `/dashboard?tab=splits&role=creator`
+     - POS Terminal: `/dashboard?tab=pos-terminal&role=label`
+     - Distribution Tracker: `/dashboard?tab=distribution-tracker&role=creator`
+     - Hosting Manager: `/dashboard?tab=hosting-manager&role=creator`
+     - Main Page Sticky CTA: `/dashboard?role=creator` labeled "Open TuneMavens Dashboard".
+6. **Multi-Viewport Headless Verification**:
+   - Verified clean production compilation (`npm run build --prefix apps/portal` succeeded in 872ms with 0 errors).
+   - Rendered and captured headless screenshots for all 7 apps and the main pool view, validating authoritative TuneMavens logo rendering, role elevation, and accurate panel component mounting.

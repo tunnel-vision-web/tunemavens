@@ -72,7 +72,7 @@ export default function AppsView({ sessionUser }) {
       tag: 'Creator Showcase',
       icon: RiLayoutMasonryFill, 
       accent: 'var(--cyan)',
-      dashboardUrl: '/dashboard?tab=epk-builder',
+      dashboardUrl: '/dashboard?tab=epk-builder&role=creator',
       actionLabel: 'Launch EPK Studio',
       lead: 'Interactive Electronic Press Kit studio, theme visualizer, bio editor, and standalone web world publisher.',
       paragraphs: [
@@ -94,7 +94,7 @@ export default function AppsView({ sessionUser }) {
       tag: 'Audience Intelligence',
       icon: RiGroupFill, 
       accent: '#10b981',
-      dashboardUrl: '/dashboard?tab=crm',
+      dashboardUrl: '/dashboard?tab=crm&role=creator',
       actionLabel: 'Open Smart CRM',
       lead: 'Fan relationship management, VIP subscriber lists, direct email messaging, and tour booking conversion.',
       paragraphs: [
@@ -138,7 +138,7 @@ export default function AppsView({ sessionUser }) {
       tag: 'Royalty Accounting',
       icon: RiStackFill, 
       accent: 'var(--cyan)',
-      dashboardUrl: '/dashboard?tab=splits',
+      dashboardUrl: '/dashboard?tab=splits&role=creator',
       actionLabel: 'Open Split Ledger',
       lead: 'Configure collaborator splits, load bulk statement spreadsheets, and automate recoupment accounting down to the cent.',
       paragraphs: [
@@ -160,7 +160,7 @@ export default function AppsView({ sessionUser }) {
       tag: 'Live Event Commerce',
       icon: RiBankCardFill, 
       accent: '#10b981',
-      dashboardUrl: '/dashboard?tab=pos-inventory&role=label',
+      dashboardUrl: '/dashboard?tab=pos-terminal&role=label',
       actionLabel: 'Open POS Terminal',
       lead: `${posShort}: Collect on-site merchant card, contactless, and mobile money payments during tours and concerts.`,
       paragraphs: [
@@ -182,7 +182,7 @@ export default function AppsView({ sessionUser }) {
       tag: 'Global Delivery Radar',
       icon: RiBarChartFill, 
       accent: '#f59e0b',
-      dashboardUrl: '/dashboard?tab=distribution-election',
+      dashboardUrl: '/dashboard?tab=distribution-tracker&role=creator',
       actionLabel: 'Open Distribution Tracker',
       lead: 'Monitor real-time ingest status, editorial submission deadlines, and storefront delivery across 150+ DSPs.',
       paragraphs: [
@@ -204,7 +204,7 @@ export default function AppsView({ sessionUser }) {
       tag: 'Cloud Infrastructure',
       icon: RiGlobalFill, 
       accent: '#3b82f6',
-      dashboardUrl: '/dashboard?tab=domain-mappings',
+      dashboardUrl: '/dashboard?tab=hosting-manager&role=creator',
       actionLabel: 'Open Domain Manager',
       lead: 'Register custom domain names, configure DNS zone settings, and deploy high-performance modular web containers.',
       paragraphs: [
@@ -247,7 +247,7 @@ export default function AppsView({ sessionUser }) {
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <Link 
-                  to="/dashboard?tab=epk-builder" 
+                  to="/dashboard?tab=epk-builder&role=creator" 
                   className="btn-primary" 
                   style={{ padding: '10px 22px', fontSize: '13px' }}
                 >
@@ -316,7 +316,7 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to="/dashboard?tab=epk-builder" 
+                to="/dashboard?tab=epk-builder&role=creator" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px' }}
               >
@@ -357,7 +357,7 @@ export default function AppsView({ sessionUser }) {
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <Link 
-                  to="/dashboard?tab=crm" 
+                  to="/dashboard?tab=crm&role=creator" 
                   className="btn-primary" 
                   style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}
                 >
@@ -441,7 +441,7 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to="/dashboard?tab=crm" 
+                to="/dashboard?tab=crm&role=creator" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}
               >
@@ -625,7 +625,7 @@ export default function AppsView({ sessionUser }) {
                 <h2 className="subapp-title">{posName}</h2>
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <Link to="/dashboard?tab=pos-inventory&role=label" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}>
+                <Link to="/dashboard?tab=pos-terminal&role=label" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}>
                   Open POS Terminal in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
                 </Link>
                 <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
@@ -668,7 +668,7 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to="/dashboard?tab=pos-inventory&role=label" 
+                to="/dashboard?tab=pos-terminal&role=label" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}
               >
@@ -708,7 +708,7 @@ export default function AppsView({ sessionUser }) {
                 <h2 className="subapp-title">Split Cascade Ledger &amp; Recoupment Engine</h2>
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <Link to="/dashboard?tab=splits" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px' }}>
+                <Link to="/dashboard?tab=splits&role=creator" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px' }}>
                   Open Split Ledger in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
                 </Link>
                 <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
@@ -751,7 +751,7 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to="/dashboard?tab=splits" 
+                to="/dashboard?tab=splits&role=creator" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px' }}
               >
@@ -791,7 +791,7 @@ export default function AppsView({ sessionUser }) {
                 <h2 className="subapp-title">Distribution Tracker &amp; Store Delivery Radar</h2>
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <Link to="/dashboard?tab=distribution-election" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#f59e0b', color: '#090d1f' }}>
+                <Link to="/dashboard?tab=distribution-tracker&role=creator" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#f59e0b', color: '#090d1f' }}>
                   Open Distribution Tracker in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
                 </Link>
                 <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
@@ -834,7 +834,7 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to="/dashboard?tab=distribution-election" 
+                to="/dashboard?tab=distribution-tracker&role=creator" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px', background: '#f59e0b', color: '#090d1f' }}
               >
@@ -874,7 +874,7 @@ export default function AppsView({ sessionUser }) {
                 <h2 className="subapp-title">Hosting &amp; Custom Domain Manager</h2>
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <Link to="/dashboard?tab=domain-mappings" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#3b82f6' }}>
+                <Link to="/dashboard?tab=hosting-manager&role=creator" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#3b82f6' }}>
                   Open Domain Manager in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
                 </Link>
                 <Link to="/for" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
@@ -917,7 +917,7 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to="/dashboard?tab=domain-mappings" 
+                to="/dashboard?tab=hosting-manager&role=creator" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px', background: '#3b82f6' }}
               >
@@ -1041,12 +1041,12 @@ export default function AppsView({ sessionUser }) {
           </div>
           <div className="cta-actions">
             <Link 
-              to={sessionUser ? "/dashboard?role=creator" : "/register?role=creator"} 
+              to="/dashboard?role=creator" 
               className="btn-primary" 
               style={{ padding: '10px 22px', fontSize: '13px' }}
               data-testid="apps-open-tunemavens-dash-cta"
             >
-              {sessionUser ? "Open TuneMavens Dashboard" : "Get Started Free"} <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+              Open TuneMavens Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
             </Link>
             <Link to="/for" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
               Explore By Role

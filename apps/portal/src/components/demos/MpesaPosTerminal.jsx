@@ -157,13 +157,15 @@ export default function MpesaPosTerminal({ goBack }) {
             <p style={{ fontSize: '11px', color: 'var(--mu)', margin: 0 }}>Collect client payments directly to your local wallet</p>
           </div>
         </div>
-        <button 
-          onClick={goBack} 
-          className="plan-btn outline"
-          style={{ padding: '6px 14px', fontSize: '11px', height: '30px', borderRadius: '4px', cursor: 'pointer' }}
-        >
-          &larr; Back to Apps
-        </button>
+        {typeof goBack === 'function' && (
+          <button 
+            onClick={goBack} 
+            className="plan-btn outline"
+            style={{ padding: '6px 14px', fontSize: '11px', height: '30px', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            &larr; Back to Apps
+          </button>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px' }}>

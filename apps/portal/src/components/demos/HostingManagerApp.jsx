@@ -82,13 +82,15 @@ export default function HostingManagerApp({ goBack, sessionUser }) {
     <div style={{ width: '100%' }}>
       {/* Back button */}
       <div style={{ marginBottom: '24px' }}>
-        <button 
-          onClick={goBack} 
-          className="btn-secondary" 
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', fontSize: '13px' }}
-        >
-          <RiArrowLeftLine size={16} /> Back to Dashboard Apps
-        </button>
+        {typeof goBack === 'function' && (
+          <button 
+            onClick={goBack} 
+            className="btn-secondary" 
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', fontSize: '13px' }}
+          >
+            <RiArrowLeftLine size={16} /> Back to Dashboard Apps
+          </button>
+        )}
       </div>
 
       {/* Hero Glass Panel */}
