@@ -2098,3 +2098,31 @@ Allows creators and administrators to update or regenerate custom headers via na
    - Wired contextual in-app help triggers into `LiveEventsSection`, `ToursView`, and `VcDashboardPanel`, mapping directly to `InAppDocModal` and `userLifecycleMemory.js` (`APP_DOC_MAPPINGS`).
 4. **Standalone Route Registration**:
    - Registered direct landing routes in `apps/portal/src/App.jsx` for `/events` and `/concerts`, deep-linking directly to `ToursView` with `initialTab="concerts"`.
+
+### 9.44.21 Full System Localization, Solution-Specific Screenshots & Dynamic Header Imagery
+1. **End-to-End Localization & Solution-Specific Screenshot Architecture**:
+   - Captured and deployed 18 authentic, high-resolution (1680x1050) system screenshots directly from the active live platform across all supported industry roles and solutions, in both **English (`_en`)** and **Swahili (`_sw`)**:
+     - `creator_dashboard_actual_en.png` / `creator_dashboard_actual_sw.png`: Creator Studio Dashboard, split calculators, and track ingestion console.
+     - `label_dashboard_actual_en.png` / `label_dashboard_actual_sw.png`: Record Label Catalog Machine, multi-artist ingestion, and revenue waterfall.
+     - `dj_dashboard_actual_en.png` / `dj_dashboard_actual_sw.png`: DJ Pool engine, lossless audio cues, and dancefloor clearance hub.
+     - `mediahouse_dashboard_actual_en.png` / `mediahouse_dashboard_actual_sw.png`: Media House broadcast compliance queues and programming grid.
+     - `supervisor_dashboard_actual_en.png` / `supervisor_dashboard_actual_sw.png`: SyncMavens sync licensing, AI scene-search, and commercial cue sheets.
+     - `consumer_dashboard_actual_en.png` / `consumer_dashboard_actual_sw.png`: TuneStream Hi-Fi streaming application, direct tipping, and offline cache.
+     - `corporate_dashboard_actual_en.png` / `corporate_dashboard_actual_sw.png`: Corporate advertising flight dispatcher and brand sponsorship console.
+     - `vc_dashboard_actual_en.png` / `vc_dashboard_actual_sw.png`: Venture Capital command center, career sponsorship engine, and portfolio yield meters.
+     - `tour_dashboard_actual_en.png` / `tour_dashboard_actual_sw.png`: Tour Command Center, live venue routing, and senior-secured underwriting vault.
+2. **Dynamic Language-Aware Rendering in `PerfectForPageView.jsx` & `ToursView.jsx`**:
+   - Integrated with `useRegion()` (`language === 'sw' || language === 'ki'`) to dynamically resolve:
+     - Card preview images (`creatorDashActualSw` vs `creatorDashActualEn`, etc.).
+     - Card titles, subtitles, and detailed role descriptions in full Kiswahili and English.
+     - High-resolution click-to-zoom modal lightbox previews matching the user's selected language.
+   - Updated `ToursView.jsx` to dynamically switch between `tourDashboardActualSw` and `tourDashboardActualEn` in both the inline preview and the full-screen modal zoom.
+3. **Dedicated & Localized Live Tour & Service Header Imagery**:
+   - Replaced generic header assets on the Tours page with dedicated concert production photography:
+     - `header_tours.png`: Pan-African / Nairobi live concert tour stage at night with soundwave screens, laser rigs, and festival crowd.
+     - `header_tours_western.png`: International stadium world tour stage (London / New York arena) with massive lighting trusses and arena crowds.
+     - `perfect_for_header_western.png`: High-end creative studio executive command console with multi-screen monitoring and midnight ambient aesthetic.
+   - Wired seamlessly into `PageHeader.jsx`, which dynamically selects the appropriate regional header background based on the user's country code (`US`/`GB` vs `KE`/Pan-African).
+4. **TuneStream Cross-Platform Live Events Parity**:
+   - Deployed the complete `LiveEventsSection` into `apps/tunestream/src/components/events/` and integrated into the TuneStream web player and landing view (`apps/tunestream/src/App.jsx` and `NativeAppLandingView.jsx`).
+   - Added direct navbar dropdown option under "Services" ("Huduma") linking to `#/concerts` ("Moja kwa moja Matamasha ya muziki & Matukio").

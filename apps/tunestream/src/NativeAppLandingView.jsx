@@ -19,6 +19,7 @@ import tpLogo from './assets/tunepay-logo.png'
 import RegionSwitcher from './RegionSwitcher'
 import { useRegion } from './RegionContext'
 import './Landing.css'
+import LiveEventsSection from './components/events/LiveEventsSection.jsx'
 
 const ROLE_LOGOS = {
   consumer: tsLogo,
@@ -1809,6 +1810,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               />
             </section>
 
+            {/* Live Concerts, Tours & Masterclasses in Progress */}
+            <div style={{ marginTop: '40px', marginBottom: '40px' }}>
+              <LiveEventsSection sessionUser={sessionUser} />
+            </div>
+
             {/* Plans & Membership Access Options */}
             {renderPlansSection()}
           </div>
@@ -2906,6 +2912,14 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         case 'help':
         case 'docs':
           return renderHelp('docs');
+        case 'concerts':
+        case 'events':
+        case 'live':
+          return (
+            <div style={{ marginTop: '30px', marginBottom: '40px' }}>
+              <LiveEventsSection sessionUser={sessionUser} />
+            </div>
+          );
         case 'listen':
         default:
           return renderListen();
@@ -3260,6 +3274,11 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
                 </Link>
               </li>
             </ul>
+          </li>
+          <li>
+            <Link to="?view=concerts" className={`nav-link ${view === 'concerts' || view === 'events' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+              Live Shows
+            </Link>
           </li>
           <li>
             <Link to="?view=apps" className={`nav-link ${view === 'apps' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>

@@ -34,6 +34,7 @@ import consumerAppImg from '../../assets/images/consumer_app.png'
 import appsLedgerImg from '../../assets/images/apps_ledger.png'
 import userManagerImg from '../../assets/images/user_manager.png'
 import appsSyncImg from '../../assets/images/apps_sync.png'
+import LiveEventsSection from '../../components/events/LiveEventsSection.jsx'
 
 const NATIVE_APP_LANDING_DATA = {
   tunestream: {
@@ -1785,6 +1786,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               />
             </section>
 
+            {/* Live Concerts, Tours & Masterclasses in Progress */}
+            <div style={{ marginTop: '40px', marginBottom: '40px' }}>
+              <LiveEventsSection sessionUser={sessionUser} />
+            </div>
+
             {/* Plans & Membership Access Options */}
             {renderPlansSection()}
           </div>
@@ -2824,6 +2830,14 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         case 'help':
         case 'docs':
           return renderHelp('docs');
+        case 'concerts':
+        case 'events':
+        case 'live':
+          return (
+            <div style={{ marginTop: '30px', marginBottom: '40px' }}>
+              <LiveEventsSection sessionUser={sessionUser} />
+            </div>
+          );
         case 'listen':
         default:
           return renderListen();

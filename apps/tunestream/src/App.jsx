@@ -31,6 +31,8 @@ import CreatorEpkView from './views/creator/CreatorEpkView.jsx';
 import CreatorProfileView from './components/creator/CreatorProfileView.jsx';
 import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx';
 import CreditReloadModal from './components/common/CreditReloadModal.jsx';
+import LiveEventsSection from './components/events/LiveEventsSection.jsx';
+import { RiTicket2Fill } from 'react-icons/ri';
 import AppHelpAiControls from './components/common/AppHelpAiControls.jsx';
 import {
   AffiliatePayoutSettingsModal,
@@ -137,6 +139,9 @@ function AppContent() {
         <Routes location={backgroundLocation}>
           <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/explore" element={<Navigate to="/?view=explore" replace />} />
+          <Route path="/concerts" element={<Navigate to="/?view=concerts" replace />} />
+          <Route path="/events" element={<Navigate to="/?view=concerts" replace />} />
+          <Route path="/tours" element={<Navigate to="/?view=concerts" replace />} />
           <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} initialTab="explore" onLogout={handleLogout} />} />
           <Route path="/singles" element={<PlayerDashboard sessionUser={sessionUser} initialTab="singles" onLogout={handleLogout} />} />
           <Route path="/artists" element={<PlayerDashboard sessionUser={sessionUser} initialTab="artists" onLogout={handleLogout} />} />
@@ -1878,8 +1883,9 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       badge: 'COPILOT' 
     });
 
-    // Discover & Audio (Catalogue, Singles, Artists, Favorites, Radio)
+    // Discover & Audio (Catalogue, Singles, Artists, Favorites, Radio, Concerts)
     add('Discover & Audio', { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Line });
+    add('Discover & Audio', { id: 'concerts', label: 'Live Shows & Tours', icon: RiTicket2Fill, badge: 'LIVE', color: '#ef4444' });
     add('Discover & Audio', { id: 'singles', label: 'Singles Showcase', icon: RiMusicLine });
     add('Discover & Audio', { id: 'artists', label: 'Roster Artists', icon: RiUserLine });
     add('Discover & Audio', { id: 'favorites', label: 'Favorites', icon: RiHeart3Fill });
@@ -2128,6 +2134,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             onPlayTrack={handleTrackSelect}
             setActiveTab={setActiveTab}
           />
+        );
+      case 'concerts':
+      case 'events':
+        return (
+          <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 20px 40px' }}>
+            <LiveEventsSection sessionUser={activeUser} />
+          </div>
         );
       case 'apps':
         return <EcosystemAppsPanel setActiveTab={setActiveTab} />;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill } from 'react-icons/ri'
+import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill, RiTicket2Fill } from 'react-icons/ri'
 import { ROLE_LOGOS, getServiceUrl } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -302,7 +302,7 @@ export default function Navbar({ sessionUser }) {
         </li>
         <li className="dropdown-container" ref={servicesDropdownRef}>
           <button
-            className={`nav-link dropdown-trigger ${isActive('/publishing') || isActive('/tours') || isActive('/distribution') || isActive('/sync-placement') ? 'active' : ''}`}
+            className={`nav-link dropdown-trigger ${isActive('/publishing') || isActive('/tours') || isActive('/concerts') || isActive('/events') || isActive('/distribution') || isActive('/sync-placement') ? 'active' : ''}`}
             onClick={() => { setDropdownOpen(false); setAboutDropdownOpen(false); setAppsDropdownOpen(false); setServicesDropdownOpen(!servicesDropdownOpen); }}
             data-testid="nav-services-dropdown-trigger"
           >
@@ -325,7 +325,17 @@ export default function Navbar({ sessionUser }) {
                 className="dropdown-link"
                 onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}
               >
-                <RiCalendarEventFill size={16} /> Tours
+                <RiCalendarEventFill size={16} /> Tours &amp; VC Capital
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/concerts"
+                className="dropdown-link"
+                onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}
+                data-testid="nav-service-concerts"
+              >
+                <RiTicket2Fill size={16} /> Live Concerts &amp; Events
               </Link>
             </li>
             <li>

@@ -42,15 +42,18 @@ import SEO from '../../components/common/SEO.jsx'
 import { useRegion } from '../../RegionContext.jsx'
 import LiveEventsSection from '../../components/events/LiveEventsSection.jsx'
 
-import headerAppsImg from '../../assets/images/header_apps.png'
-import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
-import tourDashboardActual from '../../assets/images/tour_dashboard_actual.png'
+import headerToursImg from '../../assets/images/header_tours.png'
+import headerToursWesternImg from '../../assets/images/header_tours_western.png'
+import tourDashboardActualEn from '../../assets/images/tour_dashboard_actual_en.png'
+import tourDashboardActualSw from '../../assets/images/tour_dashboard_actual_sw.png'
 
 import './ToursView.css'
 import './AppsView.css'
 
 export default function ToursView({ sessionUser, initialTab }) {
-  const { country, currencyInfo } = useRegion();
+  const { country, currencyInfo, language } = useRegion();
+  const isSw = language === 'sw' || language === 'ki';
+  const tourDashboardActual = isSw ? tourDashboardActualSw : tourDashboardActualEn;
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const tabQuery = searchParams.get('tab');
@@ -302,8 +305,8 @@ export default function ToursView({ sessionUser, initialTab }) {
 
       <PageHeader 
         title="Tours, ticketing, VC Capital & Masterclasses"
-        bgImage={headerAppsImg}
-        bgImageWestern={headerAppsWesternImg}
+        bgImage={headerToursImg}
+        bgImageWestern={headerToursWesternImg}
         breadcrumb="Tours"
         titleStyle={{ fontSize: 'clamp(21px, 2.8vw, 31px)', fontWeight: 800, letterSpacing: '-0.3px' }}
         subtitle="Taking Artists from Anywhere in the World to Everywhere — Backed by Data, Industry Relationships & Automated Settlement"
