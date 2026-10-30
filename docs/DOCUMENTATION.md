@@ -2126,3 +2126,29 @@ Allows creators and administrators to update or regenerate custom headers via na
 4. **TuneStream Cross-Platform Live Events Parity**:
    - Deployed the complete `LiveEventsSection` into `apps/tunestream/src/components/events/` and integrated into the TuneStream web player and landing view (`apps/tunestream/src/App.jsx` and `NativeAppLandingView.jsx`).
    - Added direct navbar dropdown option under "Services" ("Huduma") linking to `#/concerts` ("Moja kwa moja Matamasha ya muziki & Matukio").
+
+### 9.44.22 Separation of Tours & Live Events Front End from Venture Capital Underwriting Vault
+1. **Dedicated Front End Pages**:
+   - **Tours, Concerts, Ticketing & Masterclasses (`apps/portal/src/views/landing/ToursView.jsx`)**:
+     - Dedicated purely to artists, bands, managers, concertgoers, and fans (`#/tours`, `#/concerts`, `#/events`).
+     - Houses the **Live Concerts, In-Progress Shows & Masterclasses showcase** (`LiveEventsSection.jsx`), city selector, genre filters, instant M-Pesa STK push & TunePay card ticketing engine, cryptographic QR pass generator, and CRM superfan RSVP waitlist.
+     - Features the **6-Phase Cross-Border Artist Tour Incubation Framework**, international promoter and independent venue rolodex, daytime creative masterclasses, and tour infrastructure POS tech stack.
+     - Includes a high-visibility, elegant **Institutional Tour Capital callout banner** for investors directing them to the dedicated VC vault.
+   - **Tour Venture Capital & Underwriting Vault (`apps/portal/src/views/landing/TourCapitalView.jsx`)**:
+     - Dedicated standalone public front end (`#/tour-capital`, with route aliases `#/tours/capital`, `#/vc-capital`, `#/tours-vault`).
+     - Houses the complete VC underwriting feature suite:
+       - **Investor Macro Telemetry Ribbon**: $14.2M+ deployed, 22.6% average target IRR, 48+ international corridors, 100% automated Split Cascade settlement.
+       - **Current Tour Underwriting Opportunities in the Vault**: Interactive carousel of cards with side arrows, route stops, pre-sale velocity, and live telemetry badges.
+       - **VC Fast-Track Onboarding & LP Accreditation Wizard**: Multi-step institutional accreditation form.
+       - **Telemetry Due Diligence Data Room**: Real-time DSP streaming velocity, CRM superfan density, and itinerary capacity.
+       - **Capital Commitment & Allocation Engine**: Direct check commitment with real-time currency conversion and cryptographic senior lien transaction receipt.
+       - **Creator Product & Service Cost Sponsorship**: Directory of non-dilutive platform cost underwriting (distribution, EPK hosting, mastering, sync representation) with senior-secured first-dollar liens.
+       - **Split Cascade Recoupment Architecture**: Visual waterfall breakdown across Tier 1 (Senior Secured), Tier 2 (Promoter/Venue), and Tier 3 (Artist/Band Net Profit).
+       - Direct CTA to launch the authenticated **VC Command Center** (`/dashboard?tab=vc-portfolio&role=vc`).
+2. **Navigation & Cross-Platform Linking**:
+   - Updated `apps/portal/src/components/common/Navbar.jsx` Services dropdown with 3 dedicated items:
+     1. `Tours & Masterclasses` (`/tours`)
+     2. `Live Concerts & Events` (`/concerts`)
+     3. `Tour Venture Capital Vault` (`/tour-capital`)
+   - Updated `VcLandingPage.jsx` CTA to link directly to `/tour-capital`.
+   - Sticky bottom quick-access bar provides instant switching between "Submit Tour Pitch" and "Tour VC Capital Vault".

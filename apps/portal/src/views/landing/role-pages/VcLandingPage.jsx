@@ -63,7 +63,7 @@ export default function VcLandingPage({ switcher }) {
               <Link to="/dashboard?tab=vc-portfolio&role=vc" className="btn-primary" style={{ padding: '12px 26px', background: '#10b981', borderColor: '#10b981', color: '#fff', fontSize: '14px', fontWeight: 700 }}>
                 Launch VC Command Center <RiArrowRightLine size={16} style={{ marginLeft: '6px' }} />
               </Link>
-              <Link to="/tours?tab=vc-backing" className="btn-secondary" style={{ padding: '12px 22px', fontSize: '13.5px' }}>
+              <Link to="/tour-capital" className="btn-secondary" style={{ padding: '12px 22px', fontSize: '13.5px' }}>
                 Browse Tour Underwriting Vault
               </Link>
             </div>

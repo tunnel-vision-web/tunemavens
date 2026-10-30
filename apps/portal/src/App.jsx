@@ -104,6 +104,7 @@ import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx'
 import PublishingView from './views/landing/PublishingView.jsx'
 import DistributionView from './views/landing/DistributionView.jsx'
 import ToursView from './views/landing/ToursView.jsx'
+import TourCapitalView from './views/landing/TourCapitalView.jsx'
 import SyncPlacementView from './views/landing/SyncPlacementView.jsx'
 import StreamView from './views/consumer/StreamView.jsx'
 import {
@@ -8847,6 +8848,10 @@ function AppContent({
           <Route path="/tours" element={<ToursView sessionUser={sessionUser} />} />
           <Route path="/events" element={<ToursView sessionUser={sessionUser} initialTab="concerts" />} />
           <Route path="/concerts" element={<ToursView sessionUser={sessionUser} initialTab="concerts" />} />
+          <Route path="/tour-capital" element={<TourCapitalView sessionUser={sessionUser} />} />
+          <Route path="/tours/capital" element={<Navigate to="/tour-capital" replace />} />
+          <Route path="/vc-capital" element={<Navigate to="/tour-capital" replace />} />
+          <Route path="/tours-vault" element={<Navigate to="/tour-capital" replace />} />
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/affiliates" element={<AffiliatesView sessionUser={sessionUser} />} />
