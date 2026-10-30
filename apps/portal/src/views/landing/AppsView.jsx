@@ -455,7 +455,7 @@ export default function AppsView({ sessionUser }) {
               </div>
             </div>
             <div className="cta-actions">
-              <Link to={sessionUser ? "/dashboard" : "/register?role=label"} className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7' }}>
+              <Link to={sessionUser ? "/dashboard?tab=catalog&role=label" : "/register?role=label"} className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7' }}>
                 Open Ingestion Console <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
@@ -791,15 +791,6 @@ export default function AppsView({ sessionUser }) {
                   <p key={pIdx} className="app-desc-p">{p}</p>
                 ))}
 
-                <ul className="app-bullets-list">
-                  {a.bullets.map((b, bIdx) => (
-                    <li key={bIdx}>
-                      <RiCheckDoubleFill size={16} />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-
                 <div className="app-card-footer">
                   <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
@@ -838,11 +829,12 @@ export default function AppsView({ sessionUser }) {
           </div>
           <div className="cta-actions">
             <Link 
-              to={sessionUser ? "/dashboard" : "/register?role=creator"} 
+              to={sessionUser ? "/dashboard?role=creator" : "/register?role=creator"} 
               className="btn-primary" 
               style={{ padding: '10px 22px', fontSize: '13px' }}
+              data-testid="apps-open-tunemavens-dash-cta"
             >
-              {sessionUser ? "Open Dashboard" : "Get Started Free"} <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+              {sessionUser ? "Open TuneMavens Dashboard" : "Get Started Free"} <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
             </Link>
             <Link to="/for" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
               Explore By Role

@@ -1412,15 +1412,15 @@ function DashboardView({
           onScroll={() => setHoveredNavItem(null)}
         >
           <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
-            <Link to="/" title={['consumer', 'creator'].includes(sessionUser?.role) ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site"} data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
+            <Link to="/" title={sessionUser?.role === 'consumer' ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site"} data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
               {collapsed ? (
-                ['consumer', 'creator'].includes(sessionUser?.role) ? (
+                sessionUser?.role === 'consumer' ? (
                   <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Icon" style={{ height: '28px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/favicon.png'; }} />
                 ) : (
                   <img src="/favicon.png" alt="TuneMavens Icon" style={{ height: '32px', width: 'auto', display: 'block' }} />
                 )
               ) : (
-                ['consumer', 'creator'].includes(sessionUser?.role) ? (
+                sessionUser?.role === 'consumer' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
                     <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: '32px', width: 'auto', display: 'block', margin: '0 auto' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
                     <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase' }}>a tunemavens utility</span>

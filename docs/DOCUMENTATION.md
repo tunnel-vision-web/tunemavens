@@ -1880,3 +1880,11 @@ Allows creators and administrators to update or regenerate custom headers via na
      - Image styled with `width: 100%; height: auto; max-height: none;` removing arbitrary 80vh constraints and maintaining crystal-clear native dashboard pixel density.
      - Implemented vertical scrolling via `.pf-modal-scroll-body { overflow-y: auto; max-height: calc(92vh - 56px); }`.
      - Docked top header bar (`.pf-modal-header-bar`) displaying the green "● LIVE SYSTEM CAPTURE" indicator, role title, and sticky close button.
+
+### 9.44.12 Apps Card Simplification & TuneMavens Dashboard Branding Routing
+1. **Simplified App Cards on Apps Pool Page (`/apps`)**:
+   - Removed the bullet lists from all 7 application cards in the main grid (`apps-grid-detailed`) on [`AppsView.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/AppsView.jsx).
+   - Preserved clear, punchy description paragraphs on the grid level to keep card height clean and browsable, reserving granular feature matrices and double-checkmark benefit bullet lists for the individual sub-app detailed studios (`activeApp !== null`).
+2. **Dashboard CTA & Header Branding Alignment**:
+   - Corrected the dashboard sidebar header in [`App.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/App.jsx): replaced the previous `['consumer', 'creator'].includes(sessionUser?.role)` condition with `sessionUser?.role === 'consumer'`. Creators, managers, labels, DJs, and admins now correctly display the authoritative **TuneMavens** branding (`/tunemavens-logo-white.png`) and title rather than the consumer TuneStream utility logo.
+   - Updated the persistent viewport sticky CTA button on the main Apps page to route explicitly to `/dashboard?role=creator` labeled "Open TuneMavens Dashboard", preventing any accidental fallback to a consumer-gated session.
