@@ -10,6 +10,7 @@ import mediahouseDashActualImg from '../../assets/images/mediahouse_dashboard_ac
 import supervisorDashActualImg from '../../assets/images/supervisor_dashboard_actual.png'
 import consumerDashActualImg from '../../assets/images/consumer_dashboard_actual.png'
 import corporateDashActualImg from '../../assets/images/corporate_dashboard_actual.png'
+import vcDashActualImg from '../../assets/images/vc_dashboard_actual.png'
 import perfectForHeaderImg from '../../assets/images/perfect_for_header.png'
 
 export default function PerfectForPageView() {
@@ -96,6 +97,17 @@ export default function PerfectForPageView() {
       desc: 'Connect brands with target audiences. Run campaigns, sponsor curators, and manage native audio ad placements.',
       preview: corporateDashActualImg,
       previewTitle: 'Corporate Advertising & Sponsorships Console'
+    },
+    {
+      key: 'vc',
+      label: 'Venture Capitalists',
+      sub: 'Tour & Career Financing',
+      href: '/for/vc',
+      logo: ROLE_LOGOS['exec'] || ROLE_LOGOS['corporate'],
+      accent: '#10b981',
+      desc: 'Underwrite live tours and directly facilitate creator product and service costs with senior-secured Split Cascade recoupment.',
+      preview: vcDashActualImg,
+      previewTitle: 'Tour & Creator Venture Capital Command Center'
     }
   ];
 
@@ -119,76 +131,43 @@ export default function PerfectForPageView() {
                 <img src={role.logo} alt={role.label} className="pf-card-logo-img" />
               </div>
               <h3 className="pf-card-title">{role.label}</h3>
-              <span className="pf-card-eyebrow" style={{ color: role.accent }}>{role.sub}</span>
+              <p className="pf-card-sub" style={{ color: role.accent }}>{role.sub}</p>
               <p className="pf-card-desc">{role.desc}</p>
               
-              <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
-                {role.isExternal ? (
-                  <a href={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
-                    Explore Seat
-                  </a>
-                ) : (
-                  <Link to={role.href} className="btn pf-card-cta" style={{ '--pf-accent': role.accent }}>
-                    Explore Seat
-                  </Link>
-                )}
-                {role.externalUrl && (
-                  <a 
-                    href={role.externalUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="btn pf-card-cta" 
-                    style={{ '--pf-accent': role.accent, background: 'rgba(255,255,255,0.06)', border: `1px solid ${role.accent}`, color: role.accent }}
-                  >
-                    {role.externalLabel || 'Open Portal'} &rarr;
-                  </a>
-                )}
-                <button 
-                  onClick={() => setPreviewModal({ 
-                    image: role.preview, 
-                    title: role.previewTitle, 
-                    roleName: role.label, 
-                    accent: role.accent 
-                  })} 
-                  className="btn pf-card-cta outline"
-                  style={{ '--pf-accent': role.accent, cursor: 'pointer', background: 'transparent' }}
-                  data-testid={`dash-preview-btn-${role.key}`}
-                >
-                  Dash Preview
-                </button>
+              <div className="pf-card-preview-wrap" style={{ cursor: 'pointer', margin: '16px 0', overflow: 'hidden', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => setPreviewModal(role)}>
+                <img src={role.preview} alt={`${role.label} preview`} style={{ width: '100%', height: '140px', objectFit: 'cover', display: 'block', transition: 'transform 0.3s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.03)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
+                <div style={{ background: 'rgba(0,0,0,0.6)', padding: '6px 10px', fontSize: '11px', color: '#fff', textAlign: 'center' }}>
+                  Click to view full {role.label} interface
+                </div>
               </div>
+
+              {role.externalUrl ? (
+                <a href={role.externalUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-cyan pf-card-btn" style={{ borderColor: role.accent, color: role.accent }}>
+                  {role.externalLabel || `Explore ${role.label}`}
+                </a>
+              ) : (
+                <Link to={role.href} className="btn btn-outline-cyan pf-card-btn" style={{ borderColor: role.accent, color: role.accent }}>
+                  Explore {role.label}
+                </Link>
+              )}
             </div>
           ))}
         </div>
       </div>
 
+      {/* Full Size Preview Modal with 40% Larger Size and Vertical Scrolling */}
       {previewModal && (
-        <div className="pf-modal-overlay" onClick={() => setPreviewModal(null)}>
-          <div className="pf-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="pf-modal-header-bar">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span className="pf-modal-live-tag">
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-                  Live System Capture
-                </span>
-                <span className="pf-modal-title">
-                  {previewModal.roleName}  -  {previewModal.title}
-                </span>
-              </div>
-              <button 
-                className="pf-modal-close" 
-                onClick={() => setPreviewModal(null)}
-                aria-label="Close dashboard preview modal"
-              >
-                ×
-              </button>
+        <div className="preview-modal-backdrop" onClick={() => setPreviewModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="preview-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '90vw', width: '1350px', maxHeight: '92vh', overflowY: 'auto', background: '#0a0d1d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '24px', position: 'relative' }}>
+            <button className="preview-modal-close" onClick={() => setPreviewModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', zIndex: 10 }}>
+              &times;
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: previewModal.accent }}></span>
+              <h3 style={{ margin: 0, fontSize: '18px', color: '#fff' }}>{previewModal.previewTitle || `${previewModal.label} Workspace`}</h3>
             </div>
-            <div className="pf-modal-scroll-body">
-              <img 
-                src={previewModal.image} 
-                alt={`${previewModal.roleName} Dashboard Preview`} 
-                className="pf-modal-img" 
-              />
+            <div style={{ borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <img src={previewModal.preview} alt={previewModal.label} style={{ width: '100%', height: 'auto', display: 'block' }} />
             </div>
           </div>
         </div>

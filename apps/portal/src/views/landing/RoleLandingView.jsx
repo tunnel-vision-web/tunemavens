@@ -8,6 +8,7 @@ import SupervisorLandingPage from './role-pages/SupervisorLandingPage.jsx'
 import ConsumerLandingPage from './role-pages/ConsumerLandingPage.jsx'
 import MediaHouseLandingPage from './role-pages/MediaHouseLandingPage.jsx'
 import CorporateLandingPage from './role-pages/CorporateLandingPage.jsx'
+import VcLandingPage from './role-pages/VcLandingPage.jsx'
 import { CANONICAL_ROLES } from '../../data/landingPageRegistry.js'
 
 function PersonaSwitcherToolbar({ activeRole, search, isScrolled }) {
@@ -111,6 +112,7 @@ export default function RoleLandingView() {
   if (['listener', 'listeners'].includes(normalized)) canonicalKey = 'consumer';
   if (['media_house', 'media', 'broadcaster'].includes(normalized)) canonicalKey = 'media-house';
   if (['brand', 'brands'].includes(normalized)) canonicalKey = 'corporate';
+  if (['vc', 'investor', 'venture', 'syndicate'].includes(normalized)) canonicalKey = 'vc';
 
   const switcher = (
     <PersonaSwitcherToolbar
@@ -142,6 +144,9 @@ export default function RoleLandingView() {
 
       case 'corporate':
         return <CorporateLandingPage switcher={switcher} />;
+
+      case 'vc':
+        return <VcLandingPage switcher={switcher} />;
 
       default:
         return (

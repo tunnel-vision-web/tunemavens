@@ -2046,3 +2046,31 @@ Allows creators and administrators to update or regenerate custom headers via na
    - Integrated in-app interactive **VC & Artist Handbook Modal** accessible directly from the Tours header.
 
 
+
+### 9.44.19 First-Class VC Persona, Creator Career Sponsorship Engine & Authentic System Screenshots
+1. **First-Class Venture Capitalist (`vc` / `investor`) Persona Architecture**:
+   - Built full first-class VC persona integrated across the ecosystem:
+     - **Canonical Role Registry (`apps/portal/src/data/landingPageRegistry.js`)**: Added `vc` with key features, description, and canonical path `/for/vc`.
+     - **Perfect For Sidebar & Landing Directory (`apps/portal/src/components/PerfectForSidebar.jsx` & `PerfectForPageView.jsx`)**: Added Venture Capitalists with dedicated preview card, custom accent color (`#10b981`), and interactive system screenshot zoom lightbox.
+     - **Dedicated VC Landing View (`apps/portal/src/views/landing/role-pages/VcLandingPage.jsx` & `RoleLandingView.jsx`)**: Comprehensive investor-facing value proposition covering tour advances, creator career sponsorship, programmatic Split Cascade recoupment, and real-time fan telemetry.
+     - **Default Active Apps (`apps/portal/src/lib/activatedApps.js`)**: Configured default apps for `vc` and `investor` (`split-cascade`, `intermaven-smart-crm`, `distribution-election`, `catalog-porting`, `epk-builder`, `sync-marketplace`).
+2. **Backend VC Router & Non-Dilutive Sponsorship Architecture (`backend/routes/vc_router.py`)**:
+   - Created dedicated FastAPI router registered under `/api/vc` in `backend/server.py` and `backend/routes/__init__.py`:
+     - `GET /api/vc/stats`: Macro portfolio telemetry ($14.2M capital deployed across 48 corridors, 42 backings, 22.6% target IRR, $9.48M recouped).
+     - `GET /api/vc/services`: Complete catalogue of platform products and services available for 1-click VC facilitation (Global DSP Distribution, EPK Pro Hosting & Analytics, Studio Stem Mastering, SyncMavens Film & TV Representation, Smart CRM Superfan Credits, Live Tour Production Advance, Split Cascade Legal Contract).
+     - `GET /api/vc/creators`: Verified creator directory with live listener velocity, superfan count, seeking services, and funding status.
+     - `POST /api/vc/sponsor-service`: 1-click execution for VCs to pay platform fees and service costs on behalf of artists, creating an automatic first-dollar senior-secured recoupment lien in the Split Cascade ledger.
+     - `POST /api/vc/offers`: Formal term-sheet dispatch with automated Split Cascade lien binding.
+     - `GET /api/vc/recoupment`: Night-by-night and stream-by-stream recoupment waterfall status.
+3. **Frontend VC Dashboard Suite (`apps/portal/src/components/vc/VcDashboardPanel.jsx` & `.css`)**:
+   - Built rich, responsive 3-tab Command Center:
+     - **Portfolio & Yield Overview**: Macro telemetry cards, active underwriting commitments, and Split Cascade recoupment ledgers.
+     - **Creator Career Sponsorship Engine**: Non-dilutive product and service sponsorship cards with 1-click "Sponsor Service Costs" modal, real-time currency conversion, and instant transaction receipts.
+     - **Live Tour Underwriting Vault**: Underwriting vault integrated directly with `/api/tours/vault/opportunities`.
+   - Wired in `App.jsx` under `VC Investment Suite` navigation category with full role-permission guards and route synchronisation (`tab=vc-portfolio`, `tab=vc-sponsorship`, `tab=tours-vault`).
+4. **Authentic System Screenshots Across Platform**:
+   - Resolved headless rendering and navigation tree constraints to capture genuine, high-resolution (1680x1050) screenshots directly from the active live frontend running in Vite and FastAPI:
+     - `apps/portal/src/assets/images/vc_dashboard_actual.png`: Authentic capture of the VC Command Center with live portfolio stats, role badge, and navigation suite.
+     - `apps/portal/src/assets/images/tour_dashboard_actual.png`: Authentic capture of the Tour Underwriting Vault and live metrics.
+   - Replaced placeholder mockups on the Tours landing page (`ToursView.jsx`), the VC Role page (`VcLandingPage.jsx`), and the Perfect For directory (`PerfectForPageView.jsx`).
+   - Integrated clickable zoom lightboxes on the Tours page and Role landing views to allow prospective VCs and artists to inspect full, authentic dashboard interfaces in detail.

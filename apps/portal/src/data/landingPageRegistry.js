@@ -27,4 +27,5 @@ export const CANONICAL_ROLES = [
   { key: 'supervisor', label: 'Music Supervisors', sub: 'Pre-Cleared Sync', href: '/for/supervisor', color: '#f59e0b' },
   { key: 'consumer', label: 'Listeners', sub: 'TuneStream Fan Tipping', href: '/for/consumer', color: '#10b981' },
   { key: 'corporate', label: 'Corporate Brands', sub: 'Audio Sponsorships', href: '/for/corporate', color: '#ef4444' },
+  { key: 'vc', label: 'Venture Capitalists', sub: 'Tour & Career Financing', href: '/for/vc', color: '#10b981' },
 ];

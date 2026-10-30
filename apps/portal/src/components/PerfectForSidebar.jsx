@@ -87,6 +87,7 @@ export const PERFECT_FOR_ROLES = [
   { key: 'supervisor', label: 'Music Supervisors', sub: 'SyncMavens Licensing', href: '/for/supervisor', accent: 'var(--am)' },
   { key: 'consumer', label: 'tunestream', sub: 'Everyday Listeners', href: '/for/consumer', accent: 'var(--gr)' },
   { key: 'corporate', label: 'Corporate', sub: 'Sponsorships & Ads', href: '/for/corporate', accent: '#ef4444' },
+  { key: 'vc', label: 'Venture Capitalists', sub: 'Tour & Career Financing', href: '/for/vc', accent: '#10b981' },
 ];
 
 const LANDING_ROUTE_PREFIXES = [

@@ -42,7 +42,7 @@ import { useRegion } from '../../RegionContext.jsx'
 
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
-import tourDashboardMockup from '../../assets/images/tour_dashboard_mockup.png'
+import tourDashboardActual from '../../assets/images/tour_dashboard_actual.png'
 
 import './ToursView.css'
 import './AppsView.css'
@@ -124,6 +124,7 @@ export default function ToursView({ sessionUser }) {
   });
   const [pitchSubmitting, setPitchSubmitting] = useState(false);
   const [pitchSuccessMessage, setPitchSuccessMessage] = useState(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
   // Currency Formatter Helper
   const formatMoney = (usdVal) => {
@@ -916,21 +917,119 @@ export default function ToursView({ sessionUser }) {
           </div>
         </div>
 
-        {/* Visual Live Tour Dashboard Mockup Preview */}
+        {/* Visual Live Tour Dashboard Actual Screenshot Preview */}
         <div style={{ textAlign: 'center', marginTop: '48px', marginBottom: '40px' }}>
-          <img 
-            src={tourDashboardMockup} 
-            alt="TuneMavens Global Tour Command Center" 
+          <div 
             style={{ 
+              position: 'relative', 
+              display: 'inline-block', 
               maxWidth: '100%', 
-              height: 'auto', 
-              borderRadius: '3px', 
-              border: '1px solid rgba(255,255,255,0.12)',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.8)'
-            }} 
-          />
+              cursor: 'pointer' 
+            }}
+            onClick={() => setPreviewModalOpen(true)}
+            title="Click to zoom actual TuneMavens system screenshot"
+          >
+            <img 
+              src={tourDashboardActual} 
+              alt="Actual TuneMavens Global Tour Command Center" 
+              style={{ 
+                maxWidth: '100%', 
+                height: 'auto', 
+                borderRadius: '3px', 
+                border: '1px solid rgba(255,255,255,0.12)',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+              }} 
+            />
+            <div style={{
+              position: 'absolute',
+              bottom: '16px',
+              right: '16px',
+              background: 'rgba(9, 13, 31, 0.92)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '3px',
+              padding: '8px 14px',
+              fontSize: '12px',
+              color: '#38bdf8',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backdropFilter: 'blur(8px)',
+              pointerEvents: 'none'
+            }}>
+              <RiBarChartFill size={15} /> Actual System Interface • Click to Zoom
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Actual Screenshot Lightbox Zoom Modal */}
+      {previewModalOpen && (
+        <div 
+          onClick={() => setPreviewModalOpen(false)} 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.88)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            style={{
+              position: 'relative',
+              maxWidth: '1500px',
+              width: '100%',
+              maxHeight: '92vh',
+              background: '#090d1f',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '3px',
+              padding: '20px',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.9)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflowY: 'auto'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div>
+                <h3 style={{ color: '#fff', fontSize: '18px', margin: 0, fontWeight: 700 }}>
+                  TuneMavens Global Tour Command Center &amp; VC Suite — Actual System Interface
+                </h3>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  Live 1680x1050 viewport capture of live tour underwriting, Split Cascade recoupment ledgers, and creator sponsorship
+                </span>
+              </div>
+              <button 
+                onClick={() => setPreviewModalOpen(false)} 
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  borderRadius: '3px',
+                  padding: '6px 12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <RiCloseLine size={18} /> Close
+              </button>
+            </div>
+            <img 
+              src={tourDashboardActual} 
+              alt="Actual System Screenshot Zoomed" 
+              style={{ width: '100%', height: 'auto', borderRadius: '3px' }} 
+            />
+          </div>
+        </div>
+      )}
 
       {/* -------------------------------------------------------------
           MODAL 1: VC FAST-TRACK ONBOARDING & LP ACCREDITATION WIZARD

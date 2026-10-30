@@ -24,7 +24,7 @@ import {
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
   RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine,
   RiPriceTag3Fill, RiLayoutMasonryFill, RiMegaphoneFill, RiUserSharedFill, RiTeamFill,
-  RiShieldCheckFill, RiCustomerService2Fill
+  RiShieldCheckFill, RiCustomerService2Fill, RiFundsBoxFill, RiSparklingFill, RiCompass3Fill
 } from 'react-icons/ri'
 
 // Local assets
@@ -147,6 +147,8 @@ import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } f
 import MpesaPosTerminal from './components/demos/MpesaPosTerminal.jsx'
 import DistributionTrackerApp from './components/demos/DistributionTrackerApp.jsx'
 import HostingManagerApp from './components/demos/HostingManagerApp.jsx'
+import VcDashboardPanel from './components/vc/VcDashboardPanel.jsx'
+
 
 // ================= Dashboard Apps View =================
 // ================= Dashboard Apps Sub-Components =================
@@ -763,6 +765,22 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
 // Collapsed sidebar navigation items icon representations & descriptions
 const NAV_ITEM_DESCRIPTIONS = {
+  'vc-portfolio': {
+    title: 'Portfolio & Yield',
+    desc: 'Capital deployment analytics, IRR metrics, active creator investments, and recoupment velocity',
+    category: 'VC Investment Suite'
+  },
+  'vc-sponsorship': {
+    title: 'Career Sponsorship',
+    desc: 'Facilitate costs for creator distribution, EPK hosting, mastering, sync representation, and tour advances',
+    category: 'VC Investment Suite'
+  },
+  'tours-vault': {
+    title: 'Tour Capital Vault',
+    desc: 'Underwrite live international tours with senior-secured Split Cascade recoupment liens',
+    category: 'VC Investment Suite'
+  },
+
   home: {
     title: 'Overview',
     desc: 'Platform analytics, stream counts, revenue summaries, and workspace stats',
@@ -925,6 +943,9 @@ function DashboardView({
   // Compute effective role immediately on first render to prevent any consumer backend redirection
   const effectiveRole = useMemo(() => {
     if (reqRoleParam) return reqRoleParam;
+    if (['vc-portfolio', 'vc-sponsorship', 'tours-vault'].includes(initialTabQuery)) {
+      return 'vc';
+    }
     if (initialTabQuery && !['library', 'tips', 'stream-controls', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
       if (sessionUser?.role === 'consumer') {
         return 'creator';
@@ -1220,6 +1241,8 @@ function DashboardView({
     // Role-based permission guard ensuring users only access authorized apps
     const userRole = activeUser?.role || 'creator';
     const roleAllowed = {
+      vc: ['home', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'sync', 'distribution-tracker', 'epk-builder', 'catalog', 'app-marketplace', 'profile', 'settings', 'support'],
+      investor: ['home', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'sync', 'distribution-tracker', 'epk-builder', 'catalog', 'app-marketplace', 'profile', 'settings', 'support'],
       admin: ['home', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
       corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
@@ -1247,7 +1270,26 @@ function DashboardView({
     }
 
     switch (activeTab) {
+            case 'vc-portfolio':
+      case 'vc-sponsorship':
+      case 'tours-vault':
+        return (
+          <VcDashboardPanel 
+            sessionUser={sessionUser} 
+            initialTab={activeTab === 'tours-vault' ? 'vault' : activeTab === 'vc-sponsorship' ? 'sponsorship' : 'portfolio'}
+            setActiveDashboardTab={setActiveTab}
+          />
+        );
       case 'home':
+        if (userRole === 'vc' || userRole === 'investor') {
+          return (
+            <VcDashboardPanel 
+              sessionUser={sessionUser} 
+              initialTab="portfolio"
+              setActiveDashboardTab={setActiveTab}
+            />
+          );
+        }
         return (
           <DashboardHome 
             sessionUser={sessionUser}
@@ -1504,6 +1546,9 @@ function DashboardView({
       splits: { id: 'splits', label: 'Split Cascade', icon: RiCoinsFill, category: 'Royalty Ledgers' },
       djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
       sync: { id: 'sync', label: 'Sync Marketplace', icon: RiGlobalFill, category: 'Pools & Sync' },
+      'vc-portfolio': { id: 'vc-portfolio', label: 'Portfolio & Yield', icon: RiFundsBoxFill, category: 'VC Investment Suite' },
+      'vc-sponsorship': { id: 'vc-sponsorship', label: 'Career Sponsorship', icon: RiSparklingFill, category: 'VC Investment Suite' },
+      'tours-vault': { id: 'tours-vault', label: 'Tour Capital Vault', icon: RiCompass3Fill, category: 'VC Investment Suite' },
       'label-team': { id: 'label-team', label: 'Roster & Team Seats', icon: RiTeamFill, category: 'Label Administration' },
       escrow: { id: 'escrow', label: 'MyContracts', icon: RiFileTextFill, category: 'Royalty Ledgers' },
       profile: { id: 'profile', label: 'Profile Settings', icon: RiSettings3Fill, category: 'Account' },
@@ -1538,6 +1583,10 @@ function DashboardView({
         break;
       case 'affiliate':
         visibleKeys = ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'support'];
+        break;
+            case 'vc':
+      case 'investor':
+        visibleKeys = ['home', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'sync', 'distribution-tracker', 'app-marketplace', 'profile', 'support'];
         break;
       case 'corporate':
         visibleKeys = ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'support'];
@@ -1594,6 +1643,7 @@ function DashboardView({
         }
       }
       const item = allItems[k];
+      if (!item) return;
       if (!categories[item.category]) {
         categories[item.category] = [];
       }
@@ -3509,6 +3559,10 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
             { label: "Active Rate Tiers", val: "4 Live Tiers", color: "#10b981" }
           ]
         };
+            case 'vc':
+      case 'investor':
+        visibleKeys = ['home', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'sync', 'distribution-tracker', 'app-marketplace', 'profile', 'support'];
+        break;
       case 'corporate':
         return {
           title: "Corporate Brand Advertising Console",

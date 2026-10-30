@@ -17,6 +17,8 @@ export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
   corporate: ['sync-marketplace', 'corporate-ads'],
   affiliate: ['affiliates', 'split-cascade', 'tunemavens-library'],
   consumer: ['tunemavens-library', 'tunemavens-tips'],
+  vc: ['split-cascade', 'sync-marketplace', 'epk-builder', 'catalog-porting'],
+  investor: ['split-cascade', 'sync-marketplace', 'epk-builder', 'catalog-porting'],
   admin: [
     'epk-builder', 'catalog-porting', 'split-cascade', 'publishing-election',
     'distribution-election', 'djpool', 'sync-marketplace', 'escrow-contracts',
