@@ -1961,3 +1961,23 @@ Allows creators and administrators to update or regenerate custom headers via na
 6. **Multi-Viewport Headless Verification**:
    - Verified clean production compilation (`npm run build --prefix apps/portal` succeeded in 872ms with 0 errors).
    - Rendered and captured headless screenshots for all 7 apps and the main pool view, validating authoritative TuneMavens logo rendering, role elevation, and accurate panel component mounting.
+
+### 9.44.16 Single Source of Truth Unification for Smart CRM
+1. **Root-Cause Analysis of Dual CRM Instances**:
+   - Diagnosed two conflicting CRM presentations:
+     1. A legacy popup modal instance in [`App.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/App.jsx) (`activeModalApp` titled "Intermaven Smart CRM") triggered when clicking "Smart CRM" in the dashboard sidebar, which bypassed `activeTab = 'crm'` and prevented sidebar item highlighting.
+     2. A duplicate full-size production studio embedded directly inside the marketing specs view in [`AppsView.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/landing/AppsView.jsx) (`#smart-crm-console`), competing with the in-dashboard application tab.
+2. **Dashboard In-Tab Unification**:
+   - Updated the sidebar click handler in `App.jsx` to eliminate the modal interception and directly invoke `setActiveTab('crm')`, matching all other authoritative dashboard tools.
+   - Updated sidebar navigation styling so "Smart CRM" highlights as `active` whenever `activeTab === 'crm'`.
+   - Updated `CrmPanel` to provide a full-height, responsive container (`minHeight: calc(100vh - 120px)`) housing [`SmartCrmStudioPanel.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/components/SmartCrmStudioPanel.jsx) as the sole comprehensive source of truth.
+3. **Comprehensive Rebranding & Native Decoupling**:
+   - Rebranded `SmartCrmStudioPanel.jsx` header to **TuneMavens Smart CRM Studio** with **TUNEMAVENS CRM CLOUD SYNCED** status badge and subtitle *"Centralized Creator & Label Audience Hub · Multi-Channel Broadcasts & Pipeline"*.
+   - Replaced all legacy `intermaven_crm` storage and endpoint keys with authoritative `tunemavens_crm`.
+   - Removed external `https://intermaven.io` link button from the header action bar.
+4. **Landing Specs Optimization (`AppsView.jsx`)**:
+   - Replaced the duplicate embedded studio on the marketing specs view with an **Audience Intelligence Architecture & Feature Grid** (Omnichannel Broadcasts, Superfan Tiering, Tour Geo-Alerts), aligning with the UX pattern of EPK Builder and Catalogue Machine.
+   - Preserved direct CTA routing to `/dashboard?tab=crm&role=creator` across both top action bar and persistent viewport-sticky bottom bar.
+5. **Compilation & Headless Visual Verification**:
+   - Verified production compilation with `npm run build --prefix apps/portal` (0 errors).
+   - Captured and reviewed headless screenshots for both the dashboard in-tab CRM and the landing specs page, confirming single-source-of-truth routing, clean navigation highlighting, and native TuneMavens branding.

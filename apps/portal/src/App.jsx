@@ -1675,37 +1675,7 @@ function DashboardView({
                           if (['catalog', 'epk-builder'].includes(item.id)) {
                             setCollapsed(true);
                           }
-                          if (item.id === 'crm') {
-                            const activeSub = localStorage.getItem('last_saved_epk_subdomain') || 'ndufo';
-                            try {
-                              const localFans = JSON.parse(localStorage.getItem(`creator_crm_fans_${activeSub}`) || '[]');
-                              fetch(`/api/crm/contacts?creator_username=${activeSub}`)
-                                .then(r => r.json())
-                                .then(d => {
-                                  const remoteContacts = d.contacts || [];
-                                  const merged = [...remoteContacts, ...localFans.map((f, i) => ({
-                                    id: `CRM-FAN-${i+1}`,
-                                    first_name: (f.name || 'Fan').split(' ')[0],
-                                    last_name: (f.name || '').split(' ').slice(1).join(' '),
-                                    email: f.email,
-                                    phone: f.phone || '+1 (555) 019-2834',
-                                    company: activeSub.toUpperCase(),
-                                    tags: ['fan', 'vip'],
-                                    source: 'creator_fan_portal',
-                                    status: 'active'
-                                  }))];
-                                  localStorage.setItem('intermaven_crm', JSON.stringify(merged));
-                                })
-                                .catch(() => {});
-                            } catch (_) {}
-
-                            const targetUrl = getIntermavenUrl('intermaven-smart-crm');
-                            setActiveModalApp({ url: targetUrl, title: 'Intermaven Smart CRM' });
-                          } else if (item.id === 'cms') {
-                            setActiveTab('cms');
-                          } else {
-                            setActiveTab(item.id);
-                          }
+                          setActiveTab(item.id);
                         }} 
                         onMouseEnter={(e) => {
                           if (collapsed) {
@@ -1722,7 +1692,7 @@ function DashboardView({
                           }
                         }}
                         onMouseLeave={() => setHoveredNavItem(null)}
-                        className={`dashboard-nav-item ${activeTab === item.id && !['crm', 'cms'].includes(item.id) ? 'active' : ''}`}
+                        className={`dashboard-nav-item ${activeTab === item.id ? 'active' : ''}`}
                         title={!collapsed ? item.label : undefined}
                       >
                         <Icon size={16} />
@@ -2040,11 +2010,7 @@ function DashboardView({
                     setActiveTab(tab);
                   }} 
                 />
-              ) : activeModalApp.title === 'Intermaven Smart CRM' ? (
-                <SmartCrmStudioPanel
-                  sessionUser={sessionUser}
-                  onClose={() => setActiveModalApp(null)}
-                />
+
               ) : (
                 <iframe 
                   src={activeModalApp.url}
@@ -10062,7 +10028,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
 // ================= Track D: CRM Campaigns Panel =================
 function CrmPanel({ sessionUser }) {
   return (
-    <div className="dashboard-card" style={{ width: '100%', height: 'calc(100vh - 180px)', padding: 0, overflow: 'hidden', background: '#070a13', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px' }}>
+    <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', background: '#04060f', borderRadius: '3px', overflow: 'hidden' }}>
       <SmartCrmStudioPanel sessionUser={sessionUser} />
     </div>
   );

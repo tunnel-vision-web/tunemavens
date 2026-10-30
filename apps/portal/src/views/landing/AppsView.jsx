@@ -22,7 +22,7 @@ import {
 } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
-import SmartCrmStudioPanel from '../../components/SmartCrmStudioPanel.jsx'
+// SmartCrmStudioPanel unified inside DashboardView CrmPanel
 import CatalogueWizard from '../../components/CatalogueWizard.jsx'
 import MpesaPosTerminal from '../../components/demos/MpesaPosTerminal.jsx'
 import SplitCascadeLedgerApp from '../../components/demos/SplitCascadeLedgerApp.jsx'
@@ -409,24 +409,30 @@ export default function AppsView({ sessionUser }) {
             </div>
           </div>
 
-          {/* Embedded Native TuneMavens Smart CRM Studio */}
-          <div id="smart-crm-console" style={{ marginTop: '36px', marginBottom: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#10b981', display: 'block', marginBottom: '4px' }}>
-                  TuneMavens Native Studio
-                </span>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: 0, fontFamily: 'Sansation, sans-serif' }}>
-                  Smart CRM Contacts &amp; Broadcast Console
-                </h3>
-              </div>
-              <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-                Live CRM Console
-              </span>
+          {/* Smart CRM Architecture & Capabilities Showcase */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '32px', marginBottom: '36px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ color: '#10b981', marginBottom: '12px' }}><RiMailSendFill size={26} /></div>
+              <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Omnichannel Fan Broadcasts</h4>
+              <p style={{ fontSize: '13px', color: 'var(--mu)', margin: 0, lineHeight: 1.6 }}>
+                Reach your superfans directly through verified WhatsApp business messages, SMS alert gateways, and branded HTML newsletters with 99.4% deliverability.
+              </p>
             </div>
-            <div style={{ background: '#070a13', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '3px', overflow: 'hidden' }}>
-              <SmartCrmStudioPanel sessionUser={sessionUser} />
+
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ color: 'var(--cyan)', marginBottom: '12px' }}><RiGroupFill size={26} /></div>
+              <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Superfan Tiering &amp; Segmentation</h4>
+              <p style={{ fontSize: '13px', color: 'var(--mu)', margin: 0, lineHeight: 1.6 }}>
+                Automatically rank listeners by merchandise orders, streaming tips, and tour ticket purchases to unlock exclusive listening sessions and VIP passes.
+              </p>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ color: '#a855f7', marginBottom: '12px' }}><RiCompass3Fill size={26} /></div>
+              <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Tour Geo-Alerts &amp; Direct Booking</h4>
+              <p style={{ fontSize: '13px', color: 'var(--mu)', margin: 0, lineHeight: 1.6 }}>
+                Send location-targeted pre-sale codes directly to fans in upcoming tour cities while managing talent buyer and booking agent inquiries in one pipeline.
+              </p>
             </div>
           </div>
 

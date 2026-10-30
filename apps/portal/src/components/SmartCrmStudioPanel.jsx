@@ -109,7 +109,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
   const [fanPlaylists, setFanPlaylists] = useState([])
 
   // Helper to standardize contact records
-  const normalizeContact = (c, fallbackOrigin = 'Intermaven Central CRM') => {
+  const normalizeContact = (c, fallbackOrigin = 'TuneMavens Central CRM') => {
     const rawMethod = (c.preferred_comm_method || c.channel || 'email').toLowerCase()
     const rawName = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'VIP Lead'
     const parts = rawName.split(' ')
@@ -172,7 +172,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
             if (Array.isArray(dataExt.contacts)) {
               dataExt.contacts.forEach(contact => {
                 if (!contact.creator_username || contact.creator_username === selectedSubdomain) {
-                  const norm = normalizeContact(contact, 'Intermaven Central CRM')
+                  const norm = normalizeContact(contact, 'TuneMavens Central CRM')
                   if (norm.email && !seenEmails.has(norm.email.toLowerCase())) {
                     seenEmails.add(norm.email.toLowerCase())
                     combined.push(norm)
@@ -390,7 +390,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `intermaven_crm_${selectedSubdomain}_${Date.now()}.csv`
+    a.download = `tunemavens_crm_${selectedSubdomain}_${Date.now()}.csv`
     a.click()
   }
 
@@ -432,7 +432,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, letterSpacing: '-0.02em', color: '#fff' }}>
-                Intermaven Smart CRM Studio
+                TuneMavens Smart CRM Studio
               </h2>
               <span style={{
                 fontSize: '0.68rem',
@@ -447,11 +447,11 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
                 gap: '4px'
               }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isCentralSynced ? '#10b981' : '#f59e0b', boxShadow: isCentralSynced ? '0 0 6px #10b981' : 'none' }} />
-                {isCentralSynced ? 'CENTRAL INTERMAVEN CRM SYNCED' : 'OFFLINE BUFFER'}
+                {isCentralSynced ? 'TUNEMAVENS CRM CLOUD SYNCED' : 'OFFLINE BUFFER'}
               </span>
             </div>
             <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '2px' }}>
-              Centralized Agency CRM Hub (Port 8001) · Accessible by Content Owners & System Admin
+              Centralized Creator & Label Audience Hub · Multi-Channel Broadcasts & Pipeline
             </div>
           </div>
         </div>
@@ -533,26 +533,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
             <RiAddLine size={16} /> Add Fan / Lead
           </button>
 
-          <a
-            href="https://intermaven.io"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: '#94a3b8',
-              padding: '7px 10px',
-              borderRadius: '4px',
-              fontSize: '0.78rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              textDecoration: 'none'
-            }}
-            title="Open Full Intermaven Cloud Portal"
-          >
-            <RiExternalLinkLine size={14} /> Cloud
-          </a>
+
 
           <button
             type="button"
@@ -799,7 +780,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
             {/* Contacts Table */}
             {loading ? (
               <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
-                Connecting to Intermaven Smart CRM engine...
+                Connecting to TuneMavens Smart CRM engine...
               </div>
             ) : filteredContacts.length === 0 ? (
               <div style={{ padding: '60px', textAlign: 'center', color: '#64748b', background: '#0a0f1d', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -1046,7 +1027,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                  Will dispatch via Intermaven Network Gateway · Est. cost: 0 TM Credits
+                  Will dispatch via TuneMavens Network Gateway · Est. cost: 0 TM Credits
                 </span>
                 <button
                   type="button"
@@ -1272,7 +1253,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
                   type="email"
                   value={newLead.email}
                   onChange={e => setNewLead({ ...newLead, email: e.target.value })}
-                  placeholder="fan@intermaven.io"
+                  placeholder="fan@tunemavens.com"
                   style={{ width: '100%', padding: '9px 12px', background: '#04060d', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '0.84rem' }}
                 />
               </div>
