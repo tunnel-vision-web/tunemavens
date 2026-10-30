@@ -36,7 +36,7 @@ export default function LoginView({ onLogin }) {
       }));
     } finally {
       setGoogleLoading(false);
-      navigate('/dashboard');
+      const targetTab = sessionStorage.getItem('preferred_dashboard_tab'); navigate(targetTab ? `/dashboard?tab=${targetTab}` : '/dashboard');
     }
   };
 
@@ -104,7 +104,7 @@ export default function LoginView({ onLogin }) {
 
       if (loggedInUser) {
         onLogin(reconcileUserApps(loggedInUser));
-        navigate('/dashboard');
+        const targetTab = sessionStorage.getItem('preferred_dashboard_tab'); navigate(targetTab ? `/dashboard?tab=${targetTab}` : '/dashboard');
       }
     } finally {
       setSubmitting(false);

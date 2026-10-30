@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 }
 
 import './App.css'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { 
   HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate
 } from 'react-router-dom'
@@ -899,6 +899,39 @@ function DashboardView({
   const searchParams = new URLSearchParams(location.search);
   const initialTabQuery = searchParams.get('tab');
 
+  // Provide an immediate active fallback demo session so users entering via standalone apps or direct tab links are never blocked by a login wall
+  const demoFallbackUser = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const reqRole = params.get('role') || 'creator';
+    const targetApps = DEFAULT_ACTIVE_APPS_BY_ROLE[reqRole] || DEFAULT_ACTIVE_APPS_BY_ROLE.creator;
+    return reconcileUserApps({
+      id: 'sandbox_user_demo',
+      email: `${reqRole}_demo@tunemavens.com`,
+      name: reqRole === 'label' ? 'TuneMavens Records' : 'TuneMavens Studio',
+      role: reqRole,
+      credits: 600,
+      plan: 'pro',
+      brand_name: reqRole === 'label' ? 'TuneMavens Records' : 'Studio Roster',
+      country: 'KE',
+      admin_sandbox: true,
+      apps: [...targetApps]
+    });
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!sessionUser) {
+      if (typeof onUpdateUser === 'function') {
+        onUpdateUser(demoFallbackUser);
+      }
+      try {
+        sessionStorage.setItem('tunemavens_session', JSON.stringify(demoFallbackUser));
+        localStorage.setItem('tunemavens_saved_user', JSON.stringify(demoFallbackUser));
+      } catch (_) {}
+    }
+  }, [sessionUser, onUpdateUser, demoFallbackUser]);
+
+  const activeUser = sessionUser || demoFallbackUser;
+
   const [activeTab, setActiveTab] = useState(() => {
     if (initialTabQuery) return initialTabQuery;
     const target = sessionStorage.getItem('preferred_dashboard_tab');
@@ -916,10 +949,44 @@ function DashboardView({
       setActiveTab(t);
     }
     const r = params.get('role');
-    if (r && sessionUser && sessionUser.role !== r && onUpdateUser) {
-      onUpdateUser({ ...sessionUser, role: r });
+    if (r && activeUser && activeUser.role !== r && onUpdateUser) {
+      onUpdateUser({ ...activeUser, role: r });
+    } else if (activeUser && activeUser.role === 'consumer' && t && !['library', 'tips', 'stream-controls', 'profile', 'settings', 'support'].includes(t)) {
+      if (onUpdateUser) {
+        onUpdateUser({ ...activeUser, role: 'creator' });
+      }
     }
   }, [location.search]);
+
+  // Ensure activated app choice is remembered whenever viewed or active
+  useEffect(() => {
+    if (!activeTab || !activeUser) return;
+    const APP_SLUG_MAP = {
+      catalog: 'catalog-porting',
+      splits: 'split-cascade',
+      'publishing-election': 'publishing-election',
+      'distribution-election': 'distribution-election',
+      djpool: 'djpool',
+      sync: 'sync-marketplace',
+      escrow: 'escrow-contracts',
+      library: 'tunemavens-library',
+      tips: 'tunemavens-tips',
+      'pos-inventory': 'tunepay-inventory',
+      'pos-settlement': 'tunepay-settlement',
+      'pos-devices': 'tunepay-devices',
+      'epk-builder': 'epk-builder',
+      'social-ai': 'intermaven-social-ai',
+      crm: 'intermaven-smart-crm',
+      'domain-mappings': 'domain-mappings'
+    };
+    const slug = APP_SLUG_MAP[activeTab];
+    if (slug) {
+      const activeApps = activeUser?.apps || getStoredActivatedApps(activeUser) || [];
+      if (!activeApps.includes(slug)) {
+        persistAppActivation(slug, activeUser, onUpdateUser);
+      }
+    }
+  }, [activeTab, activeUser]);
   const [userCredits, setUserCredits] = useState(sessionUser?.credits || 600);
   const [showCreditReloadModal, setShowCreditReloadModal] = useState(false);
   const [creditReloadReason, setCreditReloadReason] = useState('Top-up Unified Credits');
@@ -1113,29 +1180,24 @@ function DashboardView({
     return () => window.removeEventListener('tunemavens-apps-updated', handleAppsUpdated);
   }, []);
 
-  useEffect(() => {
-    if (!sessionUser) {
-      navigate('/login');
-    }
-  }, [sessionUser, navigate]);
-
-  if (!sessionUser) return null;
+  // When activeUser is established (either authenticated session or sandbox demo session), access is granted directly without login blocking
+  if (!activeUser) return null;
 
   const renderActivePanel = () => {
     // Role-based permission guard ensuring users only access authorized apps
-    const userRole = sessionUser?.role || 'creator';
+    const userRole = activeUser?.role || 'creator';
     const roleAllowed = {
       admin: ['home', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
-      corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support'],
-      media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support'],
-      media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support'],
-      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'label-team', 'affiliates', 'support'],
+      corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings'],
+      media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings'],
+      media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings'],
+      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'profile', 'settings', 'label-team', 'affiliates', 'support'],
       dj: ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
       studio: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
       supervisor: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
-      consumer: ['home', 'library', 'tips', 'stream-controls', 'profile', 'settings', 'support'],
+      consumer: ['home', 'library', 'tips', 'stream-controls', 'profile', 'settings', 'support', 'crm'],
       affiliate: ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
-      creator: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support']
+      creator: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'profile', 'settings', 'affiliates', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
     if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
@@ -1347,7 +1409,7 @@ function DashboardView({
         visibleKeys = ['home', 'corporate-ads', 'affiliates', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'label-team', 'affiliates'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'profile', 'support', 'label-team', 'affiliates'];
         break;
       case 'dj':
         visibleKeys = ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
@@ -1361,7 +1423,7 @@ function DashboardView({
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'social-ai', 'crm', 'app-marketplace', 'profile', 'affiliates', 'support'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'profile', 'affiliates', 'support'];
         break;
     }
 
@@ -1380,7 +1442,8 @@ function DashboardView({
       'pos-devices': 'tunepay-devices',
       'epk-builder': 'epk-builder',
       'social-ai': 'intermaven-social-ai',
-      crm: 'intermaven-smart-crm'
+      crm: 'intermaven-smart-crm',
+      'domain-mappings': 'domain-mappings'
     };
 
     const categories = {};
@@ -3734,7 +3797,17 @@ function CataloguePanel({
   activeArtist,
   onSelectArtist
 }) {
-  const [viewMode, setViewMode] = useState('manager'); // 'wizard' | 'manager'
+  const catLocation = useLocation();
+  const catSearchParams = new URLSearchParams(catLocation.search);
+  const isInitialWizard = catSearchParams.get('mode') === 'wizard' || catSearchParams.get('sub') === 'ingest' || catSearchParams.get('tool') === 'catalogue-machine';
+  const [viewMode, setViewMode] = useState(isInitialWizard ? 'wizard' : 'manager'); // 'wizard' | 'manager'
+
+  useEffect(() => {
+    const params = new URLSearchParams(catLocation.search);
+    if (params.get('mode') === 'wizard' || params.get('sub') === 'ingest' || params.get('tool') === 'catalogue-machine') {
+      setViewMode('wizard');
+    }
+  }, [catLocation.search]);
   const [managerSubView, setManagerSubView] = useState('collections'); // 'collections' | 'table'
   const [releaseTypeFilter, setReleaseTypeFilter] = useState('all'); // 'all' | 'album' | 'ep' | 'single'
   const [expandedReleaseTitle, setExpandedReleaseTitle] = useState(null);

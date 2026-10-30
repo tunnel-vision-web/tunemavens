@@ -1907,3 +1907,23 @@ Allows creators and administrators to update or regenerate custom headers via na
      - **Distribution Tracker**: Primary action routes to `/dashboard?tab=distribution-election` (or `/register?role=creator`), with secondary link to `/for/creator`.
      - **Hosting & Domain Manager**: Primary action routes to `/dashboard?tab=domain-mappings` (or `/register?role=creator`), with secondary link to `/for`.
    - Verified that all sticky action bars maintain the required 3px border radius and deep midnight background styling (`#090d1f`).
+
+### 9.44.14 Direct In-Dashboard App Launching & Frictionless Sandbox User Onboarding
+1. **Direct In-Dashboard Navigation for All Standalone Apps (`AppsView.jsx`)**:
+   - Replaced anchor scrolling and external links with direct in-dashboard routing for all 7 apps:
+     - **EPK Builder Studio**: Direct link to `/dashboard?tab=epk-builder`.
+     - **Smart CRM & Audience Engine**: Direct link to `/dashboard?tab=crm`.
+     - **Catalogue Machine (Release Ingestion Engine)**: Direct link to `/dashboard?tab=catalog&mode=wizard&role=label`.
+     - **Split Cascade Ledger**: Direct link to `/dashboard?tab=splits`.
+     - **POS Terminal (M-Pesa / Mobile Money / Stripe)**: Direct link to `/dashboard?tab=pos-inventory&role=label`.
+     - **Distribution Tracker**: Direct link to `/dashboard?tab=distribution-election`.
+     - **Hosting & Domain Manager**: Direct link to `/dashboard?tab=domain-mappings`.
+   - On the main apps catalogue grid (`apps-grid-detailed`), each card now features dual actions: a primary **"Open in Dashboard"** button rendered in brand accent to instantly launch the live app, plus a secondary **"View Specs"** button to toggle comprehensive feature/benefit documentation.
+   - On each standalone app overview subview, both the header action group and the persistent viewport-sticky bottom bar now feature direct in-dashboard launch buttons.
+2. **Frictionless Demo/Sandbox Provisioning (`App.jsx`)**:
+   - Replaced the hard redirect to `/login` with an immediate fallback demo user (`demoFallbackUser`) in [`DashboardView`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/App.jsx). Visitors and unauthenticated users entering via standalone app CTAs or direct URLs are no longer blocked by a login wall; they are seamlessly provisioned with a sandbox session matching the target role and admitted directly into the requested app.
+   - Added `APP_SLUG_MAP` reactive auto-activation on tab access: whenever a user navigates to an app tab, the corresponding app slug is automatically persisted to `activeUser.apps` and highlighted in the sidebar navigation.
+   - Added `domain-mappings` to `roleAllowed` for creators and labels, and enabled automatic role elevation if a consumer account accesses creator/label operations.
+3. **Deep Link State Preservation in Catalogue Engine & Auth**:
+   - Updated [`CataloguePanel`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/App.jsx) to dynamically evaluate `mode=wizard`, `sub=ingest`, or `tool=catalogue-machine` query parameters, ensuring clicking **"Open Ingestion Engine"** immediately renders the interactive 4-step `CatalogueWizard` rather than the default catalog table.
+   - Updated [`LoginView.jsx`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/auth/LoginView.jsx) to check `preferred_dashboard_tab` upon authentication so return destinations are preserved.

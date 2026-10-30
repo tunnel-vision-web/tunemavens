@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { 
   RiBarChartFill, 
   RiGlobalFill, 
@@ -44,7 +44,18 @@ import distributeHeroImg from '../../assets/images/distribute_hero.png'
 import './AppsView.css'
 
 export default function AppsView({ sessionUser }) {
-  const [activeApp, setActiveApp] = useState(null); // null, 'epk-builder', 'crm', 'catalogue-machine', 'tracker', 'hosting', 'ledger', 'pos'
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialApp = searchParams.get('app');
+  const [activeApp, setActiveApp] = useState(initialApp || null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const a = params.get('app');
+    if (a) {
+      setActiveApp(a);
+    }
+  }, [location.search]);
   const { country } = useRegion();
 
   const isEastAfrica = ['KE', 'UG', 'TZ'].includes(country);
@@ -61,6 +72,8 @@ export default function AppsView({ sessionUser }) {
       tag: 'Creator Showcase',
       icon: RiLayoutMasonryFill, 
       accent: 'var(--cyan)',
+      dashboardUrl: '/dashboard?tab=epk-builder',
+      actionLabel: 'Launch EPK Studio',
       lead: 'Interactive Electronic Press Kit studio, theme visualizer, bio editor, and standalone web world publisher.',
       paragraphs: [
         'Replace static PDF press kits and fragmented Dropbox links with a dynamic, living web destination built to capture the attention of festival bookers, A&R scouts, and press editors.',
@@ -81,6 +94,8 @@ export default function AppsView({ sessionUser }) {
       tag: 'Audience Intelligence',
       icon: RiGroupFill, 
       accent: '#10b981',
+      dashboardUrl: '/dashboard?tab=crm',
+      actionLabel: 'Open Smart CRM',
       lead: 'Fan relationship management, VIP subscriber lists, direct email messaging, and tour booking conversion.',
       paragraphs: [
         'Reclaim direct ownership of your listener base and liberate your audience relationships from the whims of volatile social media algorithms.',
@@ -101,6 +116,8 @@ export default function AppsView({ sessionUser }) {
       tag: 'Catalog Operations',
       icon: RiDatabase2Fill, 
       accent: '#a855f7',
+      dashboardUrl: '/dashboard?tab=catalog&mode=wizard&role=label',
+      actionLabel: 'Open Ingestion Engine',
       lead: 'Central discography & release management, stem archives, bulk CSV roster ingestion, and metadata synchronization.',
       paragraphs: [
         'Transform catalog chaos into a pristine, production-ready ingestion pipeline engineered to manage and syndicate hundreds of master recordings effortlessly.',
@@ -121,6 +138,8 @@ export default function AppsView({ sessionUser }) {
       tag: 'Royalty Accounting',
       icon: RiStackFill, 
       accent: 'var(--cyan)',
+      dashboardUrl: '/dashboard?tab=splits',
+      actionLabel: 'Open Split Ledger',
       lead: 'Configure collaborator splits, load bulk statement spreadsheets, and automate recoupment accounting down to the cent.',
       paragraphs: [
         'Collaborative music production creates complex payout structures that traditional accounting spreadsheets cannot handle without error and delays.',
@@ -141,6 +160,8 @@ export default function AppsView({ sessionUser }) {
       tag: 'Live Event Commerce',
       icon: RiBankCardFill, 
       accent: '#10b981',
+      dashboardUrl: '/dashboard?tab=pos-inventory&role=label',
+      actionLabel: 'Open POS Terminal',
       lead: `${posShort}: Collect on-site merchant card, contactless, and mobile money payments during tours and concerts.`,
       paragraphs: [
         'Transform any smartphone, tablet, or laptop into a fast, reliable point-of-sale terminal optimized specifically for merchandise booths, venue door admissions, and tour activations.',
@@ -161,6 +182,8 @@ export default function AppsView({ sessionUser }) {
       tag: 'Global Delivery Radar',
       icon: RiBarChartFill, 
       accent: '#f59e0b',
+      dashboardUrl: '/dashboard?tab=distribution-election',
+      actionLabel: 'Open Distribution Tracker',
       lead: 'Monitor real-time ingest status, editorial submission deadlines, and storefront delivery across 150+ DSPs.',
       paragraphs: [
         'Remove the guesswork and uncertainty from your release cycle with an authoritative radar dashboard that tracks every single step of your music delivery pipeline.',
@@ -181,6 +204,8 @@ export default function AppsView({ sessionUser }) {
       tag: 'Cloud Infrastructure',
       icon: RiGlobalFill, 
       accent: '#3b82f6',
+      dashboardUrl: '/dashboard?tab=domain-mappings',
+      actionLabel: 'Open Domain Manager',
       lead: 'Register custom domain names, configure DNS zone settings, and deploy high-performance modular web containers.',
       paragraphs: [
         'Your artist web presence should not be constrained by brittle site builders that impose severe bandwidth caps or crash during viral release traffic spikes.',
@@ -222,11 +247,11 @@ export default function AppsView({ sessionUser }) {
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <Link 
-                  to={sessionUser ? "/dashboard?tab=epk-builder" : "/epk"} 
+                  to="/dashboard?tab=epk-builder" 
                   className="btn-primary" 
                   style={{ padding: '10px 22px', fontSize: '13px' }}
                 >
-                  Launch EPK Studio <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                  Launch EPK Studio in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
                 </Link>
                 <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
                   Creator Hub
@@ -291,11 +316,11 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to={sessionUser ? "/dashboard?tab=epk-builder" : "/epk"} 
+                to="/dashboard?tab=epk-builder" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px' }}
               >
-                Launch EPK Studio <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                Launch EPK Studio in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
                 Creator Hub
@@ -331,22 +356,15 @@ export default function AppsView({ sessionUser }) {
                 <h2 className="subapp-title">Smart CRM &amp; Fan Relationship Engine</h2>
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button 
-                  onClick={() => {
-                    const el = document.getElementById('smart-crm-console');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }} 
-                  className="btn-primary" 
-                  style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981', cursor: 'pointer' }}
-                >
-                  Open Smart CRM <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
-                </button>
                 <Link 
-                  to={sessionUser ? "/dashboard?tab=crm" : "/dashboard?tab=crm&role=creator"} 
-                  className="btn-secondary" 
-                  style={{ padding: '10px 20px', fontSize: '13px' }}
+                  to="/dashboard?tab=crm" 
+                  className="btn-primary" 
+                  style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}
                 >
-                  Dashboard CRM
+                  Open Smart CRM in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </Link>
+                <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
+                  Creator Solutions
                 </Link>
               </div>
             </div>
@@ -422,22 +440,15 @@ export default function AppsView({ sessionUser }) {
               </div>
             </div>
             <div className="cta-actions">
-              <button 
-                onClick={() => {
-                  const el = document.getElementById('smart-crm-console');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }} 
-                className="btn-primary" 
-                style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981', cursor: 'pointer' }}
-              >
-                Open Smart CRM <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
-              </button>
               <Link 
-                to={sessionUser ? "/dashboard?tab=crm" : "/dashboard?tab=crm&role=creator"} 
-                className="btn-secondary" 
-                style={{ padding: '10px 18px', fontSize: '13px' }}
+                to="/dashboard?tab=crm" 
+                className="btn-primary" 
+                style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}
               >
-                Dashboard CRM
+                Open Smart CRM in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+              </Link>
+              <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
+                Creator Solutions
               </Link>
             </div>
           </div>
@@ -470,22 +481,19 @@ export default function AppsView({ sessionUser }) {
                 <h2 className="subapp-title">Catalogue Machine &amp; Release Engine</h2>
               </div>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button 
-                  onClick={() => {
-                    const el = document.getElementById('ingestion-engine');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }} 
-                  className="btn-primary" 
-                  style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7', cursor: 'pointer' }}
-                >
-                  Open Ingestion Engine <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
-                </button>
                 <Link 
-                  to={sessionUser ? "/dashboard?tab=catalog&role=label" : "/dashboard?tab=catalog&role=creator"} 
+                  to="/dashboard?tab=catalog&mode=wizard&role=label" 
+                  className="btn-primary" 
+                  style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7' }}
+                >
+                  Open Ingestion Engine in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </Link>
+                <Link 
+                  to="/dashboard?tab=catalog&role=label" 
                   className="btn-secondary" 
                   style={{ padding: '10px 20px', fontSize: '13px' }}
                 >
-                  Dashboard Catalog
+                  Open Catalog Manager
                 </Link>
               </div>
             </div>
@@ -572,22 +580,19 @@ export default function AppsView({ sessionUser }) {
               </div>
             </div>
             <div className="cta-actions">
-              <button 
-                onClick={() => {
-                  const el = document.getElementById('ingestion-engine');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }} 
-                className="btn-primary" 
-                style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7', cursor: 'pointer' }}
-              >
-                Open Ingestion Engine <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
-              </button>
               <Link 
-                to={sessionUser ? "/dashboard?tab=catalog&role=label" : "/for/label"} 
+                to="/dashboard?tab=catalog&mode=wizard&role=label" 
+                className="btn-primary" 
+                style={{ padding: '10px 22px', fontSize: '13px', background: '#a855f7' }}
+              >
+                Open Ingestion Engine in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+              </Link>
+              <Link 
+                to="/dashboard?tab=catalog&role=label" 
                 className="btn-secondary" 
                 style={{ padding: '10px 18px', fontSize: '13px' }}
               >
-                Label Ingest Specs
+                Open Catalog Manager
               </Link>
             </div>
           </div>
@@ -614,8 +619,20 @@ export default function AppsView({ sessionUser }) {
           </div>
 
           <div className="subapp-overview-card" style={{ borderColor: 'rgba(16, 185, 129, 0.25)' }}>
-            <span className="subapp-tag" style={{ color: '#10b981' }}>Live Venue &amp; Tour Commerce</span>
-            <h2 className="subapp-title">{posName}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
+              <div>
+                <span className="subapp-tag" style={{ color: '#10b981' }}>Live Venue &amp; Tour Commerce</span>
+                <h2 className="subapp-title">{posName}</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <Link to="/dashboard?tab=pos-inventory&role=label" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}>
+                  Open POS Terminal in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </Link>
+                <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
+                  Venue Specs
+                </Link>
+              </div>
+            </div>
             
             <p className="subapp-p">
               Live concerts, festival appearances, and pop-up merch booths are vital revenue drivers for modern touring acts. However, live sales frequently suffer from patchy cellular connections, physical cash handling security risks, and tedious end-of-night reconciliations.
@@ -651,11 +668,11 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to={sessionUser ? "/dashboard?tab=pos-inventory" : "/register?role=label"} 
+                to="/dashboard?tab=pos-inventory&role=label" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px', background: '#10b981' }}
               >
-                Deploy Venue POS <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                Open POS Terminal in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
                 Venue Specs
@@ -685,8 +702,20 @@ export default function AppsView({ sessionUser }) {
           </div>
 
           <div className="subapp-overview-card" style={{ borderColor: 'rgba(34, 211, 238, 0.25)' }}>
-            <span className="subapp-tag" style={{ color: 'var(--cyan)' }}>Financial Engineering &amp; Royalties</span>
-            <h2 className="subapp-title">Split Cascade Ledger &amp; Recoupment Engine</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
+              <div>
+                <span className="subapp-tag" style={{ color: 'var(--cyan)' }}>Financial Engineering &amp; Royalties</span>
+                <h2 className="subapp-title">Split Cascade Ledger &amp; Recoupment Engine</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <Link to="/dashboard?tab=splits" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px' }}>
+                  Open Split Ledger in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </Link>
+                <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
+                  Split Sheet Specs
+                </Link>
+              </div>
+            </div>
             
             <p className="subapp-p">
               Collaborative music releases involve intricate agreements between primary artists, featured vocalists, beat producers, recording studios, and executive investors. Tracking these obligations across varying DSP statement formats and currencies is prone to human error and accounting disputes.
@@ -722,14 +751,14 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to={sessionUser ? "/dashboard?tab=splits" : "/register?role=creator"} 
+                to="/dashboard?tab=splits" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px' }}
               >
-                Configure Release Splits <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                Open Split Ledger in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
-                Accounting Tour
+                Split Sheet Specs
               </Link>
             </div>
           </div>
@@ -756,8 +785,20 @@ export default function AppsView({ sessionUser }) {
           </div>
 
           <div className="subapp-overview-card" style={{ borderColor: 'rgba(245, 158, 11, 0.25)' }}>
-            <span className="subapp-tag" style={{ color: '#f59e0b' }}>Real-Time Ingestion Radar</span>
-            <h2 className="subapp-title">Distribution Tracker &amp; Store Delivery Radar</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
+              <div>
+                <span className="subapp-tag" style={{ color: '#f59e0b' }}>Real-Time Ingestion Radar</span>
+                <h2 className="subapp-title">Distribution Tracker &amp; Store Delivery Radar</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <Link to="/dashboard?tab=distribution-election" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#f59e0b', color: '#090d1f' }}>
+                  Open Distribution Tracker in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </Link>
+                <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
+                  Distribution Specs
+                </Link>
+              </div>
+            </div>
             
             <p className="subapp-p">
               Releasing music to over 150 digital service providers (DSPs) requires absolute transparency. Without real-time status reporting, artists and managers are left wondering if audio files have cleared DSP QC checks or if editorial pitch deadlines have passed.
@@ -793,14 +834,14 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to={sessionUser ? "/dashboard?tab=distribution-election" : "/register?role=creator"} 
+                to="/dashboard?tab=distribution-election" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px', background: '#f59e0b', color: '#090d1f' }}
               >
-                Track Your Next Release <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                Open Distribution Tracker in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
-                Release Strategy
+                Distribution Specs
               </Link>
             </div>
           </div>
@@ -827,8 +868,20 @@ export default function AppsView({ sessionUser }) {
           </div>
 
           <div className="subapp-overview-card" style={{ borderColor: 'rgba(59, 130, 246, 0.25)' }}>
-            <span className="subapp-tag" style={{ color: '#3b82f6' }}>High-Availability Cloud Infrastructure</span>
-            <h2 className="subapp-title">Hosting &amp; Custom Domain Manager</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
+              <div>
+                <span className="subapp-tag" style={{ color: '#3b82f6' }}>High-Availability Cloud Infrastructure</span>
+                <h2 className="subapp-title">Hosting &amp; Custom Domain Manager</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <Link to="/dashboard?tab=domain-mappings" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', background: '#3b82f6' }}>
+                  Open Domain Manager in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                </Link>
+                <Link to="/for" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }}>
+                  Explore Solutions
+                </Link>
+              </div>
+            </div>
             
             <p className="subapp-p">
               Artists and record labels require fast, resilient web hosting infrastructure capable of serving high-resolution artwork, audio streams, and handling viral traffic surges without crashing or incurring punitive bandwidth surcharges.
@@ -864,11 +917,11 @@ export default function AppsView({ sessionUser }) {
             </div>
             <div className="cta-actions">
               <Link 
-                to={sessionUser ? "/dashboard?tab=domain-mappings" : "/register?role=creator"} 
+                to="/dashboard?tab=domain-mappings" 
                 className="btn-primary" 
                 style={{ padding: '10px 22px', fontSize: '13px', background: '#3b82f6' }}
               >
-                Configure Custom Domains <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
+                Open Domain Manager in Dashboard <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
               </Link>
               <Link to="/for" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px' }}>
                 Explore Solutions
@@ -935,27 +988,42 @@ export default function AppsView({ sessionUser }) {
                   <p key={pIdx} className="app-desc-p">{p}</p>
                 ))}
 
-                <div className="app-card-footer">
-                  <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-                    Live Standalone App
-                  </span>
-                  <button
-                    onClick={() => {
-                      setActiveApp(a.id);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
+                <div className="app-card-footer" style={{ flexDirection: 'column', gap: '12px', alignItems: 'stretch' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
+                      Live Dashboard App
+                    </span>
+                    <button
+                      onClick={() => {
+                        setActiveApp(a.id);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="btn-secondary"
+                      style={{ padding: '6px 14px', fontSize: '12px' }}
+                    >
+                      View Specs
+                    </button>
+                  </div>
+                  <Link
+                    to={a.dashboardUrl}
                     className="btn-primary"
                     style={{ 
-                      padding: '8px 18px', 
-                      fontSize: '12.5px', 
+                      width: '100%',
+                      textAlign: 'center',
+                      padding: '10px 18px', 
+                      fontSize: '13px', 
                       background: accent === '#f59e0b' ? '#f59e0b' : (accent === 'var(--cyan)' ? '#22d3ee' : accent),
                       color: accent === '#f59e0b' || accent === 'var(--cyan)' || accent === '#22d3ee' ? '#090d1f' : '#ffffff',
-                      fontWeight: 700
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
                     }}
                   >
-                    Open Details &amp; Demo <RiArrowRightLine size={14} style={{ marginLeft: '4px' }} />
-                  </button>
+                    Open in Dashboard <RiArrowRightLine size={14} />
+                  </Link>
                 </div>
               </div>
             );
