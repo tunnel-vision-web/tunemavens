@@ -2011,3 +2011,38 @@ Allows creators and administrators to update or regenerate custom headers via na
    - Persistent viewport-sticky CTA action bar ensuring effortless booking and investment actions across mobile and desktop.
    - Strict adherence to TuneMavens design language: 3px border radius (`border-radius: 3px`), midnight `#090d1f` background, purple (`#8b5cf6`), cyan (`#00f0ff`), emerald (`#10b981`), and amber (`#f59e0b`) accents.
 
+### 9.44.18 Dual-Audience Segmentation, VC Onboarding Architecture & Underwriting Carousel
+1. **Clear Audience Segmentation Architecture**:
+   - Engineered prominent dual-track audience segmentation at the apex of the Tours page:
+     - **Track 1 (Artists, Bands & Managers)**: Focused on 6-phase cross-border incubation, PR rollout, non-dilutive advances, booking agency festival networks, and creative masterclasses.
+     - **Track 2 (Venture Capitalists, Angel Syndicates & LPs)**: Focused on alternative live music assets, data-underwritten tour advances, real fan telemetry data rooms, and senior-secured first-dollar recoupment via the Split Cascade Ledger.
+2. **VC Fast-Track Onboarding & Accreditation Wizard**:
+   - Designed and built a 4-step institutional onboarding flow:
+     - *Step 1 (LP Entity Profile)*: Entity classification (Venture Capital Fund, Accredited Angel, Family Office, Music Syndicate, Corporate Sponsor).
+     - *Step 2 (Accreditation Verification)*: Attestation under SEC Rule 506(c), Qualified Purchaser, or international equivalent.
+     - *Step 3 (Allocation Mandate)*: Check size range ($5k to $500k+) and preferred geographic corridors (Pan-African Highway, Western Europe & UK, North American Circuit, East Asia).
+     - *Step 4 (Recoupment Routing)*: Split Cascade Smart Contract wallet address, M-Pesa business till, or SWIFT/Wire account.
+   - On completion, assigns **Tier-1 Accredited LP** badge, unlocks full due-diligence data rooms, and persists investor status locally and in the database.
+3. **Interactive Underwriting Opportunities Carousel with Side Arrows**:
+   - Transformed the static deals view into an interactive card carousel with prominent floating left (`<`) and right (`>`) side navigation arrows, slide counters ("Opportunity 1 of 5"), and dot indicators.
+   - Displays real-time syndicated opportunities:
+     - *Ndufo & The Modular Collective* (Afro-Electronic, Nairobi → Europe).
+     - *Aisha Mwangi Live Residency* (Pan-African Soul, Nairobi → Kigali → Lagos → Accra → Johannesburg).
+     - *Kip & The Mavens US Festival Circuit* (Indie Afro-Rock, SXSW, Chicago, NY, Toronto, Seattle).
+     - *Sauti Ya Sahara European Arena Support* (Tuareg Rock / Desert Blues).
+     - *The Rift Valley Sessions Japan & Korea Showcase* (Afro-House Ensemble).
+   - Each card features route stop chips, real-time progress bars with dynamic currency localization (KSh/USD), target IRR, pre-sale demand index, telemetry summaries, and direct triggers for Telemetry Data Rooms and Capital Commitment.
+4. **Backend REST API Suite (`backend/routes/tours_router.py`)**:
+   - Registered under `/api/tours` in FastAPI backend (`server.py`):
+     - `GET /api/tours/vault/opportunities`: Returns active underwriting opportunities with automated Mongo seeding.
+     - `GET /api/tours/vault/opportunities/{opp_id}`: Delivers detailed telemetry data room (monthly streams, CRM waitlists, itinerary stops, and waterfall priority).
+     - `POST /api/tours/investors/onboard`: Registers and accreditates VC investors, storing profiles in `db.tour_investors`.
+     - `POST /api/tours/vault/commit`: Processes investor capital allocations, increments opportunity funding in real-time, logs transactions to `db.tour_commitments`, and returns allocation receipts.
+     - `POST /api/tours/pitches`: Processes artist tour pitches into `db.tour_pitches`.
+     - `GET /api/tours/stats`: Aggregates platform deployment statistics.
+5. **Comprehensive Help & Documentation Suite**:
+   - Authored [`docs/TOUR_VENTURE_CAPITAL_GUIDE.md`](file:///c:/BOCM/Apps/tunemavens/docs/TOUR_VENTURE_CAPITAL_GUIDE.md): Deep-dive guide covering the Tour VC thesis, LP accreditation, underwriting telemetry signals, Split Cascade waterfall diagrams, and investor FAQ.
+   - Authored [`docs/ARTIST_TOUR_INCUBATION_GUIDE.md`](file:///c:/BOCM/Apps/tunemavens/docs/ARTIST_TOUR_INCUBATION_GUIDE.md): Practical guide covering 6-phase tour incubation, masterclasses, and door/merch POS integration.
+   - Integrated in-app interactive **VC & Artist Handbook Modal** accessible directly from the Tours header.
+
+
