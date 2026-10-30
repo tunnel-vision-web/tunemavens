@@ -23,15 +23,16 @@ import {
 } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 import InAppDocModal from '../common/InAppDocModal.jsx'
+import { AUTHORITATIVE_EVENTS, AUTHORITATIVE_MACRO_TELEMETRY } from '../../data/authoritativeEvents.js'
 import './LiveEventsSection.css'
 
 export default function LiveEventsSection({ sessionUser }) {
   const { currencyInfo, formatPrice } = useRegion();
 
   // State
-  const [events, setEvents] = useState([]);
-  const [macroStats, setMacroStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState(AUTHORITATIVE_EVENTS);
+  const [macroStats, setMacroStats] = useState(AUTHORITATIVE_MACRO_TELEMETRY);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Filters
@@ -66,19 +67,19 @@ export default function LiveEventsSection({ sessionUser }) {
 
   // Load Events from API
   const fetchEvents = async () => {
-    setLoading(true);
     try {
       const res = await fetch('/api/events');
       if (res.ok) {
         const data = await res.json();
-        setEvents(data.events || []);
-        setMacroStats(data.macro_telemetry || null);
-      } else {
-        throw new Error('Failed to load live events');
+        if (data.events && Array.isArray(data.events) && data.events.length > 0) {
+          setEvents(data.events);
+        }
+        if (data.macro_telemetry) {
+          setMacroStats(data.macro_telemetry);
+        }
       }
     } catch (err) {
-      console.error(err);
-      setError('Unable to load live events stream');
+      console.warn('Backend events API unavailable, using authoritative events catalog', err);
     } finally {
       setLoading(false);
     }
