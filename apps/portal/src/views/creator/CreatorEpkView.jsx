@@ -1,3 +1,12 @@
+import {
+  getPersonaNavLinks,
+  PodcasterEpisodesSection,
+  PodcasterAdRatesSection,
+  PodcasterDemographicsSection,
+  DjTechRiderSection,
+  ProducerBeatStoreSection,
+  LabelRosterSection
+} from './PersonaEpkSections.jsx';
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import JSZip from 'jszip'
@@ -92,6 +101,31 @@ export function CreatorEpkView(props = {}) {
 
   // Navigation & Sticky Header State
   const [activeTab, setActiveTab] = useState('home')
+  // Persona-Adaptive EPK Intelligence (Artist, Podcaster, DJ, Producer, Label)
+  const [previewPersona, setPreviewPersona] = useState(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get('persona') || sp.get('role') || null;
+    } catch {
+      return null;
+    }
+  });
+
+  const creatorType = (
+    previewPersona ||
+    epkData?.creator_type ||
+    epkData?.persona ||
+    epkData?.role ||
+    (epkData?.isPodcast ? 'podcaster' : null) ||
+    (effectiveUsername?.toLowerCase().startsWith('dj_') || effectiveUsername?.toLowerCase().includes('kalonje') ? 'dj' : null) ||
+    (effectiveUsername?.toLowerCase().includes('pod') || effectiveUsername?.toLowerCase().includes('brief') ? 'podcaster' : null) ||
+    (effectiveUsername?.toLowerCase().includes('producer') || effectiveUsername?.toLowerCase().includes('rivera') ? 'producer' : null) ||
+    (effectiveUsername?.toLowerCase().includes('label') || effectiveUsername?.toLowerCase().includes('records') ? 'label' : null) ||
+    'artist'
+  ).toLowerCase();
+
+  const personaNavLinks = getPersonaNavLinks(creatorType);
+
   const [mediaFilter, setMediaFilter] = useState('all')
   const [selectedTheme, setSelectedTheme] = useState(EPK_THEMES[0])
   const [epkData, setEpkData] = useState(() => {
@@ -2451,6 +2485,55 @@ Direct Management Contact: mgmt@intermaven.io`
       flexDirection: 'column',
       position: 'relative'
     }}>
+      {/* Persona Switcher Preview Banner */}
+      <div style={{
+        background: '#040711',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '8px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '8px',
+        fontSize: '11px',
+        zIndex: 1000
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.6px' }}>
+            EPK Persona:
+          </span>
+          <span style={{ color: effectiveAccent, fontWeight: 900, textTransform: 'uppercase', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '3px' }}>
+            {creatorType}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ color: '#64748b' }}>Switch View:</span>
+          {['artist', 'podcaster', 'dj', 'producer', 'label'].map(p => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => {
+                setPreviewPersona(p);
+                setActiveTab('home');
+              }}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '3px',
+                border: (previewPersona || creatorType) === p ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.1)',
+                background: (previewPersona || creatorType) === p ? effectiveAccent : 'rgba(255,255,255,0.04)',
+                color: (previewPersona || creatorType) === p ? '#060813' : '#cbd5e1',
+                fontSize: '10px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                textTransform: 'capitalize'
+              }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* TuneStream Audio Engines */}
       <audio
         ref={epkAudioRef}
@@ -2831,15 +2914,34 @@ Direct Management Contact: mgmt@intermaven.io`
               })
             ) : (
               <>
-                <button onClick={() => { setActiveTab('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'home' ? effectiveAccent : 'transparent', color: activeTab === 'home' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiHomeFill /> Home
-                </button>
-                <button onClick={() => { setActiveTab('bio'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'bio' ? effectiveAccent : 'transparent', color: activeTab === 'bio' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiUserFill /> Bio
-                </button>
-                <button onClick={() => { setActiveTab('shows'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'shows' ? effectiveAccent : 'transparent', color: activeTab === 'shows' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiCalendarEventFill /> Shows
-                </button>
+                {personaNavLinks.map(link => {
+                  const isSelected = activeTab === link.id || (link.id === 'home' && activeTab === 'home');
+                  const IconComp = link.icon;
+                  return (
+                    <button
+                      key={link.id}
+                      onClick={() => {
+                        setActiveTab(link.id);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{
+                        background: isSelected ? effectiveAccent : 'transparent',
+                        color: isSelected ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                        border: 'none',
+                        padding: '7px 14px',
+                        borderRadius: '3px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.88rem'
+                      }}
+                    >
+                      {IconComp && <IconComp />} {link.label}
+                    </button>
+                  );
+                })}
                 <div style={{ position: 'relative' }} ref={dropdownRef} onMouseDown={(e) => e.stopPropagation()}>
                   <button type="button" onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)} style={{ background: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? effectiveAccent : 'transparent', color: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
                     <RiVideoFill /> Media <RiArrowDownSLine />
@@ -4672,6 +4774,55 @@ Direct Management Contact: mgmt@intermaven.io`
         )}
 
         {/* ================= TAB 9: TM CREDITS TOP-UP PACKAGES ================= */}
+        
+        {/* ── PERSONA SPECIFIC TABS ── */}
+        {/* Podcaster Tabs */}
+        {activeTab === 'episodes' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+            <PodcasterEpisodesSection
+              episodes={epkData?.episodes || []}
+              onPlayEpisode={(ep) => {
+                setActiveTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/api/stream/track/KE-TM1-26-00042' });
+                setIsPlaying(true);
+              }}
+              accentColor={effectiveAccent}
+            />
+          </div>
+        )}
+
+        {activeTab === 'ad-rates' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+            <PodcasterAdRatesSection formatPrice={(v) => `$${v}`} accentColor={effectiveAccent} />
+          </div>
+        )}
+
+        {activeTab === 'demographics' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+            <PodcasterDemographicsSection demographics={epkData?.demographics} accentColor={effectiveAccent} />
+          </div>
+        )}
+
+        {/* DJ Tabs */}
+        {activeTab === 'tech-rider' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+            <DjTechRiderSection accentColor={effectiveAccent} />
+          </div>
+        )}
+
+        {/* Producer Tabs */}
+        {activeTab === 'beat-store' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+            <ProducerBeatStoreSection formatPrice={(v) => `$${v}`} accentColor={effectiveAccent} />
+          </div>
+        )}
+
+        {/* Label Tabs */}
+        {activeTab === 'roster' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+            <LabelRosterSection accentColor={effectiveAccent} />
+          </div>
+        )}
+
         {activeTab === 'pricing' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div style={{ background: isLight ? '#ffffff' : selectedTheme.cardBg, padding: '36px', borderRadius: '3px', border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>

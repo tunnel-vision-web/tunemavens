@@ -506,3 +506,47 @@ def get_corporate_stats():
         ],
         "target_territories": ["East Africa", "West Africa", "South Africa", "UK & European Diaspora", "North America"]
     }
+
+
+@router.get("/next-audio-ad")
+def get_next_audio_ad():
+    """Return the next active Corporate Ad audio interstitial spot for TuneStream Free / 0-credit listeners."""
+    try:
+        campaigns = list(db.corporate_ad_campaigns.find({"status": "active"}))
+        if not campaigns:
+            seed_default_ad_rates_if_empty()
+            campaigns = list(db.corporate_ad_campaigns.find({"status": "active"}))
+        if campaigns:
+            chosen = campaigns[int(datetime.now().timestamp()) % len(campaigns)]
+            cid = str(chosen.get("_id", "demo-camp-1"))
+            try:
+                db.corporate_ad_campaigns.update_one({"_id": chosen["_id"]}, {"$inc": {"impressions_delivered": 1}})
+            except Exception:
+                pass
+            return {
+                "id": cid,
+                "brand_name": chosen.get("brand_name", "Safaricom Neon Beats"),
+                "company_name": chosen.get("company_name", "Safaricom PLC"),
+                "headline": f"Sponsored by {chosen.get('brand_name', 'Safaricom Neon Beats')} — Supporting Always-Free Streaming on TuneStream",
+                "spot_duration_seconds": 15,
+                "audio_url": "/api/stream/track/KE-TM1-24-INTRO",
+                "companion_banner_url": chosen.get("companion_banner_url", "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg"),
+                "destination_url": chosen.get("destination_url", "https://safaricom.co.ke/neon"),
+                "promo_code": chosen.get("promo_code", "SAFARITUNE25"),
+                "tier_name": chosen.get("tier_name", "Corporate Ad Services")
+            }
+    except Exception:
+        pass
+
+    return {
+        "id": "corp-spot-safaricom",
+        "brand_name": "Safaricom Neon Beats",
+        "company_name": "Safaricom PLC",
+        "headline": "Stream Music & Podcasts Anywhere with Safaricom 5G Data Bundles",
+        "spot_duration_seconds": 15,
+        "audio_url": "/api/stream/track/KE-TM1-24-INTRO",
+        "companion_banner_url": "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+        "destination_url": "https://safaricom.co.ke/neon",
+        "promo_code": "SAFARITUNE25",
+        "tier_name": "Corporate Ad Services"
+    }

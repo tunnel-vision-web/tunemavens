@@ -4,7 +4,7 @@ import {
   RiWhatsappFill, RiSmartphoneFill, RiFilter3Line, RiDownloadLine,
   RiAddLine, RiSearchLine, RiCheckLine, RiCloseFill, RiExternalLinkLine,
   RiDiscFill, RiBarChartFill, RiSparklingFill, RiStarFill, RiPhoneFill,
-  RiTimeLine, RiCheckboxCircleFill, RiRefreshLine, RiArrowDownSLine, RiArrowUpSLine
+  RiTimeLine, RiCheckboxCircleFill, RiRefreshLine, RiArrowDownSLine, RiArrowUpSLine, RiLockFill, RiShieldCheckFill, RiCoinsFill
 } from 'react-icons/ri'
 
 const CREATOR_PROFILES = {
@@ -64,15 +64,255 @@ const CREATOR_PROFILES = {
       { id: 201, name: 'Rift Valley Live Energy', fanName: 'Sauti Juma', createdAt: 'SEP 03, 2026', tracks: [{ title: 'Fuzz over Kilimanjaro', artist: 'Kip & The Mavens' }, { title: 'Dusty Highway Anthem', artist: 'Kip & The Mavens' }] },
       { id: 202, name: 'Desert Rock & Fuzz Odyssey', fanName: 'Dylan Murphy', createdAt: 'AUG 28, 2026', tracks: [{ title: 'Electric Acacia', artist: 'Kip & The Mavens' }, { title: 'Rift Valley Sunset (Live)', artist: 'Kip & The Mavens' }] }
     ]
+  },
+  amina: {
+    name: 'Amina Mwangi',
+    genre: 'Afro-Soul & R&B Vocals',
+    contacts: [
+      { id: 'CRM-AM-1', name: 'Fatima Zahra', email: 'fatima.z@casablancavibes.ma', phone: '+212 661 294810', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Fan Club Portal', status: 'Subscribed', interests: ['VIP Front-Row Tickets', 'Limited Tour Vinyl', 'Meet & Greet Passes'], tags: ['fan', 'vip'] },
+      { id: 'CRM-AM-2', name: 'Marcus Sterling', email: 'm.sterling@uktouring.co.uk', phone: '+44 7911 204918', preferred_comm_method: 'email', channel: 'EMAIL', source: 'EPK Tour Booker', status: 'Confirmed', interests: ['London O2 Academy Tour Dates', 'Acoustic Support Act'], tags: ['promoter', 'booking'] },
+      { id: 'CRM-AM-3', name: 'Brenda Wanjiru', email: 'brenda.w@nairobilive.ke', phone: '+254 722 901 823', preferred_comm_method: 'sms', channel: 'SMS', source: 'Fan Club VIP Member', status: 'Subscribed', interests: ['Candlelight Acoustic Showcase', 'Signed Merch Drops'], tags: ['fan', 'vip'] },
+      { id: 'CRM-AM-4', name: "Liam O'Connor", email: 'liam@dublinindie.ie', phone: '+353 87 291 0492', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Radio Music Director', status: 'Subscribed', interests: ['Radio Single Servicing', 'Live On-Air Acoustic Session'], tags: ['press', 'radio'] },
+      { id: 'CRM-AM-5', name: 'Chloe Dupont', email: 'chloe@parissoul.fr', phone: '+33 6 12 34 56 78', preferred_comm_method: 'push', channel: 'PUSH', source: 'Sync Licensing Inquiries', status: 'Proposal Sent', interests: ['Paris Fashion Week Runway Placement', 'Sync Clearance'], tags: ['sync', 'supervisor'] }
+    ],
+    campaigns: [
+      { id: 'CMP-AM-201', name: 'Acoustic Candlelight Tour VIP Priority Codes', channel: 'whatsapp', target: 'VIP Passholders', recipients: 210, openRate: '99.1%', status: 'Sent', date: 'SEP 06, 2026' },
+      { id: 'CMP-AM-202', name: 'Golden Hour EP Vinyl Pre-Order Blast', channel: 'email', target: 'Merch Collectors', recipients: 165, openRate: '72.4%', status: 'Delivered', date: 'AUG 31, 2026' }
+    ],
+    playlists: [
+      { id: 101, name: 'Nairobi Sunset Soul Sessions', fanName: 'Brenda Wanjiru', createdAt: 'SEP 07, 2026', tracks: [{ title: 'Sauti ya Mombasa', artist: 'Amina Mwangi' }, { title: 'Afro-Soul Serenade', artist: 'Amina Mwangi' }] },
+      { id: 102, name: 'Afro-R&B Late Night Driving', fanName: 'Fatima Zahra', createdAt: 'SEP 01, 2026', tracks: [{ title: 'Golden Hour Lullaby', artist: 'Amina Mwangi' }] }
+    ]
+  },
+  kibera: {
+    name: 'Kibera Sound System',
+    genre: 'Street Gengetone & Drill',
+    contacts: [
+      { id: 'CRM-KB-1', name: 'Otieno James', email: 'otieno.j@kiberabeats.ke', phone: '+254 721 889 012', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Matatu Roadshow VIP', status: 'Subscribed', interests: ['Street Arena Pre-Sales', 'Limited Drill Tees', 'VIP Stage Access'], tags: ['fan', 'vip'] },
+      { id: 'CRM-KB-2', name: 'David Mwangi', email: 'david@kampalalive.ug', phone: '+256 772 190 281', preferred_comm_method: 'sms', channel: 'SMS', source: 'East Africa Tour Promoter', status: 'Confirmed', interests: ['Uganda Campus Tour', 'Full Sound Rig'], tags: ['promoter', 'booking'] },
+      { id: 'CRM-KB-3', name: 'Sonia Patel', email: 'sonia@redbullmusic.co.uk', phone: '+44 7890 123456', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Brand Sponsorship Scout', status: 'Proposal Sent', interests: ['Red Bull Street Dance Anthem Sync'], tags: ['sponsor', 'sync'] }
+    ],
+    campaigns: [
+      { id: 'CMP-KB-1', name: 'Matatu Heat 100 Arena Tour Priority Passes', channel: 'whatsapp', target: 'Nairobi Fans', recipients: 520, openRate: '99.4%', status: 'Sent', date: 'SEP 09, 2026' }
+    ],
+    playlists: [
+      { id: 301, name: 'Kibera Street Energy Vol. 1', fanName: 'Otieno James', createdAt: 'SEP 05, 2026', tracks: [{ title: 'Matatu Heat 100', artist: 'Kibera Sound System' }, { title: 'Sheng Cypher Live', artist: 'Kibera Sound System' }] }
+    ]
+  },
+  tamani: {
+    name: 'Tamani Collective',
+    genre: 'East African Nu-Jazz & Highlife',
+    contacts: [
+      { id: 'CRM-TM-1', name: 'Lars Lindqvist', email: 'lars@stockholmjazz.se', phone: '+46 70 123 4567', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Jazz Festival Booker', status: 'Confirmed', interests: ['Stockholm Jazz Mainstage', 'Acoustic Master Rights'], tags: ['booking', 'promoter'] },
+      { id: 'CRM-TM-2', name: 'Wanjira Ndegwa', email: 'wanjira@nairobigroove.ke', phone: '+254 711 987 654', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'VIP Club Pass', status: 'Subscribed', interests: ['Vinyl Boxset Pre-Order', 'VIP Lounge Tickets'], tags: ['fan', 'vip'] }
+    ],
+    campaigns: [
+      { id: 'CMP-TM-1', name: 'Rift Valley Nu-Jazz European Tour Announcement', channel: 'email', target: 'International Jazz Subscribers', recipients: 310, openRate: '78.2%', status: 'Sent', date: 'SEP 08, 2026' }
+    ],
+    playlists: [
+      { id: 401, name: 'Nu-Jazz Sunset Cues', fanName: 'Lars Lindqvist', createdAt: 'SEP 06, 2026', tracks: [{ title: 'Rift Valley Nu-Jazz', artist: 'Tamani Collective' }] }
+    ]
+  },
+  afrotech: {
+    name: 'AfroTech Disruption',
+    genre: 'Tech, VC & Startup Podcast',
+    contacts: [
+      { id: 'CRM-AT-1', name: 'Dr. Michael Chen', email: 'm.chen@sequoia-af.com', phone: '+1 (415) 892-0199', preferred_comm_method: 'email', channel: 'EMAIL', source: 'VIP Podcast Subscriber', status: 'Subscribed', interests: ['Angel Syndicate Pre-Access', 'Sovereign Wealth Briefings', 'Live Forum Seats'], tags: ['investor', 'vip'] },
+      { id: 'CRM-AT-2', name: 'Amina Bello', email: 'amina@lagosinnovates.ng', phone: '+234 803 129 4810', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Summit Panelist Lead', status: 'Confirmed', interests: ['Lagos Tech Week Live Stage', 'Podcast Co-Sponsorship'], tags: ['sponsor', 'booking'] },
+      { id: 'CRM-AT-3', name: 'Karanja Thuo', email: 'karanja@siliconrift.ke', phone: '+254 722 401 928', preferred_comm_method: 'sms', channel: 'SMS', source: 'Premium Subscriber List', status: 'Subscribed', interests: ['Private Deal Flow Telegram Link', 'Quarterly VC Deck Analysis'], tags: ['vip', 'fan'] },
+      { id: 'CRM-AT-4', name: 'Sophie Martin', email: 's.martin@ebrd.org', phone: '+33 1 42 68 55 00', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Corporate Media Desk', status: 'Subscribed', interests: ['East Africa Impact Reports', 'Audio Sponsorship Flights'], tags: ['sponsor'] }
+    ],
+    campaigns: [
+      { id: 'CMP-AT-1', name: 'Season 4 VIP Syndicate Roundtable Invitations', channel: 'email', target: 'VCs & Angel LPs', recipients: 480, openRate: '84.6%', status: 'Sent', date: 'SEP 08, 2026' },
+      { id: 'CMP-AT-2', name: 'Africa Tech Fest Live Recording VIP Seats', channel: 'whatsapp', target: 'Founder Superfans', recipients: 320, openRate: '96.2%', status: 'Sent', date: 'SEP 02, 2026' }
+    ],
+    playlists: [
+      { id: 501, name: 'Sovereign Tech Deep Dives', fanName: 'Dr. Michael Chen', createdAt: 'SEP 07, 2026', tracks: [{ title: 'Ep 42: The Sovereign Wealth of African Music', artist: 'AfroTech Disruption' }, { title: 'Ep 43: Split Cascade vs Major Labels', artist: 'AfroTech Disruption' }] }
+    ]
+  },
+  nairobi_beats: {
+    name: 'Nairobi Beats Weekly',
+    genre: 'Culture, Hip-Hop & Gengetone Podcast',
+    contacts: [
+      { id: 'CRM-NB-1', name: 'Brian Omondi', email: 'brian@nairobibeats.ke', phone: '+254 713 555 789', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Weekly Broadcast VIP', status: 'Subscribed', interests: ['Studio Live Audience Pass', 'Limited Gengetone Merch', 'Artist Q&A'], tags: ['fan', 'vip'] },
+      { id: 'CRM-NB-2', name: 'Faith Waweru', email: 'faith@capitalfm.co.ke', phone: '+254 722 819 034', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Radio Syndication Desk', status: 'Subscribed', interests: ['Weekly Audio Feed Syndication', 'On-Air Host Interviews'], tags: ['radio', 'press'] }
+    ],
+    campaigns: [
+      { id: 'CMP-NB-1', name: 'Live Recording Lounge & Producer Battles', channel: 'whatsapp', target: 'Hip-Hop VIPs', recipients: 290, openRate: '97.4%', status: 'Sent', date: 'SEP 07, 2026' }
+    ],
+    playlists: [
+      { id: 601, name: 'Gengetone Drill Essentials', fanName: 'Brian Omondi', createdAt: 'SEP 06, 2026', tracks: [{ title: 'Ep 78: Gengetone 2.0 & The New Drill Masters', artist: 'Nairobi Beats Weekly' }] }
+    ]
+  },
+  creative_brief: {
+    name: 'The African Creative Brief',
+    genre: 'Film, Media & Sync Audio Hub',
+    contacts: [
+      { id: 'CRM-CB-1', name: 'Nathalie Mercier', email: 'n.mercier@canalplus.fr', phone: '+33 6 89 20 19 44', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Sync Licensing Inquiries', status: 'Subscribed', interests: ['Pan-African Film Cue Sheets', 'Master Rights Pre-Clearance'], tags: ['sync', 'supervisor'] },
+      { id: 'CRM-CB-2', name: 'Emeka Okafor', email: 'emeka@nollywoodsound.ng', phone: '+234 802 341 5567', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Director Network', status: 'Confirmed', interests: ['Original Score Commissioning', 'Podcast Sync Showcase'], tags: ['supervisor', 'vip'] }
+    ],
+    campaigns: [
+      { id: 'CMP-CB-1', name: 'Hollywood Music Supervisors East Africa Summit', channel: 'email', target: 'Film & Media Executives', recipients: 195, openRate: '79.1%', status: 'Sent', date: 'SEP 05, 2026' }
+    ],
+    playlists: [
+      { id: 701, name: 'Film Cue Showcase', fanName: 'Nathalie Mercier', createdAt: 'SEP 04, 2026', tracks: [{ title: 'Ep 12: Hollywood Music Supervisors in East Africa', artist: 'The African Creative Brief' }] }
+    ]
+  },
+  swahili_stories: {
+    name: 'Swahili Stories & Soundscapes',
+    genre: 'Cultural Audio Stories & Oral History',
+    contacts: [
+      { id: 'CRM-SS-1', name: 'Zainab Binti Said', email: 'zainab@zanzibarculture.org', phone: '+255 777 419 203', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Heritage Society', status: 'Subscribed', interests: ['Oral History Archive Pass', 'Lossless Binaural Recordings'], tags: ['fan', 'vip'] },
+      { id: 'CRM-SS-2', name: 'Prof. David Robinson', email: 'd.robinson@soas.ac.uk', phone: '+44 20 7898 4000', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Academic Archival Partner', status: 'Subscribed', interests: ['East African Ethnomusicology', 'Audio Exhibition Rights'], tags: ['education'] }
+    ],
+    campaigns: [
+      { id: 'CMP-SS-1', name: 'Lamu Archipelago Binaural Soundscape Release', channel: 'whatsapp', target: 'Cultural Members', recipients: 240, openRate: '98.0%', status: 'Sent', date: 'SEP 04, 2026' }
+    ],
+    playlists: [
+      { id: 801, name: 'Oral Folklore Cues', fanName: 'Zainab Binti Said', createdAt: 'SEP 03, 2026', tracks: [{ title: 'Ep 09: Lamu Dhow Chants & Oral Folklore', artist: 'Swahili Stories & Soundscapes' }] }
+    ]
+  },
+  dj_kalonje: {
+    name: 'DJ Kalonje (Cyberwave Live)',
+    genre: 'Street Anthem & Arena Club DJ',
+    contacts: [
+      { id: 'CRM-DK-1', name: 'Kiprono Cheruiyot', email: 'kip@eldoretarena.ke', phone: '+254 720 918 273', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Stadium Tour Booker', status: 'Confirmed', interests: ['Headline Arena Sound System', 'Lossless DJ Stems'], tags: ['promoter', 'booking'] },
+      { id: 'CRM-DK-2', name: 'Stella Mwende', email: 'stella@nairobiparties.com', phone: '+254 711 234 567', preferred_comm_method: 'sms', channel: 'SMS', source: 'Street VIP Fan Club', status: 'Subscribed', interests: ['VIP DJ Booth Passes', 'Exclusive Mixtape Drops'], tags: ['fan', 'vip'] },
+      { id: 'CRM-DK-3', name: 'DJ Moises', email: 'moises@luandafest.ao', phone: '+244 923 456 789', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Pan-African DJ Pool', status: 'Subscribed', interests: ['Afro-Club Transitions', 'Direct Track Unlock Codes'], tags: ['dj', 'vip'] }
+    ],
+    campaigns: [
+      { id: 'CMP-DK-1', name: 'Cyberwave Street Mixtape Vol. 4 Lossless VIP Drop', channel: 'whatsapp', target: 'Superfans & Club Heads', recipients: 890, openRate: '99.5%', status: 'Sent', date: 'SEP 09, 2026' },
+      { id: 'CMP-DK-2', name: 'Nairobi Neon Arena Sound System Presale', channel: 'sms', target: 'Arena Attendees', recipients: 640, openRate: '96.8%', status: 'Sent', date: 'SEP 04, 2026' }
+    ],
+    playlists: [
+      { id: 901, name: 'Cyberwave Street Anthems', fanName: 'Kiprono Cheruiyot', createdAt: 'SEP 08, 2026', tracks: [{ title: 'Cyberwave Street Mixtape Vol. 4', artist: 'DJ Kalonje' }, { title: 'Nairobi Neon Live Set', artist: 'DJ Kalonje' }] }
+    ]
+  },
+  dj_dlite: {
+    name: 'DJ D-Lite (Amapiano Coast)',
+    genre: 'Amapiano & Coastal Afro-House',
+    contacts: [
+      { id: 'CRM-DL-1', name: 'Juma Mbarak', email: 'juma@dianibeachclub.ke', phone: '+254 722 718 290', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'Beach Club General Manager', status: 'Confirmed', interests: ['Sunset Residency Season Contract', 'Lossless Crate Feed'], tags: ['booking', 'promoter'] },
+      { id: 'CRM-DL-2', name: 'Laura Schmidt', email: 'laura@zanzibarsessions.de', phone: '+49 170 345 6789', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Festival Curator', status: 'Subscribed', interests: ['Zanzibar Full Moon VIP Passes', 'Amapiano Stems'], tags: ['fan', 'vip'] }
+    ],
+    campaigns: [
+      { id: 'CMP-DL-1', name: 'Coastal Sunsets Live Mix (Diani Edition) Unlock', channel: 'whatsapp', target: 'Coastal VIPs', recipients: 410, openRate: '98.7%', status: 'Sent', date: 'SEP 08, 2026' }
+    ],
+    playlists: [
+      { id: 1001, name: 'Diani Beach Sunset Crate', fanName: 'Juma Mbarak', createdAt: 'SEP 07, 2026', tracks: [{ title: 'Coastal Sunsets Live Mix (Diani Edition)', artist: 'DJ D-Lite' }] }
+    ]
+  },
+  dj_sola: {
+    name: 'DJ Sola (Global Afro-Tech)',
+    genre: 'Deep Afro-Tech & Electronic',
+    contacts: [
+      { id: 'CRM-DS-1', name: 'Klaus Webber', email: 'klaus@watergate-berlin.de', phone: '+49 30 1234 5678', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Berlin Club Talent Buyer', status: 'Confirmed', interests: ['Watergate Residency Dates', 'B2B Set Clearances'], tags: ['booking', 'promoter'] },
+      { id: 'CRM-DS-2', name: 'Amara Diop', email: 'amara@fabriclondon.com', phone: '+44 20 7739 2200', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'London Club Booker', status: 'Confirmed', interests: ['Fabric Live Room 1 Slot', 'Unreleased Afro-Tech Stems'], tags: ['booking', 'promoter'] }
+    ],
+    campaigns: [
+      { id: 'CMP-DS-1', name: 'London Fabric & Berlin Watergate Tour Announcement', channel: 'email', target: 'European Electronic Curators', recipients: 380, openRate: '82.4%', status: 'Sent', date: 'SEP 06, 2026' }
+    ],
+    playlists: [
+      { id: 1101, name: 'Transatlantic Afro-Tech Crate', fanName: 'Klaus Webber', createdAt: 'SEP 05, 2026', tracks: [{ title: 'Afro-Tech Transatlantic Session', artist: 'DJ Sola' }] }
+    ]
+  },
+  dj_queen_chiku: {
+    name: 'DJ Queen Chiku',
+    genre: 'Afrobeats, Gengetone & Dancehall',
+    contacts: [
+      { id: 'CRM-QC-1', name: 'Mercy Kimani', email: 'mercy@uon-students.ke', phone: '+254 714 892 011', preferred_comm_method: 'whatsapp', channel: 'WHATSAPP', source: 'University Campus Tour Head', status: 'Confirmed', interests: ['Campus Flame Arena Pre-Sale', 'VIP Student Meet & Greet'], tags: ['booking', 'fan'] },
+      { id: 'CRM-QC-2', name: 'Kelvin Mutua', email: 'kelvin@safcomlive.ke', phone: '+254 722 345 612', preferred_comm_method: 'sms', channel: 'SMS', source: 'Corporate Youth Tour Sponsor', status: 'Proposal Sent', interests: ['National Youth Battle Headline Slot', 'Live Stream Sponsorship'], tags: ['sponsor', 'booking'] }
+    ],
+    campaigns: [
+      { id: 'CMP-QC-1', name: 'Campus Flame National University Tour Passes', channel: 'whatsapp', target: 'Student VIPs', recipients: 720, openRate: '99.2%', status: 'Sent', date: 'SEP 07, 2026' }
+    ],
+    playlists: [
+      { id: 1201, name: 'Campus Flame Anthems', fanName: 'Mercy Kimani', createdAt: 'SEP 06, 2026', tracks: [{ title: 'Campus Flame Live Mixtape', artist: 'DJ Queen Chiku' }] }
+    ]
   }
+
 }
 
-export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
+export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTab }) {
+  const isVc = sessionUser?.role === 'vc' || sessionUser?.role === 'investor';
+  const [activeVcContracts, setActiveVcContracts] = useState(() => {
+    try {
+      const raw = localStorage.getItem('tunemavens_vc_contracts');
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    if (!isVc) return;
+    const fetchAgreements = async () => {
+      try {
+        const res = await fetch('/api/vc/agreements');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.agreements)) {
+            setActiveVcContracts(data.agreements);
+            localStorage.setItem('tunemavens_vc_contracts', JSON.stringify(data.agreements));
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch VC agreements:', err);
+      }
+    };
+    fetchAgreements();
+
+    const handleContractSigned = (e) => {
+      const c = e?.detail;
+      if (c) {
+        setActiveVcContracts(prev => {
+          const next = [c, ...prev.filter(x => x.contract_id !== c.contract_id)];
+          localStorage.setItem('tunemavens_vc_contracts', JSON.stringify(next));
+          return next;
+        });
+      }
+    };
+    window.addEventListener('tunemavens:vc-agreement-signed', handleContractSigned);
+    window.addEventListener('storage', fetchAgreements);
+    return () => {
+      window.removeEventListener('tunemavens:vc-agreement-signed', handleContractSigned);
+      window.removeEventListener('storage', fetchAgreements);
+    };
+  }, [isVc]);
+
+  const mapContractToKey = (c) => {
+    const id = (c.creator_id || '').toLowerCase();
+    const name = (c.creator_name || '').toLowerCase();
+    if (id.includes('ndufo') || name.includes('ndufo')) return 'ndufo';
+    if (id.includes('amina') || name.includes('amina')) return 'amina';
+    if (id.includes('kibera') || name.includes('kibera')) return 'kibera';
+    if (id.includes('tamani') || name.includes('tamani')) return 'tamani';
+    if (id.includes('afrotech') || name.includes('afrotech')) return 'afrotech';
+    if (id.includes('nairobi_beats') || name.includes('nairobi beats')) return 'nairobi_beats';
+    if (id.includes('creative_brief') || name.includes('creative brief')) return 'creative_brief';
+    if (id.includes('swahili_stories') || name.includes('swahili stories')) return 'swahili_stories';
+    if (id.includes('kalonje') || name.includes('kalonje')) return 'dj_kalonje';
+    if (id.includes('dlite') || name.includes('d-lite')) return 'dj_dlite';
+    if (id.includes('sola') || name.includes('sola')) return 'dj_sola';
+    if (id.includes('chiku') || name.includes('chiku')) return 'dj_queen_chiku';
+    return id.replace(/[^a-z0-9]/gi, '_') || name.replace(/[^a-z0-9]/gi, '_');
+  };
+
+  const contractedKeys = isVc ? activeVcContracts.map(mapContractToKey) : Object.keys(CREATOR_PROFILES);
+  const availableCreatorKeys = isVc
+    ? Object.keys(CREATOR_PROFILES).filter(k => contractedKeys.includes(k))
+    : Object.keys(CREATOR_PROFILES);
+
   const [activeTab, setActiveTab] = useState('contacts') // 'contacts' | 'broadcasts' | 'playlists' | 'pipeline'
   const [selectedSubdomain, setSelectedSubdomain] = useState(() => {
     return localStorage.getItem('last_saved_epk_subdomain') || 'ndufo'
   })
   const [statsMinimized, setStatsMinimized] = useState(false)
+  useEffect(() => {
+    if (isVc && availableCreatorKeys.length > 0 && !availableCreatorKeys.includes(selectedSubdomain)) {
+      setSelectedSubdomain(availableCreatorKeys[0]);
+    }
+  }, [isVc, availableCreatorKeys, selectedSubdomain]);
   const [contacts, setContacts] = useState([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
@@ -394,6 +634,116 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
     a.click()
   }
 
+  // Institutional Access Control Guard for VCs: Only contracted creators are accessible
+  if (isVc && activeVcContracts.length === 0) {
+    return (
+      <div style={{ padding: '40px 20px', maxWidth: '1000px', margin: '40px auto', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%)',
+          border: '1px solid rgba(0, 240, 255, 0.3)',
+          borderRadius: '12px',
+          padding: '44px 32px',
+          textAlign: 'center',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
+        }}>
+          <div style={{
+            width: '68px',
+            height: '68px',
+            borderRadius: '50%',
+            background: 'rgba(0, 240, 255, 0.1)',
+            border: '1px solid rgba(0, 240, 255, 0.4)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#00f0ff',
+            marginBottom: '20px'
+          }}>
+            <RiLockFill size={34} />
+          </div>
+
+          <div style={{
+            display: 'inline-block',
+            background: 'rgba(0, 240, 255, 0.12)',
+            border: '1px solid rgba(0, 240, 255, 0.3)',
+            color: '#00f0ff',
+            padding: '4px 14px',
+            borderRadius: '20px',
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            marginBottom: '16px'
+          }}>
+            Confidential LP Superfan Ledger
+          </div>
+
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 900, margin: '0 0 14px', color: '#fff', letterSpacing: '-0.02em' }}>
+            Smart CRM Audience Intelligence Locked
+          </h2>
+
+          <p style={{ color: '#94a3b8', fontSize: '0.94rem', maxWidth: '660px', margin: '0 auto 28px', lineHeight: 1.6 }}>
+            Under TuneMavens institutional governance protocols and creator Non-Disclosure Agreements, audience databases, WhatsApp/SMS broadcast engines, and CRM fan pipelines are strictly partitioned. VCs and Syndicate LPs can only access audience telemetry and fan intelligence for creators with an executed Tri-Party Underwriting Agreement on file.
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px',
+            maxWidth: '820px',
+            margin: '0 auto 32px',
+            textAlign: 'left'
+          }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ color: '#00f0ff', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
+                Tri-Party Data Ring-Fencing
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                Fan contact data and pre-sale booking lists remain encrypted and inaccessible until an online underwriting facility is executed.
+              </div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
+                Zero Credits Charged
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                VCs and Investor Syndicate LPs are permanently exempt from platform credit fees across all CRM tools and audience analytics.
+              </div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ color: '#a78bfa', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
+                Direct Tour Geo-Targeting
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                Upon executing an agreement, instantly access geo-segmented superfan lists to de-risk tour stops and accelerate ticket velocity.
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof onNavigateTab === 'function') onNavigateTab('vc-discover');
+              else window.dispatchEvent(new CustomEvent('tunemavens:navigate-tab', { detail: { tab: 'vc-discover' } }));
+            }}
+            style={{
+              background: 'linear-gradient(135deg, #00f0ff 0%, #0284c7 100%)',
+              border: 'none',
+              color: '#000',
+              padding: '12px 28px',
+              borderRadius: '6px',
+              fontWeight: 800,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(0, 240, 255, 0.4)'
+            }}
+          >
+            Discover Creators &amp; Catalog to Underwrite &rarr;
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       width: '100%',
@@ -404,6 +754,43 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
       color: '#fff',
       fontFamily: 'Inter, system-ui, sans-serif'
     }}>
+      {/* Institutional Clearance Active Banner for VCs */}
+      {isVc && activeVcContracts.length > 0 && (
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.08)',
+          borderBottom: '1px solid rgba(16, 185, 129, 0.3)',
+          padding: '10px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <RiShieldCheckFill size={18} color="#10b981" />
+            <div>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#10b981', marginRight: '8px' }}>
+                INSTITUTIONAL CRM ACCESS CLEARANCE ACTIVE:
+              </span>
+              <span style={{ fontSize: '0.76rem', color: '#cbd5e1' }}>
+                Audience intelligence restricted strictly to {activeVcContracts.length} contracted creator(s): <strong style={{ color: '#fff' }}>{activeVcContracts.map(c => c.creator_name).join(', ')}</strong> under executed Tri-Party NDA.
+              </span>
+            </div>
+          </div>
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.15)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            color: '#10b981',
+            padding: '3px 10px',
+            borderRadius: '4px',
+            fontSize: '0.72rem',
+            fontWeight: 800
+          }}>
+            VIP LP: ZERO CREDITS CHARGED
+          </div>
+        </div>
+      )}
+
       {/* Top Header Bar */}
       <div style={{
         padding: '16px 24px',
@@ -487,9 +874,11 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose }) {
               onChange={e => setSelectedSubdomain(e.target.value)}
               style={{ background: 'none', border: 'none', color: '#00f0ff', fontWeight: 800, fontSize: '0.82rem', outline: 'none', cursor: 'pointer' }}
             >
-              <option value="ndufo" style={{ background: '#090d1a', color: '#fff' }}>Ndufo (Official)</option>
-              <option value="aisha" style={{ background: '#090d1a', color: '#fff' }}>Aisha Mwangi</option>
-              <option value="kip" style={{ background: '#090d1a', color: '#fff' }}>Kip & The Mavens</option>
+              {availableCreatorKeys.map(k => (
+                <option key={k} value={k} style={{ background: '#090d1a', color: '#fff' }}>
+                  {CREATOR_PROFILES[k]?.name || k}
+                </option>
+              ))}
             </select>
           </div>
 

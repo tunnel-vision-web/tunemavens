@@ -36,6 +36,8 @@ import {
   RiBuilding4Fill,
   RiMicFill,
   RiMegaphoneFill,
+  RiFundsBoxFill,
+  RiRadioFill,
   RiStarFill,
   RiBookOpenLine,
   RiBookOpenFill
@@ -965,9 +967,13 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
               {[
                 { id: 'all', label: 'All Users', count: networkUsers.length },
                 { id: 'creator', label: 'Artists & Creators', count: networkStats.role_breakdown.creator || 0 },
+                { id: 'podcaster', label: 'Podcasters & Shows', count: networkStats.role_breakdown.podcaster || 0 },
+                { id: 'vc', label: 'Tour VCs & Syndicates', count: networkStats.role_breakdown.vc || 0 },
                 { id: 'label', label: 'Record Labels', count: networkStats.role_breakdown.label || 0 },
                 { id: 'supervisor', label: 'Music Supervisors', count: networkStats.role_breakdown.supervisor || 0 },
                 { id: 'corporate', label: 'Brands & Sponsors', count: networkStats.role_breakdown.corporate || 0 },
+                { id: 'dj', label: 'DJs & Curators', count: networkStats.role_breakdown.dj || 0 },
+                { id: 'consumer', label: 'Listeners & Superfans', count: networkStats.role_breakdown.consumer || 0 },
                 { id: 'affiliate', label: 'Sub-Affiliates', count: networkStats.role_breakdown.affiliate || 0 }
               ].map(pill => (
                 <button
@@ -1009,7 +1015,12 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
                       <td>
                         <div className="aff-user-info">
                           <div className="network-user-avatar" style={{ background: `${user.avatar_color || '#22d3ee'}22`, borderColor: user.avatar_color || '#22d3ee' }}>
-                            {user.role === 'label' ? <RiBuilding4Fill color={user.avatar_color} /> : <RiMicFill color={user.avatar_color} />}
+                            {user.role === 'vc' ? <RiFundsBoxFill color={user.avatar_color} /> :
+                             user.role === 'podcaster' ? <RiMicFill color={user.avatar_color} /> :
+                             user.role === 'label' ? <RiBuilding4Fill color={user.avatar_color} /> :
+                             user.role === 'consumer' ? <RiHeadphoneFill color={user.avatar_color} /> :
+                             user.role === 'dj' ? <RiRadioFill color={user.avatar_color} /> :
+                             <RiMicFill color={user.avatar_color} />}
                           </div>
                           <div>
                             <strong>{user.name}</strong>
@@ -1153,9 +1164,14 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
                             className="aff-form-select"
                           >
                             <option value="creator">Recording Artist &amp; Producer</option>
+                            <option value="podcaster">Podcaster &amp; Audio Show Host</option>
+                            <option value="vc">Tour Venture Capitalist (VC) &amp; Syndicate</option>
                             <option value="label">Independent Record Label</option>
+                            <option value="dj">DJ &amp; Curated Playlist Curator</option>
                             <option value="supervisor">Music Supervisor / Post House</option>
                             <option value="corporate">Corporate Brand Sponsor</option>
+                            <option value="media_house">Media House &amp; Broadcast Network</option>
+                            <option value="consumer">Listener &amp; Superfan Pass</option>
                             <option value="affiliate">Sub-Affiliate / Campus Scout</option>
                           </select>
                         </div>
@@ -1178,9 +1194,14 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
                         <div>
                           <strong>Recommended Onboarding Reading for this Role (Not Required):</strong>{' '}
                           {onboardForm.role === 'creator' && <span>"The Two Halves of Music Copyright: Master Rights vs. Composition Rights"</span>}
+                          {onboardForm.role === 'podcaster' && <span>"Podcaster Studio Masterclass: Ad Flight Monetization, LUFS Standards & Audio EPK Syndication"</span>}
+                          {onboardForm.role === 'vc' && <span>"Tour Venture Capital & Underwriting: Senior-Secured Tour Debt & 18%-24% IRR Telemetry Playbook"</span>}
                           {onboardForm.role === 'label' && <span>"TuneLedger & Split Cascade: Automated Multi-Currency Royalty Payouts"</span>}
                           {onboardForm.role === 'supervisor' && <span>"Sync Licensing Masterclass: Securing Placements in Film & TV"</span>}
                           {onboardForm.role === 'corporate' && <span>"Corporate Ads & Brand Flight Sponsorships"</span>}
+                          {onboardForm.role === 'media_house' && <span>"Broadcast Network Integration: Synchronized Digital Rights Management"</span>}
+                          {onboardForm.role === 'consumer' && <span>"TuneStream Hi-Fi & VIP Superfan Pass: Lossless Audio & Creator Tipping"</span>}
+                          {onboardForm.role === 'dj' && <span>"DJ Crate Management & Live Mix Cleared Licensing"</span>}
                           {onboardForm.role === 'affiliate' && <span>"The TuneMavens Affiliate Scheme: 3% to 12% Multi-Stream Commissions"</span>}
                           <span className="doc-hint-sub"> · Included as optional reading in their one-click invite URL with zero required gates.</span>
                         </div>
@@ -1208,7 +1229,9 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
                             <option value="Standard Matrix (3% - 12%)">Standard Matrix (3% - 12%)</option>
                             <option value="Partner Label Tier (+1% Bonus)">Partner Label Tier (+1% Bonus)</option>
                             <option value="12% Corporate Ad Placement">12% Corporate Ad Placement</option>
+                            <option value="Tour Vault LP Syndicate (5% flat)">Tour Vault LP Syndicate (5% flat)</option>
                             <option value="Special 10% Onboarding Bonus">Special 10% Onboarding Bonus</option>
+                            <option value="Hi-Fi Pass Referral (12% flat)">Hi-Fi Pass Referral (12% flat)</option>
                           </select>
                         </div>
                       </div>

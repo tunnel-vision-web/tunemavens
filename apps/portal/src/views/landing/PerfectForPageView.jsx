@@ -48,6 +48,19 @@ export default function PerfectForPageView() {
       previewTitle: isSw ? 'Dashibodi ya Studio ya Muundaji & Mgawanyo wa Mapato' : 'Creator Studio Dashboard & Split Sheets'
     },
     {
+      key: 'podcaster',
+      label: isSw ? 'Waundaji wa Podikasti' : 'Podcasters',
+      sub: isSw ? 'Vipindi & Ufadhili wa Matangazo' : 'Shows & Ad Sponsorships',
+      href: '/for/podcaster',
+      logo: ROLE_LOGOS['podcaster'] || ROLE_LOGOS['creator'],
+      accent: '#00f2fe',
+      desc: isSw
+        ? 'Kwa watayarishaji na wenyeji wa podikasti. Chapisha vipindi na sura maalum, pata ufadhili wa matangazo ya ushirika, na dhibiti EPK ya sauti na Split Cascade.'
+        : 'For podcast creators, narrative audio hosts, and media producers. Publish broadcast-mastered episodes, monetize corporate ad flights, host verified EPKs, and split host/producer royalties automatically.',
+      preview: isSw ? creatorDashActualSw : creatorDashActualEn,
+      previewTitle: isSw ? 'Studio ya Podikasti & Usimamizi wa EPK' : 'Podcaster Studio & Ad Monetization Console'
+    },
+    {
       key: 'label',
       label: isSw ? 'Lebo za Rekodi' : 'Record Labels',
       sub: isSw ? 'Usimamizi wa Katalogi' : 'Catalog Management',

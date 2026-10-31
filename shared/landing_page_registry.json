@@ -1,7 +1,11 @@
 [
   {
     "slug": "creator",
-    "aliases": ["for-creators", "for/creator", "for/artist"],
+    "aliases": [
+      "for-creators",
+      "for/creator",
+      "for/artist"
+    ],
     "product": "tunemavens",
     "audience": "Independent Creators, Songwriters & Producers",
     "headline": "Take Command of Your Masters, Splits & Sync Pitching",
@@ -27,7 +31,11 @@
   },
   {
     "slug": "label",
-    "aliases": ["for-labels", "for/label", "for/exec"],
+    "aliases": [
+      "for-labels",
+      "for/label",
+      "for/exec"
+    ],
     "product": "tunemavens",
     "audience": "Independent Record Labels & Imprints",
     "headline": "Automated Waterfall Recoupments & Multi-Artist Roster Management",
@@ -53,7 +61,10 @@
   },
   {
     "slug": "dj",
-    "aliases": ["for-djs", "for/dj"],
+    "aliases": [
+      "for-djs",
+      "for/dj"
+    ],
     "product": "tunemavens",
     "audience": "Club, Radio & Festival DJs",
     "headline": "Lossless Promo Pool Drops & Verified Mixtape Clearances",
@@ -78,7 +89,11 @@
   },
   {
     "slug": "media-house",
-    "aliases": ["for-mediahouses", "for/media-house", "for/media"],
+    "aliases": [
+      "for-mediahouses",
+      "for/media-house",
+      "for/media"
+    ],
     "product": "tunemavens",
     "audience": "Broadcasters, TV Stations & Media Networks",
     "headline": "Broadcast Stems & Direct Sync Licensing Ingestion",
@@ -103,7 +118,10 @@
   },
   {
     "slug": "supervisor",
-    "aliases": ["for-supervisors", "for/supervisor"],
+    "aliases": [
+      "for-supervisors",
+      "for/supervisor"
+    ],
     "product": "syncmavens",
     "audience": "Film, TV & Gaming Music Supervisors",
     "headline": "AI-Assisted One-Stop Sync Licensing from Africa & Diaspora",
@@ -128,7 +146,10 @@
   },
   {
     "slug": "consumer",
-    "aliases": ["for/consumer", "for/listener"],
+    "aliases": [
+      "for/consumer",
+      "for/listener"
+    ],
     "product": "tunestream",
     "audience": "Everyday Listeners & Music Enthusiasts",
     "headline": "Music Streaming Built for Creators — 95% Direct Fan Tipping",
@@ -154,7 +175,10 @@
   },
   {
     "slug": "corporate",
-    "aliases": ["for-corporate", "for/corporate"],
+    "aliases": [
+      "for-corporate",
+      "for/corporate"
+    ],
     "product": "tunemavens",
     "audience": "Brand Marketers, Advertisers & Sponsors",
     "headline": "High-Impact Audio Sponsorships & Targeted Creator Campaigns",
@@ -178,8 +202,72 @@
     "partner_claims_approved": true
   },
   {
+    "slug": "podcaster",
+    "aliases": [
+      "for-podcasters",
+      "for/podcaster",
+      "for/podcasters"
+    ],
+    "product": "tunemavens",
+    "audience": "Podcasters, Talk Show Hosts & Audio Documentarians",
+    "headline": "Monetize Your Audio Show with Corporate Ad Flights & Verified EPKs",
+    "subhead": "Broadcast-grade infrastructure for African and diaspora podcasters: automated -16 LUFS voice mastering, interactive chapter markers, synchronized transcripts, single-source ad rates, and host/producer split cascades.",
+    "proof_points": [
+      "Automated -16 LUFS voice normalization & broadcast-ready audio mastering",
+      "Single-source corporate ad flight sponsorship packages starting at standard rates",
+      "Customizable Podcaster EPKs hosted on verified creator subdomains",
+      "Automated Split Cascade settlements for multi-host and producer teams"
+    ],
+    "primary_cta": {
+      "text": "Start Free Podcaster Hub",
+      "href": "/register?role=podcaster"
+    },
+    "signup_role": "podcaster",
+    "default_currency": "USD",
+    "default_locale": "en-US",
+    "canonical_url": "https://tunemavens.com/for/podcaster",
+    "og_image": "https://tunemavens.com/headers/header_tools.png",
+    "sitemap_flag": true,
+    "subdomain": "podcasters.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
+    "slug": "vc",
+    "aliases": [
+      "for-vc",
+      "for/vc",
+      "for-investors",
+      "for/investor"
+    ],
+    "product": "tunemavens",
+    "audience": "Venture Capitalists, Tour Financiers & Private Equity",
+    "headline": "Underwrite Live Concert Tours & Creator Growth with Real-Time Telemetry",
+    "subhead": "Deploy non-dilutive tour advances and catalog growth capital backed by real-time box office telemetry, senior secured revenue waterfalls, and automated Split Cascade recoups with 0 platform fees.",
+    "proof_points": [
+      "Real-time live telemetry tracking ticket sales, gross box office, and historical retention",
+      "Tri-party legally binding smart contracts between VC, Creator, and TuneMavens",
+      "Split Cascade priority recoupment waterfalls direct to institutional wallets",
+      "Zero platform credit charges or hidden subscription fees for verified capital partners"
+    ],
+    "primary_cta": {
+      "text": "Access Capital Syndicate",
+      "href": "/register?role=vc"
+    },
+    "signup_role": "vc",
+    "default_currency": "USD",
+    "default_locale": "en-US",
+    "canonical_url": "https://tunemavens.com/for/vc",
+    "og_image": "https://tunemavens.com/headers/header_events.png",
+    "sitemap_flag": true,
+    "subdomain": "capital.tunemavens.com",
+    "partner_claims_approved": true
+  },
+  {
     "slug": "who-is-it-for",
-    "aliases": ["for", "who-is-it-for"],
+    "aliases": [
+      "for",
+      "who-is-it-for"
+    ],
     "product": "tunemavens",
     "audience": "Music Industry Ecosystem",
     "headline": "Who is TuneMavens For? Dedicated Infrastructure for Every Industry Seat",

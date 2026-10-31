@@ -727,7 +727,30 @@ export function AffiliateDirectTalentModal({ isOpen, onClose, sessionUser, onSuc
     setTimeout(() => setCopiedInvite(false), 2500);
   };
 
-  const inviteShareMsg = `Hey ${form.name || 'there'}! I’ve reserved your artist/label onboarding on TuneMavens with full distribution & sync clearance benefits pre-activated. Claim your account here: ${successData?.invite_url}`;
+  const getInviteShareMsg = () => {
+    const name = form.name || 'there';
+    const link = successData?.invite_url || '';
+    switch (form.role) {
+      case 'vc':
+        return `Hey ${name}! I’ve reserved your Tour Venture Capitalist & Underwriting LP onboarding on TuneMavens with real audience telemetry and Split Cascade senior recoupment pre-activated. Claim your access here: ${link}`;
+      case 'podcaster':
+        return `Hey ${name}! I’ve reserved your Podcaster Studio onboarding on TuneMavens with corporate audio ad flights, -16 LUFS mastering and Podcaster EPK pre-activated. Claim your account here: ${link}`;
+      case 'consumer':
+        return `Hey ${name}! Claim your TuneStream Hi-Fi lossless streaming pass with direct creator micro-tipping: ${link}`;
+      case 'label':
+        return `Hey ${name}! I’ve reserved your Record Label onboarding on TuneMavens with automated catalog ingestion, split cascade royalty accounting and sync escrow pre-activated: ${link}`;
+      case 'supervisor':
+        return `Hey ${name}! I’ve reserved your Music Supervisor & Studio clearance account on TuneMavens with direct sync brief matching: ${link}`;
+      case 'corporate':
+      case 'media_house':
+        return `Hey ${name}! I’ve reserved your Corporate Brand / Media House sponsorship account on TuneMavens for targeted audio ad flights: ${link}`;
+      case 'dj':
+        return `Hey ${name}! I’ve reserved your DJ Crate & Curated Playlist curation onboarding on TuneMavens: ${link}`;
+      default:
+        return `Hey ${name}! I’ve reserved your artist/creator onboarding on TuneMavens with full distribution & sync clearance benefits pre-activated. Claim your account here: ${link}`;
+    }
+  };
+  const inviteShareMsg = getInviteShareMsg();
 
   return (
     <div className="aff-action-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -737,7 +760,7 @@ export function AffiliateDirectTalentModal({ isOpen, onClose, sessionUser, onSuc
           <div>
             <span className="aff-action-modal-eyebrow">Roster Expansion · 0 Credits</span>
             <h3 className="aff-action-modal-title">
-              <RiUserAddFill color="#22d3ee" /> Directly Onboard Creator, Label, or Partner
+              <RiUserAddFill color="#22d3ee" /> Directly Onboard Creator, Podcaster, VC, or Partner
             </h3>
           </div>
           <button className="aff-action-modal-close" onClick={onClose} aria-label="Close modal">
@@ -871,10 +894,14 @@ export function AffiliateDirectTalentModal({ isOpen, onClose, sessionUser, onSuc
                     className="aff-modal-select"
                   >
                     <option value="creator">Recording Artist &amp; Beat Producer</option>
-                    <option value="label">Independent Record Label</option>
+                    <option value="podcaster">Podcaster &amp; Audio Show Host</option>
+                    <option value="vc">Tour Venture Capitalist (VC) &amp; Syndicate</option>
+                    <option value="label">Independent Record Label &amp; Publisher</option>
                     <option value="dj">DJ &amp; Curated Playlist Curator</option>
                     <option value="supervisor">Music Supervisor &amp; Studio</option>
-                    <option value="corporate">Corporate Brand / Media House</option>
+                    <option value="corporate">Corporate Brand Sponsor &amp; Advertiser</option>
+                    <option value="media_house">Media House &amp; Broadcast Network</option>
+                    <option value="consumer">Listener &amp; Superfan Pass</option>
                     <option value="affiliate">Sub-Affiliate / Campus Partner</option>
                   </select>
                 </div>
@@ -919,7 +946,10 @@ export function AffiliateDirectTalentModal({ isOpen, onClose, sessionUser, onSuc
                   >
                     <option value="Standard Matrix (3% - 12%)">Standard Matrix (3% - 12%)</option>
                     <option value="Priority Sync Placement (10% flat)">Priority Sync Placement (10% flat)</option>
+                    <option value="Corporate Ad Flight (12% flat)">Corporate Ad Flight (12% flat)</option>
+                    <option value="Tour Vault LP Syndicate (5% flat)">Tour Vault LP Syndicate (5% flat)</option>
                     <option value="Label Enterprise Deal (Custom)">Label Enterprise Deal (Custom)</option>
+                    <option value="Hi-Fi Pass Referral (12% flat)">Hi-Fi Pass Referral (12% flat)</option>
                   </select>
                 </div>
               </div>

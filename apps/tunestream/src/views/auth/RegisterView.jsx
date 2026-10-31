@@ -68,6 +68,7 @@ export default function RegisterView({ onLogin, onClose }) {
   const [syncedCount, setSyncedCount] = useState(0);
 
   const [genres, setGenres] = useState(() => safeParseArray(sessionStorage.getItem('signup_genres'), []));
+  const [listeningVibe, setListeningVibe] = useState(() => sessionStorage.getItem('signup_listening_vibe') || 'chill');
   const [followedCreators, setFollowedCreators] = useState(() => safeParseArray(sessionStorage.getItem('signup_followed_creators'), []));
   const [selectedPricing, setSelectedPricing] = useState(() => sessionStorage.getItem('signup_selected_pricing') || 'free');
   const [creativeType, setCreativeType] = useState(() => sessionStorage.getItem('signup_creative_type') || 'Artist');
@@ -297,17 +298,28 @@ export default function RegisterView({ onLogin, onClose }) {
   };
 
   const handleBypassOnboarding = () => {
-    const bypassRoles = ['creator', 'label'];
+    const bypassRoles = ['consumer'];
     setRoles(bypassRoles);
     setName('Alex Rivera');
     setEmail('alex.rivera@tunemavens.com');
     setPassword('sandbox123456');
     
+    const defaultInterests = {
+      genres: ['Afrobeat', 'Amapiano', 'Highlife'],
+      favorite_artists: ['Ndufo', 'Burna Boy', 'Tems'],
+      vibe: 'chill',
+      saved_at: new Date().toISOString()
+    };
+    try {
+      localStorage.setItem('tunestream_user_interests', JSON.stringify(defaultInterests));
+      localStorage.setItem('tunestream_visited', 'true');
+    } catch (e) {}
+
     authApi.register({
       email: 'alex.rivera@tunemavens.com',
       password: 'sandbox123456',
       name: 'Alex Rivera',
-      role: 'creator',
+      role: 'consumer',
       brand_name: 'Alex Rivera Productions',
       country: 'KE',
     }).then(({ user, access_token }) => {
@@ -319,7 +331,7 @@ export default function RegisterView({ onLogin, onClose }) {
       onLogin({
         email: 'alex.rivera@tunemavens.com',
         name: 'Alex Rivera',
-        role: 'creator',
+        role: 'consumer',
         credits: 600,
         plan: 'creator',
         brand_name: 'Alex Rivera Productions',
@@ -472,7 +484,7 @@ export default function RegisterView({ onLogin, onClose }) {
       alert('Please fill out name, email, and password on the Security credentials step.');
       return;
     }
-    const userRole = roles[0] || 'creator';
+    const userRole = roles[0] || 'consumer';
     try {
       const { user, access_token } = await authApi.register({
         email,
@@ -484,7 +496,53 @@ export default function RegisterView({ onLogin, onClose }) {
       });
       tokenStore.set(access_token);
       onLogin(user);
-      alert(`SSO registration successfully complete! Welcome, ${name}!`);
+
+      // Wire Complete Listener Personalization Intelligence directly from onboarding signup
+      const effectiveGenres = (genres && genres.length > 0) ? genres : ['Afrobeat', 'Amapiano', 'Highlife'];
+      const effectiveArtists = (followedCreators && followedCreators.length > 0) ? followedCreators : ['Ndufo', 'Burna Boy', 'Tems'];
+      const effectiveVibe = listeningVibe || 'chill';
+
+      const listenerInterests = {
+        genres: effectiveGenres,
+        favorite_artists: effectiveArtists,
+        vibe: effectiveVibe,
+        saved_at: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem('tunestream_user_interests', JSON.stringify(listenerInterests));
+        localStorage.setItem('tunestream_visited', 'true');
+      } catch (e) {}
+
+      // Persist preferences to backend
+      fetch('/api/stream/onboarding/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user?.email || email,
+          genres: effectiveGenres,
+          favorite_artists: effectiveArtists,
+          vibe: effectiveVibe
+        })
+      }).catch(() => {});
+
+      // Request personalized playlist immediately and dispatch to player
+      fetch(`/api/stream/personalized-playlist?genres=${encodeURIComponent(effectiveGenres.join(','))}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.tracks && data.tracks.length > 0) {
+            window.dispatchEvent(new CustomEvent('tunestreamPlayTrack', {
+              detail: {
+                track: data.tracks[0],
+                queue: data.tracks,
+                contextTitle: data.title || 'Your Personalized Mix'
+              }
+            }));
+          }
+        })
+        .catch(() => {});
+
+      alert(`SSO registration successfully complete! Welcome, ${name}! Your personalized stream is ready.`);
       clearSignupMemory();
       navigate('/dashboard');
     } catch (err) {
@@ -740,9 +798,9 @@ export default function RegisterView({ onLogin, onClose }) {
 
           {currentStepName === 'Genre Prefs' && (
             <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'left' }}>
-              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '10px' }}>Select genres you enjoy listening to (minimum 1):</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                {['Afrobeat', 'Amapiano', 'Hip-Hop', 'R&B', 'Gengetone', 'Bongo Flava', 'Dancehall', 'Afro-Jazz'].map(g => {
+              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '8px' }}>Select genres you love (used to curate your personal lossless stream):</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
+                {['Afrobeat', 'Amapiano', 'Highlife', 'Gengetone', 'Bongo Flava', 'Afro-Jazz', 'Hip-Hop', 'R&B', 'Dancehall', 'Gospel'].map(g => {
                   const isSel = genres.includes(g);
                   return (
                     <div 
@@ -750,9 +808,31 @@ export default function RegisterView({ onLogin, onClose }) {
                       onClick={() => {
                         setGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
                       }}
-                      style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '20px', border: `1px solid ${isSel ? 'var(--cyan)' : 'rgba(255,255,255,0.08)'}`, background: isSel ? 'rgba(34,211,238,0.06)' : 'rgba(255,255,255,0.02)', color: isSel ? 'var(--cyan)' : 'var(--mu)', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                      style={{ padding: '6px 14px', fontSize: '11px', borderRadius: '20px', border: `1px solid ${isSel ? 'var(--cyan)' : 'rgba(255,255,255,0.1)'}`, background: isSel ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.03)', color: isSel ? 'var(--cyan)' : '#cbd5e1', cursor: 'pointer', fontWeight: isSel ? 700 : 500, transition: 'all 0.15s ease' }}
                     >
                       {g} {isSel ? '✓' : '+'}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '8px' }}>Listening Vibe / Mood:</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                {[
+                  { id: 'chill', label: 'Chill & Relax' },
+                  { id: 'workout', label: 'Workout Energy' },
+                  { id: 'drive', label: 'Late Night Driving' },
+                  { id: 'focus', label: 'Deep Focus & Code' },
+                  { id: 'party', label: 'Afro-Club Party' }
+                ].map(v => {
+                  const isSel = (listeningVibe || 'chill') === v.id;
+                  return (
+                    <div
+                      key={v.id}
+                      onClick={() => setListeningVibe(v.id)}
+                      style={{ padding: '5px 12px', fontSize: '10.5px', borderRadius: '3px', border: `1px solid ${isSel ? '#10b981' : 'rgba(255,255,255,0.08)'}`, background: isSel ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.02)', color: isSel ? '#10b981' : '#94a3b8', cursor: 'pointer', fontWeight: isSel ? 700 : 400 }}
+                    >
+                      {isSel ? '● ' : ''}{v.label}
                     </div>
                   );
                 })}
@@ -762,12 +842,12 @@ export default function RegisterView({ onLogin, onClose }) {
 
           {currentStepName === 'Creator Discovery' && (
             <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'left' }}>
-              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '12px' }}>Pick creators to follow (minimum 1 to finish onboarding):</p>
+              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '12px' }}>Follow featured creators to personalize your automated queue:</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                {['Alex Rivera (Producer)', 'Burna Boy (Artist)', 'Tems (Vocalist)', 'Sauti Sol (Band)'].map(c => {
+                {['Ndufo (Afrobeats)', 'Burna Boy (Afro-Fusion)', 'Tems (Alt-R&B)', 'Wizkid (Starboy)', 'Asake (Amapiano)', 'Sauti Sol (Afro-Pop)'].map(c => {
                   const isF = followedCreators.includes(c);
                   return (
-                    <div key={c} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '4px' }}>
+                    <div key={c} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '3px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(34,211,238,0.08)', color: 'var(--cyan)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 'bold' }}>
                           {c.charAt(0)}
@@ -775,9 +855,10 @@ export default function RegisterView({ onLogin, onClose }) {
                         <span style={{ fontSize: '12px', color: '#fff' }}>{c}</span>
                       </div>
                       <button 
+                        type="button"
                         onClick={() => setFollowedCreators(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])}
                         className={`plan-btn ${isF ? 'outline' : ''}`}
-                        style={{ padding: '4px 10px', height: '24px', fontSize: '10px', borderRadius: '4px', cursor: 'pointer' }}
+                        style={{ padding: '4px 10px', height: '24px', fontSize: '10px', borderRadius: '3px', cursor: 'pointer' }}
                       >
                         {isF ? '✓ Following' : '+ Follow'}
                       </button>
@@ -790,50 +871,58 @@ export default function RegisterView({ onLogin, onClose }) {
 
           {currentStepName === 'Device Detection' && (
             <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'left' }}>
-              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '14px' }}>Hardware Device Sync Detection:</p>
+              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '14px' }}>Hardware Lossless Output Sync:</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                <div style={{ padding: '8px 12px', background: 'rgba(6,8,19,0.3)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                  <span style={{ color: 'var(--mu)' }}>Chrome Web Player</span>
-                  <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>🟢 Connected</span>
+                <div style={{ padding: '8px 12px', background: 'rgba(6,8,19,0.3)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                  <span style={{ color: 'var(--mu)' }}>Chrome HiFi Web Player</span>
+                  <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>✓ Connected</span>
                 </div>
-                <div style={{ padding: '8px 12px', background: 'rgba(6,8,19,0.3)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                  <span style={{ color: 'var(--mu)' }}>iOS / Android App</span>
+                <div style={{ padding: '8px 12px', background: 'rgba(6,8,19,0.3)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                  <span style={{ color: 'var(--mu)' }}>DAC / 24-bit Lossless Edge</span>
                   <span style={{ color: scanningDevices ? 'var(--cyan)' : 'var(--orange)', fontWeight: 'bold' }}>
-                    {scanningDevices ? '🔄 Ingesting...' : '🟡 Awaiting sync'}
+                    {scanningDevices ? '● Calibrating...' : '● Auto-Detect Ready'}
                   </span>
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={() => {
                   setScanningDevices(true);
-                  setTimeout(() => setScanningDevices(false), 2000);
+                  setTimeout(() => setScanningDevices(false), 1500);
                 }}
                 className="plan-btn outline"
-                style={{ width: '100%', fontSize: '11px', padding: '8px', cursor: 'pointer' }}
+                style={{ width: '100%', fontSize: '11px', padding: '8px', cursor: 'pointer', borderRadius: '3px' }}
                 disabled={scanningDevices}
               >
-                {scanningDevices ? 'Scanning network...' : 'Scan local network for devices'}
+                {scanningDevices ? 'Checking Audio Output...' : 'Calibrate 24-Bit / 96kHz DAC'}
               </button>
             </div>
           )}
 
           {currentStepName === 'Pricing & Payout' && (
             <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'left' }}>
-              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '12px' }}>Choose your listening plan subscription:</p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '3px', padding: '3px 8px', fontSize: '10px', color: '#10b981', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase' }}>
+                Zero Subscriptions Ever
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '12px' }}>
+                TuneStream operates strictly on a non-expiring credit top-up system. No monthly recurring fees, ever.
+              </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
                 <div 
                   onClick={() => setSelectedPricing('free')}
-                  style={{ padding: '12px', borderRadius: '4px', border: `1px solid ${selectedPricing === 'free' ? 'var(--cyan)' : 'rgba(255,255,255,0.05)'}`, background: selectedPricing === 'free' ? 'rgba(34,211,238,0.04)' : 'rgba(255,255,255,0.01)', cursor: 'pointer', textAlign: 'center' }}
+                  style={{ padding: '12px', borderRadius: '3px', border: `1px solid ${selectedPricing === 'free' ? 'var(--cyan)' : 'rgba(255,255,255,0.05)'}`, background: selectedPricing === 'free' ? 'rgba(34,211,238,0.06)' : 'rgba(255,255,255,0.01)', cursor: 'pointer', textAlign: 'center' }}
                 >
-                  <h4 style={{ fontSize: '12px', color: '#fff', margin: '0 0 2px' }}>Free Listener</h4>
-                  <p style={{ fontSize: '9px', color: 'var(--mu)', margin: 0 }}>150 free credits</p>
+                  <h4 style={{ fontSize: '12px', color: '#fff', margin: '0 0 2px' }}>Starter Listener</h4>
+                  <p style={{ fontSize: '10px', color: 'var(--cyan)', fontWeight: 700, margin: '0 0 4px' }}>150 Free Signup Credits</p>
+                  <p style={{ fontSize: '9px', color: 'var(--mu)', margin: 0 }}>Stream FLAC &amp; tip creators</p>
                 </div>
                 <div 
-                  onClick={() => setSelectedPricing('pro')}
-                  style={{ padding: '12px', borderRadius: '4px', border: `1px solid ${selectedPricing === 'pro' ? 'var(--cyan)' : 'rgba(255,255,255,0.05)'}`, background: selectedPricing === 'pro' ? 'rgba(34,211,238,0.04)' : 'rgba(255,255,255,0.01)', cursor: 'pointer', textAlign: 'center' }}
+                  onClick={() => setSelectedPricing('topup')}
+                  style={{ padding: '12px', borderRadius: '3px', border: `1px solid ${selectedPricing === 'topup' ? 'var(--cyan)' : 'rgba(255,255,255,0.05)'}`, background: selectedPricing === 'topup' ? 'rgba(34,211,238,0.06)' : 'rgba(255,255,255,0.01)', cursor: 'pointer', textAlign: 'center' }}
                 >
-                  <h4 style={{ fontSize: '12px', color: '#fff', margin: '0 0 2px' }}>Pro Streamer</h4>
-                  <p style={{ fontSize: '9px', color: 'var(--mu)', margin: 0 }}>500 credits / month</p>
+                  <h4 style={{ fontSize: '12px', color: '#fff', margin: '0 0 2px' }}>Quick Top-Up Packs</h4>
+                  <p style={{ fontSize: '10px', color: '#10b981', fontWeight: 700, margin: '0 0 4px' }}>Non-Expiring Credits</p>
+                  <p style={{ fontSize: '9px', color: 'var(--mu)', margin: 0 }}>Reload on demand from $9.99</p>
                 </div>
               </div>
             </div>

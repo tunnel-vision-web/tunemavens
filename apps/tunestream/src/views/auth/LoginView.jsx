@@ -54,7 +54,7 @@ export default function LoginView({ onLogin, onClose }) {
       }));
     } finally {
       setGoogleLoading(false);
-      navigate('/stream');
+      navigate('/dashboard');
     }
   };
 
@@ -117,7 +117,7 @@ export default function LoginView({ onLogin, onClose }) {
       if (loggedInUser) {
         loggedInUser.role = userJourney === 'listener' ? 'consumer' : 'creator';
         onLogin(reconcileUserApps(loggedInUser));
-        navigate('/stream');
+        navigate('/dashboard');
       }
     } finally {
       setSubmitting(false);

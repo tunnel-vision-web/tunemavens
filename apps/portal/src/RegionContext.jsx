@@ -7,6 +7,85 @@ export const LANGUAGES_LIST = [
   { code: 'es', short: 'ES', name: 'Spanish', native: 'Español', flag: '🇺🇸', market: 'US', accent: '#a855f7', textDark: '#ffffff' }
 ];
 
+export const REGIONAL_MESSAGING = {
+  KE: {
+    badge: 'African Artists · Global Reach',
+    headline1: 'Feel the crowd.',
+    headline2: 'Anywhere on earth.',
+    painPointQuestion: 'Exhausted by unfair royalties, expensive data, and delayed foreign payouts?',
+    painPointAnswer: 'TuneStream brings 8GB offline caching so you never burn metered data on commutes. Instant M-Pesa mobile money tipping flows directly to creators with zero monthly subscription traps.',
+    sub: 'From Lagos to London, Nairobi to New York — stream the full depth of African music culture with built-in creator tipping and direct support.',
+    localCurrencyText: 'Micro-top ups via instant M-Pesa STK Push. Zero monthly fee.',
+    regionLabel: 'Africa & Diaspora'
+  },
+  NG: {
+    badge: 'African Artists · Global Reach',
+    headline1: 'Feel the crowd.',
+    headline2: 'Sovereign African Sound.',
+    painPointQuestion: 'Tired of dollar cards failing and foreign platforms paying fractions of a kobo?',
+    painPointAnswer: 'Direct creator payouts into local accounts. Zero monthly subscription fees, 8GB offline caching, and instant mid-track tipping for Naija and global creators.',
+    sub: 'From Lagos to London, Accra to Atlanta — stream pure African and diaspora master tracks with direct-to-wallet tipping.',
+    localCurrencyText: 'Non-expiring credits in NGN. No subscriptions ever.',
+    regionLabel: 'West Africa'
+  },
+  ZA: {
+    badge: 'African Artists · Global Reach',
+    headline1: 'Feel the crowd.',
+    headline2: 'Amapiano to the World.',
+    painPointQuestion: 'Paying high monthly subscription rates for crushed audio quality?',
+    painPointAnswer: 'Stream uncompressed 24-bit studio FLAC. 8GB offline caching for metered loadshedding hours, zero monthly fees, and transparent creator splits.',
+    sub: 'From Johannesburg to the world — stream the deepest Amapiano and Afro-House rhythms with direct artist support.',
+    localCurrencyText: 'Top up with ZAR. Zero subscriptions ever.',
+    regionLabel: 'Southern Africa'
+  },
+  US: {
+    badge: 'Global Sound · Zero Subscriptions',
+    headline1: 'Skip the monthly drain.',
+    headline2: 'Direct creator streaming.',
+    painPointQuestion: 'Tired of paying $11–$17 every month for subscriptions where 80% goes to corporate middlemen?',
+    painPointAnswer: 'TuneStream has no subscriptions ever. Top up non-expiring credits only when you want them. Stream lossless 24-bit FLAC audio, and send tips mid-listen where 100% of your support reaches independent creators within 24 hours.',
+    sub: 'Discover authentic independent global sounds and African music culture directly from the artists who make it. No contracts, no subscription lock-in.',
+    localCurrencyText: 'Pay-as-you-go TM Credits from $4.99. Never expires.',
+    regionLabel: 'North America'
+  },
+  ES: {
+    badge: 'Música Global · Cero Suscripciones',
+    headline1: 'Siente la música.',
+    headline2: 'Sin ataduras mensuales.',
+    painPointQuestion: '¿Cansado de tarifas mensuales en dólares y plataformas que pagan centavos a los artistas?',
+    painPointAnswer: 'En TuneStream no hay suscripciones mensuales jamás. Recargas micro-créditos sin vencimiento, disfrutas audio FLAC de 24 bits y apoyas directamente a los creadores de todo el sur global y la diáspora.',
+    sub: 'Desde el Caribe hasta los Andes, ritmos afro-latinos y sonidos auténticos sin intermediarios ni cobros recurrentes sorpresa.',
+    localCurrencyText: 'Micro-recargas sin suscripción fija. Calidad de estudio.',
+    regionLabel: 'Latinoamérica y España'
+  },
+  GB: {
+    badge: 'Ethical Audio · Sovereign Splits',
+    headline1: 'Fair creator payouts.',
+    headline2: 'Zero monthly lock-in.',
+    painPointQuestion: 'Frustrated by opaque corporate streaming monopolies and exploitative streaming royalty cuts?',
+    painPointAnswer: 'TuneStream operates on transparent Split Cascade ledgers. Support independent UK and African diaspora artists directly with non-expiring credits and zero monthly subscriptions.',
+    sub: 'From London to Lagos — explore high-fidelity lossless masters with verified split sheets and transparent creator compensation.',
+    localCurrencyText: 'Non-expiring TM Credits in GBP. No monthly contracts.',
+    regionLabel: 'United Kingdom'
+  },
+  EU: {
+    badge: 'Independent Sound · Transparent Rights',
+    headline1: 'Pure studio audio.',
+    headline2: 'No recurring bills.',
+    painPointQuestion: 'Looking for an ethical streaming platform with true independent artist equity?',
+    painPointAnswer: 'No monthly subscriptions ever. Purchase non-expiring TM Credits, stream lossless FLAC studio masters, and know exactly how much reaches each creator on every track.',
+    sub: 'European and global music enthusiasts connecting directly with sovereign creators across continents.',
+    localCurrencyText: 'Non-expiring TM Credits in EUR. Zero subscription traps.',
+    regionLabel: 'European Union'
+  }
+};
+
+export function getRegionalMessaging(countryCode = 'KE', langCode = 'en') {
+  if (langCode === 'es') return REGIONAL_MESSAGING.ES;
+  const match = REGIONAL_MESSAGING[countryCode] || REGIONAL_MESSAGING.KE;
+  return match;
+}
+
 const RegionContext = createContext(null);
 export const useRegion = () => useContext(RegionContext) || {
   country: 'KE',
@@ -17,6 +96,8 @@ export const useRegion = () => useContext(RegionContext) || {
   currencyInfo: { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
   language: 'sw',
   languages: LANGUAGES_LIST,
+  regionalMessaging: REGIONAL_MESSAGING.KE,
+  getRegionalMessaging,
   options: { countries: [], currencies: [], languages: LANGUAGES_LIST },
   changeCountry: () => {},
   changeCurrency: () => {},
@@ -62,6 +143,8 @@ export const EXCHANGE_RATES = {
   GBP: 0.8,
   EUR: 0.92
 };
+
+
 
 function getMergedLanguages() {
   const dynList = (typeof window !== 'undefined' && window.SynergyLocalization && typeof window.SynergyLocalization.getLanguagesList === 'function')
@@ -299,6 +382,7 @@ export function RegionProvider({ children }) {
   }, [language]);
 
   const region = (country === 'KE' || country === 'TZ' || country === 'UG') ? 'east-africa' : 'west';
+  const regionalMessaging = useMemo(() => getRegionalMessaging(country, language), [country, language]);
 
   return (
     <RegionContext.Provider value={{
@@ -310,6 +394,8 @@ export function RegionProvider({ children }) {
       currencyInfo,
       language,
       languages: availableLanguages,
+      regionalMessaging,
+      getRegionalMessaging,
       options: {
         countries: COUNTRIES_LIST,
         currencies: Object.values(CURRENCIES_MAP),

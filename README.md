@@ -97,6 +97,24 @@ npm run dev
 
 ---
 
+### 9. Cross-Tab Media Player Intelligence & Autoplay Control
+- **Cross-Tab Audio Synchronization (`playbackSync.js`):** Multi-tab coordination via `BroadcastChannel`, `localStorage`, and FastAPI `/api/stream/active-playback` fallback.
+- **Frontend-Only Autoplay:** Unprompted autoplay on page load is restricted exclusively to public frontend tabs; backend tabs remain paused until explicitly triggered.
+- **Backend Selection Override:** Explicitly starting playback in the backend or any secondary tab halts playback in all other open instances.
+
+### 10. Creator Taste Profile & Discovery Onboarding
+- **Creator Onboarding Modal (`OnboardingTasteModal.jsx`):** Allows users to select their favorite creators and artists from an authoritative roster alongside genres and vibes.
+- **Backend Taste Profile Editor:** Settings panel in `PlayerDashboard` allows viewing, adding, and removing preferred creators.
+- **Personalized Playlist Algorithmic Mix:** `/api/stream/personalized-playlist` interleaves tracks matching the user's preferred creators and genres.
+
+### 11. Persona-Tailored EPKs & VC Discover Suite
+- **Persona-Tailored Web Worlds:** Dynamic navigation and section layouts for podcasters, DJs, producers, record labels, and recording artists (`PersonaEpkSections.jsx`).
+- **VC Discover Creators App (`VcDiscoverCreatorsApp.jsx`):** Multi-persona creator discovery with growth projections, streaming velocity, and contract underwriting workflows.
+- **Split Cascade & CRM Data Isolation:** Underwriters only access creator data covered under active contracts.
+- **Permanent Credit Exemption:** VC/Investor accounts are permanently exempt from credit limits and reload reminders.
+
+---
+
 ## 🛠️ Build & Verification
 
 ```bash

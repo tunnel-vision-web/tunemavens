@@ -2326,7 +2326,7 @@
 .dashboard-topbar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .dashboard-topbar-item {
   position: relative;
@@ -2340,30 +2340,31 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.03);
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(15, 23, 42, 0.85);
   color: #cbd5e1;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 .topbar-icon-btn:hover {
   color: var(--cyan);
-  border-color: rgba(34,211,238,0.35);
-  background: rgba(34,211,238,0.06);
+  border-color: rgba(34,211,238,0.45);
+  background: rgba(34,211,238,0.1);
+  box-shadow: 0 0 14px rgba(34,211,238,0.18);
 }
 .topbar-badge {
   position: absolute;
-  top: -3px;
-  right: -3px;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 8px;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 999px;
   padding: 0 4px;
   background: #ef4444;
   color: white;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 900;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2373,31 +2374,33 @@
 .topbar-account-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px 4px 4px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.03);
+  gap: 10px;
+  height: 38px;
+  padding: 4px 12px 4px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(15, 23, 42, 0.85);
   color: #f1f5f9;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 .topbar-account-btn:hover {
-  border-color: rgba(34,211,238,0.35);
-  background: rgba(34,211,238,0.06);
+  border-color: rgba(34,211,238,0.45);
+  background: rgba(34,211,238,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
 .topbar-avatar {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  background: #0ea5e9; /* Strict flat solid cyan-blue */
-  color: #ffffff;
+  border-radius: 3px;
+  background: #0ea5e9;
+  color: #060813;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 13px;
 }
 .topbar-avatar.large { width: 40px; height: 40px; font-size: 16px; }
@@ -2704,17 +2707,17 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(34, 211, 238, 0.25);
-  background: rgba(34, 211, 238, 0.06);
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.08);
   color: var(--cyan);
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
-  letter-spacing: 0.3px;
-  transition: all 0.15s ease;
-  margin-right: 4px;
+  letter-spacing: 0.2px;
+  transition: all 0.18s ease;
 }
 .topbar-back-to-site:hover {
   background: rgba(34, 211, 238, 0.14);

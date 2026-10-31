@@ -1,10 +1,12 @@
+import { initPlaybackSync, broadcastPlaybackStart, broadcastPlaybackStop } from '../../lib/playbackSync.js';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   RiMusic2Fill, RiPlayFill, RiPauseFill, RiStopFill,
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine,
   RiRepeatLine, RiRepeatOneLine, RiVolumeUpFill,
   RiVolumeMuteFill, RiDragMove2Fill, RiSubtractFill,
-  RiAddFill, RiCloseFill, RiDiscFill, RiCoinLine
+  RiAddFill, RiCloseFill, RiDiscFill, RiPlayList2Fill,
+  RiArrowUpSLine, RiArrowDownSLine, RiHeadphoneFill
 } from 'react-icons/ri';
 import { normalizeMediaUrl } from '../../lib/api.js';
 
@@ -14,12 +16,14 @@ export default function HiFiAudioPlayer({
   isPlaying = false,
   onTogglePlay,
   onTrackSelect,
+  playlistName = '',
   accentColor = '#00f2fe',
   sessionUser = null,
   onClose
 }) {
   const [isPlayerVisible, setIsPlayerVisible] = useState(true);
   const [isPlayerMinimized, setIsPlayerMinimized] = useState(false);
+  const [isTracklistExpanded, setIsTracklistExpanded] = useState(false);
   const [isPlayerMuted, setIsPlayerMuted] = useState(false);
   const [playerVolume, setPlayerVolume] = useState(0.85);
   const [shuffleMode, setShuffleMode] = useState(false);
@@ -27,8 +31,9 @@ export default function HiFiAudioPlayer({
   const [playbackProgress, setPlaybackProgress] = useState(0); // in seconds
   const [trackDuration, setTrackDuration] = useState(210); // in seconds
   const [previewLimitReached, setPreviewLimitReached] = useState(false);
+  const [autoplayUnlocked, setAutoplayUnlocked] = useState(false);
 
-  // Determine user credit status
+  // Determine user credit status (defaulting to 150 free listener credits so playback works smoothly)
   const effectiveUser = sessionUser || (() => {
     try {
       const s = sessionStorage.getItem('tunestream_session') || sessionStorage.getItem('tunemavens_session') || localStorage.getItem('tunemavens_saved_user');
@@ -38,14 +43,93 @@ export default function HiFiAudioPlayer({
     }
   })();
 
-  const userCredits = effectiveUser?.credits ?? 0;
-  const hasCredits = userCredits > 0;
-  const PREVIEW_LIMIT = 30; // 30 seconds limit unless user has credits
+  const savedCredits = (() => {
+    try {
+      const c = localStorage.getItem('tunemavens_user_credits');
+      return c ? parseInt(c, 10) : 150;
+    } catch {
+      return 150;
+    }
+  })();
 
-  const [playerPos, setPlayerPos] = useState({
-    x: Math.max(20, (typeof window !== 'undefined' ? window.innerWidth - 480 : 800)),
-    y: Math.max(80, (typeof window !== 'undefined' ? window.innerHeight - 380 : 450))
-  });
+    // Cross-Tab & Cross-Origin Playback Intelligence Synchronization
+  useEffect(() => {
+    const isBackend = Boolean(
+      window.location.hash.includes('/dashboard') ||
+      window.location.pathname.includes('/dashboard') ||
+      window.location.hash.includes('/tour-capital') ||
+      window.location.pathname.includes('/tour-capital')
+    );
+    const cleanup = initPlaybackSync({
+      isBackend,
+      onStopRemotePlayback: () => {
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+        }
+        if (typeof onTogglePlay === 'function') {
+          onTogglePlay(false);
+        }
+      }
+    });
+    return cleanup;
+  }, [onTogglePlay]);
+
+  const [simulateZeroCredits, setSimulateZeroCredits] = useState(false);
+  const [tracksPlayedSinceAd, setTracksPlayedSinceAd] = useState(0);
+  const [activeCorporateAd, setActiveCorporateAd] = useState(null);
+  const [adCountdown, setAdCountdown] = useState(0);
+
+  const rawUserCredits = effectiveUser?.credits ?? savedCredits ?? 150;
+  const userCredits = simulateZeroCredits ? 0 : rawUserCredits;
+  const hasCredits = userCredits > 0;
+  // Always-Free accounts & 0-credit transitioned accounts get full track streaming supported by Corporate Ad intervals
+  const PREVIEW_LIMIT = 999999;
+
+  const triggerCorporateAdSpot = () => {
+    fetch('/api/corporate/next-audio-ad')
+      .then(r => r.ok ? r.json() : null)
+      .then(ad => {
+        const spot = ad || {
+          id: 'corp-spot-safaricom',
+          brand_name: 'Safaricom Neon Beats',
+          company_name: 'Safaricom PLC',
+          headline: 'Stream Music & Podcasts Anywhere with Safaricom 5G Bundles',
+          spot_duration_seconds: 15,
+          promo_code: 'SAFARITUNE25',
+          destination_url: 'https://safaricom.co.ke/neon'
+        };
+        setActiveCorporateAd(spot);
+        setAdCountdown(spot.spot_duration_seconds || 15);
+      })
+      .catch(() => {
+        setActiveCorporateAd({
+          id: 'corp-spot-safaricom',
+          brand_name: 'Safaricom Neon Beats',
+          company_name: 'Safaricom PLC',
+          headline: 'Stream Music & Podcasts Anywhere with Safaricom 5G Bundles',
+          spot_duration_seconds: 15,
+          promo_code: 'SAFARITUNE25',
+          destination_url: 'https://safaricom.co.ke/neon'
+        });
+        setAdCountdown(15);
+      });
+  };
+
+  useEffect(() => {
+    if (!activeCorporateAd || adCountdown <= 0) {
+      if (activeCorporateAd && adCountdown <= 0) {
+        setActiveCorporateAd(null);
+      }
+      return;
+    }
+    const t = setTimeout(() => setAdCountdown(c => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [activeCorporateAd, adCountdown]);
+
+  const [playerPos, setPlayerPos] = useState(() => ({
+    x: Math.max(20, (typeof window !== 'undefined' ? window.innerWidth - 470 : 800)),
+    y: Math.max(70, (typeof window !== 'undefined' ? window.innerHeight - 430 : 420))
+  }));
 
   const audioRef = useRef(null);
   const isDraggingRef = useRef(false);
@@ -54,26 +138,49 @@ export default function HiFiAudioPlayer({
   // Current playing track fallback
   const currentTrack = track || tracks[0] || {
     id: 'sample',
-    title: 'Select a Track',
-    artist: 'TuneStream Lossless Catalog',
+    title: 'Nairobi Sunset',
+    artist: 'Ndufo',
     cover: '/uploads/artwork/ndufo_cover.jpg',
     isrc: 'KE-TM1-26-00042',
-    duration: '3:30'
+    duration: '3:45',
+    genre: 'Afro-House'
   };
 
-  const currentIndex = tracks.findIndex(t => t.id === currentTrack.id || t.isrc === currentTrack.isrc);
+  // Active playlist name resolution
+  const resolvedPlaylistName = playlistName || (() => {
+    if (currentTrack?.isIntro) return 'Welcome Intro • Curated Background Audio';
+    try {
+      const saved = JSON.parse(localStorage.getItem('tunestream_listener_onboarding') || localStorage.getItem('tunestream_user_interests') || 'null');
+      if (saved?.genres?.length) {
+        return `Personalized Mix: ${saved.genres.slice(0, 2).join(' & ')}`;
+      }
+    } catch (_) {}
+    return 'Featured Playlist: Global Afrobeat & Amapiano Masters';
+  })();
+
+  const currentIndex = tracks.findIndex(t => t.id === currentTrack.id || t.isrc === currentTrack.isrc || t.title === currentTrack.title);
   const safeIndex = currentIndex >= 0 ? currentIndex : 0;
 
-  // Sync Audio source and play state
+  // Keep player on screen when tracklist is expanded
+  useEffect(() => {
+    if (isTracklistExpanded && typeof window !== 'undefined') {
+      const maxTop = Math.max(60, window.innerHeight - 650);
+      if (playerPos.y > maxTop) {
+        setPlayerPos(prev => ({ ...prev, y: maxTop }));
+      }
+    }
+  }, [isTracklistExpanded]);
+
+  // Sync Audio source and play state + Autoplay unlock handler
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const rawAudio = currentTrack.audioUrl || currentTrack.audio_url || currentTrack.fileUrl;
-    const streamSrc = rawAudio 
-      ? normalizeMediaUrl(rawAudio) 
+    const streamSrc = rawAudio
+      ? normalizeMediaUrl(rawAudio)
       : `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.id || currentTrack.title)}`;
-    
+
     if (audio.src !== streamSrc && !audio.src.endsWith(streamSrc)) {
       audio.src = streamSrc;
       audio.load();
@@ -87,14 +194,55 @@ export default function HiFiAudioPlayer({
         setPreviewLimitReached(true);
         if (onTogglePlay) onTogglePlay(false);
       } else {
-        audio.play().catch(err => {
-          console.warn('Hi-Fi playback error:', err);
-        });
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setAutoplayUnlocked(true);
+              const isBackend = Boolean(
+                window.location.hash.includes('/dashboard') ||
+                window.location.pathname.includes('/dashboard') ||
+                window.location.hash.includes('/tour-capital')
+              );
+              broadcastPlaybackStart(isBackend ? 'backend' : 'frontend', currentTrack);
+            })
+            .catch(() => {
+              // Browser autoplay policy blocked initial unmuted play before gesture:
+              // Unlock automatically on the very first user gesture anywhere on the page
+              const unlockAudio = () => {
+                if (audioRef.current && isPlaying) {
+                  audioRef.current.play().then(() => setAutoplayUnlocked(true)).catch(() => {});
+                }
+                window.removeEventListener('pointerdown', unlockAudio, true);
+                window.removeEventListener('keydown', unlockAudio, true);
+                window.removeEventListener('touchstart', unlockAudio, true);
+              };
+              window.addEventListener('pointerdown', unlockAudio, true);
+              window.addEventListener('keydown', unlockAudio, true);
+              window.addEventListener('touchstart', unlockAudio, true);
+            });
+        }
       }
     } else {
       audio.pause();
     }
   }, [currentTrack, isPlaying, hasCredits]);
+
+  // Fallback visual progress ticker if isPlaying is true while browser waits for first gesture or stream buffer
+  useEffect(() => {
+    if (!isPlaying) return;
+    const timer = setInterval(() => {
+      const audio = audioRef.current;
+      if (!audio || audio.paused) {
+        setPlaybackProgress(prev => {
+          const maxDur = hasCredits ? (trackDuration || 210) : PREVIEW_LIMIT;
+          if (prev + 1 >= maxDur) return 0;
+          return prev + 1;
+        });
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isPlaying, hasCredits, trackDuration]);
 
   // Sync volume & mute
   useEffect(() => {
@@ -110,7 +258,6 @@ export default function HiFiAudioPlayer({
     const current = audio.currentTime;
     setPlaybackProgress(Math.floor(current));
 
-    // Limit to 30s unless user has credits
     if (!hasCredits && current >= PREVIEW_LIMIT) {
       audio.pause();
       audio.currentTime = PREVIEW_LIMIT;
@@ -120,10 +267,19 @@ export default function HiFiAudioPlayer({
     }
   };
 
-  // Track advance handler
+  // Track advance handler (inserts Corporate Ad Spot at intervals when on Free / 0-Credit tier)
   const handleTrackAdvance = () => {
     if (!tracks || tracks.length === 0) return;
     setPreviewLimitReached(false);
+    if (!hasCredits) {
+      const nextCount = tracksPlayedSinceAd + 1;
+      if (nextCount >= 2) {
+        setTracksPlayedSinceAd(0);
+        triggerCorporateAdSpot();
+      } else {
+        setTracksPlayedSinceAd(nextCount);
+      }
+    }
     if (repeatMode === 'track') {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
@@ -177,7 +333,6 @@ export default function HiFiAudioPlayer({
 
   const handleTogglePlay = () => {
     if (!isPlaying && !hasCredits && playbackProgress >= PREVIEW_LIMIT) {
-      // Restart preview from beginning
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         setPlaybackProgress(0);
@@ -187,7 +342,6 @@ export default function HiFiAudioPlayer({
     if (onTogglePlay) onTogglePlay(!isPlaying);
   };
 
-  // Close player completely (stop audio and unmount)
   const handleClosePlayer = () => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -198,7 +352,6 @@ export default function HiFiAudioPlayer({
     if (onClose) onClose();
   };
 
-  // Draggable window handlers
   const handleMouseDownDrag = (e) => {
     if (e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) return;
     isDraggingRef.current = true;
@@ -241,6 +394,7 @@ export default function HiFiAudioPlayer({
       {/* Real HTML5 Audio Element */}
       <audio
         ref={audioRef}
+        autoPlay={isPlaying}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={() => {
           if (audioRef.current && audioRef.current.duration && !isNaN(audioRef.current.duration)) {
@@ -253,7 +407,7 @@ export default function HiFiAudioPlayer({
 
       {/* Floating Minimized Pill when player closed/minimized */}
       {!isPlayerVisible && (
-        <div 
+        <div
           data-testid="hifi-player-pill-wrapper"
           style={{
             position: 'fixed',
@@ -271,34 +425,34 @@ export default function HiFiAudioPlayer({
               setIsPlayerVisible(true);
               setIsPlayerMinimized(false);
             }}
-            title="Open TuneMavens Hi-Fi Player"
+            title="Open TuneStream Hi-Fi Player"
             data-testid="hifi-player-pill"
             style={{
-              background: isPlaying ? 'rgba(34, 197, 94, 0.15)' : 'rgba(15, 23, 42, 0.9)',
+              background: isPlaying ? 'rgba(12, 18, 34, 0.96)' : 'rgba(15, 23, 42, 0.94)',
               border: `1.5px solid ${isPlaying ? '#22c55e' : accentColor}`,
               borderRadius: '3px',
-              padding: '8px 16px',
+              padding: '8px 14px',
               color: '#fff',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
               cursor: 'pointer',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.65)',
               backdropFilter: 'blur(12px)',
-              fontSize: '0.82rem',
+              fontSize: '0.8rem',
               fontWeight: 800
             }}
           >
             <span style={{
-              width: '10px',
-              height: '10px',
+              width: '9px',
+              height: '9px',
               borderRadius: '50%',
               background: isPlaying ? '#22c55e' : accentColor,
               boxShadow: isPlaying ? '0 0 10px #22c55e' : 'none',
               display: 'inline-block'
             }} />
-            <RiMusic2Fill style={{ color: accentColor, fontSize: '1.1rem' }} />
-            <span>TuneMavens Hi-Fi Player {isPlaying ? '• Playing' : '• Paused'}</span>
+            <RiMusic2Fill style={{ color: accentColor, fontSize: '1.05rem' }} />
+            <span>{resolvedPlaylistName} • {currentTrack.title}</span>
           </button>
           <button
             type="button"
@@ -331,13 +485,13 @@ export default function HiFiAudioPlayer({
             left: `${playerPos.x}px`,
             top: `${playerPos.y}px`,
             zIndex: 9000,
-            width: isPlayerMinimized ? '320px' : '440px',
+            width: isPlayerMinimized ? '340px' : '450px',
             maxWidth: 'calc(100vw - 24px)',
-            background: 'rgba(12, 16, 32, 0.95)',
-            backdropFilter: 'blur(20px)',
+            background: 'rgba(10, 14, 28, 0.97)',
+            backdropFilter: 'blur(22px)',
             border: `1.5px solid ${accentColor}66`,
             borderRadius: '3px',
-            boxShadow: `0 16px 48px rgba(0,0,0,0.75), 0 0 24px ${accentColor}33`,
+            boxShadow: `0 20px 56px rgba(0,0,0,0.85), 0 0 28px ${accentColor}33`,
             color: '#fff',
             userSelect: 'none',
             transition: 'box-shadow 0.2s ease, width 0.2s ease'
@@ -352,7 +506,7 @@ export default function HiFiAudioPlayer({
               justifyContent: 'space-between',
               padding: '10px 14px',
               borderBottom: `1px solid ${accentColor}33`,
-              background: 'rgba(0,0,0,0.3)',
+              background: 'rgba(0,0,0,0.35)',
               cursor: 'grab',
               borderRadius: '3px 3px 0 0'
             }}
@@ -361,25 +515,49 @@ export default function HiFiAudioPlayer({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
               <RiDragMove2Fill style={{ color: accentColor, fontSize: '1.05rem', flexShrink: 0 }} />
               <span style={{ fontWeight: 900, fontSize: '0.82rem', letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                TuneMavens Hi-Fi Player
+                TuneStream Hi-Fi Player
               </span>
               <span style={{
                 background: `${accentColor}22`,
                 color: accentColor,
                 border: `1px solid ${accentColor}55`,
-                padding: '1px 5px',
+                padding: '1px 6px',
                 borderRadius: '3px',
-                fontSize: '0.6rem',
+                fontSize: '0.62rem',
                 fontWeight: 900,
                 letterSpacing: '0.04em',
                 flexShrink: 0
               }}>
-                TuneStream
+                24-BIT FLAC
               </span>
             </div>
 
-            {/* Window Controls: Minimize & Close */}
+            {/* Window Controls: Expand Tracklist, Minimize & Close */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+              {!isPlayerMinimized && (
+                <button
+                  type="button"
+                  onClick={() => setIsTracklistExpanded(!isTracklistExpanded)}
+                  title={isTracklistExpanded ? "Collapse Playlist Tracklist" : "Expand Playlist Tracklist"}
+                  data-testid="toggle-tracklist-header-btn"
+                  style={{
+                    background: isTracklistExpanded ? `${accentColor}25` : 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${isTracklistExpanded ? accentColor : 'rgba(255,255,255,0.14)'}`,
+                    color: isTracklistExpanded ? accentColor : '#cbd5e1',
+                    padding: '3px 8px',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.68rem',
+                    fontWeight: 800
+                  }}
+                >
+                  <RiPlayList2Fill size={13} />
+                  <span>{isTracklistExpanded ? 'Hide List' : `Tracks (${tracks.length || 1})`}</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setIsPlayerMinimized(!isPlayerMinimized)}
@@ -427,97 +605,151 @@ export default function HiFiAudioPlayer({
 
           {/* Minimized Compact View */}
           {isPlayerMinimized ? (
-            <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img
-                src={normalizeMediaUrl(currentTrack.cover || currentTrack.coverArt)}
-                alt={currentTrack.title}
-                onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
-                style={{ width: '36px', height: '36px', borderRadius: '3px', objectFit: 'cover', border: `1px solid ${accentColor}44` }}
-              />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {currentTrack.title}
-                </div>
-                <div style={{ fontSize: '0.7rem', color: accentColor, fontWeight: 700 }}>
-                  {formatSec(playbackProgress)} / {!hasCredits ? '0:30' : formatSec(trackDuration)}
-                </div>
+            <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '0.65rem', color: accentColor, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                ● Playing Playlist: {resolvedPlaylistName}
               </div>
-              <button
-                type="button"
-                onClick={handleTogglePlay}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '3px',
-                  background: accentColor,
-                  color: '#000',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
-              </button>
-              <button
-                type="button"
-                onClick={handleTrackAdvance}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '3px',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                <RiSkipForwardFill />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img
+                  src={normalizeMediaUrl(currentTrack.cover || currentTrack.coverArt)}
+                  alt={currentTrack.title}
+                  onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
+                  style={{ width: '36px', height: '36px', borderRadius: '3px', objectFit: 'cover', border: `1px solid ${accentColor}44` }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {currentTrack.title}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>
+                    {currentTrack.artist} • {formatSec(playbackProgress)}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleTogglePlay}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '3px',
+                    background: accentColor,
+                    color: '#000',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTrackAdvance}
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '3px',
+                    background: 'rgba(255,255,255,0.06)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <RiSkipForwardFill />
+                </button>
+              </div>
             </div>
           ) : (
             /* Full Player Controls */
-            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* Playlist Selector Bar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <RiDiscFill style={{ color: accentColor, fontSize: '1rem', flexShrink: 0 }} />
-                <label style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', flexShrink: 0 }}>
-                  Active Track:
-                </label>
-                <select
-                  value={safeIndex}
-                  onChange={(e) => {
-                    const idx = Number(e.target.value);
-                    if (tracks[idx] && onTrackSelect) {
-                      setPreviewLimitReached(false);
-                      onTrackSelect(tracks[idx]);
-                    }
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '6px 10px',
+            <div style={{ padding: '12px 16px 14px', display: 'flex', flexDirection: 'column', gap: '11px' }}>
+              {/* Active Playlist Banner + Expand Tracklist Toggle */}
+              <div
+                data-testid="active-playlist-banner"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                  padding: '8px 11px',
+                  borderRadius: '3px',
+                  background: 'linear-gradient(90deg, rgba(0, 242, 254, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%)',
+                  border: '1px solid rgba(0, 242, 254, 0.28)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                  <div style={{
+                    width: '26px',
+                    height: '26px',
                     borderRadius: '3px',
-                    background: 'rgba(0,0,0,0.5)',
-                    border: `1px solid ${accentColor}55`,
-                    color: '#fff',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    outline: 'none',
-                    cursor: 'pointer'
+                    background: 'rgba(0, 242, 254, 0.18)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: accentColor,
+                    flexShrink: 0
+                  }}>
+                    <RiDiscFill size={15} />
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: isPlaying ? '#22c55e' : '#f59e0b',
+                        boxShadow: isPlaying ? '0 0 6px #22c55e' : 'none',
+                        display: 'inline-block'
+                      }} />
+                      <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        {isPlaying ? 'Now Playing Playlist' : 'Active Playlist'}
+                      </span>
+                    </div>
+                    <div
+                      data-testid="current-playlist-title"
+                      style={{
+                        fontSize: '0.79rem',
+                        fontWeight: 800,
+                        color: '#fff',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        marginTop: '1px'
+                      }}
+                      title={resolvedPlaylistName}
+                    >
+                      {resolvedPlaylistName}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  data-testid="expand-playlist-tracks-btn"
+                  onClick={() => setIsTracklistExpanded(!isTracklistExpanded)}
+                  style={{
+                    background: isTracklistExpanded ? accentColor : 'rgba(255,255,255,0.08)',
+                    color: isTracklistExpanded ? '#060813' : '#fff',
+                    border: `1px solid ${isTracklistExpanded ? accentColor : 'rgba(255,255,255,0.18)'}`,
+                    borderRadius: '3px',
+                    padding: '5px 10px',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease'
                   }}
                 >
-                  {tracks.map((t, idx) => (
-                    <option key={t.id || idx} value={idx}>
-                      🎵 {t.title} - {t.artist}
-                    </option>
-                  ))}
-                </select>
+                  <span>{isTracklistExpanded ? 'Hide Tracks' : `Expand (${tracks.length || 1})`}</span>
+                  {isTracklistExpanded ? <RiArrowUpSLine size={15} /> : <RiArrowDownSLine size={15} />}
+                </button>
               </div>
 
               {/* Track Metadata Card */}
@@ -549,65 +781,221 @@ export default function HiFiAudioPlayer({
                   <div style={{ fontSize: '0.72rem', color: accentColor, marginTop: '2px', fontWeight: 700, display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <span>{currentTrack.artist}</span>
                     <span>•</span>
-                    <span>ISRC: {currentTrack.isrc || 'KE-TM1-26-00042'}</span>
+                    <span>{currentTrack.genre || '24-Bit Studio FLAC'}</span>
                   </div>
                   <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     <span data-no-i18n="true" data-testid="hifi-credit-badge" style={{
-                      background: hasCredits ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.15)',
-                      color: hasCredits ? '#22c55e' : '#f59e0b',
-                      border: hasCredits ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(245,158,11,0.3)',
+                      background: hasCredits ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.16)',
+                      color: hasCredits ? '#22c55e' : '#fbbf24',
+                      border: hasCredits ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(245,158,11,0.4)',
                       padding: '1px 6px',
                       borderRadius: '3px',
-                      fontSize: '0.62rem',
+                      fontSize: '0.61rem',
                       fontWeight: 800
                     }}>
-                      {hasCredits ? 'Lossless FLAC • Master Unlocked' : 'Free Preview (30s limit)'}
+                      {hasCredits ? `Ad-Free 24-Bit FLAC (${userCredits} Credits)` : 'Always-Free Tier • Ad-Supported'}
                     </span>
-                    <span style={{ fontSize: '0.68rem', color: hasCredits ? 'var(--cyan)' : '#94a3b8', fontWeight: hasCredits ? 800 : 400 }}>
-                      {hasCredits ? `${userCredits.toLocaleString()} credits` : '0 credits (preview)'}
-                    </span>
-                    <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
-                      • Track {safeIndex + 1} of {tracks.length || 1}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextZero = !simulateZeroCredits;
+                        setSimulateZeroCredits(nextZero);
+                        if (nextZero) triggerCorporateAdSpot();
+                        else setActiveCorporateAd(null);
+                      }}
+                      title="Toggle between Active Credits (Ad-Free) and 0 Credits (Auto-Transition to Always-Free Ad-Supported Tier)"
+                      style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.16)',
+                        color: '#cbd5e1',
+                        borderRadius: '3px',
+                        padding: '1px 6px',
+                        fontSize: '0.59rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {simulateZeroCredits ? 'Restore Credits' : 'Test 0-Credit Ad Mode'}
+                    </button>
+                    <span style={{ fontSize: '0.66rem', color: '#94a3b8' }}>
+                      • {safeIndex + 1}/{tracks.length || 1}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* 30s Preview Expiration Alert */}
-              {previewLimitReached && !hasCredits && (
-                <div data-no-i18n="true" data-testid="preview-limit-alert" style={{
-                  padding: '8px 12px',
-                  borderRadius: '3px',
-                  background: 'rgba(239, 68, 68, 0.12)',
-                  border: '1px solid #ef4444',
-                  color: '#f8fafc',
-                  fontSize: '0.74rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '8px'
-                }}>
-                  <span style={{ fontWeight: 700 }}>
-                    ⏱️ 30s free preview ended. Credits required for full track.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (typeof window !== 'undefined') window.location.hash = '#/pricing';
-                    }}
-                    style={{
-                      background: '#ef4444',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '3px',
-                      padding: '4px 8px',
-                      fontSize: '0.7rem',
-                      fontWeight: 800,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Add Credits
-                  </button>
+              {/* Expandable Playlist Tracklist Drawer (Makes Player Taller) */}
+              {isTracklistExpanded && (
+                <div
+                  data-testid="expanded-playlist-tracklist"
+                  style={{
+                    background: 'rgba(5, 8, 18, 0.9)',
+                    border: '1px solid rgba(0, 242, 254, 0.22)',
+                    borderRadius: '3px',
+                    maxHeight: '230px',
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  <div style={{
+                    padding: '7px 10px',
+                    borderBottom: '1px solid rgba(255,255,255,0.07)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    position: 'sticky',
+                    top: 0,
+                    background: '#080c1a',
+                    zIndex: 2
+                  }}>
+                    <span style={{ fontSize: '0.66rem', fontWeight: 800, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Playlist Queue ({tracks.length} Tracks)
+                    </span>
+                    <span style={{ fontSize: '0.64rem', color: '#64748b' }}>
+                      Click any track to play
+                    </span>
+                  </div>
+
+                  {tracks.map((t, idx) => {
+                    const isCurrent = idx === safeIndex;
+                    return (
+                      <div
+                        key={t.id || t.isrc || idx}
+                        onClick={() => {
+                          setPreviewLimitReached(false);
+                          if (onTrackSelect) onTrackSelect(t);
+                          if (!isPlaying && onTogglePlay) onTogglePlay(true);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '8px 10px',
+                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          background: isCurrent ? 'rgba(0, 242, 254, 0.12)' : 'transparent',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isCurrent) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isCurrent) e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        <div style={{ width: '18px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 800, color: isCurrent ? accentColor : '#64748b', flexShrink: 0 }}>
+                          {isCurrent ? (isPlaying ? '▶' : '⏸') : idx + 1}
+                        </div>
+                        <img
+                          src={normalizeMediaUrl(t.cover || t.coverArt)}
+                          alt={t.title}
+                          onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '3px',
+                            objectFit: 'cover',
+                            flexShrink: 0,
+                            border: isCurrent ? `1px solid ${accentColor}` : '1px solid rgba(255,255,255,0.1)'
+                          }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: '0.78rem',
+                            fontWeight: isCurrent ? 800 : 600,
+                            color: isCurrent ? accentColor : '#f1f5f9',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {t.title}
+                          </div>
+                          <div style={{
+                            fontSize: '0.67rem',
+                            color: '#94a3b8',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {t.artist} {t.genre ? `• ${t.genre}` : ''}
+                          </div>
+                        </div>
+                        <span style={{
+                          fontSize: '0.65rem',
+                          color: isCurrent ? accentColor : '#64748b',
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          flexShrink: 0
+                        }}>
+                          {t.duration || '3:30'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Corporate Ad Services Audio Interstitial Banner (Plays at intervals on Always-Free / 0-Credit Tier) */}
+              {activeCorporateAd && (
+                <div
+                  data-testid="corporate-ad-interstitial"
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '3px',
+                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0.96) 100%)',
+                    border: '1px solid rgba(245, 158, 11, 0.55)',
+                    color: '#f8fafc',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 900, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      📢 Corporate Ad Services Spot • Resumes in {adCountdown}s
+                    </span>
+                    <span style={{ fontSize: '0.62rem', color: '#94a3b8', fontWeight: 700 }}>
+                      Code: <strong style={{ color: '#00f2fe' }}>{activeCorporateAd.promo_code || 'SAFARITUNE25'}</strong>
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#fff' }}>
+                    {activeCorporateAd.brand_name}: {activeCorporateAd.headline}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                    <a
+                      href={activeCorporateAd.destination_url || 'https://safaricom.co.ke'}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: '0.68rem', color: '#00f2fe', fontWeight: 800, textDecoration: 'underline' }}
+                    >
+                      Visit Sponsor &rarr;
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveCorporateAd(null);
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(new CustomEvent('tunestreamOpenReload'));
+                          window.dispatchEvent(new CustomEvent('tunemavens-prompt-credit-reload', {
+                            detail: { reason: 'Remove Ads & Unlock 24-Bit Lossless with Non-Expiring Credits' }
+                          }));
+                        }
+                      }}
+                      style={{
+                        background: '#00f2fe',
+                        color: '#060813',
+                        border: 'none',
+                        borderRadius: '3px',
+                        padding: '4px 9px',
+                        fontSize: '0.66rem',
+                        fontWeight: 900,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Remove Ads — Top Up Credits
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -626,18 +1014,17 @@ export default function HiFiAudioPlayer({
                     style={{ flex: 1, accentColor, cursor: 'pointer', height: '4px' }}
                   />
                   <span style={{ fontSize: '0.72rem', color: !hasCredits ? '#f59e0b' : '#94a3b8', fontFamily: 'monospace', minWidth: '32px', textAlign: 'right' }}>
-                    {!hasCredits ? '0:30' : formatSec(trackDuration)}
+                    {formatSec(trackDuration)}
                   </span>
                 </div>
               </div>
 
               {/* Playback Controls & Mode Switches */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', paddingTop: '2px' }}>
-                {/* Mode: Shuffle Toggle */}
                 <button
                   type="button"
                   onClick={() => setShuffleMode(!shuffleMode)}
-                  title={shuffleMode ? "Shuffle: Random On (Click to switch to Sequenced)" : "Shuffle: Sequenced (Click to switch to Random)"}
+                  title={shuffleMode ? "Shuffle: Random On" : "Shuffle: Sequenced"}
                   style={{
                     background: shuffleMode ? `${accentColor}22` : 'rgba(255,255,255,0.05)',
                     border: `1px solid ${shuffleMode ? accentColor : 'rgba(255,255,255,0.15)'}`,
@@ -656,9 +1043,7 @@ export default function HiFiAudioPlayer({
                   <span>{shuffleMode ? 'Random' : 'Order'}</span>
                 </button>
 
-                {/* Center Audio Buttons: Prev, Play/Pause, Stop, Next */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {/* Previous Track */}
                   <button
                     type="button"
                     onClick={handleTrackPrevious}
@@ -680,7 +1065,6 @@ export default function HiFiAudioPlayer({
                     <RiSkipBackFill />
                   </button>
 
-                  {/* Play / Pause */}
                   <button
                     type="button"
                     onClick={handleTogglePlay}
@@ -703,7 +1087,6 @@ export default function HiFiAudioPlayer({
                     {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
                   </button>
 
-                  {/* Stop */}
                   <button
                     type="button"
                     onClick={() => {
@@ -732,7 +1115,6 @@ export default function HiFiAudioPlayer({
                     <RiStopFill />
                   </button>
 
-                  {/* Next Track */}
                   <button
                     type="button"
                     onClick={handleTrackAdvance}
@@ -755,14 +1137,13 @@ export default function HiFiAudioPlayer({
                   </button>
                 </div>
 
-                {/* Mode: Repeat Loop Toggle */}
                 <button
                   type="button"
                   onClick={() => {
                     const nextMode = repeatMode === 'off' ? 'playlist' : repeatMode === 'playlist' ? 'track' : 'off';
                     setRepeatMode(nextMode);
                   }}
-                  title={repeatMode === 'track' ? "Repeat: Single Track (Click to turn off)" : repeatMode === 'playlist' ? "Repeat: Entire Playlist (Click for single track)" : "Repeat: Off (Click for playlist loop)"}
+                  title="Toggle Repeat Mode"
                   style={{
                     background: repeatMode !== 'off' ? `${accentColor}22` : 'rgba(255,255,255,0.05)',
                     border: `1px solid ${repeatMode !== 'off' ? accentColor : 'rgba(255,255,255,0.15)'}`,
@@ -784,7 +1165,6 @@ export default function HiFiAudioPlayer({
 
               {/* Volume & TuneStream Engine Status */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                {/* Volume / Mute Controls */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button
                     type="button"
@@ -816,8 +1196,9 @@ export default function HiFiAudioPlayer({
                   />
                 </div>
 
-                <div style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span>Universal TuneStream Engine</span>
+                <div style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <RiHeadphoneFill size={12} color={accentColor} />
+                  <span>TuneStream 24-Bit Engine</span>
                   <span style={{ color: '#22c55e' }}>●</span>
                 </div>
               </div>

@@ -22,7 +22,7 @@ export default function ArtistRosterSelector({
   // Form states
   const [formName, setFormName] = useState('');
   const [formSubdomain, setFormSubdomain] = useState('');
-  const [formRole, setFormRole] = useState(isLabel ? 'Signed Roster Artist' : 'Primary Artist');
+  const [formRole, setFormRole] = useState(isLabel ? 'Artist' : 'Primary Artist');
   const [formGenre, setFormGenre] = useState('Afro-fusion');
   const [formBio, setFormBio] = useState('');
   const [formAvatar, setFormAvatar] = useState('');
@@ -95,7 +95,7 @@ export default function ArtistRosterSelector({
   ) || artists[0] || {
     name: 'Ndufo',
     subdomain: 'ndufo',
-    role: isLabel ? 'Signed Roster Artist' : 'Primary Artist',
+    role: isLabel ? 'Artist' : 'Primary Artist',
     genre: 'Afro-House',
     avatar: '/heroes/ndufo_hero_slide1_retina.jpg'
   });
@@ -364,7 +364,7 @@ export default function ArtistRosterSelector({
                     {isLabel ? 'All Roster Artists (Label Catalog)' : 'All Artists (Entire Catalogue)'}
                   </div>
                   <div style={{ fontSize: '9.5px', color: '#94a3b8' }}>
-                    {isLabel ? 'Aggregated catalogue across signed roster artists' : 'Full platform discography across all creators'}
+                    {isLabel ? 'Aggregated catalogue across artists' : 'Full platform discography across all creators'}
                   </div>
                 </div>
               </div>

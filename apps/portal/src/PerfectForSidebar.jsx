@@ -63,6 +63,8 @@ export const getIntermavenUrl = (appId, path = '') => {
 
 export const ROLE_LOGOS = {
   creator: createLogo,
+  podcaster: listenLogo,
+  vc: distributeLogo,
   label: distributeLogo,
   dj: bookingLogo,
   media_house: managementLogo,
@@ -79,6 +81,7 @@ export const ROLE_LOGOS = {
 
 export const PERFECT_FOR_ROLES = [
   { key: 'creator', label: 'Creators', sub: 'Artists & Producers', href: '/for/creator', accent: 'var(--cyan)' },
+  { key: 'podcaster', label: 'Podcasters', sub: 'Shows & Sponsorships', href: '/for/podcaster', accent: '#00f2fe' },
   { key: 'label', label: 'Record Labels', sub: 'Catalog Management', href: '/for/label', accent: 'var(--purple)' },
   { key: 'dj', label: 'DJs', sub: 'DJ Pool Engine', href: '/for/dj', accent: '#14b8a6' },
   { key: 'media_house', label: 'Media Houses', sub: 'Broadcast & Playlisting', href: '/for/media-house', accent: 'var(--blue)' },

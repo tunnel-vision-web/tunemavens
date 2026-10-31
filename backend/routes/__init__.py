@@ -27,6 +27,7 @@ from .affiliate_router import router as affiliate_router
 from .tours_router import router as tours_router
 from .vc_router import router as vc_router
 from .events_router import router as events_router
+from .podcasts_router import router as podcasts_router
 
 __all__ = [
     "admin_router",
@@ -58,4 +59,5 @@ __all__ = [
     "tours_router",
     "vc_router",
     "events_router",
+    "podcasts_router",
 ]

@@ -8,6 +8,7 @@ export const DEFAULT_ACTIVE_APPS = ['epk-builder', 'catalog-porting'];
 
 export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
   creator: ['epk-builder', 'catalog-porting', 'split-cascade'],
+  podcaster: ['podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'split-cascade', 'corporate-ads'],
   label: ['catalog-porting', 'split-cascade', 'publishing-election', 'distribution-election', 'sync-marketplace', 'label-team'],
   dj: ['djpool', 'tunemavens-library'],
   studio: ['sync-marketplace', 'escrow-contracts'],
@@ -17,8 +18,8 @@ export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
   corporate: ['sync-marketplace', 'corporate-ads'],
   affiliate: ['affiliates', 'split-cascade', 'tunemavens-library'],
   consumer: ['tunemavens-library', 'tunemavens-tips'],
-  vc: ['split-cascade', 'sync-marketplace', 'epk-builder', 'catalog-porting'],
-  investor: ['split-cascade', 'sync-marketplace', 'epk-builder', 'catalog-porting'],
+  vc: ['vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'split-cascade', 'escrow-contracts', 'crm'],
+  investor: ['vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'split-cascade', 'escrow-contracts', 'crm'],
   admin: [
     'epk-builder', 'catalog-porting', 'split-cascade', 'publishing-election',
     'distribution-election', 'djpool', 'sync-marketplace', 'escrow-contracts',

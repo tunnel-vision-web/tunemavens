@@ -9,7 +9,9 @@ import io
 import math
 import struct
 import wave
-from typing import Optional
+import time
+from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any
 from urllib.request import Request, urlopen
 from pathlib import Path
 
@@ -224,6 +226,333 @@ def stream_catalog_track(
         }
     )
 
+
+
+class AdminStreamConfigUpdate(BaseModel):
+    introductory_track: Optional[dict] = None
+    alternative_intro_tracks: Optional[list] = None
+    featured_playlist: Optional[dict] = None
+    autoplay_enabled: Optional[bool] = None
+    default_volume: Optional[float] = None
+
+
+class UserPreferencesPayload(BaseModel):
+    user_id: Optional[str] = None
+    genres: Optional[list] = []
+    favorite_artists: Optional[list] = []
+    vibes: Optional[list] = []
+    country: Optional[str] = "KE"
+
+
+DEFAULT_INTRO_TRACK = {
+    "isrc": "KE-TM1-24-INTRO",
+    "title": "Welcome to TuneStream (Ambient Intro)",
+    "artist": "TuneStream Curators",
+    "genre": "Ambient / Afro-Chill",
+    "duration": "2:45",
+    "coverArt": "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+    "coverBg": "linear-gradient(135deg, #00f0ff 0%, #10b981 100%)",
+    "audioUrl": "/uploads/audio/enenda.wav",
+    "isIntro": True,
+    "description": "Introductory background atmosphere playing for first-time visitors."
+}
+
+DEFAULT_ALT_INTRO_TRACKS = [
+    {
+        "isrc": "KE-TM1-24-INTRO",
+        "title": "Welcome to TuneStream (Ambient Intro)",
+        "artist": "TuneStream Curators",
+        "genre": "Ambient / Afro-Chill",
+        "duration": "2:45",
+        "coverArt": "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+        "audioUrl": "/uploads/audio/enenda.wav"
+    },
+    {
+        "isrc": "KE-TM1-24-INTRO-02",
+        "title": "Nairobi Sunset Horizon",
+        "artist": "Intermaven Collective",
+        "genre": "Afro-House / Deep",
+        "duration": "3:10",
+        "coverArt": "/heroes/ndufo_hero_slide1_retina.jpg",
+        "audioUrl": "/uploads/audio/enenda.wav"
+    },
+    {
+        "isrc": "KE-TM1-24-INTRO-03",
+        "title": "Diaspora Cyberwave Frequency",
+        "artist": "AfroTech Pioneers",
+        "genre": "Cyberwave / Electronic",
+        "duration": "3:20",
+        "coverArt": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
+        "audioUrl": "/uploads/audio/enenda.wav"
+    }
+]
+
+DEFAULT_FEATURED_PLAYLIST = {
+    "id": "pl_admin_featured_01",
+    "title": "Admin Featured: Sovereign Sounds of Africa & Global Reach",
+    "description": "The authoritative admin-curated showcase. Stream high-fidelity master tracks with zero subscriptions and direct creator splits.",
+    "curator": "TuneMavens Global Curation Board",
+    "cover": "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+    "tracks": [
+        {
+            "id": "trk_feat_01",
+            "isrc": "KE-TM1-24-00013",
+            "title": "ENENDA (1)",
+            "artist": "Ndufo",
+            "genre": "Afrobeats",
+            "duration": "3:35",
+            "coverArt": "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+            "audioUrl": "/uploads/audio/enenda.wav",
+            "priceCredits": 50,
+            "isFeatured": True
+        },
+        {
+            "id": "trk_feat_02",
+            "isrc": "KE-TM1-24-00006",
+            "title": "Nairobi Cyberwave 2026",
+            "artist": "Ndufo Victoria",
+            "genre": "Afro-House",
+            "duration": "3:48",
+            "coverArt": "/heroes/ndufo_hero_slide1_retina.jpg",
+            "audioUrl": "/uploads/audio/enenda.wav",
+            "priceCredits": 50,
+            "isFeatured": True
+        },
+        {
+            "id": "trk_feat_03",
+            "isrc": "KE-TM1-24-00007",
+            "title": "Mombasa Sunset Pulse",
+            "artist": "Khalid Waves",
+            "genre": "Deep-House & Club",
+            "duration": "4:12",
+            "coverArt": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
+            "audioUrl": "/uploads/audio/enenda.wav",
+            "priceCredits": 50,
+            "isFeatured": True
+        },
+        {
+            "id": "trk_feat_04",
+            "isrc": "KE-TM1-24-00008",
+            "title": "Kibera Dreams",
+            "artist": "Ndufo Victoria",
+            "genre": "Gengetone & Trap",
+            "duration": "3:20",
+            "coverArt": "/heroes/ndufo_hero_slide2_retina.jpg",
+            "audioUrl": "/uploads/audio/enenda.wav",
+            "priceCredits": 50,
+            "isFeatured": True
+        }
+    ]
+}
+
+
+@router.get("/config")
+def get_stream_config():
+    """Returns backend configuration for TuneStream."""
+    config_doc = None
+    try:
+        config_doc = db.stream_config.find_one({"type": "global_playback"})
+    except Exception as e:
+        logger.warning(f"Failed to query stream_config collection: {e}")
+
+    if not config_doc:
+        return {
+            "introductory_track": DEFAULT_INTRO_TRACK,
+            "alternative_intro_tracks": DEFAULT_ALT_INTRO_TRACKS,
+            "featured_playlist": DEFAULT_FEATURED_PLAYLIST,
+            "autoplay_enabled": True,
+            "default_volume": 0.85,
+            "supported_genres": [
+                "Afrobeats", "Amapiano", "Gengetone", "Bongo Flava",
+                "Afro-House", "Hip Hop", "R&B / Soul", "Latin Fusion", "Reggae & Dancehall"
+            ],
+            "supported_vibes": [
+                "Sunset Chill & Focus", "High-Energy Club", "Road Trip & Commute",
+                "Deep Bass / Sound System", "Acoustic & Organic"
+            ]
+        }
+
+    return {
+        "introductory_track": config_doc.get("introductory_track", DEFAULT_INTRO_TRACK),
+        "alternative_intro_tracks": config_doc.get("alternative_intro_tracks", DEFAULT_ALT_INTRO_TRACKS),
+        "featured_playlist": config_doc.get("featured_playlist", DEFAULT_FEATURED_PLAYLIST),
+        "autoplay_enabled": config_doc.get("autoplay_enabled", True),
+        "default_volume": config_doc.get("default_volume", 0.85),
+        "supported_genres": [
+            "Afrobeats", "Amapiano", "Gengetone", "Bongo Flava",
+            "Afro-House", "Hip Hop", "R&B / Soul", "Latin Fusion", "Reggae & Dancehall"
+        ],
+        "supported_vibes": [
+            "Sunset Chill & Focus", "High-Energy Club", "Road Trip & Commute",
+            "Deep Bass / Sound System", "Acoustic & Organic"
+        ]
+    }
+
+
+@router.put("/admin/config")
+def update_admin_stream_config(
+    payload: AdminStreamConfigUpdate,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Allows backend administrators to establish the featured playlist and introductory background music."""
+    update_data = {}
+    if payload.introductory_track is not None:
+        update_data["introductory_track"] = payload.introductory_track
+    if payload.alternative_intro_tracks is not None:
+        update_data["alternative_intro_tracks"] = payload.alternative_intro_tracks
+    if payload.featured_playlist is not None:
+        update_data["featured_playlist"] = payload.featured_playlist
+    if payload.autoplay_enabled is not None:
+        update_data["autoplay_enabled"] = payload.autoplay_enabled
+    if payload.default_volume is not None:
+        update_data["default_volume"] = payload.default_volume
+
+    try:
+        db.stream_config.update_one(
+            {"type": "global_playback"},
+            {"$set": update_data},
+            upsert=True
+        )
+    except Exception as e:
+        logger.error(f"Failed to persist stream config: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save stream configuration")
+
+    return {"ok": True, "message": "Stream configuration updated successfully", "config": update_data}
+
+
+@router.post("/onboarding/preferences")
+def save_user_stream_preferences(
+    payload: UserPreferencesPayload,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Saves user listening interests (genres, artists, vibes) during onboarding."""
+    uid = (current_user and str(current_user.get("_id"))) or payload.user_id or "anonymous_listener"
+    pref_data = {
+        "user_id": uid,
+        "genres": payload.genres or [],
+        "favorite_artists": payload.favorite_artists or [],
+        "vibes": payload.vibes or [],
+        "country": payload.country or "KE",
+        "updated_at": "2026-10-31T00:00:00Z"
+    }
+
+    try:
+        db.user_stream_preferences.update_one(
+            {"user_id": uid},
+            {"$set": pref_data},
+            upsert=True
+        )
+    except Exception as e:
+        logger.warning(f"Could not persist preferences to MongoDB, returning memory object: {e}")
+
+    return {
+        "ok": True,
+        "message": "Listener interests saved. Your TuneStream experience is now 100% personalized.",
+        "preferences": pref_data
+    }
+
+
+@router.get("/personalized-playlist")
+def get_personalized_playlist(
+    user_id: Optional[str] = None,
+    genres: Optional[str] = None,
+    creators: Optional[str] = None,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Generates a dynamic 100% personalized playlist tailored to the user's recorded interests and preferred creators."""
+    uid = (current_user and str(current_user.get("_id"))) or user_id or "anonymous_listener"
+    
+    saved_pref = None
+    try:
+        saved_pref = db.user_stream_preferences.find_one({"user_id": uid})
+    except Exception:
+        pass
+
+    target_genres = []
+    if genres:
+        target_genres = [g.strip().lower() for g in genres.split(",") if g.strip()]
+    elif saved_pref and saved_pref.get("genres"):
+        target_genres = [g.lower() for g in saved_pref.get("genres")]
+
+    target_creators = []
+    if creators:
+        target_creators = [c.strip().lower().replace("_", " ") for c in creators.split(",") if c.strip()]
+    elif saved_pref and saved_pref.get("creators"):
+        target_creators = [c.lower().replace("_", " ") for c in saved_pref.get("creators")]
+
+    base_tracks = list(DEFAULT_FEATURED_PLAYLIST["tracks"])
+    
+    # Creator match takes top priority, followed by genre matches
+    creator_matched = []
+    if target_creators:
+        for t in base_tracks:
+            art = t.get("artist", "").lower()
+            if any(c in art for c in target_creators):
+                creator_matched.append(t)
+
+    genre_matched = []
+    if target_genres:
+        for t in base_tracks:
+            if t not in creator_matched and any(g in t.get("genre", "").lower() for g in target_genres):
+                genre_matched.append(t)
+
+    remaining = [t for t in base_tracks if t not in creator_matched and t not in genre_matched]
+    curated_tracks = creator_matched + genre_matched + remaining
+
+    creators_desc = f"featuring {', '.join(target_creators[:3]).title()}" if target_creators else ""
+    genres_desc = f"in {', '.join(target_genres[:3]).title()}" if target_genres else ""
+    desc_tail = f"{creators_desc} {genres_desc}".strip() or "All Rhythms"
+
+    return {
+        "playlist_id": f"pl_personalized_{uid}",
+        "title": "Your Daily Personalized Mix",
+        "description": f"Curated specifically for your taste ({desc_tail}). Continuous 24-bit lossless streaming.",
+        "curated_for": uid,
+        "tracks": curated_tracks,
+        "interests_applied": target_genres,
+        "creators_applied": target_creators
+    }
+
+
+
+
+# Cross-Tab & Cross-Origin Active Playback Synchronization Engine
+# ==============================================================================
+ACTIVE_PLAYBACK_SESSION: dict = {
+    "instance_id": None,
+    "source": None,  # "backend" | "frontend"
+    "track": None,
+    "status": "stopped",
+    "timestamp": 0
+}
+
+
+class ActivePlaybackRequest(BaseModel):
+    instance_id: str
+    source: str = "backend"  # "backend" | "frontend"
+    track: Optional[Dict[str, Any]] = None
+    status: str = "playing"  # "playing" | "paused" | "stopped"
+    timestamp: Optional[float] = None
+
+
+@router.post("/active-playback")
+def set_active_playback(payload: ActivePlaybackRequest):
+    """Broadcast active playback state across all browser tabs and origins."""
+    global ACTIVE_PLAYBACK_SESSION
+    ACTIVE_PLAYBACK_SESSION = {
+        "instance_id": payload.instance_id,
+        "source": payload.source,
+        "track": payload.track,
+        "status": payload.status,
+        "timestamp": payload.timestamp or datetime.now(timezone.utc).timestamp()
+    }
+    return {"status": "ok", "active_session": ACTIVE_PLAYBACK_SESSION}
+
+
+@router.get("/active-playback")
+def get_active_playback():
+    """Retrieve active playback session for cross-tab coordination."""
+    return ACTIVE_PLAYBACK_SESSION
 
 
 @router.get("/{release_id}")
@@ -443,3 +772,12 @@ def report_content(
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ==============================================================================
+# TuneStream Featured Playlist & First-Time Visitor Background Music Engine
+# ==============================================================================
+
+
+
+# ==============================================================================

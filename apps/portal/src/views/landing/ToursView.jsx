@@ -156,7 +156,41 @@ export default function ToursView({ sessionUser, initialTab }) {
         }
       />
 
-      <div className="landing-body tours-container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '40px 20px 80px' }}>
+      <div className="landing-body tours-container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 20px 80px' }}>
+        <div className="tours-mode-tabs" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>
+          <button 
+            className={`tours-mode-tab-btn ${activeTab === 'concerts' ? 'active-live' : ''}`}
+            onClick={() => setActiveTab('concerts')}
+          >
+            <RiLiveFill size={16} /> Live Concerts &amp; Shows
+          </button>
+          <button 
+            className={`tours-mode-tab-btn ${activeTab === 'incubation' ? 'active' : ''}`}
+            onClick={() => setActiveTab('incubation')}
+          >
+            <RiGlobalFill size={16} /> Artist Tour Incubation &amp; PR Blueprint
+          </button>
+          <button 
+            className={`tours-mode-tab-btn ${activeTab === 'workshops' ? 'active' : ''}`}
+            onClick={() => setActiveTab('workshops')}
+          >
+            <RiGroupFill size={16} /> Masterclasses &amp; Creative Residencies
+          </button>
+          <button 
+            className={`tours-mode-tab-btn ${activeTab === 'tech-stack' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tech-stack')}
+          >
+            <RiStackFill size={16} /> Ticketing &amp; TunePay POS Stack
+          </button>
+          <button 
+            className="tours-mode-tab-btn"
+            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+            onClick={() => setDocsModalOpen(true)}
+          >
+            <RiBookOpenFill size={16} /> Tour Production Handbook
+          </button>
+        </div>
+
         {/* Strategic Metrics Bar */}
         <div className="tours-metrics-bar" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px', marginBottom: '32px' }}>
           <div className="tours-metric-card" style={{ background: '#060914', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '3px' }}>
@@ -246,39 +280,7 @@ export default function ToursView({ sessionUser, initialTab }) {
         </div>
 
         {/* Navigation Mode Switcher */}
-        <div className="tours-mode-tabs" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>
-          <button 
-            className={`tours-mode-tab-btn ${activeTab === 'concerts' ? 'active-live' : ''}`}
-            onClick={() => setActiveTab('concerts')}
-          >
-            <RiLiveFill size={16} /> Live Concerts &amp; Shows
-          </button>
-          <button 
-            className={`tours-mode-tab-btn ${activeTab === 'incubation' ? 'active' : ''}`}
-            onClick={() => setActiveTab('incubation')}
-          >
-            <RiGlobalFill size={16} /> Artist Tour Incubation &amp; PR Blueprint
-          </button>
-          <button 
-            className={`tours-mode-tab-btn ${activeTab === 'workshops' ? 'active' : ''}`}
-            onClick={() => setActiveTab('workshops')}
-          >
-            <RiGroupFill size={16} /> Masterclasses &amp; Creative Residencies
-          </button>
-          <button 
-            className={`tours-mode-tab-btn ${activeTab === 'tech-stack' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tech-stack')}
-          >
-            <RiStackFill size={16} /> Ticketing &amp; TunePay POS Stack
-          </button>
-          <button 
-            className="tours-mode-tab-btn"
-            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-            onClick={() => setDocsModalOpen(true)}
-          >
-            <RiBookOpenFill size={16} /> Tour Production Handbook
-          </button>
-        </div>
+        
 
         {/* -------------------------------------------------------------
             TAB 0: LIVE CONCERTS, TOURS & MASTERCLASSES SHOWCASE

@@ -1,3 +1,4 @@
+import { initPlaybackSync, broadcastPlaybackStart, broadcastPlaybackStop } from './lib/playbackSync.js';
 // Global self-healing storage recovery to resolve stale state crashes
 if (typeof window !== 'undefined') {
   window.addEventListener('error', (e) => {
@@ -120,6 +121,9 @@ import EpkWizard from './components/EpkWizard.jsx'
 import DashboardCmsStudio from './components/DashboardCmsStudio.jsx'
 import SmartCrmStudioPanel from './components/SmartCrmStudioPanel.jsx'
 import CorporateAdsPanel from './components/CorporateAdsPanel.jsx'
+import PodcastStreamingHub, { AUTHORITATIVE_PODCAST_SHOWS, PodcasterEpkModal } from './components/podcasts/PodcastStreamingHub.jsx'
+import PodcasterStudioWorkspace from './components/podcasts/PodcasterStudioWorkspace.jsx'
+import VcDiscoverCreatorsApp from './components/vc/VcDiscoverCreatorsApp.jsx'
 import AffiliatesView from './views/landing/AffiliatesView.jsx'
 import AffiliateAdminPanel from './components/affiliates/AffiliateAdminPanel.jsx'
 import CatalogueWizard from './components/CatalogueWizard.jsx'
@@ -198,6 +202,8 @@ const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
   { id: 'affiliate', label: 'Affiliate Partner', shortLabel: 'Affiliate', shortDesc: 'Links, Matrix & Payouts', icon: RiCoinsFill, color: '#22d3ee' },
   { id: 'creator', label: 'Creator / Artist', shortLabel: 'Creator', shortDesc: 'EPK, Catalog, Splits', icon: RiMicFill, color: '#22d3ee' },
+  { id: 'podcaster', label: 'Podcaster / Show Host', shortLabel: 'Podcaster', shortDesc: 'Shows, Episodes, EPK & Ads', icon: RiMicFill, color: '#ec4899' },
+  { id: 'vc', label: 'Tour Venture Capital (VC)', shortLabel: 'VC / Investor', shortDesc: 'Tour Vault, Syndicates & Telemetry', icon: RiFundsBoxFill, color: '#00f2fe' },
   { id: 'label', label: 'Record Label', shortLabel: 'Label', shortDesc: 'Roster, Rights, Splits & Sync', icon: RiDiscFill, color: '#a855f7' },
   { id: 'supervisor', label: 'Music Supervisor', shortLabel: 'Supervisor', shortDesc: 'Sync Briefs & Escrow', icon: RiEqualizerFill, color: '#ec4899' },
   { id: 'dj', label: 'DJ / Curator', shortLabel: 'DJ', shortDesc: 'DJ Pool & Library', icon: RiRadioFill, color: '#f59e0b' },
@@ -259,6 +265,13 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
         updatedUser.payout_method = updatedUser.payout_method || 'mpesa';
         updatedUser.payout_account = updatedUser.payout_account || '+254712345678';
         updatedUser.name = updatedUser.name || 'Zawadi Kiprop';
+      } else if (targetRole === 'vc') {
+        updatedUser.name = updatedUser.name || 'Helios Tour Capital Syndicate';
+        updatedUser.entity_name = updatedUser.entity_name || 'Helios Creative Capital LP';
+        updatedUser.accreditation_tier = updatedUser.accreditation_tier || 'Tier-1 Verified Institutional LP';
+      } else if (targetRole === 'podcaster') {
+        updatedUser.name = updatedUser.name || 'AfroTech Disruption Podcast';
+        updatedUser.show_title = updatedUser.show_title || 'AfroTech Disruption';
       }
 
       try {
@@ -277,7 +290,12 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
       }
 
       if (onUpdateUser) onUpdateUser(updatedUser);
-      if (setActiveTab) setActiveTab(targetRole === 'affiliate' ? 'affiliates' : 'home');
+      if (setActiveTab) {
+        if (targetRole === 'affiliate') setActiveTab('affiliates');
+        else if (targetRole === 'vc') setActiveTab('vc-portfolio');
+        else if (targetRole === 'podcaster') setActiveTab('podcaster-studio');
+        else setActiveTab('home');
+      }
       setAccountOpen(false);
       window.location.reload();
     } catch (err) {
@@ -289,6 +307,49 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
   // Notification feed with role-tailored actionable tasks
   const [notifications, setNotifications] = useState(() => {
+    if (sessionUser?.role === 'vc' || sessionUser?.role === 'investor') {
+      return [
+        {
+          id: 'vc_notif_1',
+          title: 'Tour Telemetry Update · 24% Target IRR',
+          body: 'Nairobi City Arena Tour pacing at 104% box office velocity. Automated Split Cascade recoupment online.',
+          actionText: 'Inspect Vault',
+          actionType: 'navigate',
+          targetTab: 'tours-vault',
+          read: false,
+          at: '2m ago'
+        },
+        {
+          id: 'vc_notif_2',
+          title: 'New Senior-Secured Tour Facility Open',
+          body: 'West African Afrobeats Incubation Tour tranche open for institutional co-investment ($25,000 – $100,000 ticket).',
+          actionText: 'View Tranche',
+          actionType: 'navigate',
+          targetTab: 'tours-vault',
+          read: false,
+          at: '18m ago'
+        },
+        {
+          id: 'vc_notif_3',
+          title: 'Creator Discovery & AI Growth Projections',
+          body: '5 high-velocity creators flagged for senior tour advance financing based on 30-day stream acceleration.',
+          actionText: 'Discover',
+          actionType: 'navigate',
+          targetTab: 'vc-discover',
+          read: false,
+          at: '45m ago'
+        },
+        {
+          id: 'vc_notif_4',
+          title: 'Recommended Reading: Tour Debt Playbook',
+          body: 'Senior-Secured Live Tour Advance Structuring & Split Cascade Liquidation Waterfall (Institutional LP Guide).',
+          actionText: 'Read Playbook',
+          actionType: 'vc-guide',
+          read: false,
+          at: '1h ago'
+        }
+      ];
+    }
     if (sessionUser?.role === 'affiliate') {
       return [
         {
@@ -337,7 +398,49 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
   });
 
   useEffect(() => {
-    if (sessionUser?.role === 'affiliate') {
+    if (sessionUser?.role === 'vc' || sessionUser?.role === 'investor') {
+      setNotifications([
+        {
+          id: 'vc_notif_1',
+          title: 'Tour Telemetry Update · 24% Target IRR',
+          body: 'Nairobi City Arena Tour pacing at 104% box office velocity. Automated Split Cascade recoupment online.',
+          actionText: 'Inspect Vault',
+          actionType: 'navigate',
+          targetTab: 'tours-vault',
+          read: false,
+          at: '2m ago'
+        },
+        {
+          id: 'vc_notif_2',
+          title: 'New Senior-Secured Tour Facility Open',
+          body: 'West African Afrobeats Incubation Tour tranche open for institutional co-investment ($25,000 – $100,000 ticket).',
+          actionText: 'View Tranche',
+          actionType: 'navigate',
+          targetTab: 'tours-vault',
+          read: false,
+          at: '18m ago'
+        },
+        {
+          id: 'vc_notif_3',
+          title: 'Creator Discovery & AI Growth Projections',
+          body: '5 high-velocity creators flagged for senior tour advance financing based on 30-day stream acceleration.',
+          actionText: 'Discover',
+          actionType: 'navigate',
+          targetTab: 'vc-discover',
+          read: false,
+          at: '45m ago'
+        },
+        {
+          id: 'vc_notif_4',
+          title: 'Recommended Reading: Tour Debt Playbook',
+          body: 'Senior-Secured Live Tour Advance Structuring & Split Cascade Liquidation Waterfall (Institutional LP Guide).',
+          actionText: 'Read Playbook',
+          actionType: 'vc-guide',
+          read: false,
+          at: '1h ago'
+        }
+      ]);
+    } else if (sessionUser?.role === 'affiliate') {
       setNotifications([
         {
           id: 'aff_payout',
@@ -397,8 +500,10 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
   return (
     <header className="dashboard-topbar" data-testid="dashboard-topbar">
       <div className="dashboard-topbar-title">
-        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Admin Console</span>
-        <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
+        <span style={{ fontSize: '10.5px', color: sessionUser?.role === 'consumer' ? '#00f2fe' : '#64748b', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          {sessionUser?.role === 'consumer' ? 'TuneStream Listener Console • 24-Bit Lossless' : 'Admin Console'}
+        </span>
+        <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', margin: '2px 0 0' }}>
           {sessionUser?.brand_name || sessionUser?.name || 'TuneMavens'}
         </h1>
       </div>
@@ -434,6 +539,43 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
         {/* Unified Credits Badge & Reload Trigger on Topbar */}
         {(() => {
+          const isVc = sessionUser?.role === 'vc' || sessionUser?.role === 'investor';
+          if (isVc) {
+            return (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  background: 'rgba(0, 242, 254, 0.08)',
+                  border: '1px solid rgba(0, 242, 254, 0.35)',
+                  color: '#00f2fe',
+                  padding: '5px 12px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'default'
+                }}
+                title="Institutional LP Syndicate Account: VCs & Investors have full platformwide access and are never charged credits."
+                data-testid="topbar-vc-credit-exempt-badge"
+              >
+                <RiShieldCheckFill size={15} style={{ color: '#00f2fe' }} />
+                <span>Institutional LP</span>
+                <span style={{
+                  fontSize: '10px',
+                  background: 'rgba(0, 242, 254, 0.2)',
+                  color: '#00f2fe',
+                  padding: '1px 6px',
+                  borderRadius: '2px',
+                  fontWeight: 800,
+                  letterSpacing: '0.4px',
+                  textTransform: 'uppercase'
+                }}>
+                  Credit-Exempt
+                </span>
+              </div>
+            );
+          }
           const isAffiliate = sessionUser?.role === 'affiliate' || activeTab === 'affiliates';
           const creditsCount = sessionUser?.credits ?? 0;
           return (
@@ -550,6 +692,10 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                                 window.dispatchEvent(new CustomEvent('tunemavens:open-direct-talent'));
                               } else if (n.actionType === 'guide') {
                                 window.dispatchEvent(new CustomEvent('tunemavens:open-reading-doc', { detail: { docId: 'affiliate-program-guide' } }));
+                              } else if (n.actionType === 'navigate' && n.targetTab && typeof setActiveTab === 'function') {
+                                setActiveTab(n.targetTab);
+                              } else if (n.actionType === 'vc-guide') {
+                                window.dispatchEvent(new CustomEvent('tunemavens:open-vc-guide'));
                               }
                               setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
                             }}
@@ -589,12 +735,17 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           <button
             className="topbar-account-btn"
             onClick={() => { setAccountOpen(o => !o); setNotifOpen(false); }}
-            title="Account"
+            title="Account & Profile"
             data-testid="topbar-account-button"
           >
-            <span className="topbar-avatar">{initial}</span>
-            <span className="topbar-account-name">{sessionUser?.name || 'Account'}</span>
-            <RiArrowDownSFill size={14} />
+            <span className="topbar-avatar" style={{ background: currentRoleObj?.color || '#0ea5e9', color: '#060813' }}>{initial}</span>
+            <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15, textAlign: 'left' }}>
+              <span className="topbar-account-name">{sessionUser?.name || 'Listener'}</span>
+              <span style={{ fontSize: '9.5px', fontWeight: 800, color: currentRoleObj?.color || '#00f2fe', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {sessionUser?.role === 'consumer' ? 'Verified Listener' : (currentRoleObj?.shortLabel || 'Member')}
+              </span>
+            </span>
+            <RiArrowDownSFill size={14} style={{ color: '#94a3b8' }} />
           </button>
           {accountOpen && (
             <div className="topbar-dropdown topbar-dropdown-account" data-testid="topbar-account-dropdown">
@@ -612,7 +763,9 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                       {sessionUser?.role || 'creator'}
                     </span>
                     <span style={{ fontSize: '10px', color: '#64748b' }}>
-                      · {sessionUser?.credits ?? 0} credits
+                      {sessionUser?.role === 'vc' || sessionUser?.role === 'investor' 
+                        ? '· Institutional LP (Credit-Exempt)' 
+                        : `· ${sessionUser?.credits ?? 0} credits`}
                     </span>
                   </div>
                 </div>
@@ -766,6 +919,11 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
 // Collapsed sidebar navigation items icon representations & descriptions
 const NAV_ITEM_DESCRIPTIONS = {
+  'vc-discover': {
+    title: 'Discover Creators & Catalog',
+    desc: 'Browse creators & catalogue, audit historical performance telemetry & AI growth projections, and execute financing agreements online',
+    category: 'VC Investment Suite'
+  },
   'vc-portfolio': {
     title: 'Portfolio & Yield',
     desc: 'Capital deployment analytics, IRR metrics, active creator investments, and recoupment velocity',
@@ -782,6 +940,16 @@ const NAV_ITEM_DESCRIPTIONS = {
     category: 'VC Investment Suite'
   },
 
+  podcasts: {
+    title: 'Podcasts & Shows Hub',
+    desc: 'Stream original shows, browse episode chapters & transcripts, tip hosts, and inspect Podcaster EPKs',
+    category: 'TuneStream'
+  },
+  'podcaster-studio': {
+    title: 'Podcaster Studio & EPK',
+    desc: 'Full backend for podcasters: episode publishing, -16 LUFS mastering, Podcaster EPK builder, Corporate Ad Services & guest CRM',
+    category: 'Podcasts & Shows'
+  },
   home: {
     title: 'Overview',
     desc: 'Platform analytics, stream counts, revenue summaries, and workspace stats',
@@ -883,8 +1051,18 @@ const NAV_ITEM_DESCRIPTIONS = {
     category: 'TuneStream'
   },
   'stream-controls': {
-    title: 'Player & Devices',
+    title: '24-Bit Studio EQ & DAC',
     desc: 'TuneStream lossless audio player configuration, bit-depth controls & streaming device routing',
+    category: 'TuneStream'
+  },
+  'listener-apps': {
+    title: 'Listener Apps Suite',
+    desc: 'TuneStream Mobile (iOS & Android), Studio Desktop DAC Bridge, and Live Pass & CarPlay apps',
+    category: 'TuneStream'
+  },
+  'device-sync': {
+    title: 'Mobile & Offline Cache',
+    desc: 'Manage your 8GB smart FLAC offline crate cache and paired listener devices',
     category: 'TuneStream'
   },
   'pos-inventory': {
@@ -930,11 +1108,11 @@ function DashboardView({
     return reconcileUserApps({
       id: 'sandbox_user_demo',
       email: `${reqRole}_demo@tunemavens.com`,
-      name: reqRole === 'label' ? 'TuneMavens Records' : 'TuneMavens Studio',
+      name: reqRole === 'consumer' ? 'TuneStream Listener' : (reqRole === 'label' ? 'TuneMavens Records' : 'TuneMavens Studio'),
       role: reqRole,
       credits: 600,
       plan: 'pro',
-      brand_name: reqRole === 'label' ? 'TuneMavens Records' : 'Studio Roster',
+      brand_name: reqRole === 'consumer' ? 'TuneStream Hi-Fi' : (reqRole === 'label' ? 'TuneMavens Records' : 'Studio Roster'),
       country: 'KE',
       admin_sandbox: true,
       apps: [...targetApps]
@@ -944,10 +1122,13 @@ function DashboardView({
   // Compute effective role immediately on first render to prevent any consumer backend redirection
   const effectiveRole = useMemo(() => {
     if (reqRoleParam) return reqRoleParam;
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('tunestream_active_backend') === 'true') {
+      return 'consumer';
+    }
     if (['vc-portfolio', 'vc-sponsorship', 'tours-vault'].includes(initialTabQuery)) {
       return 'vc';
     }
-    if (initialTabQuery && !['library', 'tips', 'stream-controls', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
+    if (initialTabQuery && !['home', 'explore', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
       if (sessionUser?.role === 'consumer') {
         return 'creator';
       }
@@ -973,6 +1154,7 @@ function DashboardView({
         onUpdateUser(activeUser);
       }
       try {
+        if (reqRoleParam) localStorage.setItem('tunemavens_active_persona', activeUser.role);
         sessionStorage.setItem('tunemavens_session', JSON.stringify(activeUser));
         localStorage.setItem('tunemavens_saved_user', JSON.stringify(activeUser));
       } catch (_) {}
@@ -1095,11 +1277,14 @@ function DashboardView({
     window.addEventListener('tunemavens:open-payout-settings', onOpenPayout);
     window.addEventListener('tunemavens:open-referral-link', onOpenLink);
     window.addEventListener('tunemavens:open-direct-talent', onOpenTalent);
+    const onNavTab = (e) => { if (e?.detail?.tab) setActiveTab(e.detail.tab); };
+    window.addEventListener('tunemavens:navigate-tab', onNavTab);
 
     return () => {
       window.removeEventListener('tunemavens:open-payout-settings', onOpenPayout);
       window.removeEventListener('tunemavens:open-referral-link', onOpenLink);
       window.removeEventListener('tunemavens:open-direct-talent', onOpenTalent);
+      window.removeEventListener('tunemavens:navigate-tab', onNavTab);
     };
   }, []);
 
@@ -1166,6 +1351,21 @@ function DashboardView({
     }
   };
 
+  // Cross-Tab Playback Coordinator in Portal Backend
+  useEffect(() => {
+    const cleanup = initPlaybackSync({
+      isBackend: true,
+      onStopRemotePlayback: () => {
+        const audioEl = document.getElementById('tunestream-global-audio');
+        if (audioEl && !audioEl.paused) {
+          audioEl.pause();
+        }
+        setGlobalPlaying(false);
+      }
+    });
+    return cleanup;
+  }, []);
+
   // TuneStream Global Audio Player State
   const [globalTrack, setGlobalTrack] = useState(null);
   const [globalPlaying, setGlobalPlaying] = useState(false);
@@ -1178,6 +1378,8 @@ function DashboardView({
     if (!t) return;
     setGlobalTrack(t);
     setGlobalPlaying(true);
+    // Explicit selection from backend: notify cross-tab coordinator to halt other instances
+    broadcastPlaybackStart('backend', t);
     setGlobalProgress(0);
     if (Array.isArray(queue) && queue.length > 0) {
       setPlaylistQueue(queue);
@@ -1242,9 +1444,9 @@ function DashboardView({
     // Role-based permission guard ensuring users only access authorized apps
     const userRole = activeUser?.role || 'creator';
     const roleAllowed = {
-      vc: ['home', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'sync', 'distribution-tracker', 'epk-builder', 'catalog', 'app-marketplace', 'profile', 'settings', 'support'],
-      investor: ['home', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'sync', 'distribution-tracker', 'epk-builder', 'catalog', 'app-marketplace', 'profile', 'settings', 'support'],
-      admin: ['home', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
+      vc: ['home', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
+      investor: ['home', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
+      admin: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
       corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
@@ -1252,9 +1454,10 @@ function DashboardView({
       dj: ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
       studio: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
       supervisor: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
-      consumer: ['home', 'library', 'tips', 'stream-controls', 'profile', 'settings', 'support', 'crm'],
-      affiliate: ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
-      creator: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support']
+      podcaster: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
+      consumer: ['home', 'explore', 'podcasts', 'podcaster-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
+      affiliate: ['home', 'affiliates', 'podcasts', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
+      creator: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
     if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
@@ -1271,7 +1474,14 @@ function DashboardView({
     }
 
     switch (activeTab) {
-            case 'vc-portfolio':
+      case 'vc-discover':
+        return (
+          <VcDiscoverCreatorsApp 
+            sessionUser={sessionUser}
+            onNavigateTab={setActiveTab}
+          />
+        );
+      case 'vc-portfolio':
       case 'vc-sponsorship':
       case 'tours-vault':
         return (
@@ -1285,15 +1495,31 @@ function DashboardView({
         if (userRole === 'vc' || userRole === 'investor') {
           return (
             <VcDashboardPanel 
-              sessionUser={sessionUser} 
+              sessionUser={activeUser} 
               initialTab="portfolio"
               setActiveDashboardTab={setActiveTab}
             />
           );
         }
+        if (userRole === 'podcaster') {
+          return <PodcasterStudioWorkspace sessionUser={activeUser} initialSection="overview" />;
+        }
+        if (userRole === 'consumer') {
+          return (
+            <ConsumerHomeOverviewPanel
+              sessionUser={activeUser}
+              tracks={catalogTracks}
+              userCredits={userCredits}
+              setUserCredits={setUserCredits}
+              setActiveTab={setActiveTab}
+              onPlayTrack={handlePlayGlobalTrack}
+              onOpenCreditReload={handleOpenCreditReload}
+            />
+          );
+        }
         return (
           <DashboardHome 
-            sessionUser={sessionUser}
+            sessionUser={activeUser}
             tracks={catalogTracks}
             userCredits={userCredits}
             payoutBalance={payoutBalance}
@@ -1325,6 +1551,7 @@ function DashboardView({
             setLedgerRows={setLedgerRows}
             payoutBalance={payoutBalance}
             setPayoutBalance={setPayoutBalance}
+            onNavigateTab={setActiveTab}
           />
         );
       case 'djpool':
@@ -1364,19 +1591,50 @@ function DashboardView({
         );
       case 'settings':
       case 'profile':
+        if (userRole === 'consumer') {
+          return <ConsumerPreferencesPanel sessionUser={activeUser} />;
+        }
         return (
           <ProfileSettingsPanel 
-            sessionUser={sessionUser} 
+            sessionUser={activeUser} 
             onUpdateUser={onUpdateUser} 
             setActiveTab={setActiveTab}
           />
         );
+      case 'explore':
+        return <ConsumerExploreStreamPanel tracks={catalogTracks} onPlayTrack={handlePlayGlobalTrack} />;
+      case 'podcasts':
+        return (
+          <PodcastStreamingHub
+            userCredits={userCredits}
+            setUserCredits={setUserCredits}
+            onOpenCreditReload={handleOpenCreditReload}
+          />
+        );
+      case 'podcaster-studio':
+        return <PodcasterStudioWorkspace sessionUser={activeUser} initialSection="overview" />;
+      case 'podcaster-episodes':
+        return <PodcasterStudioWorkspace sessionUser={activeUser} initialSection="episodes" />;
+      case 'podcaster-epk':
+        return <PodcasterStudioWorkspace sessionUser={activeUser} initialSection="epk" />;
+      case 'podcaster-monetization':
+        return <PodcasterStudioWorkspace sessionUser={activeUser} initialSection="monetization" />;
+      case 'podcaster-guests':
+        return <PodcasterStudioWorkspace sessionUser={activeUser} initialSection="guests" />;
+      case 'radio':
+        return <ConsumerRadioNodePanel tracks={catalogTracks} onPlayTrack={handlePlayGlobalTrack} />;
+      case 'concerts':
+        return <ConsumerLiveConcertsPanel userCredits={userCredits} setUserCredits={setUserCredits} />;
       case 'library':
-        return <ConsumerLibraryPanel />;
+        return <ConsumerLibraryPanel tracks={catalogTracks} onPlayTrack={handlePlayGlobalTrack} />;
       case 'tips':
-        return <ConsumerTipsPanel />;
+        return <ConsumerTipsPanel userCredits={userCredits} setUserCredits={setUserCredits} onOpenCreditReload={handleOpenCreditReload} />;
       case 'stream-controls':
         return <ConsumerStreamControlsPanel />;
+      case 'listener-apps':
+        return <ConsumerListenerAppsPanel setActiveTab={setActiveTab} />;
+      case 'device-sync':
+        return <ConsumerDeviceSyncPanel tracks={catalogTracks} />;
       case 'pos-terminal':
         return (
           <div style={{ padding: '24px 32px' }}>
@@ -1502,7 +1760,7 @@ function DashboardView({
           />
         );
       case 'crm':
-        return <CrmPanel sessionUser={activeUser} />;
+        return <CrmPanel sessionUser={activeUser} onNavigateTab={setActiveTab} />;
       case 'cms':
         return <CmsPanel sessionUser={sessionUser} epk={creatorEpk} setEpk={setCreatorEpk} tracks={catalogTracks} initialTab={cmsInitialTab} onSwitchToWizard={() => setActiveTab('catalog')} />;
       case 'epk-builder':
@@ -1541,12 +1799,61 @@ function DashboardView({
     const role = activeUser?.role || 'creator';
     
     const allItems = {
-      home: { id: 'home', label: 'Overview', icon: RiBarChartFill, category: 'Dashboard' },
+      podcasts: {
+        id: 'podcasts',
+        label: 'Podcasts & Shows Hub',
+        icon: RiMicFill,
+        title: 'Podcasts & Shows Hub',
+        desc: 'Stream original shows, browse episode chapters & transcripts, tip hosts, and inspect Podcaster EPKs',
+        category: 'Podcasts & Shows'
+      },
+      'podcaster-studio': {
+        id: 'podcaster-studio',
+        label: 'Podcaster Studio & EPK',
+        icon: RiMicFill,
+        title: 'Podcaster Studio & EPK',
+        desc: 'Full backend for podcasters: episode publishing, -16 LUFS mastering, Podcaster EPK builder, Corporate Ad Services & guest CRM',
+        category: 'Podcasts & Shows'
+      },
+      'podcaster-episodes': {
+        id: 'podcaster-episodes',
+        label: 'Episode Publisher & LUFS',
+        icon: RiEqualizerFill,
+        title: 'Episode Publisher & -16 LUFS Mastering',
+        desc: 'Upload podcast episodes, normalize to -16 LUFS, and edit chapters & transcripts',
+        category: 'Podcasts & Shows'
+      },
+      'podcaster-epk': {
+        id: 'podcaster-epk',
+        label: 'Podcaster EPK Builder',
+        icon: RiGlobalFill,
+        title: 'Podcaster EPK & Media Kit Builder',
+        desc: 'Configure your public Podcaster EPK, audience demographics, and press kit',
+        category: 'Podcasts & Shows'
+      },
+      'podcaster-monetization': {
+        id: 'podcaster-monetization',
+        label: 'Podcast Ad Rates & Splits',
+        icon: RiCoinsFill,
+        title: 'Podcast Ad Rates & Co-Host Splits',
+        desc: 'Localized Corporate Ad Services sponsorship rates and automated co-host split cascades',
+        category: 'Podcasts & Shows'
+      },
+      'podcaster-guests': {
+        id: 'podcaster-guests',
+        label: 'Guest Booking CRM',
+        icon: RiTeamFill,
+        title: 'Guest Booking & Release CRM',
+        desc: 'Manage incoming guest pitches and signed audio/video broadcast waivers',
+        category: 'Podcasts & Shows'
+      },
+  home: { id: 'home', label: role === 'consumer' ? 'For You & Mixes' : 'Overview', icon: role === 'consumer' ? RiHomeFill : RiBarChartFill, category: role === 'consumer' ? 'TuneStream Listener' : 'Dashboard' },
       catalog: { id: 'catalog', label: 'Catalogue Machine', icon: RiDatabase2Fill, category: 'Catalog & IP' },
       'epk-builder': { id: 'epk-builder', label: 'EPK Builder', icon: RiDiscFill, category: 'Catalog & IP' },
       splits: { id: 'splits', label: 'Split Cascade', icon: RiCoinsFill, category: 'Royalty Ledgers' },
       djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
       sync: { id: 'sync', label: 'Sync Marketplace', icon: RiGlobalFill, category: 'Pools & Sync' },
+      'vc-discover': { id: 'vc-discover', label: 'Discover Creators & Catalog', icon: RiSearchLine, category: 'VC Investment Suite' },
       'vc-portfolio': { id: 'vc-portfolio', label: 'Portfolio & Yield', icon: RiFundsBoxFill, category: 'VC Investment Suite' },
       'vc-sponsorship': { id: 'vc-sponsorship', label: 'Career Sponsorship', icon: RiSparklingFill, category: 'VC Investment Suite' },
       'tours-vault': { id: 'tours-vault', label: 'Tour Capital Vault', icon: RiCompass3Fill, category: 'VC Investment Suite' },
@@ -1555,9 +1862,11 @@ function DashboardView({
       profile: { id: 'profile', label: 'Profile Settings', icon: RiSettings3Fill, category: 'Account' },
       support: { id: 'support', label: 'Support & AI Claims', icon: RiCustomerService2Fill, category: 'Account' },
       // Native-app user controls (full editing parity with the apps)
-      library: { id: 'library', label: 'My Library', icon: RiMusicFill, category: 'tunestream' },
-      tips: { id: 'tips', label: 'Tips & Purchases', icon: RiCoinsFill, category: 'tunestream' },
-      'stream-controls': { id: 'stream-controls', label: 'Player & Devices', icon: RiHeadphoneFill, category: 'tunestream' },
+      library: { id: 'library', label: role === 'consumer' ? 'My Library & Crates' : 'My Library', icon: RiMusicFill, category: role === 'consumer' ? 'TuneStream Listener' : 'tunestream' },
+      tips: { id: 'tips', label: role === 'consumer' ? 'Tips & Artist Support' : 'Tips & Purchases', icon: RiCoinsFill, category: role === 'consumer' ? 'TuneStream Listener' : 'tunestream' },
+      'stream-controls': { id: 'stream-controls', label: role === 'consumer' ? '24-Bit Studio EQ & DAC' : 'Player & Devices', icon: RiEqualizerFill, category: role === 'consumer' ? 'TuneStream Listener' : 'tunestream' },
+      'listener-apps': { id: 'listener-apps', label: 'Listener Apps Suite', icon: RiApps2Fill, category: 'Listener Apps & Sync' },
+      'device-sync': { id: 'device-sync', label: 'Mobile & Offline Cache', icon: RiSmartphoneFill, category: 'Listener Apps & Sync' },
       'pos-terminal': { id: 'pos-terminal', label: 'POS Terminal', icon: RiBankCardFill, category: 'Live Commerce' },
       'distribution-tracker': { id: 'distribution-tracker', label: 'Distribution Radar', icon: RiBarChartFill, category: 'Distribution' },
       'hosting-manager': { id: 'hosting-manager', label: 'Hosting & Domains', icon: RiGlobalFill, category: 'Infrastructure' },
@@ -1580,14 +1889,14 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'admin-team', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
+        visibleKeys = ['home', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
         break;
       case 'affiliate':
         visibleKeys = ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'support'];
         break;
-            case 'vc':
+      case 'vc':
       case 'investor':
-        visibleKeys = ['home', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'sync', 'distribution-tracker', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'vc-discover', 'tours-vault', 'vc-portfolio', 'vc-sponsorship', 'splits', 'crm', 'escrow', 'profile', 'support'];
         break;
       case 'corporate':
         visibleKeys = ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'support'];
@@ -1606,12 +1915,15 @@ function DashboardView({
       case 'supervisor':
         visibleKeys = ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'affiliates'];
         break;
+      case 'podcaster':
+        visibleKeys = ['home', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcasts', 'splits', 'corporate-ads', 'social-ai', 'crm', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
+        break;
       case 'consumer':
-        visibleKeys = ['home', 'library', 'tips', 'stream-controls', 'profile', 'support'];
+        visibleKeys = ['home', 'podcasts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'podcaster-studio', 'podcasts', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
         break;
     }
 
@@ -1637,7 +1949,7 @@ function DashboardView({
     const categories = {};
     visibleKeys.forEach(k => {
       // Check if this tab is a marketplace app, and if so, only show if activated (CRM and Corporate Ads are always available).
-      if (APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads' && k !== 'pos-terminal' && k !== 'distribution-tracker' && k !== 'hosting-manager') {
+      if (role !== 'consumer' && APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads' && k !== 'pos-terminal' && k !== 'distribution-tracker' && k !== 'hosting-manager') {
         const activeApps = sessionUser?.apps || getStoredActivatedApps(sessionUser) || [];
         if (!activeApps.includes(APP_SLUGS[k])) {
           return;
@@ -1654,6 +1966,247 @@ function DashboardView({
     return categories;
   };
 
+  if (activeUser?.role === 'consumer') {
+    const listenerCategories = {
+      'Discover & Stream': [
+        { id: 'home', label: 'For You & Mixes', icon: RiHomeFill, color: '#00f2fe' },
+        { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Fill, color: '#00f2fe' },
+        { id: 'podcasts', label: 'Podcasts & Shows', icon: RiMicFill, color: '#10b981', badge: 'PODCASTS' },
+        { id: 'radio', label: 'Live 24-Bit Radio', icon: RiRadioFill, color: '#a855f7' },
+      ],
+      'My Collection': [
+        { id: 'library', label: 'My Playlist Crates', icon: RiMusicFill, color: '#a855f7', badge: 'CRATES' },
+        { id: 'concerts', label: 'Live Shows & Passes', icon: RiTicket2Fill, color: '#f59e0b', badge: 'TICKETS' },
+      ],
+      'Sound & Devices': [
+        { id: 'stream-controls', label: 'Lossless Sound & EQ', icon: RiEqualizerFill, color: '#10b981', badge: '24-BIT' },
+        { id: 'device-sync', label: 'Mobile & Offline Sync', icon: RiSmartphoneFill, color: '#a855f7', badge: '8GB SYNC' },
+      ],
+      'Superfan Wallet': [
+        { id: 'tips', label: 'Creator Tipping', icon: RiCoinsFill, color: '#00f2fe', badge: 'TIPS' },
+      ],
+      'Listener Apps & Support': [
+        { id: 'listener-apps', label: 'Listener Apps Suite', icon: RiApps2Fill, color: '#00f2fe', badge: 'APPS' },
+        { id: 'support', label: 'Listener Support Desk', icon: RiCustomerService2Fill },
+        { id: 'profile', label: 'Taste & Audio Preferences', icon: RiSettings3Fill },
+      ]
+    };
+
+    const listenerTabTitles = {
+      home: 'For You & Personalized Mixes',
+      explore: 'Explore & Lossless Stream',
+      podcasts: 'Podcasts & Original Shows Hub',
+      'podcaster-studio': 'Podcaster Studio, Show Host EPK & Ad Rates',
+      radio: 'Live 24-Bit Radio Node',
+      library: 'My Playlist Crates & Offline Vault',
+      concerts: 'Live Shows & VIP Tour Passes',
+      'stream-controls': '24-Bit / 96kHz Studio EQ & DAC',
+      'device-sync': 'Mobile & 8GB Offline Crate Sync',
+      tips: 'Direct Artist Tipping & Superfan Wallet',
+      'listener-apps': 'TuneStream Listener Apps Suite',
+      support: 'Listener Support & Community',
+      profile: 'Listener Taste DNA & Preferences',
+      settings: 'Listener Taste DNA & Preferences'
+    };
+
+    return (
+      <div className="dashboard-container" data-testid="tunestream-dedicated-listener-backend">
+        <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`} style={{ borderRight: '1px solid rgba(0, 242, 254, 0.14)', background: '#070b16' }}>
+          <div className="dashboard-sidebar-scroll" data-testid="dashboard-sidebar-scroll">
+            <div className="dashboard-sidebar-header" style={{ flexDirection: 'column', gap: '6px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <Link to="/native-apps/tunestream" title="Back to TuneStream Player" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', gap: '3px' }}>
+                <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: collapsed ? '26px' : '32px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
+                {!collapsed && (
+                  <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase' }}>
+                    a tunemavens utility
+                  </span>
+                )}
+              </Link>
+              {!collapsed && (
+                <div style={{ marginTop: '6px', width: '100%', padding: '7px 10px', borderRadius: '3px', background: 'rgba(0, 242, 254, 0.08)', border: '1px solid rgba(0, 242, 254, 0.25)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <RiHeadphoneFill size={15} color="#00f2fe" />
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#fff' }}>Listener Backend</div>
+                    <div style={{ fontSize: '9.5px', color: '#00f2fe', fontWeight: 700 }}>24-Bit / 96kHz Lossless</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="dashboard-nav-item collapse-toggle-btn"
+              style={{ border: 'none', background: 'transparent', padding: '6px', justifyContent: 'center', width: '100%', margin: '8px 0', color: '#94a3b8' }}
+              title={!collapsed ? "Collapse Sidebar" : "Expand Sidebar"}
+            >
+              {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
+            </button>
+
+            {Object.entries(listenerCategories).map(([category, items]) => (
+              <div key={category} className="sidebar-category-group" style={{ marginBottom: '12px' }}>
+                {!collapsed && (
+                  <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
+                    {category}
+                  </div>
+                )}
+                <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
+                  {items.map(item => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab(item.id)}
+                          className={`dashboard-nav-item ${isActive ? 'active' : ''}`}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Icon size={16} style={{ color: isActive ? '#00f2fe' : (item.color || '#94a3b8') }} />
+                            {!collapsed && <span>{item.label}</span>}
+                          </span>
+                          {!collapsed && item.badge && (
+                            <span style={{ fontSize: '8.5px', fontWeight: 800, padding: '2px 5px', borderRadius: '3px', background: 'rgba(0,242,254,0.12)', color: item.color || '#00f2fe' }}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+
+            <ul className="dashboard-nav-list" style={{ marginTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px' }}>
+              <li>
+                <Link
+                  to="/native-apps/tunestream"
+                  className="dashboard-nav-item"
+                  style={{ textDecoration: 'none', color: '#00f2fe', fontWeight: 700 }}
+                >
+                  <RiArrowLeftFill size={16} />
+                  {!collapsed && "Back to TuneStream Player"}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="dashboard-sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="dashboard-profile-card">
+              <div className="dashboard-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 242, 254, 0.15)', color: '#00f2fe', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
+                {(activeUser?.name || 'L').charAt(0).toUpperCase()}
+              </div>
+              {!collapsed && (
+                <div className="dashboard-profile-info">
+                  <h5 style={{ color: '#fff', margin: 0 }}>{activeUser?.name || 'TuneStream Listener'}</h5>
+                  <span style={{ fontSize: '10px', color: '#00f2fe', fontWeight: 700, display: 'inline-block', marginTop: '2px' }}>
+                    🎧 Hi-Fi Audiophile
+                  </span>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onLogout}
+              className="dashboard-nav-item"
+              style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px' }}
+            >
+              <RiCloseFill size={14} />
+              {!collapsed && "Log Out"}
+            </button>
+          </div>
+        </aside>
+
+        <main className="dashboard-main-content">
+          <header className="dashboard-topbar" style={{ borderBottom: '1px solid rgba(0, 242, 254, 0.12)', background: 'rgba(7, 11, 22, 0.95)' }}>
+            <div className="dashboard-topbar-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div>
+                <span style={{ fontSize: '10px', color: '#00f2fe', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>TuneStream Personal Audio Engine</span>
+                <h1 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: '2px 0 0' }}>
+                  {listenerTabTitles[activeTab] || 'TuneStream Listener Hub'}
+                </h1>
+              </div>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '3px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', fontSize: '11px', fontWeight: 700 }}>
+                ● Lossless Edge Active
+              </span>
+            </div>
+
+            <div className="dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => handleOpenCreditReload('Top-Up Non-Expiring Listener TM Credits')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 242, 254, 0.12)', border: '1px solid rgba(0, 242, 254, 0.35)', color: '#00f2fe', padding: '6px 12px', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+              >
+                <RiCoinsFill size={15} />
+                <span>{(userCredits ?? 600).toLocaleString()} TM Credits</span>
+                <span style={{ background: '#00f2fe', color: '#060813', padding: '1px 6px', borderRadius: '3px', fontSize: '10px', fontWeight: 900 }}>+ Top Up</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('listener-apps')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(168, 85, 247, 0.12)', border: '1px solid rgba(168, 85, 247, 0.35)', color: '#c084fc', padding: '6px 12px', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                <RiApps2Fill size={14} />
+                <span>Listener Apps</span>
+              </button>
+
+              <Link
+                to="/native-apps/tunestream"
+                className="topbar-back-to-site"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '3px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: '12px', fontWeight: 700, textDecoration: 'none' }}
+              >
+                <RiPlayFill size={14} color="#00f2fe" />
+                <span>Web Player</span>
+              </Link>
+            </div>
+          </header>
+
+          <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll" style={{ padding: '24px' }}>
+            {renderActivePanel()}
+          </div>
+
+          <div className="dashboard-copyright-strip" style={{ borderTop: '1px solid rgba(0,242,254,0.1)' }}>
+            <span>© {new Date().getFullYear()} TuneStream • A TuneMavens Utility</span>
+            <span className="dashboard-copyright-divider">·</span>
+            <span>24-Bit / 96kHz Lossless Audio Network • 100% Non-Expiring TM Credits • Zero Monthly Subscriptions</span>
+          </div>
+        </main>
+
+        <GlobalAudioPlayer
+          globalTrack={globalTrack}
+          setGlobalTrack={setGlobalTrack}
+          globalPlaying={globalPlaying}
+          setGlobalPlaying={setGlobalPlaying}
+          globalProgress={globalProgress}
+          setGlobalProgress={setGlobalProgress}
+          isUndocked={isUndocked}
+          setIsUndocked={setIsUndocked}
+          playerPos={playerPos}
+          setPlayerPos={setPlayerPos}
+          catalogTracks={catalogTracks}
+          playlistQueue={playlistQueue}
+          setPlaylistQueue={setPlaylistQueue}
+          userCredits={userCredits}
+          setUserCredits={setUserCredits}
+        />
+
+        <CreditReloadModal
+          isOpen={showCreditReloadModal}
+          onClose={() => setShowCreditReloadModal(false)}
+          reason={creditReloadReason}
+          suggestedPackageId={creditReloadSuggestedPkg}
+          sessionUser={activeUser}
+          onUpdateUser={onUpdateUser}
+          onSuccess={(result) => {
+            const newBal = typeof result === 'number' ? result : (result?.balance ?? ((activeUser?.credits || 0) + (result?.creditsAdded || 0)));
+            setUserCredits(newBal);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-container">
       {/* Sidebar Navigation */}
@@ -1664,15 +2217,15 @@ function DashboardView({
           onScroll={() => setHoveredNavItem(null)}
         >
           <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
-            <Link to="/" title={(activeUser?.role === 'consumer' && ['library', 'tips', 'stream-controls'].includes(activeTab)) ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site"} data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
+            <Link to={activeUser?.role === 'consumer' ? "/native-apps/tunestream" : "/"} title={activeUser?.role === 'consumer' ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site"} data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
               {collapsed ? (
-                (activeUser?.role === 'consumer' && ['library', 'tips', 'stream-controls'].includes(activeTab)) ? (
+                activeUser?.role === 'consumer' ? (
                   <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Icon" style={{ height: '28px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/favicon.png'; }} />
                 ) : (
                   <img src="/favicon.png" alt="TuneMavens Icon" style={{ height: '32px', width: 'auto', display: 'block' }} />
                 )
               ) : (
-                (activeUser?.role === 'consumer' && ['library', 'tips', 'stream-controls'].includes(activeTab)) ? (
+                activeUser?.role === 'consumer' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
                     <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: '32px', width: 'auto', display: 'block', margin: '0 auto' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
                     <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase' }}>a tunemavens utility</span>
@@ -1778,7 +2331,7 @@ function DashboardView({
                 title={!collapsed ? "Back to Home Site" : undefined}
               >
                 <RiArrowLeftFill size={16} />
-                {!collapsed && "Back to Home Site"}
+                {!collapsed && (activeUser?.role === 'consumer' ? "Back to TuneStream Player" : "Back to Home Site")}
               </Link>
             </li>
           </ul>
@@ -1843,7 +2396,7 @@ function DashboardView({
       {/* Main Panel Content */}
       <main className="dashboard-main-content">
         <DashboardTopbar
-          sessionUser={sessionUser}
+          sessionUser={activeUser}
           onLogout={onLogout}
           setActiveTab={setActiveTab}
           onUpdateUser={onUpdateUser}
@@ -1851,8 +2404,14 @@ function DashboardView({
           onOpenCreditReload={handleOpenCreditReload}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
-          {/* Low unified credits prompt banner - Excludes affiliates since affiliate dashboard requires 0 credits */}
-          {(sessionUser?.credits ?? userCredits) < 50 && sessionUser?.role !== 'affiliate' && activeTab !== 'affiliates' && (
+          {/* Low unified credits prompt banner - Excludes affiliates and VCs since institutional accounts require 0 credits */}
+          {(sessionUser?.credits ?? userCredits) < 50 && 
+            sessionUser?.role !== 'affiliate' && 
+            sessionUser?.role !== 'vc' && 
+            sessionUser?.role !== 'investor' && 
+            activeTab !== 'affiliates' && 
+            !activeTab?.startsWith('vc-') && 
+            activeTab !== 'tours-vault' && (
             <div
               style={{
                 background: 'rgba(239, 68, 68, 0.12)',
@@ -1898,11 +2457,11 @@ function DashboardView({
               </button>
             </div>
           )}
-          <OnboardingStripe sessionUser={sessionUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} />
+          {activeUser?.role !== 'consumer' && <OnboardingStripe sessionUser={activeUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} />}
           <div className="admin-app-wrapper" style={{ position: 'relative' }}>
             <div className="admin-app-header-bar" data-testid="admin-app-header-bar">
               <div className="admin-app-header-left">
-                <span className="admin-app-badge">App Workspace</span>
+                <span className="admin-app-badge">{activeUser?.role === 'consumer' ? 'TuneStream Listener Suite' : 'App Workspace'}</span>
                 <span className="admin-app-title">
                   {getRelevantDocLink(activeTab).appTitle}
                 </span>
@@ -2790,6 +3349,993 @@ function PromotedActsAdminPanel() {
 // so a TuneMavens listener or an M-Pesa POS operator can do everything from web too.
 // (PanelHeader now lives in ./components/phase3.jsx alongside the panels that use it.)
 
+function ConsumerExploreStreamPanel({ tracks = [], onPlayTrack }) {
+  const [filterType, setFilterType] = useState('all'); // all | tracks | podcasts | podcasters
+  const [genreFilter, setGenreFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
+  const [search, setSearch] = useState('');
+  const [activePodcasterEpkShow, setActivePodcasterEpkShow] = useState(null);
+
+  const podcastShows = AUTHORITATIVE_PODCAST_SHOWS || [];
+  const podcastEpisodes = podcastShows.flatMap(show =>
+    (show.episodes || []).map(ep => ({
+      ...ep,
+      podcastTitle: show.title,
+      host: show.host,
+      category: show.category,
+      cover: ep.coverArt || show.coverArt,
+      show
+    }))
+  );
+
+  const genres = ['All', 'Afrobeats', 'Amapiano', 'Afro-House', 'Alté & R&B', 'Hip-Hop', 'Podcast • Music Business', 'Podcast • Sound & Culture', 'Podcast • Culture & Nightlife', 'Podcast • Audio Engineering'];
+
+  const filteredTracks = tracks.filter(t => {
+    const matchesGenre = genreFilter === 'All' || (t.genre && t.genre.toLowerCase().includes(genreFilter.toLowerCase()));
+    const matchesSearch = !search.trim() || (t.title && t.title.toLowerCase().includes(search.toLowerCase())) || (t.artist && t.artist.toLowerCase().includes(search.toLowerCase()));
+    return matchesGenre && matchesSearch;
+  }).sort((a, b) => {
+    if (sortBy === 'title') return (a.title || '').localeCompare(b.title || '');
+    if (sortBy === 'genre') return (a.genre || '').localeCompare(b.genre || '');
+    return 0;
+  });
+
+  const filteredPodcasts = podcastEpisodes.filter(ep => {
+    const g = ep.genre || `Podcast • ${ep.category}`;
+    const matchesGenre = genreFilter === 'All' || g.toLowerCase().includes(genreFilter.toLowerCase());
+    const matchesSearch = !search.trim() || (ep.title && ep.title.toLowerCase().includes(search.toLowerCase())) || (ep.host && ep.host.toLowerCase().includes(search.toLowerCase())) || (ep.podcastTitle && ep.podcastTitle.toLowerCase().includes(search.toLowerCase()));
+    return matchesGenre && matchesSearch;
+  });
+
+  const filteredPodcasters = podcastShows.filter(show => {
+    const g = `Podcast • ${show.category}`;
+    const matchesGenre = genreFilter === 'All' || g.toLowerCase().includes(genreFilter.toLowerCase());
+    const matchesSearch = !search.trim() || (show.host && show.host.toLowerCase().includes(search.toLowerCase())) || (show.title && show.title.toLowerCase().includes(search.toLowerCase())) || (show.category && show.category.toLowerCase().includes(search.toLowerCase()));
+    return matchesGenre && matchesSearch;
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} data-testid="tunestream-explore-panel">
+      <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <span style={{ fontSize: '10px', fontWeight: 800, color: '#00f2fe', textTransform: 'uppercase', letterSpacing: '1px' }}>24-Bit Studio Master &amp; Podcast Catalog</span>
+            <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: '4px 0 0' }}>Explore Tracks, Podcasts &amp; Podcaster EPKs</h2>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Search tracks, podcasts, hosts..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', padding: '7px 12px', color: '#fff', fontSize: '12px', outline: 'none', minWidth: '220px' }}
+            />
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              style={{ background: '#090d1f', border: '1px solid rgba(0,242,254,0.35)', borderRadius: '3px', padding: '7px 10px', color: '#fff', fontSize: '11.5px', fontWeight: 700 }}
+            >
+              <option value="newest">Sort: Newest Releases</option>
+              <option value="title">Sort: Title / Host (A–Z)</option>
+              <option value="genre">Sort: Genre / Category</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: `All Results (${filteredTracks.length + filteredPodcasts.length + filteredPodcasters.length})`, color: '#00f2fe' },
+            { id: 'tracks', label: `Lossless Tracks (${filteredTracks.length})`, color: '#10b981' },
+            { id: 'podcasts', label: `Podcasts & Episodes (${filteredPodcasts.length})`, color: '#22d3ee' },
+            { id: 'podcasters', label: `Podcasters & EPKs (${filteredPodcasters.length})`, color: '#ec4899' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setFilterType(tab.id)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: filterType === tab.id ? `1px solid ${tab.color}` : '1px solid rgba(255,255,255,0.1)',
+                background: filterType === tab.id ? tab.color : 'rgba(255,255,255,0.03)',
+                color: filterType === tab.id ? '#060813' : '#fff',
+                fontSize: '11.5px',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {genres.map(g => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setGenreFilter(g)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '3px',
+                border: genreFilter === g ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
+                background: genreFilter === g ? 'rgba(0,242,254,0.15)' : 'rgba(255,255,255,0.02)',
+                color: genreFilter === g ? '#00f2fe' : '#cbd5e1',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {(filterType === 'all' || filterType === 'podcasters') && filteredPodcasters.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>🎙️ Verified Podcasters &amp; Show Host EPKs</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
+            {filteredPodcasters.map((show) => (
+              <div
+                key={show.id}
+                className="dashboard-card"
+                style={{ padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(236,72,153,0.3)' }}
+              >
+                <div>
+                  <div style={{ position: 'relative', marginBottom: '12px' }}>
+                    <img src={show.coverArt} alt={show.title} style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '3px' }} />
+                    <span style={{ position: 'absolute', top: '8px', left: '8px', background: 'rgba(236,72,153,0.9)', color: '#fff', padding: '3px 7px', borderRadius: '3px', fontSize: '9px', fontWeight: 800 }}>
+                      PODCASTER EPK
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: '#fff', marginBottom: '2px' }}>{show.host}</div>
+                  <div style={{ fontSize: '12px', color: '#00f2fe', fontWeight: 700, marginBottom: '6px' }}>{show.title}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '12px' }}>{show.category} • {show.subscribers} subscribers</div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => show.episodes?.[0] && onPlayTrack && onPlayTrack(show.episodes[0], show.episodes)}
+                    style={{ flex: 1, padding: '8px', borderRadius: '3px', background: '#00f2fe', color: '#060813', border: 'none', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    ▶ Stream
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActivePodcasterEpkShow(show)}
+                    style={{ flex: 1, padding: '8px', borderRadius: '3px', background: 'rgba(236,72,153,0.16)', color: '#f472b6', border: '1px solid rgba(236,72,153,0.4)', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    🌐 Open EPK
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(filterType === 'all' || filterType === 'podcasts') && filteredPodcasts.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>🎧 Podcast Episodes</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
+            {filteredPodcasts.map((ep) => (
+              <div
+                key={ep.id}
+                className="dashboard-card"
+                style={{ padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(34,211,238,0.25)' }}
+              >
+                <div>
+                  <div style={{ position: 'relative', marginBottom: '12px' }}>
+                    <img src={ep.cover} alt={ep.title} style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '3px' }} />
+                    <span style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(6,8,19,0.85)', color: '#22d3ee', padding: '3px 7px', borderRadius: '3px', fontSize: '9px', fontWeight: 800 }}>
+                      {ep.duration}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{ep.title}</div>
+                  <div style={{ fontSize: '11.5px', color: '#94a3b8', marginBottom: '10px' }}>{ep.podcastTitle} • <span style={{ color: '#22d3ee' }}>{ep.host}</span></div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => onPlayTrack && onPlayTrack(ep, filteredPodcasts)}
+                    style={{ flex: 1, padding: '8px', borderRadius: '3px', background: 'rgba(34,211,238,0.16)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.35)', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    ▶ Play Episode
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActivePodcasterEpkShow(ep.show)}
+                    style={{ padding: '8px 10px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.12)', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    EPK 🌐
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(filterType === 'all' || filterType === 'tracks') && (
+        <div>
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>🎵 24-Bit Studio Master Tracks</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '16px' }}>
+            {filteredTracks.map((t, idx) => (
+              <div
+                key={t.id || idx}
+                className="dashboard-card"
+                onClick={() => onPlayTrack && onPlayTrack(t, filteredTracks)}
+                style={{ padding: '14px', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <div>
+                  <div style={{ position: 'relative', marginBottom: '12px' }}>
+                    <img src={t.cover || '/assets/images/hero_music_1.png'} alt={t.title} style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '3px' }} />
+                    <span style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(6,8,19,0.85)', color: '#00f2fe', padding: '3px 7px', borderRadius: '3px', fontSize: '9px', fontWeight: 800 }}>
+                      24-BIT FLAC
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#fff', marginBottom: '3px' }}>{t.title}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px' }}>{t.artist} • <span style={{ color: '#00f2fe' }}>{t.genre || 'Afro-Fusion'}</span></div>
+                </div>
+                <button
+                  type="button"
+                  style={{ width: '100%', padding: '8px', borderRadius: '3px', background: 'rgba(0,242,254,0.14)', color: '#00f2fe', border: '1px solid rgba(0,242,254,0.3)', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <RiPlayFill size={14} /> Stream Master
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activePodcasterEpkShow && (
+        <PodcasterEpkModal
+          show={activePodcasterEpkShow}
+          onClose={() => setActivePodcasterEpkShow(null)}
+          onPlayEpisode={(ep) => onPlayTrack && onPlayTrack(ep)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ConsumerRadioNodePanel({ tracks = [], onPlayTrack }) {
+  const stations = [
+    { id: 'st-1', name: 'Nairobi Cyberwave 24-Bit FM', genre: 'Afro-House & Electronic', listeners: '1,420 listening', accent: '#00f2fe' },
+    { id: 'st-2', name: 'Lagos Midnight Cruise', genre: 'Afrobeats & Alté', listeners: '2,890 listening', accent: '#a855f7' },
+    { id: 'st-3', name: 'Jozi Log Drum Underground', genre: 'Private School Amapiano', listeners: '1,950 listening', accent: '#10b981' },
+    { id: 'st-4', name: 'Diaspora Bassline (London • ATL)', genre: 'Afro-Swing & R&B', listeners: '1,180 listening', accent: '#f59e0b' },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="dashboard-card">
+        <span style={{ fontSize: '10px', fontWeight: 800, color: '#00f2fe', textTransform: 'uppercase', letterSpacing: '1px' }}>Continuous Curated Channels</span>
+        <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: '4px 0' }}>Live 24-Bit Radio Nodes</h2>
+        <p style={{ fontSize: '12.5px', color: '#94a3b8', margin: 0 }}>Non-stop lossless radio channels curated by regional tastemakers with zero ad interruptions.</p>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+        {stations.map((s, idx) => (
+          <div key={s.id} className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: s.accent, background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '3px' }}>● LIVE 24-BIT</span>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{s.listeners}</span>
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>{s.name}</h3>
+              <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 16px' }}>{s.genre}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => tracks[idx % tracks.length] && onPlayTrack && onPlayTrack(tracks[idx % tracks.length], tracks)}
+              style={{ width: '100%', padding: '9px', borderRadius: '3px', background: s.accent, color: '#060813', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            >
+              <RiRadioFill size={14} /> Tune In Live
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConsumerLiveConcertsPanel({ userCredits = 600, setUserCredits }) {
+  const { formatPrice } = useRegion ? useRegion() : { formatPrice: (v) => `$${v}` };
+  const [notice, setNotice] = useState('');
+  const [selectedEventDetail, setSelectedEventDetail] = useState(null);
+  const [selectedTierIdx, setSelectedTierIdx] = useState(0);
+  const [ticketQty, setTicketQty] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState('credits');
+
+  const shows = [
+    {
+      id: 'ev-1',
+      title: 'Ndufo — Nairobi Cyberdome Live',
+      artist: 'Ndufo',
+      subdomain: 'ndufo',
+      date: 'SEP 18, 2026',
+      time: '20:00 EAT',
+      city: 'Nairobi, KE',
+      venue: 'Nairobi Cyberdome Arena, Westlands',
+      credits: 120,
+      price_usd: 25,
+      passCode: 'QR-NBO-849201',
+      owned: true,
+      banner: '/assets/images/hero_music_1.png',
+      description: 'Headline 24-bit spatial audio live experience featuring Ndufo with full 12-piece Afro-House ensemble, live holographic visuals, and instant TunePay POS merch drops.',
+      schedule: [
+        { time: '19:00', title: 'VIP Doors & Soundcheck Lounge' },
+        { time: '20:30', title: 'Opening Set: DJ Zinhle & Nairobi Underground' },
+        { time: '22:00', title: 'Ndufo — Neon Safari 90-Minute Headline Set' }
+      ],
+      tiers: [
+        { name: 'General Admission Arena Pass', price_usd: 25, credits: 120, perks: 'Arena floor access + Digital QR Pass' },
+        { name: 'VIP Soundstage & Backstage Lounge', price_usd: 75, credits: 350, perks: 'Front-row pit + Backstage lounge + Lossless live stem drop' }
+      ]
+    },
+    {
+      id: 'ev-2',
+      title: 'Aisha Okoro — London O2 Afro-Soul Night',
+      artist: 'Aisha Okoro',
+      subdomain: 'aishaokoro',
+      date: 'OCT 04, 2026',
+      time: '19:30 BST',
+      city: 'London, UK',
+      venue: 'O2 Forum Kentish Town, London',
+      credits: 150,
+      price_usd: 35,
+      passCode: 'QR-LON-194028',
+      owned: true,
+      banner: '/assets/images/hero_music_2.png',
+      description: 'An intimate orchestral Afro-Soul & Alté evening in London featuring unreleased acoustic arrangements and vinyl signing.',
+      schedule: [
+        { time: '18:30', title: 'Doors Open & Vinyl Listening Lounge' },
+        { time: '20:00', title: 'Acoustic Quartet Prelude' },
+        { time: '21:15', title: 'Aisha Okoro Headline Performance' }
+      ],
+      tiers: [
+        { name: 'Standard Stall Pass', price_usd: 35, credits: 150, perks: 'Main stall access + Digital QR Pass' },
+        { name: 'VIP Meet & Greet Package', price_usd: 95, credits: 450, perks: 'Signed vinyl + Priority entry + Meet & Greet' }
+      ]
+    },
+    {
+      id: 'ev-3',
+      title: 'Lagos Amapiano & Alté Rooftop Festival',
+      artist: 'Kofi Mensah & Friends',
+      subdomain: 'kofimensah',
+      date: 'NOV 14, 2026',
+      time: '18:00 WAT',
+      city: 'Lagos, NG',
+      venue: 'Eko Atlantic Skydeck, Victoria Island',
+      credits: 100,
+      price_usd: 20,
+      passCode: 'QR-LOS-553910',
+      owned: false,
+      banner: '/assets/images/hero_music_3.png',
+      description: 'Sunset-to-sunrise rooftop festival uniting West African Highlife, Alté, and Private School Amapiano log-drum pioneers.',
+      schedule: [
+        { time: '18:00', title: 'Sunset Rooftop Sessions' },
+        { time: '21:00', title: 'Amapiano vs. Afro-Tech Soundclash' },
+        { time: '23:30', title: 'Kofi Mensah & Special Guests Live' }
+      ],
+      tiers: [
+        { name: 'Festival General Pass', price_usd: 20, credits: 100, perks: 'Full skydeck access + RFID Wristband' },
+        { name: 'VVIP Cabana & Artist Deck', price_usd: 80, credits: 400, perks: 'Private table + Artist deck access + Merch pack' }
+      ]
+    },
+  ];
+
+  if (selectedEventDetail) {
+    const activeTier = (selectedEventDetail.tiers && selectedEventDetail.tiers[selectedTierIdx]) || {
+      name: 'General Admission',
+      price_usd: selectedEventDetail.price_usd || 25,
+      credits: selectedEventDetail.credits || 120,
+      perks: 'Full event entry + Digital QR Pass'
+    };
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} data-testid="event-detail-page">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={() => setSelectedEventDetail(null)}
+            style={{ padding: '8px 16px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.14)', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+          >
+            ← Back to All Live Shows &amp; Passes
+          </button>
+          <a
+            href={`#/epk/${selectedEventDetail.subdomain || 'ndufo'}`}
+            style={{ padding: '8px 14px', borderRadius: '3px', background: 'rgba(0,242,254,0.14)', color: '#00f2fe', border: '1px solid rgba(0,242,254,0.35)', fontSize: '12px', fontWeight: 800, textDecoration: 'none' }}
+          >
+            🌐 View Artist EPK ({selectedEventDetail.artist})
+          </a>
+        </div>
+
+        {notice && (
+          <div style={{ padding: '12px 16px', borderRadius: '3px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7', fontSize: '12.5px', fontWeight: 700 }}>
+            {notice}
+          </div>
+        )}
+
+        <div className="dashboard-card" style={{ padding: '24px', border: '1px solid rgba(245,158,11,0.3)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            <div>
+              <img src={selectedEventDetail.banner} alt={selectedEventDetail.title} style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '3px', marginBottom: '16px' }} />
+              <span style={{ fontSize: '10px', fontWeight: 800, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '3px 8px', borderRadius: '3px' }}>
+                {selectedEventDetail.date} • {selectedEventDetail.time}
+              </span>
+              <h2 style={{ fontSize: '22px', fontWeight: 900, color: '#fff', margin: '10px 0 6px' }}>{selectedEventDetail.title}</h2>
+              <div style={{ fontSize: '13px', color: '#00f2fe', fontWeight: 700, marginBottom: '12px' }}>
+                📍 {selectedEventDetail.venue} ({selectedEventDetail.city})
+              </div>
+              <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '18px' }}>
+                {selectedEventDetail.description}
+              </p>
+
+              <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px' }}>
+                Run of Show &amp; Stage Schedule
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {(selectedEventDetail.schedule || []).map((slot, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '3px', fontSize: '12px' }}>
+                    <strong style={{ color: '#f59e0b' }}>{slot.time}</strong>
+                    <span style={{ color: '#e2e8f0' }}>{slot.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: '#070b16', padding: '20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '17px', fontWeight: 900, color: '#fff', margin: '0 0 6px' }}>Select Ticket Tier &amp; Checkout</h3>
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px' }}>
+                  Instant cryptographic QR concert pass issued directly to your TuneStream Live Wallet.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                  {(selectedEventDetail.tiers || []).map((tier, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedTierIdx(idx)}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '3px',
+                        border: selectedTierIdx === idx ? '1.5px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                        background: selectedTierIdx === idx ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.02)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <strong style={{ color: '#fff', fontSize: '13px' }}>{tier.name}</strong>
+                        <span style={{ color: '#f59e0b', fontWeight: 900, fontSize: '14px' }}>
+                          {formatPrice(tier.price_usd)} <span style={{ fontSize: '11px', color: '#94a3b8' }}>({tier.credits} Credits)</span>
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: '#cbd5e1' }}>{tier.perks}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 700 }}>Quantity</label>
+                    <select
+                      value={ticketQty}
+                      onChange={e => setTicketQty(Number(e.target.value))}
+                      style={{ width: '100%', padding: '8px', background: '#090d1f', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', fontSize: '12px' }}
+                    >
+                      {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} {n === 1 ? 'Pass' : 'Passes'}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 700 }}>Payment Method</label>
+                    <select
+                      value={paymentMethod}
+                      onChange={e => setPaymentMethod(e.target.value)}
+                      style={{ width: '100%', padding: '8px', background: '#090d1f', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', fontSize: '12px' }}
+                    >
+                      <option value="credits">TM Credits ({userCredits} avail)</option>
+                      <option value="mpesa">M-Pesa Express STK</option>
+                      <option value="card">TunePay Card / Apple Pay</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.08)', marginBottom: '12px', fontSize: '13px' }}>
+                  <span style={{ color: '#94a3b8' }}>Total Settlement:</span>
+                  <strong style={{ color: '#10b981' }}>
+                    {formatPrice(activeTier.price_usd * ticketQty)} ({activeTier.credits * ticketQty} TM Credits)
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const totalCreds = activeTier.credits * ticketQty;
+                    if (paymentMethod === 'credits' && setUserCredits) {
+                      setUserCredits(Math.max(0, userCredits - totalCreds));
+                    }
+                    setNotice(`✓ Purchased ${ticketQty}x ${activeTier.name} for ${selectedEventDetail.title}! Digital Pass ID: ${selectedEventDetail.passCode} active in wallet.`);
+                  }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '3px', background: '#f59e0b', color: '#060813', border: 'none', fontSize: '13px', fontWeight: 900, cursor: 'pointer' }}
+                >
+                  Purchase &amp; Mint QR Event Pass →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="dashboard-card">
+        <span style={{ fontSize: '10px', fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1px' }}>TuneStream Live Pass Wallet</span>
+        <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: '4px 0' }}>Live Shows &amp; VIP Tour Passes</h2>
+        <p style={{ fontSize: '12.5px', color: '#94a3b8', margin: 0 }}>Click any event card to open the comprehensive Event Page with full run-of-show schedule, ticket tiers, and instant pass purchase.</p>
+      </div>
+      {notice && (
+        <div style={{ padding: '12px 16px', borderRadius: '3px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7', fontSize: '12.5px', fontWeight: 700 }}>
+          {notice}
+        </div>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+        {shows.map(s => (
+          <div
+            key={s.id}
+            className="dashboard-card"
+            onClick={() => { setSelectedEventDetail(s); setSelectedTierIdx(0); }}
+            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: s.owned ? '#10b981' : '#f59e0b', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '3px' }}>
+                  {s.owned ? '✓ VIP PASS IN WALLET' : `FROM ${formatPrice(s.price_usd)} • ${s.credits} CREDITS`}
+                </span>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{s.date}</span>
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>{s.title}</h3>
+              <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 12px' }}>{s.venue} • {s.city}</p>
+              <div style={{ padding: '8px 10px', borderRadius: '3px', background: 'rgba(0,242,254,0.06)', border: '1px solid rgba(0,242,254,0.18)', fontFamily: 'monospace', fontSize: '11px', color: '#00f2fe', marginBottom: '14px' }}>
+                Pass ID: {s.passCode}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedEventDetail(s);
+                setSelectedTierIdx(0);
+              }}
+              style={{ width: '100%', padding: '9px', borderRadius: '3px', background: '#f59e0b', color: '#060813', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+            >
+              View Event Page &amp; Purchase Passes →
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConsumerPreferencesPanel({ sessionUser }) {
+  const allGenres = ['Afrobeats', 'Amapiano', 'Afro-House', 'Alté & R&B', 'Hip-Hop & Drill', 'Bongo Flava', 'Gengetone', 'Afro-Gospel'];
+  const [selectedGenres, setSelectedGenres] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('tunestream_listener_onboarding') || 'null');
+      return saved?.genres?.length ? saved.genres : ['Afrobeats', 'Amapiano', 'Afro-House', 'Alté & R&B'];
+    } catch {
+      return ['Afrobeats', 'Amapiano', 'Afro-House', 'Alté & R&B'];
+    }
+  });
+  const [savedBanner, setSavedBanner] = useState('');
+
+  const toggleGenre = (g) => {
+    setSelectedGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
+  };
+
+  const handleSaveTaste = () => {
+    try {
+      localStorage.setItem('tunestream_listener_onboarding', JSON.stringify({ genres: selectedGenres, updatedAt: new Date().toISOString() }));
+    } catch (_) {}
+    setSavedBanner('✓ Listener Taste DNA saved! Your Daily Personalized Mix and autoplay station have been updated.');
+    setTimeout(() => setSavedBanner(''), 4000);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="dashboard-card">
+        <span style={{ fontSize: '10px', fontWeight: 800, color: '#00f2fe', textTransform: 'uppercase', letterSpacing: '1px' }}>Complete Listener Personalization</span>
+        <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: '4px 0' }}>Taste DNA & Audio Preferences</h2>
+        <p style={{ fontSize: '12.5px', color: '#94a3b8', margin: 0 }}>Select the genres and moods that power your automatic TuneStream personalized mix on every visit.</p>
+      </div>
+      {savedBanner && (
+        <div style={{ padding: '12px 16px', borderRadius: '3px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7', fontSize: '12.5px', fontWeight: 700 }}>
+          {savedBanner}
+        </div>
+      )}
+      <div className="dashboard-card">
+        <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>Your Active Genre DNA</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+          {allGenres.map(g => {
+            const active = selectedGenres.includes(g);
+            return (
+              <button
+                key={g}
+                type="button"
+                onClick={() => toggleGenre(g)}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '3px',
+                  border: active ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.12)',
+                  background: active ? 'rgba(0,242,254,0.15)' : 'rgba(255,255,255,0.03)',
+                  color: active ? '#00f2fe' : '#cbd5e1',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {active ? `✓ ${g}` : g}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={handleSaveTaste}
+          style={{ padding: '10px 20px', borderRadius: '3px', background: '#00f2fe', color: '#060813', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+        >
+          Save Listener Taste DNA
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConsumerHomeOverviewPanel({ sessionUser, tracks = [], userCredits = 600, setUserCredits, setActiveTab, onPlayTrack, onOpenCreditReload }) {
+  const navigate = useNavigate();
+  const savedTaste = (() => {
+    try { return JSON.parse(localStorage.getItem('tunestream_listener_onboarding') || 'null'); } catch { return null; }
+  })();
+  const favoriteGenres = savedTaste?.genres?.length ? savedTaste.genres : ['Afrobeats', 'Amapiano', 'Afro-House', 'Alté & R&B'];
+  const recommendedTracks = tracks.slice(0, 6);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} data-testid="tunestream-listener-home-panel">
+      <div className="dashboard-card" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.12) 0%, rgba(168,85,247,0.10) 50%, rgba(15,23,42,0.95) 100%)', border: '1px solid rgba(34,211,238,0.25)', padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '3px', background: 'rgba(34,211,238,0.15)', color: 'var(--cyan)', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px' }}>
+              <RiHeadphoneFill size={12} /> TuneStream Personal Audio Engine • 24-Bit / 96kHz FLAC
+            </div>
+            <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', margin: '0 0 6px' }}>
+              Welcome back, {sessionUser?.name || 'Music Lover'}
+            </h2>
+            <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0, maxWidth: '640px', lineHeight: '1.5' }}>
+              Your personal listening station is tuned to <strong style={{ color: 'var(--cyan)' }}>{favoriteGenres.join(' • ')}</strong>. Zero monthly subscriptions — your non-expiring TM Credits unlock studio-master FLAC streams, offline crates, and direct artist tipping.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => recommendedTracks[0] && onPlayTrack && onPlayTrack(recommendedTracks[0], recommendedTracks)}
+              style={{ background: 'var(--cyan)', color: '#090d1f', border: 'none', padding: '10px 18px', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <RiPlayFill size={16} /> Play Personalized Mix
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/native-apps/tunestream?view=explore')}
+              style={{ background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', padding: '10px 16px', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Explore Full Catalog
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-grid-3">
+        <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div className="stat-label">Non-Expiring Listener Wallet</div>
+            <div className="stat-value" style={{ color: 'var(--cyan)' }}>{userCredits} TM Credits</div>
+            <div className="stat-trend">✨ No monthly subscription • Never expires</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenCreditReload ? onOpenCreditReload('Top-Up Listener TM Credits') : setUserCredits(c => c + 250)}
+            className="btn-primary"
+            style={{ width: '100%', marginTop: '14px', padding: '7px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}
+          >
+            + Top Up TM Credits
+          </button>
+        </div>
+
+        <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div className="stat-label">Saved Crates & Offline Vault</div>
+            <div className="stat-value">14 Tracks • 1.4 GB</div>
+            <div className="stat-trend" style={{ color: '#10b981' }}>✓ 24-Bit Lossless FLAC Cached</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('library')}
+            className="plan-btn outline"
+            style={{ width: '100%', marginTop: '14px', padding: '7px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.12)', color: '#fff' }}
+          >
+            Open My Library & Crates
+          </button>
+        </div>
+
+        <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div className="stat-label">Direct Artist Support & Passes</div>
+            <div className="stat-value">3 Artists • 2 VIP Passes</div>
+            <div className="stat-trend" style={{ color: '#a855f7' }}>💜 100% Direct-to-Creator Tipping</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('tips')}
+            className="plan-btn outline"
+            style={{ width: '100%', marginTop: '14px', padding: '7px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.12)', color: '#fff' }}
+          >
+            Manage Tips & Artist Support
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+        <div className="dashboard-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: 0 }}>Your Daily Tailored Crate</h3>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: '2px 0 0' }}>Curated automatically from your taste DNA and lossless listening history</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('library')}
+              style={{ background: 'transparent', border: '1px solid rgba(34,211,238,0.3)', color: 'var(--cyan)', padding: '5px 12px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              My Crates →
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '12px' }}>
+            {recommendedTracks.map((t, idx) => (
+              <div
+                key={t.id || idx}
+                onClick={() => onPlayTrack && onPlayTrack(t, recommendedTracks)}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '3px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}
+              >
+                <img src={t.cover || '/assets/images/hero_music_1.png'} alt={t.title} style={{ width: '46px', height: '46px', borderRadius: '3px', objectFit: 'cover', flexShrink: 0 }} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.artist}</div>
+                  <div style={{ fontSize: '9px', color: 'var(--cyan)', fontWeight: 700, marginTop: '2px' }}>{t.genre || '24-Bit FLAC'}</div>
+                </div>
+                <div style={{ width: '28px', height: '28px', borderRadius: '3px', background: 'rgba(34,211,238,0.14)', color: 'var(--cyan)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <RiPlayFill size={15} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>Listener Apps & Quick Actions</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setActiveTab('stream-controls')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 12px', borderRadius: '3px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 700 }}>24-Bit Studio EQ & DAC</div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>Lossless FLAC, crossfade & output routing</div>
+                </div>
+                <RiEqualizerFill size={16} color="var(--cyan)" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('listener-apps')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 12px', borderRadius: '3px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 700 }}>Listener Apps Suite</div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>Mobile Hi-Fi, Desktop DAC & CarPlay</div>
+                </div>
+                <RiApps2Fill size={16} color="#a855f7" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('device-sync')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 12px', borderRadius: '3px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 700 }}>Mobile & 8GB Offline Cache</div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>Sync crates for offline flight playback</div>
+                </div>
+                <RiSmartphoneFill size={16} color="#10b981" />
+              </button>
+            </div>
+          </div>
+          <div style={{ marginTop: '14px', padding: '10px 12px', borderRadius: '3px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', fontSize: '11px', color: '#a7f3d0' }}>
+            ✓ Connected to TuneStream Hi-Fi Engine (Zero monthly fees)
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConsumerListenerAppsPanel({ setActiveTab }) {
+  const navigate = useNavigate();
+  const apps = [
+    {
+      id: 'tunestream-mobile',
+      name: 'TuneStream Mobile (iOS & Android)',
+      tagline: 'Lossless 24-Bit/96kHz FLAC & 8GB Smart Offline Crate Cache',
+      badge: 'Installed • Active',
+      accent: 'var(--cyan)',
+      features: [
+        '8GB Smart Offline Vault for zero-buffering flight & commute playback',
+        'Personalized Daily Crate & Taste DNA mood discovery engine',
+        'One-tap mid-song direct artist tipping with non-expiring TM Credits'
+      ],
+      ctaLabel: 'Manage Offline Cache & Sync',
+      onAction: () => setActiveTab('device-sync')
+    },
+    {
+      id: 'tunestream-desktop-dac',
+      name: 'TuneStream Studio Desktop & DAC Bridge',
+      tagline: 'Bit-Perfect USB DAC Passthrough & 10-Band Parametric Studio EQ',
+      badge: 'Ready to Pair',
+      accent: '#a855f7',
+      features: [
+        'Exclusive-mode CoreAudio / WASAPI hardware USB DAC output',
+        '10-Band Studio EQ with custom genre & headphone calibration curves',
+        'Zero-compression 24-bit/96kHz master stream verification'
+      ],
+      ctaLabel: 'Configure 24-Bit Studio EQ',
+      onAction: () => setActiveTab('stream-controls')
+    },
+    {
+      id: 'tunestream-live-carplay',
+      name: 'TuneStream Live Pass & CarPlay',
+      tagline: 'QR Concert Wallet, Backstage Fan Drops & In-Car Hi-Fi Audio',
+      badge: 'Connected',
+      accent: '#10b981',
+      features: [
+        'Instant QR Tour Pass wallet for verified venue entry & VIP merch',
+        'Hands-free Apple CarPlay & Android Auto lossless crate browsing',
+        'Live show setlist auto-save directly into your TuneStream Library'
+      ],
+      ctaLabel: 'Explore Live Shows & Passes',
+      onAction: () => navigate('/native-apps/tunestream?view=tours')
+    }
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} data-testid="tunestream-listener-apps-panel">
+      <div className="dashboard-card" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.08) 0%, rgba(15,23,42,0.95) 100%)', border: '1px solid rgba(34,211,238,0.2)' }}>
+        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '1px' }}>TuneStream Listener Ecosystem</span>
+        <h2 style={{ fontSize: '22px', fontWeight: 900, color: '#fff', margin: '4px 0 6px' }}>Listener Apps & Connected Audio Suite</h2>
+        <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0 }}>
+          All TuneStream apps are purpose-built for music listeners, audiophiles, and live concert fans. Sync your playlists, offline FLAC crates, and QR concert passes across every screen.
+        </p>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
+        {apps.map(app => (
+          <div key={app.id} className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '3px', background: 'rgba(34,211,238,0.12)', color: app.accent, textTransform: 'uppercase' }}>{app.badge}</span>
+                <RiHeadphoneFill size={18} color={app.accent} />
+              </div>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>{app.name}</h3>
+              <p style={{ fontSize: '12px', color: app.accent, fontWeight: 700, margin: '0 0 14px' }}>{app.tagline}</p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {app.features.map((f, i) => (
+                  <li key={i} style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.4 }}>
+                    <span style={{ color: app.accent, fontWeight: 800 }}>✓</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <button
+              type="button"
+              onClick={app.onAction}
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '3px', background: app.accent, color: '#090d1f', border: 'none', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+            >
+              {app.ctaLabel} →
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConsumerDeviceSyncPanel({ tracks = [] }) {
+  const [wifiAutoSync, setWifiAutoSync] = useState(true);
+  const [flacOffline, setFlacOffline] = useState(true);
+  const [syncNotice, setSyncNotice] = useState('');
+  const [devices, setDevices] = useState([
+    { id: 'dev-1', name: 'iPhone 16 Pro • TuneStream Mobile', status: 'Synced 2 mins ago', cache: '1.4 GB FLAC Cached', active: true },
+    { id: 'dev-2', name: 'MacBook Pro Studio • USB DAC Bridge', status: 'Bit-Perfect 24-Bit/96kHz Active', cache: '0.8 GB Cached', active: true },
+    { id: 'dev-3', name: 'Apple CarPlay • In-Car Hi-Fi', status: 'Last connected yesterday', cache: '320 kbps Stream', active: false },
+  ]);
+
+  const handleSyncNow = () => {
+    setSyncNotice('✓ Synced 14 tracks (24-bit FLAC) & 2 QR Concert Passes across your paired listener devices.');
+    setTimeout(() => setSyncNotice(''), 4000);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} data-testid="tunestream-device-sync-panel">
+      <div className="dashboard-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+        <div>
+          <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '1px' }}>8GB Smart Offline Vault</span>
+          <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: '4px 0' }}>Mobile & Device Offline Sync</h2>
+          <p style={{ fontSize: '12.5px', color: '#94a3b8', margin: 0 }}>Cache your favorite crates in uncompressed 24-bit FLAC for zero-data flight and commute listening.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleSyncNow}
+          style={{ background: 'var(--cyan)', color: '#090d1f', border: 'none', padding: '10px 18px', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+        >
+          Sync Crates to Mobile Now
+        </button>
+      </div>
+
+      {syncNotice && (
+        <div style={{ padding: '12px 16px', borderRadius: '3px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.35)', color: '#6ee7b7', fontSize: '12.5px', fontWeight: 700 }}>
+          {syncNotice}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px' }}>
+        <div className="dashboard-card">
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>Offline Storage Allocation (2.2 GB / 8.0 GB)</h3>
+          <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden', marginBottom: '14px' }}>
+            <div style={{ width: '28%', height: '100%', background: 'linear-gradient(90deg, var(--cyan), #a855f7)' }} />
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12.5px', color: '#cbd5e1', marginBottom: '10px', cursor: 'pointer' }}>
+            <input type="checkbox" checked={wifiAutoSync} onChange={e => setWifiAutoSync(e.target.checked)} />
+            Auto-download Daily Personalized Mix over Wi-Fi
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12.5px', color: '#cbd5e1', cursor: 'pointer' }}>
+            <input type="checkbox" checked={flacOffline} onChange={e => setFlacOffline(e.target.checked)} />
+            Store offline crates in 24-Bit / 96kHz Studio FLAC
+          </label>
+        </div>
+
+        <div className="dashboard-card">
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>Paired Listener Devices</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {devices.map(d => (
+              <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: '3px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{d.name}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{d.status} • <span style={{ color: 'var(--cyan)' }}>{d.cache}</span></div>
+                </div>
+                <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '3px', background: d.active ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)', color: d.active ? '#10b981' : '#94a3b8' }}>
+                  {d.active ? 'Online' : 'Standby'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ConsumerLibraryPanel() {
   const [tracks, setTracks] = useState([
     { id: 1, title: 'Nairobi Sunset', artist: 'Aisha Okoro', source: 'purchased', cached: true },
@@ -3560,10 +5106,26 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
             { label: "Active Rate Tiers", val: "4 Live Tiers", color: "#10b981" }
           ]
         };
-            case 'vc':
+      case 'vc':
       case 'investor':
-        visibleKeys = ['home', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'sync', 'distribution-tracker', 'app-marketplace', 'profile', 'support'];
-        break;
+        return {
+          title: "Tour Venture Capital & LP Command Center",
+          statLabel: "Total Active Tour Advances & LP Capital",
+          statValue: "$240,000.00",
+          statTrend: "↗ 3 arena tranches fully subscribed",
+          stat2Label: "Blended Target IRR",
+          stat2Value: "21.4%",
+          stat2Trend: "⚡ Senior-Secured Split Cascade Recoupment",
+          chartTitle: "Tour Debt Recoupment & Box Office Pacing ($)",
+          chartPoints: [45000, 92000, 140000, 185000, 215000, 240000],
+          chartLabels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"],
+          detailsTitle: "Active Syndicate Tranches",
+          detailsItems: [
+            { label: "Nairobi Arena Spring Tour", val: "$100,000 (104% pacing)", color: "var(--cyan)" },
+            { label: "Kigali & Kampala Fest Advance", val: "$85,000 (Senior Lien)", color: "#10b981" },
+            { label: "Afrobeats UK/EU Corridor", val: "$55,000 (24% target IRR)", color: "#f59e0b" }
+          ]
+        };
       case 'corporate':
         return {
           title: "Corporate Brand Advertising Console",
@@ -7805,12 +9367,13 @@ function GlobalAudioPlayer({
 
   // Credit Unlock Handlers
   const handleUnlockStream = () => {
+    const isCreditExempt = sessionUser?.role === 'vc' || sessionUser?.role === 'investor' || sessionUser?.role === 'admin';
     const cost = 5;
-    if (userCredits < cost) {
+    if (!isCreditExempt && userCredits < cost) {
       alert(`Insufficient credits! You need ${cost} credits (current balance: ${userCredits}). Please top up your credits.`);
       return;
     }
-    if (typeof setUserCredits === 'function') {
+    if (!isCreditExempt && typeof setUserCredits === 'function') {
       setUserCredits(prev => Math.max(0, prev - cost));
     }
     const updated = [...unlockedTracks, globalTrack.isrc];
@@ -7826,12 +9389,13 @@ function GlobalAudioPlayer({
   };
 
   const handlePurchaseTrack = () => {
+    const isCreditExempt = sessionUser?.role === 'vc' || sessionUser?.role === 'investor' || sessionUser?.role === 'admin';
     const cost = globalTrack.priceCredits || 50;
-    if (userCredits < cost) {
+    if (!isCreditExempt && userCredits < cost) {
       alert(`Insufficient credits! You need ${cost} credits (current balance: ${userCredits}). Please top up your credits.`);
       return;
     }
-    if (typeof setUserCredits === 'function') {
+    if (!isCreditExempt && typeof setUserCredits === 'function') {
       setUserCredits(prev => Math.max(0, prev - cost));
     }
     const updated = [...unlockedTracks, globalTrack.isrc];
@@ -8315,8 +9879,8 @@ function GlobalAudioPlayer({
     }
   }
 
-  // Expanded Floating Player
-  if (isUndocked) {
+  // Expanded Floating Player (Docked bottom bar disabled so only floating player runs)
+  if (true || isUndocked) {
     return (
       <>
         {audioTag}
@@ -10087,7 +11651,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
 }
 
 // ================= Track D: CRM Campaigns Panel =================
-function CrmPanel({ sessionUser }) {
+function CrmPanel({ sessionUser, onNavigateTab }) {
   return (
     <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', background: '#04060f', borderRadius: '3px', overflow: 'hidden' }}>
       <SmartCrmStudioPanel sessionUser={sessionUser} />

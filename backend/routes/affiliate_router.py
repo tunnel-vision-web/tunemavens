@@ -333,6 +333,66 @@ DEMO_LINKED_USERS = [
         "avatar_color": "#ec4899",
         "notes": "Cleared 2 Netflix Pan-African drama series cues through SyncMavens.",
         "last_active": "Just now"
+    },
+    {
+        "id": "usr_vc_906",
+        "ref_code": "TM-KENYA-254",
+        "name": "Helios Tour Capital Syndicate",
+        "email": "deals@helioscreative.vc",
+        "handle": "@helioscreativevc",
+        "role": "vc",
+        "role_label": "Tour Venture Capital & Syndicate",
+        "status": "active",
+        "region": "Nairobi & London",
+        "linked_at": "2026-10-08T09:15:00Z",
+        "releases_count": 5,
+        "streams_count": 520000,
+        "gross_revenue": 50000.00,
+        "commission_generated": 2500.00,
+        "split_incentive": "Tour Vault Syndicate (5% flat)",
+        "avatar_color": "#00f2fe",
+        "notes": "Underwriting 3 African arena tours. Split cascade priority recoupment.",
+        "last_active": "4 hours ago"
+    },
+    {
+        "id": "usr_pod_907",
+        "ref_code": "TM-KENYA-254",
+        "name": "AfroTech Disruption Podcast",
+        "email": "host@afrotechpodcast.ke",
+        "handle": "@afrotech_disrupt",
+        "role": "podcaster",
+        "role_label": "Podcaster & Show Host",
+        "status": "catalog_live",
+        "region": "Nairobi, Kenya",
+        "linked_at": "2026-10-10T14:30:00Z",
+        "releases_count": 28,
+        "streams_count": 185000,
+        "gross_revenue": 3400.00,
+        "commission_generated": 408.00,
+        "split_incentive": "Corporate Ad Flight (12% flat)",
+        "avatar_color": "#ec4899",
+        "notes": "Top 10 Business & Tech podcast in East Africa. Integrated corporate audio ads.",
+        "last_active": "Just now"
+    },
+    {
+        "id": "usr_con_908",
+        "ref_code": "TM-KENYA-254",
+        "name": "David Kimani",
+        "email": "david.kimani@superfan.ke",
+        "handle": "@kimanimusic",
+        "role": "consumer",
+        "role_label": "Listener & Superfan",
+        "status": "active",
+        "region": "Nairobi, Kenya",
+        "linked_at": "2026-10-12T16:00:00Z",
+        "releases_count": 0,
+        "streams_count": 3400,
+        "gross_revenue": 120.00,
+        "commission_generated": 14.40,
+        "split_incentive": "Hi-Fi Pass Referral (12% flat)",
+        "avatar_color": "#3b82f6",
+        "notes": "Hi-Fi annual subscriber with active creator tip history.",
+        "last_active": "1 hour ago"
     }
 ]
 
@@ -971,9 +1031,14 @@ def get_affiliate_network(ref_code: str):
 
     role_counts = {
         "creator": sum(1 for u in users if u.get("role") == "creator"),
+        "podcaster": sum(1 for u in users if u.get("role") == "podcaster"),
+        "vc": sum(1 for u in users if u.get("role") == "vc"),
         "label": sum(1 for u in users if u.get("role") == "label"),
         "supervisor": sum(1 for u in users if u.get("role") == "supervisor"),
         "corporate": sum(1 for u in users if u.get("role") == "corporate"),
+        "dj": sum(1 for u in users if u.get("role") == "dj"),
+        "media_house": sum(1 for u in users if u.get("role") == "media_house"),
+        "consumer": sum(1 for u in users if u.get("role") == "consumer"),
         "affiliate": sum(1 for u in users if u.get("role") == "affiliate")
     }
 
@@ -998,17 +1063,27 @@ def onboard_user_by_affiliate(payload: UserOnboardingRequest):
 
     role_labels = {
         "creator": "Recording Artist & Producer",
+        "podcaster": "Podcaster & Show Host",
+        "vc": "Tour Venture Capital & Syndicate",
         "label": "Independent Record Label",
-        "supervisor": "Music Supervisor & Post Studio",
+        "dj": "DJ & Curated Playlist Curator",
+        "supervisor": "Music Supervisor & Studio",
         "corporate": "Corporate Brand / Ad Agency",
+        "media_house": "Media House & Broadcast Network",
+        "consumer": "Listener & Superfan",
         "affiliate": "Sub-Affiliate / Scout"
     }
 
     avatar_colors = {
         "creator": "#22d3ee",
+        "podcaster": "#ec4899",
+        "vc": "#00f2fe",
         "label": "#a855f7",
-        "supervisor": "#ec4899",
+        "dj": "#f59e0b",
+        "supervisor": "#06b6d4",
         "corporate": "#f97316",
+        "media_house": "#8b5cf6",
+        "consumer": "#3b82f6",
         "affiliate": "#10b981"
     }
 

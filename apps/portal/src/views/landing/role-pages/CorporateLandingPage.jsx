@@ -21,6 +21,7 @@ import {
 
 import './RoleLandingShared.css'
 import { useRegion } from '../../../RegionContext.jsx'
+import { AUTHORITATIVE_AD_RATES } from '../../../data/authoritativeAdRates.js'
 import headerImg from '../../../assets/images/header_pricing.png'
 import headerAppsImg from '../../../assets/images/header_apps.png'
 import userManagerImg from '../../../assets/images/user_manager.png'
@@ -143,7 +144,7 @@ export default function CorporateLandingPage({ switcher }) {
   const timerRef = useRef(null);
 
   // Live Rates & Booking Modal State
-  const [adRates, setAdRates] = useState(FALLBACK_RATES);
+  const [adRates, setAdRates] = useState(AUTHORITATIVE_AD_RATES);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState(null);
   const [inquirySubmitting, setInquirySubmitting] = useState(false);

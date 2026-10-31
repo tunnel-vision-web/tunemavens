@@ -40,6 +40,12 @@ export default function Navbar({ sessionUser }) {
     if (!isSubAppPath(currentPath)) {
       sessionStorage.setItem(LAST_TM_PAGE_KEY, currentPath + location.search);
     }
+    if (currentPath === '/native-apps/tunestream' || currentPath.startsWith('/tunestream') || currentPath === '/stream') {
+      sessionStorage.setItem('tunestream_active_backend', 'true');
+      try { localStorage.setItem('tunemavens_active_persona', 'consumer'); } catch (_) {}
+    } else if (['/', '/tools', '/apps', '/pricing', '/publishing', '/distribution', '/about'].includes(currentPath) || currentPath.startsWith('/for/')) {
+      sessionStorage.setItem('tunestream_active_backend', 'false');
+    }
   }, [currentPath, location.search]);
 
   const handleBackToTuneMavens = (e) => {
@@ -493,7 +499,7 @@ export default function Navbar({ sessionUser }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
                 {sessionUser ? (
-                  <Link to="/dashboard" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
+                  <Link to={currentPath === '/native-apps/tunestream' || currentPath.startsWith('/tunestream') ? "/dashboard?role=consumer&tab=home" : "/dashboard"} className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
                 ) : (
                   <>
                     <Link to="/login" className="btn-secondary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Log In</Link>
@@ -512,7 +518,7 @@ export default function Navbar({ sessionUser }) {
           </div>
           <div className="nav-ctas">
             {sessionUser ? (
-              <Link to="/dashboard" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Link to={currentPath === '/native-apps/tunestream' || currentPath.startsWith('/tunestream') ? "/dashboard?role=consumer&tab=home" : "/dashboard"} onClick={() => { if (currentPath === '/native-apps/tunestream' || currentPath.startsWith('/tunestream')) { try { localStorage.setItem('tunemavens_active_persona', 'consumer'); } catch (_) {} } }} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <RiCpuFill size={14} /> Dashboard
               </Link>
             ) : (

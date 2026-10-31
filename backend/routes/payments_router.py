@@ -50,8 +50,8 @@ CREDIT_PACKAGES: Dict[str, Dict[str, Any]] = {
         "price_usd": 99.0,
         "price_kes": 12870,
         "target_role": "label",
-        "description": "Loads 1,000 non-expiring credits. Covers 3 collaborator seats, 5 signed roster artists, and catalog ingestion.",
-        "deliverables": ["3 Collaborator Seats", "5 Signed Roster Artists", "Full Split Cascade Engine", "Sync Pitching Clearance"]
+        "description": "Loads 1,000 non-expiring credits. Covers 3 collaborator seats, 5 artists, and catalog ingestion.",
+        "deliverables": ["3 Collaborator Seats", "5 Artists", "Full Split Cascade Engine", "Sync Pitching Clearance"]
     },
     "scale-label-load": {
         "id": "scale-label-load",
@@ -60,8 +60,8 @@ CREDIT_PACKAGES: Dict[str, Dict[str, Any]] = {
         "price_usd": 299.0,
         "price_kes": 38870,
         "target_role": "label",
-        "description": "Loads 3,500 non-expiring credits. Covers 10 collaborator seats, 25 signed roster artists, multi-seat A&R/Accounting.",
-        "deliverables": ["10 Collaborator Seats", "25 Signed Roster Artists", "Multi-Seat Logins", "Priority Sync Pitching"]
+        "description": "Loads 3,500 non-expiring credits. Covers 10 collaborator seats, 25 artists, multi-seat A&R/Accounting.",
+        "deliverables": ["10 Collaborator Seats", "25 Artists", "Multi-Seat Logins", "Priority Sync Pitching"]
     },
     "enterprise-label-load": {
         "id": "enterprise-label-load",

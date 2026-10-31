@@ -148,7 +148,7 @@ export default function LabelTeamRosterPanel({
     return DEFAULT_TEAM_MEMBERS;
   });
 
-  // Signed roster artists state
+  // Artists state
   const [rosterArtists, setRosterArtists] = useState(() => {
     try {
       const stored = localStorage.getItem('tunemavens_label_roster');
@@ -214,7 +214,7 @@ export default function LabelTeamRosterPanel({
             id: a.id,
             subdomain: a.subdomain,
             name: a.name,
-            role: a.role || 'Signed Roster Artist',
+            role: a.role || 'Artist',
             genre: a.genre || 'Afro-House',
             bio: a.bio || '',
             avatar: a.avatar || `https://picsum.photos/seed/${a.id}/400/400`,
@@ -380,9 +380,9 @@ export default function LabelTeamRosterPanel({
       id: `art_${cleanSub}`,
       subdomain: cleanSub,
       name: newArtistName.trim(),
-      role: 'Signed Roster Artist',
+      role: 'Artist',
       genre: newArtistGenre,
-      bio: newArtistBio.trim() || `Signed roster artist on ${sessionUser?.brand_name || 'Record Label'}.`,
+      bio: newArtistBio.trim() || `Artist on ${sessionUser?.brand_name || 'Record Label'}.`,
       avatar: `https://picsum.photos/seed/${cleanSub}/400/400`,
       tracksCount: 0,
       status: 'Active / Signed'

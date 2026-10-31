@@ -8,6 +8,7 @@ import {
   RiPriceTag3Fill, RiQuestionFill, RiRefreshFill, RiCheckboxCircleFill,
   RiAlertFill
 } from 'react-icons/ri';
+import ArticleContentRenderer from '../common/ArticleContentRenderer.jsx';
 
 // Multi-Currency Exchange Rates relative to 1 USD (Kenya Launch Default: KES)
 export const CURRENCY_RATES = {
@@ -197,14 +198,216 @@ export const STUDIO_TABS = [
   { id: 'university', label: 'Royalty University & Guide', icon: RiBookOpenFill }
 ];
 
+// Catalog of tracks associated with distinct creator personas for institutional VC access
+export const CONTRACTED_CREATOR_CATALOG = {
+  ndufo: [
+    { id: 'trk_nd_1', title: 'Neon Safari', artist: 'Ndufo', isrc: 'KE-TM1-26-00001', genre: 'Afro-House', duration: '4:12' },
+    { id: 'trk_nd_2', title: 'Rift Valley Sunset', artist: 'Ndufo', isrc: 'KE-TM1-26-00002', genre: 'Afro-Tech', duration: '5:03' },
+    { id: 'trk_nd_3', title: 'Kilifi Drift', artist: 'Ndufo', isrc: 'KE-TM1-26-00003', genre: 'Deep House', duration: '3:58' }
+  ],
+  amina: [
+    { id: 'trk_am_1', title: 'Sauti ya Mombasa', artist: 'Amina Mwangi', isrc: 'KE-TM1-26-00010', genre: 'Afro-Soul', duration: '3:45' },
+    { id: 'trk_am_2', title: 'Afro-Soul Serenade', artist: 'Amina Mwangi', isrc: 'KE-TM1-26-00011', genre: 'Neo-Soul', duration: '4:10' }
+  ],
+  kibera: [
+    { id: 'trk_kb_1', title: 'Matatu Heat 100', artist: 'Kibera Sound System', isrc: 'KE-TM1-26-00015', genre: 'Gengetone Drill', duration: '3:30' }
+  ],
+  tamani: [
+    { id: 'trk_tm_1', title: 'Rift Valley Nu-Jazz', artist: 'Tamani Collective', isrc: 'KE-TM1-26-00020', genre: 'Afro-Jazz', duration: '6:15' }
+  ],
+  afrotech: [
+    { id: 'trk_pod_1', title: 'Ep 42: The Sovereign Wealth of African Music', artist: 'AfroTech Disruption', isrc: 'KE-TM1-POD-001', genre: 'Tech Podcast', duration: '48:15' },
+    { id: 'trk_pod_2', title: 'Ep 43: Split Cascade vs Major Labels', artist: 'AfroTech Disruption', isrc: 'KE-TM1-POD-002', genre: 'VC Podcast', duration: '52:10' }
+  ],
+  nairobi_beats: [
+    { id: 'trk_pod_3', title: 'Ep 78: Gengetone 2.0 & The New Drill Masters', artist: 'Nairobi Beats Weekly', isrc: 'KE-TM1-POD-010', genre: 'Music Talk', duration: '41:20' }
+  ],
+  creative_brief: [
+    { id: 'trk_pod_4', title: 'Ep 12: Hollywood Music Supervisors in East Africa', artist: 'The African Creative Brief', isrc: 'KE-TM1-POD-020', genre: 'Sync Podcast', duration: '39:50' }
+  ],
+  swahili_stories: [
+    { id: 'trk_pod_5', title: 'Ep 09: Lamu Dhow Chants & Oral Folklore', artist: 'Swahili Stories & Soundscapes', isrc: 'KE-TM1-POD-030', genre: 'Audio Documentary', duration: '45:10' }
+  ],
+  dj_kalonje: [
+    { id: 'trk_dj_1', title: 'Cyberwave Street Mixtape Vol. 4', artist: 'DJ Kalonje (Cyberwave Live)', isrc: 'KE-TM1-DJ-001', genre: 'Street Club Mix', duration: '58:00' },
+    { id: 'trk_dj_2', title: 'Nairobi Neon Live Set (Sound System Edition)', artist: 'DJ Kalonje (Cyberwave Live)', isrc: 'KE-TM1-DJ-002', genre: 'Live DJ Mix', duration: '64:20' }
+  ],
+  dj_dlite: [
+    { id: 'trk_dj_3', title: 'Coastal Sunsets Live Mix (Diani Edition)', artist: 'DJ D-Lite (Amapiano Coast)', isrc: 'KE-TM1-DJ-010', genre: 'Amapiano', duration: '52:15' }
+  ],
+  dj_sola: [
+    { id: 'trk_dj_4', title: 'Afro-Tech Transatlantic Session', artist: 'DJ Sola (Global Afro-Tech)', isrc: 'KE-TM1-DJ-020', genre: 'Afro-Tech', duration: '61:00' }
+  ],
+  dj_queen_chiku: [
+    { id: 'trk_dj_5', title: 'Campus Flame Live Mixtape', artist: 'DJ Queen Chiku', isrc: 'KE-TM1-DJ-030', genre: 'Afrobeats', duration: '47:50' }
+  ]
+};
+
 export default function TuneLedgerSplitCascadePanel({
   sessionUser,
   tracks = [],
   ledgerRows = [],
   setLedgerRows,
   payoutBalance = 0,
-  setPayoutBalance
+  setPayoutBalance,
+  onNavigateTab
 }) {
+  // Institutional Access Control for VCs: Strict data isolation for contracted creators
+  const isVc = sessionUser?.role === 'vc' || sessionUser?.role === 'investor';
+  const [vcContracts, setVcContracts] = useState(() => {
+    try {
+      const raw = localStorage.getItem('tunemavens_vc_contracts');
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    if (!isVc) return;
+    const fetchAgreements = async () => {
+      try {
+        const res = await fetch('/api/vc/agreements');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.agreements)) {
+            setVcContracts(data.agreements);
+            localStorage.setItem('tunemavens_vc_contracts', JSON.stringify(data.agreements));
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch VC agreements:', err);
+      }
+    };
+    fetchAgreements();
+
+    const handleContractSigned = (e) => {
+      const c = e?.detail;
+      if (c) {
+        setVcContracts(prev => {
+          const next = [c, ...prev.filter(x => x.contract_id !== c.contract_id)];
+          localStorage.setItem('tunemavens_vc_contracts', JSON.stringify(next));
+          return next;
+        });
+      }
+    };
+    window.addEventListener('tunemavens:vc-agreement-signed', handleContractSigned);
+    window.addEventListener('storage', fetchAgreements);
+    return () => {
+      window.removeEventListener('tunemavens:vc-agreement-signed', handleContractSigned);
+      window.removeEventListener('storage', fetchAgreements);
+    };
+  }, [isVc]);
+
+  // Derived effective catalog tracks strictly for contracted creators
+  const effectiveTracks = useMemo(() => {
+    if (!isVc) return tracks;
+    const contractedCatalog = [];
+    vcContracts.forEach(contract => {
+      const cName = (contract.creator_name || '').toLowerCase();
+      const cId = (contract.creator_id || '').toLowerCase();
+      Object.entries(CONTRACTED_CREATOR_CATALOG).forEach(([key, items]) => {
+        if (cId.includes(key) || cName.includes(key) || (items[0] && items[0].artist.toLowerCase().includes(cName))) {
+          items.forEach(trk => {
+            if (!contractedCatalog.some(x => x.id === trk.id)) contractedCatalog.push(trk);
+          });
+        }
+      });
+      tracks.forEach(trk => {
+        if ((trk.artist && trk.artist.toLowerCase().includes(cName)) || (trk.creator && trk.creator.toLowerCase().includes(cName))) {
+          if (!contractedCatalog.some(x => x.id === trk.id)) contractedCatalog.push(trk);
+        }
+      });
+    });
+    return contractedCatalog;
+  }, [isVc, vcContracts, tracks]);
+
+  // Derived effective ledger rows strictly for contracted creators
+  const effectiveLedgerRows = useMemo(() => {
+    if (!isVc) return ledgerRows;
+    const rows = [];
+    vcContracts.forEach(contract => {
+      const cName = contract.creator_name || 'Contracted Creator';
+      const adv = Number(contract.advance_amount_usd) || 35000;
+      const tmFee = Math.round(adv * ((contract.tunemavens_platform_fee_pct || 3.0) / 100));
+
+      rows.push({
+        id: `TX-ADV-${(contract.contract_id || '2026').slice(-4)}`,
+        date: contract.signature_timestamp ? contract.signature_timestamp.split('T')[0] : '2026-03-14',
+        title: `${cName} — Senior Advance Facility Disbursement`,
+        source: 'Senior Tour Advance Escrow',
+        gross: adv,
+        comm: tmFee,
+        label: 0,
+        recoupment: adv,
+        artist: adv - tmFee,
+        manager: 0,
+        net: adv - tmFee,
+        status: 'disbursed',
+        creator_name: cName
+      });
+
+      const box1 = Math.round(adv * 0.38);
+      const box1Fee = Math.round(box1 * 0.03);
+      rows.push({
+        id: `TX-BOX-${Math.floor(1000 + Math.random() * 8999)}`,
+        date: '2026-03-16',
+        title: `${cName} — Arena Tour Night 1 Box Office Recoupment`,
+        source: 'Live Tour Ticket Scan',
+        gross: box1,
+        comm: box1Fee,
+        label: 0,
+        recoupment: box1 - box1Fee,
+        artist: 0,
+        manager: 0,
+        net: box1 - box1Fee,
+        status: 'processed',
+        creator_name: cName
+      });
+
+      rows.push({
+        id: `TX-DSP-${Math.floor(1000 + Math.random() * 8999)}`,
+        date: '2026-03-20',
+        title: `${cName} — Q1 Global Lossless Streaming Statement`,
+        source: 'DSP Streaming',
+        gross: 3450,
+        comm: 103.50,
+        label: 690.00,
+        recoupment: 1200.00,
+        artist: 1056.50,
+        manager: 400.00,
+        net: 1056.50,
+        status: 'processed',
+        creator_name: cName
+      });
+    });
+    return rows;
+  }, [isVc, vcContracts, ledgerRows]);
+
+  // Derived effective split sheets strictly for contracted creators
+  const effectiveSplitSheets = useMemo(() => {
+    if (!isVc) return splitSheetsVault;
+    const sheets = [];
+    vcContracts.forEach(contract => {
+      const cName = contract.creator_name || 'Contracted Creator';
+      sheets.push({
+        id: `sheet_${contract.contract_id || 'vc'}`,
+        title: `${cName} — Tri-Party Split Cascade & Recoupment Sheet`,
+        isrc: `KE-TM1-26-${Math.floor(10000 + Math.random() * 89999)}`,
+        iswc: `T-${Math.floor(100 + Math.random() * 899)}.${Math.floor(100 + Math.random() * 899)}.${Math.floor(100 + Math.random() * 899)}-1`,
+        status: 'Tri-Party Verified & Enforced',
+        collaborators: `${cName} (67%), Producer/Co-Host (20%), Investor LP (10% ongoing + 100% First-Dollar Sweep), TuneMavens Escrow (3.0%)`,
+        lastUpdated: contract.signature_timestamp ? contract.signature_timestamp.split('T')[0] : '2026-03-14',
+        creator_name: cName
+      });
+    });
+    return sheets;
+  }, [isVc, vcContracts, splitSheetsVault]);
+
+  const currentLedgerRows = isVc ? effectiveLedgerRows : ledgerRows;
+  const currentTracks = isVc ? effectiveTracks : tracks;
+  const currentSplitSheets = isVc ? effectiveSplitSheets : splitSheetsVault;
+
   // Navigation View Tabs
   const [activeTab, setActiveTab] = useState('waterfall'); // 'waterfall' | 'ledger' | 'vault' | 'importer' | 'university'
 
@@ -548,7 +751,7 @@ export default function TuneLedgerSplitCascadePanel({
 
   // Export CSV of ledger rows
   const handleExportCSV = () => {
-    if (!ledgerRows || ledgerRows.length === 0) {
+    if (!currentLedgerRows || currentLedgerRows.length === 0) {
       alert('No ledger transactions available to export.');
       return;
     }
@@ -556,7 +759,7 @@ export default function TuneLedgerSplitCascadePanel({
     const headers = ['TxID', 'Date', 'Track Title', 'Source', 'Gross USD', 'Admin Comm (10%)', 'Label Share', 'Recoupment', 'Artist Share', 'Manager Fee', 'Net Pool', 'Status'];
     const csvContent = [
       headers.join(','),
-      ...ledgerRows.map(r => [
+      ...currentLedgerRows.map(r => [
         r.id,
         r.date || '2026-03-14',
         `"${r.title || 'Untitled Track'}"`,
@@ -584,7 +787,7 @@ export default function TuneLedgerSplitCascadePanel({
 
   // Filtered ledger rows
   const filteredLedger = useMemo(() => {
-    return ledgerRows.filter(row => {
+    return currentLedgerRows.filter(row => {
       const title = row.title || '';
       const id = row.id || '';
       const matchesSearch = title.toLowerCase().includes(searchLedger.toLowerCase()) ||
@@ -592,19 +795,168 @@ export default function TuneLedgerSplitCascadePanel({
       const matchesSource = ledgerSourceFilter === 'ALL' || (row.source || '').toLowerCase().includes(ledgerSourceFilter.toLowerCase());
       return matchesSearch && matchesSource;
     });
-  }, [ledgerRows, searchLedger, ledgerSourceFilter]);
+  }, [currentLedgerRows, searchLedger, ledgerSourceFilter]);
 
   // Aggregate stats
   const totalVolumeUSD = useMemo(() => {
-    return ledgerRows.reduce((acc, r) => acc + (Number(r.gross) || 0), 0);
-  }, [ledgerRows]);
+    return currentLedgerRows.reduce((acc, r) => acc + (Number(r.gross) || 0), 0);
+  }, [currentLedgerRows]);
 
   const totalArtistPaidUSD = useMemo(() => {
-    return ledgerRows.reduce((acc, r) => acc + (Number(r.artist) || 0), 0);
-  }, [ledgerRows]);
+    return currentLedgerRows.reduce((acc, r) => acc + (Number(r.artist) || 0), 0);
+  }, [currentLedgerRows]);
+
+  // Institutional Access Control Guard for VCs: Split Cascade data locked until agreements are executed
+  if (isVc && vcContracts.length === 0) {
+    return (
+      <div style={{ padding: '40px 24px', maxWidth: '1080px', margin: '40px auto', color: '#fff', fontFamily: 'inherit' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%)',
+          border: '1px solid rgba(16, 185, 129, 0.35)',
+          borderRadius: '12px',
+          padding: '48px 36px',
+          textAlign: 'center',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
+        }}>
+          <div style={{
+            width: '72px',
+            height: '72px',
+            borderRadius: '50%',
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#10b981',
+            marginBottom: '20px'
+          }}>
+            <RiLockFill size={36} />
+          </div>
+
+          <div style={{
+            display: 'inline-block',
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '1px solid rgba(16, 185, 129, 0.35)',
+            color: '#10b981',
+            padding: '4px 14px',
+            borderRadius: '20px',
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            marginBottom: '16px'
+          }}>
+            SEC / CMA Confidential Escrow &amp; Split Cascade Ledger
+          </div>
+
+          <h2 style={{ fontSize: '1.9rem', fontWeight: 900, margin: '0 0 14px', color: '#fff', letterSpacing: '-0.02em' }}>
+            Split Cascade Ledger &amp; Waterfall Locked
+          </h2>
+
+          <p style={{ color: '#94a3b8', fontSize: '0.95rem', maxWidth: '680px', margin: '0 auto 28px', lineHeight: 1.6 }}>
+            Under TuneMavens institutional protocol and creator Non-Disclosure Agreements, all revenue waterfalls, Split Cascade settlement ledgers, and telemetry are strictly compartmentalized. You can only view revenue streams, split sheets, and automated settlement waterfalls for creators with an active, executed Tri-Party VC Agreement.
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px',
+            maxWidth: '860px',
+            margin: '0 auto 36px',
+            textAlign: 'left'
+          }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
+                Tri-Party Custody Architecture
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                TuneMavens acts as technology intermediary, escrow custodian, and automated clearinghouse between Investor LPs and Creators.
+              </div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ color: '#38bdf8', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
+                3.0% Protocol Facilitation Fee
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                TuneMavens earns a fair 3.0% protocol clearinghouse fee on all gross box office and catalog volume flowing through Split Cascade.
+              </div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ color: '#a78bfa', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
+                Zero Platform Credits Charged
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                All institutional VCs and LPs are permanently exempt from credit deductions across all ledgers and calculation tools.
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof onNavigateTab === 'function') onNavigateTab('vc-discover');
+              else window.dispatchEvent(new CustomEvent('tunemavens:navigate-tab', { detail: { tab: 'vc-discover' } }));
+            }}
+            style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              border: 'none',
+              color: '#fff',
+              padding: '13px 30px',
+              borderRadius: '6px',
+              fontWeight: 800,
+              fontSize: '0.92rem',
+              cursor: 'pointer',
+              boxShadow: '0 4px 18px rgba(16, 185, 129, 0.4)'
+            }}
+          >
+            Discover Creators &amp; Catalog to Underwrite &rarr;
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '24px', maxWidth: '1440px', margin: '0 auto', color: '#f8fafc', fontFamily: 'inherit' }}>
+      {/* Institutional Clearance Active Banner for VCs */}
+      {isVc && vcContracts.length > 0 && (
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.08)',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          borderRadius: '8px',
+          padding: '14px 20px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <RiShieldCheckFill size={22} color="#10b981" />
+            <div>
+              <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#10b981' }}>
+                INSTITUTIONAL SPLIT CASCADE CLEARANCE ACTIVE
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#cbd5e1', marginTop: '2px' }}>
+                Revenue cascades and recoupment ledgers restricted strictly to {vcContracts.length} contracted creator asset(s): <strong style={{ color: '#fff' }}>{vcContracts.map(c => c.creator_name).join(', ')}</strong> under Tri-Party Escrow (3.0% Platform Fee).
+              </div>
+            </div>
+          </div>
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.15)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            color: '#10b981',
+            padding: '4px 12px',
+            borderRadius: '4px',
+            fontSize: '0.74rem',
+            fontWeight: 800
+          }}>
+            VIP LP: ZERO CREDITS CHARGED
+          </div>
+        </div>
+      )}
+
       {/* Top Banner / Studio Header */}
       <div style={{
         background: '#090e24',
@@ -743,7 +1095,7 @@ export default function TuneLedgerSplitCascadePanel({
         }}>
           {[
             { id: 'waterfall', label: 'Interactive Waterfall Builder', icon: RiEqualizerFill },
-            { id: 'ledger', label: `TuneLedger Transactions (${ledgerRows.length})`, icon: RiFileTextFill },
+            { id: 'ledger', label: `TuneLedger Transactions (${currentLedgerRows.length})`, icon: RiFileTextFill },
             { id: 'vault', label: 'Split Sheets Vault', icon: RiLockFill },
             { id: 'importer', label: 'Statement Ingestion & CSV', icon: RiUploadCloud2Line },
             { id: 'university', label: 'Royalty University & Guide', icon: RiBookOpenFill }
@@ -1013,7 +1365,7 @@ export default function TuneLedgerSplitCascadePanel({
                         onChange={(e) => handleSelectTrack(e.target.value)}
                         style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '9px 12px', color: '#fff', fontSize: '13px' }}
                       >
-                        {tracks.map(t => (
+                        {currentTracks.map(t => (
                           <option key={t.id} value={t.id}>{t.title} ({t.isrc || 'ISRC Attached'})</option>
                         ))}
                         <option value="custom">+ Custom Track Title...</option>
@@ -2054,7 +2406,7 @@ export default function TuneLedgerSplitCascadePanel({
                   gap: '6px'
                 }}
               >
-                <span>View TuneLedger Transactions ({ledgerRows.length})</span>
+                <span>View TuneLedger Transactions ({currentLedgerRows.length})</span>
                 <RiArrowRightLine size={15} />
               </button>
             </div>
@@ -2308,7 +2660,7 @@ export default function TuneLedgerSplitCascadePanel({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            {splitSheetsVault.map(sheet => (
+            {currentSplitSheets.map(sheet => (
               <div key={sheet.id} style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                   <div>
@@ -2590,8 +2942,8 @@ export default function TuneLedgerSplitCascadePanel({
                 <p style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.4, margin: '0 0 14px' }}>
                   {guide.summary}
                 </p>
-                <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '6px', padding: '14px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                  {guide.content}
+                <div style={{ background: '#0b1126', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '6px', padding: '14px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.5 }}>
+                  <ArticleContentRenderer content={guide.content} />
                 </div>
               </div>
             ))}

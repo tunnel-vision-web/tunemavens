@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRegion } from '../RegionContext.jsx'
+import { AUTHORITATIVE_AD_RATES } from '../data/authoritativeAdRates.js'
 import {
   RiMegaphoneFill,
   RiBarChartBoxFill,
@@ -19,7 +20,7 @@ import {
 
 export default function CorporateAdsPanel({ sessionUser, setActiveTab }) {
   const { formatPrice } = useRegion();
-  const [rates, setRates] = useState([])
+  const [rates, setRates] = useState(AUTHORITATIVE_AD_RATES)
   const [campaigns, setCampaigns] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -55,7 +56,7 @@ export default function CorporateAdsPanel({ sessionUser, setActiveTab }) {
         fetch('/api/corporate/campaigns').then(r => r.json()).catch(() => []),
         fetch('/api/corporate/stats').then(r => r.json()).catch(() => null)
       ])
-      setRates(Array.isArray(ratesRes) ? ratesRes : [])
+      setRates(Array.isArray(ratesRes) && ratesRes.length > 0 ? ratesRes : AUTHORITATIVE_AD_RATES)
       setCampaigns(Array.isArray(campsRes) ? campsRes : [])
       setStats(statsRes)
     } catch (e) {

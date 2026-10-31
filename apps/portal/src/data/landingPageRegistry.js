@@ -21,6 +21,7 @@ export function getLandingPage(slug) {
 
 export const CANONICAL_ROLES = [
   { key: 'creator', label: 'Creators', sub: 'Artists & Producers', href: '/for/creator', color: '#00f0ff' },
+  { key: 'podcaster', label: 'Podcasters', sub: 'Shows & Sponsorships', href: '/for/podcaster', color: '#00f2fe' },
   { key: 'label', label: 'Record Labels', sub: 'Roster & Recoupment', href: '/for/label', color: '#a855f7' },
   { key: 'dj', label: 'DJs', sub: 'Promo Pool Engine', href: '/for/dj', color: '#14b8a6' },
   { key: 'media-house', label: 'Media Houses', sub: 'Broadcast & Sync', href: '/for/media-house', color: '#0ea5e9' },

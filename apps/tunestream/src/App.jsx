@@ -1,5 +1,10 @@
+import OnboardingTasteModal, { AUTHORITATIVE_CREATORS_FOR_TASTE, GENRES_LIST } from './components/common/OnboardingTasteModal.jsx';
+import { initPlaybackSync, broadcastPlaybackStart, broadcastPlaybackStop } from './lib/playbackSync.js';
 import ConsumerSupportCommunityView from './components/community/ConsumerSupportCommunityView.jsx';
 import HiFiAudioPlayer from './components/player/HiFiAudioPlayer.jsx';
+import PodcastStreamingHub, { AUTHORITATIVE_PODCAST_SHOWS, PodcasterEpkModal } from './components/podcasts/PodcastStreamingHub.jsx';
+import PodcasterStudioWorkspace from './components/podcasts/PodcasterStudioWorkspace.jsx';
+import VcDiscoverCreatorsApp from './components/vc/VcDiscoverCreatorsApp.jsx';
 import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import LoginView from './views/auth/LoginView';
@@ -16,7 +21,8 @@ import {
   RiCheckLine, RiSparklingLine, RiCoinsFill, RiExchangeDollarLine,
   RiFolderMusicLine, RiQuestionLine, RiBriefcaseLine, RiArrowDownSFill,
   RiApps2Fill, RiAppleFill, RiHomeFill, RiBarChartFill, RiGlobalFill, RiArrowLeftFill, RiCloseLine,
-  RiLineChartFill, RiFileTextFill
+  RiLineChartFill, RiFileTextFill,
+  RiHeadphoneFill, RiEqualizerFill, RiSmartphoneFill, RiMicFill, RiFundsBoxFill
 } from 'react-icons/ri';
 import tsLogo from './assets/tunestream-logo.png';
 import tcLogo from './assets/tunecompanion-logo.png';
@@ -26,7 +32,7 @@ import './App.css';
 // Import newly copied header assets
 import listenHero from './assets/images/listen_hero.png';
 
-import NativeAppLandingView from './NativeAppLandingView';
+import NativeAppLandingView, { LandingNavbar, LandingFooter } from './NativeAppLandingView';
 import TourCapitalView from './views/landing/TourCapitalView.jsx';
 import ToursView from './views/landing/ToursView.jsx';
 import CreatorEpkView from './views/creator/CreatorEpkView.jsx';
@@ -61,6 +67,8 @@ export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
   { id: 'affiliate', label: 'Affiliate Partner', shortLabel: 'Affiliate', shortDesc: 'Links, Matrix & Payouts', icon: RiExchangeDollarLine, color: '#22d3ee' },
   { id: 'creator', label: 'Creator / Artist', shortLabel: 'Creator', shortDesc: 'EPK, Catalog, Splits', icon: RiMusicLine, color: '#22d3ee' },
+  { id: 'podcaster', label: 'Podcaster / Show Host', shortLabel: 'Podcaster', shortDesc: 'Shows, Episodes, EPK & Ads', icon: RiMicFill, color: '#ec4899' },
+  { id: 'vc', label: 'Tour Venture Capital (VC)', shortLabel: 'VC / Investor', shortDesc: 'Tour Vault, Syndicates & Telemetry', icon: RiFundsBoxFill, color: '#00f2fe' },
   { id: 'label', label: 'Record Label', shortLabel: 'Label', shortDesc: 'Roster, Rights, Splits & Sync', icon: RiFolderMusicLine, color: '#a855f7' },
   { id: 'supervisor', label: 'Music Supervisor', shortLabel: 'Supervisor', shortDesc: 'Sync Briefs & Escrow', icon: RiCompass3Line, color: '#ec4899' },
   { id: 'dj', label: 'DJ / Curator', shortLabel: 'DJ', shortDesc: 'DJ Pool & Library', icon: RiVolumeUpFill, color: '#f59e0b' },
@@ -84,6 +92,25 @@ export default function App() {
   );
 }
 
+
+function TourCapitalWrapper({ sessionUser, onLogout }) {
+  const navigate = useNavigate();
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', background: '#060813' }}>
+      <LandingNavbar 
+        view="tours" 
+        setView={(v) => navigate(`/?view=${v}`)} 
+        sessionUser={sessionUser} 
+        onLogout={onLogout} 
+      />
+      <div style={{ flex: 1 }}>
+        <TourCapitalView sessionUser={sessionUser} />
+      </div>
+      <LandingFooter view="tours" />
+    </div>
+  );
+}
+
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -97,6 +124,258 @@ function AppContent() {
   });
 
   const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
+
+  // Global TuneStream Lossless Audio Player States (Autostart on load with Featured Playlist)
+  const [globalTrack, setGlobalTrack] = useState(() => AUTHORITATIVE_CATALOG_TRACKS[0] || null);
+  const [globalPlaying, setGlobalPlaying] = useState(true);
+  const [globalProgress, setGlobalProgress] = useState(0);
+  const [isUndocked, setIsUndocked] = useState(false);
+  const [playerPos, setPlayerPos] = useState({ x: 40, y: 120 });
+  const [playlistQueue, setPlaylistQueue] = useState(() => AUTHORITATIVE_CATALOG_TRACKS);
+  const [userCredits, setUserCredits] = useState(() => sessionUser?.credits ?? 150);
+  const [playbackContextTitle, setPlaybackContextTitle] = useState('Featured Playlist: Global Afrobeat & Amapiano Masters');
+  const [catalogTracks, setCatalogTracks] = useState(AUTHORITATIVE_CATALOG_TRACKS);
+  const [streamConfig, setStreamConfig] = useState(null);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [showCreditReloadModal, setShowCreditReloadModal] = useState(false);
+  const [reloadPackageInfo, setReloadPackageInfo] = useState(null);
+  const [introTrackIndex, setIntroTrackIndex] = useState(0);
+  const [showIntroPill, setShowIntroPill] = useState(false);
+
+  // Play a track globally and update queue
+  const handlePlayGlobalTrack = (track, queue = null) => {
+    if (!track) return;
+    setGlobalTrack(track);
+    setGlobalPlaying(true);
+    const isBackend = Boolean(
+      window.location.hash.includes('/dashboard') ||
+      window.location.pathname.includes('/dashboard') ||
+      window.location.hash.includes('/tour-capital')
+    );
+    broadcastPlaybackStart(isBackend ? 'backend' : 'frontend', track);
+    setGlobalProgress(0);
+    if (Array.isArray(queue) && queue.length > 0) {
+      setPlaylistQueue(queue);
+    } else if (playlistQueue.length === 0 && catalogTracks && catalogTracks.length > 0) {
+      setPlaylistQueue(catalogTracks);
+    }
+  };
+
+  // Establish different introductory background music for first time visitors
+  const handleCycleIntroTrack = () => {
+    if (!streamConfig || !streamConfig.alternative_intro_tracks || streamConfig.alternative_intro_tracks.length === 0) return;
+    const nextIdx = (introTrackIndex + 1) % streamConfig.alternative_intro_tracks.length;
+    setIntroTrackIndex(nextIdx);
+    const chosen = streamConfig.alternative_intro_tracks[nextIdx];
+    setGlobalTrack(chosen);
+    setGlobalPlaying(true);
+    setGlobalProgress(0);
+    setPlaybackContextTitle(`Intro BGM: ${chosen.title}`);
+  };
+
+  // Handle listener onboarding completion with 100% total personalization
+  const handleSaveOnboardingPreferences = (interests) => {
+    const genresParam = (interests.genres || []).join(',');
+    fetch(`/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.tracks && data.tracks.length > 0) {
+          setPlaylistQueue(data.tracks);
+          setGlobalTrack(data.tracks[0]);
+          setPlaybackContextTitle(data.title || 'Your Daily Personalized Mix');
+          setGlobalPlaying(true);
+        }
+      })
+      .catch(() => {});
+  };
+
+  // Cross-Tab & Cross-Origin Playback Intelligence Synchronization
+  useEffect(() => {
+    const isBackend = Boolean(
+      window.location.hash.includes('/dashboard') ||
+      window.location.pathname.includes('/dashboard') ||
+      window.location.hash.includes('/tour-capital')
+    );
+    const cleanup = initPlaybackSync({
+      isBackend,
+      onStopRemotePlayback: ({ callerSource }) => {
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+        }
+        setGlobalPlaying(false);
+      }
+    });
+    return cleanup;
+  }, []);
+
+  // Global event listener for playback from any component
+  useEffect(() => {
+    const handlePlayReq = (e) => {
+      if (e.detail?.track) {
+        setGlobalTrack(e.detail.track);
+        if (Array.isArray(e.detail.queue) && e.detail.queue.length > 0) {
+          setPlaylistQueue(e.detail.queue);
+        }
+        setGlobalPlaying(true);
+        setShowIntroPill(false);
+      }
+    };
+    window.addEventListener('tunestreamPlayTrack', handlePlayReq);
+    return () => window.removeEventListener('tunestreamPlayTrack', handlePlayReq);
+  }, []);
+
+  // Listen for Quick Reload modal triggers from Pricing section
+  useEffect(() => {
+    const handleOpenReload = (e) => {
+      setReloadPackageInfo(e.detail || null);
+      setShowCreditReloadModal(true);
+    };
+    window.addEventListener('tunestreamOpenReload', handleOpenReload);
+    return () => window.removeEventListener('tunestreamOpenReload', handleOpenReload);
+  }, []);
+
+  // Sync sessionUser credits
+  useEffect(() => {
+    if (sessionUser?.credits !== undefined) {
+      setUserCredits(sessionUser.credits);
+    }
+  }, [sessionUser?.credits]);
+
+  // Initial playback engine: First-time visitor BGM vs Logged-in Featured / Personalized mix
+  useEffect(() => {
+    const handleConfigPlayback = (config) => {
+      setStreamConfig(config);
+
+      // Media Player Intelligence: Autoplay only runs on the frontend tab.
+      // Backend tabs (Dashboard, Tour Capital, Studio) NEVER autoplay unprompted on load.
+      const isBackendView = Boolean(
+        window.location.hash.includes('/dashboard') ||
+        window.location.pathname.includes('/dashboard') ||
+        window.location.hash.includes('/tour-capital') ||
+        window.location.pathname.includes('/tour-capital') ||
+        (window.location.search && window.location.search.includes('role=') && !window.location.search.includes('role=consumer'))
+      );
+
+      if (isBackendView) {
+        if (config.featured_playlist?.tracks?.length > 0) {
+          setPlaylistQueue(config.featured_playlist.tracks);
+          setGlobalTrack(config.featured_playlist.tracks[0]);
+          setPlaybackContextTitle(config.featured_playlist.title || 'Featured Playlist');
+          setGlobalPlaying(false); // DO NOT AUTOPLAY ON LOAD IN BACKEND
+        }
+        return;
+      }
+
+      const isFirstVisit = !localStorage.getItem('tunestream_visited');
+      const hasSavedInterests = localStorage.getItem('tunestream_user_interests');
+
+      if (sessionUser) {
+        // Logged-in Listener flow
+        if (hasSavedInterests) {
+          // Returning listener with preferences: Play their personalized mix
+          try {
+            const interests = JSON.parse(hasSavedInterests);
+            const genresParam = (interests.genres || []).join(',');
+            fetch(`/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.tracks && data.tracks.length > 0) {
+                  setPlaylistQueue(data.tracks);
+                  setGlobalTrack(data.tracks[0]);
+                  setPlaybackContextTitle(data.title || 'Your Daily Personalized Mix');
+                  setGlobalPlaying(true);
+                }
+              })
+              .catch(() => {
+                if (config.featured_playlist?.tracks?.length > 0) {
+                  setPlaylistQueue(config.featured_playlist.tracks);
+                  setGlobalTrack(config.featured_playlist.tracks[0]);
+                  setPlaybackContextTitle(config.featured_playlist.title);
+                  setGlobalPlaying(true);
+                }
+              });
+          } catch {
+            if (config.featured_playlist?.tracks?.length > 0) {
+              setPlaylistQueue(config.featured_playlist.tracks);
+              setGlobalTrack(config.featured_playlist.tracks[0]);
+              setPlaybackContextTitle(config.featured_playlist.title);
+              setGlobalPlaying(true);
+            }
+          }
+        } else {
+          // First time listener logs in: Play backend admin featured playlist
+          if (config.featured_playlist?.tracks?.length > 0) {
+            setPlaylistQueue(config.featured_playlist.tracks);
+            setGlobalTrack(config.featured_playlist.tracks[0]);
+            setPlaybackContextTitle(config.featured_playlist.title);
+            setGlobalPlaying(true);
+          }
+        }
+      } else {
+        // First time visitor flow (Non-logged in)
+        if (isFirstVisit) {
+          localStorage.setItem('tunestream_visited', 'true');
+          const introTrk = config.introductory_track || (config.alternative_intro_tracks && config.alternative_intro_tracks[0]);
+          if (introTrk) {
+            setGlobalTrack(introTrk);
+            if (config.alternative_intro_tracks) {
+              setPlaylistQueue(config.alternative_intro_tracks);
+            }
+            setPlaybackContextTitle('Introductory Background Audio');
+            setShowIntroPill(true);
+            setGlobalPlaying(true);
+          }
+        } else if (config.featured_playlist?.tracks?.length > 0) {
+          setPlaylistQueue(config.featured_playlist.tracks);
+          setGlobalTrack(config.featured_playlist.tracks[0]);
+          setPlaybackContextTitle(config.featured_playlist.title || 'Featured Playlist: Global Afrobeat & Amapiano Masters');
+          setGlobalPlaying(true);
+        }
+      }
+    };
+
+    fetch('/api/stream/config')
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(handleConfigPlayback)
+      .catch(err => {
+        console.warn('Using client fallback stream config:', err);
+        const fallbackConfig = {
+          introductory_track: {
+            isrc: "KE-TM1-24-INTRO",
+            title: "Welcome to TuneStream (Ambient Intro)",
+            artist: "TuneStream Curators",
+            genre: "Ambient / Afro-Chill",
+            duration: "2:45",
+            coverArt: "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+            audioUrl: "/uploads/audio/african_ambient_intro.mp3",
+            priceCredits: 0,
+            isIntro: true
+          },
+          alternative_intro_tracks: [
+            {
+              isrc: "KE-TM1-24-INTRO",
+              title: "Welcome to TuneStream (Ambient Intro)",
+              artist: "TuneStream Curators",
+              genre: "Ambient / Afro-Chill",
+              duration: "2:45",
+              coverArt: "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
+              audioUrl: "/uploads/audio/african_ambient_intro.mp3",
+              priceCredits: 0,
+              isIntro: true
+            }
+          ],
+          featured_playlist: {
+            id: "admin-featured-default",
+            title: "Global Afrobeat & Amapiano Masters",
+            tracks: catalogTracks || AUTHORITATIVE_CATALOG_TRACKS
+          }
+        };
+        handleConfigPlayback(fallbackConfig);
+      });
+  }, [sessionUser?.id]);
 
   useEffect(() => {
     if (location.pathname !== '/login' && location.pathname !== '/register') {
@@ -139,25 +418,25 @@ function AppContent() {
         }}
       >
         <Routes location={backgroundLocation}>
-          <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} onPlayTrack={handlePlayGlobalTrack} onOpenPersonalization={() => setShowOnboardingModal(true)} />} />
           <Route path="/explore" element={<Navigate to="/?view=explore" replace />} />
           <Route path="/concerts" element={<Navigate to="/?view=tours" replace />} />
           <Route path="/events" element={<Navigate to="/?view=tours" replace />} />
           <Route path="/tours" element={<Navigate to="/?view=tours" replace />} />
-          <Route path="/tour-capital" element={<TourCapitalView sessionUser={sessionUser} />} />
+          <Route path="/tour-capital" element={<TourCapitalWrapper sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/vc-capital" element={<Navigate to="/tour-capital" replace />} />
-          <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} initialTab="explore" onLogout={handleLogout} />} />
-          <Route path="/singles" element={<PlayerDashboard sessionUser={sessionUser} initialTab="singles" onLogout={handleLogout} />} />
-          <Route path="/artists" element={<PlayerDashboard sessionUser={sessionUser} initialTab="artists" onLogout={handleLogout} />} />
-          <Route path="/catalog" element={<PlayerDashboard sessionUser={sessionUser} initialTab="my-catalog" onLogout={handleLogout} />} />
-          <Route path="/sync" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
-          <Route path="/sync-marketplace" element={<PlayerDashboard sessionUser={sessionUser} initialTab="sync-marketplace" onLogout={handleLogout} />} />
-          <Route path="/apps" element={<PlayerDashboard sessionUser={sessionUser} initialTab="apps" onLogout={handleLogout} />} />
-          <Route path="/companion" element={<PlayerDashboard sessionUser={sessionUser} initialTab="companion" onLogout={handleLogout} />} />
-          <Route path="/tunecompanion" element={<PlayerDashboard sessionUser={sessionUser} initialTab="companion" onLogout={handleLogout} />} />
+          <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="home" onLogout={handleLogout} />} />
+          <Route path="/singles" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="singles" onLogout={handleLogout} />} />
+          <Route path="/artists" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="artists" onLogout={handleLogout} />} />
+          <Route path="/catalog" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="my-catalog" onLogout={handleLogout} />} />
+          <Route path="/sync" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="sync-marketplace" onLogout={handleLogout} />} />
+          <Route path="/sync-marketplace" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="sync-marketplace" onLogout={handleLogout} />} />
+          <Route path="/apps" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="apps" onLogout={handleLogout} />} />
+          <Route path="/companion" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="companion" onLogout={handleLogout} />} />
+          <Route path="/tunecompanion" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="companion" onLogout={handleLogout} />} />
           <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
           <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
-          <Route path="/dashboard" element={<PlayerDashboard sessionUser={sessionUser} initialTab="home" onLogout={handleLogout} />} />
+          <Route path="/dashboard" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="home" onLogout={handleLogout} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/help" element={<Navigate to="/?view=help" replace />} />
@@ -182,6 +461,88 @@ function AppContent() {
           </Routes>
         </div>
       )}
+
+      {/* First-Time Visitor Background Music Controller Pill */}
+            {/* Interactive Taste Profile & Preferred Creators Onboarding Modal */}
+      {showOnboardingModal && (
+        <OnboardingTasteModal
+          isOpen={showOnboardingModal}
+          onClose={() => setShowOnboardingModal(false)}
+          onSavePreferences={handleSaveOnboardingPreferences}
+        />
+      )}
+
+{showIntroPill && globalTrack?.isIntro && (
+        <div style={{
+          position: 'fixed',
+          top: '72px',
+          right: '20px',
+          background: 'rgba(7, 14, 27, 0.95)',
+          border: '1px solid rgba(0, 240, 255, 0.4)',
+          borderRadius: '24px',
+          padding: '6px 14px',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+          color: '#fff',
+          fontSize: '12px'
+        }}>
+          <span style={{ color: '#00f0ff', fontWeight: 'bold' }}>🎵 Ambient Intro BGM</span>
+          <button
+            onClick={handleCycleIntroTrack}
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '12px',
+              color: '#00f0ff',
+              padding: '2px 8px',
+              fontSize: '11px',
+              cursor: 'pointer'
+            }}
+            title="Switch introductory background track"
+          >
+            Change Intro Track &rarr;
+          </button>
+          <button
+            onClick={() => setShowIntroPill(false)}
+            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '13px' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Authoritative TuneMavens Hi-Fi Audio Player */}
+      {globalTrack && (
+        <HiFiAudioPlayer
+          track={globalTrack}
+          tracks={playlistQueue && playlistQueue.length > 0 ? playlistQueue : catalogTracks}
+          playlistName={playbackContextTitle}
+          isPlaying={globalPlaying}
+          onTogglePlay={setGlobalPlaying}
+          onTrackSelect={(t) => {
+            setGlobalTrack(t);
+            setGlobalPlaying(true);
+          }}
+          sessionUser={sessionUser}
+          onClose={() => {
+            setGlobalPlaying(false);
+            setGlobalTrack(null);
+            setShowIntroPill(false);
+          }}
+        />
+      )}
+
+      {/* Zero Subscription Credit Reload Modal */}
+      <CreditReloadModal
+        isOpen={showCreditReloadModal}
+        onClose={() => setShowCreditReloadModal(false)}
+        sessionUser={sessionUser}
+        suggestedPackageId={reloadPackageInfo ? reloadPackageInfo.packName : null}
+        reason={reloadPackageInfo ? `Top-Up ${reloadPackageInfo.packName}` : 'TuneStream Non-Expiring Credits'}
+      />
     </div>
   );
 }
@@ -192,48 +553,54 @@ function EcosystemAppsPanel({ setActiveTab }) {
       id: 'consumer',
       title: 'TuneStream Mobile',
       tagline: 'Stream. Tip. Carry the catalogue.',
-      target: 'For Listeners & Fans',
-      desc: 'The consumer streaming client with high-fidelity 24-bit FLAC audio, 8GB offline caching, and direct creator micro-tipping that settles automatically into creator splits.',
+      target: 'Mobile & Offline Sync',
+      desc: 'The flagship listener streaming app with high-fidelity 24-bit / 96kHz FLAC audio, 8GB smart offline crate caching, and 1-tap direct creator tipping.',
       platforms: 'iOS & Android (Capacitor)',
       logo: tsLogo,
       accent: '#00f2fe',
+      actionLabel: 'Manage 8GB Mobile Sync',
+      actionTab: 'companion',
       features: [
-        'Lossless 24-bit FLAC audio & low-latency streaming',
-        '8GB smart offline library caching for travel & commutes',
-        'Direct creator tipping into unified split ledgers',
-        'Region-aware editorial feeds and community live radio'
+        'Lossless 24-bit / 96kHz FLAC audio & low-latency streaming',
+        '8GB smart offline crate caching for flights & commutes',
+        '1-tap direct creator tipping with zero middlemen',
+        'Region-aware editorial feeds and 24/7 community live radio'
       ]
     },
     {
-      id: 'companion',
-      title: 'Creator Companion',
-      tagline: 'Your split ledger in your pocket.',
-      target: 'For Artists & Managers',
-      desc: 'Mobile command center for creators and artist managers: real-time split cascade waterfall, accrued payout balances, sync brief alerts, and instant release analytics.',
-      platforms: 'iOS & Android',
-      logo: tcLogo,
-      accent: '#a855f7',
-      features: [
-        'Live split cascade revenue waterfall visualization',
-        'Instant royalty payout balances and micro-tip notifications',
-        'Push notifications for incoming TV/film sync brief pitches',
-        'AI-assisted release scheduling and EPK sharing tools'
-      ]
-    },
-    {
-      id: 'tunepay',
-      title: 'TunePay POS',
-      tagline: 'Sell at the show. Settle by morning.',
-      target: 'For Labels & Venues',
-      desc: 'Portable point-of-sale for concerts, festivals, and merch booths: process card and M-Pesa STK mobile money checkout, scan gate tickets, and settle splits automatically.',
-      platforms: 'iOS & Android Tablet',
-      logo: tpLogo,
+      id: 'dac-desktop',
+      title: 'TuneStream Desktop & DAC Bridge',
+      tagline: 'Bit-perfect studio reference sound.',
+      target: 'For HiFi Audiophiles',
+      desc: 'Desktop audiophile engine engineered for bit-perfect hardware USB DAC passthrough, OS sound-mixer bypass, and 10-band studio equalizer calibration.',
+      platforms: 'macOS (CoreAudio) & Windows (ASIO)',
+      logo: tsLogo,
       accent: '#10b981',
+      actionLabel: 'Configure Studio EQ & DAC',
+      actionTab: 'stream-controls',
       features: [
-        'Contactless card, Apple Pay & M-Pesa STK mobile rails',
-        'Real-time merch inventory management (vinyl, apparel, CDs)',
-        'Barcode / QR door ticket scanner with fast credential pass',
-        'Automated event settlement run with instant ledger cascade'
+        'Bit-perfect USB DAC hardware passthrough',
+        'Exclusive CoreAudio & ASIO mixer bypass mode',
+        '10-band parametric equalizer with Afrobeat & Amapiano sub presets',
+        'Zero-compression 24-bit / 96kHz master playback'
+      ]
+    },
+    {
+      id: 'live-pass',
+      title: 'TuneStream Live Pass & CarPlay',
+      tagline: 'From the highway to the front row.',
+      target: 'Live Shows & In-Car',
+      desc: 'Your digital concert pass wallet and in-car lossless companion: store offline QR VIP tour passes, get local show alerts, and stream hands-free in your car.',
+      platforms: 'Apple CarPlay, Android Auto & Watch',
+      logo: tsLogo,
+      accent: '#f59e0b',
+      actionLabel: 'Browse Live Shows & Passes',
+      actionTab: 'concerts',
+      features: [
+        'Offline QR concert pass & VIP tour ticket wallet',
+        'Instant local tour & festival alerts for artists you follow',
+        'Native Apple CarPlay & Android Auto lossless dashboard',
+        'Seamless handoff between phone, car & home Hi-Fi speakers'
       ]
     }
   ];
@@ -244,40 +611,40 @@ function EcosystemAppsPanel({ setActiveTab }) {
       <div style={{ 
         padding: '36px 32px', 
         borderRadius: '3px', 
-        border: '1px solid rgba(255,255,255,0.08)', 
-        background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%)', 
+        border: '1px solid rgba(0, 242, 254, 0.25)', 
+        background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.06) 0%, rgba(15, 23, 42, 0.7) 100%)', 
         marginBottom: '28px', 
         width: '100%', 
         boxSizing: 'border-box' 
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
           <RiApps2Fill size={22} style={{ color: '#00f2fe' }} />
-          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#fff', margin: 0 }}>Ecosystem App Distribution & Native Suites</h2>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#fff', margin: 0 }}>TuneStream Listener Apps &amp; HiFi Device Suite</h2>
         </div>
         <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', margin: '0 0 24px 0', maxWidth: '840px' }}>
-          Every native app in the Intermaven Network synchronizes with your unified credentials, shared credits vault, and TuneLedger splits waterfall.
+          Built 100% for listeners, concertgoers, and audiophiles. Every TuneStream app synchronizes your custom playlist crates, 8GB offline cache, live show passes, and non-expiring TM Credits in real time.
         </p>
 
         <div className="ts-ecosystem-summary-grid">
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.04)' }}>
-            <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Consumers</span>
-            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Listen & Tip On the Go</div>
-            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>High-fidelity streaming with offline mode.</div>
+            <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mobile &amp; Offline</span>
+            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>8GB Smart Crate Caching</div>
+            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Carry lossless FLAC playlists offline anywhere.</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.04)' }}>
-            <span style={{ fontSize: '11px', color: '#a855f7', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Creators</span>
-            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Pocket Split Ledger</div>
-            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Real-time earnings, splits and sync brief alerts.</div>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Studio HiFi &amp; DAC</span>
+            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>24-Bit / 96kHz Bit-Perfect</div>
+            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Hardware DAC passthrough &amp; 10-band studio EQ.</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.04)' }}>
-            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Labels & Venues</span>
-            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>Tour & Event Settlement</div>
-            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Hardware POS, ticket scanning, and instant payout runs.</div>
+            <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Shows &amp; CarPlay</span>
+            <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>VIP Concert Pass Wallet</div>
+            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>QR festival tickets &amp; hands-free in-car audio.</div>
           </div>
         </div>
       </div>
 
-      {/* Expansive Full-Width Apps Grid */}
+      {/* Expansive Full-Width Listener Apps Grid */}
       <div className="ts-ecosystem-apps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '24px', width: '100%', boxSizing: 'border-box' }}>
         {apps.map((app) => (
           <div 
@@ -333,35 +700,33 @@ function EcosystemAppsPanel({ setActiveTab }) {
               </ul>
             </div>
 
-            {app.id === 'companion' && (
-              <button
-                type="button"
-                onClick={() => setActiveTab && setActiveTab('companion')}
-                style={{
-                  marginBottom: '10px',
-                  width: '100%',
-                  padding: '10px 14px',
-                  background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
-                  border: 'none',
-                  borderRadius: '3px',
-                  color: '#fff',
-                  fontWeight: 800,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <RiLineChartFill size={16} /> Open TuneCompanion Dashboard
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setActiveTab && setActiveTab(app.actionTab)}
+              style={{
+                marginBottom: '10px',
+                width: '100%',
+                padding: '10px 14px',
+                background: app.accent,
+                border: 'none',
+                borderRadius: '3px',
+                color: '#060813',
+                fontWeight: 800,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
+              }}
+            >
+              {app.actionLabel} &rarr;
+            </button>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', marginTop: app.id === 'companion' ? '0' : 'auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
               <button 
                 type="button" 
-                onClick={() => alert(`App Store build for ${app.title} coming in Phase 5+.`)}
+                onClick={() => setActiveTab && setActiveTab(app.actionTab)}
                 style={{ 
                   cursor: 'pointer', 
                   background: 'rgba(255,255,255,0.04)', 
@@ -386,7 +751,7 @@ function EcosystemAppsPanel({ setActiveTab }) {
               </button>
               <button 
                 type="button" 
-                onClick={() => alert(`Google Play build for ${app.title} coming in Phase 5+.`)}
+                onClick={() => setActiveTab && setActiveTab(app.actionTab)}
                 style={{ 
                   cursor: 'pointer', 
                   background: 'rgba(255,255,255,0.04)', 
@@ -417,80 +782,241 @@ function EcosystemAppsPanel({ setActiveTab }) {
   );
 }
 
-const APP_TITLES = {
-  home: 'Streaming Overview & Royalty Dashboard',
-  explore: 'Explore Lossless Audio Streams',
-  favorites: 'My Favorite Audio Streams',
-  radio: 'Community Live Radio Node',
-  'my-catalog': 'Lossless Audio Catalog Repository',
-  upload: 'Lossless Audio Ingestion & Transcoding',
-  'sync-marketplace': 'Sync Licensing Marketplace',
-  splits: 'TuneLedger Split Cascade Waterfall',
-  affiliates: 'Affiliate Programme & Partner Hub',
-  'label-team': 'Label Signed Roster & Permissions',
-  'admin-team': 'Site Administration & Team Seats',
-  apps: 'Ecosystem Native Apps & Mobile Distribution',
-  companion: 'TuneCompanion Pocket Split Ledger & Command Center',
-  support: 'Support & AI Claims Desk',
-  settings: 'Profile & Security Settings'
-};
+function TuneStreamDeviceSyncPanel({ tracks = [], onPlayTrack, setActiveTab }) {
+  const [wifiAutoSync, setWifiAutoSync] = useState(true);
+  const [losslessOffline, setLosslessOffline] = useState(true);
+  const [devices, setDevices] = useState([
+    { id: 'dev_1', name: 'iPhone 16 Pro · TuneStream iOS', type: 'Mobile Client', cacheUsed: '1.4 GB / 8.0 GB', status: 'Synced & Active', active: true },
+    { id: 'dev_2', name: 'MacBook Pro · Studio DAC Bridge', type: '24-Bit / 96kHz CoreAudio', cacheUsed: '0.4 GB / 8.0 GB', status: 'Bit-Perfect Ready', active: true },
+    { id: 'dev_3', name: 'Apple CarPlay · In-Car Receiver', type: 'Vehicle Audio Node', cacheUsed: 'Streaming Cache', status: 'Paired via iPhone', active: false }
+  ]);
 
-function formatTime(seconds) {
-  if (isNaN(seconds) || seconds === null || seconds === undefined) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-}
-
-function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredits, setActiveTab, onPlayTrack }) {
-  const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
   return (
-    <div className="tunestream-home-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* KPI Overview Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Catalog Repository</span>
-            <RiDatabase2Line size={18} style={{ color: '#00f2fe' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Hero Banner */}
+      <div className="dashboard-card" style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(9, 15, 30, 0.95) 0%, rgba(16, 28, 56, 0.85) 100%)', border: '1px solid rgba(0, 240, 255, 0.3)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase' }}>Mobile &amp; Device Sync</span>
+            <h3 style={{ fontSize: '22px', fontWeight: '900', color: '#fff', margin: '4px 0' }}>8GB Smart Offline Cache &amp; Paired Devices</h3>
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', margin: 0, maxWidth: '640px' }}>
+              Synchronize your custom playlist crates and liked 24-bit FLAC tracks across your phone, desktop DAC, and CarPlay receiver for zero-buffering offline playback.
+            </p>
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>{tracks.length} Releases</div>
-          <div style={{ fontSize: '12px', color: '#10b981', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>✓ 100% Lossless FLAC Transcoded</span>
-          </div>
-        </div>
-
-        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Singles & EPs</span>
-            <RiMusicLine size={18} style={{ color: '#f59e0b' }} />
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>{singles.length} Singles</div>
-          <div style={{ fontSize: '12px', color: '#f59e0b', marginTop: '6px' }}>Pre-Cleared One-Stop Masters</div>
-        </div>
-
-        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Signed Artists</span>
-            <RiUserLine size={18} style={{ color: '#a855f7' }} />
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>{artists.length || 5} Creators</div>
-          <div style={{ fontSize: '12px', color: '#a855f7', marginTop: '6px' }}>Authoritative Roster Roster</div>
-        </div>
-
-        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Unified Credits</span>
-            <RiSparklingLine size={18} style={{ color: '#22d3ee' }} />
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#22d3ee' }}>{(userCredits ?? 600).toLocaleString()}</div>
-          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>Intermaven Shared Vault</div>
+          <button
+            type="button"
+            onClick={() => setActiveTab && setActiveTab('library')}
+            style={{ background: '#00f2fe', color: '#060813', border: 'none', padding: '10px 20px', borderRadius: '3px', fontSize: '12px', fontWeight: '800', cursor: 'pointer' }}
+          >
+            Manage Cached Crates &rarr;
+          </button>
         </div>
       </div>
 
-      {/* Quick Launchpad Action Grid */}
+      {/* Storage Meter & Sync Toggles */}
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0 }}>Offline Smart Cache Allocation</h4>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: '#00f2fe' }}>1.8 GB / 8.0 GB Used (22.5%)</span>
+        </div>
+        <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden', marginBottom: '20px' }}>
+          <div style={{ width: '22.5%', height: '100%', background: 'linear-gradient(90deg, #00f2fe, #10b981)', borderRadius: '3px' }}></div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#e2e8f0', cursor: 'pointer' }}>
+            <input type="checkbox" checked={wifiAutoSync} onChange={(e) => setWifiAutoSync(e.target.checked)} />
+            <span>Auto-Sync Custom Playlist Crates &amp; Liked Songs over Wi-Fi</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#e2e8f0', cursor: 'pointer' }}>
+            <input type="checkbox" checked={losslessOffline} onChange={(e) => setLosslessOffline(e.target.checked)} />
+            <span>Cache Uncompressed 24-Bit FLAC Masters for Offline Playback</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Paired Listener Devices */}
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', margin: '0 0 16px' }}>Signed-In Listener Devices</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {devices.map(d => (
+            <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <RiSmartphoneFill size={22} style={{ color: d.active ? '#00f2fe' : '#64748b' }} />
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#fff' }}>{d.name}</div>
+                  <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>{d.type} • Cache: {d.cacheUsed}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '11px', color: d.active ? '#10b981' : '#94a3b8', background: d.active ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '3px', fontWeight: '600' }}>
+                  ● {d.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredits, setActiveTab, onPlayTrack }) {
+  const [listenerInterests, setListenerInterests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tunestream_user_interests');
+      return saved ? JSON.parse(saved) : { genres: ['Afrobeat', 'Amapiano', 'Highlife'], vibe: 'chill' };
+    } catch {
+      return { genres: ['Afrobeat', 'Amapiano', 'Highlife'], vibe: 'chill' };
+    }
+  });
+
+  const [recentTips] = useState([
+    { id: 1, artist: 'Ndufo', track: 'Enenda', credits: 50, amount: '$5.00', date: 'Just now', badge: 'Superfan' },
+    { id: 2, artist: 'Burna Boy', track: 'City Boys', credits: 50, amount: '$5.00', date: '2 days ago', badge: 'Patron' },
+    { id: 3, artist: 'Tems', track: 'Me & U', credits: 50, amount: '$5.00', date: '5 days ago', badge: 'Early Supporter' }
+  ]);
+
+  const handlePlayPersonalizedMix = () => {
+    const genresParam = (listenerInterests.genres || ['Afrobeat']).join(',');
+    fetch(`/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.tracks && data.tracks.length > 0) {
+          window.dispatchEvent(new CustomEvent('tunestreamPlayTrack', {
+            detail: { track: data.tracks[0], queue: data.tracks, contextTitle: data.title || 'Your Daily Personalized Mix' }
+          }));
+        }
+      })
+      .catch(() => {
+        if (tracks.length > 0) {
+          window.dispatchEvent(new CustomEvent('tunestreamPlayTrack', {
+            detail: { track: tracks[0], queue: tracks, contextTitle: 'Global Afrobeat & Amapiano Masters' }
+          }));
+        }
+      });
+  };
+
+  return (
+    <div className="tunestream-home-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Listener KPI Overview Metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(0, 240, 255, 0.25)', borderRadius: '3px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>TM Credits Balance</span>
+            <RiCoinsFill size={18} style={{ color: '#00f2fe' }} />
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#00f2fe' }}>{(userCredits ?? 150).toLocaleString()} <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#94a3b8' }}>Credits</span></div>
+          <div style={{ fontSize: '11px', color: '#10b981', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Non-Expiring • 0 Subscriptions</span>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('tunestreamOpenReload'))}
+              style={{ background: 'rgba(0,240,255,0.1)', border: '1px solid #00f2fe', color: '#00f2fe', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold', padding: '2px 8px', cursor: 'pointer' }}
+            >
+              + Top-Up
+            </button>
+          </div>
+        </div>
+
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Listening Fidelity</span>
+            <RiEqualizerFill size={18} style={{ color: '#10b981' }} />
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>24-bit / 96kHz</div>
+          <div style={{ fontSize: '12px', color: '#10b981', marginTop: '6px' }}>Master FLAC • DAC Bit-Perfect</div>
+        </div>
+
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Direct Artist Support</span>
+            <RiHeart3Fill size={18} style={{ color: '#ec4899' }} />
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>{recentTips.length} Creators</div>
+          <div style={{ fontSize: '12px', color: '#ec4899', marginTop: '6px' }}>100% Direct Tips via Split Cascade</div>
+        </div>
+
+        <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Offline Smart Cache</span>
+            <RiSmartphoneFill size={18} style={{ color: '#a855f7' }} />
+          </div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#fff' }}>1.8 GB <span style={{ fontSize: '14px', color: '#64748b' }}>/ 8 GB</span></div>
+          <div style={{ fontSize: '12px', color: '#a855f7', marginTop: '6px' }}>TuneCompanion Sync Active</div>
+        </div>
+      </div>
+
+      {/* Personalized Stream Hero Banner */}
+      <div className="dashboard-card" style={{
+        padding: '28px',
+        background: 'linear-gradient(135deg, rgba(9, 15, 30, 0.95) 0%, rgba(13, 24, 48, 0.85) 100%)',
+        border: '1px solid rgba(0, 240, 255, 0.3)',
+        borderRadius: '3px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 240, 255, 0.1)', border: '1px solid rgba(0, 240, 255, 0.3)', borderRadius: '3px', padding: '3px 8px', fontSize: '10px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>
+              ✦ Daily Tailored Crate
+            </div>
+            <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#fff', margin: '0 0 6px' }}>
+              Your Daily Personalized Mix
+            </h3>
+            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, maxWidth: '600px' }}>
+              Engineered exclusively from your onboarding taste preferences. Seamlessly streaming high-res 24-bit lossless masters.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handlePlayPersonalizedMix}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 24px',
+              background: '#00f2fe',
+              color: '#060813',
+              border: 'none',
+              borderRadius: '3px',
+              fontSize: '13px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(0, 242, 254, 0.35)'
+            }}
+          >
+            <RiPlayFill size={18} /> Play Personalized Mix
+          </button>
+        </div>
+
+        {/* Selected Preferences Badges */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+          <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Tuned For:</span>
+          {(listenerInterests.genres || ['Afrobeat', 'Amapiano']).map(g => (
+            <span key={g} style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0,240,255,0.08)', border: '1px solid rgba(0,240,255,0.2)', padding: '2px 8px', borderRadius: '3px', fontWeight: '600' }}>
+              {g}
+            </span>
+          ))}
+          <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', padding: '2px 8px', borderRadius: '3px', fontWeight: '600' }}>
+            ● Vibe: {listenerInterests.vibe || 'Chill & Relax'}
+          </span>
+          <button
+            type="button"
+            onClick={() => setActiveTab('settings')}
+            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            Refine Taste &rarr;
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Listener Launchpad */}
       <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
         <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <RiApps2Fill style={{ color: '#00f2fe' }} /> Quick Actions &amp; Workflow Launchpad
+          <RiApps2Fill style={{ color: '#00f2fe' }} /> Listener Quick Actions
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
           <button
@@ -500,93 +1026,102 @@ function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredi
           >
             <RiCompass3Line size={20} style={{ color: '#00f2fe' }} />
             <span style={{ fontSize: '13px', fontWeight: '700' }}>Explore Streams</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Lossless catalogue stream</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Lossless catalog stream</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('singles')}
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            onClick={() => setActiveTab('podcasts')}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
-            <RiMusicLine size={20} style={{ color: '#f59e0b' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>Singles Showcase</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Individual master releases</span>
+            <RiMicFill size={20} style={{ color: '#10b981' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Podcasts &amp; Shows</span>
+            <span style={{ fontSize: '11px', color: '#10b981' }}>Episodes, chapters &amp; EPKs</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('artists')}
+            onClick={() => setActiveTab('library')}
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
-            <RiUserLine size={20} style={{ color: '#22d3ee' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>Signed Artists</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Roster bios &amp; releases</span>
+            <RiFolderMusicLine size={20} style={{ color: '#a855f7' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>My Playlist Crates</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Manage custom crates</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('upload')}
+            onClick={() => setActiveTab('concerts')}
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
-            <RiUpload2Line size={20} style={{ color: '#a855f7' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>Ingest Audio</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Lossless FLAC/WAV upload</span>
+            <RiTicket2Fill size={20} style={{ color: '#f59e0b' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Live Shows &amp; Passes</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Tour tickets &amp; RSVP</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('sync-marketplace')}
+            onClick={() => setActiveTab('stream-controls')}
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
-            <RiGlobalFill size={20} style={{ color: '#ec4899' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>Sync Marketplace</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Pitch to TV/Film supervisors</span>
+            <RiEqualizerFill size={20} style={{ color: '#10b981' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Lossless Sound &amp; EQ</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>24-bit studio equalizer</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('splits')}
+            onClick={() => setActiveTab('companion')}
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
-            <RiCoinsFill size={20} style={{ color: '#10b981' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>TuneLedger Splits</span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Automated waterfall ledgers</span>
+            <RiSmartphoneFill size={20} style={{ color: '#c084fc' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>TuneCompanion App</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>8GB offline mobile sync</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('tunestreamOpenReload'))}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiCoinsFill size={20} style={{ color: '#00f2fe' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>Top-Up TM Credits</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Zero subscriptions ever</span>
           </button>
         </div>
       </div>
 
-      {/* Trending Streams Row */}
+      {/* Recommended Lossless Streams */}
       <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: 0 }}>Spotlight &amp; Trending Releases</h4>
+          <h4 style={{ fontSize: '15px', color: '#fff', fontWeight: '800', margin: 0 }}>Trending African Masters</h4>
           <button
             type="button"
             onClick={() => setActiveTab('explore')}
             style={{ background: 'transparent', border: 'none', color: '#00f2fe', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
           >
-            View All Streams &rarr;
+            Browse All &rarr;
           </button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {tracks.slice(0, 5).map((track, idx) => (
             <div
-              key={track.id}
+              key={track.id || track.isrc}
               onClick={() => onPlayTrack && onPlayTrack(track)}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px', cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '12px', color: '#64748b', width: '16px', textAlign: 'center' }}>{idx + 1}</span>
-                <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} style={{ width: '40px', height: '40px', borderRadius: '3px', objectFit: 'cover' }} />
+                <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }} style={{ width: '40px', height: '40px', borderRadius: '3px', objectFit: 'cover' }} />
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{track.title}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{track.artist} · {track.album || track.release}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{track.artist} • {track.genre || 'Afrobeats'}</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <span style={{ fontSize: '11px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 8px', borderRadius: '3px' }}>
-                  {track.releaseType || 'Single'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <span style={{ fontSize: '10px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '3px', fontWeight: 'bold' }}>
+                  24-BIT FLAC
                 </span>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>{track.plays}</span>
                 <button
                   type="button"
                   style={{ background: '#00f2fe', border: 'none', color: '#000', padding: '6px 14px', borderRadius: '3px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -596,6 +1131,219 @@ function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredi
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TuneStreamLibraryPanel({ tracks = [], onPlayTrack }) {
+  const [crates, setCrates] = useState([
+    { id: 'crate_1', name: 'Nairobi Cyberwave Crate', count: 14, genre: 'Afro-Synth', cover: '/uploads/artwork/ndufo_cover.jpg' },
+    { id: 'crate_2', name: 'Sunset Chill & Drive', count: 22, genre: 'Amapiano', cover: '/heroes/ndufo_hero_slide1_retina.jpg' },
+    { id: 'crate_3', name: 'High-Energy Lagos Beats', count: 18, genre: 'Afrobeat', cover: '/heroes/ndufo_hero_slide2_retina.jpg' }
+  ]);
+  const [newCrateName, setNewCrateName] = useState('');
+  const [showCreateCrate, setShowCreateCrate] = useState(false);
+
+  const handleCreateCrate = (e) => {
+    e.preventDefault();
+    if (!newCrateName.trim()) return;
+    setCrates([
+      ...crates,
+      { id: `crate_${Date.now()}`, name: newCrateName.trim(), count: 0, genre: 'Custom Mix', cover: '/uploads/artwork/ndufo_cover.jpg' }
+    ]);
+    setNewCrateName('');
+    setShowCreateCrate(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Header & Crate Actions */}
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#fff', margin: '0 0 4px' }}>My Playlist Crates</h3>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Organize your offline music crates and curated lossless playlists.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowCreateCrate(!showCreateCrate)}
+            style={{ background: '#00f2fe', color: '#060813', border: 'none', padding: '8px 16px', borderRadius: '3px', fontSize: '12px', fontWeight: '800', cursor: 'pointer' }}
+          >
+            + Create New Crate
+          </button>
+        </div>
+
+        {showCreateCrate && (
+          <form onSubmit={handleCreateCrate} style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+            <input
+              type="text"
+              placeholder="Enter crate name (e.g. Accra Midnight Grooves)..."
+              value={newCrateName}
+              onChange={(e) => setNewCrateName(e.target.value)}
+              style={{ flex: 1, padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', color: '#fff', fontSize: '12px' }}
+            />
+            <button type="submit" style={{ background: '#10b981', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '3px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Save Crate
+            </button>
+          </form>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+          {crates.map(c => (
+            <div key={c.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', padding: '16px', display: 'flex', gap: '14px', alignItems: 'center' }}>
+              <img src={c.cover} alt={c.name} onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }} style={{ width: '50px', height: '50px', borderRadius: '3px', objectFit: 'cover' }} />
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>{c.name}</div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>{c.count} tracks • {c.genre}</div>
+                <div style={{ fontSize: '10px', color: '#10b981', marginTop: '4px' }}>● 8GB Cache Enabled</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Saved Tracks in Library */}
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: '0 0 16px' }}>Saved Tracks &amp; Offline Downloads</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {tracks.map((t, idx) => (
+            <div key={t.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '3px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>{idx + 1}</span>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>{t.title}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{t.artist}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '10px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '3px' }}>Downloaded</span>
+                <button
+                  type="button"
+                  onClick={() => onPlayTrack && onPlayTrack(t)}
+                  style={{ background: '#00f2fe', border: 'none', color: '#000', padding: '5px 12px', borderRadius: '3px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  Play
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TuneStreamTipsPanel({ userCredits }) {
+  const [tipsHistory] = useState([
+    { id: 1, artist: 'Ndufo', track: 'Enenda (Lossless FLAC)', credits: 50, amount: '$5.00', date: 'Oct 31, 2026', status: 'Settled 100% Direct via Split Cascade' },
+    { id: 2, artist: 'Burna Boy', track: 'City Boys', credits: 50, amount: '$5.00', date: 'Oct 29, 2026', status: 'Settled 100% Direct via Split Cascade' },
+    { id: 3, artist: 'Tems', track: 'Me & U', credits: 100, amount: '$10.00', date: 'Oct 24, 2026', status: 'Settled 100% Direct via Split Cascade' }
+  ]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Balance & Top-Up Card */}
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(0, 240, 255, 0.3)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase' }}>Superfan Wallet</span>
+            <h3 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', margin: '4px 0' }}>
+              {(userCredits ?? 150).toLocaleString()} <span style={{ fontSize: '16px', color: '#94a3b8' }}>TM Credits</span>
+            </h3>
+            <p style={{ fontSize: '12px', color: '#10b981', margin: 0 }}>
+              100% Non-expiring TM credits • Zero monthly subscriptions
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('tunestreamOpenReload'))}
+            style={{ background: '#00f2fe', color: '#060813', border: 'none', padding: '12px 24px', borderRadius: '3px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', boxShadow: '0 4px 16px rgba(0, 242, 254, 0.3)' }}
+          >
+            + Top-Up Credits Now
+          </button>
+        </div>
+      </div>
+
+      {/* Direct Tipping Ledger */}
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: '0 0 16px' }}>Direct Creator Tipping Ledger</h4>
+        <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px' }}>
+          Every credit you tip goes 100% directly to the creator's Split Cascade wallet without corporate intermediaries pocketing royalties.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {tipsHistory.map(tip => (
+            <div key={tip.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px', flexWrap: 'wrap', gap: '8px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>
+                  Tipped <strong>{tip.artist}</strong> • <span style={{ color: '#00f2fe' }}>{tip.credits} Credits ({tip.amount})</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{tip.track} • {tip.date}</div>
+              </div>
+              <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '3px 8px', borderRadius: '3px', fontWeight: '600' }}>
+                ✓ {tip.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TuneStreamControlsPanel() {
+  const [quality, setQuality] = useState('flac_master');
+  const [dacPassthrough, setDacPassthrough] = useState(true);
+  const [eqPreset, setEqPreset] = useState('afro_dance');
+  const [dataSaver, setDataSaver] = useState(false);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#fff', margin: '0 0 6px' }}>Lossless Sound &amp; Equalizer Engine</h3>
+        <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 20px' }}>Configure studio bit-depth calibration, DAC routing, and 10-band equalizer settings.</p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <div>
+            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>Streaming Bit-Depth</label>
+            <select
+              value={quality}
+              onChange={(e) => setQuality(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', background: '#050811', border: '1px solid rgba(0, 240, 255, 0.3)', borderRadius: '3px', color: '#fff', fontSize: '13px' }}
+            >
+              <option value="flac_master">Studio 24-Bit / 96kHz FLAC Master</option>
+              <option value="cd_quality">Lossless 16-Bit / 44.1kHz (CD Quality)</option>
+              <option value="high">HQ 320kbps AAC</option>
+              <option value="saver">Data-Saver 128kbps</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>Studio EQ Preset</label>
+            <select
+              value={eqPreset}
+              onChange={(e) => setEqPreset(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', background: '#050811', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '3px', color: '#fff', fontSize: '13px' }}
+            >
+              <option value="afro_dance">Afro-Beat Club &amp; Bass Punch</option>
+              <option value="amapiano_sub">Amapiano Deep Log Drum Sub</option>
+              <option value="vocal_air">Acoustic &amp; Vocal Clarity</option>
+              <option value="flat">Studio Flat Reference</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#e2e8f0', cursor: 'pointer' }}>
+            <input type="checkbox" checked={dacPassthrough} onChange={(e) => setDacPassthrough(e.target.checked)} />
+            <span>Enable Bit-Perfect DAC Hardware Passthrough (Bypasses OS sound mixers)</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#e2e8f0', cursor: 'pointer' }}>
+            <input type="checkbox" checked={dataSaver} onChange={(e) => setDataSaver(e.target.checked)} />
+            <span>Smart Cellular Data Saver (Downgrade to 160kbps when streaming on metered mobile data)</span>
+          </label>
         </div>
       </div>
     </div>
@@ -615,6 +1363,9 @@ function TuneStreamExplorePanel({
   onSearchChange
 }) {
   const [filterMode, setFilterMode] = useState(initialFilter);
+  const [sortBy, setSortBy] = useState('newest');
+  const [genreFilter, setGenreFilter] = useState('all');
+  const [activePodcasterEpkShow, setActivePodcasterEpkShow] = useState(null);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchChange || setInternalSearchQuery;
@@ -622,17 +1373,50 @@ function TuneStreamExplorePanel({
 
   const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
   const albums = tracks.filter(t => t.releaseType !== 'Single' && !(t.release && t.release.toLowerCase().includes('single')));
+  const podcastShows = AUTHORITATIVE_PODCAST_SHOWS || [];
+  const podcastEpisodes = podcastShows.flatMap(show =>
+    (show.episodes || []).map(ep => ({
+      ...ep,
+      podcastTitle: show.title,
+      host: show.host,
+      category: show.category,
+      cover: ep.coverArt || show.coverArt,
+      show
+    }))
+  );
+
+  const availableGenres = Array.from(new Set([
+    'Afrobeats', 'Amapiano', 'Afro-House', 'Afro-fusion', 'Electronic', 'Hip-Hop',
+    ...tracks.map(t => t.genre).filter(Boolean),
+    ...podcastShows.map(s => `Podcast • ${s.category}`).filter(Boolean)
+  ]));
 
   // Filter computation
-  let displayedTracks = tracks;
-  if (filterMode === 'singles') displayedTracks = singles;
-  else if (filterMode === 'albums') displayedTracks = albums;
+  let displayedTracks = [...tracks];
+  if (filterMode === 'singles') displayedTracks = [...singles];
+  else if (filterMode === 'albums') displayedTracks = [...albums];
 
   if (selectedArtist) {
     displayedTracks = displayedTracks.filter(t => t.artist && t.artist.toLowerCase() === selectedArtist.toLowerCase());
   }
 
-  let displayedArtists = artists;
+  if (genreFilter !== 'all') {
+    displayedTracks = displayedTracks.filter(t => t.genre && t.genre.toLowerCase().includes(genreFilter.toLowerCase()));
+  }
+
+  let displayedArtists = [...artists];
+  let displayedPodcasts = [...podcastEpisodes];
+  let displayedPodcasters = [...podcastShows];
+
+  if (genreFilter !== 'all') {
+    displayedPodcasts = displayedPodcasts.filter(ep =>
+      (ep.genre && ep.genre.toLowerCase().includes(genreFilter.toLowerCase())) ||
+      (ep.category && `podcast • ${ep.category}`.toLowerCase().includes(genreFilter.toLowerCase()))
+    );
+    displayedPodcasters = displayedPodcasters.filter(s =>
+      s.category && `podcast • ${s.category}`.toLowerCase().includes(genreFilter.toLowerCase())
+    );
+  }
 
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
@@ -644,13 +1428,36 @@ function TuneStreamExplorePanel({
       (t.genre && t.genre.toLowerCase().includes(q)) ||
       (t.isrc && t.isrc.toLowerCase().includes(q))
     );
-    displayedArtists = artists.filter(a =>
+    displayedArtists = displayedArtists.filter(a =>
       (a.name && a.name.toLowerCase().includes(q)) ||
       (a.genre && a.genre.toLowerCase().includes(q)) ||
       (a.bio && a.bio.toLowerCase().includes(q)) ||
       (a.role && a.role.toLowerCase().includes(q))
     );
+    displayedPodcasts = displayedPodcasts.filter(ep =>
+      (ep.title && ep.title.toLowerCase().includes(q)) ||
+      (ep.podcastTitle && ep.podcastTitle.toLowerCase().includes(q)) ||
+      (ep.host && ep.host.toLowerCase().includes(q)) ||
+      (ep.category && ep.category.toLowerCase().includes(q))
+    );
+    displayedPodcasters = displayedPodcasters.filter(s =>
+      (s.host && s.host.toLowerCase().includes(q)) ||
+      (s.title && s.title.toLowerCase().includes(q)) ||
+      (s.category && s.category.toLowerCase().includes(q)) ||
+      (s.bio && s.bio.toLowerCase().includes(q))
+    );
   }
+
+  const sortSorter = (a, b, keyTitle = 'title', keyGenre = 'genre') => {
+    if (sortBy === 'title') return String(a[keyTitle] || a.name || '').localeCompare(String(b[keyTitle] || b.name || ''));
+    if (sortBy === 'genre') return String(a[keyGenre] || a.category || '').localeCompare(String(b[keyGenre] || b.category || ''));
+    if (sortBy === 'oldest') return 1;
+    return -1;
+  };
+
+  displayedTracks.sort((a, b) => sortSorter(a, b, 'title', 'genre'));
+  displayedPodcasts.sort((a, b) => sortSorter(a, b, 'title', 'category'));
+  displayedPodcasters.sort((a, b) => sortSorter(a, b, 'host', 'category'));
 
   const spotlightTrack = tracks[0] || {
     title: 'Nairobi Cyberwave (Master)',
@@ -671,16 +1478,16 @@ function TuneStreamExplorePanel({
               SPOTLIGHT RELEASE
             </span>
             <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '3px', fontWeight: '600' }}>
-              ✓ Lossless 24-bit / 96kHz FLAC
+              ✓ Lossless 24-bit / 96kHz FLAC &amp; Podcasts
             </span>
           </div>
           <h1 style={{ fontSize: '26px', margin: '4px 0 6px', fontWeight: '800' }}>
             {spotlightTrack.title}
           </h1>
-          <p style={{ fontSize: '13px', marginBottom: '14px', maxWidth: '540px', color: '#cbd5e1', lineHeight: '1.5' }}>
-            By <strong style={{ color: '#fff' }}>{spotlightTrack.artist}</strong> · From "{spotlightTrack.album || spotlightTrack.release}". Authoritative Master streaming directly from the TuneMavens lossless cluster.
+          <p style={{ fontSize: '13px', marginBottom: '14px', maxWidth: '580px', color: '#cbd5e1', lineHeight: '1.5' }}>
+            By <strong style={{ color: '#fff' }}>{spotlightTrack.artist}</strong> · From "{spotlightTrack.album || spotlightTrack.release}". Stream music masters, original podcasts, and verified Podcaster EPKs.
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <button 
               className="btn-play-hero" 
               onClick={() => onPlayTrack(spotlightTrack)} 
@@ -690,125 +1497,295 @@ function TuneStreamExplorePanel({
             </button>
             <button
               type="button"
-              onClick={() => setSelectedArtist(spotlightTrack.artist)}
-              style={{ padding: '8px 16px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}
+              onClick={() => setFilterMode('podcasts')}
+              style={{ padding: '8px 16px', borderRadius: '3px', background: 'rgba(16,185,129,0.16)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.35)', cursor: 'pointer', fontSize: '12px', fontWeight: '800' }}
             >
-              View Artist Releases
+              🎙️ Explore Podcasts &amp; EPKs
             </button>
           </div>
         </div>
       </section>
 
-      {/* Filter Toolbar (Design Standards §14: 3px border-radius, flat colors) */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: '#090c16', padding: '14px 18px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={() => { setFilterMode('all'); setSelectedArtist(null); }}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '3px',
-              border: filterMode === 'all' && !selectedArtist ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
-              background: filterMode === 'all' && !selectedArtist ? '#00f2fe' : 'rgba(255,255,255,0.03)',
-              color: filterMode === 'all' && !selectedArtist ? '#000' : '#fff',
-              fontSize: '12px',
-              fontWeight: '700',
-              cursor: 'pointer'
-            }}
-          >
-            All Catalogue ({tracks.length})
-          </button>
+      {/* Filter & Sort Toolbar (Design Standards §14: 3px border-radius, flat colors) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: '#090c16', padding: '14px 18px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={() => { setFilterMode('all'); setSelectedArtist(null); }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: filterMode === 'all' && !selectedArtist ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
+                background: filterMode === 'all' && !selectedArtist ? '#00f2fe' : 'rgba(255,255,255,0.03)',
+                color: filterMode === 'all' && !selectedArtist ? '#000' : '#fff',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              All Results ({tracks.length + podcastEpisodes.length + podcastShows.length})
+            </button>
 
-          <button
-            type="button"
-            onClick={() => { setFilterMode('singles'); setSelectedArtist(null); }}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '3px',
-              border: filterMode === 'singles' ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.08)',
-              background: filterMode === 'singles' ? '#f59e0b' : 'rgba(255,255,255,0.03)',
-              color: filterMode === 'singles' ? '#000' : '#fff',
-              fontSize: '12px',
-              fontWeight: '700',
-              cursor: 'pointer'
-            }}
-          >
-            Singles ({singles.length})
-          </button>
+            <button
+              type="button"
+              onClick={() => { setFilterMode('singles'); setSelectedArtist(null); }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: filterMode === 'singles' ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.08)',
+                background: filterMode === 'singles' ? '#f59e0b' : 'rgba(255,255,255,0.03)',
+                color: filterMode === 'singles' ? '#000' : '#fff',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              Singles ({singles.length})
+            </button>
 
-          <button
-            type="button"
-            onClick={() => { setFilterMode('albums'); setSelectedArtist(null); }}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '3px',
-              border: filterMode === 'albums' ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.08)',
-              background: filterMode === 'albums' ? '#a855f7' : 'rgba(255,255,255,0.03)',
-              color: filterMode === 'albums' ? '#fff' : '#fff',
-              fontSize: '12px',
-              fontWeight: '700',
-              cursor: 'pointer'
-            }}
-          >
-            Albums &amp; EPs ({albums.length})
-          </button>
+            <button
+              type="button"
+              onClick={() => { setFilterMode('albums'); setSelectedArtist(null); }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: filterMode === 'albums' ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.08)',
+                background: filterMode === 'albums' ? '#a855f7' : 'rgba(255,255,255,0.03)',
+                color: '#fff',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              Albums &amp; EPs ({albums.length})
+            </button>
 
-          <button
-            type="button"
-            onClick={() => { setFilterMode('artists'); setSelectedArtist(null); }}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '3px',
-              border: filterMode === 'artists' ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
-              background: filterMode === 'artists' ? '#10b981' : 'rgba(255,255,255,0.03)',
-              color: filterMode === 'artists' ? '#000' : '#fff',
-              fontSize: '12px',
-              fontWeight: '700',
-              cursor: 'pointer'
-            }}
-          >
-            Signed Artists ({artists.length || 5})
-          </button>
+            <button
+              type="button"
+              onClick={() => { setFilterMode('artists'); setSelectedArtist(null); }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: filterMode === 'artists' ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
+                background: filterMode === 'artists' ? '#10b981' : 'rgba(255,255,255,0.03)',
+                color: filterMode === 'artists' ? '#000' : '#fff',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              Signed Artists ({artists.length || 5})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setFilterMode('podcasts'); setSelectedArtist(null); }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: filterMode === 'podcasts' ? '1px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)',
+                background: filterMode === 'podcasts' ? '#22d3ee' : 'rgba(255,255,255,0.03)',
+                color: filterMode === 'podcasts' ? '#000' : '#fff',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              Podcasts &amp; Episodes ({podcastEpisodes.length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setFilterMode('podcasters'); setSelectedArtist(null); }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: filterMode === 'podcasters' ? '1px solid #ec4899' : '1px solid rgba(255,255,255,0.08)',
+                background: filterMode === 'podcasters' ? '#ec4899' : 'rgba(255,255,255,0.03)',
+                color: '#fff',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              Podcasters &amp; EPKs ({podcastShows.length})
+            </button>
+          </div>
+
+          {/* Live Search Input */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '240px' }}>
+            <RiSearchLine size={16} style={{ color: '#64748b' }} />
+            <input
+              type="text"
+              placeholder="Search tracks, podcasts, podcasters, ISRC..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                flex: 1,
+                padding: '6px 10px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '3px',
+                color: '#fff',
+                fontSize: '12px',
+                outline: 'none'
+              }}
+            />
+          </div>
         </div>
 
-        {/* Live Search Input */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '240px' }}>
-          <RiSearchLine size={16} style={{ color: '#64748b' }} />
-          <input
-            type="text"
-            placeholder="Search tracks, artists, ISRC..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              flex: 1,
-              padding: '6px 10px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '3px',
-              color: '#fff',
-              fontSize: '12px',
-              outline: 'none'
-            }}
-          />
+        {/* Genre & Sort Controls */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>Genre / Category:</span>
+            <select
+              value={genreFilter}
+              onChange={(e) => setGenreFilter(e.target.value)}
+              style={{ background: '#050811', color: '#fff', border: '1px solid rgba(0,242,254,0.35)', borderRadius: '3px', padding: '5px 10px', fontSize: '11.5px', fontWeight: 700 }}
+            >
+              <option value="all">All Genres &amp; Podcast Categories</option>
+              {availableGenres.map(g => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>Sort By:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{ background: '#050811', color: '#fff', border: '1px solid rgba(0,242,254,0.35)', borderRadius: '3px', padding: '5px 10px', fontSize: '11.5px', fontWeight: 700 }}
+            >
+              <option value="newest">Newest Releases</option>
+              <option value="oldest">Oldest Releases</option>
+              <option value="title">Title / Name (A – Z)</option>
+              <option value="genre">Genre / Category (A – Z)</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {selectedArtist && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(0, 242, 254, 0.08)', border: '1px solid rgba(0, 242, 254, 0.25)', borderRadius: '3px' }}>
-          <span style={{ fontSize: '13px', color: '#00f2fe', fontWeight: '700' }}>
-            Filtering catalogue for artist: <strong>{selectedArtist}</strong>
-          </span>
-          <button
-            type="button"
-            onClick={() => setSelectedArtist(null)}
-            style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}
-          >
-            ✕ Clear Filter
-          </button>
-        </div>
+      {/* Podcasters & EPKs Section (Shown when filterMode is 'podcasters' or 'all') */}
+      {(filterMode === 'podcasters' || filterMode === 'all') && displayedPodcasters.length > 0 && (
+        <section>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '16px', margin: 0, color: '#fff' }}>
+              🎙️ Featured Podcasters &amp; Verified Host EPKs
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'normal', marginLeft: '8px' }}>
+                ({displayedPodcasters.length} shows)
+              </span>
+            </h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '16px' }}>
+            {displayedPodcasters.map((show) => (
+              <div
+                key={show.id}
+                style={{ background: '#090c16', border: '1px solid rgba(236,72,153,0.28)', borderRadius: '3px', padding: '18px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                    <img
+                      src={normalizeMediaUrl(show.coverArt)}
+                      alt={show.title}
+                      style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.12)' }}
+                    />
+                    <div>
+                      <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#ec4899', background: 'rgba(236,72,153,0.14)', padding: '2px 6px', borderRadius: '3px' }}>
+                        PODCASTER EPK • {show.category}
+                      </span>
+                      <h4 style={{ margin: '4px 0 2px', fontSize: '15px', color: '#fff', fontWeight: 800 }}>{show.host}</h4>
+                      <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>{show.title}</div>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.5, margin: '0 0 12px' }}>
+                    {show.description}
+                  </p>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px', marginBottom: '10px' }}>
+                    <span>{show.subscribers} Subscribers</span>
+                    <span>{show.avgCompletionRate} Avg. Completion</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => show.episodes?.[0] && onPlayTrack(show.episodes[0])}
+                      style={{ flex: 1, padding: '8px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    >
+                      <RiPlayFill size={14} /> Stream Show
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActivePodcasterEpkShow(show)}
+                      style={{ flex: 1, padding: '8px', background: 'rgba(236,72,153,0.16)', color: '#f472b6', border: '1px solid rgba(236,72,153,0.4)', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                    >
+                      🌐 Podcaster EPK
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* Main Content Area */}
+      {/* Podcasts & Episodes Section (Shown when filterMode is 'podcasts' or 'all') */}
+      {(filterMode === 'podcasts' || filterMode === 'all') && displayedPodcasts.length > 0 && (
+        <section>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '16px', margin: 0, color: '#fff' }}>
+              🎧 Podcast Episodes (-16 LUFS Broadcast Masters)
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'normal', marginLeft: '8px' }}>
+                ({displayedPodcasts.length} episodes)
+              </span>
+            </h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '16px' }}>
+            {displayedPodcasts.map((ep) => (
+              <div
+                key={ep.id}
+                style={{ background: '#090c16', border: '1px solid rgba(34,211,238,0.22)', borderRadius: '3px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#22d3ee', background: 'rgba(34,211,238,0.12)', padding: '2px 6px', borderRadius: '3px' }}>
+                      {ep.genre || `Podcast • ${ep.category}`}
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>{ep.duration}</span>
+                  </div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '14.5px', color: '#fff', fontWeight: 800 }}>{ep.title}</h4>
+                  <div style={{ fontSize: '11.5px', color: '#00f2fe', fontWeight: 700, marginBottom: '8px' }}>
+                    {ep.podcastTitle} · {ep.host}
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.45, margin: '0 0 12px' }}>
+                    {ep.summary}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => onPlayTrack(ep)}
+                    style={{ flex: 1, padding: '8px', background: '#22d3ee', color: '#000', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                  >
+                    <RiPlayFill size={14} /> Play Episode
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActivePodcasterEpkShow(ep.show)}
+                    style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Host EPK 🌐
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Main Music Content Area */}
       {filterMode === 'artists' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
           {displayedArtists.length === 0 ? (
@@ -842,9 +1819,7 @@ function TuneStreamExplorePanel({
                     <div>
                       <h4 
                         data-no-i18n="true" 
-                        style={{ margin: '0 0 4px', fontSize: '16px', color: '#fff', fontWeight: '800', cursor: 'pointer', textDecoration: 'underline text-decoration-color: rgba(34, 211, 238, 0.4)' }}
-                        onClick={() => setViewingCreatorProfile(artist)}
-                        title="View Creator Profile"
+                        style={{ margin: '0 0 4px', fontSize: '16px', color: '#fff', fontWeight: '800', cursor: 'pointer' }}
                       >
                         {artist.name}
                       </h4>
@@ -866,7 +1841,6 @@ function TuneStreamExplorePanel({
                     <span>Catalogue: {artistTracks.length} tracks</span>
                     <a 
                       href={`#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
-                       
                       rel="noreferrer"
                       style={{ color: '#00f2fe', textDecoration: 'none', fontWeight: '700' }}
                     >
@@ -902,11 +1876,11 @@ function TuneStreamExplorePanel({
           })
         )}
         </div>
-      ) : (
+      ) : (filterMode !== 'podcasts' && filterMode !== 'podcasters') ? (
         <section className="ts-music-section">
           <div className="section-header" style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontSize: '16px' }}>
-              {filterMode === 'singles' ? 'Singles Showcase' : (filterMode === 'albums' ? 'Albums & EPs' : 'Authoritative Catalogue')} 
+              {filterMode === 'singles' ? 'Singles Showcase' : (filterMode === 'albums' ? 'Albums & EPs' : 'Authoritative Music Catalogue')} 
               <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 'normal', marginLeft: '8px' }}>
                 ({displayedTracks.length} entries)
               </span>
@@ -958,6 +1932,14 @@ function TuneStreamExplorePanel({
             )}
           </div>
         </section>
+      ) : null}
+
+      {activePodcasterEpkShow && (
+        <PodcasterEpkModal
+          show={activePodcasterEpkShow}
+          onClose={() => setActivePodcasterEpkShow(null)}
+          onPlayEpisode={(ep) => onPlayTrack(ep)}
+        />
       )}
     </div>
   );
@@ -1079,7 +2061,7 @@ function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPla
       <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0 }}>Signed Roster Artists</h3>
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0 }}>Artists</h3>
             <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
               Exact {artists.length} signed creator roster entries registered in TuneMavens backend with automated split cascades and lossless streaming.
             </p>
@@ -1146,7 +2128,7 @@ function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPla
                 </div>
 
                 <div style={{ fontSize: '12px', color: '#a855f7', fontWeight: '700', marginBottom: '8px' }}>
-                  {artist.role || 'Signed Roster Artist'}
+                  {artist.role || 'Artist'}
                 </div>
                 <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', margin: '0 0 16px' }}>
                   {artist.bio || 'Authoritative Intermaven creator.'}
@@ -1495,24 +2477,180 @@ function TuneStreamUploadPanel({
   );
 }
 
-function TuneStreamSettingsPanel({ sessionUser, onSwitchRole }) {
+function TuneStreamSettingsPanel({ sessionUser }) {
+  const [preferences, setPreferences] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tunestream_user_interests');
+      return saved ? JSON.parse(saved) : {
+        genres: ['Afrobeat', 'Amapiano', 'Highlife'],
+        creators: ['ndufo', 'zawadi_kofi', 'dj_kalonje'],
+        vibe: 'chill'
+      };
+    } catch {
+      return {
+        genres: ['Afrobeat', 'Amapiano', 'Highlife'],
+        creators: ['ndufo', 'zawadi_kofi', 'dj_kalonje'],
+        vibe: 'chill'
+      };
+    }
+  });
+
+  const [savedMsg, setSavedMsg] = useState('');
+
+  const genresList = GENRES_LIST || ['Afrobeat', 'Amapiano', 'Highlife', 'Bongo Flava', 'Gengetone', 'Afro-Fusion', 'Afro-House', 'Kizomba'];
+
+  const toggleCreator = (creatorId) => {
+    const current = preferences.creators || ['ndufo'];
+    let updated;
+    if (current.includes(creatorId)) {
+      if (current.length === 1) return;
+      updated = current.filter(id => id !== creatorId);
+    } else {
+      updated = [...current, creatorId];
+    }
+    const newPrefs = { ...preferences, creators: updated };
+    setPreferences(newPrefs);
+    localStorage.setItem('tunestream_user_interests', JSON.stringify(newPrefs));
+    setSavedMsg('Preferred Creators updated!');
+    setTimeout(() => setSavedMsg(''), 2500);
+  };
+
+  const toggleGenre = (genre) => {
+    const current = preferences.genres || [];
+    let updated;
+    if (current.includes(genre)) {
+      if (current.length === 1) return;
+      updated = current.filter(g => g !== genre);
+    } else {
+      updated = [...current, genre];
+    }
+    const newPrefs = { ...preferences, genres: updated };
+    setPreferences(newPrefs);
+    localStorage.setItem('tunestream_user_interests', JSON.stringify(newPrefs));
+    setSavedMsg('Genre Preferences updated!');
+    setTimeout(() => setSavedMsg(''), 2500);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-        <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: '0 0 16px' }}>
-          Platform Session &amp; Identity Settings
+        <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: '0 0 8px' }}>
+          Listener Account &amp; Playback Taste Profile
         </h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
+        <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 20px' }}>
+          TuneStream dynamically tailors your daily personal mixes, introductory background audio, and lossless queues to these preferences.
+        </p>
+
+        {savedMsg && (
+          <div style={{ padding: '8px 12px', background: 'rgba(16,185,129,0.15)', border: '1px solid #10b981', color: '#10b981', borderRadius: '3px', fontSize: '12px', marginBottom: '16px' }}>
+            ✓ {savedMsg}
+          </div>
+        )}
+
+        {/* Preferred Creators & Artists Section */}
+        <div style={{ marginBottom: '22px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              Preferred Creators, Artists &amp; Show Hosts ({preferences.creators?.length || 0})
+            </label>
+            <span style={{ fontSize: '11px', color: '#00f2fe' }}>
+              ● Shapes Daily Mix &amp; Tour Pacing
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '10px' }}>
+            {AUTHORITATIVE_CREATORS_FOR_TASTE.map(c => {
+              const selected = (preferences.creators || []).includes(c.id);
+              return (
+                <div
+                  key={c.id}
+                  onClick={() => toggleCreator(c.id)}
+                  style={{
+                    padding: '9px 12px',
+                    borderRadius: '3px',
+                    background: selected ? 'rgba(0, 240, 255, 0.08)' : 'rgba(255,255,255,0.02)',
+                    border: selected ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <img
+                    src={c.avatar}
+                    alt={c.name}
+                    onError={(e) => { e.currentTarget.src = '/heroes/hero_music_1.png'; }}
+                    style={{ width: '32px', height: '32px', borderRadius: '3px', objectFit: 'cover' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {c.name}
+                    </div>
+                    <div style={{ fontSize: '10px', color: selected ? '#00f2fe' : '#64748b' }}>
+                      {c.role}
+                    </div>
+                  </div>
+                  <span style={{
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '3px',
+                    background: selected ? '#00f2fe' : 'rgba(255,255,255,0.08)',
+                    color: '#060813',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '11px',
+                    fontWeight: 900
+                  }}>
+                    {selected ? '✓' : '+'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+            Favorite Genres &amp; Rhythms
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {genresList.map(g => {
+              const selected = (preferences.genres || []).includes(g);
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => toggleGenre(g)}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '3px',
+                    fontSize: '12px',
+                    fontWeight: selected ? '700' : '500',
+                    background: selected ? 'rgba(0,240,255,0.15)' : 'rgba(255,255,255,0.03)',
+                    border: selected ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.1)',
+                    color: selected ? '#00f2fe' : '#94a3b8',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {selected ? '✓ ' : '+ '}{g}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div>
-            <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold' }}>Current Role Persona</label>
-            <div style={{ color: '#00f2fe', fontWeight: '700', fontSize: '14px', marginTop: '2px' }}>
-              {sessionUser?.role || 'Creator'}
+            <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold' }}>Active Fidelity Node</label>
+            <div style={{ color: '#10b981', fontWeight: '700', fontSize: '14px', marginTop: '2px' }}>
+              24-Bit / 96kHz Lossless Studio Master (DAC Passthrough Enabled)
             </div>
           </div>
           <div>
-            <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold' }}>Unified Credits Balance</label>
-            <div style={{ color: '#10b981', fontWeight: '700', fontSize: '14px', marginTop: '2px' }}>
-              {(sessionUser?.credits ?? 600).toLocaleString()} Credits
+            <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold' }}>Pricing &amp; Account Model</label>
+            <div style={{ color: '#00f2fe', fontWeight: '700', fontSize: '14px', marginTop: '2px' }}>
+              100% Non-Expiring TM Credits • Zero Recurring Subscriptions
             </div>
           </div>
         </div>
@@ -1545,9 +2683,12 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
   // Unified Dashboard States
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab || 'home');
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
   const [globalSearch, setGlobalSearch] = useState('');
 
-  const [userRole, setUserRole] = useState(() => localStorage.getItem('tunestream_user_role') || (sessionUser?.role || 'creator'));
+  const [userRole, setUserRole] = useState(() => localStorage.getItem('tunestream_user_role') || (sessionUser?.role || 'consumer'));
   const [userCredits, setUserCredits] = useState(() => {
     const saved = localStorage.getItem('tunemavens_user_credits');
     return saved ? parseInt(saved, 10) : 600;
@@ -1562,48 +2703,98 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
   const notifRef = useRef(null);
   const accountRef = useRef(null);
 
+  useEffect(() => {
+    if (userRole === 'vc' || userRole === 'investor') {
+      setNotifications([
+        {
+          id: 'vc_notif_1',
+          title: 'Tour Telemetry Update · 24% Target IRR',
+          body: 'Nairobi City Arena Tour pacing at 104% box office velocity. Automated Split Cascade recoupment online.',
+          actionText: 'Inspect Vault',
+          actionType: 'tours-vault',
+          read: false,
+          at: '2m ago'
+        },
+        {
+          id: 'vc_notif_2',
+          title: 'New Senior-Secured Tour Facility Open',
+          body: 'West African Afrobeats Incubation Tour tranche open for institutional co-investment ($25,000 – $100,000 ticket).',
+          actionText: 'View Tranche',
+          actionType: 'tours-vault',
+          read: false,
+          at: '18m ago'
+        },
+        {
+          id: 'vc_notif_3',
+          title: 'Creator Discovery & AI Growth Projections',
+          body: '5 high-velocity creators flagged for senior tour advance financing based on 30-day stream acceleration.',
+          actionText: 'Discover',
+          actionType: 'vc-discover',
+          read: false,
+          at: '45m ago'
+        },
+        {
+          id: 'vc_notif_4',
+          title: 'Recommended Reading: Tour Debt Playbook',
+          body: 'Senior-Secured Live Tour Advance Structuring & Split Cascade Liquidation Waterfall (Institutional LP Guide).',
+          actionText: 'Read Playbook',
+          actionType: 'vc-guide',
+          read: false,
+          at: '1h ago'
+        }
+      ]);
+    }
+  }, [userRole]);
+
   const [notifications, setNotifications] = useState([
     {
-      id: 'aff_payout',
-      title: 'Partner Payout Rails & Mobile STK',
-      body: 'Connect M-Pesa STK or Bank to receive weekly automatic payouts.',
-      actionText: 'Settings',
-      actionType: 'payout',
+      id: 'notif_tour',
+      title: 'Ndufo Africa Tour VIP Pass',
+      body: 'Your live showcase pass for Nairobi Cyberwave is secured in Live Shows & Passes.',
+      actionText: 'View Passes',
+      actionType: 'concerts',
       read: false,
-      at: '1m ago'
+      at: '10m ago'
     },
     {
-      id: 'aff_link',
-      title: '90-Day Referral Link & Share Suite',
-      body: 'Earn 3%–12% commission on music sales, sync licensing, and EPKs.',
-      actionText: 'Get Link',
-      actionType: 'link',
+      id: 'notif_tip',
+      title: 'Direct Creator Tip Settled',
+      body: 'Your tip of 50 credits to Ndufo reached their wallet via Split Cascade.',
+      actionText: 'Ledger',
+      actionType: 'tips',
       read: false,
-      at: '5m ago'
+      at: '1h ago'
     },
     {
-      id: 'aff_talent',
-      title: 'Directly Onboard Creators & Labels',
-      body: 'Add talent directly to your network with 0 credit deduction.',
-      actionText: 'Add Talent',
-      actionType: 'talent',
-      read: false,
-      at: '15m ago'
+      id: 'notif_lossless',
+      title: 'Lossless 24-bit Stream Ready',
+      body: '3 new studio masters added to your daily personalized playlist crate.',
+      actionText: 'Play Mix',
+      actionType: 'home',
+      read: true,
+      at: '5h ago'
     }
   ]);
 
   const activeUser = {
     id: sessionUser?.id || 'user_tunestream_01',
-    name: sessionUser?.name || 'TuneStream User',
-    email: sessionUser?.email || 'user@tunemavens.com',
-    role: userRole,
+    name: sessionUser?.name || 'Verified Listener',
+    email: sessionUser?.email || 'listener@tunestream.com',
+    role: 'consumer',
     credits: userCredits,
     phone: '254712345678',
-    is_admin: userRole === 'admin' || (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true'),
-    tier: 'pro'
+    is_admin: false,
+    tier: 'audiophile'
   };
 
-  const currentRoleObj = PERSONA_ROLES.find(r => r.id === userRole) || PERSONA_ROLES[0];
+  const currentRoleObj = {
+    id: 'consumer',
+    label: 'Verified Listener',
+    shortLabel: 'Listener',
+    shortDesc: '24-Bit / 96kHz Lossless',
+    icon: RiHeadphoneFill,
+    color: '#00f2fe'
+  };
   const isAdminSimulated = (activeUser.is_admin && userRole !== 'admin') || (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true' && userRole !== 'admin');
 
   const handleSwitchRole = (targetRole) => {
@@ -1620,6 +2811,10 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         setActiveTab('label-team');
       } else if (targetRole === 'supervisor') {
         setActiveTab('sync-marketplace');
+      } else if (targetRole === 'vc') {
+        setActiveTab('tours-vault');
+      } else if (targetRole === 'podcaster') {
+        setActiveTab('podcaster-studio');
       }
       setAccountOpen(false);
     } catch (err) {
@@ -1834,14 +3029,17 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
   const handleTipArtist = async () => {
     if (!currentTrack) return;
     const tipAmount = 50; // 50 credits = $5.00
-    if (userCredits < tipAmount) {
+    const isCreditExempt = userRole === 'vc' || userRole === 'investor' || userRole === 'admin';
+    if (!isCreditExempt && userCredits < tipAmount) {
       setIsCreditReloadOpen(true);
       return;
     }
 
-    const newCredits = userCredits - tipAmount;
-    setUserCredits(newCredits);
-    localStorage.setItem('tunemavens_user_credits', newCredits.toString());
+    if (!isCreditExempt) {
+      const newCredits = userCredits - tipAmount;
+      setUserCredits(newCredits);
+      localStorage.setItem('tunemavens_user_credits', newCredits.toString());
+    }
 
     try {
       await fetch('/api/stream/tip', {
@@ -1876,57 +3074,38 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       categories[cat].push(item);
     };
 
-    // Dashboard Overview & Copilot
-    add('Dashboard', { id: 'home', label: 'Overview', icon: RiHomeFill });
-    add('Dashboard', { 
-      id: 'companion', 
-      label: 'TuneCompanion', 
-      icon: RiLineChartFill, 
-      iconImg: tcLogo,
-      color: '#c084fc', 
-      badge: 'COPILOT' 
-    });
-
-    // Discover & Audio (Catalogue, Singles, Artists, Favorites, Radio, Concerts)
-    add('Discover & Audio', { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Line });
-    add('Discover & Audio', { id: 'concerts', label: 'Live Shows & Tours', icon: RiTicket2Fill, badge: 'LIVE', color: '#ef4444' });
-    add('Discover & Audio', { id: 'singles', label: 'Singles Showcase', icon: RiMusicLine });
-    add('Discover & Audio', { id: 'artists', label: 'Roster Artists', icon: RiUserLine });
-    add('Discover & Audio', { id: 'favorites', label: 'Favorites', icon: RiHeart3Fill });
-    add('Discover & Audio', { id: 'radio', label: 'Live Radio Node', icon: RiRadioLine });
-
-    // Catalog & Upload
-    if (['creator', 'label', 'admin'].includes(userRole)) {
-      add('Catalog & Ingestion', { id: 'my-catalog', label: 'Lossless Catalog', icon: RiDatabase2Line });
-      add('Catalog & Ingestion', { id: 'upload', label: 'Ingest Audio', icon: RiUpload2Line });
+    // Discover & Stream
+    if (userRole === 'vc' || userRole === 'investor') {
+      add('Tour Capital & Underwriting', { id: 'vc-discover', label: 'Discover Creators & Catalog', icon: RiSearchLine, color: '#00f2fe', badge: 'DEALS' });
+      add('Tour Capital & Underwriting', { id: 'tours-vault', label: 'Tour Underwriting Vault', icon: RiFundsBoxFill, color: '#00f2fe', badge: 'IRR 24%' });
+      add('Tour Capital & Underwriting', { id: 'vc-portfolio', label: 'Syndicate Portfolio', icon: RiLineChartFill, color: '#10b981' });
     }
-
-    // Sync Marketplace
-    add('Sync & Licensing', { id: 'sync-marketplace', label: 'Sync Marketplace', icon: RiSparklingLine, color: '#22d3ee' });
-
-    // Splits & Ledgers
-    if (['creator', 'label', 'admin', 'affiliate'].includes(userRole)) {
-      add('Splits & Ledgers', { id: 'splits', label: 'TuneLedger Splits', icon: RiExchangeDollarLine, color: '#22d3ee' });
-      add('Splits & Ledgers', { id: 'contracts', label: 'MyContracts', icon: RiFileTextFill, color: '#38bdf8', badge: 'LEGAL' });
-      add('Splits & Ledgers', { id: 'companion', label: 'TuneCompanion Ledger', icon: RiLineChartFill, iconImg: tcLogo, color: '#c084fc', badge: 'MOBILE' });
-      add('Splits & Ledgers', { id: 'affiliates', label: 'Affiliate Hub', icon: RiSparklingLine, color: '#22d3ee' });
+    if (userRole === 'podcaster') {
+      add('Podcaster Studio', { id: 'podcaster-studio', label: 'Podcaster Studio & EPK', icon: RiMicFill, color: '#ec4899', badge: 'STUDIO' });
     }
+    add('Discover & Stream', { id: 'home', label: 'For You & Mixes', icon: RiHomeFill });
+    add('Discover & Stream', { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Line });
+    add('Discover & Stream', { id: 'podcasts', label: 'Podcasts & Shows', icon: RiMicFill, color: '#10b981', badge: 'PODCASTS' });
+    add('Discover & Stream', { id: 'radio', label: 'Live Radio Node', icon: RiRadioLine });
+    add('Discover & Stream', { id: 'singles', label: 'Singles Showcase', icon: RiMusicLine });
+    add('Discover & Stream', { id: 'artists', label: 'Roster Creators', icon: RiUserLine });
 
-    // Label Roster
-    if (['label', 'admin'].includes(userRole)) {
-      add('Label Roster', { id: 'label-team', label: 'Signed Roster', icon: RiFolderMusicLine, color: '#a855f7' });
-    }
+    // My Collection
+    add('My Collection', { id: 'library', label: 'My Playlist Crates', icon: RiFolderMusicLine, color: '#a855f7', badge: 'CRATES' });
+    add('My Collection', { id: 'favorites', label: 'Liked Tracks', icon: RiHeart3Fill, color: '#ec4899' });
+    add('My Collection', { id: 'concerts', label: 'Live Shows & Passes', icon: RiTicket2Fill, color: '#f59e0b', badge: 'TICKETS' });
 
-    // Admin Governance
-    if (userRole === 'admin') {
-      add('Governance & Admin', { id: 'admin-team', label: 'Admin Team Seats', icon: RiShieldFill, color: '#ec4899' });
-    }
+    // Sound & Devices
+    add('Sound & Devices', { id: 'stream-controls', label: 'Lossless Sound & EQ', icon: RiEqualizerFill, color: '#10b981', badge: '24-BIT' });
 
-    // Platform & Ecosystem
-    add('Ecosystem & Apps', { id: 'companion', label: 'TuneCompanion', icon: RiLineChartFill, iconImg: tcLogo, color: '#a855f7', badge: 'APP' });
-    add('Ecosystem & Apps', { id: 'apps', label: 'Ecosystem Apps', icon: RiApps2Fill, color: '#00f2fe' });
-    add('Support & Config', { id: 'support', label: 'Support Desk', icon: RiQuestionLine });
-    add('Support & Config', { id: 'settings', label: 'Settings', icon: RiSettings3Fill });
+    // Superfan Wallet
+    add('Superfan Wallet', { id: 'tips', label: 'Creator Tipping', icon: RiCoinsFill, color: '#00f2fe', badge: 'TIPS' });
+
+    // Apps & Support
+    add('Sound & Devices', { id: 'companion', label: 'Mobile & Device Sync', icon: RiSmartphoneFill, color: '#a855f7', badge: '8GB SYNC' });
+    add('Apps & Support', { id: 'apps', label: 'Listener Apps', icon: RiApps2Fill, color: '#00f2fe', badge: 'APPS' });
+    add('Apps & Support', { id: 'support', label: 'Support Desk', icon: RiQuestionLine });
+    add('Apps & Support', { id: 'settings', label: 'Preferences & Audio', icon: RiSettings3Fill });
 
     return categories;
   };
@@ -2068,6 +3247,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             onLike={handleLike}
           />
         );
+      case 'library':
+        return (
+          <TuneStreamLibraryPanel
+            tracks={catalogTracks}
+            onPlayTrack={handleTrackSelect}
+          />
+        );
       case 'favorites':
         return (
           <TuneStreamFavoritesPanel
@@ -2078,73 +3264,46 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             onLike={handleLike}
           />
         );
+      case 'podcasts':
+        return (
+          <PodcastStreamingHub
+            userCredits={userCredits}
+            setUserCredits={setUserCredits}
+            onOpenCreditReload={() => setIsCreditReloadOpen(true)}
+          />
+        );
+      case 'vc-discover':
+        return <VcDiscoverCreatorsApp sessionUser={activeUser} onNavigateTab={setActiveTab} />;
+      case 'podcaster-studio':
+        return <PodcasterStudioWorkspace sessionUser={activeUser} />;
+      case 'tours-vault':
+      case 'vc-portfolio':
+      case 'vc-sponsorship':
+        return (
+          <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 20px 40px' }}>
+            <TourCapitalView sessionUser={activeUser} />
+          </div>
+        );
       case 'radio':
         return <TuneStreamRadioPanel />;
-      case 'catalog':
-      case 'my-catalog':
-        return (
-          <TuneStreamCatalogPanel
-            tracks={catalogTracks}
-            onPlayTrack={handleTrackSelect}
-            setActiveTab={setActiveTab}
-          />
-        );
-      case 'upload':
-        return (
-          <TuneStreamUploadPanel
-            uploadForm={uploadForm}
-            setUploadForm={setUploadForm}
-            uploadError={uploadError}
-            uploadSuccess={uploadSuccess}
-            dragActive={dragActive}
-            fileName={fileName}
-            setFileName={setFileName}
-            handleDrag={handleDrag}
-            handleDrop={handleDrop}
-            handleUploadSubmit={handleUploadSubmit}
-          />
-        );
-      case 'sync-marketplace':
-      case 'sync':
-        return <SyncMarketplacePanel sessionUser={activeUser} />;
-      case 'splits':
-        return <TuneLedgerSplitCascadePanel sessionUser={activeUser} />;
-      case 'contracts':
-      case 'mycontracts':
-      case 'escrow':
-        return <MyContractsPanel sessionUser={activeUser} setActiveTab={setActiveTab} />;
-      case 'affiliates':
-        return <AffiliateAdminPanel sessionUser={activeUser} />;
-      case 'label-team':
-        return (
-          <LabelTeamRosterPanel
-            sessionUser={activeUser}
-            setActiveTab={setActiveTab}
-            activeArtist={activeArtist}
-            onSelectArtist={handleSwitchArtist}
-          />
-        );
-      case 'admin-team':
-        return (
-          <AdminTeamRosterPanel
-            sessionUser={activeUser}
-            setActiveTab={setActiveTab}
-          />
-        );
-      case 'companion':
-        return (
-          <TuneCompanionApp
-            sessionUser={activeUser}
-            onPlayTrack={handleTrackSelect}
-            setActiveTab={setActiveTab}
-          />
-        );
       case 'concerts':
       case 'events':
         return (
           <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 20px 40px' }}>
             <LiveEventsSection sessionUser={activeUser} />
           </div>
+        );
+      case 'stream-controls':
+        return <TuneStreamControlsPanel />;
+      case 'tips':
+        return <TuneStreamTipsPanel userCredits={userCredits} />;
+      case 'companion':
+        return (
+          <TuneStreamDeviceSyncPanel
+            tracks={catalogTracks}
+            onPlayTrack={handleTrackSelect}
+            setActiveTab={setActiveTab}
+          />
         );
       case 'apps':
         return <EcosystemAppsPanel setActiveTab={setActiveTab} />;
@@ -2293,8 +3452,23 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       <main className="dashboard-main-content">
         <header className="dashboard-topbar">
           <div className="topbar-left">
-            <h2 className="topbar-page-title" style={{ textTransform: 'capitalize' }}>
-              {activeTab.replace('-', ' ')}
+            <h2 className="topbar-page-title">
+              {{
+                home: 'For You & Personalized Mixes',
+                explore: 'Explore & Lossless Stream',
+                radio: 'Live 24-Bit Radio Node',
+                singles: 'Lossless Singles Showcase',
+                artists: 'Featured Artists & Web Worlds',
+                library: 'My Playlist Crates & Vault',
+                favorites: 'Liked Tracks Collection',
+                concerts: 'Live Shows & VIP Tour Passes',
+                'stream-controls': '24-Bit / 96kHz Studio EQ & DAC',
+                companion: 'Mobile & 8GB Offline Crate Sync',
+                tips: 'Direct Artist Tipping & Wallet',
+                apps: 'TuneStream Listener Apps Suite',
+                support: 'Listener Support & Community',
+                settings: 'Listener Taste & Audio Preferences'
+              }[activeTab] || 'TuneStream Listener Hub'}
             </h2>
             <div className="topbar-status-chip">
               <span className="chip-indicator"></span>
@@ -2339,28 +3513,66 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
           </div>
 
           <div className="topbar-right">
-            {/* Unified Credits Vault */}
-            <button 
-              type="button" 
-              className="topbar-credits-btn"
-              onClick={() => setIsCreditReloadOpen(true)}
-              title="Click to reload unified credits"
+            {/* 24-Bit Lossless DAC Indicator Pill */}
+            <button
+              type="button"
+              className="topbar-dac-pill"
+              onClick={() => setActiveTab('stream-controls')}
+              title="Configure 24-Bit / 96kHz FLAC & 10-Band Studio EQ"
             >
-              <RiSparklingLine size={16} color="#00f2fe" />
-              <span className="credits-amount">{(userCredits ?? 600).toLocaleString()} Credits</span>
-              <span className="credits-reload-action">+</span>
+              <span className="topbar-dac-dot" />
+              <RiEqualizerFill size={13} />
+              <span>24-Bit / 96kHz FLAC</span>
             </button>
+
+            {/* Unified Listener Credits Vault / Institutional LP Exemption */}
+            {userRole === 'vc' || userRole === 'investor' ? (
+              <div 
+                className="topbar-credits-btn"
+                style={{ cursor: 'default', background: 'rgba(0, 242, 254, 0.08)', borderColor: 'rgba(0, 242, 254, 0.35)', color: '#00f2fe' }}
+                title="Institutional LP Syndicate Account: VCs & Investors are 100% exempt from platform credit fees."
+              >
+                <RiShieldCheckFill size={15} color="#00f2fe" />
+                <span className="credits-amount">Institutional LP</span>
+                <span className="credits-reload-action" style={{ background: 'rgba(0, 242, 254, 0.2)', color: '#00f2fe' }}>Exempt</span>
+              </div>
+            ) : (
+              <button 
+                type="button" 
+                className="topbar-credits-btn"
+                onClick={() => window.dispatchEvent(new CustomEvent('tunestreamOpenReload'))}
+                title="Click to top up non-expiring listener credits (Zero monthly subscriptions)"
+              >
+                <RiCoinsFill size={15} color="#00f2fe" />
+                <span className="credits-amount">{(userCredits ?? 150).toLocaleString()} Credits</span>
+                <span className="credits-reload-action">+ Top Up</span>
+              </button>
+            )}
+
+            {/* Quick Return to Web Player */}
+            <Link
+              to="/"
+              className="topbar-back-player-btn"
+              title="Return to TuneStream Web Player"
+            >
+              <RiHeadphoneFill size={14} />
+              <span>Web Player</span>
+            </Link>
 
             {/* Notification Dropdown */}
             <div className="topbar-popover-container" ref={notifRef}>
               <button 
                 type="button" 
-                className="topbar-icon-btn"
-                onClick={() => setNotifOpen(!notifOpen)}
-                title="Notifications"
+                className={`topbar-icon-btn ${notifOpen ? 'active' : ''}`}
+                onClick={() => { setNotifOpen(!notifOpen); setAccountOpen(false); }}
+                title="Listener Notifications"
               >
-                <RiBellFill size={18} />
-                {notifications.some(n => !n.read) && <span className="topbar-notif-dot"></span>}
+                <RiBellFill size={17} />
+                {notifications.some(n => !n.read) && (
+                  <span className="topbar-notif-badge">
+                    {notifications.filter(n => !n.read).length}
+                  </span>
+                )}
               </button>
 
               {notifOpen && (
@@ -2410,40 +3622,96 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
               </button>
 
               {accountOpen && (
-                <div className="topbar-dropdown account-dropdown">
-                  <div className="dropdown-header">
-                    <span className="dropdown-header-title">Switch Persona Mode</span>
+                <div className="topbar-dropdown account-dropdown" style={{ minWidth: '280px', padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '3px', background: 'rgba(0,240,255,0.15)', border: '1px solid #00f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f2fe', fontWeight: '900', fontSize: '18px' }}>
+                      {activeUser.name.slice(0, 1).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>{activeUser.name}</div>
+                      <div style={{ fontSize: '11px', color: '#00f2fe', fontWeight: '600' }}>Verified Listener • HiFi Audiophile</div>
+                      <div style={{ fontSize: '10px', color: '#64748b' }}>{activeUser.email}</div>
+                    </div>
                   </div>
-                  <div className="dropdown-body">
-                    {PERSONA_ROLES.map(role => (
-                      <button
-                        key={role.id}
-                        type="button"
-                        className={`dropdown-persona-row ${userRole === role.id ? 'active' : ''}`}
-                        onClick={() => handleSwitchRole(role.id)}
-                      >
-                        <div className="persona-row-icon" style={{ background: role.color }}>
-                          <role.icon size={14} color="#060813" />
-                        </div>
-                        <div className="persona-row-meta">
-                          <span className="persona-row-label">{role.label}</span>
-                          <span className="persona-row-desc">{role.shortDesc}</span>
-                        </div>
-                        {userRole === role.id && <RiCheckLine size={16} style={{ color: '#00f2fe' }} />}
-                      </button>
-                    ))}
+
+                  {/* TM Credits Balance & Top-Up */}
+                  <div style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>TM Credits Balance</span>
+                      <span style={{ fontSize: '14px', fontWeight: '800', color: '#00f2fe' }}>{(userCredits ?? 150).toLocaleString()} TM</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        window.dispatchEvent(new CustomEvent('tunestreamOpenReload'));
+                      }}
+                      style={{ width: '100%', padding: '8px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      <RiCoinsFill size={14} /> + Top-Up Non-Expiring Credits
+                    </button>
                   </div>
-                  <div className="dropdown-footer">
-                    <button 
-                      type="button" 
+
+                  {/* Sound Fidelity & Quick Links */}
+                  <div style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        setActiveTab('stream-controls');
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', color: '#e2e8f0', fontSize: '12px', cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <RiEqualizerFill size={15} style={{ color: '#10b981' }} />
+                        <span>Lossless Sound & EQ</span>
+                      </div>
+                      <span style={{ fontSize: '10px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '3px' }}>24-Bit / 96kHz</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        setActiveTab('settings');
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', color: '#e2e8f0', fontSize: '12px', cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <RiSettings3Fill size={15} style={{ color: '#94a3b8' }} />
+                        <span>Taste Preferences</span>
+                      </div>
+                      <span style={{ fontSize: '10px', color: '#94a3b8' }}>Personalized</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        setActiveTab('companion');
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.25)', borderRadius: '3px', color: '#c084fc', fontSize: '12px', cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <RiSmartphoneFill size={15} style={{ color: '#c084fc' }} />
+                        <span>Mobile & 8GB Offline Sync</span>
+                      </div>
+                      <span style={{ fontSize: '10px', color: '#c084fc' }}>Synced ✓</span>
+                    </button>
+                  </div>
+
+                  <div style={{ paddingTop: '12px' }}>
+                    <button
+                      type="button"
                       className="dropdown-logout-btn"
                       onClick={() => onLogout && onLogout()}
+                      style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', borderRadius: '3px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
                       <RiLogoutBoxRFill size={15} /> Log Out
                     </button>
                   </div>
                 </div>
-              )}
+                            )}
             </div>
           </div>
         </header>
@@ -2473,6 +3741,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         <HiFiAudioPlayer
           track={currentTrack}
           tracks={catalogTracks}
+          playlistName="Featured Playlist: Global Afrobeat & Amapiano Masters"
           isPlaying={isPlaying}
           sessionUser={sessionUser}
           onTogglePlay={(p) => setIsPlaying(typeof p === 'boolean' ? p : !isPlaying)}
@@ -2483,104 +3752,6 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             setActivePlayerTrack(null);
           }}
         />
-      )}
-      {/* Old Docked Audio Player Bar */}
-      {false && isPlayerOpen && currentTrack && (
-        <footer className="ts-player-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', borderTop: '1px solid rgba(0, 240, 255, 0.2)', zIndex: 1000, background: '#070a14' }}>
-          <div className="player-track-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src={normalizeMediaUrl(currentTrack.cover || currentTrack.coverArt)} alt={currentTrack.title} className="player-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200'; }} style={{ width: '48px', height: '48px', borderRadius: '3px', objectFit: 'cover' }} />
-            <div data-no-i18n="true" className="player-metadata">
-              <span className="player-title" style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{currentTrack.title}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="player-artist" style={{ fontSize: '11px', color: '#94a3b8' }}>{currentTrack.artist}</span>
-                <span style={{ fontSize: '10px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '1px 6px', borderRadius: '3px' }}>
-                  {currentTrack.releaseType || 'Single'}
-                </span>
-                <a 
-                  href={`#/epk/${currentTrack.artist ? currentTrack.artist.toLowerCase().replace(/\s+/g, '') : 'ndufo'}`}
-                   
-                  rel="noreferrer"
-                  style={{ fontSize: '10px', background: 'rgba(0, 240, 255, 0.15)', color: '#00f2fe', padding: '2px 6px', borderRadius: '3px', textDecoration: 'none', fontWeight: 600 }}
-                >
-                  🌐 Web World
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="player-controls" style={{ flex: 1, maxWidth: '640px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            <div className="control-buttons" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <button className="btn-control" onClick={handlePrevTrack} title="Previous Track" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '18px' }}>
-                <RiSkipBackFill />
-              </button>
-              <button className="btn-control btn-play-pause" onClick={togglePlay} title={isPlaying ? "Pause" : "Play"} style={{ width: '36px', height: '36px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px' }}>
-                {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
-              </button>
-              <button className="btn-control" onClick={handleNextTrack} title="Next Track" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '18px' }}>
-                <RiSkipForwardFill />
-              </button>
-
-              <span style={{ fontSize: '10px', fontWeight: 'bold', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 8px', borderRadius: '3px' }}>
-                🎧 Lossless FLAC Stream • Intermaven Shared Pool
-              </span>
-            </div>
-
-            <div className="playback-bar" style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
-              <span className="time-stamp" style={{ fontSize: '11px', color: '#94a3b8', minWidth: '32px' }}>
-                {formatTime(currentTime)}
-              </span>
-              <div 
-                className="progress-bar-container" 
-                onClick={handleSeek} 
-                title="Click to seek timeline"
-                style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', cursor: 'pointer', position: 'relative' }}
-              >
-                <div 
-                  className="progress-bar-fill" 
-                  style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, height: '100%', background: '#00f2fe', borderRadius: '3px', transition: 'width 0.1s linear' }}
-                />
-              </div>
-              <span className="time-stamp" style={{ fontSize: '11px', color: '#94a3b8', minWidth: '32px' }}>
-                {duration > 0 ? formatTime(duration) : (currentTrack.duration || '3:30')}
-              </span>
-            </div>
-          </div>
-
-          <div className="player-volume" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button 
-              type="button"
-              onClick={handleTipArtist}
-              style={{ background: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-              title="Send 1-tap tip using unified credits"
-            >
-              <RiCoinsLine /> Tip Artist $5
-            </button>
-
-            <RiVolumeUpFill className="volume-icon" style={{ color: '#94a3b8', fontSize: '18px' }} />
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))} 
-              className="volume-slider"
-              style={{ width: '80px', accentColor: '#00f2fe', cursor: 'pointer' }}
-            />
-
-            <button
-              type="button"
-              onClick={() => {
-                if (audioRef.current) audioRef.current.pause();
-                setIsPlaying(false);
-                setIsPlayerOpen(false);
-              }}
-              style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-              title="Close Player"
-            >
-              <RiCloseLine size={18} />
-            </button>
-          </div>
-        </footer>
       )}
 
       <CreditReloadModal

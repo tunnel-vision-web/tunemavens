@@ -15,8 +15,8 @@ export const CREDIT_LOAD_PACKAGES = [
     priceKes: 12870,
     badge: 'Label Starter',
     badgeColor: '#a855f7',
-    desc: 'Unlocks 3 collaborator seats, 5 signed roster artists, and full Split Cascade engine.',
-    features: ['3 Collaborator Seats', '5 Signed Roster Artists', 'Split Cascade Math', 'Pre-Cleared Sync Hub']
+    desc: 'Unlocks 3 collaborator seats, 5 artists, and full Split Cascade engine.',
+    features: ['3 Collaborator Seats', '5 Artists', 'Split Cascade Math', 'Pre-Cleared Sync Hub']
   },
   {
     id: 'scale-label-load',
@@ -27,8 +27,8 @@ export const CREDIT_LOAD_PACKAGES = [
     priceKes: 38870,
     badge: 'Most Popular',
     badgeColor: '#0ea5e9',
-    desc: 'Unlocks 10 collaborator seats, 25 signed roster artists, and multi-seat A&R/Accounting logins.',
-    features: ['10 Collaborator Seats', '25 Signed Roster Artists', 'Multi-Seat Staff Roles', 'Priority Sync Pitching']
+    desc: 'Unlocks 10 collaborator seats, 25 artists, and multi-seat A&R/Accounting logins.',
+    features: ['10 Collaborator Seats', '25 Artists', 'Multi-Seat Staff Roles', 'Priority Sync Pitching']
   },
   {
     id: 'enterprise-label-load',

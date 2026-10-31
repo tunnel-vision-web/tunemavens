@@ -631,14 +631,28 @@ export default function TourCapitalView({ sessionUser }) {
       {/* MODAL 1: VC FAST-TRACK ONBOARDING & LP ACCREDITATION WIZARD */}
       {vcOnboardModalOpen && (
         <div className="tours-modal-overlay">
-          <div className="tours-modal-card">
+          <div className="tours-modal-card" style={{ maxWidth: '640px' }}>
             <button className="tours-modal-close-btn" onClick={() => setVcOnboardModalOpen(false)}>
               <RiCloseLine size={20} />
             </button>
             <div className="tours-modal-header">
-              <span className="badge">LP Fast-Track Accreditation</span>
-              <h3>Venture Capitalist &amp; Syndicate Onboarding</h3>
-              <p>Register your fund or syndicate to participate in live tour debt underwriting and creator career sponsorship.</p>
+              <span className="badge" style={{ color: '#10b981', borderColor: '#10b981' }}>
+                <RiShieldCheckFill size={14} /> Tier-1 Institutional Accreditation
+              </span>
+              <h3>Venture Capitalist &amp; Syndicate Fast-Track</h3>
+              <p>Register your fund or syndicate for instant deal allocation in live tour debt underwriting and creator career sponsorship.</p>
+            </div>
+
+            {/* Step Wizard Bar */}
+            <div className="tours-wizard-steps-bar">
+              <div className={`tours-wizard-step-pill ${vcStep === 1 ? 'active' : 'done'}`}>
+                <span className="tours-step-num">1</span>
+                <span>Entity Credentials</span>
+              </div>
+              <div className={`tours-wizard-step-pill ${vcStep === 2 ? 'active' : ''}`}>
+                <span className="tours-step-num">2</span>
+                <span>Check Size &amp; Settlement</span>
+              </div>
             </div>
 
             <form onSubmit={handleVcSubmit} className="tours-modal-form">
@@ -686,8 +700,8 @@ export default function TourCapitalView({ sessionUser }) {
                       <option value="music_label_fund">Record Label / Publisher Investment Arm</option>
                     </select>
                   </div>
-                  <button type="button" className="btn-primary" onClick={() => setVcStep(2)} style={{ marginTop: '12px', width: '100%' }}>
-                    Continue to Allocation Preferences &rarr;
+                  <button type="button" className="btn-primary" onClick={() => setVcStep(2)} style={{ marginTop: '16px', width: '100%', padding: '12px' }}>
+                    Continue to Check Size &amp; Settlement &rarr;
                   </button>
                 </>
               )}
@@ -700,10 +714,10 @@ export default function TourCapitalView({ sessionUser }) {
                       value={vcForm.check_size_range} 
                       onChange={e => setVcForm({...vcForm, check_size_range: e.target.value})}
                     >
-                      <option value="$10,000 - $25,000">$10,000 - $25,000 (Micro-Syndicate)</option>
-                      <option value="$25,000 - $100,000">$25,000 - $100,000 (Single-Tour Lead)</option>
-                      <option value="$100,000 - $500,000">$100,000 - $500,000 (Multi-City World Tour)</option>
-                      <option value="$500,000+">$500,000+ (Master Syndicate Facility)</option>
+                      <option value="$10,000 - $25,000">$10,000 - $25,000 (Micro-Syndicate Participation)</option>
+                      <option value="$25,000 - $100,000">$25,000 - $100,000 (Single-Tour Lead Anchor)</option>
+                      <option value="$100,000 - $500,000">$100,000 - $500,000 (Multi-City World Tour Underwriting)</option>
+                      <option value="$500,000+">$500,000+ (Master Syndicate Credit Facility)</option>
                     </select>
                   </div>
                   <div className="form-group">
@@ -716,23 +730,24 @@ export default function TourCapitalView({ sessionUser }) {
                       placeholder="e.g. tm_split_cascade_0x9a84 or Bank Routing / IBAN"
                     />
                   </div>
-                  <div className="form-checkbox" style={{ marginTop: '12px' }}>
-                    <label style={{ display: 'flex', gap: '8px', fontSize: '11.5px', color: '#94a3b8' }}>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '12px 14px', borderRadius: '3px', marginTop: '14px', marginBottom: '16px' }}>
+                    <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '11.5px', color: '#cbd5e1', cursor: 'pointer' }}>
                       <input 
                         type="checkbox" 
                         required 
                         checked={vcForm.regulatory_attestation} 
                         onChange={e => setVcForm({...vcForm, regulatory_attestation: e.target.checked})}
+                        style={{ marginTop: '2px' }}
                       />
-                      <span>I attest that our entity is an accredited investor or authorized institution with legal capacity to underwrite live entertainment advances.</span>
+                      <span>I attest that our entity is an accredited investor or authorized institution with legal capacity to underwrite live entertainment advances with senior lien recoupment.</span>
                     </label>
                   </div>
                   <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                    <button type="button" className="btn-secondary" onClick={() => setVcStep(1)} style={{ flex: 1 }}>
+                    <button type="button" className="btn-secondary" onClick={() => setVcStep(1)} style={{ flex: 1, padding: '12px' }}>
                       &larr; Back
                     </button>
-                    <button type="submit" className="btn-primary" disabled={vcSubmitting} style={{ flex: 2, background: '#10b981', borderColor: '#10b981' }}>
-                      {vcSubmitting ? 'Verifying LP Credentials...' : 'Complete Accreditation Onboarding'}
+                    <button type="submit" className="btn-primary" disabled={vcSubmitting} style={{ flex: 2, background: '#10b981', borderColor: '#10b981', padding: '12px' }}>
+                      {vcSubmitting ? 'Verifying LP Credentials...' : 'Complete Fast-Track Accreditation'}
                     </button>
                   </div>
                 </>
@@ -745,24 +760,27 @@ export default function TourCapitalView({ sessionUser }) {
       {/* MODAL 2: TELEMETRY DUE DILIGENCE DATA ROOM */}
       {telemetryModalOpen && selectedOpp && (
         <div className="tours-modal-overlay">
-          <div className="tours-modal-card" style={{ maxWidth: '640px' }}>
+          <div className="tours-modal-card" style={{ maxWidth: '680px' }}>
             <button className="tours-modal-close-btn" onClick={() => setTelemetryModalOpen(false)}>
               <RiCloseLine size={20} />
             </button>
             <div className="tours-modal-header">
-              <span className="badge" style={{ color: 'var(--cyan)', borderColor: 'var(--cyan)' }}>Verified Audience Telemetry</span>
-              <h3>{selectedOpp.artist} &bull; Tour Due Diligence Data Room</h3>
-              <p>Audience density, ticket pre-sales velocity, and historical recoupment indices for corridor: <strong>{selectedOpp.route}</strong></p>
+              <span className="badge" style={{ color: 'var(--cyan)', borderColor: 'var(--cyan)' }}>
+                <RiRadarFill size={13} /> Verified Due Diligence Telemetry
+              </span>
+              <h3>{selectedOpp.artist} &bull; LP Underwriting Data Room</h3>
+              <p>Audience concentration, ticketing velocity, and historical split recoupment metrics for route: <strong style={{ color: '#fff' }}>{selectedOpp.route}</strong></p>
             </div>
 
             <div className="tours-telemetry-modal-body">
+              {/* Institutional 3-Card KPI Row */}
               <div className="telemetry-stat-card-row">
                 <div className="telemetry-card">
                   <span className="val">{selectedOpp.telemetry?.tunestream_monthly_listeners ? `${(selectedOpp.telemetry.tunestream_monthly_listeners / 1000).toFixed(0)}k` : '185k'}</span>
                   <span className="lbl">TuneStream DSP Listeners</span>
                 </div>
                 <div className="telemetry-card">
-                  <span className="val">{selectedOpp.telemetry?.crm_waitlist_fans ? selectedOpp.telemetry.crm_waitlist_fans.toLocaleString() : '14,200'}</span>
+                  <span className="val" style={{ color: '#00f2fe' }}>{selectedOpp.telemetry?.crm_waitlist_fans ? selectedOpp.telemetry.crm_waitlist_fans.toLocaleString() : '14,200'}</span>
                   <span className="lbl">Verified CRM Superfans</span>
                 </div>
                 <div className="telemetry-card">
@@ -771,29 +789,54 @@ export default function TourCapitalView({ sessionUser }) {
                 </div>
               </div>
 
-              <h4 style={{ fontSize: '14px', color: '#fff', margin: '20px 0 10px 0' }}>Tour Route Stops &amp; Pre-Sale Status</h4>
+              {/* Corridor Pre-Sales & Route Occupancy */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4 style={{ fontSize: '13.5px', color: '#fff', margin: 0, fontWeight: 800 }}>
+                  Route Stops &amp; Pre-Sale Velocity
+                </h4>
+                <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
+                  Avg. 88.5% Occupancy
+                </span>
+              </div>
+
               <div className="telemetry-stops-table">
                 {selectedOpp.route_stops ? selectedOpp.route_stops.map((st, i) => (
                   <div key={i} className="telemetry-stop-row">
                     <div>
-                      <strong>{st.city}</strong>
-                      <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>{st.venue} &bull; {st.date}</span>
+                      <strong style={{ fontSize: '13px', color: '#fff' }}>{st.city}</strong>
+                      <span style={{ fontSize: '11.5px', color: '#94a3b8', display: 'block', marginTop: '2px' }}>{st.venue} &bull; {st.date}</span>
                     </div>
-                    <span className="status-pill sold-out">{st.capacity_sold || '85% Capacity Sold'}</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span className="status-pill">{st.capacity_sold || '85% Capacity Sold'}</span>
+                      <span style={{ fontSize: '10.5px', color: '#64748b', display: 'block', marginTop: '3px' }}>Tier 1 Pass Minted</span>
+                    </div>
                   </div>
                 )) : (
                   <div className="telemetry-stop-row">
-                    <div><strong>London, UK</strong><span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>Jazz Cafe &bull; Oct 15</span></div>
-                    <span className="status-pill sold-out">92% Capacity Sold</span>
+                    <div>
+                      <strong style={{ fontSize: '13px', color: '#fff' }}>London, UK</strong>
+                      <span style={{ fontSize: '11.5px', color: '#94a3b8', display: 'block', marginTop: '2px' }}>Jazz Cafe &bull; Oct 15</span>
+                    </div>
+                    <span className="status-pill">92% Capacity Sold</span>
                   </div>
                 )}
               </div>
 
-              <div style={{ marginTop: '24px', display: 'flex', gap: '10px' }}>
+              {/* Recoupment Waterfall Mechanics Strip */}
+              <div style={{ background: '#04060e', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '3px', padding: '14px', marginBottom: '20px' }}>
+                <div style={{ fontSize: '11.5px', color: '#94a3b8', marginBottom: '6px' }}>
+                  <strong style={{ color: '#fff' }}>Waterfall Security:</strong> {selectedOpp.payback_terms}
+                </div>
+                <div style={{ fontSize: '11px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RiShieldCheckFill size={14} /> Senior Lien: Gross ticket sales and TunePay Merch flow into investor wallet before artist or promoter disbursements.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <button 
                   className="btn-secondary" 
                   onClick={() => setTelemetryModalOpen(false)}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, padding: '12px' }}
                 >
                   Close Data Room
                 </button>
@@ -807,9 +850,9 @@ export default function TourCapitalView({ sessionUser }) {
                       setCommitModalOpen(true);
                     }
                   }}
-                  style={{ flex: 2, background: '#10b981', borderColor: '#10b981' }}
+                  style={{ flex: 2, background: '#10b981', borderColor: '#10b981', padding: '12px', fontWeight: 800 }}
                 >
-                  Underwrite This Tour Advance &rarr;
+                  Proceed to Underwrite This Tour &rarr;
                 </button>
               </div>
             </div>
@@ -820,73 +863,108 @@ export default function TourCapitalView({ sessionUser }) {
       {/* MODAL 3: CAPITAL COMMITMENT & ALLOCATION */}
       {commitModalOpen && selectedOpp && (
         <div className="tours-modal-overlay">
-          <div className="tours-modal-card">
+          <div className="tours-modal-card" style={{ maxWidth: '640px' }}>
             <button className="tours-modal-close-btn" onClick={() => { setCommitModalOpen(false); setCommitSuccessReceipt(null); }}>
               <RiCloseLine size={20} />
             </button>
 
             {commitSuccessReceipt ? (
-              <div className="tours-commit-success-receipt">
-                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                  <RiCheckDoubleFill size={48} color="#10b981" />
-                  <h3 style={{ margin: '10px 0 4px 0', fontSize: '20px', color: '#fff' }}>Underwriting Commitment Allocated!</h3>
-                  <p style={{ margin: 0, fontSize: '12.5px', color: '#94a3b8' }}>Transaction logged to Split Cascade Senior Lien Ledger.</p>
+              <div className="tours-commit-success-receipt" style={{ textAlign: 'center', padding: '12px 0' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(16,185,129,0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '32px' }}>
+                  <RiCheckDoubleFill />
                 </div>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '22px', color: '#fff', fontWeight: 900 }}>Underwriting Commitment Allocated!</h3>
+                <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#94a3b8' }}>Transaction registered to TuneMavens Split Cascade Senior Lien Ledger.</p>
 
-                <div className="receipt-details-box" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '20px', fontSize: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div className="receipt-details-box" style={{ background: '#04060e', padding: '18px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px', fontSize: '12.5px', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <span style={{ color: '#94a3b8' }}>Commitment ID:</span>
-                    <strong style={{ color: '#fff' }}>{commitSuccessReceipt.id}</strong>
+                    <strong style={{ color: '#00f2fe' }}>{commitSuccessReceipt.id}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: '#94a3b8' }}>Tour / Artist:</span>
-                    <strong style={{ color: '#fff' }}>{commitSuccessReceipt.artist}</strong>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ color: '#94a3b8' }}>Tour Corridor:</span>
+                    <strong style={{ color: '#fff' }}>{commitSuccessReceipt.artist} ({selectedOpp.route})</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: '#94a3b8' }}>Allocated Amount:</span>
-                    <strong style={{ color: '#10b981' }}>{formatMoney(commitSuccessReceipt.check_amount)}</strong>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ color: '#94a3b8' }}>Allocated Principal:</span>
+                    <strong style={{ color: '#10b981', fontSize: '15px' }}>{formatMoney(commitSuccessReceipt.check_amount)}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: '#94a3b8' }}>Target Return:</span>
-                    <strong style={{ color: 'var(--cyan)' }}>{selectedOpp.investor_irr} (1.35x Cap)</strong>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ color: '#94a3b8' }}>Target Return (Yield):</span>
+                    <strong style={{ color: '#00f2fe' }}>{selectedOpp.investor_irr} ({formatMoney(commitSuccessReceipt.check_amount * 1.35)} Max Senior Cap)</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Recoupment Priority:</span>
-                    <span style={{ color: '#fff' }}>Tier 1 Senior First-Dollar</span>
+                    <span style={{ color: '#94a3b8' }}>Settlement Priority:</span>
+                    <span style={{ color: '#fff', fontWeight: 700 }}>Tier 1 Senior First-Dollar Lien</span>
                   </div>
                 </div>
 
                 <button 
                   className="btn-primary" 
                   onClick={() => { setCommitModalOpen(false); setCommitSuccessReceipt(null); }}
-                  style={{ width: '100%', background: '#10b981', borderColor: '#10b981' }}
+                  style={{ width: '100%', background: '#10b981', borderColor: '#10b981', padding: '12px', fontSize: '14px', fontWeight: 800 }}
                 >
-                  Return to Vault
+                  Return to Tour Capital Vault
                 </button>
               </div>
             ) : (
               <>
                 <div className="tours-modal-header">
-                  <span className="badge" style={{ color: '#10b981', borderColor: '#10b981' }}>Senior-Secured Advance</span>
+                  <span className="badge" style={{ color: '#10b981', borderColor: '#10b981' }}>
+                    <RiFundsBoxFill size={13} /> Senior-Secured Tour Advance
+                  </span>
                   <h3>Commit Underwriting Capital &bull; {selectedOpp.artist}</h3>
-                  <p>Allocate funds to underwrite flights, gear backline, and venue deposit costs. Recoup 100% first-dollar gross until target IRR.</p>
+                  <p>Allocate capital into corridor: <strong>{selectedOpp.route}</strong>. Holds Tier-1 senior first-dollar recoupment across box office and merch sales.</p>
                 </div>
 
                 <form onSubmit={handleCommitSubmit} className="tours-modal-form">
+                  {/* Preset Check Size Pills */}
+                  <label style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
+                    Select Check Size:
+                  </label>
+                  <div className="underwrite-check-presets">
+                    {[10000, 25000, 50000, 100000].map(val => (
+                      <button
+                        key={val}
+                        type="button"
+                        className={`underwrite-check-btn ${commitAmount === val ? 'active' : ''}`}
+                        onClick={() => setCommitAmount(val)}
+                      >
+                        ${(val / 1000)}k USD
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="form-group">
-                    <label>Underwriting Check Size (USD)</label>
+                    <label>Custom Check Amount (USD)</label>
                     <input 
                       type="number" 
                       required 
                       min={1000} 
-                      max={100000}
+                      max={250000}
                       step={1000}
                       value={commitAmount} 
                       onChange={e => setCommitAmount(Number(e.target.value))}
                     />
-                    <span style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px', display: 'block' }}>
-                      Equivalent: <strong>{formatMoney(commitAmount)}</strong>
-                    </span>
+                  </div>
+
+                  {/* Live Recoupment Waterfall Calculator */}
+                  <div className="underwrite-calculator-box">
+                    <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+                      ⚡ Programmatic Split Cascade Waterfall Projection
+                    </div>
+                    <div className="underwrite-calc-row">
+                      <span style={{ color: '#94a3b8' }}>Senior Principal Advance:</span>
+                      <strong style={{ color: '#fff' }}>{formatMoney(commitAmount)}</strong>
+                    </div>
+                    <div className="underwrite-calc-row">
+                      <span style={{ color: '#94a3b8' }}>Target Yield ({selectedOpp.investor_irr}):</span>
+                      <strong style={{ color: '#00f2fe' }}>+{formatMoney(Math.round(commitAmount * 0.22))}</strong>
+                    </div>
+                    <div className="underwrite-calc-row">
+                      <span style={{ color: '#fff' }}>Total Senior Recoupment Cap (1.35x):</span>
+                      <strong style={{ color: '#10b981' }}>{formatMoney(Math.round(commitAmount * 1.35))}</strong>
+                    </div>
                   </div>
 
                   <div className="form-group">
@@ -909,15 +987,15 @@ export default function TourCapitalView({ sessionUser }) {
                     />
                   </div>
 
-                  <div style={{ background: 'rgba(16,185,129,0.06)', padding: '12px', borderRadius: '3px', border: '1px solid rgba(16,185,129,0.2)', marginBottom: '16px', fontSize: '11.5px', color: '#cbd5e1' }}>
+                  <div style={{ background: 'rgba(16,185,129,0.06)', padding: '12px 14px', borderRadius: '3px', border: '1px solid rgba(16,185,129,0.2)', marginBottom: '18px', fontSize: '11.5px', color: '#cbd5e1' }}>
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px', color: '#10b981', fontWeight: 700 }}>
                       <RiShieldCheckFill /> Senior Lien Binding Guarantee
                     </div>
                     By executing this commitment, your entity holds Tier 1 first-dollar recoupment on all ticket gross, door walk-ins, and merch via TunePay POS until your full principal and target {selectedOpp.investor_irr} IRR is realized.
                   </div>
 
-                  <button type="submit" className="btn-primary" disabled={commitSubmitting} style={{ width: '100%', background: '#10b981', borderColor: '#10b981' }}>
-                    {commitSubmitting ? 'Allocating Commitment...' : `Confirm & Allocate ${formatMoney(commitAmount)}`}
+                  <button type="submit" className="btn-primary" disabled={commitSubmitting} style={{ width: '100%', background: '#10b981', borderColor: '#10b981', padding: '13px', fontSize: '14px', fontWeight: 800 }}>
+                    {commitSubmitting ? 'Allocating Commitment...' : `Confirm & Allocate ${formatMoney(commitAmount)} Senior Advance`}
                   </button>
                 </form>
               </>

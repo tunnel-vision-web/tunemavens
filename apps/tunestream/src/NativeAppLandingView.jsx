@@ -1,3 +1,4 @@
+import PodcastStreamingHub, { AUTHORITATIVE_PODCAST_SHOWS, PodcasterEpkModal } from './components/podcasts/PodcastStreamingHub.jsx';
 import ConsumerBlogForumView from './components/community/ConsumerBlogForumView.jsx';
 import ConsumerHelpDocsView from './components/community/ConsumerHelpDocsView.jsx';
 import ConsumerSupportDeskView from './components/community/ConsumerSupportDeskView.jsx';
@@ -20,6 +21,8 @@ import RegionSwitcher from './RegionSwitcher'
 import { useRegion } from './RegionContext'
 import './Landing.css'
 import LiveEventsSection from './components/events/LiveEventsSection.jsx'
+import ToursView from './views/landing/ToursView.jsx';
+import TourCapitalView from './views/landing/TourCapitalView.jsx';
 
 const ROLE_LOGOS = {
   consumer: tsLogo,
@@ -531,7 +534,14 @@ function ExploreCustomDropdown({ label, value, options, onChange }) {
 }
 
 
-export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = [], sessionUser = null, onLogout = null }) {
+export default function NativeAppLandingView({ 
+  creatorEpk = {}, 
+  catalogTracks = [], 
+  sessionUser = null, 
+  onLogout = null,
+  onPlayTrack = null,
+  onOpenPersonalization = null
+}) {
   const { slug: paramSlug } = useParams();
   const slug = paramSlug || 'tunestream';
   const normalizedSlug = (slug === 'tunestream' || slug === 'tunemavens') ? 'tunestream' : slug;
@@ -546,6 +556,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const [tracks, setTracks] = useState(() => (catalogTracks && catalogTracks.length > 0) ? catalogTracks : AUTHORITATIVE_CATALOG_TRACKS);
   const [artists, setArtists] = useState(AUTHORITATIVE_CATALOG_ARTISTS);
   const [albums, setAlbums] = useState(AUTHORITATIVE_CATALOG_ALBUMS);
+  const [podcastsList, setPodcastsList] = useState(AUTHORITATIVE_PODCAST_SHOWS);
+  const [activePodcasterEpkShow, setActivePodcasterEpkShow] = useState(null);
   const [exploreSearch, setExploreSearch] = useState('');
   const [exploreFilter, setExploreFilter] = useState('all');
   const [exploreGenre, setExploreGenre] = useState('all');
@@ -554,7 +566,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const [isHiFiPlaying, setIsHiFiPlaying] = useState(false);
   const creatorSlugParam = searchParams.get('creator');
   const [selectedCreatorProfile, setSelectedCreatorProfile] = useState(null);
-  const { formatPrice, currencyInfo } = useRegion();
+  const { formatPrice, currencyInfo, regionalMessaging, getRegionalMessaging } = useRegion();
   const [planBillingCycle, setPlanBillingCycle] = useState('monthly');
   const [planFaqOpenIndex, setPlanFaqOpenIndex] = useState(-1);
 
@@ -647,11 +659,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     {
       img: tunestreamHeader3Img,
       dot: '#f59e0b',
-      badge: 'African Artists · Global Reach',
-      headline1: 'Feel the crowd.',
-      headline2: 'Anywhere on earth.',
+      badge: (regionalMessaging && regionalMessaging.badge) || 'African Artists · Global Reach',
+      headline1: (regionalMessaging && regionalMessaging.headline1) || 'Feel the crowd.',
+      headline2: (regionalMessaging && regionalMessaging.headline2) || 'Anywhere on earth.',
       headline2Color: '#f59e0b',
-      sub: 'From Lagos to London, Nairobi to New York — stream the full depth of African music culture with built-in creator tipping and direct support.',
+      sub: (regionalMessaging && regionalMessaging.sub) || 'From Lagos to London, Nairobi to New York — stream the full depth of African music culture with built-in creator tipping and direct support.',
     },
   ];
   const INTERIOR_HEADER_MAP = {
@@ -915,82 +927,6 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 </div>
               </div>
             </div>
-
-            <div style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
-              background: 'rgba(6, 8, 19, 0.8)',
-              backdropFilter: 'blur(20px)',
-              borderTop: '1px solid rgba(255,255,255,0.07)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '14px',
-              padding: '10px 24px',
-              height: '62px',
-              boxSizing: 'border-box',
-            }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '4px', background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <RiMusicFill size={18} style={{ color: '#fff' }} />
-              </div>
-
-              <div style={{ flexShrink: 0, minWidth: 0 }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>Midnight Cruise</div>
-                <div style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap' }}>Alex Rivera</div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                <button
-                  onClick={() => setPlayerProgress(p => Math.max(0, p - 5))}
-                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex' }}
-                  title="Rewind"
-                ><RiResetLeftFill size={15} /></button>
-                <button
-                  onClick={() => setPlayerPlaying(p => !p)}
-                  style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#10b981', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                  title={playerPlaying ? 'Pause' : 'Play'}
-                >
-                  {playerPlaying ? <RiPauseFill size={14} fill="#fff" stroke="none" /> : <RiPlayFill size={14} fill="#fff" stroke="none" />}
-                </button>
-                <button
-                  onClick={() => setPlayerProgress(0)}
-                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex' }}
-                  title="Skip"
-                ><RiArrowRightSFill size={15} /></button>
-              </div>
-
-              <div style={{ flex: 1, height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', cursor: 'pointer', minWidth: '60px' }}
-                onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); setPlayerProgress(((e.clientX - rect.left) / rect.width) * 100); }}
-              >
-                <div style={{ height: '100%', width: `${playerProgress}%`, background: 'linear-gradient(90deg, #10b981, #22d3ee)', borderRadius: '2px', transition: 'width 1s linear' }} />
-              </div>
-
-              <div style={{ fontSize: '11px', color: '#64748b', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                {Math.floor(playerProgress * 2.12 / 60).toString().padStart(1,'0')}:{Math.floor(playerProgress * 2.12 % 60).toString().padStart(2,'0')} / 3:32
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '4px' }}>
-                <span style={{ fontSize: '10px', color: autoplay ? '#10b981' : '#475569', fontWeight: 600, letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>AUTO</span>
-                <button
-                  onClick={() => { setAutoplay(a => !a); if (autoplay) setPlayerPlaying(false); }}
-                  style={{
-                    width: '34px', height: '18px', borderRadius: '9px',
-                    background: autoplay ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.08)',
-                    border: `1px solid ${autoplay ? '#10b981' : 'rgba(255,255,255,0.12)'}`,
-                    cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease', padding: 0,
-                    flexShrink: 0,
-                  }}
-                  title={autoplay ? 'Turn off autoplay' : 'Turn on autoplay'}
-                >
-                  <span style={{
-                    position: 'absolute', top: '2px',
-                    left: autoplay ? '16px' : '2px',
-                    width: '12px', height: '12px', borderRadius: '50%',
-                    background: autoplay ? '#10b981' : '#475569',
-                    transition: 'left 0.3s ease, background 0.3s ease',
-                    display: 'block',
-                  }} />
-                </button>
-              </div>
-            </div>
           </>
         );
       }
@@ -1175,236 +1111,255 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
 
 
     const renderPlansSection = () => {
-      const isAnnual = planBillingCycle === 'annual';
-
-      const plans = [
+      const topUpPacks = [
         {
-          id: 'free',
-          name: 'TuneStream Free',
-          badge: 'Free Forever',
+          id: 'free-listener',
+          name: 'TuneStream Free (Always Free)',
+          badge: 'Always Free • Ad-Supported',
           badgeColor: '#10b981',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          priceDisplay: '$0',
-          period: 'forever',
-          subtext: 'No credit card required',
-          desc: 'Ad-supported music streaming with essential playlist crates and 150 shared registration credits.',
+          border: '1px solid rgba(16, 185, 129, 0.45)',
+          price: 0,
+          priceDisplay: formatPrice ? formatPrice(0) : '$0',
+          period: '/ always free',
+          subtext: 'Ad-supported via Corporate Ad Services • Plus 150 Welcome Credits',
+          desc: 'Stream music and podcasts for free forever, supported by brief Corporate Ad audio spots played at intervals between tracks (similar to Spotify Free). Any paid account automatically transitions back here once credits run out.',
+          credits: 150,
           features: [
-            'Ad-supported listening experience',
-            '150 shared Intermaven Network credits',
-            'Standard 160kbps audio streaming',
-            'Mobile & Web player access',
-            'Create & share custom playlist crates',
-            'Follow creators and comment on releases'
+            'Always Free forever — no credit card required',
+            'Ad-supported streaming via TuneMavens Corporate Ad Services between tracks',
+            'Includes 150 Welcome Credits on signup to test ad-free 24-bit FLAC',
+            'Full access to Podcasts, Podcaster EPKs & custom playlist crates',
+            'Automatic fallback: Paid accounts transition here when credits hit 0'
           ],
           cta: 'Start Listening Free',
           ctaStyle: {
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
-            color: '#fff'
+            background: 'rgba(16, 185, 129, 0.16)',
+            border: '1px solid rgba(16, 185, 129, 0.5)',
+            color: '#10b981'
           },
-          targetRoute: '/register?plan=free'
+          isFree: true
         },
         {
-          id: 'individual',
-          name: 'HiFi Individual',
-          badge: 'Most Popular • Lossless 24-bit',
+          id: 'casual-listener',
+          name: 'Casual Listener Pack',
+          badge: 'Ad-Free Top-Up',
           badgeColor: '#22d3ee',
-          border: '2px solid #22d3ee',
-          boxShadow: '0 0 24px rgba(34, 211, 238, 0.25)',
-          priceDisplay: formatPrice ? formatPrice(isAnnual ? 3.99 : 4.99) : (isAnnual ? '$3.99' : '$4.99'),
-          period: isAnnual ? '/ month, billed annually' : '/ month',
-          subtext: isAnnual ? 'Save 20% compared to monthly' : 'Flexible monthly cancellation',
-          desc: 'For solo listeners who demand studio master fidelity and direct mid-listen creator tipping.',
+          border: '1px solid rgba(34, 211, 238, 0.4)',
+          price: 9.99,
+          priceDisplay: formatPrice ? formatPrice(9.99) : '$9.99',
+          period: '/ one-time top-up',
+          subtext: '100% Ad-Free while credits last • Reverts to Free if depleted',
+          desc: '350 Listener Credits. Enjoy 100% ad-free 24-bit lossless music & podcasts, offline caching, and direct artist/podcaster tipping. Transitions back to TuneStream Free when credits reach 0.',
+          credits: 350,
           features: [
-            'Lossless Studio 24-bit / 48kHz FLAC master audio',
-            '100% Ad-Free uninterrupted playback',
-            '8GB Smart offline library caching',
-            'Direct creator tipping enabled (bypasses pools)',
-            '500 bonus network credits every month',
-            'Bit-perfect DAC output & 10-band studio EQ',
-            'Unlimited track skips & full lyrics display'
+            '350 Listener Credits (Zero Corporate Ad interruptions)',
+            'Studio 24-bit / 96kHz FLAC lossless music & podcast audio',
+            '8GB Smart offline mobile & desktop caching',
+            'Tip artists & podcasters directly (100% to creator wallet)',
+            'Graceful fallback to Always-Free Ad-Supported tier at 0 credits'
           ],
-          cta: 'Get HiFi Individual',
+          cta: 'Top-Up 350 Credits',
           ctaStyle: {
-            background: '#22d3ee',
-            border: 'none',
-            color: '#060813',
-            boxShadow: '0 0 16px rgba(34, 211, 238, 0.4)'
+            background: 'rgba(34, 211, 238, 0.15)',
+            border: '1px solid #22d3ee',
+            color: '#22d3ee'
           },
-          targetRoute: '/register?plan=individual'
+          suggestedPkg: 'casual-listener'
         },
         {
-          id: 'duo',
-          name: 'TuneStream Duo',
-          badge: 'For 2 Listeners',
+          id: 'superfan-audiophile',
+          name: 'Superfan & Audiophile Pack',
+          badge: 'Most Popular • Best Value',
+          badgeColor: '#00f2fe',
+          border: '2px solid #00f2fe',
+          boxShadow: '0 0 28px rgba(0, 242, 254, 0.28)',
+          price: 29.99,
+          priceDisplay: formatPrice ? formatPrice(29.99) : '$29.99',
+          period: '/ one-time top-up',
+          subtext: 'Includes 250 Bonus Credits • 100% Ad-Free Hi-Fi',
+          desc: '1,500 Listener Credits. Built for dedicated music & podcast fans, audiophiles, and concert-goers who want bit-perfect 24-bit sound and zero ad interruptions.',
+          credits: 1500,
+          popular: true,
+          features: [
+            '1,500 Listener Credits (100% Ad-Free playback)',
+            'Bit-perfect DAC output & 10-band audiophile EQ',
+            'Download lossless tracks, albums & podcast episodes to keep',
+            'VIP Supporter badge on Artist & Podcaster EPK walls',
+            'Early access to live concert tickets & live podcast tapings',
+            'Automatically reverts to Always-Free tier if credits deplete'
+          ],
+          cta: 'Top-Up 1,500 Credits',
+          ctaStyle: {
+            background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+            border: 'none',
+            color: '#060813',
+            boxShadow: '0 0 20px rgba(0, 242, 254, 0.45)',
+            fontWeight: '900'
+          },
+          suggestedPkg: 'superfan-audiophile'
+        },
+        {
+          id: 'duo-friends',
+          name: 'Duo & Friends Pack',
+          badge: '2 Listener Profiles',
           badgeColor: '#a855f7',
-          border: '1px solid rgba(168, 85, 247, 0.5)',
-          priceDisplay: formatPrice ? formatPrice(isAnnual ? 6.39 : 7.99) : (isAnnual ? '$6.39' : '$7.99'),
-          period: isAnnual ? '/ month, billed annually' : '/ month',
-          subtext: '2 independent accounts under 1 bill',
-          desc: 'Two independent premium accounts for couples or housemates with personalized mix crates.',
+          border: '1px solid rgba(168, 85, 247, 0.45)',
+          price: 49.99,
+          priceDisplay: formatPrice ? formatPrice(49.99) : '$49.99',
+          period: '/ one-time top-up',
+          subtext: 'Shared Ad-Free credit vault for 2 listeners',
+          desc: '5,000 Listener Credits. Share one credit balance across two private listener accounts with blended playlists, ad-free podcasts, and offline storage.',
+          credits: 5000,
           features: [
-            '2 separate, private accounts with personal crates',
-            'Shared Duo Mix playlist updated weekly',
-            '2 devices with 8GB offline storage each',
-            'Lossless 24-bit FLAC audio for both listeners',
-            '1,000 shared network credits every month',
-            'Direct creator tipping for both accounts'
+            '5,000 Shared Listener Credits (100% Ad-Free for both)',
+            '2 private listener profiles with separate music & podcast libraries',
+            'Auto-generated Shared Duo Mix playlist',
+            '8GB smart offline storage per listener device',
+            'Reverts seamlessly to Always-Free tier when credits reach 0'
           ],
-          cta: 'Get Duo Plan',
+          cta: 'Top-Up 5,000 Credits',
           ctaStyle: {
-            background: '#a855f7',
-            border: 'none',
-            color: '#fff',
-            boxShadow: '0 0 16px rgba(168, 85, 247, 0.3)'
+            background: 'rgba(168, 85, 247, 0.15)',
+            border: '1px solid #a855f7',
+            color: '#c084fc'
           },
-          targetRoute: '/register?plan=duo'
+          suggestedPkg: 'duo-friends'
         },
         {
-          id: 'family',
-          name: 'TuneStream Family',
-          badge: 'Up to 6 Accounts',
+          id: 'family-household',
+          name: 'Family & Household Vault',
+          badge: 'Up to 6 Listeners',
           badgeColor: '#f59e0b',
-          border: '1px solid rgba(245, 158, 11, 0.5)',
-          priceDisplay: formatPrice ? formatPrice(isAnnual ? 7.99 : 9.99) : (isAnnual ? '$7.99' : '$9.99'),
-          period: isAnnual ? '/ month, billed annually' : '/ month',
-          subtext: 'For households with up to 6 members',
-          desc: 'Up to 6 standalone premium accounts with parental controls and a blended Family Mix crate.',
+          border: '1px solid rgba(245, 158, 11, 0.45)',
+          price: 149.99,
+          priceDisplay: formatPrice ? formatPrice(149.99) : '$149.99',
+          period: '/ one-time top-up',
+          subtext: 'Household Ad-Free credit pool for up to 6 members',
+          desc: '25,000 Listener Credits. Power your entire household with up to 6 individual listener accounts, kid-safe filters, and home Hi-Fi casting.',
+          credits: 25000,
+          team: true,
           features: [
-            'Up to 6 independent accounts for family members',
-            'Parental explicit lyrics filter toggle',
-            'Family Mix playlist blending tracks everyone loves',
-            'Up to 6 devices with offline caching',
-            '1,500 shared network credits every month',
-            'Lossless 24-bit studio FLAC for the entire house'
+            '25,000 Household Credits for up to 6 accounts',
+            '100% Ad-Free music & podcast streaming for the whole house',
+            'Blended Family Mix crate & parental lyrics filter',
+            'Multi-room Hi-Fi casting (Sonos, AirPlay 2, CarPlay)',
+            'Automatic transition to Always-Free tier if credits hit 0'
           ],
-          cta: 'Get Family Plan',
+          cta: 'Top-Up 25,000 Credits',
           ctaStyle: {
-            background: '#f59e0b',
-            border: 'none',
-            color: '#060813',
-            boxShadow: '0 0 16px rgba(245, 158, 11, 0.3)'
+            background: 'rgba(245, 158, 11, 0.15)',
+            border: '1px solid #f59e0b',
+            color: '#fbbf24'
           },
-          targetRoute: '/register?plan=family'
+          suggestedPkg: 'family-household'
         }
       ];
 
       const comparisonMatrix = [
-        { feature: 'Audio Streaming Quality', free: 'Standard (160kbps)', ind: 'Lossless 24-Bit FLAC', duo: 'Lossless 24-Bit FLAC', fam: 'Lossless 24-Bit FLAC' },
-        { feature: 'Ad-Free Playback', free: 'No (Ad-supported)', ind: 'Yes (100% Ad-Free)', duo: 'Yes (100% Ad-Free)', fam: 'Yes (100% Ad-Free)' },
-        { feature: 'Offline Library Caching', free: 'None', ind: '8GB Smart Cache', duo: '8GB per Account', fam: '8GB per Account' },
-        { feature: 'Direct Creator Tipping', free: 'Disabled', ind: 'Enabled', duo: 'Enabled', fam: 'Enabled' },
-        { feature: 'Monthly Network Credits', free: '150 (one-time)', ind: '500 / month', duo: '1,000 / month', fam: '1,500 / month' },
-        { feature: 'Independent Accounts', free: '1 Account', ind: '1 Account', duo: '2 Accounts', fam: 'Up to 6 Accounts' },
-        { feature: 'Studio EQ & Bit-Perfect DAC', free: 'Basic', ind: '10-Band + DAC pass', duo: '10-Band + DAC pass', fam: '10-Band + DAC pass' },
-        { feature: 'Unlimited Skips & Lyrics', free: 'Limited skips', ind: 'Unlimited', duo: 'Unlimited', fam: 'Unlimited' },
+        { feature: 'Account Cost', starter: '$0 Forever (Always Free)', creator: '$9.99 One-Time Top-Up', pro: '$29.99 One-Time Top-Up', studio: '$49.99+ One-Time Top-Up' },
+        { feature: 'Ad Experience', starter: 'Ad-Supported (Corporate Ad Intervals)', creator: '100% Ad-Free (While Credits Active)', pro: '100% Ad-Free (While Credits Active)', studio: '100% Ad-Free (2–6 Listeners)' },
+        { feature: 'When Credits Expire / Hit 0', starter: 'Continues Streaming Free (Ad-Supported)', creator: 'Auto-Transitions to Always-Free Tier', pro: 'Auto-Transitions to Always-Free Tier', studio: 'Auto-Transitions to Always-Free Tier' },
+        { feature: 'Music & Podcast Quality', starter: 'Standard + 150 Lossless Welcome Credits', creator: 'Lossless 24-Bit / 96kHz FLAC', pro: 'Studio Master 24/96kHz + 10-Band EQ', studio: 'Multi-Room 24/96kHz Hi-Fi' },
+        { feature: 'Offline Library & Podcast Cache', starter: 'Web & Mobile Streaming', creator: '8GB Smart Offline Cache', pro: '8GB Cache + Permanent Downloads', studio: '8GB Cache per Listener' },
+        { feature: 'Direct Artist & Podcaster Tipping', starter: 'Via Welcome Credits', creator: '100% Direct to Creator Wallet', pro: '100% Direct + VIP Fan Badge', studio: '100% Direct + Group Gifting' },
+        { feature: 'Monthly Subscription Bills', starter: 'Zero ($0/mo forever)', creator: 'Zero ($0/mo forever)', pro: 'Zero ($0/mo forever)', studio: 'Zero ($0/mo forever)' }
       ];
 
       const planFaqs = [
-        { q: 'Can I switch between plans at any time?', a: 'Yes! You can upgrade, downgrade, or switch between monthly and annual billing at any point from your Billing settings. Upgrades apply immediately with prorated credits.' },
-        { q: 'How does direct artist tipping work with my subscription?', a: "Every Premium plan includes monthly bonus Intermaven Network Credits. While streaming, tap \'Tip Artist\' to send credits directly to the creator\'s verified split wallet." },
-        { q: 'Do Duo and Family members share listening history or playlists?', a: 'Never. Each member gets their own private login credentials, library, favorite artists, and custom recommendations.' },
-        { q: 'What happens if I cancel my subscription?', a: 'If you cancel, you will keep all Premium perks until the end of your billing cycle. After that, your account transitions gracefully to TuneStream Free without losing any playlists.' }
+        {
+          q: 'How does the TuneStream Always-Free account work?',
+          a: 'TuneStream Free is 100% free forever. Just like Spotify Free, you can stream full songs, albums, and podcasts on demand, supported by brief 15-to-30 second audio spots from TuneMavens Corporate Ad Services played at intervals between tracks. Every ad impression still pays the artists and podcasters you listen to!'
+        },
+        {
+          q: 'What happens to my paid account when my credits run out or expire?',
+          a: 'You are never locked out of your music or podcasts! The moment a paid account reaches 0 credits, it automatically and seamlessly transitions back to a TuneStream Free (Ad-Supported) account. You keep all your playlists, saved podcasts, and history, and you can top up credits again whenever you want to return to 100% ad-free 24-bit lossless playback.'
+        },
+        {
+          q: 'Why does TuneStream use credit top-ups instead of monthly subscriptions?',
+          a: 'Subscriptions charge you every month whether you listen or not. With TuneStream, our base tier is Always Free (Ad-Supported), and topping up credits unlocks 100% ad-free 24-bit FLAC streaming, offline caching, and direct artist/podcaster tipping with zero recurring monthly bills.'
+        },
+        {
+          q: 'How do Corporate Ad Services support artists and podcasters on Free streams?',
+          a: 'Corporate brands book targeted audio campaigns through TuneMavens Corporate Ad Services. Whenever a Free-tier listener hears an ad spot between tracks or podcast chapters, the ad revenue is routed directly into the Split Cascade ledger of the artists and podcasters streamed in that session.'
+        }
       ];
+
+      const handlePackSelect = (pack) => {
+        if (pack.isFree) {
+          navigate('/register');
+        } else {
+          window.dispatchEvent(new CustomEvent('tunestreamOpenReload', {
+            detail: {
+              packName: pack.name,
+              credits: pack.credits,
+              price: pack.price,
+              suggestedPkg: pack.suggestedPkg
+            }
+          }));
+          window.dispatchEvent(new CustomEvent('tunemavens-prompt-credit-reload', {
+            detail: {
+              reason: `Top-Up ${pack.name} (${pack.credits.toLocaleString()} Listener Credits)`,
+              suggestedPackageId: pack.suggestedPkg
+            }
+          }));
+        }
+      };
 
       return (
         <section id="plans-section" style={{ marginTop: '70px', marginBottom: '60px', textAlign: 'center', scrollMarginTop: '100px' }}>
           {/* Section Header */}
-          <div style={{ maxWidth: '800px', margin: '0 auto 36px auto' }}>
+          <div style={{ maxWidth: '880px', margin: '0 auto 36px auto' }}>
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              background: 'rgba(34, 211, 238, 0.08)',
-              border: '1px solid rgba(34, 211, 238, 0.25)',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
               padding: '6px 14px',
               borderRadius: '3px',
               fontSize: '11px',
               fontWeight: '700',
-              color: '#22d3ee',
+              color: '#10b981',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
               marginBottom: '14px'
             }}>
-              <RiCoinsFill size={14} /> Membership &amp; Access Tiers
+              <RiCoinsFill size={14} /> Always-Free Ad-Supported Tier • Or Ad-Free Credit Top-Ups
             </div>
 
             <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#fff', margin: '0 0 12px 0', letterSpacing: '-0.02em' }}>
-              Choose Your Sound. Pick Your Plan.
+              Listen Free Forever (Ad-Supported) or Top Up Credits for 100% Ad-Free Hi-Fi.
             </h2>
-            <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', margin: '0 0 28px 0' }}>
-              Experience master lossless audio, direct artist tipping, and 8GB offline caching. Prices adapt automatically to your local currency ({currencyInfo?.symbol || '$'}).
+            <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', margin: '0 0 24px 0' }}>
+              Enjoy our <strong>Always-Free Account</strong> powered by Corporate Ad Services played at intervals between tracks (just like Spotify Free), or top up Listener Credits anytime for 100% ad-free 24-bit lossless audio. When a paid account's credits run out, it automatically transitions back to Free—never locking you out.
             </p>
 
-            {/* Monthly / Annual Billing Toggle */}
+            {/* Zero Subscription & Auto-Transition Guarantee Banner */}
             <div style={{
+              background: 'rgba(0, 240, 255, 0.05)',
+              border: '1px solid rgba(0, 240, 255, 0.25)',
+              borderRadius: '3px',
+              padding: '12px 20px',
               display: 'inline-flex',
               alignItems: 'center',
-              background: '#090d1f',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '3px',
-              padding: '4px',
-              gap: '4px'
+              gap: '10px',
+              color: '#00f2fe',
+              fontSize: '12.5px',
+              fontWeight: '600'
             }}>
-              <button
-                type="button"
-                onClick={() => setPlanBillingCycle('monthly')}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: '3px',
-                  border: planBillingCycle === 'monthly' ? '1px solid #22d3ee' : '1px solid transparent',
-                  background: planBillingCycle === 'monthly' ? 'rgba(34, 211, 238, 0.15)' : 'transparent',
-                  color: planBillingCycle === 'monthly' ? '#22d3ee' : '#94a3b8',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                Monthly Billing
-              </button>
-              <button
-                type="button"
-                onClick={() => setPlanBillingCycle('annual')}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: '3px',
-                  border: planBillingCycle === 'annual' ? '1px solid #10b981' : '1px solid transparent',
-                  background: planBillingCycle === 'annual' ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
-                  color: planBillingCycle === 'annual' ? '#10b981' : '#94a3b8',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <span>Annual Billing</span>
-                <span style={{
-                  background: '#10b981',
-                  color: '#060813',
-                  fontSize: '10px',
-                  fontWeight: '900',
-                  padding: '1px 6px',
-                  borderRadius: '3px'
-                }}>
-                  SAVE 20%
-                </span>
-              </button>
+              <span>🛡️ Listener Promise: Zero monthly subscriptions ever. Paid accounts seamlessly revert to Always-Free (Ad-Supported) when credits expire.</span>
             </div>
           </div>
 
-          {/* 4 Plan Cards Grid */}
+          {/* Top-Up Packs Grid */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: '24px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            gap: '20px',
             marginBottom: '40px',
             textAlign: 'left'
           }}>
-            {plans.map((p) => (
+            {topUpPacks.map((p) => (
               <div
                 key={p.id}
                 style={{
@@ -1412,7 +1367,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   border: p.border,
                   boxShadow: p.boxShadow || '0 8px 24px rgba(0, 0, 0, 0.5)',
                   borderRadius: '3px',
-                  padding: '28px 24px',
+                  padding: '24px 20px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -1420,7 +1375,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <span style={{
                       fontSize: '10px',
                       fontWeight: '800',
@@ -1435,34 +1390,34 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: '22px', fontWeight: '900', color: '#fff', margin: '0 0 10px 0' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0' }}>
                     {p.name}
                   </h3>
 
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '32px', fontWeight: '900', color: '#fff' }}>
+                    <span style={{ fontSize: '28px', fontWeight: '900', color: '#fff' }}>
                       {p.priceDisplay}
                     </span>
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
                       {p.period}
                     </span>
                   </div>
-                  <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '14px' }}>
                     {p.subtext}
                   </div>
 
-                  <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', margin: '0 0 24px 0', minHeight: '38px' }}>
+                  <p style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: '1.5', margin: '0 0 20px 0', minHeight: '38px' }}>
                     {p.desc}
                   </p>
 
-                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '20px', marginBottom: '24px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '12px' }}>
-                      Included Features:
+                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '16px', marginBottom: '20px' }}>
+                    <div style={{ fontSize: '10.5px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '10px' }}>
+                      Listener Perks Included:
                     </div>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {p.features.map((feat, fIdx) => (
-                        <li key={fIdx} style={{ fontSize: '12.5px', color: '#e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                          <RiCheckFill size={15} color={p.badgeColor} style={{ flexShrink: 0, marginTop: '2px' }} />
+                        <li key={fIdx} style={{ fontSize: '12px', color: '#e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                          <RiCheckFill size={14} color={p.badgeColor} style={{ flexShrink: 0, marginTop: '2px' }} />
                           <span>{feat}</span>
                         </li>
                       ))}
@@ -1472,7 +1427,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
 
                 <button
                   type="button"
-                  onClick={() => navigate(p.targetRoute)}
+                  onClick={() => handlePackSelect(p)}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -1490,7 +1445,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             ))}
           </div>
 
-          {/* Student Discount Banner */}
+          {/* Corporate Ad Services & Seamless Transition Strip */}
           <div style={{
             background: 'rgba(34, 211, 238, 0.04)',
             border: '1px solid rgba(34, 211, 238, 0.2)',
@@ -1504,17 +1459,17 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             marginBottom: '50px',
             textAlign: 'left'
           }}>
-            <div>
+            <div style={{ flex: 1, minWidth: '280px' }}>
               <span style={{ fontSize: '13px', fontWeight: '800', color: '#22d3ee' }}>
-                🎓 University &amp; College Student Discount:
+                📢 Powered by TuneMavens Corporate Ad Services:
               </span>
               <span style={{ fontSize: '13px', color: '#cbd5e1', marginLeft: '8px' }}>
-                Full-time enrolled students receive 50% discount on HiFi Individual ({formatPrice ? formatPrice(2.49) : '$2.49'}/mo).
+                Free accounts hear brief sponsor audio spots between tracks &amp; podcasts so artists and podcasters still get paid. Top up credits anytime to remove ads instantly!
               </span>
             </div>
             <button
               type="button"
-              onClick={() => navigate('/register?plan=student')}
+              onClick={() => handlePackSelect(topUpPacks[2])}
               style={{
                 background: 'rgba(34, 211, 238, 0.12)',
                 border: '1px solid #22d3ee',
@@ -1526,7 +1481,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 cursor: 'pointer'
               }}
             >
-              Verify Student Status &rarr;
+              Go 100% Ad-Free with Credits &rarr;
             </button>
           </div>
 
@@ -1542,27 +1497,27 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             textAlign: 'left'
           }}>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: '0 0 20px 0', textAlign: 'center' }}>
-              Full Feature Comparison
+              Always-Free (Ad-Supported) vs. Ad-Free Credit Top-Up Packs
             </h3>
 
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <th style={{ padding: '12px 16px', color: '#94a3b8', textAlign: 'left' }}>Feature</th>
-                  <th style={{ padding: '12px 16px', color: '#fff', textAlign: 'center' }}>Free</th>
-                  <th style={{ padding: '12px 16px', color: '#22d3ee', textAlign: 'center' }}>HiFi Individual</th>
-                  <th style={{ padding: '12px 16px', color: '#a855f7', textAlign: 'center' }}>Duo</th>
-                  <th style={{ padding: '12px 16px', color: '#f59e0b', textAlign: 'center' }}>Family</th>
+                  <th style={{ padding: '12px 16px', color: '#94a3b8', textAlign: 'left' }}>Listener Benefit</th>
+                  <th style={{ padding: '12px 16px', color: '#10b981', textAlign: 'center' }}>TuneStream Free ($0)</th>
+                  <th style={{ padding: '12px 16px', color: '#22d3ee', textAlign: 'center' }}>Casual ($9.99)</th>
+                  <th style={{ padding: '12px 16px', color: '#00f2fe', textAlign: 'center' }}>Superfan ($29.99)</th>
+                  <th style={{ padding: '12px 16px', color: '#a855f7', textAlign: 'center' }}>Duo / Family ($49.99+)</th>
                 </tr>
               </thead>
               <tbody>
                 {comparisonMatrix.map((row, rIdx) => (
                   <tr key={rIdx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
                     <td style={{ padding: '12px 16px', color: '#e2e8f0', fontWeight: '600' }}>{row.feature}</td>
-                    <td style={{ padding: '12px 16px', color: '#94a3b8', textAlign: 'center' }}>{row.free}</td>
-                    <td style={{ padding: '12px 16px', color: '#22d3ee', fontWeight: '700', textAlign: 'center' }}>{row.ind}</td>
-                    <td style={{ padding: '12px 16px', color: '#c084fc', textAlign: 'center' }}>{row.duo}</td>
-                    <td style={{ padding: '12px 16px', color: '#fcd34d', textAlign: 'center' }}>{row.fam}</td>
+                    <td style={{ padding: '12px 16px', color: '#94a3b8', textAlign: 'center' }}>{row.starter}</td>
+                    <td style={{ padding: '12px 16px', color: '#22d3ee', fontWeight: '700', textAlign: 'center' }}>{row.creator}</td>
+                    <td style={{ padding: '12px 16px', color: '#00f2fe', fontWeight: '800', textAlign: 'center' }}>{row.pro}</td>
+                    <td style={{ padding: '12px 16px', color: '#c084fc', textAlign: 'center' }}>{row.studio}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1580,7 +1535,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             textAlign: 'left'
           }}>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#fff', margin: '0 0 20px 0', textAlign: 'center' }}>
-              Plan &amp; Billing Inquiries
+              Free Ad-Supported &amp; Credit Top-Up FAQs
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -1720,7 +1675,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             {/* Popular Creators Section */}
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Signed Roster Artists</h2>
+                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>Artists</h2>
                 <Link to="?view=explore" style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold' }}>See all artists &rarr;</Link>
               </div>
               <HorizontalSlider 
@@ -1813,6 +1768,170 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               />
             </section>
 
+            {/* Localized Regional Pain Points & Direct Engagement Section */}
+            <div style={{
+              margin: '36px 0 48px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(9, 14, 28, 0.95) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '8px',
+              padding: '36px 32px',
+              boxShadow: '0 15px 40px rgba(0,0,0,0.6)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '18px' }}>
+                <span style={{
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  color: '#10b981',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  padding: '5px 12px',
+                  borderRadius: '20px'
+                }}>
+                  Localized For: {regionalMessaging?.regionLabel || 'Global Diaspora'}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '12px', color: '#00f0ff', fontWeight: 700 }}>
+                    {regionalMessaging?.localCurrencyText || 'Non-expiring TM Credits · Zero subscriptions'}
+                  </span>
+                  {onOpenPersonalization && (
+                    <button
+                      onClick={onOpenPersonalization}
+                      style={{
+                        background: 'rgba(0, 240, 255, 0.15)',
+                        border: '1px solid rgba(0, 240, 255, 0.35)',
+                        borderRadius: '4px',
+                        color: '#00f0ff',
+                        padding: '4px 10px',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ✨ Personalize Taste
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: '0 0 12px', fontFamily: 'Sansation, sans-serif' }}>
+                {regionalMessaging?.painPointQuestion || 'Exhausted by unfair royalties, expensive data, and monthly subscription drains?'}
+              </h2>
+              <p style={{ fontSize: '14.5px', color: '#cbd5e1', lineHeight: 1.6, margin: '0 0 24px', maxWidth: '880px' }}>
+                {regionalMessaging?.painPointAnswer || 'TuneStream brings 8GB offline caching so you never burn metered data on commutes. Instant micro-tipping flows directly to creators with zero monthly subscription traps.'}
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '18px' }}>
+                  <h4 style={{ color: '#00f0ff', fontSize: '14px', fontWeight: 700, margin: '0 0 6px' }}>
+                    No Subscriptions Ever
+                  </h4>
+                  <p style={{ color: '#94a3b8', fontSize: '12px', margin: 0, lineHeight: 1.5 }}>
+                    Pay only for what you stream with non-expiring TM Credits. No recurring card charges or surprise renewals.
+                  </p>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '18px' }}>
+                  <h4 style={{ color: '#10b981', fontSize: '14px', fontWeight: 700, margin: '0 0 6px' }}>
+                    Direct-to-Artist Payouts
+                  </h4>
+                  <p style={{ color: '#94a3b8', fontSize: '12px', margin: 0, lineHeight: 1.5 }}>
+                    Tips enter the Split Cascade waterfall: Commission → Label → Artist → Manager within 24 hours via mobile money or bank wire.
+                  </p>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '18px' }}>
+                  <h4 style={{ color: '#a855f7', fontSize: '14px', fontWeight: 700, margin: '0 0 6px' }}>
+                    Lossless Studio Fidelity
+                  </h4>
+                  <p style={{ color: '#94a3b8', fontSize: '12px', margin: 0, lineHeight: 1.5 }}>
+                    Experience 24-bit / 96kHz FLAC audio direct from the mastering studio with 8GB offline cellular-aware caching.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Featured Podcasts & Podcaster EPK Spotlight Section */}
+            <div style={{ marginTop: '48px', marginBottom: '40px', background: '#090d1f', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '3px', padding: '28px 24px', textAlign: 'left' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.14)', border: '1px solid rgba(16, 185, 129, 0.4)', padding: '3px 9px', borderRadius: '3px', fontSize: '10.5px', fontWeight: 800, color: '#10b981', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    <RiMicFill size={12} /> TuneStream Podcasts &amp; Podcaster EPKs
+                  </div>
+                  <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', margin: 0 }}>
+                    Original Podcasts, Deep-Dive Interviews &amp; Show EPKs
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('?view=browse-podcasts')}
+                  style={{
+                    padding: '10px 18px',
+                    background: '#10b981',
+                    color: '#060813',
+                    border: 'none',
+                    borderRadius: '3px',
+                    fontSize: '12.5px',
+                    fontWeight: 900,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Explore All Podcasts &amp; Podcaster EPKs &rarr;
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+                {AUTHORITATIVE_PODCAST_SHOWS.slice(0, 4).map((pod) => (
+                  <div
+                    key={pod.id}
+                    style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '3px',
+                      padding: '18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '12px'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: pod.accentColor, background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: '3px', textTransform: 'uppercase' }}>
+                          {pod.category}
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>{pod.subscribers} subs</span>
+                      </div>
+                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>{pod.title}</h4>
+                      <div style={{ fontSize: '11.5px', color: '#00f2fe', fontWeight: 700, marginBottom: '8px' }}>By {pod.host}</div>
+                      <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>{pod.description}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (pod.episodes?.[0]) {
+                            handlePlaySong({ ...pod.episodes[0], artist: pod.host }, pod.episodes);
+                          }
+                        }}
+                        style={{ flex: 1, padding: '8px 10px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11.5px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                      >
+                        <RiPlayFill size={14} /> Stream Ep. {pod.episodes?.[0]?.episodeNumber || 1}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigate('?view=browse-podcasts')}
+                        style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Show EPK
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Live Concerts, Tours & Masterclasses in Progress */}
             <div style={{ marginTop: '40px', marginBottom: '40px' }}>
               <LiveEventsSection sessionUser={sessionUser} />
@@ -1824,8 +1943,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         </>
       );
     };
-
-            const renderExplore = () => {
+    const renderExplore = () => {
       if (selectedCreatorProfile) {
         return (
           <CreatorProfileView
@@ -1885,6 +2003,38 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         type: a.type || 'Album'
       }));
 
+      const activePodcastShows = (podcastsList && podcastsList.length > 0) ? podcastsList : AUTHORITATIVE_PODCAST_SHOWS;
+
+      const popularPodcasters = activePodcastShows.map((show, idx) => ({
+        id: show.id || `podcaster_${idx}`,
+        name: show.host,
+        showTitle: show.title,
+        role: show.hostRole || 'Verified Podcaster & Show Host',
+        genre: `Podcast • ${show.category || 'Culture'}`,
+        subscribers: `${show.subscribers || '100K'} subscribers`,
+        cover: normalizeMediaUrl(show.coverArt) || `/uploads/artwork/ndufo_cover.jpg`,
+        subdomain: show.subdomain || show.slug,
+        year: 2026,
+        show
+      }));
+
+      const popularPodcastEpisodes = activePodcastShows.flatMap((show) =>
+        (show.episodes || []).map((ep, idx) => ({
+          id: ep.id || `${show.id}_ep_${idx}`,
+          title: ep.title,
+          artist: ep.artist || show.host,
+          podcastTitle: show.title,
+          genre: ep.genre || `Podcast • ${show.category || 'Culture'}`,
+          duration: ep.duration || '42:15',
+          streams: ep.streams || show.totalStreams || '95K',
+          isrc: ep.isrc || 'KE-POD-26-00101',
+          cover: normalizeMediaUrl(ep.coverArt || show.coverArt) || `/uploads/artwork/ndufo_cover.jpg`,
+          year: 2026,
+          episode: ep,
+          show
+        }))
+      );
+
       const q = exploreSearch.toLowerCase().trim();
 
       // Collect available unique genres for filter dropdown
@@ -1899,14 +2049,20 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         'Contemporary Soul',
         'Electronic',
         'Hip-Hop',
-        'Pan-African'
+        'Pan-African',
+        'Podcast • Music Business',
+        'Podcast • Sound & Culture',
+        'Podcast • Culture & Nightlife',
+        'Podcast • Audio Engineering'
       ];
 
       const allGenres = Array.from(new Set([
         ...BASE_GENRES,
         ...popularCreators.map(a => a.genre),
         ...popularSingles.map(s => s.genre),
-        ...popularAlbums.map(al => al.genre)
+        ...popularAlbums.map(al => al.genre),
+        ...popularPodcasters.map(p => p.genre),
+        ...popularPodcastEpisodes.map(pe => pe.genre)
       ].filter(Boolean))).sort();
 
       // Build unified collection
@@ -1960,6 +2116,38 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         })));
       }
 
+      if (exploreFilter === 'all' || exploreFilter === 'podcasts') {
+        combinedItems = combinedItems.concat(popularPodcastEpisodes.map(pe => ({
+          kind: 'podcast',
+          id: pe.id,
+          title: pe.title,
+          subtitle: `${pe.podcastTitle} · Hosted by ${pe.artist}`,
+          genre: pe.genre,
+          metaLeft: `${pe.duration} · ${pe.streams} listens`,
+          metaRight: 'Podcaster EPK 🌐 →',
+          cover: pe.cover,
+          year: 2026,
+          date: '2026-03-10',
+          data: pe
+        })));
+      }
+
+      if (exploreFilter === 'all' || exploreFilter === 'podcasters') {
+        combinedItems = combinedItems.concat(popularPodcasters.map(pod => ({
+          kind: 'podcaster',
+          id: pod.id,
+          title: pod.name,
+          subtitle: `${pod.showTitle} · ${pod.role}`,
+          genre: pod.genre,
+          metaLeft: pod.subscribers,
+          metaRight: 'Podcaster EPK 🌐 →',
+          cover: pod.cover,
+          year: 2026,
+          date: '2026-03-12',
+          data: pod
+        })));
+      }
+
       // 1. Text Search Filter (q)
       if (q) {
         combinedItems = combinedItems.filter(item => {
@@ -2008,6 +2196,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       const pageItems = combinedItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
       const handleCardClick = (item) => {
+        if (item.kind === 'podcaster' || item.kind === 'podcast') {
+          const targetShow = item.data?.show || activePodcastShows[0];
+          setActivePodcasterEpkShow(targetShow);
+          return;
+        }
         let targetCreator = null;
         if (item.kind === 'creator') {
           targetCreator = item.data;
@@ -2045,7 +2238,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       return (
         <div style={{ textAlign: 'center', width: '100%', maxWidth: '1240px', margin: '0 auto', boxSizing: 'border-box' }}>
           <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
-            Discover, filter, and stream across signed creators, singles, and albums entered in the TuneMavens backend.
+            Discover, filter, and stream across signed creators, singles, albums, podcasts, and verified podcaster EPKs.
           </p>
 
           {/* Working Search Bar */}
@@ -2053,7 +2246,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             <RiSearchLine size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
             <input 
               type="text" 
-              placeholder="Search creators, tracks, singles, albums, genres..." 
+              placeholder="Search creators, tracks, podcasts, podcasters, albums, genres..." 
               value={exploreSearch}
               onChange={(e) => {
                 setExploreSearch(e.target.value);
@@ -2167,15 +2360,47 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             >
               Albums &amp; EPs ({popularAlbums.length})
             </button>
+            <button
+              type="button"
+              onClick={() => { setExploreFilter('podcasts'); setExplorePage(1); }}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'podcasts' ? '1px solid #22d3ee' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'podcasts' ? '#22d3ee' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'podcasts' ? '#000' : '#fff',
+                fontWeight: '700',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              Podcasts &amp; Episodes ({popularPodcastEpisodes.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => { setExploreFilter('podcasters'); setExplorePage(1); }}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'podcasters' ? '1px solid #ec4899' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'podcasters' ? '#ec4899' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'podcasters' ? '#fff' : '#fff',
+                fontWeight: '700',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              Podcasters &amp; EPKs ({popularPodcasters.length})
+            </button>
           </div>
 
           {/* Filtering & Sorting Controls (Genre & Date/Title/Popularity) */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginBottom: '28px', flexWrap: 'wrap' }}>
             <ExploreCustomDropdown
-              label="Genre:"
+              label="Genre / Category:"
               value={exploreGenre}
               options={[
-                { value: 'all', label: 'All Genres' },
+                { value: 'all', label: 'All Genres & Categories' },
                 ...allGenres.map(g => ({ value: g, label: g }))
               ]}
               onChange={(val) => {
@@ -2253,23 +2478,31 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                       left: '8px', 
                       fontSize: '9px', 
                       fontWeight: 'bold', 
-                      background: item.kind === 'creator' ? 'rgba(0,0,0,0.7)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
-                      color: item.kind === 'creator' ? '#00f2fe' : '#fff', 
+                      background: item.kind === 'creator' ? 'rgba(0,0,0,0.75)' : item.kind === 'podcaster' ? 'rgba(236,72,153,0.9)' : item.kind === 'podcast' ? 'rgba(34,211,238,0.9)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
+                      color: item.kind === 'creator' ? '#00f2fe' : item.kind === 'podcast' ? '#000' : '#fff', 
                       padding: '2px 6px', 
                       borderRadius: '3px' 
                     }}>
-                      {item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
+                      {item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'podcaster' ? 'PODCASTER EPK' : item.kind === 'podcast' ? 'PODCAST EPISODE' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
                     </span>
                     {item.kind !== 'creator' && (
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (item.kind === 'album') handlePlayAlbum(item.data);
-                          else handlePlaySong(item.data);
+                          if (item.kind === 'album') {
+                            handlePlayAlbum(item.data);
+                          } else if (item.kind === 'podcast') {
+                            handlePlaySong(item.data.episode || item.data);
+                          } else if (item.kind === 'podcaster') {
+                            const firstEp = item.data?.show?.episodes?.[0];
+                            if (firstEp) handlePlaySong(firstEp);
+                          } else {
+                            handlePlaySong(item.data);
+                          }
                         }}
                         style={{ position: 'absolute', bottom: '8px', right: '8px', width: '28px', height: '28px', borderRadius: '3px', background: 'rgba(0,0,0,0.75)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                        title="Quick Audio Preview"
+                        title="Quick Audio Stream"
                       >
                         <RiPlayFill size={15} color="#00f2fe" />
                       </button>
@@ -2279,7 +2512,9 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subtitle}</p>
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                     <span style={{ color: 'var(--mu)', fontFamily: item.kind === 'single' ? 'monospace' : 'inherit' }}>{item.metaLeft}</span>
-                    <span style={{ color: item.kind === 'creator' ? 'var(--cyan)' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold' }}>View Creator Profile &rarr;</span>
+                    <span style={{ color: (item.kind === 'podcaster' || item.kind === 'podcast') ? '#ec4899' : item.kind === 'creator' ? 'var(--cyan)' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold' }}>
+                      {(item.kind === 'podcaster' || item.kind === 'podcast') ? 'Open Podcaster EPK →' : 'View Creator Profile →'}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -2493,49 +2728,12 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     };
 
     const renderBrowsePodcasts = () => {
-      const podcasts = [
-        { title: 'The Independent Artist Podcast', host: 'Intermaven Audio', desc: 'Survival tips, split cascade tutorials, and industry insights for creators.', bg: 'linear-gradient(135deg, #10b981 0%, #1e1b4b 100%)', icon: RiMicFill },
-        { title: 'Intermaven Tech & Music', host: 'Intermaven Engineering', desc: 'Deep dives into decentralized compensation models and audio compression standards.', bg: 'linear-gradient(135deg, #8b5cf6 0%, #1e1b4b 100%)', icon: RiCpuFill },
-        { title: 'African Soundscapes', host: 'Mercy Wangari', desc: 'High-fidelity field recordings and interviews with traditional instrument masters.', bg: 'linear-gradient(135deg, #f59e0b 0%, #1e1b4b 100%)', icon: RiGlobalFill },
-        { title: 'Backstage Pass', host: 'Label Ops Network', desc: 'merch POS provisioning, live tickets setups, and regional settlement guides.', bg: 'linear-gradient(135deg, #3b82f6 0%, #1e1b4b 100%)', icon: RiTicket2Fill },
-        { title: 'The Producer Roundtable', host: 'Alex Rivera', desc: 'Discussion on studio workflows, mastering presets, and regional sample packs.', bg: 'linear-gradient(135deg, #f43f5e 0%, #1e1b4b 100%)', icon: RiEqualizerFill },
-        { title: 'Decentralized Audio Weekly', host: 'Intermaven Audio', desc: 'Exploring smart contract applications in the global music supply chain.', bg: 'linear-gradient(135deg, #0ea5e9 0%, #1e1b4b 100%)', icon: RiLinksFill },
-        { title: 'Amapiano Pioneer Stories', host: 'Zola K.', desc: 'Oral history of the Pretoria club movements and sub-genre development.', bg: 'linear-gradient(135deg, #a855f7 0%, #1e1b4b 100%)', icon: RiRadioFill },
-        { title: 'Off-Grid Streaming Insights', host: 'Intermaven Network', desc: 'How peer-to-peer storage models power local high-fidelity music streaming.', bg: 'linear-gradient(135deg, #10b981 0%, #1e1b4b 100%)', icon: RiWifiFill }
-      ];
-
-      const itemsPerPage = 4;
-      const indexOfLast = podcastPage * itemsPerPage;
-      const indexOfFirst = indexOfLast - itemsPerPage;
-      const currentPodcasts = podcasts.slice(indexOfFirst, indexOfLast);
-
       return (
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--mu)', fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>Listen to tech talks, artist masterclasses, and field recordings from around the network.</p>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
-            {currentPodcasts.map((pod, idx) => {
-              const IconComp = pod.icon;
-              return (
-                <div key={idx} className="landing-feature-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '24px', borderRadius: '3px', transition: 'all 0.2s ease', cursor: 'pointer', textAlign: 'center' }} onClick={() => alert(`Streaming podcast episode: ${pod.title}`)}>
-                  <div style={{ width: '60px', height: '60px', borderRadius: '3px', background: pod.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', margin: '0 auto 16px' }}>
-                    <IconComp size={24} style={{ color: '#fff' }} />
-                  </div>
-                  <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 4px', fontWeight: '700', lineHeight: '1.3' }}>{pod.title}</h3>
-                  <span style={{ fontSize: '12px', color: 'var(--cyan)', display: 'block', marginBottom: '12px' }}>By {pod.host}</span>
-                  <p style={{ fontSize: '12px', color: 'var(--mu)', margin: 0, lineHeight: '1.5' }}>{pod.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <Pagination
-            currentPage={podcastPage}
-            totalItems={podcasts.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={(page) => { setPodcastPage(page); }}
-          />
-        </div>
+        <PodcastStreamingHub
+          sessionUser={sessionUser}
+          onPlayTrack={(track, queue) => handlePlaySong(track, queue)}
+          onNavigateToPodcasterStudio={() => navigate('/dashboard?role=podcaster&tab=podcaster-overview')}
+        />
       );
     };
 
@@ -2543,44 +2741,44 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       const appListing = [
         { 
           title: 'TuneStream Mobile', 
-          desc: 'The consumer streaming client with high-fidelity FLAC audio, 8GB offline caching, and direct creator micro-tipping.', 
+          desc: 'The flagship listener streaming client with 24-bit / 96kHz FLAC audio, 8GB smart offline crate caching, and 1-tap direct artist tipping.', 
           platforms: 'iOS & Android (Capacitor)', 
           logoKey: 'consumer',
-          target: 'For Listeners & Fans',
+          target: 'Mobile & Offline Sync',
           accent: '#00f2fe',
           features: [
-            'Offline-cached 24-bit FLAC audio',
-            'Direct creator tipping into split ledgers',
-            'Region-aware editorial & community radio',
-            'Unified Intermaven session & credits vault'
+            'Offline-cached 24-bit / 96kHz FLAC lossless audio',
+            '8GB smart crate storage for flights & commutes',
+            '1-tap direct creator tipping with zero middlemen',
+            'Region-aware editorial mixes & 24/7 live radio'
           ]
         },
         { 
-          title: 'Creator Companion', 
-          desc: 'Real-time metrics, automated split cascade ledger tracking, sync placement alerts, and instant payout status on the go.', 
-          platforms: 'iOS & Android', 
-          logoKey: 'companion',
-          target: 'For Artists & Managers',
-          accent: '#a855f7',
-          features: [
-            'Live split cascade revenue waterfall',
-            'Instant royalty balances & tip stream',
-            'Sync brief alerts & push licensing',
-            'AI-assisted catalog release strategy'
-          ]
-        },
-        { 
-          title: 'TunePay POS', 
-          desc: 'Live event ticketing, point-of-sale merchandise sales, and geo-gated settlement rails integrated into creator accounts.', 
-          platforms: 'iOS & Android tablet', 
-          logoKey: 'tunepay',
-          target: 'For Labels & Venues',
+          title: 'TuneStream Studio Desktop & DAC Bridge', 
+          desc: 'Audiophile desktop client engineered for bit-perfect hardware DAC passthrough, exclusive audio output, and 10-band studio EQ.', 
+          platforms: 'macOS & Windows (ASIO / CoreAudio)', 
+          logoKey: 'consumer',
+          target: 'For HiFi Audiophiles',
           accent: '#10b981',
           features: [
-            'Mobile STK push & contactless card checkout',
-            'Inventory tracking for vinyl, CDs & merch',
-            'Door ticket scanning & credential pass checks',
-            'Automated show settlement split cascade'
+            'Bit-perfect USB DAC hardware passthrough',
+            'Exclusive CoreAudio & ASIO mixer bypass mode',
+            '10-band parametric studio equalizer & bass sub presets',
+            'Uncompressed 24-bit / 96kHz master playback'
+          ]
+        },
+        { 
+          title: 'TuneStream Live Pass & CarPlay', 
+          desc: 'Your concert pass wallet and in-car lossless companion: store QR VIP tour tickets, get artist show alerts, and stream hands-free.', 
+          platforms: 'Apple CarPlay, Android Auto & Watch', 
+          logoKey: 'consumer',
+          target: 'Live Shows & In-Car',
+          accent: '#f59e0b',
+          features: [
+            'Offline QR concert pass & VIP tour ticket wallet',
+            'Instant local show alerts for artists you follow',
+            'Native Apple CarPlay & Android Auto lossless dashboard',
+            'Seamless handoff between phone, car & home speakers'
           ]
         },
       ];
@@ -2588,30 +2786,30 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       return (
         <div style={{ textAlign: 'center', width: '100%', maxWidth: '100%', margin: '0 auto' }}>
           <div className="glass-panel" style={{ padding: '36px 32px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', marginBottom: '32px', width: '100%', maxWidth: '100%', textAlign: 'left', boxSizing: 'border-box' }}>
-            <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' }}>Ecosystem App Distribution & Native Suites</h3>
+            <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' }}>TuneStream Listener Apps &amp; HiFi Device Suite</h3>
             <p style={{ fontSize: '14.5px', color: '#cbd5e1', lineHeight: '1.6', margin: '0 auto 28px', textAlign: 'center', maxWidth: '880px' }}>
-              TuneStream distributes high-performance native experiences across the shared Intermaven Network. Every app synchronizes your credentials, streaming library, and unified credits vault in real time:
+              Built exclusively for music lovers, commuters, concertgoers, and audiophiles. Every TuneStream listener app synchronizes your custom playlist crates, 8GB offline cache, concert passes, and non-expiring TM Credits in real time:
             </p>
             <ul className="ts-ecosystem-summary-grid" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               <li style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
                 <RiHeadphoneFill size={32} style={{ color: '#00f2fe' }} />
                 <div>
-                  <strong style={{ color: '#fff', display: 'block', fontSize: '15px', marginBottom: '6px' }}>For Listeners</strong>
-                  <span style={{ fontSize: '12.5px', color: 'var(--mu)', lineHeight: '1.5' }}>Lossless FLAC streaming, 8GB offline caching, and direct creator micro-tipping.</span>
+                  <strong style={{ color: '#fff', display: 'block', fontSize: '15px', marginBottom: '6px' }}>Mobile &amp; Offline Commute</strong>
+                  <span style={{ fontSize: '12.5px', color: 'var(--mu)', lineHeight: '1.5' }}>Lossless FLAC streaming, 8GB smart offline crate caching, and 1-tap direct artist tipping.</span>
                 </div>
               </li>
               <li style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <RiLineChartFill size={32} style={{ color: '#a855f7' }} />
+                <RiLineChartFill size={32} style={{ color: '#10b981' }} />
                 <div>
-                  <strong style={{ color: '#fff', display: 'block', fontSize: '15px', marginBottom: '6px' }}>For Artists & Managers</strong>
-                  <span style={{ fontSize: '12.5px', color: 'var(--mu)', lineHeight: '1.5' }}>Live split cascade waterfall, accrued payout balances, and instant sync alerts.</span>
+                  <strong style={{ color: '#fff', display: 'block', fontSize: '15px', marginBottom: '6px' }}>Desktop DAC &amp; Studio EQ</strong>
+                  <span style={{ fontSize: '12.5px', color: 'var(--mu)', lineHeight: '1.5' }}>Bit-perfect 24-bit / 96kHz hardware DAC passthrough and 10-band studio equalizer.</span>
                 </div>
               </li>
               <li style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <RiBankCardFill size={32} style={{ color: '#10b981' }} />
+                <RiBankCardFill size={32} style={{ color: '#f59e0b' }} />
                 <div>
-                  <strong style={{ color: '#fff', display: 'block', fontSize: '15px', marginBottom: '6px' }}>For Labels & Venues</strong>
-                  <span style={{ fontSize: '12.5px', color: 'var(--mu)', lineHeight: '1.5' }}>Point-of-sale merch checkout, M-Pesa STK mobile rails, and ticket door scanning.</span>
+                  <strong style={{ color: '#fff', display: 'block', fontSize: '15px', marginBottom: '6px' }}>Live Pass &amp; CarPlay</strong>
+                  <span style={{ fontSize: '12.5px', color: 'var(--mu)', lineHeight: '1.5' }}>Offline QR VIP concert ticket wallet, tour RSVP radar, and lossless in-car audio.</span>
                 </div>
               </li>
             </ul>
@@ -2624,7 +2822,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: ap.accent }}></div>
                   <div style={{ width: '100%' }}>
                     <div style={{ height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
-                      <img src={ROLE_LOGOS[ap.logoKey]} alt={ap.title} style={{ height: '42px', width: 'auto', display: 'block', maxWidth: '240px', objectFit: 'contain' }} />
+                      <img src={ROLE_LOGOS[ap.logoKey] || tsLogo} alt={ap.title} style={{ height: '42px', width: 'auto', display: 'block', maxWidth: '240px', objectFit: 'contain' }} />
                     </div>
                     <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.06)', color: ap.accent, padding: '4px 12px', borderRadius: '14px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>
                       {ap.target}
@@ -2647,7 +2845,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                     <button 
                       type="button" 
                       className="store-cta" 
-                      onClick={() => alert(`App Store listing for ${ap.title} coming in Phase 5+.`)}
+                      onClick={() => navigate('/dashboard')}
                       style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '6px', color: '#fff', textAlign: 'left', width: '100%', outline: 'none', justifyContent: 'center', transition: 'all 0.2s ease' }}
                     >
                       <RiAppleFill size={22} style={{ color: '#fff', flexShrink: 0 }} />
@@ -2659,7 +2857,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                     <button 
                       type="button" 
                       className="store-cta" 
-                      onClick={() => alert(`Google Play listing for ${ap.title} coming in Phase 5+.`)}
+                      onClick={() => navigate('/dashboard')}
                       style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '6px', color: '#fff', textAlign: 'left', width: '100%', outline: 'none', justifyContent: 'center', transition: 'all 0.2s ease' }}
                     >
                       <RiDownloadFill size={22} style={{ color: '#00f2fe', flexShrink: 0 }} />
@@ -2720,110 +2918,316 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     };
 
     const renderPremiumPlan = () => {
-      const handleGetPremium = () => {
-        alert('Premium package selected! Proceeding to registration / credits activation.');
+    const handleQuickTopUp = (packName, credits, usdPrice) => {
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('tunestreamOpenReload', {
+          detail: { packName, credits, usdPrice }
+        }));
+      } else {
         navigate('/register');
-      };
-
-      return (
-        <div style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.05) 0%, rgba(7, 14, 27, 0.5) 100%)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '8px', marginBottom: '40px' }}>
-            <span style={{ color: 'var(--cyan)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', tracking: '0.1em' }}>TuneStream Premium</span>
-            <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: '900', margin: '12px 0' }}>Go Premium. Stream without limits.</h2>
-            <p style={{ color: '#cbd5e1', fontSize: '16px', marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>Ad-free listening, lossless FLAC quality, offline caching, and direct creator support. Pay-as-you-go using our credit system.</p>
-            <button 
-              onClick={handleGetPremium} 
-              className="btn-primary" 
-              style={{ 
-                padding: '12px 36px', 
-                fontSize: '15px', 
-                background: 'var(--cyan)', 
-                color: '#000', 
-                fontWeight: 'bold', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: 'pointer',
-                boxShadow: '0 0 15px rgba(34,211,238,0.25)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              GET PREMIUM
-            </button>
-          </div>
-
-          <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', marginBottom: '24px', textAlign: 'center' }}>Experience premium features</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '50px' }}>
-            {[
-              { title: 'Zero Ads', desc: 'Stream your music without any audio or visual advertisements. Total focus on the tunes.', icon: <RiVolumeMuteFill size={32} color="var(--cyan)" style={{ display: 'block', margin: '0 auto 12px' }} /> },
-              { title: 'Lossless Studio Audio', desc: 'Enjoy high-fidelity 24-bit / 96kHz FLAC audio, preserving every detail from the mix studio.', icon: <RiEqualizerFill size={32} color="var(--cyan)" style={{ display: 'block', margin: '0 auto 12px' }} /> },
-              { title: 'Offline Caching', desc: 'Save up to 8GB of music files directly to your mobile storage. Perfect for flights or remote zones.', icon: <RiDownloadFill size={32} color="var(--cyan)" style={{ display: 'block', margin: '0 auto 12px' }} /> },
-              { title: 'Direct Tipping', desc: 'Unlock mid-listen tipping. Your support enters the cascade split directly to creator wallets.', icon: <RiCoinsFill size={32} color="var(--cyan)" style={{ display: 'block', margin: '0 auto 12px' }} /> },
-            ].map((item, idx) => (
-              <div key={idx} className="glass-panel" style={{ padding: '24px 20px', borderRadius: '6px', background: 'rgba(34, 211, 238, 0.01)', border: '1px solid rgba(34, 211, 238, 0.08)' }}>
-                {item.icon}
-                <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px', textAlign: 'center' }}>{item.title}</h4>
-                <p style={{ color: 'var(--mu)', fontSize: '12px', margin: 0, lineHeight: '1.5', textAlign: 'center' }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: '800', marginBottom: '24px', textAlign: 'center' }}>Choose your Premium option</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '50px' }}>
-            {[
-              { name: 'Individual', price: 'Deducts 1 credit / stream', desc: 'For single listeners. 1 active device offline caching. Lossless streaming.', buttonText: 'Get Individual' },
-              { name: 'Duo', price: 'Deducts 1.8 credits / stream', desc: '2 Premium accounts. Shared playlist mix. 2 devices offline caching.', buttonText: 'Get Duo' },
-              { name: 'Family', price: 'Deducts 2.5 credits / stream', desc: 'Up to 6 Premium accounts. Kids player portal. Family mix playlist.', buttonText: 'Get Family' },
-            ].map((plan, idx) => (
-              <div key={idx} className="glass-panel" style={{ padding: '28px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
-                <div>
-                  <h4 style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px' }}>{plan.name}</h4>
-                  <span style={{ color: 'var(--cyan)', fontSize: '13px', fontWeight: 'bold', display: 'block', marginBottom: '16px' }}>{plan.price}</span>
-                  <p style={{ color: 'var(--mu)', fontSize: '12px', margin: '0 0 20px', lineHeight: '1.5' }}>{plan.desc}</p>
-                </div>
-                <button 
-                  onClick={handleGetPremium} 
-                  className="plan-btn outline" 
-                  style={{ 
-                    padding: '10px 16px', 
-                    width: '100%', 
-                    fontSize: '13px', 
-                    fontWeight: 'bold', 
-                    background: 'rgba(255,255,255,0.03)', 
-                    border: '1px solid rgba(255,255,255,0.12)', 
-                    color: '#fff', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'var(--cyan)';
-                    e.currentTarget.style.color = '#000';
-                    e.currentTarget.style.borderColor = 'var(--cyan)';
-                    e.currentTarget.style.boxShadow = '0 0 10px rgba(34,211,238,0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                    e.currentTarget.style.color = '#fff';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  {plan.buttonText}
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '24px', borderRadius: '3px' }}>
-            <p style={{ color: 'var(--mu)', fontSize: '12px', margin: 0 }}>
-              Premium consumption is billed directly to your shared Intermaven Network Credit balance. Credits are non-expiring. You can purchase credit top-up packages starting from $4.99 at any time in the <Link to="/pricing" style={{ color: 'var(--cyan)' }}>Pricing Panel</Link>.
-            </p>
-          </div>
-        </div>
-      );
+      }
     };
 
-    const renderHelp = (tab = 'docs') => {
+    const CREDIT_PACKS = [
+      {
+        name: 'Starter Welcome Pack',
+        credits: 150,
+        priceUsd: 0,
+        tag: 'Free on Signup',
+        badgeColor: '#10b981',
+        desc: '150 free signup credits automatically loaded on registration. Continuous ad-supported listening & preview tests.',
+        features: [
+          '150 Non-Expiring TM Credits',
+          'Unlimited lossy / ad-supported playback',
+          '30s master preview on entire catalog',
+          'Community discussion & playlist building'
+        ],
+        ctaText: 'Claim 150 Free Credits',
+        popular: false
+      },
+      {
+        name: 'Listener Top-Up',
+        credits: 250,
+        priceUsd: 4.99,
+        tag: 'Casual Listener',
+        badgeColor: '#22d3ee',
+        desc: '250 Non-Expiring Credits. Stream up to 250 lossless FLAC tracks or tip your favourite indie creators.',
+        features: [
+          '250 Non-Expiring TM Credits',
+          'Lossless 24-bit / 96kHz FLAC audio',
+          'Direct mid-track creator tipping',
+          '1 active device 8GB offline caching'
+        ],
+        ctaText: 'Top-Up 250 Credits',
+        popular: false
+      },
+      {
+        name: 'Pro Maven Pack',
+        credits: 600,
+        priceUsd: 9.99,
+        tag: 'Most Popular',
+        badgeColor: '#00f0ff',
+        desc: '600 Non-Expiring Credits. Full freedom to stream, cache entire albums offline, and unlock stems.',
+        features: [
+          '600 Non-Expiring TM Credits',
+          'Multi-device 8GB offline storage',
+          'Lossless FLAC & Dolby Atmos stems',
+          'Priority VIP ticket presale access',
+          'Verified Fan badge in live chats'
+        ],
+        ctaText: 'Top-Up 600 Credits',
+        popular: true
+      },
+      {
+        name: 'Audiophile VIP Pack',
+        credits: 1800,
+        priceUsd: 24.99,
+        tag: 'Superfan & Collector',
+        badgeColor: '#a855f7',
+        desc: '1,800 Non-Expiring Credits. For sonic purists and dedicated patrons who want master track ownership.',
+        features: [
+          '1,800 Non-Expiring TM Credits',
+          'Permanent master track purchase & download',
+          'Backstage tour RSVP discounts',
+          'Unlimited FLAC streaming sessions',
+          'Direct artist split waterfall transparency'
+        ],
+        ctaText: 'Top-Up 1,800 Credits',
+        popular: false
+      },
+      {
+        name: 'Studio Superfan Pool',
+        credits: 5000,
+        priceUsd: 49.99,
+        tag: 'Patron / Label',
+        badgeColor: '#ec4899',
+        desc: '5,000 Non-Expiring Credits. Enterprise-grade pool for large families, DJ collectors, or label A&Rs.',
+        features: [
+          '5,000 Non-Expiring TM Credits',
+          '5 shared listener profiles',
+          'Bulk lossless catalog stem exports',
+          'Direct tour venture backer eligibility',
+          'Dedicated creator split cascade reports'
+        ],
+        ctaText: 'Top-Up 5,000 Credits',
+        popular: false
+      }
+    ];
+
+    return (
+      <div style={{ textAlign: 'left', maxWidth: '1200px', margin: '0 auto', padding: '0 20px 80px' }}>
+        {/* Hero Banner with explicit Zero-Subscription Statement */}
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '56px 24px', 
+          background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(7, 14, 27, 0.7) 100%)', 
+          border: '1px solid rgba(0, 240, 255, 0.3)', 
+          borderRadius: '8px', 
+          marginBottom: '48px',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(0,240,255,0.1)'
+        }}>
+          <span style={{ 
+            display: 'inline-block',
+            background: 'rgba(0, 240, 255, 0.15)', 
+            border: '1px solid rgba(0, 240, 255, 0.4)', 
+            color: '#00f0ff', 
+            fontSize: '11px', 
+            fontWeight: 800, 
+            textTransform: 'uppercase', 
+            letterSpacing: '1px',
+            padding: '5px 14px',
+            borderRadius: '20px',
+            marginBottom: '16px'
+          }}>
+            Canonical Pricing Model · Zero Recurring Subscriptions
+          </span>
+          <h2 style={{ color: '#fff', fontSize: '38px', fontWeight: '900', margin: '0 0 16px', fontFamily: 'Sansation, sans-serif' }}>
+            No Subscriptions. Ever. 100% Credit Top-Up.
+          </h2>
+          <p style={{ color: '#cbd5e1', fontSize: '16px', marginBottom: '28px', maxWidth: '780px', margin: '0 auto 28px', lineHeight: 1.6 }}>
+            Say goodbye to $11–$17/month recurring streaming fees where 80% goes to corporate middlemen. TuneStream rejects monthly billing. You top up non-expiring TM Credits only when you want them, and your money flows directly into creator split cascade ledgers.
+          </p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <button 
+              onClick={() => handleQuickTopUp('Pro Maven Pack', 600, 9.99)}
+              style={{
+                padding: '14px 32px',
+                background: '#00f0ff',
+                color: '#000',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '14.5px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 0 20px rgba(0, 240, 255, 0.4)'
+              }}
+            >
+              Top-Up Non-Expiring Credits
+            </button>
+            <button
+              onClick={() => navigate('/stream')}
+              style={{
+                padding: '14px 28px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.18)',
+                color: '#fff',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Launch Lossless Web Player
+            </button>
+          </div>
+        </div>
+
+        {/* Credit Utility Transparency Section */}
+        <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: 800, marginBottom: '20px', textAlign: 'center' }}>
+          How Unified TM Credits Work
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '56px' }}>
+          {[
+            { rate: '1 Credit', title: 'Lossless Master Stream', desc: '1 credit plays a complete studio-grade 24-bit FLAC track with zero ads.' },
+            { rate: '5 Credits', title: '30-Day Offline Cache', desc: 'Cache tracks locally for 30 days without consuming cellular data on commutes.' },
+            { rate: '5–25 Credits', title: 'Direct Creator Tip', desc: 'One tap sends credits straight into the artist & producer’s wallet within 24 hours.' },
+            { rate: '50 Credits', title: 'Buy & Own Master', desc: 'Permanent FLAC master download with commercial sync evaluation license.' }
+          ].map((item, idx) => (
+            <div key={idx} style={{ 
+              background: 'rgba(15, 23, 42, 0.65)', 
+              border: '1px solid rgba(255,255,255,0.08)', 
+              borderRadius: '6px', 
+              padding: '20px',
+              textAlign: 'center'
+            }}>
+              <span style={{ fontSize: '18px', fontWeight: 900, color: '#00f0ff', display: 'block', marginBottom: '4px' }}>
+                {item.rate}
+              </span>
+              <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: 700, margin: '0 0 6px' }}>{item.title}</h4>
+              <p style={{ color: '#94a3b8', fontSize: '12.5px', margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Top-Up Packages Grid */}
+        <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: 800, marginBottom: '20px', textAlign: 'center' }}>
+          Choose a Top-Up Package (Non-Expiring)
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '48px' }}>
+          {CREDIT_PACKS.map((pack, idx) => (
+            <div 
+              key={idx}
+              style={{
+                background: pack.popular ? 'rgba(0, 240, 255, 0.05)' : 'rgba(15, 23, 42, 0.65)',
+                border: pack.popular ? '2px solid #00f0ff' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '8px',
+                padding: '24px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                position: 'relative'
+              }}
+            >
+              {pack.popular && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-12px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: '#00f0ff',
+                  color: '#000',
+                  fontSize: '10px',
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  padding: '3px 10px',
+                  borderRadius: '10px'
+                }}>
+                  Most Popular
+                </span>
+              )}
+
+              <div>
+                <span style={{ fontSize: '11px', color: pack.badgeColor, fontWeight: 700, textTransform: 'uppercase' }}>
+                  {pack.tag}
+                </span>
+                <h4 style={{ color: '#fff', fontSize: '18px', fontWeight: 800, margin: '4px 0 12px' }}>
+                  {pack.name}
+                </h4>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '28px', fontWeight: 900, color: '#fff' }}>
+                    {pack.priceUsd === 0 ? 'Free' : formatPrice(pack.priceUsd)}
+                  </div>
+                  <span style={{ fontSize: '12px', color: '#00f0ff', fontWeight: 700 }}>
+                    +{pack.credits.toLocaleString()} TM Credits (One-Time)
+                  </span>
+                </div>
+
+                <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5, marginBottom: '20px' }}>
+                  {pack.desc}
+                </p>
+
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {pack.features.map((feat, fIdx) => (
+                    <li key={fIdx} style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <button
+                onClick={() => handleQuickTopUp(pack.name, pack.credits, pack.priceUsd)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '4px',
+                  background: pack.popular ? '#00f0ff' : 'rgba(255,255,255,0.06)',
+                  color: pack.popular ? '#000' : '#fff',
+                  border: pack.popular ? 'none' : '1px solid rgba(255,255,255,0.18)',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {pack.ctaText}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Multi-Rail Checkout Banner */}
+        <div style={{
+          background: 'rgba(7, 10, 20, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '6px',
+          padding: '24px 28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '20px'
+        }}>
+          <div>
+            <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: 700, margin: '0 0 4px' }}>
+              Universal Multi-Currency Payment Rails
+            </h4>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>
+              Top up frictionlessly using Instant M-Pesa STK Push in Kenya &amp; East Africa (KES), or global Visa / Mastercard / Stripe (USD, GBP, EUR).
+            </p>
+          </div>
+          <span style={{ fontSize: '12px', color: '#00f0ff', background: 'rgba(0, 240, 255, 0.1)', padding: '6px 12px', borderRadius: '4px', fontWeight: 700 }}>
+            ⚡ Instant Balance Settlement · Zero Lock-In
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderHelp = (tab = 'docs') => {
       if (tab === 'blog' || tab === 'forum') {
         return (
           <ConsumerBlogForumView
@@ -2857,10 +3261,17 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       );
     };
 
-    const handlePlaySong = (song) => {
+    const handlePlaySong = (song, queue = null) => {
     const match = (tracks && tracks.find(t => t.id === song.id || t.isrc === song.isrc || t.title === song.title)) || song;
-    setActiveHiFiTrack(match);
-    setIsHiFiPlaying(true);
+    if (typeof onPlayTrack === 'function') {
+      onPlayTrack(match);
+    } else {
+      setActiveHiFiTrack(match);
+      setIsHiFiPlaying(true);
+    }
+    window.dispatchEvent(new CustomEvent('tunestreamPlayTrack', {
+      detail: { track: match, queue: queue || tracks }
+    }));
   };
 
   const handleArtistClick = (artist) => {
@@ -2880,8 +3291,15 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       isrc: album.isrc || 'KE-TM1-26-00042',
       audioUrl: `/api/stream/track/${encodeURIComponent(album.title)}`
     };
-    setActiveHiFiTrack(albumTrack);
-    setIsHiFiPlaying(true);
+    if (typeof onPlayTrack === 'function') {
+      onPlayTrack(albumTrack);
+    } else {
+      setActiveHiFiTrack(albumTrack);
+      setIsHiFiPlaying(true);
+    }
+    window.dispatchEvent(new CustomEvent('tunestreamPlayTrack', {
+      detail: { track: albumTrack, queue: tracks }
+    }));
   };
 
   const renderContent = () => {
@@ -2924,6 +3342,14 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               <ToursView sessionUser={sessionUser} initialTab={searchParams.get('tab') || 'concerts'} />
             </div>
           );
+        case 'tour-capital':
+        case 'vc-capital':
+        case 'tours-vault':
+          return (
+            <div style={{ marginTop: '10px', marginBottom: '40px' }}>
+              <TourCapitalView sessionUser={sessionUser} />
+            </div>
+          );
         case 'listen':
         default:
           return renderListen();
@@ -2935,10 +3361,17 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         className="native-app-landing tunestream-landing" 
         style={{ background: getLandingBackground('tunestream'), color: '#f1f5f9', minHeight: '100vh', padding: '0 0 162px' }}
       >
-        {renderTopHeader()}
-        <div className="container" style={{ marginTop: view === 'listen' ? '40px' : '0', maxWidth: '1240px', width: '100%', margin: '0 auto', padding: '0 24px', boxSizing: 'border-box' }}>
+        {!['tours', 'events', 'concerts', 'live', 'tour-capital', 'vc-capital', 'tours-vault'].includes(view) && renderTopHeader()}
+        <div className="container" style={{ marginTop: view === 'listen' ? '40px' : '0', maxWidth: ['tours', 'events', 'concerts', 'live', 'tour-capital', 'vc-capital', 'tours-vault'].includes(view) ? '100%' : '1240px', width: '100%', margin: '0 auto', padding: ['tours', 'events', 'concerts', 'live', 'tour-capital', 'vc-capital', 'tours-vault'].includes(view) ? '0' : '0 24px', boxSizing: 'border-box' }}>
           {renderContent()}
         </div>
+        {activePodcasterEpkShow && (
+          <PodcasterEpkModal
+            show={activePodcasterEpkShow}
+            onClose={() => setActivePodcasterEpkShow(null)}
+            onPlayEpisode={(ep) => handlePlaySong(ep)}
+          />
+        )}
       </div>
     );
   } else {
@@ -3169,26 +3602,13 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       <div style={{ flex: 1 }}>
         {pageContent}
       </div>
-            {activeHiFiTrack && (
-        <HiFiAudioPlayer
-          track={activeHiFiTrack}
-          tracks={tracks}
-          isPlaying={isHiFiPlaying}
-          onTogglePlay={setIsHiFiPlaying}
-          onTrackSelect={setActiveHiFiTrack}
-          sessionUser={sessionUser}
-          onClose={() => {
-            setIsHiFiPlaying(false);
-            setActiveHiFiTrack(null);
-          }}
-        />
-      )}
+      {/* HiFiAudioPlayer rendered globally at root */}
       <LandingFooter view={view} />
     </div>
   );
 }
 
-function LandingNavbar({ view, setView, sessionUser, onLogout }) {
+export function LandingNavbar({ view, setView, sessionUser, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
   const [supportDropdownOpen, setSupportDropdownOpen] = useState(false);
@@ -3284,11 +3704,7 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
               </li>
             </ul>
           </li>
-          <li>
-            <Link to="?view=concerts" className={`nav-link ${view === 'concerts' || view === 'events' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
-              Live Shows
-            </Link>
-          </li>
+
           <li>
             <Link to="?view=apps" className={`nav-link ${view === 'apps' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
               Apps
@@ -3357,7 +3773,7 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
                 {sessionUser ? (
-                  <Link to="/stream" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
+                  <Link to="/dashboard" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
                 ) : (
                   <>
                     <Link to="/login" className="btn-secondary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={() => setMobileOpen(false)}>Log In</Link>
@@ -3377,7 +3793,7 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
           <div className="nav-ctas">
             {sessionUser ? (
               <>
-                <Link to="/stream" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Link to="/dashboard" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   Dashboard
                 </Link>
                 <button onClick={onLogout} className="btn-secondary" style={{ cursor: 'pointer' }}>
@@ -3397,7 +3813,7 @@ function LandingNavbar({ view, setView, sessionUser, onLogout }) {
   );
 }
 
-function LandingFooter({ view }) {
+export function LandingFooter({ view }) {
   return (
     <footer className="landing-footer">
       <div className="footer-inner-container">
