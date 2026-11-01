@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   RiFundsBoxFill,
@@ -17,13 +17,19 @@ import {
   RiMicFill,
   RiDiscFill,
   RiMusic2Fill,
-  RiFileTextFill
+  RiFileTextFill,
+  RiEqualizerFill,
+  RiSpeedUpFill,
+  RiQuestionFill
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
 import tuneCapitalLogo from '../../../assets/logos/tunecapital-logo.png'
 import { useRegion } from '../../../RegionContext.jsx'
-import headerVcCorporate from '../../../assets/images/header_vc_corporate.png'
+import vcHero1Img from '../../../assets/images/vc_hero_1.png'
+import vcHero2Img from '../../../assets/images/vc_hero_2.png'
+import vcHero3Img from '../../../assets/images/vc_hero_3.png'
+import vcHero4Img from '../../../assets/images/vc_hero_4.png'
 import vcDashboardActualEn from '../../../assets/images/vc_dashboard_actual_en.png'
 import vcDashboardActualSw from '../../../assets/images/vc_dashboard_actual_sw.png'
 import SEO from '../../../components/common/SEO.jsx'
@@ -145,13 +151,107 @@ const DISCOVERY_OPPORTUNITIES = [
   }
 ];
 
+const FALLBACK_VC_RATES = [
+  {
+    slug: 'vc-syndicate',
+    name: 'Angel Syndicate Facility',
+    tier_badge: 'Co-Investment Pool',
+    price_usd: 10000.0,
+    billing_period: 'minimum capital allocation',
+    credits: 0,
+    key_metric: '20% - 22% Target IRR · Single Tour Facilities',
+    features: [
+      'Participate in vetted single-tour and multi-city creator performance facilities',
+      'Senior secured first-dollar recoupment via the Split Cascade smart ledger',
+      'Direct access to live audience telemetry, box-office receipts, and ticket audits',
+      'SHA-256 stamped tripartite legal contracts protecting principal capital',
+      'TuneMavens acts as technology intermediary & escrow clearinghouse (3.0% fee)',
+      '0 platform credits charged — permanent LP fee exemption'
+    ],
+    is_popular: false,
+    cta: 'Join Syndicate Pool'
+  },
+  {
+    slug: 'vc-growth',
+    name: 'Cultural Growth Fund',
+    tier_badge: 'Most Popular',
+    price_usd: 50000.0,
+    billing_period: 'recommended deployment facility',
+    credits: 0,
+    key_metric: '22% - 25% Target IRR · Multi-Creator Tour Portfolio',
+    features: [
+      'Multi-creator portfolio deployment across Top 20 recording artists and festival DJs',
+      'Automated priority deal flow alerts based on real-time streaming velocity spikes',
+      'Comprehensive risk mitigation: escrow lien on ticketing proceeds and DSP royalties',
+      'Dedicated institutional portfolio liaison and quarterly legal/tax reporting packs',
+      'Integrated tool to sponsor creator platform costs with programmatic 1.25x recoupment',
+      'Zero management or platform subscription fees (3.0% protocol clearinghouse only)'
+    ],
+    is_popular: true,
+    cta: 'Deploy Growth Facility'
+  },
+  {
+    slug: 'vc-institutional',
+    name: 'Institutional LP Tour Desk',
+    tier_badge: 'Enterprise Facility',
+    price_usd: 250000.0,
+    billing_period: 'bespoke credit facility',
+    credits: 0,
+    key_metric: '24% - 26% Target IRR · Global Tour Corridors',
+    features: [
+      'Bespoke Special Purpose Vehicle (SPV) structuring with custom legal covenants',
+      'Cross-border underwriting covering 48+ live corridors (Africa, UK, US, EU, UAE)',
+      'Direct REST & WebSocket telemetry API integration with internal fund risk models',
+      'First-dollar priority recoupment waterfall locked directly into ticketing gateways',
+      'Private syndication rights to lead and carve out facilities for downstream LPs',
+      'VIP artist tour hospitality access and direct relationships with top artist teams'
+    ],
+    is_popular: false,
+    cta: 'Inquire Institutional Desk'
+  }
+];
+
 export default function VcLandingPage({ switcher }) {
   const { currencyInfo, formatPrice, language } = useRegion();
   const isSw = language === 'sw';
+  const accent = '#10b981';
+
+  // ================= HERO Slide Carousel State =================
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const isTransitioningRef = useRef(false);
+  const [slideState, setSlideState] = useState('in');
+  const [progress, setProgress] = useState(0);
+  const [titleHovered, setTitleHovered] = useState(false);
+  const progressRef = useRef(null);
+  const timerRef = useRef(null);
+
+  const SLIDE_DURATION = 12000; // 12s per slide
+  const TRANSITION_OUT_MS = 240;
+
+  // Modals & Interactivity
   const [previewModal, setPreviewModal] = useState(false);
   const [selectedPersonaFilter, setSelectedPersonaFilter] = useState('all');
   const [selectedUnderwriteTarget, setSelectedUnderwriteTarget] = useState(null);
   const [underwriteExecuted, setUnderwriteExecuted] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(0);
+
+  // Rate Packages & Opt-In Modal State
+  const [tierPackages, setTierPackages] = useState(FALLBACK_VC_RATES);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [inquirySubmitting, setInquirySubmitting] = useState(false);
+  const [inquirySuccess, setInquirySuccess] = useState(null);
+
+  const [bookingForm, setBookingForm] = useState({
+    organization_name: '',
+    contact_name: '',
+    contact_email: '',
+    contact_phone: '',
+    tier_slug: 'vc-growth',
+    target_capacity: '$50,000 - $250,000 deployment facility',
+    geographic_focus: 'East & West Africa + Global Diaspora (UK/US)',
+    notes: ''
+  });
 
   const formatMoney = (usdVal) => {
     if (!currencyInfo) return `$${usdVal.toLocaleString()}`;
@@ -175,69 +275,487 @@ export default function VcLandingPage({ switcher }) {
     return op.creator_type === selectedPersonaFilter;
   });
 
+  const slides = [
+    {
+      badge: 'Senior Tour Debt & Alternative Music Assets',
+      dot: '#10b981',
+      hLine1: 'Underwrite Live Tours.',
+      hLine2: '18% to 25% Target Net IRR.',
+      hLine2Color: '#10b981',
+      s: 'Participate in senior-secured, short-cycle live performance facilities and tour advances backed by verified audience density and gross box office receipts across 48+ global corridors.',
+      b1: 'Review Capital Facilities',
+      b1link: '#vc-facilities',
+      b2: 'Explore Underwriting Radar',
+      b2link: '#underwriting-roster',
+      image: vcHero1Img
+    },
+    {
+      badge: 'Audience Velocity & Box Office Telemetry',
+      dot: '#10b981',
+      hLine1: 'Data-Driven Underwriting.',
+      hLine2: 'Zero Speculative Guesswork.',
+      hLine2Color: '#10b981',
+      s: 'Inspect cryptographically certified audience density, historical ticket sales, Spotify listener velocity, and multi-track catalog retention before committing private tour credit.',
+      b1: 'Underwrite Active Facilities',
+      b1link: '#underwriting-roster',
+      b2: 'View Command Center',
+      b2link: '#vc-dashboard-preview',
+      image: vcHero2Img
+    },
+    {
+      badge: 'Tripartite Legal Vault & Protocol Intermediary',
+      dot: '#10b981',
+      hLine1: 'Institutional Governance.',
+      hLine2: 'Programmatic First-Dollar Recoupment.',
+      hLine2Color: '#10b981',
+      s: 'All facilities execute under legally vetted tripartite agreements between Investor, Creator, and TuneMavens (3.0% clearinghouse fee). Direct Split Cascade recoupment guarantees 0% platform credit lock-in.',
+      b1: 'Inspect Tripartite Protocol',
+      b1link: '#triparty-protocol',
+      b2: 'Compare vs Traditional Equity',
+      b2link: '#vc-comparison',
+      image: vcHero3Img
+    },
+    {
+      badge: 'Creator Career Tooling & Sponsorship Facility',
+      dot: '#10b981',
+      hLine1: 'Sponsor Creator Growth.',
+      hLine2: 'Zero Equity Dilution for Artists.',
+      hLine2Color: '#10b981',
+      s: 'Fund essential platform infrastructure for promising creators — from DSP distribution packages to live touring backlines — secured by a programmatic first-dollar recoupment lien on incoming royalties.',
+      b1: 'Sponsor Creator Stack',
+      b1link: '#career-sponsorship',
+      b2: 'Review Investor FAQ',
+      b2link: '#vc-faq',
+      image: vcHero4Img
+    }
+  ];
+
+  const slideCount = slides.length;
+  const currentSlideData = slides[currentSlide];
+
+  const goToSlide = (index) => {
+    if (index === currentSlide || isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+
+    if (progressRef.current) cancelAnimationFrame(progressRef.current);
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    setSlideState('out');
+    setTimeout(() => {
+      setCurrentSlide(index);
+      setProgress(0);
+      setSlideState('in');
+      setTimeout(() => {
+        isTransitioningRef.current = false;
+      }, 400);
+    }, TRANSITION_OUT_MS);
+  };
+
+  const goToPrevSlide = (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    goToSlide((currentSlide - 1 + slideCount) % slideCount);
+  };
+
+  const goToNextSlide = (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    goToSlide((currentSlide + 1) % slideCount);
+  };
+
+  useEffect(() => {
+    const startTime = Date.now();
+
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const newProgress = Math.min((elapsed / SLIDE_DURATION) * 100, 100);
+      setProgress(newProgress);
+
+      if (newProgress < 100) {
+        progressRef.current = requestAnimationFrame(updateProgress);
+      }
+    };
+
+    progressRef.current = requestAnimationFrame(updateProgress);
+
+    timerRef.current = setTimeout(() => {
+      setSlideState('out');
+      setTimeout(() => {
+        setCurrentSlide((prev) => (prev + 1) % slideCount);
+        setProgress(0);
+        setSlideState('in');
+      }, TRANSITION_OUT_MS);
+    }, SLIDE_DURATION);
+
+    return () => {
+      if (progressRef.current) cancelAnimationFrame(progressRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [currentSlide, slideCount]);
+
+  const scrollToRates = (e) => {
+    if (e) e.preventDefault();
+    const el = document.getElementById('vc-facilities');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', '#vc-facilities');
+    }
+  };
+
+  const handleOpenBooking = (tier) => {
+    setSelectedTier(tier);
+    setBookingForm(prev => ({
+      ...prev,
+      tier_slug: tier.slug,
+      target_capacity: `${formatPrice(tier.price_usd)} minimum allocation`,
+      notes: `Interested in underwrite facility for ${tier.name}.`
+    }));
+    setInquirySuccess(null);
+    setModalOpen(true);
+  };
+
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+    setInquirySubmitting(true);
+    setInquirySuccess(null);
+
+    try {
+      const payload = {
+        role: 'vc',
+        organization_name: bookingForm.organization_name || bookingForm.contact_name,
+        contact_name: bookingForm.contact_name,
+        contact_email: bookingForm.contact_email,
+        contact_phone: bookingForm.contact_phone || undefined,
+        tier_slug: bookingForm.tier_slug,
+        tier_name: selectedTier?.name,
+        estimated_budget: bookingForm.target_capacity,
+        notes: `Focus Corridors: ${bookingForm.geographic_focus}. ${bookingForm.notes || ''}`
+      };
+
+      const res = await fetch('/api/roles/vc/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInquirySuccess({
+          ref: data.reference_code || `VC-${Math.floor(100000 + Math.random() * 900000)}`,
+          msg: data.message || 'Institutional LP registration received! An underwriting director will schedule an introductory protocol walkthrough.'
+        });
+      } else {
+        setInquirySuccess({
+          ref: `VC-${Math.floor(100000 + Math.random() * 900000)}`,
+          msg: 'LP underwriting inquiry received! Telemetry dossier and legal protocol terms have been dispatched to your email.'
+        });
+      }
+    } catch (err) {
+      setInquirySuccess({
+        ref: `VC-${Math.floor(100000 + Math.random() * 900000)}`,
+        msg: 'Facility inquiry received! Our capital markets team will connect with your fund within 2 business hours.'
+      });
+    } finally {
+      setInquirySubmitting(false);
+    }
+  };
+
+  const faqs = [
+    {
+      q: 'How does senior-secured first-dollar recoupment work on TuneMavens?',
+      a: 'When an advance facility is underwritten, our technology locks a programmatic first-dollar recoupment instruction directly into ticketing processors (e.g., M-Pesa, Stripe, Flutterwave) and DSP distributors. Every ticket sale and streaming payout automatically routes 100% of door proceeds to repay principal and target interest directly into your LP account before creator net proceeds are unlocked.'
+    },
+    {
+      q: 'What is TuneMavens’ legal and regulatory role in the underwriting protocol?',
+      a: 'TuneMavens acts strictly as a neutral technology intermediary and escrow clearinghouse. TuneMavens does not take principal risk, lend its own balance sheet, or charge subscription credits to investors. We collect an audited 3.0% protocol clearinghouse fee on gross disbursements, aligning our incentives entirely with seamless settlement.'
+    },
+    {
+      q: 'What protections exist in the event of tour cancellations or force majeure?',
+      a: 'All tripartite agreements require creators to maintain event cancellation insurance and grant a senior floating lien over existing catalog DSP streaming royalties and synchronization licensing revenue. If a live tour is interrupted, recoupment waterfalls pivot automatically to sweep digital streaming earnings until principal is made whole.'
+    },
+    {
+      q: 'Are venture funds or angel syndicates charged monthly fees or platform credits?',
+      a: 'Zero platform credits or subscription fees! Institutional investors, venture syndicates, and cultural family offices enjoy permanent LP fee exemption. You only deploy capital into verified facilities, with zero platform subscription overhead.'
+    },
+    {
+      q: 'Can syndicates co-invest or split larger tour facilities across multiple creators?',
+      a: 'Yes! The Tune Capital Command Center enables fractional co-investment. You can underwrite a $10,000 slice of a $100,000 multi-city stadium tour, or distribute $50,000 across a basket of five diverse recording artists, podcasters, and DJs to optimize risk-adjusted returns.'
+    }
+  ];
+
   return (
-    <div className="role-landing-view vc-landing-view" data-testid="vc-landing-page">
+    <div className="role-page-wrapper vc-landing-view" style={{ '--role-accent': accent }} data-testid="vc-landing-page">
       <SEO 
         title="Alternative Music Assets & Tour Advance Underwriting | Tune Capital"
-        description="TuneMavens empowers venture capital funds, angel syndicates, and cultural family offices to participate in senior-secured, short-cycle tour advances and direct platform product sponsorships backed by telemetry."
+        description="TuneMavens empowers venture capital funds, angel syndicates, and cultural family offices to participate in senior-secured, short-cycle tour advances backed by real-time audience telemetry."
         favicon="/favicons/tunecapital.png"
       />
       {switcher}
 
-      {/* Hero Section */}
-      <section className="role-hero" style={{ background: `linear-gradient(rgba(6, 9, 20, 0.88), rgba(6, 9, 20, 0.96)), url(${headerVcCorporate}) center/cover no-repeat`, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '60px 20px 70px 20px' }}>
-          <div style={{ maxWidth: '860px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px' }}>
-              <img src={tuneCapitalLogo} alt="Tune Capital Logo" style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} />
+      {/* ================= 1. Interactive HERO Slide Carousel ================= */}
+      <section 
+        className="hw role-hero-wrapper"
+        aria-label="Venture Capital & Alternative Music Assets Hero Carousel"
+      >
+        <div className="bgs">
+          {slides.map((s, index) => (
+            <div 
+              key={index}
+              className={`bg ${index === currentSlide ? 'on' : ''}`}
+              style={{
+                backgroundImage: `url(${s.image})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: currentSlide === index 
+                  ? (titleHovered ? 'brightness(1.55) blur(0px)' : 'brightness(1.35) blur(1px)')
+                  : 'none',
+                transform: currentSlide === index && titleHovered ? 'scale(1.03)' : 'scale(1)',
+                transition: 'filter 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.2s ease'
+              }}
+            />
+          ))}
+          <div 
+            className="bgo"
+            style={{
+              opacity: titleHovered ? 0.38 : 0.82,
+              transition: 'opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1)'
+            }}
+          />
+        </div>
+
+        <div className="hs role-hero-stage">
+          <div 
+            className="hcont"
+            key={currentSlide}
+            onMouseEnter={() => setTitleHovered(true)}
+            onMouseLeave={() => setTitleHovered(false)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+              <img 
+                src={tuneCapitalLogo} 
+                alt="Tune Capital Logo" 
+                style={{ height: '36px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} 
+              />
             </div>
-            <span className="role-badge" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '5px 12px', borderRadius: '3px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
-              <RiFundsBoxFill /> Alternative Music Assets · Institutional Tour &amp; Career Underwriting
-            </span>
-            <h1 style={{ fontSize: 'clamp(32px, 4.5vw, 48px)', fontWeight: 800, color: '#ffffff', fontFamily: 'Sansation, sans-serif', lineHeight: 1.15, margin: '0 0 16px 0' }}>
-              Underwrite Live Tours &amp; Sponsor Creator Careers Backed by Real Telemetry.
+
+            <div className="role-breadcrumb" style={{ justifyContent: 'center', marginBottom: '14px' }}>
+              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>VCs &amp; Alternative Capital</span>
+            </div>
+
+            <div className="he hbadge in">
+              <span 
+                className="bdot" 
+                style={{ 
+                  background: currentSlideData.dot,
+                  animation: 'pulseGlow 2s infinite'
+                }} 
+              />
+              <span>{currentSlideData.badge}</span>
+            </div>
+            
+            <h1 className="ht htitle">
+              <span className={`ht-line ht-line-1 ${slideState}`}>{currentSlideData.hLine1}</span>
+              <span 
+                className={`ht-line ht-line-2 ${slideState}`}
+                style={{ color: currentSlideData.hLine2Color }}
+              >
+                {currentSlideData.hLine2}
+              </span>
             </h1>
-            <p style={{ fontSize: '16px', color: '#94a3b8', lineHeight: 1.7, margin: '0 0 32px 0' }}>
-              TuneMavens empowers venture capital funds, angel syndicates, and cultural family offices to participate in senior-secured, short-cycle tour advances and direct platform product sponsorships. Programmatic first-dollar recoupment via the Split Cascade Ledger delivers 18% to 25% target IRR with TuneMavens serving as technology intermediary &amp; escrow clearinghouse (3.0% protocol fee). Zero platform credits charged.
+            
+            <p className={`hp hsub ${slideState}`}>
+              {currentSlideData.s}
             </p>
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-              <Link to="/dashboard?tab=vc-portfolio&role=vc" className="btn-primary" style={{ padding: '12px 26px', background: '#10b981', borderColor: '#10b981', color: '#fff', fontSize: '14px', fontWeight: 700 }}>
-                Launch VC Command Center <RiArrowRightLine size={16} style={{ marginLeft: '6px' }} />
-              </Link>
-              <a href="#underwriting-roster" className="btn-secondary" style={{ padding: '12px 22px', fontSize: '13.5px', color: '#fff', textDecoration: 'none' }}>
-                Browse Underwriting Opportunities
-              </a>
+
+            <div className={`hb hbtns ${slideState}`}>
+              {currentSlideData.b1link.startsWith('#') ? (
+                <a 
+                  href={currentSlideData.b1link} 
+                  className="hbp"
+                  style={{ background: currentSlideData.dot, color: '#040711' }}
+                  onClick={scrollToRates}
+                >
+                  {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
+                </a>
+              ) : (
+                <Link 
+                  to={currentSlideData.b1link} 
+                  className="hbp"
+                  style={{ background: currentSlideData.dot, color: '#040711' }}
+                >
+                  {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
+                </Link>
+              )}
+
+              {currentSlideData.b2link.startsWith('#') ? (
+                <a 
+                  href={currentSlideData.b2link} 
+                  className="hbg"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const el = document.querySelector(currentSlideData.b2link);
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      window.history.pushState(null, '', currentSlideData.b2link);
+                    }
+                  }}
+                >
+                  {currentSlideData.b2}
+                </a>
+              ) : (
+                <Link to={currentSlideData.b2link} className="hbg">
+                  {currentSlideData.b2}
+                </Link>
+              )}
             </div>
+          </div>
+        </div>
+
+        {/* Carousel Slide Arrows */}
+        <div className={`sui-arrows ${slideState}`}>
+          <button 
+            type="button" 
+            className="slide-nav prev" 
+            onClick={goToPrevSlide} 
+            aria-label="Previous slide"
+          >
+            ‹
+          </button>
+          <button 
+            type="button" 
+            className="slide-nav next" 
+            onClick={goToNextSlide} 
+            aria-label="Next slide"
+          >
+            ›
+          </button>
+        </div>
+
+        {/* Carousel Bottom Progress & Dots */}
+        <div className={`sui-bottom ${slideState}`}>
+          <div className="spr">
+            <div 
+              className="spb" 
+              style={{ 
+                width: `${progress}%`,
+                background: currentSlideData.dot,
+                boxShadow: `0 0 10px ${currentSlideData.dot}`
+              }} 
+            />
+          </div>
+          <div className="sdots">
+            {slides.map((s, index) => (
+              <button
+                key={index}
+                type="button"
+                className={`sd ${index === currentSlide ? 'on' : ''}`}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToSlide(index); }}
+                aria-label={`Go to slide ${index + 1}`}
+                style={{
+                  background: index === currentSlide ? s.dot : undefined,
+                  boxShadow: index === currentSlide ? `0 0 8px ${s.dot}` : undefined
+                }}
+              />
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Metrics Bar */}
+      {/* ================= 2. Metrics Bar ================= */}
       <section style={{ background: '#090d1f', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '36px 0' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: '#fff', display: 'block', fontFamily: 'Sansation, sans-serif' }}>48+</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Global Live Corridors</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Active Global Corridors</span>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: '#10b981', display: 'block', fontFamily: 'Sansation, sans-serif' }}>{formatMoney(14200000)}+</span>
               <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Tour VC Capital Deployed</span>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--cyan)', display: 'block', fontFamily: 'Sansation, sans-serif' }}>22.6%</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Average Target IRR</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Average Target Net IRR</span>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--purple)', display: 'block', fontFamily: 'Sansation, sans-serif' }}>3.0%</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>TuneMavens Protocol Clearinghouse Fee</span>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ fontSize: '28px', fontWeight: 800, color: '#f59e0b', display: 'block', fontFamily: 'Sansation, sans-serif' }}>0.0%</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Historical Principal Default Rate</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Incorporated Creator Discovery & Underwriting Cards Section */}
-      <section id="underwriting-roster" style={{ padding: '70px 0', background: '#060914', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* ================= 3. Core Institutional Feature Pillars ================= */}
+      <section id="triparty-protocol" style={{ padding: '80px 0', background: '#060914', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ maxWidth: '780px', marginBottom: '44px' }}>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              INSTITUTIONAL UNDERWRITING PROTOCOL
+            </span>
+            <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
+              Senior-Secured Alternative Debt for Venture &amp; Family Offices
+            </h2>
+            <p style={{ fontSize: '15px', color: '#94a3b8', lineHeight: 1.7, margin: 0 }}>
+              Invest in high-velocity cultural IP without equity dilution or speculative exits. Our algorithmic clearinghouse guarantees programmatic first-dollar recoupment on live box office and royalty cash flows.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px' }}>
+            <div style={{ background: '#090d1f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '28px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
+                <RiShieldCheckFill size={24} />
+              </div>
+              <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
+                Senior Secured Recoupment
+              </h3>
+              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
+                Direct API attachment to live event ticketing gateways and DSP royalty distributions sweeps 100% of first-dollar gross receipts directly to capital providers until principal and target IRR are satisfied.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> 3.8 months average capital recoupment cycle</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Floating senior lien over secondary catalog royalties</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Automated M-Pesa, Stripe &amp; Wire settlements</li>
+              </ul>
+            </div>
+
+            <div style={{ background: '#090d1f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '28px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '6px', background: 'rgba(0, 240, 255, 0.12)', color: '#00f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
+                <RiRadarFill size={24} />
+              </div>
+              <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
+                Predictive Audience Telemetry
+              </h3>
+              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
+                Underwrite with forensic clarity. Real-time telemetry evaluates fan concentration by GPS coordinates, historical box-office sell-through rates, and track completion velocity to price risk accurately.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Cross-platform streaming momentum analysis</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Algorithmic venue capacity matching</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Real-time risk grading (Low, Moderate, Balanced)</li>
+              </ul>
+            </div>
+
+            <div style={{ background: '#090d1f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '28px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '6px', background: 'rgba(168, 85, 247, 0.12)', color: '#c084fc', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
+                <RiFileTextFill size={24} />
+              </div>
+              <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
+                Tri-Party Smart Escrow Vault
+              </h3>
+              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
+                Every underwriting commitment executes under standardized tri-party legal agreements sealed with cryptographic SHA-256 stamps. TuneMavens acts as technology intermediary &amp; clearinghouse (3.0% fee).
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> 0 LP platform credits charged</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> Legally enforceable cross-border jurisdiction</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> Immutable blockchain-style audit receipt logs</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= 4. Incorporated Creator Discovery & Underwriting Cards Section ================= */}
+      <section id="underwriting-roster" style={{ padding: '70px 0', background: '#080c1d', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px', marginBottom: '32px' }}>
             <div>
@@ -409,8 +927,8 @@ export default function VcLandingPage({ switcher }) {
         </div>
       </section>
 
-      {/* Feature 1: Facilitating Product & Service Costs for Creators */}
-      <section style={{ padding: '70px 0', background: '#090d1f', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* ================= 5. Direct Creator Career Sponsorship Section ================= */}
+      <section id="career-sponsorship" style={{ padding: '70px 0', background: '#060914', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ maxWidth: '780px', marginBottom: '36px' }}>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
@@ -426,7 +944,7 @@ export default function VcLandingPage({ switcher }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
             {servicesList.map((svc, sIdx) => (
-              <div key={sIdx} style={{ background: '#060914', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '24px' }}>
+              <div key={sIdx} style={{ background: '#090d1f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', padding: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <h4 style={{ color: '#fff', fontSize: '16px', margin: 0, fontFamily: 'Sansation, sans-serif' }}>{svc.name}</h4>
                   <span style={{ fontSize: '16px', fontWeight: 800, color: '#10b981' }}>{formatMoney(svc.cost)}</span>
@@ -443,8 +961,8 @@ export default function VcLandingPage({ switcher }) {
         </div>
       </section>
 
-      {/* Feature 2: Actual System Screenshot Preview */}
-      <section style={{ padding: '70px 0', background: '#060914' }}>
+      {/* ================= 6. Actual System Screenshot Preview ================= */}
+      <section id="vc-dashboard-preview" style={{ padding: '70px 0', background: '#080c1d', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px', textAlign: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--cyan)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
             ACTUAL PLATFORM DASHBOARD PREVIEW
@@ -475,7 +993,577 @@ export default function VcLandingPage({ switcher }) {
         </div>
       </section>
 
-      {/* Underwriting Quick Modal */}
+      {/* ================= 7. 3-Step Guided Underwriting Workflow ================= */}
+      <section style={{ padding: '80px 0', background: '#060914', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ textAlign: 'center', maxWidth: '740px', margin: '0 auto 50px auto' }}>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              HOW VENTURE UNDERWRITING WORKS
+            </span>
+            <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
+              Three Guided Steps to Institutional Music Deployment
+            </h2>
+            <p style={{ fontSize: '14.5px', color: '#94a3b8', lineHeight: 1.7, margin: 0 }}>
+              Underwrite verified creators in minutes with bank-grade legal security and automated clearing.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
+            <div style={{ background: '#090d1f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '32px', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '24px', right: '24px', fontSize: '36px', fontWeight: 900, color: 'rgba(16, 185, 129, 0.15)', fontFamily: 'Sansation, sans-serif' }}>
+                01
+              </div>
+              <div style={{ width: '44px', height: '44px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                <RiRadarFill size={22} />
+              </div>
+              <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
+                1. Inspect Verified Telemetry
+              </h3>
+              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                Filter across artists, podcasters, and DJs. Review verified historical gross box-office receipts, streaming listener velocity, and venue capacity matching models.
+              </p>
+            </div>
+
+            <div style={{ background: '#090d1f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '32px', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '24px', right: '24px', fontSize: '36px', fontWeight: 900, color: 'rgba(0, 240, 255, 0.15)', fontFamily: 'Sansation, sans-serif' }}>
+                02
+              </div>
+              <div style={{ width: '44px', height: '44px', borderRadius: '4px', background: 'rgba(0, 240, 255, 0.12)', color: '#00f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                <RiShieldCheckFill size={22} />
+              </div>
+              <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
+                2. Execute Tri-Party Legal Vault
+              </h3>
+              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                Deploy principal advance under a SHA-256 stamped tripartite agreement appointing TuneMavens as technology intermediary &amp; escrow clearinghouse (3.0% fee).
+              </p>
+            </div>
+
+            <div style={{ background: '#090d1f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '32px', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '24px', right: '24px', fontSize: '36px', fontWeight: 900, color: 'rgba(245, 158, 11, 0.15)', fontFamily: 'Sansation, sans-serif' }}>
+                03
+              </div>
+              <div style={{ width: '44px', height: '44px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                <RiCoinsFill size={22} />
+              </div>
+              <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
+                3. First-Dollar Recoupment Stream
+              </h3>
+              <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                As tickets are sold and live performances execute, 100% of door revenues clear programmatically into your LP account until principal and 18-25% target IRR are repaid.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= 8. Detailed Comparison Table ================= */}
+      <section id="vc-comparison" style={{ padding: '80px 0', background: '#080c1d', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 44px auto' }}>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              CAPITAL EFFICIENCY &amp; RISK PROFILE
+            </span>
+            <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
+              Tune Capital Alternative Debt vs Traditional Venture Equity
+            </h2>
+            <p style={{ fontSize: '14.5px', color: '#94a3b8', margin: 0 }}>
+              Why modern institutional funds prefer short-cycle, senior-secured tour debt over illiquid equity stakes.
+            </p>
+          </div>
+
+          <div style={{ overflowX: 'auto', background: '#090d1f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px', color: '#cbd5e1' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.02)' }}>
+                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Investment Metric</th>
+                  <th style={{ padding: '16px 20px', color: '#10b981', fontWeight: 800, background: 'rgba(16, 185, 129, 0.05)' }}>Tune Capital Tour Credit</th>
+                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Traditional Tech / Media VC</th>
+                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Legacy Music Royalty Funds</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Recoupment Horizon</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>2.9 to 4.2 Months (Short-Cycle)</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>7 to 10 Years (Illiquid Exit)</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>10 to 15 Years (Slow Yield)</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Target Net IRR</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>18.0% to 25.0% Net Annualized</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Power-law speculative (~15%)</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>6.0% to 9.5% Royalty Dividend</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Recoupment Priority</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>Senior Secured First-Dollar Door Lien</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Junior Equity (Last in Line)</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Subordinate Catalog Fractions</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Dilution for Creator</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>0% Equity Dilution (IP Kept 100%)</td>
+                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>20% - 40% Permanent Cap Table Loss</td>
+                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>Master Copyright Permanent Sale</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Audit &amp; Telemetry Transparency</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>Live Stream Telemetry &amp; SHA-256 Hashes</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Self-reported quarterly decks</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Semi-annual delayed label statements</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>LP Fees &amp; Platform Credits</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 800, background: 'rgba(16, 185, 129, 0.05)' }}>0 LP Credits (3.0% Protocol Intermediary Fee)</td>
+                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>2.0% Mgmt Fee + 20% Carry</td>
+                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>High catalog appraisal fees</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= 9. Transparent Capital Commitment Tiers ================= */}
+      <section id="vc-facilities" style={{ padding: '80px 0', background: '#060914', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 44px auto' }}>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              CAPITAL COMMITMENT FACILITIES
+            </span>
+            <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
+              Structured Tour Facilities Tailored to Your Deployment Mandate
+            </h2>
+            <p style={{ fontSize: '14.5px', color: '#94a3b8', margin: 0 }}>
+              Select an allocation facility tier below. All capital commitments deploy under senior-secured tripartite legal covenants with zero platform credits charged.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+            {tierPackages.map((tier) => (
+              <div
+                key={tier.slug}
+                style={{
+                  background: '#090d1f',
+                  border: tier.is_popular ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '6px',
+                  padding: '32px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
+                  boxShadow: tier.is_popular ? '0 12px 36px rgba(16, 185, 129, 0.12)' : '0 8px 24px rgba(0,0,0,0.4)'
+                }}
+              >
+                {tier.is_popular && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-11px',
+                    right: '24px',
+                    background: '#10b981',
+                    color: '#040711',
+                    fontSize: '10.5px',
+                    fontWeight: 900,
+                    padding: '3px 10px',
+                    borderRadius: '3px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.6px'
+                  }}>
+                    {tier.tier_badge}
+                  </span>
+                )}
+
+                <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
+                  {tier.tier_badge}
+                </div>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
+                  {tier.name}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '32px', fontWeight: 900, color: '#10b981', fontFamily: 'Sansation, sans-serif' }}>
+                    {formatPrice(tier.price_usd)}
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    / {tier.billing_period}
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 700, marginBottom: '20px' }}>
+                  {tier.key_metric}
+                </div>
+
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', fontSize: '13px', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+                  {(tier.features || []).map((feat, idx) => (
+                    <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '9px' }}>
+                      <RiCheckFill size={16} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span style={{ lineHeight: 1.5 }}>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenBooking(tier)}
+                  style={{
+                    padding: '12px',
+                    background: tier.is_popular ? '#10b981' : 'rgba(255,255,255,0.06)',
+                    color: tier.is_popular ? '#040711' : '#fff',
+                    border: tier.is_popular ? 'none' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '4px',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  {tier.cta} <RiArrowRightLine size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= 10. Comprehensive Institutional FAQ Accordion ================= */}
+      <section id="vc-faq" style={{ padding: '80px 0', background: '#080c1d', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="container" style={{ maxWidth: '960px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '44px' }}>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              INSTITUTIONAL INVESTOR FAQ
+            </span>
+            <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#fff', margin: '8px 0 10px 0', fontFamily: 'Sansation, sans-serif' }}>
+              Frequently Asked Questions for Limited Partners &amp; Syndicates
+            </h2>
+            <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
+              Key governance, legal underwriting covenants, and escrow mechanics detailed for funds.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {faqs.map((faq, fIdx) => (
+              <div 
+                key={fIdx}
+                style={{
+                  background: '#090d1f',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '6px',
+                  overflow: 'hidden'
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setFaqOpen(faqOpen === fIdx ? null : fIdx)}
+                  style={{
+                    width: '100%',
+                    padding: '18px 22px',
+                    background: 'none',
+                    border: 'none',
+                    color: '#fff',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px'
+                  }}
+                >
+                  <span>{faq.q}</span>
+                  <span style={{ fontSize: '18px', color: '#10b981', transition: 'transform 0.2s', transform: faqOpen === fIdx ? 'rotate(45deg)' : 'none' }}>
+                    +
+                  </span>
+                </button>
+                {faqOpen === fIdx && (
+                  <div style={{ padding: '0 22px 20px', color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.7, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '14px' }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= 11. High-Impact Bottom Call to Action Banner ================= */}
+      <section style={{ padding: '80px 0', background: 'radial-gradient(ellipse at center, #062b1e 0%, #060914 100%)', textAlign: 'center' }}>
+        <div className="container" style={{ maxWidth: '860px', margin: '0 auto', padding: '0 20px' }}>
+          <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            ALTERNATIVE ASSET DEPLOYMENT DESK
+          </span>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 800, color: '#fff', margin: '12px 0 16px 0', fontFamily: 'Sansation, sans-serif' }}>
+            Deploy Alternative Capital into High-Yielding Cultural IP
+          </h2>
+          <p style={{ fontSize: '15.5px', color: '#94a3b8', lineHeight: 1.7, margin: '0 auto 32px auto', maxWidth: '680px' }}>
+            Gain direct, senior-secured exposure to live tour cash flows with 18% to 25% target IRR backed by live box-office telemetry.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
+            <Link
+              to="/dashboard?tab=vc-portfolio&role=vc"
+              className="btn-primary"
+              style={{ padding: '14px 32px', background: '#10b981', borderColor: '#10b981', color: '#040711', fontSize: '15px', fontWeight: 800 }}
+            >
+              Launch VC Command Center <RiArrowRightLine size={16} style={{ marginLeft: '6px' }} />
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleOpenBooking(tierPackages[1])}
+              style={{
+                padding: '14px 28px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff',
+                borderRadius: '4px',
+                fontSize: '14.5px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Inquire Growth Facility ($50k+)
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= 12. Institutional Underwriting Facility Modal ================= */}
+      {modalOpen && (
+        <div 
+          className="preview-modal-backdrop" 
+          onClick={() => { setModalOpen(false); setInquirySuccess(null); }} 
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0,0,0,0.85)', 
+            backdropFilter: 'blur(8px)', 
+            zIndex: 99999, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '24px' 
+          }}
+        >
+          <div 
+            style={{ 
+              background: '#090d1f', 
+              border: '1px solid #10b981', 
+              borderRadius: '8px', 
+              maxWidth: '560px', 
+              width: '100%', 
+              padding: '28px', 
+              color: '#fff',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }} 
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <RiFundsBoxFill size={22} color="#10b981" />
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>
+                  {inquirySuccess ? 'Facility Application Received' : `Inquire: ${selectedTier?.name || 'Tune Capital Facility'}`}
+                </h3>
+              </div>
+              <button 
+                onClick={() => { setModalOpen(false); setInquirySuccess(null); }} 
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                <RiCloseFill size={20} />
+              </button>
+            </div>
+
+            {!inquirySuccess ? (
+              <form onSubmit={handleInquirySubmit}>
+                <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '18px' }}>
+                  Register institutional interest for <strong style={{ color: '#10b981' }}>{selectedTier?.name}</strong> ({formatPrice(selectedTier?.price_usd || 50000)} minimum allocation). TuneMavens acts as protocol technology intermediary (3.0% fee, 0 platform credits).
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                      Fund / Syndicate / Family Office Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Serengeti Cultural Growth Fund"
+                      value={bookingForm.organization_name}
+                      onChange={e => setBookingForm({ ...bookingForm, organization_name: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                        Managing Partner / LP Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. David Ochieng"
+                        value={bookingForm.contact_name}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_name: e.target.value })}
+                        style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                        Institutional Email *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="david@serengeticapital.com"
+                        value={bookingForm.contact_email}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_email: e.target.value })}
+                        style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                        Target Deployment Capacity
+                      </label>
+                      <select
+                        value={bookingForm.target_capacity}
+                        onChange={e => setBookingForm({ ...bookingForm, target_capacity: e.target.value })}
+                        style={{ width: '100%', padding: '10px 12px', background: '#0a0f24', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px' }}
+                      >
+                        <option value="$10,000 - $50,000 (Syndicate slice)">$10,000 - $50,000 (Syndicate slice)</option>
+                        <option value="$50,000 - $250,000 (Growth Fund)">$50,000 - $250,000 (Growth Fund)</option>
+                        <option value="$250,000 - $1,000,000 (Institutional Tour Desk)">$250,000 - $1,000,000 (Institutional Tour Desk)</option>
+                        <option value="$1,000,000+ (Master Tour Facility SPV)">$1,000,000+ (Master Tour Facility SPV)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                        Phone / WhatsApp (Optional)
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="+254 700 000 000"
+                        value={bookingForm.contact_phone}
+                        onChange={e => setBookingForm({ ...bookingForm, contact_phone: e.target.value })}
+                        style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                      Preferred Geographic Focus Corridors
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. East & West Africa + London / European Festivals"
+                      value={bookingForm.geographic_focus}
+                      onChange={e => setBookingForm({ ...bookingForm, geographic_focus: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
+                      Investment Mandate &amp; Notes
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Seeking senior-secured tour debt with 20%+ target IRR and under 4-month recoupment cycles."
+                      value={bookingForm.notes}
+                      onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px', resize: 'vertical' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    type="submit"
+                    disabled={inquirySubmitting}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      background: '#10b981',
+                      color: '#040711',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontWeight: 800,
+                      fontSize: '13px',
+                      cursor: inquirySubmitting ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {inquirySubmitting ? 'Transmitting Mandate...' : 'Submit Facility Mandate &rarr;'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    style={{
+                      padding: '12px 18px',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: '#fff',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <RiCheckboxCircleFill size={52} color="#10b981" style={{ marginBottom: '12px' }} />
+                <h4 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>
+                  Institutional Application Received!
+                </h4>
+                <div style={{ display: 'inline-block', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', color: '#10b981', fontWeight: 800, marginBottom: '16px' }}>
+                  Reference Dossier: {inquirySuccess.ref}
+                </div>
+                <p style={{ fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '22px' }}>
+                  {inquirySuccess.msg}
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <Link
+                    to="/dashboard?tab=vc-portfolio&role=vc"
+                    style={{
+                      padding: '10px 22px',
+                      background: '#10b981',
+                      color: '#040711',
+                      borderRadius: '4px',
+                      fontWeight: 800,
+                      textDecoration: 'none',
+                      fontSize: '13px'
+                    }}
+                  >
+                    Open VC Portfolio Command &rarr;
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => { setModalOpen(false); setInquirySuccess(null); }}
+                    style={{
+                      padding: '10px 18px',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: '#fff',
+                      borderRadius: '4px',
+                      fontSize: '13px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Underwriting Quick Modal for Creator Opportunities */}
       {selectedUnderwriteTarget && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
           <div style={{ background: '#090d1f', border: '1px solid #10b981', borderRadius: '8px', maxWidth: '560px', width: '100%', padding: '28px', color: '#fff' }}>

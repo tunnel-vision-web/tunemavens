@@ -2334,3 +2334,50 @@ Allows creators and administrators to update or regenerate custom headers via na
      - `VcLandingPage.jsx` (`vc_dashboard_actual`)
      - `AffiliatesView.jsx` (`affiliate_dashboard_actual`)
    - Every screenshot dynamically updates between English and Kiswahili according to the active user language selection and opens in a high-resolution modal upon click.
+
+### 9.44.32 Podcaster & VC Interactive HERO Carousel and Comprehensive Conversion Landing Architecture
+1. **Interactive HERO Carousel Architecture for Podcasters (`PodcasterLandingPage.jsx`)**:
+   - Replaced static hero banner with an interactive 4-slide carousel using standard `RoleLandingShared.css` infrastructure (`role-hero-wrapper`, `bgs`, `bg`, `bgo`, `role-hero-stage`, `hcont`, `he hbadge in`, `ht htitle`, `hp hsub`, `hb hbtns`, `sui-arrows`, `sui-bottom`, `spr`, `spb`, `sdots`, `sd on`):
+     - **Slide 1 (`podcaster_hero_1.png`)**: AI Speech Studio & Broadcast Mastering (-16 LUFS voice normalization, EBU R128 compliance, multi-track studio ingestion, smart noise reduction, interactive chapter markers).
+     - **Slide 2 (`podcaster_hero_2.png`)**: Dynamic Ad Insertion (DAI) & Global RSS (server-side targeted audio ad flight stitching for pre/mid/post-rolls, 85% revenue retention, 0% cut on direct sponsor deals).
+     - **Slide 3 (`podcaster_hero_3.png`)**: Show Media Kit & High-Profile Guest Booking (verifiable EPKs with live audited download metrics, audience completion rates, and single-source CPM rate cards).
+     - **Slide 4 (`podcaster_hero_4.png`)**: Mid-Episode Fan Tipping & Split Cascade (smart contract split agreements distributing listener tips and corporate sponsor revenue to host, co-hosts, and audio engineers via M-Pesa / Bank).
+   - Features 12-second progress bar animation, smooth out/in transitions, dot and arrow navigation, and hover contrast effects.
+
+2. **Comprehensive Podcaster Opt-In & Conversion Architecture**:
+   - **4-Stat Metrics Ribbon**: 185K+ weekly show downloads, 100% audited dynamic ad flight delivery, -16 LUFS broadcast voice normalization, 0% platform subscription debt.
+   - **3 Core Feature Pillars**: AI Speech Mastering, Dynamic Ad Insertion (DAI), and Automated Co-Host Split Cascade.
+   - **12 Authoritative Verified Podcasts Grid**: Interactive category filters ('Music Business', 'Tech, VC & Startups', 'Culture & Hip-Hop', 'Film Sync & Media', 'Culture & Nightlife', 'Cultural Audio & Heritage'), 3x4 card grid, live streaming into `TuneStream`, verified EPK modal trigger, and direct fan tipping with Split Cascade toast notification.
+   - **Single Source of Truth Ad Rates Breakdown**: Authoritative ad flight rate cards with transparent CPM pricing and direct studio booking links.
+   - **Actual Platform Dashboard Preview**: Localized `creator_dashboard_actual_en.png` and `creator_dashboard_actual_sw.png` with click-to-zoom modal and dynamic language indicator.
+   - **3-Step Guided Workflow**: "From Raw Voice to Monetized Show" (Ingest & Auto-Master -> Configure Ad Slots & EPK -> Syndicate Everywhere & Collect Instant Splits).
+   - **Side-by-Side Comparison Matrix**: Deep comparison between TunePod vs Legacy Hosts (Buzzsprout, Libsyn, Spotify for Podcasters) covering storage, DAI, co-host splits, loudness standards, live EPK, and subscription debt.
+   - **Transparent Tier Packages & Opt-In Modal**:
+     - Starter Cast Pool ($0 Free, 50 credits, standard RSS feed)
+     - Studio Pro Host ($19 one-time reload, 250 credits, 25 hrs mastering, dynamic ad engine, verified EPK, co-host split cascade)
+     - Syndicate & Network Load ($59 one-time reload, 850 credits, unlimited shows, multi-host access, priority DAI flight bidding)
+   - **Interactive Show Onboarding Modal**: Direct opt-in capture with show name, host name, email, phone, category, RSS feed migration URL, and download tiers submitting to `/api/roles/podcaster/inquiries` with fallback confirmation.
+   - **Comprehensive FAQ Accordion**: 5 deep technical answers explaining DAI stitching, RSS 301 migration, Split Cascade payouts, LUFS standards, and credit expiration terms.
+
+3. **Interactive HERO Carousel Architecture for Institutional VCs (`VcLandingPage.jsx`)**:
+   - Upgraded to a 4-slide interactive hero carousel matching standard timings, controls, and accessibility:
+     - **Slide 1 (`vc_hero_1.png`)**: Senior Tour Debt & Alternative Music Assets (short-cycle live performance facilities and tour advances backed by verified audience density and gross box office receipts across 48+ global corridors).
+     - **Slide 2 (`vc_hero_2.png`)**: Audience Velocity & Box Office Telemetry (data-driven underwriting using cryptographically certified audience density, historical ticket sales, Spotify velocity, and multi-track catalog retention).
+     - **Slide 3 (`vc_hero_3.png`)**: Tripartite Legal Vault & Protocol Intermediary (legally vetted tripartite agreements between Investor, Creator, and TuneMavens at 3.0% protocol clearinghouse fee with 0% platform credit lock-in).
+     - **Slide 4 (`vc_hero_4.png`)**: Creator Career Tooling & Sponsorship Facility (sponsoring creator operational tooling from DSP distribution to live tour backlines secured by first-dollar recoupment liens on incoming royalties).
+
+4. **Comprehensive Institutional VC Underwriting & Onboarding Architecture**:
+   - **Institutional Metrics Bar**: 48+ active global corridors, $14.2M+ tour VC capital deployed, 22.6% average target net IRR (3.8-month recoupment cycle), 0.0% historical principal default rate.
+   - **Core Institutional Feature Pillars**: Senior Secured First-Dollar Recoupment, Predictive Audience Telemetry, and Tri-Party Smart Escrow Vault.
+   - **Active Opportunities & Tour Facilities Radar**: Filterable radar cards across recording artists, podcasters, and touring DJs with audience volume, historical box office, advance facility, target IRR, and 1-click execution.
+   - **Direct Creator Career Sponsorship Facility**: Structured platform tooling catalog (DSP Distribution, EPK Pro, AI Mastering, SyncMavens Representation, Superfan CRM, Live Backline Advance) with programmatic 1.20x-1.35x recoupment waterfalls.
+   - **Actual System Screenshot Preview**: Localized `vc_dashboard_actual_en.png` and `vc_dashboard_actual_sw.png` with click-to-zoom modal and dynamic language indicator.
+   - **3-Step Guided Underwriting Workflow**: "Three Guided Steps to Institutional Music Deployment" (Inspect Verified Telemetry -> Execute Tri-Party Legal Vault -> First-Dollar Recoupment Stream).
+   - **Comprehensive Comparison Matrix**: "Tune Capital Alternative Tour Credit vs Traditional Venture Equity & Royalty Funds" detailing recoupment horizon, target net IRR, priority liens, creator dilution, and audit transparency.
+   - **Structured Capital Commitment Facilities & Onboarding Modal**:
+     - Angel Syndicate Facility ($10,000 - $50,000 co-investment pool, 20-22% target IRR)
+     - Cultural Growth Fund ($50,000 - $250,000 deployment, multi-creator tour portfolio, 22-25% target IRR)
+     - Institutional LP Tour Desk ($250,000+ bespoke credit facility, SPV structuring, 24-26% target IRR)
+   - **Institutional Investor Mandate Modal**: Fund name, managing partner name, institutional email, deployment capacity, and corridor focus submitted to `/api/roles/vc/inquiries` with fallback confirmation.
+   - **Institutional FAQ Accordion**: 5 comprehensive answers covering senior-secured first-dollar liens, TuneMavens' role as technology intermediary, force majeure event insurance, LP zero-credit exemption, and fractional syndication.
+
