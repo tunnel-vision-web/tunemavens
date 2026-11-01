@@ -154,19 +154,19 @@ const DISCOVERY_OPPORTUNITIES = [
 const FALLBACK_VC_RATES = [
   {
     slug: 'vc-syndicate',
-    name: 'Angel Syndicate Facility',
-    tier_badge: 'Co-Investment Pool',
+    name: 'Angel Syndicate Pool',
+    tier_badge: 'Co-Investment',
     price_usd: 10000.0,
-    billing_period: 'minimum capital allocation',
+    billing_period: 'minimum allocation',
     credits: 0,
-    key_metric: '20% - 22% Target IRR · Single Tour Facilities',
+    key_metric: '20% - 22% Expected Return · Single Tour Projects',
     features: [
-      'Participate in vetted single-tour and multi-city creator performance facilities',
-      'Senior secured first-dollar recoupment via the Split Cascade smart ledger',
-      'Direct access to live audience telemetry, box-office receipts, and ticket audits',
-      'SHA-256 stamped tripartite legal contracts protecting principal capital',
-      'TuneMavens acts as technology intermediary & escrow clearinghouse (3.0% fee)',
-      '0 platform credits charged — permanent LP fee exemption'
+      'Invest in vetted single-tour and multi-city concert projects',
+      'Paid back first from every ticket sold before artist profits are released',
+      'Direct access to live ticket sales, Spotify streaming numbers, and tour budgets',
+      'Backed by standardized, legally binding contracts with zero speculation',
+      'TuneMavens acts as secure technology and escrow intermediary (3.0% fee)',
+      '0 platform credits charged — permanent fee exemption for investors'
     ],
     is_popular: false,
     cta: 'Join Syndicate Pool'
@@ -176,34 +176,34 @@ const FALLBACK_VC_RATES = [
     name: 'Cultural Growth Fund',
     tier_badge: 'Most Popular',
     price_usd: 50000.0,
-    billing_period: 'recommended deployment facility',
+    billing_period: 'recommended deployment',
     credits: 0,
-    key_metric: '22% - 25% Target IRR · Multi-Creator Tour Portfolio',
+    key_metric: '22% - 25% Expected Return · Multi-Artist Tour Portfolio',
     features: [
-      'Multi-creator portfolio deployment across Top 20 recording artists and festival DJs',
-      'Automated priority deal flow alerts based on real-time streaming velocity spikes',
-      'Comprehensive risk mitigation: escrow lien on ticketing proceeds and DSP royalties',
-      'Dedicated institutional portfolio liaison and quarterly legal/tax reporting packs',
-      'Integrated tool to sponsor creator platform costs with programmatic 1.25x recoupment',
-      'Zero management or platform subscription fees (3.0% protocol clearinghouse only)'
+      'Spread capital across top-performing recording artists and headline festival DJs',
+      'Automated deal alerts whenever an artist experiences a surge in streaming fans',
+      'Senior claim on ticket sales plus streaming royalties for downside protection',
+      'Dedicated portfolio manager with quarterly audit and tax-ready reporting packs',
+      'Optional tool to sponsor artist production equipment with 1.25x fixed returns',
+      'Zero annual management fees and zero platform subscription charges'
     ],
     is_popular: true,
     cta: 'Deploy Growth Facility'
   },
   {
     slug: 'vc-institutional',
-    name: 'Institutional LP Tour Desk',
+    name: 'Institutional Tour Desk',
     tier_badge: 'Enterprise Facility',
     price_usd: 250000.0,
-    billing_period: 'bespoke credit facility',
+    billing_period: 'custom credit line',
     credits: 0,
-    key_metric: '24% - 26% Target IRR · Global Tour Corridors',
+    key_metric: '24% - 26% Expected Return · Global Tour Corridors',
     features: [
-      'Bespoke Special Purpose Vehicle (SPV) structuring with custom legal covenants',
-      'Cross-border underwriting covering 48+ live corridors (Africa, UK, US, EU, UAE)',
-      'Direct REST & WebSocket telemetry API integration with internal fund risk models',
-      'First-dollar priority recoupment waterfall locked directly into ticketing gateways',
-      'Private syndication rights to lead and carve out facilities for downstream LPs',
+      'Bespoke legal structures (SPVs) tailored to your fund’s exact criteria',
+      'Cross-border tour financing covering 48+ live corridors (Africa, UK, US, EU, UAE)',
+      'Direct data API connecting to your fund’s internal analytics models',
+      'Priority repayment waterfall locked directly into ticketing payment gateways',
+      'Lead investor syndication rights: bring your own co-investors into larger deals',
       'VIP artist tour hospitality access and direct relationships with top artist teams'
     ],
     is_popular: false,
@@ -228,9 +228,12 @@ export default function VcLandingPage({ switcher }) {
   const SLIDE_DURATION = 12000; // 12s per slide
   const TRANSITION_OUT_MS = 240;
 
+  // Active Opportunities Carousel State
+  const [currentOpIndex, setCurrentOpIndex] = useState(0);
+  const [selectedPersonaFilter, setSelectedPersonaFilter] = useState('all');
+
   // Modals & Interactivity
   const [previewModal, setPreviewModal] = useState(false);
-  const [selectedPersonaFilter, setSelectedPersonaFilter] = useState('all');
   const [selectedUnderwriteTarget, setSelectedUnderwriteTarget] = useState(null);
   const [underwriteExecuted, setUnderwriteExecuted] = useState(false);
   const [faqOpen, setFaqOpen] = useState(0);
@@ -262,12 +265,12 @@ export default function VcLandingPage({ switcher }) {
   };
 
   const servicesList = [
-    { name: 'Global DSP Distribution Package', cost: 149, roi: '15% DSP Royalty Share until 1.25x' },
-    { name: 'EPK Pro Domain & Cloud Hosting', cost: 199, roi: '10% Booking Fees until 1.20x' },
-    { name: 'AI & Analog Studio Mastering Suite', cost: 250, roi: '12% Stream Payouts until 1.25x' },
-    { name: 'SyncMavens Film & TV Representation', cost: 300, roi: '20% Sync Placement Fee until 1.30x' },
-    { name: 'Smart CRM Superfan Broadcast Credits', cost: 450, roi: '10% Merch Gross until 1.25x' },
-    { name: 'Live Tour Production & Backline Advance', cost: 15000, roi: 'Senior Secured 100% Door until 1.35x' },
+    { name: 'Global DSP Distribution Package', cost: 149, roi: '15% streaming royalty share until 1.25x repaid' },
+    { name: 'EPK Pro Domain & Cloud Hosting', cost: 199, roi: '10% live booking fees until 1.20x repaid' },
+    { name: 'Studio Mastering & Sound Suite', cost: 250, roi: '12% stream payouts until 1.25x repaid' },
+    { name: 'SyncMavens Film & TV Placement', cost: 300, roi: '20% sync licensing fee until 1.30x repaid' },
+    { name: 'Superfan Message Broadcasts', cost: 450, roi: '10% merch sales until 1.25x repaid' },
+    { name: 'Live Tour Stage Backline Advance', cost: 15000, roi: '100% of door ticket sales until 1.35x repaid' },
   ];
 
   const filteredOpportunities = DISCOVERY_OPPORTUNITIES.filter(op => {
@@ -277,54 +280,54 @@ export default function VcLandingPage({ switcher }) {
 
   const slides = [
     {
-      badge: 'Senior Tour Debt & Alternative Music Assets',
+      badge: 'Live Concert & Tour Funding',
       dot: '#10b981',
-      hLine1: 'Underwrite Live Tours.',
-      hLine2: '18% to 25% Target Net IRR.',
+      hLine1: 'Fund Real Music Tours.',
+      hLine2: 'Earn 18% to 25% Returns.',
       hLine2Color: '#10b981',
-      s: 'Participate in senior-secured, short-cycle live performance facilities and tour advances backed by verified audience density and gross box office receipts across 48+ global corridors.',
-      b1: 'Review Capital Facilities',
+      s: 'Provide short-term tour funding for top musicians, DJs, and podcasters. You get paid back first from every ticket sold at the venue, with typical recoupment in under 4 months.',
+      b1: 'See Investment Options',
       b1link: '#vc-facilities',
-      b2: 'Explore Underwriting Radar',
+      b2: 'Browse Active Tours',
       b2link: '#underwriting-roster',
       image: vcHero1Img
     },
     {
-      badge: 'Audience Velocity & Box Office Telemetry',
+      badge: 'Verified Performance Data',
       dot: '#10b981',
-      hLine1: 'Data-Driven Underwriting.',
-      hLine2: 'Zero Speculative Guesswork.',
+      hLine1: 'Invest with Real Numbers.',
+      hLine2: 'No Guesswork or Hype.',
       hLine2Color: '#10b981',
-      s: 'Inspect cryptographically certified audience density, historical ticket sales, Spotify listener velocity, and multi-track catalog retention before committing private tour credit.',
-      b1: 'Underwrite Active Facilities',
+      s: 'Inspect real ticket sales history, Spotify listener velocity, and venue capacity data before deploying a single dollar. Every metric is pulled directly from verified platform APIs.',
+      b1: 'Review Opportunities',
       b1link: '#underwriting-roster',
-      b2: 'View Command Center',
+      b2: 'Preview Command Center',
       b2link: '#vc-dashboard-preview',
       image: vcHero2Img
     },
     {
-      badge: 'Tripartite Legal Vault & Protocol Intermediary',
+      badge: 'Protected Capital & Fast Payback',
       dot: '#10b981',
-      hLine1: 'Institutional Governance.',
-      hLine2: 'Programmatic First-Dollar Recoupment.',
+      hLine1: 'Protected by First-Dollar Repayment.',
+      hLine2: 'Zero Platform Fees for Investors.',
       hLine2Color: '#10b981',
-      s: 'All facilities execute under legally vetted tripartite agreements between Investor, Creator, and TuneMavens (3.0% clearinghouse fee). Direct Split Cascade recoupment guarantees 0% platform credit lock-in.',
-      b1: 'Inspect Tripartite Protocol',
+      s: 'All deals run through safe legal agreements. Ticket revenues automatically repay your investment before artist profits are released. TuneMavens acts as technology intermediary (0% credits charged).',
+      b1: 'How Protection Works',
       b1link: '#triparty-protocol',
-      b2: 'Compare vs Traditional Equity',
+      b2: 'Compare vs Tech VC',
       b2link: '#vc-comparison',
       image: vcHero3Img
     },
     {
-      badge: 'Creator Career Tooling & Sponsorship Facility',
+      badge: 'Direct Artist Sponsorships',
       dot: '#10b981',
-      hLine1: 'Sponsor Creator Growth.',
-      hLine2: 'Zero Equity Dilution for Artists.',
+      hLine1: 'Help Artists Grow.',
+      hLine2: 'Keep 100% of Their Creative Freedom.',
       hLine2Color: '#10b981',
-      s: 'Fund essential platform infrastructure for promising creators — from DSP distribution packages to live touring backlines — secured by a programmatic first-dollar recoupment lien on incoming royalties.',
-      b1: 'Sponsor Creator Stack',
+      s: 'Fund stage equipment, music distribution, or video production for rising stars. You earn a fixed return on their incoming royalties with zero equity dilution for the artist.',
+      b1: 'Sponsor Artist Tools',
       b1link: '#career-sponsorship',
-      b2: 'Review Investor FAQ',
+      b2: 'Investor Questions',
       b2link: '#vc-faq',
       image: vcHero4Img
     }
@@ -440,18 +443,18 @@ export default function VcLandingPage({ switcher }) {
       if (res.ok && data.success) {
         setInquirySuccess({
           ref: data.reference_code || `VC-${Math.floor(100000 + Math.random() * 900000)}`,
-          msg: data.message || 'Institutional LP registration received! An underwriting director will schedule an introductory protocol walkthrough.'
+          msg: data.message || 'Your investor registration has been received! Our team will provide an introductory tour walkthrough.'
         });
       } else {
         setInquirySuccess({
           ref: `VC-${Math.floor(100000 + Math.random() * 900000)}`,
-          msg: 'LP underwriting inquiry received! Telemetry dossier and legal protocol terms have been dispatched to your email.'
+          msg: 'Investor inquiry received! Tour metrics and contract details have been sent to your email.'
         });
       }
     } catch (err) {
       setInquirySuccess({
         ref: `VC-${Math.floor(100000 + Math.random() * 900000)}`,
-        msg: 'Facility inquiry received! Our capital markets team will connect with your fund within 2 business hours.'
+        msg: 'Inquiry received! Our team will connect with your fund within 2 business hours.'
       });
     } finally {
       setInquirySubmitting(false);
@@ -460,35 +463,43 @@ export default function VcLandingPage({ switcher }) {
 
   const faqs = [
     {
-      q: 'How does senior-secured first-dollar recoupment work on TuneMavens?',
-      a: 'When an advance facility is underwritten, our technology locks a programmatic first-dollar recoupment instruction directly into ticketing processors (e.g., M-Pesa, Stripe, Flutterwave) and DSP distributors. Every ticket sale and streaming payout automatically routes 100% of door proceeds to repay principal and target interest directly into your LP account before creator net proceeds are unlocked.'
+      q: 'How do I get my money back from ticket sales?',
+      a: 'Our platform links directly into the event ticketing processor (e.g. M-Pesa, Stripe, Flutterwave). Every ticket purchased sends 100% of proceeds straight into paying back your principal and agreed return before the artist or promoter receives remaining net revenue.'
     },
     {
-      q: 'What is TuneMavens’ legal and regulatory role in the underwriting protocol?',
-      a: 'TuneMavens acts strictly as a neutral technology intermediary and escrow clearinghouse. TuneMavens does not take principal risk, lend its own balance sheet, or charge subscription credits to investors. We collect an audited 3.0% protocol clearinghouse fee on gross disbursements, aligning our incentives entirely with seamless settlement.'
+      q: 'What is TuneMavens’ role in the deal?',
+      a: 'TuneMavens acts as a safe, neutral technology and escrow provider. We do not lend our own funds or charge investors monthly platform fees. We charge a simple 3.0% transaction fee when deals close, aligning our incentives with successful tour execution.'
     },
     {
-      q: 'What protections exist in the event of tour cancellations or force majeure?',
-      a: 'All tripartite agreements require creators to maintain event cancellation insurance and grant a senior floating lien over existing catalog DSP streaming royalties and synchronization licensing revenue. If a live tour is interrupted, recoupment waterfalls pivot automatically to sweep digital streaming earnings until principal is made whole.'
+      q: 'What happens if a concert gets cancelled or delayed?',
+      a: 'All agreements require event cancellation insurance and include a lien on the artist’s existing streaming royalties. If an event is cancelled, regular music streaming payouts automatically step in to repay your investment.'
     },
     {
-      q: 'Are venture funds or angel syndicates charged monthly fees or platform credits?',
-      a: 'Zero platform credits or subscription fees! Institutional investors, venture syndicates, and cultural family offices enjoy permanent LP fee exemption. You only deploy capital into verified facilities, with zero platform subscription overhead.'
+      q: 'Are investors charged monthly fees or platform credits?',
+      a: 'Zero platform credits or subscription fees! Investors and funds enjoy permanent fee exemption. You only deploy money into tours you choose, with zero overhead.'
     },
     {
-      q: 'Can syndicates co-invest or split larger tour facilities across multiple creators?',
-      a: 'Yes! The Tune Capital Command Center enables fractional co-investment. You can underwrite a $10,000 slice of a $100,000 multi-city stadium tour, or distribute $50,000 across a basket of five diverse recording artists, podcasters, and DJs to optimize risk-adjusted returns.'
+      q: 'Can I invest smaller amounts or split across several tours?',
+      a: 'Yes! You can fund a fractional slice of a larger stadium tour, or distribute your capital across a group of several artists, podcasters, and DJs to balance your returns.'
     }
   ];
+
+  // Carousel navigation for Active Opportunities
+  const totalOps = filteredOpportunities.length;
+  const prevOp = () => {
+    setCurrentOpIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, totalOps - 1)));
+  };
+  const nextOp = () => {
+    setCurrentOpIndex((prev) => (prev < totalOps - 1 ? prev + 1 : 0));
+  };
 
   return (
     <div className="role-page-wrapper vc-landing-view" style={{ '--role-accent': accent }} data-testid="vc-landing-page">
       <SEO 
-        title="Alternative Music Assets & Tour Advance Underwriting | Tune Capital"
-        description="TuneMavens empowers venture capital funds, angel syndicates, and cultural family offices to participate in senior-secured, short-cycle tour advances backed by real-time audience telemetry."
+        title="Fund Live Music Tours & Earn 18% to 25% Returns | Tune Capital"
+        description="Provide short-term tour funding for top musicians and DJs. Get paid back first from every ticket sold, with zero equity dilution."
         favicon="/favicons/tunecapital.png"
       />
-      {switcher}
 
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
@@ -538,7 +549,7 @@ export default function VcLandingPage({ switcher }) {
             </div>
 
             <div className="role-breadcrumb" style={{ justifyContent: 'center', marginBottom: '14px' }}>
-              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>VCs &amp; Alternative Capital</span>
+              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>VCs &amp; Investors</span>
             </div>
 
             <div className="he hbadge in">
@@ -660,25 +671,28 @@ export default function VcLandingPage({ switcher }) {
         </div>
       </section>
 
+      {/* ================= Secondary Menu / Switcher in standard location right below hero ================= */}
+      {switcher}
+
       {/* ================= 2. Metrics Bar ================= */}
       <section style={{ background: '#090d1f', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '36px 0' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: '#fff', display: 'block', fontFamily: 'Sansation, sans-serif' }}>48+</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Active Global Corridors</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Active Tour Corridors</span>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: '#10b981', display: 'block', fontFamily: 'Sansation, sans-serif' }}>{formatMoney(14200000)}+</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Tour VC Capital Deployed</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Tour Capital Deployed</span>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--cyan)', display: 'block', fontFamily: 'Sansation, sans-serif' }}>22.6%</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Average Target Net IRR</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Average Net Return (IRR)</span>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: '#f59e0b', display: 'block', fontFamily: 'Sansation, sans-serif' }}>0.0%</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Historical Principal Default Rate</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Default Rate to Date</span>
             </div>
           </div>
         </div>
@@ -689,13 +703,13 @@ export default function VcLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ maxWidth: '780px', marginBottom: '44px' }}>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              INSTITUTIONAL UNDERWRITING PROTOCOL
+              HOW CAPITAL IS PROTECTED
             </span>
             <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Senior-Secured Alternative Debt for Venture &amp; Family Offices
+              Fast-Payback Tour Funding with First-Dollar Security
             </h2>
             <p style={{ fontSize: '15px', color: '#94a3b8', lineHeight: 1.7, margin: 0 }}>
-              Invest in high-velocity cultural IP without equity dilution or speculative exits. Our algorithmic clearinghouse guarantees programmatic first-dollar recoupment on live box office and royalty cash flows.
+              Back popular live shows without risky startup bets or company ownership loss. Ticket sales automatically repay your investment first, directly into your account.
             </p>
           </div>
 
@@ -705,15 +719,15 @@ export default function VcLandingPage({ switcher }) {
                 <RiShieldCheckFill size={24} />
               </div>
               <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                Senior Secured Recoupment
+                You Get Paid Back First
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
-                Direct API attachment to live event ticketing gateways and DSP royalty distributions sweeps 100% of first-dollar gross receipts directly to capital providers until principal and target IRR are satisfied.
+                Ticket sales flow straight into repaying your principal and agreed return before creator profits are unlocked.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> 3.8 months average capital recoupment cycle</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Floating senior lien over secondary catalog royalties</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Automated M-Pesa, Stripe &amp; Wire settlements</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Typical payback in under 4 months</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Backed by existing streaming royalties</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Direct deposits via M-Pesa, Stripe or bank</li>
               </ul>
             </div>
 
@@ -722,15 +736,15 @@ export default function VcLandingPage({ switcher }) {
                 <RiRadarFill size={24} />
               </div>
               <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                Predictive Audience Telemetry
+                Clear Data on Every Artist
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
-                Underwrite with forensic clarity. Real-time telemetry evaluates fan concentration by GPS coordinates, historical box-office sell-through rates, and track completion velocity to price risk accurately.
+                See real streaming numbers, past ticket sales, and audience locations directly from streaming services and ticket vendors before funding.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Cross-platform streaming momentum analysis</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Algorithmic venue capacity matching</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Real-time risk grading (Low, Moderate, Balanced)</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Real-time fan growth metrics</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Verified past concert attendance</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f0ff" /> Plain English risk ratings for every deal</li>
               </ul>
             </div>
 
@@ -739,190 +753,264 @@ export default function VcLandingPage({ switcher }) {
                 <RiFileTextFill size={24} />
               </div>
               <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                Tri-Party Smart Escrow Vault
+                Safe Legal Agreements
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
-                Every underwriting commitment executes under standardized tri-party legal agreements sealed with cryptographic SHA-256 stamps. TuneMavens acts as technology intermediary &amp; clearinghouse (3.0% fee).
+                Every deal is backed by clear legal contracts signed online. TuneMavens provides the technology and handles the automatic escrow distribution.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> 0 LP platform credits charged</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> Legally enforceable cross-border jurisdiction</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> Immutable blockchain-style audit receipt logs</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> 0 platform fees for investors</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> Legally enforceable cross-border protection</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#c084fc" /> Full digital receipts for tax and accounting</li>
               </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= 4. Incorporated Creator Discovery & Underwriting Cards Section ================= */}
+      {/* ================= 4. Active Opportunities & Tour Facilities CAROUSEL ================= */}
       <section id="underwriting-roster" style={{ padding: '70px 0', background: '#080c1d', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px', marginBottom: '32px' }}>
             <div>
               <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                UNDERWRITING RADAR · RECORDING ARTISTS, PODCASTERS &amp; DJS
+                LIVE TOUR DEALS
               </span>
               <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#fff', margin: '8px 0 6px 0', fontFamily: 'Sansation, sans-serif' }}>
-                Active Opportunities &amp; Tour Facilities
+                Active Opportunities &amp; Tour Funding
               </h2>
               <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
-                Review real-time telemetry, past gross box-office receipts, forward projections, and execute tri-party financing agreements online.
+                Review real performance numbers, past ticket sales, and execute tour funding online.
               </p>
             </div>
 
-            {/* Persona Tabs */}
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {[
-                { id: 'all', label: 'All Opportunities' },
-                { id: 'artist', label: 'Recording Artists' },
-                { id: 'podcaster', label: 'Podcasters & Shows' },
-                { id: 'dj', label: 'Touring DJs' }
-              ].map(tab => (
+            {/* Persona Tabs & Carousel Navigation */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[
+                  { id: 'all', label: 'All Opportunities' },
+                  { id: 'artist', label: 'Recording Artists' },
+                  { id: 'podcaster', label: 'Podcasters & Shows' },
+                  { id: 'dj', label: 'Touring DJs' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => { setSelectedPersonaFilter(tab.id); setCurrentOpIndex(0); }}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '4px',
+                      border: selectedPersonaFilter === tab.id ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
+                      background: selectedPersonaFilter === tab.id ? '#10b981' : 'rgba(255,255,255,0.03)',
+                      color: selectedPersonaFilter === tab.id ? '#040711' : '#cbd5e1',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Carousel Arrows */}
+              <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
                 <button
-                  key={tab.id}
                   type="button"
-                  onClick={() => setSelectedPersonaFilter(tab.id)}
+                  onClick={prevOp}
                   style={{
-                    padding: '6px 14px',
+                    width: '36px',
+                    height: '36px',
                     borderRadius: '4px',
-                    border: selectedPersonaFilter === tab.id ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
-                    background: selectedPersonaFilter === tab.id ? '#10b981' : 'rgba(255,255,255,0.03)',
-                    color: selectedPersonaFilter === tab.id ? '#040711' : '#cbd5e1',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    cursor: 'pointer'
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                    fontSize: '18px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
+                  aria-label="Previous opportunity"
                 >
-                  {tab.label}
+                  ‹
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={nextOp}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '4px',
+                    background: '#10b981',
+                    border: 'none',
+                    color: '#040711',
+                    fontSize: '18px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  aria-label="Next opportunity"
+                >
+                  ›
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Underwriting Cards Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-            gap: '24px'
-          }}>
-            {filteredOpportunities.map((op) => (
-              <div
-                key={op.creator_id}
-                style={{
-                  background: '#090d1f',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '6px',
-                  padding: '24px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'all 0.25s ease',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#10b981';
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                {/* Header */}
-                <div style={{ display: 'flex', gap: '14px', alignItems: 'center', marginBottom: '16px' }}>
-                  <img
-                    src={op.avatar}
-                    alt={op.name}
-                    style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #10b981' }}
-                  />
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{
-                        background: op.creator_type === 'artist' ? 'rgba(0, 240, 255, 0.12)' : op.creator_type === 'podcaster' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                        color: op.creator_type === 'artist' ? '#00f0ff' : op.creator_type === 'podcaster' ? '#c084fc' : '#fbbf24',
-                        fontSize: '9.5px',
-                        fontWeight: 800,
-                        padding: '2px 7px',
-                        borderRadius: '3px',
-                        textTransform: 'uppercase'
-                      }}>
-                        {op.type_label}
-                      </span>
+          {/* Opportunities Carousel View */}
+          <div style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+              gap: '24px'
+            }}>
+              {filteredOpportunities
+                .slice(currentOpIndex, currentOpIndex + 3)
+                .concat(filteredOpportunities.slice(0, Math.max(0, 3 - (filteredOpportunities.length - currentOpIndex))))
+                .slice(0, Math.min(3, totalOps))
+                .map((op) => (
+                  <div
+                    key={op.creator_id}
+                    style={{
+                      background: '#090d1f',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '6px',
+                      padding: '24px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'all 0.25s ease',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#10b981';
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    {/* Header */}
+                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center', marginBottom: '16px' }}>
+                      <img
+                        src={op.avatar}
+                        alt={op.name}
+                        style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #10b981' }}
+                      />
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{
+                            background: op.creator_type === 'artist' ? 'rgba(0, 240, 255, 0.12)' : op.creator_type === 'podcaster' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                            color: op.creator_type === 'artist' ? '#00f0ff' : op.creator_type === 'podcaster' ? '#c084fc' : '#fbbf24',
+                            fontSize: '9.5px',
+                            fontWeight: 800,
+                            padding: '2px 7px',
+                            borderRadius: '3px',
+                            textTransform: 'uppercase'
+                          }}>
+                            {op.type_label}
+                          </span>
+                        </div>
+                        <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: '4px 0 2px' }}>{op.name}</h4>
+                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>{op.genre} · {op.origin}</span>
+                      </div>
                     </div>
-                    <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: '4px 0 2px' }}>{op.name}</h4>
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>{op.genre} · {op.origin}</span>
-                  </div>
-                </div>
 
-                {/* Telemetry Metrics */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '4px', marginBottom: '16px' }}>
-                  <div>
-                    <span style={{ fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Audience Volume</span>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{op.listeners_label}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Historical Box Office</span>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#10b981' }}>{formatMoney(op.historical_gross_box_office)}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Advance Facility</span>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>{formatMoney(op.recommended_advance)}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Modelled Net IRR</span>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#f59e0b' }}>{op.target_irr} ({op.recoupment_months})</span>
-                  </div>
-                </div>
+                    {/* Telemetry Metrics */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '4px', marginBottom: '16px' }}>
+                      <div>
+                        <span style={{ fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Monthly Audience</span>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{op.listeners_label}</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Past Ticket Sales</span>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#10b981' }}>{formatMoney(op.historical_gross_box_office)}</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Advance Requested</span>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>{formatMoney(op.recommended_advance)}</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Expected Return</span>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#f59e0b' }}>{op.target_irr} in {op.recoupment_months}</span>
+                      </div>
+                    </div>
 
-                {/* Protocol Info */}
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
-                  <span>TuneMavens Protocol Fee: <strong style={{ color: '#fff' }}>{op.tunemavens_fee}</strong></span>
-                  <span style={{ color: '#10b981', fontWeight: 700 }}>Senior Secured Recoupment</span>
-                </div>
+                    {/* Protocol Info */}
+                    <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
+                      <span>Intermediary Fee: <strong style={{ color: '#fff' }}>{op.tunemavens_fee}</strong></span>
+                      <span style={{ color: '#10b981', fontWeight: 700 }}>Paid Back First from Tickets</span>
+                    </div>
 
-                {/* Action Buttons */}
-                <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedUnderwriteTarget(op)}
-                    style={{
-                      flex: 1,
-                      padding: '10px',
-                      background: '#10b981',
-                      color: '#040711',
-                      border: 'none',
-                      borderRadius: '4px',
-                      fontWeight: 800,
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <RiFundsBoxFill size={15} /> Underwrite Facility
-                  </button>
+                    {/* Action Buttons */}
+                    <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUnderwriteTarget(op)}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          background: '#10b981',
+                          color: '#040711',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontWeight: 800,
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <RiFundsBoxFill size={15} /> Fund This Tour
+                      </button>
 
-                  <Link
-                    to="/dashboard?tab=vc-discover&role=vc"
-                    style={{
-                      padding: '10px 14px',
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      color: '#fff',
-                      borderRadius: '4px',
-                      fontWeight: 700,
-                      fontSize: '11.5px',
-                      textDecoration: 'none',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    Full Telemetry &rarr;
-                  </Link>
-                </div>
-              </div>
-            ))}
+                      <Link
+                        to="/dashboard?tab=vc-discover&role=vc"
+                        style={{
+                          padding: '10px 14px',
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          color: '#fff',
+                          borderRadius: '4px',
+                          fontWeight: 700,
+                          fontSize: '11.5px',
+                          textDecoration: 'none',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        Full Details &rarr;
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Pagination indicator */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '24px' }}>
+              {filteredOpportunities.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentOpIndex(idx)}
+                  style={{
+                    width: idx === currentOpIndex ? '20px' : '8px',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: idx === currentOpIndex ? '#10b981' : 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  aria-label={`Jump to opportunity ${idx + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -932,13 +1020,13 @@ export default function VcLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ maxWidth: '780px', marginBottom: '36px' }}>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              DIRECT CREATOR CAREER SPONSORSHIP
+              DIRECT ARTIST SPONSORSHIP
             </span>
             <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Invest in Any Creator by Facilitating Their Product &amp; Service Costs
+              Support Growing Creators by Funding Their Tools
             </h2>
             <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: 1.7, margin: 0 }}>
-              Rather than traditional equity dilution, VCs can directly sponsor the operational tooling creators need to launch releases, package electronic press kits, and sell out tour stops. Every dollar funded creates a programmatic first-dollar recoupment lien on incoming royalties.
+              Instead of buying company stock, you can directly sponsor the exact tools and equipment creators need to release music, build electronic press kits, and sell out tour dates. You earn a fixed return on their incoming royalties until repaid.
             </p>
           </div>
 
@@ -950,10 +1038,10 @@ export default function VcLandingPage({ switcher }) {
                   <span style={{ fontSize: '16px', fontWeight: 800, color: '#10b981' }}>{formatMoney(svc.cost)}</span>
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--cyan)', marginBottom: '16px' }}>
-                  <strong>Recoupment Waterfall:</strong> {svc.roi}
+                  <strong>How You Get Paid:</strong> {svc.roi}
                 </div>
                 <Link to="/dashboard?tab=vc-sponsorship&role=vc" className="btn-secondary" style={{ width: '100%', textAlign: 'center', fontSize: '12px', padding: '8px', textDecoration: 'none', display: 'block' }}>
-                  Sponsor for Creator <RiArrowRightLine size={13} style={{ marginLeft: '4px' }} />
+                  Sponsor for Artist <RiArrowRightLine size={13} style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
             ))}
@@ -971,7 +1059,7 @@ export default function VcLandingPage({ switcher }) {
             The TuneMavens VC Command Center
           </h2>
           <p style={{ fontSize: '14px', color: '#94a3b8', maxWidth: '720px', margin: '0 auto 36px auto', lineHeight: 1.7 }}>
-            Explore the authentic, live system interface where venture partners inspect audience telemetry, underwrite tour corridors, and monitor real-time Split Cascade distributions.
+            Explore the authentic, live system interface where investors inspect audience numbers, fund tour corridors, and monitor real-time ticket repayments.
           </p>
 
           <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
@@ -998,13 +1086,13 @@ export default function VcLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ textAlign: 'center', maxWidth: '740px', margin: '0 auto 50px auto' }}>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              HOW VENTURE UNDERWRITING WORKS
+              HOW TO INVEST
             </span>
             <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Three Guided Steps to Institutional Music Deployment
+              Three Simple Steps to Fund Music Tours
             </h2>
             <p style={{ fontSize: '14.5px', color: '#94a3b8', lineHeight: 1.7, margin: 0 }}>
-              Underwrite verified creators in minutes with bank-grade legal security and automated clearing.
+              Back verified creators in minutes with bank-grade legal security and automated repayments.
             </p>
           </div>
 
@@ -1017,10 +1105,10 @@ export default function VcLandingPage({ switcher }) {
                 <RiRadarFill size={22} />
               </div>
               <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                1. Inspect Verified Telemetry
+                1. Review Real Numbers
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                Filter across artists, podcasters, and DJs. Review verified historical gross box-office receipts, streaming listener velocity, and venue capacity matching models.
+                Browse verified musicians, podcasters, and DJs. Inspect past ticket sales, streaming fan growth, and venue capacities.
               </p>
             </div>
 
@@ -1032,10 +1120,10 @@ export default function VcLandingPage({ switcher }) {
                 <RiShieldCheckFill size={22} />
               </div>
               <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                2. Execute Tri-Party Legal Vault
+                2. Sign Clear Terms Online
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                Deploy principal advance under a SHA-256 stamped tripartite agreement appointing TuneMavens as technology intermediary &amp; escrow clearinghouse (3.0% fee).
+                Commit tour funding under clear legal contracts appointing TuneMavens as technology and escrow provider (3.0% fee).
               </p>
             </div>
 
@@ -1047,10 +1135,10 @@ export default function VcLandingPage({ switcher }) {
                 <RiCoinsFill size={22} />
               </div>
               <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                3. First-Dollar Recoupment Stream
+                3. Collect Returns Automatically
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                As tickets are sold and live performances execute, 100% of door revenues clear programmatically into your LP account until principal and 18-25% target IRR are repaid.
+                As concert tickets sell, money flows automatically into your account until your investment and return are fully paid.
               </p>
             </div>
           </div>
@@ -1062,13 +1150,13 @@ export default function VcLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 44px auto' }}>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              CAPITAL EFFICIENCY &amp; RISK PROFILE
+              BETTER RISK &amp; RETURN
             </span>
             <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Tune Capital Alternative Debt vs Traditional Venture Equity
+              Tune Capital Tour Debt vs Traditional Venture Capital
             </h2>
             <p style={{ fontSize: '14.5px', color: '#94a3b8', margin: 0 }}>
-              Why modern institutional funds prefer short-cycle, senior-secured tour debt over illiquid equity stakes.
+              Why smart investors choose short-cycle tour funding over waiting 10 years for a startup to sell.
             </p>
           </div>
 
@@ -1076,47 +1164,47 @@ export default function VcLandingPage({ switcher }) {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px', color: '#cbd5e1' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.02)' }}>
-                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Investment Metric</th>
+                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Comparison Point</th>
                   <th style={{ padding: '16px 20px', color: '#10b981', fontWeight: 800, background: 'rgba(16, 185, 129, 0.05)' }}>Tune Capital Tour Credit</th>
-                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Traditional Tech / Media VC</th>
-                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Legacy Music Royalty Funds</th>
+                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Traditional Tech VC</th>
+                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Old-School Royalty Funds</th>
                 </tr>
               </thead>
               <tbody>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Recoupment Horizon</td>
-                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>2.9 to 4.2 Months (Short-Cycle)</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>7 to 10 Years (Illiquid Exit)</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>10 to 15 Years (Slow Yield)</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Payback Speed</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>3 to 4 Months (Fast Recoupment)</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>7 to 10 Years (Wait for an IPO)</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>10 to 15 Years (Slow Annual Payouts)</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Target Net IRR</td>
-                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>18.0% to 25.0% Net Annualized</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Power-law speculative (~15%)</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>6.0% to 9.5% Royalty Dividend</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Expected Return</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>18% to 25% Predictable Return</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Speculative high-risk bets</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>6% to 9% slow dividend</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Recoupment Priority</td>
-                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>Senior Secured First-Dollar Door Lien</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Junior Equity (Last in Line)</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Subordinate Catalog Fractions</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Repayment Priority</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>Paid Back First From Every Ticket</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Last in line if company struggles</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Subordinate catalog splits</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Dilution for Creator</td>
-                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>0% Equity Dilution (IP Kept 100%)</td>
-                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>20% - 40% Permanent Cap Table Loss</td>
-                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>Master Copyright Permanent Sale</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Creator Impact</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>Artist Keeps 100% of Their Music &amp; Equity</td>
+                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>Artists lose 20% - 40% of their company</td>
+                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>Artists sell away their master rights forever</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Audit &amp; Telemetry Transparency</td>
-                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>Live Stream Telemetry &amp; SHA-256 Hashes</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Self-reported quarterly decks</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Semi-annual delayed label statements</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Data Transparency</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.05)' }}>Real-Time Streaming &amp; Ticket Data</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Self-reported quarterly pitch decks</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Delayed paper statements from labels</td>
                 </tr>
                 <tr>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>LP Fees &amp; Platform Credits</td>
-                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 800, background: 'rgba(16, 185, 129, 0.05)' }}>0 LP Credits (3.0% Protocol Intermediary Fee)</td>
-                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>2.0% Mgmt Fee + 20% Carry</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Investor Fees</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 800, background: 'rgba(16, 185, 129, 0.05)' }}>0 Platform Credits (3.0% deal fee)</td>
+                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>2.0% annual management fee + 20% carry</td>
                   <td style={{ padding: '16px 20px', color: '#ef4444' }}>High catalog appraisal fees</td>
                 </tr>
               </tbody>
@@ -1130,13 +1218,13 @@ export default function VcLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 44px auto' }}>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              CAPITAL COMMITMENT FACILITIES
+              INVESTMENT OPTIONS
             </span>
             <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Structured Tour Facilities Tailored to Your Deployment Mandate
+              Structured Tour Funding to Match Your Capital Goals
             </h2>
             <p style={{ fontSize: '14.5px', color: '#94a3b8', margin: 0 }}>
-              Select an allocation facility tier below. All capital commitments deploy under senior-secured tripartite legal covenants with zero platform credits charged.
+              Choose an allocation size below. All funds deploy under clear legal agreements with zero monthly platform fees.
             </p>
           </div>
 
@@ -1231,13 +1319,13 @@ export default function VcLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '960px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ textAlign: 'center', marginBottom: '44px' }}>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              INSTITUTIONAL INVESTOR FAQ
+              FREQUENTLY ASKED QUESTIONS
             </span>
             <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#fff', margin: '8px 0 10px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Frequently Asked Questions for Limited Partners &amp; Syndicates
+              Common Questions About Tour Funding
             </h2>
             <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
-              Key governance, legal underwriting covenants, and escrow mechanics detailed for funds.
+              Learn how ticket repayments, contracts, and fund safety work.
             </p>
           </div>
 
@@ -1291,13 +1379,13 @@ export default function VcLandingPage({ switcher }) {
       <section style={{ padding: '80px 0', background: 'radial-gradient(ellipse at center, #062b1e 0%, #060914 100%)', textAlign: 'center' }}>
         <div className="container" style={{ maxWidth: '860px', margin: '0 auto', padding: '0 20px' }}>
           <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-            ALTERNATIVE ASSET DEPLOYMENT DESK
+            START DEPLOYING TODAY
           </span>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 800, color: '#fff', margin: '12px 0 16px 0', fontFamily: 'Sansation, sans-serif' }}>
-            Deploy Alternative Capital into High-Yielding Cultural IP
+            Fund High-Yielding Concerts &amp; Live Music
           </h2>
           <p style={{ fontSize: '15.5px', color: '#94a3b8', lineHeight: 1.7, margin: '0 auto 32px auto', maxWidth: '680px' }}>
-            Gain direct, senior-secured exposure to live tour cash flows with 18% to 25% target IRR backed by live box-office telemetry.
+            Enjoy predictable, senior-secured exposure to live tour ticket sales with 18% to 25% expected returns backed by verified audience data.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
             <Link
@@ -1362,7 +1450,7 @@ export default function VcLandingPage({ switcher }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <RiFundsBoxFill size={22} color="#10b981" />
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>
-                  {inquirySuccess ? 'Facility Application Received' : `Inquire: ${selectedTier?.name || 'Tune Capital Facility'}`}
+                  {inquirySuccess ? 'Application Received' : `Inquire: ${selectedTier?.name || 'Tune Capital Facility'}`}
                 </h3>
               </div>
               <button 
@@ -1376,7 +1464,7 @@ export default function VcLandingPage({ switcher }) {
             {!inquirySuccess ? (
               <form onSubmit={handleInquirySubmit}>
                 <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '18px' }}>
-                  Register institutional interest for <strong style={{ color: '#10b981' }}>{selectedTier?.name}</strong> ({formatPrice(selectedTier?.price_usd || 50000)} minimum allocation). TuneMavens acts as protocol technology intermediary (3.0% fee, 0 platform credits).
+                  Register interest for <strong style={{ color: '#10b981' }}>{selectedTier?.name}</strong> ({formatPrice(selectedTier?.price_usd || 50000)} minimum allocation). TuneMavens acts as secure technology and escrow intermediary (3.0% fee, zero platform credits).
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
@@ -1397,7 +1485,7 @@ export default function VcLandingPage({ switcher }) {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
-                        Managing Partner / LP Name *
+                        Partner / Investor Name *
                       </label>
                       <input
                         type="text"
@@ -1410,7 +1498,7 @@ export default function VcLandingPage({ switcher }) {
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
-                        Institutional Email *
+                        Business Email *
                       </label>
                       <input
                         type="email"
@@ -1426,7 +1514,7 @@ export default function VcLandingPage({ switcher }) {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
-                        Target Deployment Capacity
+                        Target Allocation
                       </label>
                       <select
                         value={bookingForm.target_capacity}
@@ -1455,7 +1543,7 @@ export default function VcLandingPage({ switcher }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
-                      Preferred Geographic Focus Corridors
+                      Preferred Tour Locations &amp; Corridors
                     </label>
                     <input
                       type="text"
@@ -1468,11 +1556,11 @@ export default function VcLandingPage({ switcher }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
-                      Investment Mandate &amp; Notes
+                      Investment Goals or Questions
                     </label>
                     <textarea
                       rows={2}
-                      placeholder="e.g. Seeking senior-secured tour debt with 20%+ target IRR and under 4-month recoupment cycles."
+                      placeholder="e.g. Seeking tour funding deals with 20%+ return and under 4-month payback periods."
                       value={bookingForm.notes}
                       onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
                       style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px', resize: 'vertical' }}
@@ -1496,7 +1584,7 @@ export default function VcLandingPage({ switcher }) {
                       cursor: inquirySubmitting ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    {inquirySubmitting ? 'Transmitting Mandate...' : 'Submit Facility Mandate &rarr;'}
+                    {inquirySubmitting ? 'Submitting Details...' : 'Submit Investment Interest &rarr;'}
                   </button>
                   <button
                     type="button"
@@ -1518,7 +1606,7 @@ export default function VcLandingPage({ switcher }) {
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
                 <RiCheckboxCircleFill size={52} color="#10b981" style={{ marginBottom: '12px' }} />
                 <h4 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>
-                  Institutional Application Received!
+                  Application Received!
                 </h4>
                 <div style={{ display: 'inline-block', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', color: '#10b981', fontWeight: 800, marginBottom: '16px' }}>
                   Reference Dossier: {inquirySuccess.ref}
@@ -1539,7 +1627,7 @@ export default function VcLandingPage({ switcher }) {
                       fontSize: '13px'
                     }}
                   >
-                    Open VC Portfolio Command &rarr;
+                    Open VC Command Center &rarr;
                   </Link>
                   <button
                     type="button"
@@ -1570,7 +1658,7 @@ export default function VcLandingPage({ switcher }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <RiShieldCheckFill size={22} color="#10b981" />
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Tri-Party Underwriting Facility</h3>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Fund Tour for {selectedUnderwriteTarget.name}</h3>
               </div>
               <button onClick={() => { setSelectedUnderwriteTarget(null); setUnderwriteExecuted(false); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
                 <RiCloseFill size={20} />
@@ -1580,25 +1668,25 @@ export default function VcLandingPage({ switcher }) {
             {!underwriteExecuted ? (
               <>
                 <p style={{ fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '18px' }}>
-                  Execute a Senior Tour Advance Facility for <strong style={{ color: '#fff' }}>{selectedUnderwriteTarget.name}</strong> under the TuneMavens Tri-Party Protocol:
+                  Fund this tour advance for <strong style={{ color: '#fff' }}>{selectedUnderwriteTarget.name}</strong> under clear legal terms:
                 </p>
 
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '16px', marginBottom: '20px', fontSize: '12.5px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Principal Advance:</span>
+                    <span style={{ color: '#94a3b8' }}>Funding Amount:</span>
                     <strong style={{ color: '#10b981' }}>{formatMoney(selectedUnderwriteTarget.recommended_advance)}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Modelled Target IRR:</span>
-                    <strong style={{ color: '#38bdf8' }}>{selectedUnderwriteTarget.target_irr}</strong>
+                    <span style={{ color: '#94a3b8' }}>Expected Return:</span>
+                    <strong style={{ color: '#38bdf8' }}>{selectedUnderwriteTarget.target_irr} in {selectedUnderwriteTarget.recoupment_months}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#94a3b8' }}>TuneMavens Protocol Fee:</span>
-                    <strong style={{ color: '#fff' }}>3.0% automated clearinghouse fee</strong>
+                    <strong style={{ color: '#fff' }}>3.0% automated escrow fee</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#94a3b8' }}>Platform Credits Charged:</span>
-                    <strong style={{ color: '#10b981' }}>0 Credits (Permanent LP Exemption)</strong>
+                    <strong style={{ color: '#10b981' }}>0 Credits (Permanent Investor Exemption)</strong>
                   </div>
                 </div>
 
@@ -1617,7 +1705,7 @@ export default function VcLandingPage({ switcher }) {
                       cursor: 'pointer'
                     }}
                   >
-                    Execute Tri-Party Agreement Online &rarr;
+                    Confirm &amp; Sign Terms Online &rarr;
                   </button>
                   <button
                     type="button"
@@ -1639,10 +1727,10 @@ export default function VcLandingPage({ switcher }) {
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
                 <RiCheckboxCircleFill size={52} color="#10b981" style={{ marginBottom: '12px' }} />
                 <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>
-                  Facility Executed Successfully!
+                  Tour Funding Confirmed!
                 </h4>
                 <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '20px' }}>
-                  Agreement sealed with SHA-256 cryptographic stamp. TuneMavens appointed as technology intermediary and escrow clearinghouse (3.0% fee). Telemetry and Split Cascade waterfalls are now unlocked for {selectedUnderwriteTarget.name}.
+                  Agreement sealed with verified digital signature. TuneMavens appointed as technology intermediary (3.0% fee). Real-time ticket sales and repayment tracking are now active for {selectedUnderwriteTarget.name}.
                 </p>
                 <Link
                   to="/dashboard?tab=splits&role=vc"

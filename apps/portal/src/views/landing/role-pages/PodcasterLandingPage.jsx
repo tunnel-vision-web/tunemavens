@@ -40,56 +40,56 @@ const FALLBACK_PODCASTER_RATES = [
   {
     slug: 'podcaster-starter',
     name: 'Starter Cast Pool',
-    tier_badge: 'Free Entry',
+    tier_badge: 'Free Forever',
     price_usd: 0.0,
     billing_period: 'forever free starter credits',
     credits: 50,
-    key_metric: '5 Hours Audio Ingestion · Standard RSS Feed',
+    key_metric: '5 Hours Audio Hosting · Fast RSS Feed',
     features: [
-      'Standard RSS 2.0 feed syndication to Apple Podcasts, Spotify & TuneStream',
-      '5 hours of high-fidelity episode audio storage & global CDN delivery',
-      'Basic listener analytics (downloads, geo-distribution, device breakdown)',
-      'Single-track upload with automated ID3 tagging and cover artwork injection',
-      'TuneStream web player embed snippet for personal websites & blogs',
-      '50 unified credits starter balance for AI speech leveling'
+      'Automatic feed delivery to Apple Podcasts, Spotify, and TuneStream',
+      '5 hours of high-quality episode audio storage with fast global playback',
+      'Clear listener stats: total downloads, listener countries, and popular devices',
+      'Simple episode upload with automatic cover art and episode tags',
+      'Ready-to-use web player embed for your personal website or blog',
+      '50 free starter credits for automated audio voice cleanup'
     ],
     is_popular: false,
     cta: 'Start Free Podcast'
   },
   {
     slug: 'podcaster-studio',
-    name: 'Studio Pro Host Load',
+    name: 'Studio Pro Host',
     tier_badge: 'Most Popular',
     price_usd: 19.0,
     billing_period: 'one-time credit reload',
     credits: 250,
-    key_metric: '25 Hours -16 LUFS Mastering · Dynamic Ad Insertion',
+    key_metric: '25 Hours Studio Sound · Built-In Sponsor Ads',
     features: [
-      'Broadcast-grade -16 LUFS speech mastering & automated noise reduction',
-      'Server-Side Dynamic Ad Insertion (DAI) engine for pre, mid & post-roll slots',
-      'Verified EPK Media Kit with live audited downloads and audience metrics',
-      'Automated Co-Host Split Cascade: distribute ad flight earnings directly via M-Pesa / Bank',
-      'Synchronized AI speech-to-text transcript generator and chapter markers',
-      '250 unified credits load with zero recurring monthly subscription debt'
+      'Studio-grade sound leveling: voices sound crisp, loud, and balanced everywhere',
+      'Earn from sponsors: automatically play relevant ads to your listeners',
+      'Live Media Kit: share your verified download stats with brands in one link',
+      'Automatic team payouts: send co-hosts and producers their share via M-Pesa or bank',
+      'Instant voice-to-text transcripts and clickable episode chapter markers',
+      '250 credits reload with zero monthly fees — only pay when you need credits'
     ],
     is_popular: true,
     cta: 'Go Studio Pro'
   },
   {
     slug: 'podcaster-network',
-    name: 'Syndicate & Network Load',
-    tier_badge: 'Enterprise Syndicate',
+    name: 'Network & Syndicate',
+    tier_badge: 'Multi-Show Suite',
     price_usd: 59.0,
     billing_period: 'one-time credit reload',
     credits: 850,
-    key_metric: 'Unlimited Shows · Priority Corporate Ad Bidding',
+    key_metric: 'Unlimited Shows · Priority Sponsor Matching',
     features: [
-      'Multi-show network management: host unlimited podcast channels under one roof',
-      'Priority inclusion in TuneMavens Corporate Ad Flight Bidding Marketplace',
-      'Custom branded web player embed with high-converting sponsor CTAs and links',
-      'Guest booking liaison calendar and integrated remote multi-track recording',
-      'Direct listener tipping engine with 0% platform take on audience contributions',
-      '850 unified credits load & dedicated podcast engineering support (no expiry)'
+      'Manage multiple podcasts and channels all in one simple account',
+      'Priority access to corporate brand sponsors looking to book ad campaigns',
+      'Branded web player with your own links and sponsor promotional banners',
+      'Easy guest booking calendar and remote recording connections',
+      'Direct listener tipping: fans can tip you via M-Pesa or card with 0% platform take',
+      '850 credits reload and dedicated audio engineering support (no expiry)'
     ],
     is_popular: false,
     cta: 'Launch Network Suite'
@@ -147,54 +147,54 @@ export default function PodcasterLandingPage({ switcher }) {
 
   const slides = [
     {
-      badge: 'AI Speech Studio & Broadcast Mastering',
+      badge: 'Studio Sound in One Click',
       dot: '#00f2fe',
-      hLine1: 'Broadcast Pristine Voice.',
-      hLine2: 'Zero Audio Engineering Debt.',
+      hLine1: 'Make Your Podcast Sound Amazing.',
+      hLine2: 'Zero Audio Editing Hassle.',
       hLine2Color: '#00f2fe',
-      s: 'Ingest multi-track audio, auto-normalize dialogue to EBU R128 (-16 LUFS), eliminate room reverberation, and generate interactive chapter timestamps with synchronized transcripts in seconds.',
-      b1: 'Explore Podcaster Plans',
+      s: 'Upload your voice recording and let TunePod handle the rest. We remove background noise, level up volume so you sound crystal clear everywhere, and create clean transcripts and chapter markers in seconds.',
+      b1: 'See Podcaster Plans',
       b1link: '#podcaster-rates',
-      b2: 'View Studio Capabilities',
+      b2: 'Explore Features',
       b2link: '#studio-features',
       image: podcasterHero1Img
     },
     {
-      badge: 'Dynamic Ad Insertion & Global RSS',
+      badge: 'Simple Sponsorships',
       dot: '#00f2fe',
-      hLine1: 'Monetize Every Download.',
-      hLine2: 'Targeted Audio Ad Flights.',
+      hLine1: 'Get Paid When People Listen.',
+      hLine2: 'Keep 85% of What Sponsors Pay.',
       hLine2Color: '#00f2fe',
-      s: 'Stitch geo-targeted pre-roll, mid-roll, and post-roll sponsor messages dynamically into your RSS feeds. Retain 85% of corporate ad proceeds with automated clearing and zero revenue cuts on direct deals.',
-      b1: 'Start Free Podcast Feed',
+      s: 'Play sponsor ads in your episodes without having to re-record your audio. You keep 85% of ad earnings, get paid straight to your account, and we take a 0% cut on any direct brand deals you bring in.',
+      b1: 'Start Free Podcast',
       b1link: '/register?role=podcaster',
-      b2: 'Ad Insertion Protocol',
+      b2: 'How Ad Payouts Work',
       b2link: '#dai-monetization',
       image: podcasterHero2Img
     },
     {
-      badge: 'Live Audited EPK & Guest Booking',
+      badge: 'Impress Brand Sponsors',
       dot: '#00f2fe',
-      hLine1: 'Land Premium Sponsors.',
-      hLine2: 'Audited Real-Time EPK Media Kits.',
+      hLine1: 'Show Off Your Real Numbers.',
+      hLine2: 'Win High-Paying Sponsors.',
       hLine2Color: '#00f2fe',
-      s: 'Showcase verified listener volume, completion rates, and demographic breakdown directly to advertising agencies and corporate brands with live, cryptographically certified show media kits.',
-      b1: 'Browse 12 Verified Shows',
+      s: 'Share a live media kit with brands that proves your real download counts and listener numbers. Sponsors can review your show and book ads on your episodes in one simple click.',
+      b1: 'Browse Popular Shows',
       b1link: '#podcasts-showcase',
-      b2: 'Create Show Media Kit',
+      b2: 'Create Your Media Kit',
       b2link: '/register?role=podcaster',
       image: podcasterHero3Img
     },
     {
-      badge: 'Split Cascade & Direct Fan Tipping',
+      badge: 'Instant Team Pay Splits',
       dot: '#00f2fe',
-      hLine1: 'Split Royalties Instantly.',
-      hLine2: 'Zero End-of-Month Accounting.',
+      hLine1: 'Split Money with Co-Hosts Easily.',
+      hLine2: 'Straight to M-Pesa or Bank.',
       hLine2Color: '#00f2fe',
-      s: 'Split podcast ad revenue and listener tips automatically across hosts, guest contributors, sound designers, and producers directly to M-Pesa or bank accounts through the smart contract Split Cascade Ledger.',
-      b1: 'Review Split Engine',
+      s: 'No more awkward math or chasing down payments. When your show earns money from listener tips or ads, everyone on your team gets paid their agreed percentage automatically with full receipt logs.',
+      b1: 'See How Splits Work',
       b1link: '#split-cascade',
-      b2: 'Compare vs Legacy Hosts',
+      b2: 'Compare vs Other Hosts',
       b2link: '#comparison',
       image: podcasterHero4Img
     }
@@ -295,7 +295,7 @@ export default function PodcasterLandingPage({ switcher }) {
         contact_phone: bookingForm.contact_phone || undefined,
         tier_slug: bookingForm.tier_slug,
         tier_name: selectedTier?.name,
-        estimated_budget: `${formatPrice(selectedTier?.price_usd || 19)} one-time credit reload`,
+        estimated_budget: `${formatPrice(selectedTier?.price_usd || 19)} one-time reload`,
         notes: `Category: ${bookingForm.show_category} | RSS: ${bookingForm.rss_feed_url || 'New Show'} | Downloads: ${bookingForm.estimated_downloads}. ${bookingForm.notes || ''}`
       };
 
@@ -309,20 +309,18 @@ export default function PodcasterLandingPage({ switcher }) {
       if (res.ok && data.success) {
         setInquirySuccess({
           ref: data.reference_code || `POD-${Math.floor(100000 + Math.random() * 900000)}`,
-          msg: data.message || 'Show onboarding submitted successfully! An audio specialist will connect with you within 2 business hours.'
+          msg: data.message || 'Your show registration has been received! Our support team will help you set up in under 2 hours.'
         });
       } else {
-        // Fallback smooth confirmation if API endpoint is not yet mounted
         setInquirySuccess({
           ref: `POD-${Math.floor(100000 + Math.random() * 900000)}`,
           msg: 'Show registration received! Your TunePod studio credentials and RSS migration toolkit have been queued.'
         });
       }
     } catch (err) {
-      // Fallback confirmation
       setInquirySuccess({
         ref: `POD-${Math.floor(100000 + Math.random() * 900000)}`,
-        msg: 'Show reservation received! Our audio syndication team has received your registration.'
+        msg: 'Show reservation received! Our audio team has received your registration.'
       });
     } finally {
       setInquirySubmitting(false);
@@ -330,7 +328,7 @@ export default function PodcasterLandingPage({ switcher }) {
   };
 
   const handleTip = (show) => {
-    setTipNotice(`✓ Tipped 50 TM Credits (${formatPrice(5)}) directly to ${show.host} (${show.title}) — settled via Split Cascade!`);
+    setTipNotice(`✓ Tipped 50 TM Credits (${formatPrice(5)}) directly to ${show.host} (${show.title}) — sent instantly to their account!`);
     setTimeout(() => setTipNotice(''), 5000);
   };
 
@@ -355,35 +353,34 @@ export default function PodcasterLandingPage({ switcher }) {
 
   const faqs = [
     {
-      q: 'How does TunePod Dynamic Ad Insertion (DAI) work on Apple Podcasts & Spotify?',
-      a: 'TunePod generates dynamic RSS 2.0 enclosures with smart server-side audio stitching. When a listener on Apple Podcasts, Spotify, or TuneStream requests an episode, our edge CDN stitches targeted pre-roll, mid-roll, or post-roll audio ads tailored to their country and device in real time, without altering the original master file.'
+      q: 'How do sponsor ads work across Apple Podcasts and Spotify?',
+      a: 'Whenever someone presses play on any app, TunePod smoothly adds a current sponsor ad into your episode. You can add new sponsors to all your old episodes with one click, without ever needing to re-edit audio files!'
     },
     {
-      q: 'Can I migrate my existing podcast from Buzzsprout, Libsyn, or Spotify for Podcasters?',
-      a: 'Yes! TunePod offers a 1-click seamless RSS import tool. We ingest your complete episode catalog, show metadata, artwork, and chapter markers. Then, simply apply our 301 redirect instruction to your old host. You retain 100% of your current subscriber base with zero interruption.'
+      q: 'Can I bring my existing podcast over from Buzzsprout, Libsyn, or Spotify?',
+      a: 'Yes, absolutely! With our 1-click import, we bring in all your existing episodes, descriptions, and artwork. You will not lose a single subscriber.'
     },
     {
-      q: 'How does the Automated Co-Host Split Cascade pay out earnings?',
-      a: 'In your Podcaster Studio, define percentage splits for your host, co-hosts, guest interviewees, sound designers, or producers. When sponsorship ad flights or listener tips are collected, funds are mathematically partitioned and cleared directly to each participant’s mobile money (M-Pesa, Airtel Money) or bank account with cryptographic receipt logs.'
+      q: 'How do team payouts and listener tips work?',
+      a: 'You can set up percentage splits for your host, co-host, or producer. Whenever your podcast earns money from ads or fan tips, the money is automatically sent straight to each person’s M-Pesa or bank account.'
     },
     {
-      q: 'What is -16 LUFS voice normalization and why is it important?',
-      a: '-16 LUFS (Loudness Units relative to Full Scale) is the authoritative international standard (AES / EBU R128) for stereo broadcast podcasts. TunePod automatically levels your audio so your episodes sound balanced, crisp, and broadcast-ready across car speakers, studio monitors, and smartphone earbuds without painful volume fluctuations.'
+      q: 'What does automatic voice leveling do?',
+      a: 'It fixes quiet voices, stops sudden loud bursts from hurting listeners’ ears, and removes background hum. Your show will sound loud, clear, and professional on phones, car stereos, and headphones.'
     },
     {
-      q: 'Do credit reloads expire, or am I locked into a recurring monthly subscription?',
-      a: 'Zero monthly subscription debt! TuneMavens operates on transparent one-time unified credit reloads. Your credits never expire, meaning you only pay for the mastering and ingestion hours you actually use. No forced recurring invoices if you take a season break.'
+      q: 'Do my credits expire, or will I be charged every month?',
+      a: 'No monthly traps! You only reload credits when you need them, and they never expire. If you take a couple months off between podcast seasons, you will never receive a surprise charge.'
     }
   ];
 
   return (
     <div className="role-page-wrapper podcaster-landing-view" style={{ '--role-accent': accent }} data-testid="podcaster-landing-page">
       <SEO 
-        title="TunePod — Podcaster Studio, Dynamic Ads & Show Monetization"
-        description="Broadcast-grade mastering (-16 LUFS), dynamic ad insertion, verified show media kits, and real-time co-host split payouts for podcasters across Africa and the global diaspora."
+        title="TunePod — Podcaster Studio, Easy Sponsor Ads & Fast Payouts"
+        description="Great sounding podcasts in minutes. Automatic voice leveling, simple sponsor ads, verified show media kits, and instant team payouts via M-Pesa."
         favicon="/favicons/tunepod.png"
       />
-      {switcher}
 
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
@@ -433,7 +430,7 @@ export default function PodcasterLandingPage({ switcher }) {
             </div>
 
             <div className="role-breadcrumb" style={{ justifyContent: 'center', marginBottom: '14px' }}>
-              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>Podcasters &amp; Talk Shows</span>
+              <Link to="/">Home</Link> <span>/</span> <Link to="/for">Made For</Link> <span>/</span> <span>Podcasters &amp; Audio Shows</span>
             </div>
 
             <div className="he hbadge in">
@@ -555,25 +552,28 @@ export default function PodcasterLandingPage({ switcher }) {
         </div>
       </section>
 
+      {/* ================= Secondary Menu / Switcher in standard location right below hero ================= */}
+      {switcher}
+
       {/* ================= 2. 4-Stat Metrics Ribbon ================= */}
       <section style={{ background: '#080c1d', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '36px 0' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: '#00f2fe', display: 'block', fontFamily: 'Sansation, sans-serif' }}>185K+</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Weekly Show Downloads</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Weekly Episode Downloads</span>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: '28px', fontWeight: 800, color: '#10b981', display: 'block', fontFamily: 'Sansation, sans-serif' }}>100%</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Audited Dynamic Ad Flight Delivery</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Verified Sponsor Ad Plays</span>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '28px', fontWeight: 800, color: '#38bdf8', display: 'block', fontFamily: 'Sansation, sans-serif' }}>-16 LUFS</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Broadcast Voice Normalization</span>
+              <span style={{ fontSize: '28px', fontWeight: 800, color: '#38bdf8', display: 'block', fontFamily: 'Sansation, sans-serif' }}>Clear Audio</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Loud &amp; Balanced on Every Phone</span>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '28px', fontWeight: 800, color: '#f59e0b', display: 'block', fontFamily: 'Sansation, sans-serif' }}>0%</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Platform Subscription Debt</span>
+              <span style={{ fontSize: '28px', fontWeight: 800, color: '#f59e0b', display: 'block', fontFamily: 'Sansation, sans-serif' }}>$0 Traps</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>No Forced Monthly Subscriptions</span>
             </div>
           </div>
         </div>
@@ -594,13 +594,13 @@ export default function PodcasterLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ maxWidth: '780px', marginBottom: '44px' }}>
             <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              BUILT FOR MODERN AUDIO VOICES &amp; TALK SHOWS
+              BUILT FOR MODERN PODCASTERS &amp; CREATORS
             </span>
             <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Full-Stack Audio Production &amp; Monetization Infrastructure
+              Everything You Need to Sound Great and Get Paid
             </h2>
             <p style={{ fontSize: '15px', color: '#94a3b8', lineHeight: 1.7, margin: 0 }}>
-              Say goodbye to juggling fragmented hosting bills, manual spreadsheets for co-host splits, and flat ad-read sponsorship rates. TunePod unifies speech mastering, dynamic insertion, and instant settlement in one place.
+              Say goodbye to complicated sound tools, endless monthly bills, and waiting months for sponsor checks. TunePod makes podcasting simple and profitable.
             </p>
           </div>
 
@@ -610,15 +610,15 @@ export default function PodcasterLandingPage({ switcher }) {
                 <RiEqualizerFill size={24} />
               </div>
               <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                AI Speech Mastering &amp; Timestamps
+                Crystal-Clear Sound &amp; Free Transcripts
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
-                Automated dialog leveling calibrated to the international -16 LUFS broadcast standard. Includes ambient noise suppression, smart de-essing, interactive chapter markers, and synced multi-language transcripts for maximum search visibility.
+                We clean up room echoes and level out loud or quiet voices automatically. Your show sounds crisp in cars, headphones, and home speakers, with zero audio engineering skills needed.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f2fe" /> 24-bit studio quality multi-track ingestion</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f2fe" /> EBU R128 loudness compliance</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f2fe" /> Synchronized SRT / VTT transcript generator</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f2fe" /> Automatic volume balancing for every episode</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f2fe" /> Clear transcripts your listeners can read along with</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#00f2fe" /> Clickable chapter markers to jump to topics</li>
               </ul>
             </div>
 
@@ -627,15 +627,15 @@ export default function PodcasterLandingPage({ switcher }) {
                 <RiMegaphoneFill size={24} />
               </div>
               <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                Dynamic Ad Insertion (DAI)
+                Earn from Old &amp; New Episodes
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
-                Monetize your entire episode back-catalog with server-side ad stitching. Schedule pre-roll, mid-roll, and post-roll ad flights targeted by geographic region, device, and listener demographics without re-exporting audio files.
+                Add sponsor messages to your entire episode catalog with one click. Relevant ads play automatically based on where your listeners live, so you earn money even when people listen to your older shows.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Retain 85% of gross sponsorship proceeds</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> 0% cut on direct brand deals and promo reads</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Seamless syndication to Spotify, Apple &amp; TuneStream</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> You keep 85% of what sponsors pay</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> 0% platform fee on your own direct sponsor deals</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#10b981" /> Plays smoothly on Apple, Spotify, and everywhere</li>
               </ul>
             </div>
 
@@ -644,15 +644,15 @@ export default function PodcasterLandingPage({ switcher }) {
                 <RiCoinsFill size={24} />
               </div>
               <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                Split Cascade &amp; Listener Tipping
+                Fair Team Pay &amp; Fan Tips
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: '0 0 16px 0', flex: 1 }}>
-                Split ad flight payouts and listener contributions programmatically. When a corporate brand books an ad flight or a fan sends an M-Pesa tip, funds automatically route into verified host, co-host, and sound engineer wallets.
+                Share earnings automatically between hosts, guests, and editors with zero paperwork. Fans can also tip you easily using M-Pesa or card, and money goes straight into your pocket.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12.5px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#f59e0b" /> Real-time mobile money (M-Pesa) and bank clearing</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#f59e0b" /> Smart contract split agreements with SHA-256 receipts</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#f59e0b" /> Verified EPK media kit with live audited download proofs</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#f59e0b" /> Fast mobile money (M-Pesa) and bank deposits</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#f59e0b" /> Automatic percentage splits with clear receipts</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><RiCheckFill color="#f59e0b" /> Live stats page you can share with potential sponsors</li>
               </ul>
             </div>
           </div>
@@ -665,13 +665,13 @@ export default function PodcasterLandingPage({ switcher }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px', marginBottom: '32px' }}>
             <div>
               <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                AUDIO ROSTER SHOWCASE
+                FEATURED SHOWS
               </span>
               <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#fff', margin: '8px 0 6px 0', fontFamily: 'Sansation, sans-serif' }}>
-                Verified Podcasts &amp; Audio Shows
+                Popular Podcasts on TuneMavens
               </h2>
               <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
-                Explore 12 authoritative podcasts in full 3×4 card format with integrated streaming, verified media kits, single-source ad rates, and host tipping.
+                Listen to real episodes, check out their verified media kits, and see how easy it is to tip your favorite hosts.
               </p>
             </div>
 
@@ -765,7 +765,7 @@ export default function PodcasterLandingPage({ switcher }) {
                         borderRadius: '3px',
                         border: '1px solid rgba(0,242,254,0.3)'
                       }}>
-                        -16 LUFS · 24-Bit Voice
+                        Studio Balanced Voice
                       </span>
                     </div>
 
@@ -786,7 +786,7 @@ export default function PodcasterLandingPage({ switcher }) {
                       />
                       <div>
                         <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 800 }}>
-                          ★ {show.rating} · {show.subscribers} Subs
+                          ★ {show.rating} · {show.subscribers} Subscribers
                         </div>
                         <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>
                           {show.cadence}
@@ -820,7 +820,7 @@ export default function PodcasterLandingPage({ switcher }) {
                       alignItems: 'center',
                       justifyContent: 'space-between'
                     }}>
-                      <span>Ad Flights from <strong>{formatPrice(entryRateUsd)}</strong></span>
+                      <span>Sponsor Ads from <strong>{formatPrice(entryRateUsd)}</strong></span>
                       <span style={{ color: '#94a3b8' }}>{entryRateCredits.toLocaleString()} Credits</span>
                     </div>
 
@@ -864,7 +864,7 @@ export default function PodcasterLandingPage({ switcher }) {
                           gap: '6px'
                         }}
                       >
-                        <RiPlayFill size={16} /> Stream Latest Episode
+                        <RiPlayFill size={16} /> Stream Episode
                       </button>
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -886,7 +886,7 @@ export default function PodcasterLandingPage({ switcher }) {
                             gap: '5px'
                           }}
                         >
-                          <RiAwardFill size={13} /> Podcaster EPK
+                          <RiAwardFill size={13} /> View Media Kit
                         </button>
 
                         <button
@@ -924,13 +924,13 @@ export default function PodcasterLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ maxWidth: '780px', marginBottom: '36px' }}>
             <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              CORPORATE AD SERVICES MONETIZATION
+              TRANSPARENT SPONSOR RATES
             </span>
             <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Standardized, Single-Source Ad Flight Rates for Podcasters
+              Clear, Upfront Ad Rates for Sponsors &amp; Creators
             </h2>
             <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: 1.7, margin: 0 }}>
-              All podcast advertising rates across TuneMavens are synchronized from a single authoritative source of truth. Podcasters keep 85% of gross sponsorship proceeds, with automated Split Cascade settlements.
+              Sponsors pay standard rates to reach your audience. You keep 85% of every dollar earned, deposited straight into your account with automatic team splits.
             </p>
           </div>
 
@@ -961,7 +961,7 @@ export default function PodcasterLandingPage({ switcher }) {
                   {formatPrice(rate.price_usd)}
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#cbd5e1', marginBottom: '16px' }}>
-                  {rate.credits.toLocaleString()} Credits · ~{formatPrice(rate.cpm_usd)} CPM
+                  {rate.credits.toLocaleString()} Credits · ~{formatPrice(rate.cpm_usd)} per 1,000 listens
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', fontSize: '12.5px', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
                   {(rate.features || []).slice(0, 4).map((f, i) => (
@@ -991,10 +991,10 @@ export default function PodcasterLandingPage({ switcher }) {
             ACTUAL PLATFORM DASHBOARD PREVIEW
           </span>
           <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#fff', margin: '8px 0 16px 0', fontFamily: 'Sansation, sans-serif' }}>
-            The TuneMavens Podcaster Studio Console
+            Your All-in-One Podcaster Studio
           </h2>
           <p style={{ fontSize: '14px', color: '#94a3b8', maxWidth: '720px', margin: '0 auto 36px auto', lineHeight: 1.7 }}>
-            A unified backend built right inside TuneMavens for episode ingestion, chapter marker generation, synchronized transcripts, RSS feeds, and Split Cascade escrow distribution.
+            A friendly, unified dashboard: upload episodes, check your listener numbers, set up sponsor slots, and see your payouts grow.
           </p>
 
           <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
@@ -1010,7 +1010,7 @@ export default function PodcasterLandingPage({ switcher }) {
               }}
             />
             <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#00f2fe', fontWeight: 600 }}>
-              Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
+              Click to view high-resolution dashboard preview ({isSw ? 'Kiswahili' : 'English'})
             </div>
           </div>
         </div>
@@ -1021,13 +1021,13 @@ export default function PodcasterLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ textAlign: 'center', maxWidth: '740px', margin: '0 auto 50px auto' }}>
             <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              HOW IT WORKS · FROM RAW AUDIO TO MONETIZATION
+              HOW IT WORKS
             </span>
             <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Three Guided Steps to Global Podcast Syndication
+              Three Simple Steps to Launch &amp; Earn
             </h2>
             <p style={{ fontSize: '14.5px', color: '#94a3b8', lineHeight: 1.7, margin: 0 }}>
-              Start a new show or migrate your existing feed in under 5 minutes without losing a single listener.
+              Start a new show or migrate your existing episodes in under 5 minutes without losing a single listener.
             </p>
           </div>
 
@@ -1040,10 +1040,10 @@ export default function PodcasterLandingPage({ switcher }) {
                 <RiMicFill size={22} />
               </div>
               <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                1. Upload Raw Voice &amp; Auto-Master
+                1. Upload Your Voice
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                Drop raw interview tracks or multi-host files into your studio console. TunePod normalizes dialogue to -16 LUFS, suppresses ambient hum, and auto-generates transcripts with chapter markers.
+                Drop in your raw audio file. TunePod automatically cleans up background hum, balances volume levels, and creates searchable text transcripts.
               </p>
             </div>
 
@@ -1055,10 +1055,10 @@ export default function PodcasterLandingPage({ switcher }) {
                 <RiMegaphoneFill size={22} />
               </div>
               <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                2. Configure Ad Slots &amp; EPK Media Kit
+                2. Set Up Sponsor Slots &amp; Media Kit
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                Set dynamic pre-roll, mid-roll, and post-roll insertion cues. Activate your live audited EPK with single-source CPM rates so corporate advertisers can book ad flights directly into your episodes.
+                Choose where you want sponsor messages to play. Share your live media kit link with brands so they can book ads directly on your show.
               </p>
             </div>
 
@@ -1070,10 +1070,10 @@ export default function PodcasterLandingPage({ switcher }) {
                 <RiCoinsFill size={22} />
               </div>
               <h3 style={{ fontSize: '19px', fontWeight: 800, color: '#fff', margin: '0 0 10px 0' }}>
-                3. Syndicate &amp; Collect Instant Splits
+                3. Share Everywhere &amp; Get Paid
               </h3>
               <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                One-click distribution to Apple Podcasts, Spotify, Amazon Music, and TuneStream. As listeners stream and sponsors purchase impressions, proceeds clear to co-host wallets via Split Cascade.
+                Your show goes live on Apple, Spotify, and TuneStream in one click. As listeners tune in and sponsors run ads, payouts arrive directly in your account.
               </p>
             </div>
           </div>
@@ -1085,13 +1085,13 @@ export default function PodcasterLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 44px auto' }}>
             <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              THE MODERN AUDIO ADVANTAGE
+              HOW WE COMPARE
             </span>
             <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Why Leading Podcasters Choose TunePod Over Legacy Hosts
+              Why Creators Choose TunePod Over Traditional Hosts
             </h2>
             <p style={{ fontSize: '14.5px', color: '#94a3b8', margin: 0 }}>
-              Compare TunePod with traditional hosts like Buzzsprout, Libsyn, and Anchor / Spotify for Podcasters.
+              Compare TunePod with old-school hosts like Buzzsprout, Libsyn, and Spotify for Podcasters.
             </p>
           </div>
 
@@ -1099,7 +1099,7 @@ export default function PodcasterLandingPage({ switcher }) {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px', color: '#cbd5e1' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.02)' }}>
-                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Feature Capability</th>
+                  <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Feature</th>
                   <th style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 800, background: 'rgba(0, 242, 254, 0.05)' }}>TunePod (TuneMavens)</th>
                   <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Buzzsprout / Libsyn</th>
                   <th style={{ padding: '16px 20px', color: '#94a3b8', fontWeight: 700 }}>Spotify for Podcasters</th>
@@ -1108,39 +1108,39 @@ export default function PodcasterLandingPage({ switcher }) {
               <tbody>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Storage &amp; Bandwidth</td>
-                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Unlimited Lossless CDN Delivery</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Strict 3-12 hrs monthly caps</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Free with compression</td>
+                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Unlimited Fast Audio Playback</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Strict 3-12 hours monthly limits</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Free with heavy compression</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Dynamic Ad Insertion (DAI)</td>
-                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Native Geo-Targeted Pre/Mid/Post Stitching (Keep 85%)</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Expensive Enterprise add-on ($50+/mo)</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Spotify-only programmatic take</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Sponsor Ad Earnings</td>
+                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Keep 85% of ad spend (0% on own deals)</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Expensive add-ons ($50+/month)</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Spotify-only ad revenue share</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Co-Host &amp; Producer Split Cascade</td>
-                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Automated Real-Time M-Pesa &amp; Bank Splits</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Manual monthly accounting &amp; wire transfers</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Not supported</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Team &amp; Co-Host Payouts</td>
+                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Automatic M-Pesa &amp; Bank Splits</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Manual monthly math &amp; wire transfers</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Not available</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Voice Loudness Standards</td>
-                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Built-in -16 LUFS broadcast mastering</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Requires external mastering DAW</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Voice Sound Quality</td>
+                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Automatic Studio Voice Leveling</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Must buy external sound software</td>
                   <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Basic web limiter</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>EPK Media Kit with Live Telemetry</td>
-                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Live Audited EPK with 1-Click Ad Booking</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Manual PDF exports</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Not supported</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Media Kit for Brands</td>
+                  <td style={{ padding: '16px 20px', color: '#00f2fe', fontWeight: 700, background: 'rgba(0, 242, 254, 0.05)' }}>Live Audited Stats with 1-Click Booking</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Static PDF files you update by hand</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Not available</td>
                 </tr>
                 <tr>
-                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Subscription Debt</td>
-                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 800, background: 'rgba(0, 242, 254, 0.05)' }}>0% — One-Time Credit Reloads (No Expiry)</td>
-                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>Mandatory $12 - $120/mo recurring billing</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Platform lock-in</td>
+                  <td style={{ padding: '16px 20px', fontWeight: 700, color: '#fff' }}>Billing Model</td>
+                  <td style={{ padding: '16px 20px', color: '#10b981', fontWeight: 800, background: 'rgba(0, 242, 254, 0.05)' }}>No monthly fees (Credits never expire)</td>
+                  <td style={{ padding: '16px 20px', color: '#ef4444' }}>Mandatory $12 - $120 monthly invoices</td>
+                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>Locked to Spotify ecosystem</td>
                 </tr>
               </tbody>
             </table>
@@ -1153,13 +1153,13 @@ export default function PodcasterLandingPage({ switcher }) {
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 44px auto' }}>
             <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-              TRANSPARENT TIER PACKAGES
+              TRANSPARENT PLANS
             </span>
             <h2 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: '8px 0 12px 0', fontFamily: 'Sansation, sans-serif' }}>
-              Zero Monthly Subscription Debt. Pay As Your Show Grows.
+              Zero Monthly Invoices. Pay Only When You Grow.
             </h2>
             <p style={{ fontSize: '14.5px', color: '#94a3b8', margin: 0 }}>
-              Select a flexible starter package or unified credit reload. Every tier includes permanent access to your RSS feed, episodes, and analytics.
+              Choose a starter package or credit reload. Your show, feed, and episodes remain online forever.
             </p>
           </div>
 
@@ -1260,7 +1260,7 @@ export default function PodcasterLandingPage({ switcher }) {
               Everything You Need to Know About TunePod
             </h2>
             <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
-              Got questions about show migration, split waterfalls, or audio mastering? We have you covered.
+              Got questions about moving your show, getting paid, or audio sound quality? We are here to help.
             </p>
           </div>
 
@@ -1314,10 +1314,10 @@ export default function PodcasterLandingPage({ switcher }) {
       <section style={{ padding: '80px 0', background: 'radial-gradient(ellipse at center, #0e1e38 0%, #050814 100%)', textAlign: 'center' }}>
         <div className="container" style={{ maxWidth: '860px', margin: '0 auto', padding: '0 20px' }}>
           <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-            YOUR PODCAST DESERVES PROFESSIONAL BROADCASTING
+            START BROADCASTING TODAY
           </span>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 800, color: '#fff', margin: '12px 0 16px 0', fontFamily: 'Sansation, sans-serif' }}>
-            Ready to Broadcast Your Voice to Millions Across Africa &amp; the Global Diaspora?
+            Ready to Share Your Voice with Millions?
           </h2>
           <p style={{ fontSize: '15.5px', color: '#94a3b8', lineHeight: 1.7, margin: '0 auto 32px auto', maxWidth: '680px' }}>
             Set up your show in minutes, connect with verified brand advertisers, and get paid automatically for every download.
@@ -1385,7 +1385,7 @@ export default function PodcasterLandingPage({ switcher }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <RiMicFill size={22} color="#00f2fe" />
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>
-                  {inquirySuccess ? 'Show Registration Confirmed' : `Opt-In for ${selectedTier?.name || 'TunePod Studio'}`}
+                  {inquirySuccess ? 'Show Registration Confirmed' : `Sign Up: ${selectedTier?.name || 'TunePod Studio'}`}
                 </h3>
               </div>
               <button 
@@ -1399,7 +1399,7 @@ export default function PodcasterLandingPage({ switcher }) {
             {!inquirySuccess ? (
               <form onSubmit={handleInquirySubmit}>
                 <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '18px' }}>
-                  Register your show for the <strong style={{ color: '#00f2fe' }}>{selectedTier?.name}</strong> ({formatPrice(selectedTier?.price_usd || 19)} / {selectedTier?.credits} unified credits). No ongoing subscription required.
+                  Register your show for the <strong style={{ color: '#00f2fe' }}>{selectedTier?.name}</strong> ({formatPrice(selectedTier?.price_usd || 19)} / {selectedTier?.credits} credits). No recurring monthly commitments.
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
@@ -1463,7 +1463,7 @@ export default function PodcasterLandingPage({ switcher }) {
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
-                        Current Monthly Downloads
+                        Monthly Downloads
                       </label>
                       <select
                         value={bookingForm.estimated_downloads}
@@ -1493,11 +1493,11 @@ export default function PodcasterLandingPage({ switcher }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '6px' }}>
-                      Co-Host / Sponsor Goals or Notes
+                      Team Members or Co-Hosts
                     </label>
                     <textarea
                       rows={2}
-                      placeholder="e.g. We have 2 co-hosts and want to set up automated 50/50 splits for brand sponsorship flights."
+                      placeholder="e.g. We have 2 co-hosts and want to set up automatic 50/50 splits for brand sponsor earnings."
                       value={bookingForm.notes}
                       onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
                       style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '13px', resize: 'vertical' }}

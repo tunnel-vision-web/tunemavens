@@ -2381,3 +2381,23 @@ Allows creators and administrators to update or regenerate custom headers via na
    - **Institutional Investor Mandate Modal**: Fund name, managing partner name, institutional email, deployment capacity, and corridor focus submitted to `/api/roles/vc/inquiries` with fallback confirmation.
    - **Institutional FAQ Accordion**: 5 comprehensive answers covering senior-secured first-dollar liens, TuneMavens' role as technology intermediary, force majeure event insurance, LP zero-credit exemption, and fractional syndication.
 
+### 9.44.33 Persona Hero Visual Harmonization, Secondary Menu Parity, Layman Language & Active Opportunities Carousel
+1. **Clean Photographic Subject & Location Hero Visuals**:
+   - Replaced earlier telemetry charts and data graphs drawn into hero backgrounds with clean, authentic photographic/cinematic subjects and locations:
+     - **Podcasters (`podcaster_hero_1.png` - `4.png`)**: Professional broadcast studios featuring acoustic wood slat paneling, Shure SM7B broadcast microphones on boom arms, studio headphones, collaborative co-hosts conversing, and sound mixer consoles. Completely eliminated data charts from the image background to avoid visual conflict with hero titles, badges, and action buttons.
+     - **VCs & Investors (`vc_hero_1.png` - `4.png`)**: Prestigious executive boardrooms overlooking modern city skylines, private VIP stadium concert viewing suites overlooking festival crowds, and contemporary architectural meeting lounges.
+2. **Secondary Menu Location Harmonization**:
+   - Repositioned `{switcher}` across `PodcasterLandingPage.jsx` and `VcLandingPage.jsx` to be rendered directly underneath the interactive HERO carousel section (`hw role-hero-wrapper`), establishing exact structural parity with `DjLandingPage.jsx`, `LabelLandingPage.jsx`, `CorporateLandingPage.jsx`, and `SupervisorLandingPage.jsx`.
+3. **Conversational Layman Language Translation**:
+   - Simplified technical industry jargon across all marketing sections into empowering, conversational plain English:
+     - "Automated dialogue leveling (-16 LUFS)" -> "Crystal-Clear Sound in One Click: voices sound loud, clear, and balanced on every phone."
+     - "Server-Side Dynamic Ad Insertion (DAI)" -> "Get Paid When People Listen: play current sponsor ads in your episodes and keep 85%."
+     - "Senior-Secured Short-Cycle Recoupment Lien" -> "You Get Paid Back First: ticket sales flow directly into repaying your investment before artist profits are released."
+     - "Predictive Telemetry Risk Models" -> "Invest with Real Numbers: see verified ticket sales, Spotify listener velocity, and true fan engagement."
+4. **Active Opportunities Interactive Carousel (`VcLandingPage.jsx`)**:
+   - Replaced static card grid with an interactive multi-card sliding carousel:
+     - Side navigation arrows (`‹` and `›`) with hover elevation and responsive layout.
+     - Paging indicator dots reflecting the active card window.
+     - Automatic index reset to 0 upon toggling between creator persona categories (All, Artists, Podcasters, DJs).
+
+
