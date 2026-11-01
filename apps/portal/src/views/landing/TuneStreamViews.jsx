@@ -6,6 +6,7 @@ import headerAboutWesternImg from '../../assets/images/header_about_western.png'
 import headerToolsImg from '../../assets/images/header_tools.png'
 import headerToolsWesternImg from '../../assets/images/header_tools_western.png'
 import perfectForHeaderImg from '../../assets/images/perfect_for_header.png'
+import perfectForHeaderWesternImg from '../../assets/images/perfect_for_header_western.png'
 import headerHelpImg from '../../assets/images/header_help.png'
 import headerHelpWesternImg from '../../assets/images/header_help_western.png'
 
@@ -36,7 +37,7 @@ export function TuneStreamFeaturesView() {
 export function TuneStreamCreatorsView() {
   return (
     <div className="view-container">
-      <PageHeader title="TuneStream for Creators" bgImage={perfectForHeaderImg} bgImageWestern={perfectForHeaderImg} breadcrumb="TuneStream / For Creators" />
+      <PageHeader title="TuneStream for Creators" bgImage={perfectForHeaderImg} bgImageWestern={perfectForHeaderWesternImg} breadcrumb="TuneStream / For Creators" />
       <div className="container" style={{ padding: '60px 24px', textAlign: 'center' }}>
         <h2>Own Your Audience</h2>
         <p style={{ color: 'var(--mu)', marginTop: '20px', maxWidth: '600px', margin: '20px auto' }}>Get transparent analytics, instant payouts, and direct access to your superfans. TuneStream empowers you to build a sustainable music career.</p>

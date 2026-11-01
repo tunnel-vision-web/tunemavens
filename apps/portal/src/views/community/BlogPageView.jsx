@@ -191,7 +191,8 @@ export default function BlogPageView({ sessionUser }) {
       {/* Hero Header Banner */}
       <PageHeader
         title={activeArticle ? activeArticle.category : "TuneMavens Editorial & Creator Blog"}
-        bgImage={headerImg}
+        bgImage={headerAboutImg}
+        bgImageWestern={headerAboutWesternImg}
         breadcrumb="Blog"
       />
 

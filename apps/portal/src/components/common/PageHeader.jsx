@@ -9,7 +9,8 @@ export default function PageHeader({
   breadcrumb, 
   titleStyle, 
   titleClassName,
-  subtitle 
+  subtitle,
+  badge
 }) {
   const { country } = useRegion();
   const isWestern = ['US', 'GB'].includes(country);
@@ -22,6 +23,11 @@ export default function PageHeader({
     >
       <div className="page-header-overlay" />
       <div className="page-header-content">
+        {badge && (
+          <span className="badge" style={{ display: 'inline-block', marginBottom: '10px' }}>
+            {badge}
+          </span>
+        )}
         <h1 
           className={`page-header-title ${titleClassName || ''}`}
           style={titleStyle}

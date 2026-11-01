@@ -2256,3 +2256,25 @@ Allows creators and administrators to update or regenerate custom headers via na
 3. **Homepage 'Perfect For' Carousel & Landing Directory Integration**:
    - Synchronized `apps/portal/src/components/PerfectForSidebar.jsx` and `apps/portal/src/PerfectForSidebar.jsx` with updated `ROLE_LOGOS` and `PERFECT_FOR_ROLES` mapping every persona to its dedicated brand asset.
    - Updated `PerfectForPageView.jsx` (`/for`) and individual role landing pages (`CorporateLandingPage.jsx`, `LabelLandingPage.jsx`, `MediaHouseLandingPage.jsx`, `PodcasterLandingPage.jsx`, `VcLandingPage.jsx`) to feature their authoritative brand logos.
+
+### 9.44.30 Platform-Wide Localized Header Images Architecture (African & Western Market Alignment)
+1. **Dynamic Demographic Localization in PageHeader.jsx**:
+   - Upgraded PageHeader.jsx across all micro-frontends (pps/portal, pps/syncmavens, pps/tunestream) to dynamically select headers based on regional market:
+     - Western markets (US, GB) automatically select gImageWestern when provided.
+     - African & domestic markets (KE, NG, ZA, TZ, UG, RW, default) select gImage tailored to African ethnicity, cultural context, and demographics.
+2. **'Perfect For' (/#/for) Market Harmonization**:
+   - Replaced legacy Western rocker imagery on perfect_for_header.png with an authentic, high-energy live performance showcase in East Africa:
+     - **African Market (perfect_for_header.png)**: Features an African contemporary artist performing live on an outdoor festival stage (NBO Live Festival) in Nairobi with live drummer, keyboardist, DJ, and an enthusiastic African crowd cheering with hands raised under warm amber and cyan stage lighting.
+     - **Western Market (perfect_for_header_western.png)**: Features a Western club rock performance with live band and concert crowd.
+3. **'About Us' (/#/about) Executive Boardroom Alignment**:
+   - Replaced duplicate corporate boardroom imagery with dedicated localized assets:
+     - **African Market (header_about.png)**: Features a modern African music-technology boardroom overlooking the iconic Nairobi skyline (KICC and Times Tower), with Black African music tech executives, software engineers, and founders collaborating around an oak conference table with laptops, studio microphones, and cloud music distribution architecture on the whiteboard.
+     - **Western Market (header_about_western.png)**: Features a Western metropolitan corporate executive boardroom.
+4. **'Tools & Music Operations' (/#/tools) Studio Alignment**:
+   - Localized studio production imagery across markets:
+     - **African Market (header_tools.png)**: Depicts an African music producer with dreadlocks wearing an African geometric patterned hoodie producing tracks at a DAW keyboard workstation.
+     - **Western Market (header_tools_western.png)**: Depicts a Western audio engineer and producer at an expansive Pro Tools audio mixing console overlooking an illuminated city skyline.
+5. **Cross-App Header Synchronization**:
+   - Synchronized all localized header image assets and fallback props across:
+     - pps/portal: PerfectForPageView.jsx, AboutView.jsx, ToolsView.jsx, ToursView.jsx, AppsView.jsx, TuneStreamViews.jsx, BlogPageView.jsx, and SupportPageView.jsx.
+     - pps/syncmavens and pps/tunestream: Shared asset parity for unified regional switching.

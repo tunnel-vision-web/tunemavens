@@ -21,7 +21,8 @@ export default function SupportPageView({ sessionUser, catalogTracks = [] }) {
       <PageHeader
         title="Support & Claims Desk"
         subtitle="Full AI-managed claim resolution, automated TuneLedger escrow holds, and 24/7 continuous assistance."
-        bgImage={headerImg}
+        bgImage={headerHelpImg}
+        bgImageWestern={headerHelpWesternImg}
         badge="Community & Support"
       />
 

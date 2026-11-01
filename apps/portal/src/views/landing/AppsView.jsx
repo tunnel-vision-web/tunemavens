@@ -33,6 +33,7 @@ import ComingSoonApp from '../../components/demos/ComingSoonApp.jsx'
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
 import perfectForHeaderImg from '../../assets/images/perfect_for_header.png'
+import perfectForHeaderWesternImg from '../../assets/images/perfect_for_header_western.png'
 import userManagerImg from '../../assets/images/user_manager.png'
 import publishingMockupImg from '../../assets/images/publishing_dashboard_mockup.png'
 import appsLedgerImg from '../../assets/images/apps_ledger.png'
@@ -227,7 +228,7 @@ export default function AppsView({ sessionUser }) {
     const appData = apps.find(a => a.id === 'epk-builder');
     return (
       <>
-        <PageHeader title="EPK Builder Studio" bgImage={perfectForHeaderImg} breadcrumb="EPK Builder" />
+        <PageHeader title="EPK Builder Studio" bgImage={perfectForHeaderImg} bgImageWestern={perfectForHeaderWesternImg} breadcrumb="EPK Builder" />
         <div className="container" style={{ paddingBottom: '96px', marginTop: '40px' }}>
           <div style={{ marginBottom: '24px' }}>
             <button 
