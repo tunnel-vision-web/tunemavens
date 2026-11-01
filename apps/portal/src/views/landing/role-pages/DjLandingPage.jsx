@@ -23,7 +23,7 @@ import headerImg from '../../../assets/images/header_tools.png'
 import appsLedgerImg from '../../../assets/images/apps_ledger.png'
 import heroMusic4Img from '../../../assets/images/hero_music_4.png'
 import heroMusic3Img from '../../../assets/images/hero_music_3.png'
-import bookingLogo from '../../../assets/logos/tunebooking-logo.png'
+import tunedjLogo from '../../../assets/logos/tunedj-logo.png'
 
 const FALLBACK_DJ_RATES = [
   {
@@ -350,8 +350,8 @@ export default function DjLandingPage({ switcher }) {
           >
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
               <img 
-                src={bookingLogo} 
-                alt="TuneBooking Logo" 
+                src={tunedjLogo} 
+                alt="tunedj Logo" 
                 style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} 
               />
             </div>

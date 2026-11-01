@@ -17,6 +17,7 @@ import vcLogo from '../assets/logos/tunecapital-logo.png';
 import corporateLogo from '../assets/logos/tunecorp-logo.png';
 import labelLogo from '../assets/logos/tunelabel-logo.png';
 import mediaHouseLogo from '../assets/logos/tunemedia-logo.png';
+import djLogo from '../assets/logos/tunedj-logo.png';
 
 export const getServiceUrl = (service, path = '/') => {
   const { hostname, protocol } = window.location;
@@ -72,7 +73,7 @@ export const ROLE_LOGOS = {
   podcaster: podcasterLogo,
   vc: vcLogo,
   label: labelLogo,
-  dj: bookingLogo,
+  dj: djLogo,
   media_house: mediaHouseLogo,
   'media-house': mediaHouseLogo,
   supervisor: syncLogo,
@@ -85,6 +86,7 @@ export const ROLE_LOGOS = {
   tunecorp: corporateLogo,
   tunelabel: labelLogo,
   tunemedia: mediaHouseLogo,
+  tunedj: djLogo,
   exec: labelLogo,
   'booking-agent': bookingLogo,
   manager: mediaHouseLogo,
@@ -94,7 +96,7 @@ export const PERFECT_FOR_ROLES = [
   { key: 'creator', label: 'Creators', sub: 'Artists & Producers', href: '/for/creator', accent: 'var(--cyan)' },
   { key: 'podcaster', label: 'Podcasters', sub: 'Tunepod Shows & Sponsorships', href: '/for/podcaster', accent: '#00f2fe' },
   { key: 'label', label: 'Record Labels', sub: 'Tunelabel Catalog & Rights', href: '/for/label', accent: 'var(--purple)' },
-  { key: 'dj', label: 'DJs', sub: 'DJ Pool Engine', href: '/for/dj', accent: '#14b8a6' },
+  { key: 'dj', label: 'DJs', sub: 'tunedj Pool Engine', href: '/for/dj', accent: '#14b8a6' },
   { key: 'media_house', label: 'Media Houses', sub: 'Tunemedia Broadcast & Ads', href: '/for/media-house', accent: 'var(--blue)' },
   { key: 'supervisor', label: 'Music Supervisors', sub: 'SyncMavens Licensing', href: '/for/supervisor', accent: 'var(--am)' },
   { key: 'consumer', label: 'tunestream', sub: 'Everyday Listeners', href: '/for/consumer', accent: 'var(--gr)' },

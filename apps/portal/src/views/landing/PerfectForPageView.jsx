@@ -76,7 +76,7 @@ export default function PerfectForPageView() {
     {
       key: 'dj',
       label: 'DJs',
-      sub: isSw ? 'Mfumo wa DJ Pool' : 'DJ Pool Engine',
+      sub: isSw ? 'Mfumo wa tunedj Pool' : 'tunedj Record Pool Engine',
       href: '/for/dj',
       logo: ROLE_LOGOS['dj'],
       accent: '#14b8a6',

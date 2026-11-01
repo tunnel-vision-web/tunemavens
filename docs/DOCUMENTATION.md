@@ -2249,6 +2249,7 @@ Allows creators and administrators to update or regenerate custom headers via na
      - **Corporates & Brands**: Rebranded to **Tunecorp** (`tunecorp-logo.png`) with Coral Red (`#ef4444`) accents, strictly distinguishing corporate brand advertising from TunePay (`tunepay-logo.png`).
      - **Record Labels**: Rebranded to **Tunelabel** (`tunelabel-logo.png`) with Royal Violet (`#8b5cf6`) accents.
      - **Media Houses**: Rebranded to **Tunemedia** (`tunemedia-logo.png`) with Sapphire Blue (`#3b82f6`) accents.
+     - **DJs & Curators**: Rebranded to **tunedj** (`tunedj-logo.png`) with Jade Teal (`#14b8a6`) analogous accents.
 2. **Standardized 120% Icon-to-Font Scale Architecture**:
    - Resized the authoritative chevron icon to exactly 120% of the wordmark's font height (40px icon vs 33px font), centered vertically with the baseline and ascender metrics.
    - Synchronized icon proportions across all brand identities: TuneMavens main logos, TuneStream, SyncMavens, TuneCreators, TuneBooking, TuneCompanion, TunePay, and the 5 revised persona brands.

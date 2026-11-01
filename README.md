@@ -138,6 +138,6 @@ npm test
 
 
 ### 12. Persona Brand Harmonization & Unified Logo Scale
-- **Revised Persona Product Brands:** Podcasters (**Tunepod**), VCs (**Tune Capital**), Corporates (**Tunecorp**), Record Labels (**Tunelabel**), and Media Houses (**Tunemedia**) each featuring distinct analogous accents matching their landing page themes.
+- **Revised Persona Product Brands:** Podcasters (**Tunepod**), VCs (**Tune Capital**), Corporates (**Tunecorp**), Record Labels (**Tunelabel**), Media Houses (**Tunemedia**), and DJs (**tunedj**) each featuring distinct analogous accents matching their landing page themes.
 - **120% Icon Sizing Standard:** Synchronized chevron icon height to 120% of wordmark font height (40px icon vs 33px font), vertically centered platformwide.
 - **Perfect For Carousel Integration:** Homepage carousel and role directories updated with authoritative persona brand assets.
