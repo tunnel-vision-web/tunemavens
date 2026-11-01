@@ -29,7 +29,8 @@ import creatorDashboardActualSw from '../../../assets/images/creator_dashboard_a
 import SEO from '../../../components/common/SEO.jsx'
 
 export default function PodcasterLandingPage({ switcher }) {
-  const { formatPrice, currencyInfo } = useRegion();
+  const { formatPrice, currencyInfo, language } = useRegion();
+  const isSw = language === 'sw';
   const [activeEpkShow, setActiveEpkShow] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [previewModal, setPreviewModal] = useState(false);

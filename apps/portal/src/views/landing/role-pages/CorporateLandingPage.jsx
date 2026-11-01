@@ -133,7 +133,8 @@ const FALLBACK_RATES = [
 ]
 
 export default function CorporateLandingPage({ switcher }) {
-  const { formatPrice, currencyInfo } = useRegion();
+  const { formatPrice, currencyInfo, language } = useRegion();
+  const isSw = language === 'sw';
   const accent = '#ef4444';
 
   // ================= HERO Slide Carousel State =================
