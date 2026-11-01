@@ -26,6 +26,7 @@ import {
 import './RoleLandingShared.css'
 import tuneCapitalLogo from '../../../assets/logos/tunecapital-logo.png'
 import { useRegion } from '../../../RegionContext.jsx'
+import { AUTHORITATIVE_VC_PACKAGES } from '../../../data/authoritativeRolePricing.js'
 import vcHero1Img from '../../../assets/images/vc_hero_1.png'
 import vcHero2Img from '../../../assets/images/vc_hero_2.png'
 import vcHero3Img from '../../../assets/images/vc_hero_3.png'
@@ -151,65 +152,7 @@ const DISCOVERY_OPPORTUNITIES = [
   }
 ];
 
-const FALLBACK_VC_RATES = [
-  {
-    slug: 'vc-syndicate',
-    name: 'Angel Syndicate Pool',
-    tier_badge: 'Co-Investment',
-    price_usd: 10000.0,
-    billing_period: 'minimum allocation',
-    credits: 0,
-    key_metric: '20% - 22% Expected Return · Single Tour Projects',
-    features: [
-      'Invest in vetted single-tour and multi-city concert projects',
-      'Paid back first from every ticket sold before artist profits are released',
-      'Direct access to live ticket sales, Spotify streaming numbers, and tour budgets',
-      'Backed by standardized, legally binding contracts with zero speculation',
-      'TuneMavens acts as secure technology and escrow intermediary (3.0% fee)',
-      '0 platform credits charged — permanent fee exemption for investors'
-    ],
-    is_popular: false,
-    cta: 'Join Syndicate Pool'
-  },
-  {
-    slug: 'vc-growth',
-    name: 'Cultural Growth Fund',
-    tier_badge: 'Most Popular',
-    price_usd: 50000.0,
-    billing_period: 'recommended deployment',
-    credits: 0,
-    key_metric: '22% - 25% Expected Return · Multi-Artist Tour Portfolio',
-    features: [
-      'Spread capital across top-performing recording artists and headline festival DJs',
-      'Automated deal alerts whenever an artist experiences a surge in streaming fans',
-      'Senior claim on ticket sales plus streaming royalties for downside protection',
-      'Dedicated portfolio manager with quarterly audit and tax-ready reporting packs',
-      'Optional tool to sponsor artist production equipment with 1.25x fixed returns',
-      'Zero annual management fees and zero platform subscription charges'
-    ],
-    is_popular: true,
-    cta: 'Deploy Growth Facility'
-  },
-  {
-    slug: 'vc-institutional',
-    name: 'Institutional Tour Desk',
-    tier_badge: 'Enterprise Facility',
-    price_usd: 250000.0,
-    billing_period: 'custom credit line',
-    credits: 0,
-    key_metric: '24% - 26% Expected Return · Global Tour Corridors',
-    features: [
-      'Bespoke legal structures (SPVs) tailored to your fund’s exact criteria',
-      'Cross-border tour financing covering 48+ live corridors (Africa, UK, US, EU, UAE)',
-      'Direct data API connecting to your fund’s internal analytics models',
-      'Priority repayment waterfall locked directly into ticketing payment gateways',
-      'Lead investor syndication rights: bring your own co-investors into larger deals',
-      'VIP artist tour hospitality access and direct relationships with top artist teams'
-    ],
-    is_popular: false,
-    cta: 'Inquire Institutional Desk'
-  }
-];
+const FALLBACK_VC_RATES = AUTHORITATIVE_VC_PACKAGES;
 
 export default function VcLandingPage({ switcher }) {
   const { currencyInfo, formatPrice, language } = useRegion();
@@ -238,12 +181,26 @@ export default function VcLandingPage({ switcher }) {
   const [underwriteExecuted, setUnderwriteExecuted] = useState(false);
   const [faqOpen, setFaqOpen] = useState(0);
 
-  // Rate Packages & Opt-In Modal State
-  const [tierPackages, setTierPackages] = useState(FALLBACK_VC_RATES);
+  // Rate Packages & Opt-In Modal State (Single Source of Truth)
+  const [tierPackages, setTierPackages] = useState(AUTHORITATIVE_VC_PACKAGES);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState(null);
   const [inquirySubmitting, setInquirySubmitting] = useState(false);
   const [inquirySuccess, setInquirySuccess] = useState(null);
+
+  // Fetch authoritative role packages from API with fallback
+  useEffect(() => {
+    fetch('/api/roles/vc/packages')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setTierPackages(data);
+        }
+      })
+      .catch(err => {
+        console.warn('Using authoritative VC rates:', err);
+      });
+  }, []);
 
   const [bookingForm, setBookingForm] = useState({
     organization_name: '',

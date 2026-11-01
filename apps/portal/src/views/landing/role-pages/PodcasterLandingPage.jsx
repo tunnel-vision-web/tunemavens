@@ -27,74 +27,15 @@ import './RoleLandingShared.css'
 import tunepodLogo from '../../../assets/logos/tunepod-logo.png'
 import { useRegion } from '../../../RegionContext.jsx'
 import { AUTHORITATIVE_AD_RATES } from '../../../data/authoritativeAdRates.js'
+import { AUTHORITATIVE_PODCASTER_PACKAGES } from '../../../data/authoritativeRolePricing.js'
 import { AUTHORITATIVE_PODCAST_SHOWS, PodcasterEpkModal } from '../../../components/podcasts/PodcastStreamingHub.jsx'
 import podcasterHero1Img from '../../../assets/images/podcaster_hero_1.png'
 import podcasterHero2Img from '../../../assets/images/podcaster_hero_2.png'
 import podcasterHero3Img from '../../../assets/images/podcaster_hero_3.png'
 import podcasterHero4Img from '../../../assets/images/podcaster_hero_4.png'
-import creatorDashboardActualEn from '../../../assets/images/creator_dashboard_actual_en.png'
-import creatorDashboardActualSw from '../../../assets/images/creator_dashboard_actual_sw.png'
+import podcasterDashboardActualEn from '../../../assets/images/podcaster_dashboard_actual_en.png'
+import podcasterDashboardActualSw from '../../../assets/images/podcaster_dashboard_actual_sw.png'
 import SEO from '../../../components/common/SEO.jsx'
-
-const FALLBACK_PODCASTER_RATES = [
-  {
-    slug: 'podcaster-starter',
-    name: 'Starter Cast Pool',
-    tier_badge: 'Free Forever',
-    price_usd: 0.0,
-    billing_period: 'forever free starter credits',
-    credits: 50,
-    key_metric: '5 Hours Audio Hosting · Fast RSS Feed',
-    features: [
-      'Automatic feed delivery to Apple Podcasts, Spotify, and TuneStream',
-      '5 hours of high-quality episode audio storage with fast global playback',
-      'Clear listener stats: total downloads, listener countries, and popular devices',
-      'Simple episode upload with automatic cover art and episode tags',
-      'Ready-to-use web player embed for your personal website or blog',
-      '50 free starter credits for automated audio voice cleanup'
-    ],
-    is_popular: false,
-    cta: 'Start Free Podcast'
-  },
-  {
-    slug: 'podcaster-studio',
-    name: 'Studio Pro Host',
-    tier_badge: 'Most Popular',
-    price_usd: 19.0,
-    billing_period: 'one-time credit reload',
-    credits: 250,
-    key_metric: '25 Hours Studio Sound · Built-In Sponsor Ads',
-    features: [
-      'Studio-grade sound leveling: voices sound crisp, loud, and balanced everywhere',
-      'Earn from sponsors: automatically play relevant ads to your listeners',
-      'Live Media Kit: share your verified download stats with brands in one link',
-      'Automatic team payouts: send co-hosts and producers their share via M-Pesa or bank',
-      'Instant voice-to-text transcripts and clickable episode chapter markers',
-      '250 credits reload with zero monthly fees — only pay when you need credits'
-    ],
-    is_popular: true,
-    cta: 'Go Studio Pro'
-  },
-  {
-    slug: 'podcaster-network',
-    name: 'Network & Syndicate',
-    tier_badge: 'Multi-Show Suite',
-    price_usd: 59.0,
-    billing_period: 'one-time credit reload',
-    credits: 850,
-    key_metric: 'Unlimited Shows · Priority Sponsor Matching',
-    features: [
-      'Manage multiple podcasts and channels all in one simple account',
-      'Priority access to corporate brand sponsors looking to book ad campaigns',
-      'Branded web player with your own links and sponsor promotional banners',
-      'Easy guest booking calendar and remote recording connections',
-      'Direct listener tipping: fans can tip you via M-Pesa or card with 0% platform take',
-      '850 credits reload and dedicated audio engineering support (no expiry)'
-    ],
-    is_popular: false,
-    cta: 'Launch Network Suite'
-  }
-];
 
 export default function PodcasterLandingPage({ switcher }) {
   const { formatPrice, currencyInfo, language } = useRegion();
@@ -116,12 +57,13 @@ export default function PodcasterLandingPage({ switcher }) {
   // Modals & Interactivity
   const [activeEpkShow, setActiveEpkShow] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [currentPodcastIndex, setCurrentPodcastIndex] = useState(0);
   const [previewModal, setPreviewModal] = useState(false);
   const [tipNotice, setTipNotice] = useState('');
   const [faqOpen, setFaqOpen] = useState(0);
 
-  // Rate Packages & Opt-In Modal State
-  const [tierPackages, setTierPackages] = useState(FALLBACK_PODCASTER_RATES);
+  // Rate Packages & Opt-In Modal State (Single Source of Truth)
+  const [tierPackages, setTierPackages] = useState(AUTHORITATIVE_PODCASTER_PACKAGES);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState(null);
   const [inquirySubmitting, setInquirySubmitting] = useState(false);
@@ -144,6 +86,20 @@ export default function PodcasterLandingPage({ switcher }) {
   const filteredShows = AUTHORITATIVE_PODCAST_SHOWS.filter(s => {
     return selectedCategory === 'All' || s.category === selectedCategory;
   });
+
+  // Fetch authoritative role packages from API with fallback
+  useEffect(() => {
+    fetch('/api/roles/podcaster/packages')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setTierPackages(data);
+        }
+      })
+      .catch(err => {
+        console.warn('Using authoritative podcaster rates:', err);
+      });
+  }, []);
 
   const slides = [
     {
@@ -349,6 +305,15 @@ export default function PodcasterLandingPage({ switcher }) {
         contextTitle: `Podcast: ${show.title}`
       }
     }));
+  };
+
+  // Carousel navigation for Popular Podcasts
+  const totalPodcasts = filteredShows.length;
+  const prevPodcast = () => {
+    setCurrentPodcastIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, totalPodcasts - 1)));
+  };
+  const nextPodcast = () => {
+    setCurrentPodcastIndex((prev) => (prev < totalPodcasts - 1 ? prev + 1 : 0));
   };
 
   const faqs = [
@@ -659,7 +624,7 @@ export default function PodcasterLandingPage({ switcher }) {
         </div>
       </section>
 
-      {/* ================= 4. Interactive 3x4 Grid of Podcasts Section ================= */}
+      {/* ================= 4. Interactive Podcasts Showcase CAROUSEL ================= */}
       <section id="podcasts-showcase" style={{ padding: '70px 0', background: '#080c1d', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px', marginBottom: '32px' }}>
@@ -675,246 +640,320 @@ export default function PodcasterLandingPage({ switcher }) {
               </p>
             </div>
 
-            {/* Category Filter Pills */}
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {categories.map(cat => (
+            {/* Category Filter Pills & Carousel Controls */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => { setSelectedCategory(cat); setCurrentPodcastIndex(0); }}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '3px',
+                      border: selectedCategory === cat ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.1)',
+                      background: selectedCategory === cat ? '#00f2fe' : 'rgba(255,255,255,0.03)',
+                      color: selectedCategory === cat ? '#040711' : '#cbd5e1',
+                      fontSize: '11.5px',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Carousel Arrows */}
+              <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
                 <button
-                  key={cat}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={prevPodcast}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: '3px',
-                    border: selectedCategory === cat ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.1)',
-                    background: selectedCategory === cat ? '#00f2fe' : 'rgba(255,255,255,0.03)',
-                    color: selectedCategory === cat ? '#040711' : '#cbd5e1',
-                    fontSize: '11.5px',
-                    fontWeight: 800,
-                    cursor: 'pointer'
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '4px',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                    fontSize: '18px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
+                  aria-label="Previous podcast"
                 >
-                  {cat}
+                  ‹
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={nextPodcast}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '4px',
+                    background: '#00f2fe',
+                    border: 'none',
+                    color: '#040711',
+                    fontSize: '18px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  aria-label="Next podcast"
+                >
+                  ›
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* 3x4 Grid of Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: '24px'
-          }}>
-            {filteredShows.map((show) => {
-              const entryRateUsd = show.sponsorshipRates?.[0]?.packagePriceUsd || AUTHORITATIVE_AD_RATES[0].price_usd;
-              const entryRateCredits = show.sponsorshipRates?.[0]?.packageCredits || AUTHORITATIVE_AD_RATES[0].credits;
-              const latestEp = show.episodes?.[0];
+          {/* Podcasts Carousel View */}
+          <div style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+              gap: '24px'
+            }}>
+              {filteredShows
+                .slice(currentPodcastIndex, currentPodcastIndex + 3)
+                .concat(filteredShows.slice(0, Math.max(0, 3 - (filteredShows.length - currentPodcastIndex))))
+                .slice(0, Math.min(3, totalPodcasts))
+                .map((show) => {
+                  const entryRateUsd = show.sponsorshipRates?.[0]?.packagePriceUsd || AUTHORITATIVE_AD_RATES[0].price_usd;
+                  const entryRateCredits = show.sponsorshipRates?.[0]?.packageCredits || AUTHORITATIVE_AD_RATES[0].credits;
+                  const latestEp = show.episodes?.[0];
 
-              return (
-                <div
-                  key={show.id}
-                  style={{
-                    background: '#090d1c',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '6px',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                    transition: 'transform 0.2s ease, border-color 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.borderColor = show.accentColor || '#00f2fe';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                  }}
-                >
-                  {/* Top Image Banner */}
-                  <div style={{ position: 'relative', height: '175px', width: '100%', overflow: 'hidden' }}>
-                    <img
-                      src={show.bannerUrl || show.coverArt}
-                      alt={show.title}
-                      onError={(e) => { e.currentTarget.src = show.coverArt || '/uploads/artwork/ndufo_cover.jpg'; }}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.75)' }}
-                    />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,10,22,0.2) 0%, rgba(6,10,22,0.95) 100%)' }} />
-
-                    {/* Top Badges */}
-                    <div style={{ position: 'absolute', top: '12px', left: '12px', right: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{
-                        background: show.accentColor || '#00f2fe',
-                        color: '#040711',
-                        fontSize: '9.5px',
-                        fontWeight: 900,
-                        padding: '3px 8px',
-                        borderRadius: '3px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.6px'
-                      }}>
-                        {show.category}
-                      </span>
-                      <span style={{
-                        background: 'rgba(0,0,0,0.65)',
-                        color: '#00f2fe',
-                        fontSize: '9.5px',
-                        fontWeight: 800,
-                        padding: '3px 8px',
-                        borderRadius: '3px',
-                        border: '1px solid rgba(0,242,254,0.3)'
-                      }}>
-                        Studio Balanced Voice
-                      </span>
-                    </div>
-
-                    {/* Square Artwork & Host Info */}
-                    <div style={{ position: 'absolute', bottom: '12px', left: '14px', display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-                      <img
-                        src={show.coverArt}
-                        alt={show.title}
-                        onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
-                        style={{
-                          width: '56px',
-                          height: '56px',
-                          borderRadius: '4px',
-                          border: '2px solid rgba(255,255,255,0.2)',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
-                          objectFit: 'cover'
-                        }}
-                      />
-                      <div>
-                        <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 800 }}>
-                          ★ {show.rating} · {show.subscribers} Subscribers
-                        </div>
-                        <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>
-                          {show.cadence}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Body */}
-                  <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <h4 style={{ fontSize: '16.5px', fontWeight: 800, color: '#fff', margin: '0 0 4px', lineHeight: 1.3 }}>
-                      {show.title}
-                    </h4>
-                    <div style={{ fontSize: '12px', color: '#00f2fe', fontWeight: 700, marginBottom: '8px' }}>
-                      Hosted by {show.host}
-                    </div>
-                    <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.5, margin: '0 0 12px', flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {show.description}
-                    </p>
-
-                    {/* Single Source of Truth Ad Flights */}
-                    <div style={{
-                      background: 'rgba(245, 158, 11, 0.08)',
-                      border: '1px solid rgba(245, 158, 11, 0.25)',
-                      borderRadius: '4px',
-                      padding: '6px 10px',
-                      marginBottom: '10px',
-                      fontSize: '11px',
-                      color: '#fbbf24',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}>
-                      <span>Sponsor Ads from <strong>{formatPrice(entryRateUsd)}</strong></span>
-                      <span style={{ color: '#94a3b8' }}>{entryRateCredits.toLocaleString()} Credits</span>
-                    </div>
-
-                    {/* Latest Episode Preview */}
-                    {latestEp && (
-                      <div style={{
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        borderRadius: '4px',
-                        padding: '6px 10px',
-                        marginBottom: '14px',
-                        fontSize: '11px',
-                        color: '#cbd5e1',
+                  return (
+                    <div
+                      key={show.id}
+                      style={{
+                        background: '#090d1c',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '6px',
+                        overflow: 'hidden',
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}>
-                        <span style={{ color: '#10b981', fontWeight: 800 }}>Latest:</span>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{latestEp.title}</span>
-                        <span style={{ color: '#64748b', fontSize: '10px' }}>{latestEp.duration}</span>
-                      </div>
-                    )}
+                        flexDirection: 'column',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                        transition: 'transform 0.2s ease, border-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.borderColor = show.accentColor || '#00f2fe';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                      }}
+                    >
+                      {/* Top Image Banner */}
+                      <div style={{ position: 'relative', height: '175px', width: '100%', overflow: 'hidden' }}>
+                        <img
+                          src={show.bannerUrl || show.coverArt}
+                          alt={show.title}
+                          onError={(e) => { e.currentTarget.src = show.coverArt || '/uploads/artwork/ndufo_cover.jpg'; }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.75)' }}
+                        />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,10,22,0.2) 0%, rgba(6,10,22,0.95) 100%)' }} />
 
-                    {/* Actions */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
-                      <button
-                        type="button"
-                        onClick={() => handlePlayEp(show)}
-                        style={{
-                          padding: '10px 14px',
-                          background: show.accentColor || '#00f2fe',
-                          color: '#040711',
-                          border: 'none',
+                        {/* Top Badges */}
+                        <div style={{ position: 'absolute', top: '12px', left: '12px', right: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{
+                            background: show.accentColor || '#00f2fe',
+                            color: '#040711',
+                            fontSize: '9.5px',
+                            fontWeight: 900,
+                            padding: '3px 8px',
+                            borderRadius: '3px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.6px'
+                          }}>
+                            {show.category}
+                          </span>
+                          <span style={{
+                            background: 'rgba(0,0,0,0.65)',
+                            color: '#00f2fe',
+                            fontSize: '9.5px',
+                            fontWeight: 800,
+                            padding: '3px 8px',
+                            borderRadius: '3px',
+                            border: '1px solid rgba(0,242,254,0.3)'
+                          }}>
+                            Studio Balanced Voice
+                          </span>
+                        </div>
+
+                        {/* Square Artwork & Host Info */}
+                        <div style={{ position: 'absolute', bottom: '12px', left: '14px', display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                          <img
+                            src={show.coverArt}
+                            alt={show.title}
+                            onError={(e) => { e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
+                            style={{
+                              width: '56px',
+                              height: '56px',
+                              borderRadius: '4px',
+                              border: '2px solid rgba(255,255,255,0.2)',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                              objectFit: 'cover'
+                            }}
+                          />
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 800 }}>
+                              ★ {show.rating} · {show.subscribers} Subscribers
+                            </div>
+                            <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>
+                              {show.cadence}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Body */}
+                      <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <h4 style={{ fontSize: '16.5px', fontWeight: 800, color: '#fff', margin: '0 0 4px', lineHeight: 1.3 }}>
+                          {show.title}
+                        </h4>
+                        <div style={{ fontSize: '12px', color: '#00f2fe', fontWeight: 700, marginBottom: '8px' }}>
+                          Hosted by {show.host}
+                        </div>
+                        <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.5, margin: '0 0 12px', flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {show.description}
+                        </p>
+
+                        {/* Single Source of Truth Ad Flights */}
+                        <div style={{
+                          background: 'rgba(245, 158, 11, 0.08)',
+                          border: '1px solid rgba(245, 158, 11, 0.25)',
                           borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 900,
-                          cursor: 'pointer',
+                          padding: '6px 10px',
+                          marginBottom: '10px',
+                          fontSize: '11px',
+                          color: '#fbbf24',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        <RiPlayFill size={16} /> Stream Episode
-                      </button>
+                          justifyContent: 'space-between'
+                        }}>
+                          <span>Sponsor Ads from <strong>{formatPrice(entryRateUsd)}</strong></span>
+                          <span style={{ color: '#94a3b8' }}>{entryRateCredits.toLocaleString()} Credits</span>
+                        </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <button
-                          type="button"
-                          onClick={() => setActiveEpkShow(show)}
-                          style={{
-                            padding: '8px 10px',
-                            background: 'rgba(0, 242, 254, 0.08)',
-                            color: '#00f2fe',
-                            border: '1px solid rgba(0, 242, 254, 0.35)',
+                        {/* Latest Episode Preview */}
+                        {latestEp && (
+                          <div style={{
+                            background: 'rgba(255,255,255,0.02)',
+                            border: '1px solid rgba(255,255,255,0.06)',
                             borderRadius: '4px',
+                            padding: '6px 10px',
+                            marginBottom: '14px',
                             fontSize: '11px',
-                            fontWeight: 800,
-                            cursor: 'pointer',
+                            color: '#cbd5e1',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '5px'
-                          }}
-                        >
-                          <RiAwardFill size={13} /> View Media Kit
-                        </button>
+                            gap: '6px'
+                          }}>
+                            <span style={{ color: '#10b981', fontWeight: 800 }}>Latest:</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{latestEp.title}</span>
+                            <span style={{ color: '#64748b', fontSize: '10px' }}>{latestEp.duration}</span>
+                          </div>
+                        )}
 
-                        <button
-                          type="button"
-                          onClick={() => handleTip(show)}
-                          style={{
-                            padding: '8px 10px',
-                            background: 'rgba(245, 158, 11, 0.08)',
-                            color: '#fbbf24',
-                            border: '1px solid rgba(245, 158, 11, 0.35)',
-                            borderRadius: '4px',
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '5px'
-                          }}
-                        >
-                          <RiCoinsFill size={13} color="#f59e0b" /> Tip ({formatPrice(5)})
-                        </button>
+                        {/* Actions */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
+                          <button
+                            type="button"
+                            onClick={() => handlePlayEp(show)}
+                            style={{
+                              padding: '10px 14px',
+                              background: show.accentColor || '#00f2fe',
+                              color: '#040711',
+                              border: 'none',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: 900,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <RiPlayFill size={16} /> Stream Episode
+                          </button>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setActiveEpkShow(show)}
+                              style={{
+                                padding: '8px 10px',
+                                background: 'rgba(0, 242, 254, 0.08)',
+                                color: '#00f2fe',
+                                border: '1px solid rgba(0, 242, 254, 0.35)',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px'
+                              }}
+                            >
+                              <RiAwardFill size={13} /> View Media Kit
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleTip(show)}
+                              style={{
+                                padding: '8px 10px',
+                                background: 'rgba(245, 158, 11, 0.08)',
+                                color: '#fbbf24',
+                                border: '1px solid rgba(245, 158, 11, 0.35)',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px'
+                              }}
+                            >
+                              <RiCoinsFill size={13} color="#f59e0b" /> Tip ({formatPrice(5)})
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+            </div>
+
+            {/* Pagination indicator */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '24px' }}>
+              {filteredShows.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentPodcastIndex(idx)}
+                  style={{
+                    width: idx === currentPodcastIndex ? '20px' : '8px',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: idx === currentPodcastIndex ? '#00f2fe' : 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  aria-label={`Jump to podcast ${idx + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -999,7 +1038,7 @@ export default function PodcasterLandingPage({ switcher }) {
 
           <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
             <img 
-              src={isSw ? creatorDashboardActualSw : creatorDashboardActualEn} 
+              src={isSw ? podcasterDashboardActualSw : podcasterDashboardActualEn} 
               alt="TuneMavens Podcaster Studio Dashboard" 
               style={{ 
                 maxWidth: '100%', 
@@ -1596,7 +1635,7 @@ export default function PodcasterLandingPage({ switcher }) {
               <RiCloseFill size={20} />
             </button>
             <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneMavens Podcaster Studio · Actual System Interface</h3>
-            <img src={isSw ? creatorDashboardActualSw : creatorDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '4px' }} />
+            <img src={isSw ? podcasterDashboardActualSw : podcasterDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '4px' }} />
           </div>
         </div>
       )}

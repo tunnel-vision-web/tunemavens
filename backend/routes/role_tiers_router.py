@@ -495,6 +495,154 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "is_popular": False,
             "cta": "Become a Patron"
         }
+    ],
+    "podcaster": [
+        {
+            "role": "podcaster",
+            "slug": "podcaster-starter",
+            "name": "Starter Cast Pool",
+            "tier_badge": "Free Forever",
+            "price_usd": 0.0,
+            "billing_period": "forever free starter credits",
+            "credits": 50,
+            "key_metric": "5 Hours Audio Hosting · Fast RSS Feed",
+            "deliverables": [
+                "Fast RSS 2.0 Global Feed Syndication",
+                "TuneStream Web Player Embed Code"
+            ],
+            "features": [
+                "Automatic feed delivery to Apple Podcasts, Spotify, and TuneStream",
+                "5 hours of high-quality episode audio storage with fast global playback",
+                "Clear listener stats: total downloads, listener countries, and popular devices",
+                "Simple episode upload with automatic cover art and episode tags",
+                "Ready-to-use web player embed for your personal website or blog",
+                "50 free starter credits for automated audio voice cleanup"
+            ],
+            "is_popular": False,
+            "cta": "Start Free Podcast"
+        },
+        {
+            "role": "podcaster",
+            "slug": "podcaster-studio",
+            "name": "Studio Pro Host",
+            "tier_badge": "Most Popular",
+            "price_usd": 19.0,
+            "billing_period": "one-time credit reload",
+            "credits": 250,
+            "key_metric": "25 Hours Studio Sound · Built-In Sponsor Ads",
+            "deliverables": [
+                "Server-Side Dynamic Ad Insertion (DAI)",
+                "Cryptographically Certified Show Media Kit"
+            ],
+            "features": [
+                "Studio-grade sound leveling: voices sound crisp, loud, and balanced everywhere",
+                "Earn from sponsors: automatically play relevant ads to your listeners",
+                "Live Media Kit: share your verified download stats with brands in one link",
+                "Automatic team payouts: send co-hosts and producers their share via M-Pesa or bank",
+                "Instant voice-to-text transcripts and clickable episode chapter markers",
+                "250 credits reload with zero monthly fees — only pay when you need credits"
+            ],
+            "is_popular": True,
+            "cta": "Go Studio Pro"
+        },
+        {
+            "role": "podcaster",
+            "slug": "podcaster-network",
+            "name": "Network & Syndicate",
+            "tier_badge": "Multi-Show Suite",
+            "price_usd": 59.0,
+            "billing_period": "one-time credit reload",
+            "credits": 850,
+            "key_metric": "Unlimited Shows · Priority Sponsor Matching",
+            "deliverables": [
+                "Multi-Show Network Management Dashboard",
+                "Corporate Sponsor Ad Flight Bidding Access"
+            ],
+            "features": [
+                "Manage multiple podcasts and channels all in one simple account",
+                "Priority access to corporate brand sponsors looking to book ad campaigns",
+                "Branded web player with your own links and sponsor promotional banners",
+                "Easy guest booking calendar and remote recording connections",
+                "Direct listener tipping: fans can tip you via M-Pesa or card with 0% platform take",
+                "850 credits reload and dedicated audio engineering support (no expiry)"
+            ],
+            "is_popular": False,
+            "cta": "Launch Network Suite"
+        }
+    ],
+    "vc": [
+        {
+            "role": "vc",
+            "slug": "vc-syndicate",
+            "name": "Angel Syndicate Pool",
+            "tier_badge": "Co-Investment",
+            "price_usd": 10000.0,
+            "billing_period": "minimum allocation",
+            "credits": 0,
+            "key_metric": "20% - 22% Expected Return · Single Tour Projects",
+            "deliverables": [
+                "Senior Secured First-Dollar Recoupment Rights",
+                "Full Audience & Box-Office Telemetry Access"
+            ],
+            "features": [
+                "Invest in vetted single-tour and multi-city concert projects",
+                "Paid back first from every ticket sold before artist profits are released",
+                "Direct access to live ticket sales, Spotify streaming numbers, and tour budgets",
+                "Backed by standardized, legally binding contracts with zero speculation",
+                "TuneMavens acts as secure technology and escrow intermediary (3.0% fee)",
+                "0 platform credits charged — permanent fee exemption for investors"
+            ],
+            "is_popular": False,
+            "cta": "Join Syndicate Pool"
+        },
+        {
+            "role": "vc",
+            "slug": "vc-growth",
+            "name": "Cultural Growth Fund",
+            "tier_badge": "Most Popular",
+            "price_usd": 50000.0,
+            "billing_period": "recommended deployment",
+            "credits": 0,
+            "key_metric": "22% - 25% Expected Return · Multi-Artist Tour Portfolio",
+            "deliverables": [
+                "Multi-Creator Tour Portfolio Facility",
+                "Priority Deal Flow Stream Telemetry Alerts"
+            ],
+            "features": [
+                "Spread capital across top-performing recording artists and headline festival DJs",
+                "Automated deal alerts whenever an artist experiences a surge in streaming fans",
+                "Senior claim on ticket sales plus streaming royalties for downside protection",
+                "Dedicated portfolio manager with quarterly audit and tax-ready reporting packs",
+                "Optional tool to sponsor artist production equipment with 1.25x fixed returns",
+                "Zero annual management fees and zero platform subscription charges"
+            ],
+            "is_popular": True,
+            "cta": "Deploy Growth Facility"
+        },
+        {
+            "role": "vc",
+            "slug": "vc-institutional",
+            "name": "Institutional Tour Desk",
+            "tier_badge": "Enterprise Facility",
+            "price_usd": 250000.0,
+            "billing_period": "custom credit line",
+            "credits": 0,
+            "key_metric": "24% - 26% Expected Return · Global Tour Corridors",
+            "deliverables": [
+                "Bespoke Cross-Border SPV Legal Structuring",
+                "Real-Time Telemetry REST & WebSocket API"
+            ],
+            "features": [
+                "Bespoke legal structures (SPVs) tailored to your fund’s exact criteria",
+                "Cross-border tour financing covering 48+ live corridors (Africa, UK, US, EU, UAE)",
+                "Direct data API connecting to your fund’s internal analytics models",
+                "Priority repayment waterfall locked directly into ticketing payment gateways",
+                "Lead investor syndication rights: bring your own co-investors into larger deals",
+                "VIP artist tour hospitality access and direct relationships with top artist teams"
+            ],
+            "is_popular": False,
+            "cta": "Inquire Institutional Desk"
+        }
     ]
 }
 
@@ -502,15 +650,16 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
 def seed_default_role_tiers_if_empty():
     """Ensure standard commercial tiers exist in db.role_tiers for all roles."""
     try:
-        count = db.role_tiers.count_documents({})
-        if count == 0:
-            inserted = 0
-            for role_name, tiers in DEFAULT_ROLE_TIERS.items():
-                for t in tiers:
+        inserted = 0
+        for role_name, tiers in DEFAULT_ROLE_TIERS.items():
+            for t in tiers:
+                existing = db.role_tiers.find_one({"slug": t["slug"]})
+                if not existing:
                     doc = {**t, "created_at": datetime.now(timezone.utc)}
                     db.role_tiers.insert_one(doc)
                     inserted += 1
-            logger.info(f"Successfully seeded {inserted} commercial packages across 6 personas into db.role_tiers")
+        if inserted > 0:
+            logger.info(f"Successfully seeded {inserted} commercial packages into db.role_tiers")
     except Exception as e:
         logger.warning(f"Role tiers seed warning: {e}")
 
@@ -554,6 +703,10 @@ def normalize_role(role_raw: str) -> str:
         return "creator"
     if r in ("corporate", "brands", "brand"):
         return "corporate"
+    if r in ("podcaster", "podcasters", "podcast", "podcasts"):
+        return "podcaster"
+    if r in ("vc", "vcs", "investor", "investors", "capital"):
+        return "vc"
     return r
 
 
@@ -630,6 +783,16 @@ def get_media_packages():
 @router.get("/api/consumer/packages")
 def get_consumer_packages():
     return get_role_packages("consumer")
+
+
+@router.get("/api/podcaster/packages")
+def get_podcaster_packages():
+    return get_role_packages("podcaster")
+
+
+@router.get("/api/vc/packages")
+def get_vc_packages():
+    return get_role_packages("vc")
 
 
 @router.post("/api/roles/inquiries")

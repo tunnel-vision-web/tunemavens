@@ -2381,23 +2381,40 @@ Allows creators and administrators to update or regenerate custom headers via na
    - **Institutional Investor Mandate Modal**: Fund name, managing partner name, institutional email, deployment capacity, and corridor focus submitted to `/api/roles/vc/inquiries` with fallback confirmation.
    - **Institutional FAQ Accordion**: 5 comprehensive answers covering senior-secured first-dollar liens, TuneMavens' role as technology intermediary, force majeure event insurance, LP zero-credit exemption, and fractional syndication.
 
-### 9.44.33 Persona Hero Visual Harmonization, Secondary Menu Parity, Layman Language & Active Opportunities Carousel
-1. **Clean Photographic Subject & Location Hero Visuals**:
-   - Replaced earlier telemetry charts and data graphs drawn into hero backgrounds with clean, authentic photographic/cinematic subjects and locations:
-     - **Podcasters (`podcaster_hero_1.png` - `4.png`)**: Professional broadcast studios featuring acoustic wood slat paneling, Shure SM7B broadcast microphones on boom arms, studio headphones, collaborative co-hosts conversing, and sound mixer consoles. Completely eliminated data charts from the image background to avoid visual conflict with hero titles, badges, and action buttons.
-     - **VCs & Investors (`vc_hero_1.png` - `4.png`)**: Prestigious executive boardrooms overlooking modern city skylines, private VIP stadium concert viewing suites overlooking festival crowds, and contemporary architectural meeting lounges.
-2. **Secondary Menu Location Harmonization**:
-   - Repositioned `{switcher}` across `PodcasterLandingPage.jsx` and `VcLandingPage.jsx` to be rendered directly underneath the interactive HERO carousel section (`hw role-hero-wrapper`), establishing exact structural parity with `DjLandingPage.jsx`, `LabelLandingPage.jsx`, `CorporateLandingPage.jsx`, and `SupervisorLandingPage.jsx`.
-3. **Conversational Layman Language Translation**:
-   - Simplified technical industry jargon across all marketing sections into empowering, conversational plain English:
-     - "Automated dialogue leveling (-16 LUFS)" -> "Crystal-Clear Sound in One Click: voices sound loud, clear, and balanced on every phone."
-     - "Server-Side Dynamic Ad Insertion (DAI)" -> "Get Paid When People Listen: play current sponsor ads in your episodes and keep 85%."
-     - "Senior-Secured Short-Cycle Recoupment Lien" -> "You Get Paid Back First: ticket sales flow directly into repaying your investment before artist profits are released."
-     - "Predictive Telemetry Risk Models" -> "Invest with Real Numbers: see verified ticket sales, Spotify listener velocity, and true fan engagement."
-4. **Active Opportunities Interactive Carousel (`VcLandingPage.jsx`)**:
-   - Replaced static card grid with an interactive multi-card sliding carousel:
-     - Side navigation arrows (`‹` and `›`) with hover elevation and responsive layout.
-     - Paging indicator dots reflecting the active card window.
-     - Automatic index reset to 0 upon toggling between creator persona categories (All, Artists, Podcasters, DJs).
+### 9.44.34 Podcaster Popular Shows Carousel, Authentic Studio Console Screenshots & Single Source of Truth Pricing Architecture
+1. **Interactive Carousel for Popular Podcasts Showcase (`PodcasterLandingPage.jsx`)**:
+   - Converted the `#podcasts-showcase` section from a static cards display to a responsive sliding carousel:
+     - Side navigation buttons (`‹` and `›`) with hover elevation and accent styling.
+     - Responsive windowing slicing 3 shows on desktop / tablet and 1 show on mobile.
+     - Paging indicator dots reflecting the active window position.
+     - Category filter synchronization automatically resetting the active slide index to 0 when changing categories.
+
+2. **Authentic Podcaster Studio Console Localized Screenshots**:
+   - Replaced generic creator studio screenshots with actual, live-rendered screenshots of the **Podcaster Studio Workspace**:
+     - Captured via headless automated browser running against `http://localhost:3000/#/dashboard?tab=podcaster-studio&role=podcaster`.
+     - Saved authentic screenshots:
+       - [`apps/portal/src/assets/images/podcaster_dashboard_actual_en.png`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/assets/images/podcaster_dashboard_actual_en.png)
+       - [`apps/portal/src/assets/images/podcaster_dashboard_actual_sw.png`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/assets/images/podcaster_dashboard_actual_sw.png)
+       - [`apps/portal/src/assets/images/podcaster_dashboard_actual.png`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/assets/images/podcaster_dashboard_actual.png) (fallback)
+     - Features real episode lists, audio waveform meters (-16 LUFS broadcast standard), transcript status indicators, and dynamic ad slot markers.
+     - Localized preview modal in both English and Kiswahili with high-resolution inspection.
+
+3. **Unified Single Source of Truth for Role Pricing Architecture**:
+   - **Frontend Source of Truth (`authoritativeRolePricing.js`)**:
+     - Created [`apps/portal/src/data/authoritativeRolePricing.js`](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/data/authoritativeRolePricing.js) exporting canonical pricing and package definitions:
+       - `AUTHORITATIVE_PODCASTER_PACKAGES` (Starter Cast Pool $0, Studio Pro Host $19 / 250 credits, Network & Syndicate $59 / 850 credits)
+       - `AUTHORITATIVE_VC_PACKAGES` (Angel Syndicate Pool $10k, Cultural Growth Fund $50k, Institutional Tour Desk $250k)
+       - `AUTHORITATIVE_DJ_PACKAGES` (Club Resident Load $19 / 200 credits, Touring Pro DJ Load $49 / 600 credits, Headline & Festival Curator Load $129 / 1800 credits)
+       - `AUTHORITATIVE_LABEL_PACKAGES` (Indie Imprint Load $99 / 1000 credits, Scale Label Operations Load $299 / 3500 credits, Major / Conglomerate Enterprise Load $799 / 10000 credits)
+   - **Backend Source of Truth (`role_tiers_router.py`) & MongoDB Synchronization**:
+     - Added `podcaster` and `vc` role tiers directly into `DEFAULT_ROLE_TIERS` in [`backend/routes/role_tiers_router.py`](file:///c:/BOCM/Apps/tunemavens/backend/routes/role_tiers_router.py).
+     - Added aliases for `podcaster` (`tune_pod`, `pod`, `podcast`) and `vc` (`venture_capital`, `investor`, `fund`) in role normalization.
+     - Added dedicated GET endpoints:
+       - `/api/roles/podcaster/packages` and `/api/podcaster/packages`
+       - `/api/roles/vc/packages` and `/api/vc/packages`
+     - Created and executed [`scripts/seed_role_tiers.py`](file:///c:/BOCM/Apps/tunemavens/scripts/seed_role_tiers.py) to seed new role packages into MongoDB `db.role_tiers`.
+   - **Frontend Integration**:
+     - `PodcasterLandingPage.jsx` and `VcLandingPage.jsx` initialize component state directly from the authoritative constants and fetch live packages from `/api/roles/{role}/packages` on mount.
+
 
 
