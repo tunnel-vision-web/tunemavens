@@ -21,12 +21,12 @@ import './RoleLandingShared.css'
 import { useRegion } from '../../../RegionContext.jsx'
 import { getServiceUrl } from '../../../components/PerfectForSidebar.jsx'
 import syncHeaderImg from '../../../assets/images/sync_header.png'
-import supervisorDashboardActualEn from '../../../assets/images/supervisor_dashboard_actual_en.png'
-import supervisorDashboardActualSw from '../../../assets/images/supervisor_dashboard_actual_sw.png'
-import SEO from '../../../components/common/SEO.jsx'
 import userSupervisorImg from '../../../assets/images/user_supervisor.png'
 import appsSyncImg from '../../../assets/images/apps_sync.png'
 import heroMusic4Img from '../../../assets/images/hero_music_4.png'
+import supervisorDashboardActualEn from '../../../assets/images/supervisor_dashboard_actual_en.png'
+import supervisorDashboardActualSw from '../../../assets/images/supervisor_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 import syncLogo from '../../../assets/logos/syncmavens-logo.png'
 
 const SUPERVISOR_LICENSING_MODELS = [
@@ -141,7 +141,7 @@ export default function SupervisorLandingPage({ switcher }) {
         }
       })
       .catch(() => {
-        // Defaults to per-track licensing & negotiation models
+        // Defaults to per-track dynamic licensing & deal desk models
       });
   }, []);
 
@@ -193,7 +193,7 @@ export default function SupervisorLandingPage({ switcher }) {
       hLine2Color: '#10b981',
       s: "Can't find an existing match? Post confidential scene briefs to verified independent composers across East Africa and the global diaspora.",
       b1: 'Post Private Brief',
-      b1link: '/register?role=studio',
+      b1link: '#post-brief',
       b2: 'Review Composer Roster',
       b2link: '#composers',
       image: heroMusic4Img
@@ -221,12 +221,14 @@ export default function SupervisorLandingPage({ switcher }) {
     }, TRANSITION_OUT_MS);
   };
 
-  const goToNextSlide = () => {
-    goToSlide((currentSlide + 1) % slideCount);
+  const goToPrevSlide = (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    goToSlide((currentSlide - 1 + slideCount) % slideCount);
   };
 
-  const goToPrevSlide = () => {
-    goToSlide((currentSlide - 1 + slideCount) % slideCount);
+  const goToNextSlide = (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    goToSlide((currentSlide + 1) % slideCount);
   };
 
   useEffect(() => {
@@ -341,15 +343,21 @@ export default function SupervisorLandingPage({ switcher }) {
           {slides.map((s, index) => (
             <div 
               key={index}
-              className={`bg ${index === currentSlide ? `active ${slideState}` : ''}`}
+              className={`bg ${index === currentSlide ? 'on' : ''}`}
               style={{
                 backgroundImage: `url(${s.image})`,
-                backgroundPosition: 'center 20%'
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: currentSlide === index 
+                  ? (titleHovered ? 'brightness(1.55) blur(0px)' : 'brightness(1.4) blur(1px)')
+                  : 'none',
+                transform: currentSlide === index && titleHovered ? 'scale(1.03)' : 'scale(1)',
+                transition: 'filter 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.2s ease'
               }}
             />
           ))}
           <div 
-            className="role-hero-scrim" 
+            className="bgo" 
             style={{
               opacity: titleHovered ? 0.4 : 0.82,
               transition: 'opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1)'
@@ -403,7 +411,16 @@ export default function SupervisorLandingPage({ switcher }) {
             </p>
 
             <div className={`hb hbtns ${slideState}`}>
-              {currentSlideData.b1link.startsWith('#') ? (
+              {currentSlideData.b1link === '#post-brief' ? (
+                <button 
+                  type="button"
+                  className="hbp"
+                  style={{ background: currentSlideData.dot }}
+                  onClick={() => handleOpenBooking(tierPackages[1])}
+                >
+                  {currentSlideData.b1} <RiArrowRightLine size={15} style={{ marginLeft: '6px' }} />
+                </button>
+              ) : currentSlideData.b1link.startsWith('#') ? (
                 <a 
                   href={currentSlideData.b1link} 
                   className="hbp"
@@ -430,6 +447,21 @@ export default function SupervisorLandingPage({ switcher }) {
                   rel="noopener noreferrer"
                 >
                   {currentSlideData.b2} <RiExternalLinkLine size={13} style={{ marginLeft: '4px' }} />
+                </a>
+              ) : currentSlideData.b2link.startsWith('#') ? (
+                <a 
+                  href={currentSlideData.b2link} 
+                  className="hbg"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const targetEl = document.querySelector(currentSlideData.b2link);
+                    if (targetEl) {
+                      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      window.history.pushState(null, '', currentSlideData.b2link);
+                    }
+                  }}
+                >
+                  {currentSlideData.b2}
                 </a>
               ) : (
                 <Link to={currentSlideData.b2link} className="hbg">
@@ -459,23 +491,32 @@ export default function SupervisorLandingPage({ switcher }) {
           </button>
         </div>
 
-        <div className="indicators">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              className={`indicator ${index === currentSlide ? 'active' : ''}`}
-              onClick={() => goToSlide(index)}
-              aria-label={`Go to slide ${index + 1}`}
-            >
-              <div 
-                className="progress" 
-                style={{ 
-                  width: index === currentSlide ? `${progress}%` : (index < currentSlide ? '100%' : '0%') 
-                }} 
+        <div className={`sui-bottom ${slideState}`}>
+          <div className="spr">
+            <div 
+              className="spb" 
+              style={{ 
+                width: `${progress}%`,
+                background: currentSlideData.dot,
+                boxShadow: `0 0 10px ${currentSlideData.dot}`
+              }} 
+            />
+          </div>
+          <div className="sdots">
+            {slides.map((s, index) => (
+              <button
+                key={index}
+                type="button"
+                className={`sd ${index === currentSlide ? 'on' : ''}`}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToSlide(index); }}
+                aria-label={`Go to slide ${index + 1}`}
+                style={{
+                  background: index === currentSlide ? s.dot : undefined,
+                  boxShadow: index === currentSlide ? `0 0 8px ${s.dot}` : undefined
+                }}
               />
-            </button>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
@@ -489,104 +530,100 @@ export default function SupervisorLandingPage({ switcher }) {
       )}
 
       <div className="role-container">
-        {/* ================= 2. EXECUTIVE VALUE METRICS ================= */}
-        <section className="role-metrics-panel">
-          <div className="role-metric-card">
-            <span className="role-metric-val">100%</span>
-            <span className="role-metric-lbl">Pre-Cleared One-Stop Sync</span>
-            <p className="role-metric-sub">Master &amp; publishing rights guaranteed upfront with zero unresolved rights holders.</p>
+        {/* ================= 2. EXECUTIVE VALUE METRICS (STATS RIBBON) ================= */}
+        <section className="role-stats-ribbon" style={{ marginTop: '40px' }}>
+          <div className="role-stat-item">
+            <span className="role-stat-value">100%</span>
+            <span className="role-stat-label">Pre-Cleared One-Stop Masters</span>
           </div>
-          <div className="role-metric-card">
-            <span className="role-metric-val">&lt; 4 hrs</span>
-            <span className="role-metric-lbl">Broadcast Cue Clearance</span>
-            <p className="role-metric-sub">Rapid contract execution and automated stem delivery for breaking episodic deadlines.</p>
+          <div className="role-stat-item">
+            <span className="role-stat-value">&lt; 4 hrs</span>
+            <span className="role-stat-label">Urgent Broadcast Cue Clearance</span>
           </div>
-          <div className="role-metric-card">
-            <span className="role-metric-val">94%+</span>
-            <span className="role-metric-lbl">Scene Script Tagging Precision</span>
-            <p className="role-metric-sub">Bespoke AI translates screenplay emotional cues directly to tempo, era, and key.</p>
+          <div className="role-stat-item">
+            <span className="role-stat-value">94%+</span>
+            <span className="role-stat-label">Scene Script Tagging Precision</span>
           </div>
-          <div className="role-metric-card">
-            <span className="role-metric-val">0 Credits</span>
-            <span className="role-metric-lbl">No Packages or Hidden Fees</span>
-            <p className="role-metric-sub">Supervisors search, audition, post briefs, and negotiate deals completely free forever.</p>
+          <div className="role-stat-item">
+            <span className="role-stat-value">0 Credits</span>
+            <span className="role-stat-label">Zero Packages or Hidden Fees</span>
           </div>
         </section>
 
-        {/* ================= 3. CORE SUPERVISOR CAPABILITIES ================= */}
-        <section className="role-features-section">
+        {/* ================= 3. CORE SUPERVISOR CAPABILITIES (PILLARS GRID) ================= */}
+        <section id="features" style={{ scrollMarginTop: '100px' }}>
           <div className="role-section-header">
             <span className="role-section-eyebrow">Enterprise Sync Technology</span>
-            <h2 className="role-section-title">Built Specifically for Film, Television &amp; Advertising</h2>
+            <h3 className="role-section-title">Built Specifically for Film, Television &amp; Advertising</h3>
             <p className="role-section-desc">
               From natural-language scene cue matching to lossless multi-track stem downloads, SyncMavens eliminates traditional music clearance bottlenecks.
             </p>
           </div>
 
-          <div className="role-features-grid">
-            <div className="role-feature-card">
-              <div className="role-feature-icon"><RiSearchEyeFill size={24} /></div>
-              <h3 className="role-feature-title">AI Scene Brief Tagging</h3>
-              <p className="role-feature-desc">
+          <div className="role-pillars-grid">
+            <div className="role-pillar-card">
+              <div className="role-pillar-icon"><RiSearchEyeFill size={24} /></div>
+              <h4 className="role-pillar-title">AI Scene Brief Tagging</h4>
+              <p className="role-pillar-desc">
                 Drop in raw director script excerpts or tempo guidelines. Our vector model scans mood, cultural origins, and lyric themes to return mathematically ranked track candidates.
               </p>
             </div>
 
-            <div className="role-feature-card">
-              <div className="role-feature-icon"><RiSoundModuleFill size={24} /></div>
-              <h3 className="role-feature-title">Multi-Track Stem Downloads</h3>
-              <p className="role-feature-desc">
+            <div className="role-pillar-card" id="stems" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiSoundModuleFill size={24} /></div>
+              <h4 className="role-pillar-title">Multi-Track Stem Downloads</h4>
+              <p className="role-pillar-desc">
                 Access isolated vocal, bass, drum, and instrumental stems immediately upon licensing. Test cuts inside your Avid or Premiere timeline without waiting for composer delivery.
               </p>
             </div>
 
-            <div className="role-feature-card">
-              <div className="role-feature-icon"><RiFilePaper2Fill size={24} /></div>
-              <h3 className="role-feature-title">Automated Cue Sheet Generation</h3>
-              <p className="role-feature-desc">
+            <div className="role-pillar-card">
+              <div className="role-pillar-icon"><RiFilePaper2Fill size={24} /></div>
+              <h4 className="role-pillar-title">Automated Cue Sheet Generation</h4>
+              <p className="role-pillar-desc">
                 Export industry-compliant cue sheets formatted with ISRC codes, CAE/IPI numbers, duration timestamps, and split percentages for ASCAP, BMI, and global PRO reporting.
               </p>
             </div>
 
-            <div className="role-feature-card">
-              <div className="role-feature-icon"><RiShieldCheckFill size={24} /></div>
-              <h3 className="role-feature-title">100% Indemnified One-Stop Rights</h3>
-              <p className="role-feature-desc">
+            <div className="role-pillar-card">
+              <div className="role-pillar-icon"><RiShieldCheckFill size={24} /></div>
+              <h4 className="role-pillar-title">100% Indemnified One-Stop Rights</h4>
+              <p className="role-pillar-desc">
                 Every track listed in our sync vault has executed Split Sheets on file. Both master and composition rights clear simultaneously through our legally binding digital framework.
               </p>
             </div>
 
-            <div className="role-feature-card">
-              <div className="role-feature-icon"><RiRadioFill size={24} /></div>
-              <h3 className="role-feature-title">East African &amp; Diaspora Catalog</h3>
-              <p className="role-feature-desc">
+            <div className="role-pillar-card" id="composers" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiRadioFill size={24} /></div>
+              <h4 className="role-pillar-title">East African &amp; Diaspora Catalog</h4>
+              <p className="role-pillar-desc">
                 Tap directly into authentic Afrobeats, Gengetone, Benga, Amapiano, and cinematic hybrid productions straight from certified East African creators and studios.
               </p>
             </div>
 
-            <div className="role-feature-card">
-              <div className="role-feature-icon"><RiScales3Fill size={24} /></div>
-              <h3 className="role-feature-title">TuneLedger Escrow Protection</h3>
-              <p className="role-feature-desc">
+            <div className="role-pillar-card" id="escrow-safety" style={{ scrollMarginTop: '100px' }}>
+              <div className="role-pillar-icon"><RiScales3Fill size={24} /></div>
+              <h4 className="role-pillar-title">TuneLedger Escrow Protection</h4>
+              <p className="role-pillar-desc">
                 License fees are held securely in escrow and disbursed automatically based on contract milestones, ensuring full delivery compliance before funds clear to creators.
               </p>
             </div>
           </div>
         </section>
 
-        {/* ================= 4. DASHBOARD INTERFACE SHOWCASE ================= */}
-        <section className="role-interface-section">
-          <div className="role-interface-content">
+        {/* ================= 4. DASHBOARD INTERFACE SHOWCASE (SHOWCASE PANEL) ================= */}
+        <section className="role-showcase-panel">
+          <div className="role-showcase-content">
             <span className="role-section-eyebrow">Production Dashboard</span>
-            <h3 className="role-interface-title">A Unified Deal Desk for High-Volume Sync Operations</h3>
-            <p className="role-interface-desc">
+            <h3>A Unified Deal Desk for High-Volume Sync Operations</h3>
+            <p>
               Manage scene audition bins, export cue sheets, track escrow payments, and coordinate with studio legal teams from a single centralized production terminal.
             </p>
-            <ul className="role-interface-list">
-              <li><RiCheckFill size={18} color={accent} /> Scene audition bins with watermarked director sharing links</li>
-              <li><RiCheckFill size={18} color={accent} /> Instant stem separation preview before contract commitment</li>
-              <li><RiCheckFill size={18} color={accent} /> 1-Click ASCAP / BMI / DDEX cue sheet file generation</li>
-              <li><RiCheckFill size={18} color={accent} /> In-app bilateral negotiation &amp; escrow holding</li>
+            <ul className="role-showcase-checklist">
+              <li><RiCheckFill size={18} /> Scene audition bins with watermarked director sharing links</li>
+              <li><RiCheckFill size={18} /> Instant stem separation preview before contract commitment</li>
+              <li><RiCheckFill size={18} /> 1-Click ASCAP / BMI / DDEX cue sheet file generation</li>
+              <li><RiCheckFill size={18} /> In-app bilateral negotiation &amp; escrow holding</li>
             </ul>
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
               <button 
@@ -598,19 +635,15 @@ export default function SupervisorLandingPage({ switcher }) {
               </button>
             </div>
           </div>
-          <div className="role-interface-preview" onClick={() => setPreviewModal(true)} style={{ cursor: 'pointer' }}>
+          <div className="role-showcase-image-wrap" onClick={() => setPreviewModal(true)} style={{ cursor: 'pointer' }}>
             <img 
               src={isSw ? supervisorDashboardActualSw : supervisorDashboardActualEn} 
               alt="SyncMavens Supervisor Dashboard Interface" 
-              className="role-dashboard-mockup"
             />
-            <div className="role-preview-overlay">
-              <span>Click to view actual system interface</span>
-            </div>
           </div>
         </section>
 
-        {/* ================= 5. THREE-STEP CLEARANCE WORKFLOW ================= */}
+        {/* ================= 5. THREE-STEP CLEARANCE WORKFLOW (WORKFLOW GRID) ================= */}
         <section className="role-workflow-section">
           <div className="role-section-header">
             <span className="role-section-eyebrow">Clearance Workflow</span>
@@ -618,7 +651,7 @@ export default function SupervisorLandingPage({ switcher }) {
           </div>
 
           <div className="role-workflow-grid">
-            <div className="role-workflow-card">
+            <div className="role-workflow-step">
               <div className="role-workflow-icon"><RiCompass3Fill size={24} /></div>
               <span className="role-step-number">01</span>
               <span className="role-step-badge">Step 1 · Discovery</span>
@@ -628,7 +661,7 @@ export default function SupervisorLandingPage({ switcher }) {
               </p>
             </div>
 
-            <div className="role-workflow-card">
+            <div className="role-workflow-step">
               <div className="role-workflow-icon"><RiSoundModuleFill size={24} /></div>
               <span className="role-step-number">02</span>
               <span className="role-step-badge">Step 2 · Audition</span>
@@ -638,7 +671,7 @@ export default function SupervisorLandingPage({ switcher }) {
               </p>
             </div>
 
-            <div className="role-workflow-card">
+            <div className="role-workflow-step">
               <div className="role-workflow-icon"><RiFileList3Line size={24} /></div>
               <span className="role-step-number">03</span>
               <span className="role-step-badge">Step 3 · Clearance &amp; Escrow</span>
