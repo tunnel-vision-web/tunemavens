@@ -22,7 +22,7 @@ import headerImg from '../../../assets/images/header_apps.png'
 import publishingMockupImg from '../../../assets/images/publishing_dashboard_mockup.png'
 import tunestreamHeader3Img from '../../../assets/images/tunestream_header_3.png'
 import tourDashboardMockupImg from '../../../assets/images/tour_dashboard_mockup.png'
-import managementLogo from '../../../assets/logos/tunemanagement-logo.png'
+import tunemediaLogo from '../../../assets/logos/tunemedia-logo.png'
 
 const FALLBACK_MEDIA_RATES = [
   {
@@ -351,8 +351,8 @@ export default function MediaHouseLandingPage({ switcher }) {
           >
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
               <img 
-                src={managementLogo} 
-                alt="TuneManagement Logo" 
+                src={tunemediaLogo} 
+                alt="Tunemedia Logo" 
                 style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} 
               />
             </div>

@@ -12,6 +12,11 @@ import bookingLogo from './assets/logos/tunebooking-logo.png';
 import managementLogo from './assets/logos/tunemanagement-logo.png';
 import companionLogo from './assets/logos/tunecompanion-logo.png';
 import tunepayLogo from './assets/logos/tunepay-logo.png';
+import podcasterLogo from './assets/logos/tunepod-logo.png';
+import vcLogo from './assets/logos/tunecapital-logo.png';
+import corporateLogo from './assets/logos/tunecorp-logo.png';
+import labelLogo from './assets/logos/tunelabel-logo.png';
+import mediaHouseLogo from './assets/logos/tunemedia-logo.png';
 
 export const getServiceUrl = (service, path = '/') => {
   const { hostname, protocol } = window.location;

@@ -12,6 +12,11 @@ import bookingLogo from '../assets/logos/tunebooking-logo.png';
 import managementLogo from '../assets/logos/tunemanagement-logo.png';
 import companionLogo from '../assets/logos/tunecompanion-logo.png';
 import tunepayLogo from '../assets/logos/tunepay-logo.png';
+import podcasterLogo from '../assets/logos/tunepod-logo.png';
+import vcLogo from '../assets/logos/tunecapital-logo.png';
+import corporateLogo from '../assets/logos/tunecorp-logo.png';
+import labelLogo from '../assets/logos/tunelabel-logo.png';
+import mediaHouseLogo from '../assets/logos/tunemedia-logo.png';
 
 export const getServiceUrl = (service, path = '/') => {
   const { hostname, protocol } = window.location;
@@ -64,33 +69,37 @@ export const getIntermavenUrl = (appId, path = '') => {
 
 export const ROLE_LOGOS = {
   creator: createLogo,
-  podcaster: listenLogo,
-  vc: distributeLogo,
-  label: distributeLogo,
+  podcaster: podcasterLogo,
+  vc: vcLogo,
+  label: labelLogo,
   dj: bookingLogo,
-  media_house: managementLogo,
-  'media-house': managementLogo,
+  media_house: mediaHouseLogo,
+  'media-house': mediaHouseLogo,
   supervisor: syncLogo,
   consumer: listenLogo,
-  corporate: tunepayLogo,
-  // Legacy stubs for compatibility
-  exec: syncLogo,
-  'booking-agent': bookingLogo,
-  manager: managementLogo,
+  corporate: corporateLogo,
   companion: companionLogo,
   tunepay: tunepayLogo,
+  tunepod: podcasterLogo,
+  tunecapital: vcLogo,
+  tunecorp: corporateLogo,
+  tunelabel: labelLogo,
+  tunemedia: mediaHouseLogo,
+  exec: labelLogo,
+  'booking-agent': bookingLogo,
+  manager: mediaHouseLogo,
 };
 
 export const PERFECT_FOR_ROLES = [
   { key: 'creator', label: 'Creators', sub: 'Artists & Producers', href: '/for/creator', accent: 'var(--cyan)' },
-  { key: 'podcaster', label: 'Podcasters', sub: 'Shows & Sponsorships', href: '/for/podcaster', accent: '#00f2fe' },
-  { key: 'label', label: 'Record Labels', sub: 'Catalog Management', href: '/for/label', accent: 'var(--purple)' },
+  { key: 'podcaster', label: 'Podcasters', sub: 'Tunepod Shows & Sponsorships', href: '/for/podcaster', accent: '#00f2fe' },
+  { key: 'label', label: 'Record Labels', sub: 'Tunelabel Catalog & Rights', href: '/for/label', accent: 'var(--purple)' },
   { key: 'dj', label: 'DJs', sub: 'DJ Pool Engine', href: '/for/dj', accent: '#14b8a6' },
-  { key: 'media_house', label: 'Media Houses', sub: 'Broadcast & Playlisting', href: '/for/media-house', accent: 'var(--blue)' },
+  { key: 'media_house', label: 'Media Houses', sub: 'Tunemedia Broadcast & Ads', href: '/for/media-house', accent: 'var(--blue)' },
   { key: 'supervisor', label: 'Music Supervisors', sub: 'SyncMavens Licensing', href: '/for/supervisor', accent: 'var(--am)' },
   { key: 'consumer', label: 'tunestream', sub: 'Everyday Listeners', href: '/for/consumer', accent: 'var(--gr)' },
-  { key: 'corporate', label: 'Corporate', sub: 'Sponsorships & Ads', href: '/for/corporate', accent: '#ef4444' },
-  { key: 'vc', label: 'Venture Capitalists', sub: 'Tour & Career Financing', href: '/for/vc', accent: '#10b981' },
+  { key: 'corporate', label: 'Corporate', sub: 'Tunecorp Sponsorships & Ads', href: '/for/corporate', accent: '#ef4444' },
+  { key: 'vc', label: 'Venture Capitalists', sub: 'Tune Capital Tour Financing', href: '/for/vc', accent: '#10b981' },
 ];
 
 const LANDING_ROUTE_PREFIXES = [

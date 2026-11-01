@@ -21,6 +21,7 @@ import {
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
+import tuneCapitalLogo from '../../../assets/logos/tunecapital-logo.png'
 import { useRegion } from '../../../RegionContext.jsx'
 import tourDashboardActualImg from '../../../assets/images/vc_dashboard_actual.png'
 
@@ -178,6 +179,9 @@ export default function VcLandingPage({ switcher }) {
       <section className="role-hero" style={{ background: '#060914', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '60px 20px 70px 20px' }}>
           <div style={{ maxWidth: '860px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px' }}>
+              <img src={tuneCapitalLogo} alt="Tune Capital Logo" style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} />
+            </div>
             <span className="role-badge" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '5px 12px', borderRadius: '3px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
               <RiFundsBoxFill /> Alternative Music Assets · Institutional Tour &amp; Career Underwriting
             </span>

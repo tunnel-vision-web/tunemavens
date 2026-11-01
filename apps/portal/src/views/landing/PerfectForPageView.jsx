@@ -50,9 +50,9 @@ export default function PerfectForPageView() {
     {
       key: 'podcaster',
       label: isSw ? 'Waundaji wa Podikasti' : 'Podcasters',
-      sub: isSw ? 'Vipindi & Ufadhili wa Matangazo' : 'Shows & Ad Sponsorships',
+      sub: isSw ? 'Vipindi & Ufadhili wa Tunepod' : 'Tunepod Shows & Sponsorships',
       href: '/for/podcaster',
-      logo: ROLE_LOGOS['podcaster'] || ROLE_LOGOS['creator'],
+      logo: ROLE_LOGOS['podcaster'],
       accent: '#00f2fe',
       desc: isSw
         ? 'Kwa watayarishaji na wenyeji wa podikasti. Chapisha vipindi na sura maalum, pata ufadhili wa matangazo ya ushirika, na dhibiti EPK ya sauti na Split Cascade.'
@@ -63,7 +63,7 @@ export default function PerfectForPageView() {
     {
       key: 'label',
       label: isSw ? 'Lebo za Rekodi' : 'Record Labels',
-      sub: isSw ? 'Usimamizi wa Katalogi' : 'Catalog Management',
+      sub: isSw ? 'Usimamizi wa Tunelabel' : 'Tunelabel Catalog & Rights',
       href: '/for/label',
       logo: ROLE_LOGOS['label'],
       accent: 'var(--purple)',
@@ -89,7 +89,7 @@ export default function PerfectForPageView() {
     {
       key: 'media_house',
       label: isSw ? 'Mashirika ya Vyombo vya Habari' : 'Media Houses',
-      sub: isSw ? 'Utangazaji & Orodha za Uchezaji' : 'Broadcast & Playlisting',
+      sub: isSw ? 'Utangazaji wa Tunemedia' : 'Tunemedia Broadcast & Ads',
       href: '/for/media-house',
       logo: ROLE_LOGOS['media_house'],
       accent: 'var(--blue)',
@@ -132,7 +132,7 @@ export default function PerfectForPageView() {
     {
       key: 'corporate',
       label: isSw ? 'Mashirika & Biashara' : 'Corporate',
-      sub: isSw ? 'Ufadhili & Matangazo' : 'Sponsorships & Ads',
+      sub: isSw ? 'Ufadhili wa Tunecorp' : 'Tunecorp Sponsorships & Ads',
       href: '/for/corporate',
       logo: ROLE_LOGOS['corporate'],
       accent: '#ef4444',
@@ -145,9 +145,9 @@ export default function PerfectForPageView() {
     {
       key: 'vc',
       label: isSw ? 'Wawekezaji wa Mitaji (VCs)' : 'Venture Capitalists',
-      sub: isSw ? 'Ufadhili wa Ziara & Kazi za Wasanii' : 'Tour & Career Financing',
+      sub: isSw ? 'Ufadhili wa Tune Capital' : 'Tune Capital Tour Financing',
       href: '/for/vc',
-      logo: ROLE_LOGOS['exec'] || ROLE_LOGOS['corporate'],
+      logo: ROLE_LOGOS['vc'],
       accent: '#10b981',
       desc: isSw
         ? 'Wekeza kwenye ziara za moja kwa moja na ugharamie moja kwa moja huduma za wasanii ukiwa na urejeshaji wa fedha uliolindwa kupitia Split Cascade.'

@@ -20,6 +20,7 @@ import {
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
+import tunepodLogo from '../../../assets/logos/tunepod-logo.png'
 import { useRegion } from '../../../RegionContext.jsx'
 import { AUTHORITATIVE_AD_RATES } from '../../../data/authoritativeAdRates.js'
 import { AUTHORITATIVE_PODCAST_SHOWS, PodcasterEpkModal } from '../../../components/podcasts/PodcastStreamingHub.jsx'
@@ -70,6 +71,9 @@ export default function PodcasterLandingPage({ switcher }) {
       <section className="role-hero" style={{ background: '#050814', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '64px 20px 76px' }}>
           <div style={{ maxWidth: '880px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px' }}>
+              <img src={tunepodLogo} alt="Tunepod Logo" style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} />
+            </div>
             <span
               className="role-badge"
               style={{

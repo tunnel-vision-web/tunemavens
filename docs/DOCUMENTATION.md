@@ -2239,3 +2239,19 @@ Allows creators and administrators to update or regenerate custom headers via na
 5. **Podcast Showcase & Persona Landing Pages**:
    - Added a 3x4 grid of podcast cards with complete play, save, and sponsor features below the featured podcast banner at `?view=browse-podcasts`.
    - Launched dedicated public landing pages for Podcasters and VCs matching the platform's standard design protocols.
+
+
+### 9.44.29 Persona Brand Harmonization, Revised Product Naming & Unified Logo Sizing Architecture
+1. **Persona Product Identity Modernization**:
+   - Standardized persona branding with distinct analogous color palettes and revised product identities:
+     - **Podcasters**: Rebranded to **Tunepod** (`tunepod-logo.png`) featuring Electric Cyan (`#00f2fe`) analogous accents.
+     - **Venture Capitalists (VCs)**: Rebranded to **Tune Capital** (`tunecapital-logo.png`) with Emerald Green (`#10b981`) analogous accents.
+     - **Corporates & Brands**: Rebranded to **Tunecorp** (`tunecorp-logo.png`) with Coral Red (`#ef4444`) accents, strictly distinguishing corporate brand advertising from TunePay (`tunepay-logo.png`).
+     - **Record Labels**: Rebranded to **Tunelabel** (`tunelabel-logo.png`) with Royal Violet (`#8b5cf6`) accents.
+     - **Media Houses**: Rebranded to **Tunemedia** (`tunemedia-logo.png`) with Sapphire Blue (`#3b82f6`) accents.
+2. **Standardized 120% Icon-to-Font Scale Architecture**:
+   - Resized the authoritative chevron icon to exactly 120% of the wordmark's font height (40px icon vs 33px font), centered vertically with the baseline and ascender metrics.
+   - Synchronized icon proportions across all brand identities: TuneMavens main logos, TuneStream, SyncMavens, TuneCreators, TuneBooking, TuneCompanion, TunePay, and the 5 revised persona brands.
+3. **Homepage 'Perfect For' Carousel & Landing Directory Integration**:
+   - Synchronized `apps/portal/src/components/PerfectForSidebar.jsx` and `apps/portal/src/PerfectForSidebar.jsx` with updated `ROLE_LOGOS` and `PERFECT_FOR_ROLES` mapping every persona to its dedicated brand asset.
+   - Updated `PerfectForPageView.jsx` (`/for`) and individual role landing pages (`CorporateLandingPage.jsx`, `LabelLandingPage.jsx`, `MediaHouseLandingPage.jsx`, `PodcasterLandingPage.jsx`, `VcLandingPage.jsx`) to feature their authoritative brand logos.

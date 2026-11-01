@@ -23,7 +23,7 @@ import distributeHeroImg from '../../../assets/images/distribute_hero.png'
 import appsLedgerImg from '../../../assets/images/apps_ledger.png'
 import publishingMockupImg from '../../../assets/images/publishing_dashboard_mockup.png'
 import tourDashboardMockupImg from '../../../assets/images/tour_dashboard_mockup.png'
-import distributeLogo from '../../../assets/logos/tuneexecs-logo.png'
+import tunelabelLogo from '../../../assets/logos/tunelabel-logo.png'
 
 const FALLBACK_LABEL_RATES = [
   {
@@ -353,8 +353,8 @@ export default function LabelLandingPage({ switcher }) {
           >
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
               <img 
-                src={distributeLogo} 
-                alt="TuneExecs Logo" 
+                src={tunelabelLogo} 
+                alt="Tunelabel Logo" 
                 style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} 
               />
             </div>

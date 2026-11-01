@@ -26,7 +26,7 @@ import headerImg from '../../../assets/images/header_pricing.png'
 import headerAppsImg from '../../../assets/images/header_apps.png'
 import userManagerImg from '../../../assets/images/user_manager.png'
 import headerAboutImg from '../../../assets/images/header_about.png'
-import tunepayLogo from '../../../assets/logos/tunepay-logo.png'
+import tunecorpLogo from '../../../assets/logos/tunecorp-logo.png'
 
 const FALLBACK_RATES = [
   {
@@ -408,8 +408,8 @@ export default function CorporateLandingPage({ switcher }) {
             {/* Brand Logo Display */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
               <img 
-                src={tunepayLogo} 
-                alt="TunePay Brand Logo" 
+                src={tunecorpLogo} 
+                alt="Tunecorp Brand Logo" 
                 style={{ height: '34px', width: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} 
               />
             </div>
