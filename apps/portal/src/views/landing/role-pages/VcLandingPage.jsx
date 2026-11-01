@@ -23,7 +23,10 @@ import {
 import './RoleLandingShared.css'
 import tuneCapitalLogo from '../../../assets/logos/tunecapital-logo.png'
 import { useRegion } from '../../../RegionContext.jsx'
-import tourDashboardActualImg from '../../../assets/images/vc_dashboard_actual.png'
+import headerVcCorporate from '../../../assets/images/header_vc_corporate.png'
+import vcDashboardActualEn from '../../../assets/images/vc_dashboard_actual_en.png'
+import vcDashboardActualSw from '../../../assets/images/vc_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 
 const DISCOVERY_OPPORTUNITIES = [
   {
@@ -143,7 +146,8 @@ const DISCOVERY_OPPORTUNITIES = [
 ];
 
 export default function VcLandingPage({ switcher }) {
-  const { currencyInfo, formatPrice } = useRegion();
+  const { currencyInfo, formatPrice, language } = useRegion();
+  const isSw = language === 'sw';
   const [previewModal, setPreviewModal] = useState(false);
   const [selectedPersonaFilter, setSelectedPersonaFilter] = useState('all');
   const [selectedUnderwriteTarget, setSelectedUnderwriteTarget] = useState(null);
@@ -173,10 +177,15 @@ export default function VcLandingPage({ switcher }) {
 
   return (
     <div className="role-landing-view vc-landing-view" data-testid="vc-landing-page">
+      <SEO 
+        title="Alternative Music Assets & Tour Advance Underwriting | Tune Capital"
+        description="TuneMavens empowers venture capital funds, angel syndicates, and cultural family offices to participate in senior-secured, short-cycle tour advances and direct platform product sponsorships backed by telemetry."
+        favicon="/favicons/tunecapital.png"
+      />
       {switcher}
 
       {/* Hero Section */}
-      <section className="role-hero" style={{ background: '#060914', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <section className="role-hero" style={{ background: `linear-gradient(rgba(6, 9, 20, 0.88), rgba(6, 9, 20, 0.96)), url(${headerVcCorporate}) center/cover no-repeat`, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '60px 20px 70px 20px' }}>
           <div style={{ maxWidth: '860px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px' }}>
@@ -449,7 +458,7 @@ export default function VcLandingPage({ switcher }) {
 
           <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
             <img 
-              src={tourDashboardActualImg} 
+              src={isSw ? vcDashboardActualSw : vcDashboardActualEn} 
               alt="Actual TuneMavens VC Command Center Screenshot" 
               style={{ 
                 maxWidth: '100%', 
@@ -460,7 +469,7 @@ export default function VcLandingPage({ switcher }) {
               }}
             />
             <div style={{ marginTop: '12px', fontSize: '12.5px', color: 'var(--cyan)', fontWeight: 600 }}>
-              Click to view high-resolution interactive dashboard preview
+              Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
             </div>
           </div>
         </div>
@@ -575,7 +584,7 @@ export default function VcLandingPage({ switcher }) {
               <RiCloseFill size={20} />
             </button>
             <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneMavens VC Command Center · Actual System Interface</h3>
-            <img src={tourDashboardActualImg} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
+            <img src={isSw ? vcDashboardActualSw : vcDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
           </div>
         </div>
       )}

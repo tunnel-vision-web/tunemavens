@@ -24,7 +24,9 @@ import { useRegion } from '../../../RegionContext.jsx'
 import { AUTHORITATIVE_AD_RATES } from '../../../data/authoritativeAdRates.js'
 import headerImg from '../../../assets/images/header_pricing.png'
 import headerAppsImg from '../../../assets/images/header_apps.png'
-import userManagerImg from '../../../assets/images/user_manager.png'
+import corporateDashboardActualEn from '../../../assets/images/corporate_dashboard_actual_en.png'
+import corporateDashboardActualSw from '../../../assets/images/corporate_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 import headerAboutImg from '../../../assets/images/header_about.png'
 import tunecorpLogo from '../../../assets/logos/tunecorp-logo.png'
 
@@ -364,6 +366,11 @@ export default function CorporateLandingPage({ switcher }) {
 
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
+      <SEO 
+        title="TuneCorp — Brand Audio Ads, Sponsorships & CRM Attribution"
+        description="Direct-to-creator audio brand sponsorships, live tour title partnerships, and multi-channel attribution across Africa and global diaspora."
+        favicon="/favicons/tunecorp.png"
+      />
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
@@ -657,8 +664,15 @@ export default function CorporateLandingPage({ switcher }) {
               </a>
             </div>
           </div>
-          <div className="role-showcase-image-wrap">
-            <img src={userManagerImg} alt="TuneMavens Corporate Campaign and CRM Management" />
+          <div className="role-showcase-image-wrap" style={{ cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
+            <img 
+              src={isSw ? corporateDashboardActualSw : corporateDashboardActualEn} 
+              alt="Actual TuneMavens Corporate Campaign and CRM Management" 
+              style={{ borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.4)', boxShadow: '0 16px 40px rgba(0,0,0,0.7)', width: '100%', height: 'auto' }}
+            />
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#3b82f6', fontWeight: 600, textAlign: 'center' }}>
+              Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
+            </div>
           </div>
         </section>
 
@@ -1068,6 +1082,18 @@ export default function CorporateLandingPage({ switcher }) {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* High-Resolution Screenshot Modal */}
+      {previewModal && (
+        <div className="preview-modal-backdrop" onClick={() => setPreviewModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ maxWidth: '95vw', maxHeight: '95vh', overflow: 'auto', position: 'relative', background: '#090d1f', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '8px', borderRadius: '3px', cursor: 'pointer' }}>
+              <RiCloseFill size={20} />
+            </button>
+            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneCorp Brand Advertising Console · Actual System Interface</h3>
+            <img src={isSw ? corporateDashboardActualSw : corporateDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
           </div>
         </div>
       )}

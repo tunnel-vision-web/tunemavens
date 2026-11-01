@@ -2278,3 +2278,59 @@ Allows creators and administrators to update or regenerate custom headers via na
    - Synchronized all localized header image assets and fallback props across:
      - pps/portal: PerfectForPageView.jsx, AboutView.jsx, ToolsView.jsx, ToursView.jsx, AppsView.jsx, TuneStreamViews.jsx, BlogPageView.jsx, and SupportPageView.jsx.
      - pps/syncmavens and pps/tunestream: Shared asset parity for unified regional switching.
+
+
+### 9.44.31 Favicon Integrity, Persona-Specific Visual Specialization & Localized System Screenshot Architecture
+1. **Universal Favicon Architecture & Dynamic Persona Switching**:
+   - Resolved favicon disparity across micro-frontends:
+     - Fixed `apps/syncmavens/index.html` and `apps/syncmavens/public/index.html`, replacing legacy Vite placeholders with authoritative `/favicon.png`, `/favicon.ico`, and `/favicon.svg`.
+     - Standardized high-resolution 128x128 persona-specific favicons in `apps/portal/public/favicons/`:
+       - `tunedj.png` (TuneDJ Jade Teal)
+       - `tunecapital.png` (Tune Capital Emerald Green)
+       - `tunelabel.png` (TuneLabel Royal Violet)
+       - `tunepod.png` (TunePod Electric Cyan)
+       - `tunecorp.png` (TuneCorp Coral Red)
+       - `tunemedia.png` (TuneMedia Sapphire Blue)
+       - `syncmavens.png` (SyncMavens Gold/Amber)
+       - `tunecreators.png` (TuneCreators Neon Cyan)
+       - `tunestream.png` (TuneStream Emerald)
+       - `affiliates.png` (Affiliate Partner Network)
+     - Upgraded `SEO.jsx` to dynamically inject and update `<link rel="icon">` and `<link rel="shortcut icon">` tags based on the active persona route, reverting cleanly on unmount.
+2. **Corporate & Data-Driven Affiliate Visual Architecture (`AffiliatesView.jsx`)**:
+   - Replaced legacy vocalist and sound engineer photos with 5 corporate, data-driven, AI-supported hero slide backgrounds (`affiliate_hero_1.png` through `affiliate_hero_5.png`):
+     - **Slide 1 (`affiliate_hero_1.png`)**: Corporate Growth Console & Multi-Tier Revenue Share Waterfall (3% to 12% revenue cascade, KES/USD telemetry, automated daily flush).
+     - **Slide 2 (`affiliate_hero_2.png`)**: 90-Day Cookie Attribution Engine & Multi-Touch Funnel (Day 0 link click to Day 88 sync purchase tracking with 99.8% fingerprint match precision).
+     - **Slide 3 (`affiliate_hero_3.png`)**: Automated Payout Rails & Settlement Vault (Safaricom M-Pesa B2C STK push with <1s latency and $20 / KES 2,600 accessible cashout floor alongside global Stripe/SWIFT rails).
+     - **Slide 4 (`affiliate_hero_4.png`)**: SyncMavens Commercial Sync Licensing Deal Desk (12% affiliate commission on high-ticket $1,000 to $25,000 brand placements with executed split sheets).
+     - **Slide 5 (`affiliate_hero_5.png`)**: Global Multicultural Partner Network & Cross-Corridor Telemetry (corridor tracking linking Nairobi, London, Lagos, and New York).
+   - Captured and integrated authentic live Affiliate Dashboard screenshots (`affiliate_dashboard_actual_en.png` and `affiliate_dashboard_actual_sw.png`) with dynamic language switching (`language === 'sw'`) and click-to-preview zoom modal.
+3. **Venture Capital Institutional Underwriting Visuals (`VcLandingPage.jsx`)**:
+   - Integrated corporate header background banner `header_vc_corporate.png` displaying senior-secured live tour facilities, modeled 22.6% target IRR, 3.8-month recoupment timelines, and first-dollar Split Cascade recoupment waterfalls.
+   - Connected actual live VC command center screenshots (`vc_dashboard_actual_en.png` and `vc_dashboard_actual_sw.png`) with real-time Swahili/English toggling and high-resolution modal inspection.
+4. **TuneDJ Persona-Specific Visual Identity (`DjLandingPage.jsx`)**:
+   - Completely replaced studio DAW and recording engineer visuals with authentic DJ equipment and club performance graphics:
+     - `dj_hero_1.png`: Pioneer CDJ-3000 multi-players and DJM-A9 4-channel mixer console with jog-wheel displays, Camelot key detection, BPM sync, and hot cues.
+     - `dj_hero_2.png`: Live stem separation engine (drums, bass, melody, vocals) with cryptographic digital drop hashes and 100% legal performance clearances.
+     - `dj_hero_3.png`: Curated extended club edits, 8-bar intro/outro drum builds, and lossless batch download vault.
+     - `dj_hero_4.png`: Unreleased dubplates and live dancefloor crowd reaction feedback scoring directly to record label A&Rs.
+   - Integrated actual live DJ pool & stem clearance dashboard screenshots (`dj_dashboard_actual_en.png` and `dj_dashboard_actual_sw.png`) with language switching and zoom preview modal.
+5. **TuneLabel Record Label Executive Visuals (`LabelLandingPage.jsx`)**:
+   - Replaced generic solo artist imagery with targeted record label executive assets:
+     - `label_hero_1.png`: Multi-artist roster catalog management (1,840+ masters) and automated DDEX ERN 4.3 XML batch delivery to 150+ DSPs.
+     - `label_hero_2.png`: Split Cascade programmatic royalty administration, advance recoupment balances, and automated multi-party escrow payouts.
+     - `label_hero_3.png`: A&R talent discovery radar and predictive streaming velocity scoring across global diaspora corridors.
+     - `label_hero_4.png`: Global rights management, ISRC/ISWC automated matching, and CMO/PRO collection clearing (MCSK, SAMRO, PRS, BMI, ASCAP).
+   - Connected actual live label executive dashboard screenshots (`label_dashboard_actual_en.png` and `label_dashboard_actual_sw.png`) with language switching and zoom preview modal.
+6. **Platform-Wide Localized System Screenshot Parity**:
+   - Fully connected authentic localized screenshots (`_actual_en.png` and `_actual_sw.png`) across ALL role marketing surfaces:
+     - `DjLandingPage.jsx` (`dj_dashboard_actual`)
+     - `LabelLandingPage.jsx` (`label_dashboard_actual`)
+     - `CorporateLandingPage.jsx` (`corporate_dashboard_actual`)
+     - `MediaHouseLandingPage.jsx` (`mediahouse_dashboard_actual`)
+     - `SupervisorLandingPage.jsx` (`supervisor_dashboard_actual`)
+     - `ConsumerLandingPage.jsx` (`consumer_dashboard_actual`)
+     - `CreatorLandingPage.jsx` (`creator_dashboard_actual`)
+     - `PodcasterLandingPage.jsx` (`creator_dashboard_actual`)
+     - `VcLandingPage.jsx` (`vc_dashboard_actual`)
+     - `AffiliatesView.jsx` (`affiliate_dashboard_actual`)
+   - Every screenshot dynamically updates between English and Kiswahili according to the active user language selection and opens in a high-resolution modal upon click.

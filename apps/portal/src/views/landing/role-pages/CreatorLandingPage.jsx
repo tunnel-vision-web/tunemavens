@@ -20,7 +20,9 @@ import {
 import './RoleLandingShared.css'
 import { useRegion } from '../../../RegionContext.jsx'
 import { getServiceUrl } from '../../../components/PerfectForSidebar.jsx'
-import creatorDashboardImg from '../../../assets/images/creator_dashboard.png'
+import creatorDashboardActualEn from '../../../assets/images/creator_dashboard_actual_en.png'
+import creatorDashboardActualSw from '../../../assets/images/creator_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 import userProducerImg from '../../../assets/images/user_producer.png'
 import appsMasteringImg from '../../../assets/images/apps_mastering.png'
 import appsSyncImg from '../../../assets/images/apps_sync.png'
@@ -105,7 +107,9 @@ const FALLBACK_CREATOR_RATES = [
 ];
 
 export default function CreatorLandingPage({ switcher }) {
-  const { formatPrice } = useRegion();
+  const { formatPrice, language } = useRegion();
+  const isSw = language === 'sw';
+  const [previewModal, setPreviewModal] = useState(false);
   const accent = '#06b6d4';
   const syncMavensUrl = getServiceUrl('syncmavens');
 
@@ -165,7 +169,7 @@ export default function CreatorLandingPage({ switcher }) {
       b1link: '#creator-rates',
       b2: 'Explore Split Ledgers',
       b2link: '#split-ledgers',
-      image: creatorDashboardImg
+      image: (language === 'sw' ? creatorDashboardActualSw : creatorDashboardActualEn)
     },
     {
       badge: 'Mother-CMS Web Worlds',
@@ -335,6 +339,11 @@ export default function CreatorLandingPage({ switcher }) {
 
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
+      <SEO 
+        title="TuneCreators — Music Operations, AI Mastering & Global Splits"
+        description="Catalog ingestion, MasterLab AI mastering, DDEX distribution, and programmatic Split Cascade ledgers for independent music creators."
+        favicon="/favicons/tunecreators.png"
+      />
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
@@ -613,8 +622,15 @@ export default function CreatorLandingPage({ switcher }) {
               </a>
             </div>
           </div>
-          <div className="role-showcase-image-wrap">
-            <img src={creatorDashboardImg} alt="TuneMavens Creator Dashboard Console" />
+          <div className="role-showcase-image-wrap" style={{ cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
+            <img 
+              src={isSw ? creatorDashboardActualSw : creatorDashboardActualEn} 
+              alt="Actual TuneMavens Creator Dashboard Console" 
+              style={{ borderRadius: '6px', border: '1px solid rgba(0, 240, 255, 0.4)', boxShadow: '0 16px 40px rgba(0,0,0,0.7)', width: '100%', height: 'auto' }}
+            />
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#00f0ff', fontWeight: 600, textAlign: 'center' }}>
+              Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
+            </div>
           </div>
         </section>
 
@@ -993,6 +1009,18 @@ export default function CreatorLandingPage({ switcher }) {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* High-Resolution Screenshot Modal */}
+      {previewModal && (
+        <div className="preview-modal-backdrop" onClick={() => setPreviewModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ maxWidth: '95vw', maxHeight: '95vh', overflow: 'auto', position: 'relative', background: '#090d1f', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '8px', borderRadius: '3px', cursor: 'pointer' }}>
+              <RiCloseFill size={20} />
+            </button>
+            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneCreators Studio Console · Actual System Interface</h3>
+            <img src={isSw ? creatorDashboardActualSw : creatorDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
           </div>
         </div>
       )}

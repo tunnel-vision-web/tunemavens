@@ -19,10 +19,13 @@ import {
 
 import './RoleLandingShared.css'
 import { useRegion } from '../../../RegionContext.jsx'
-import distributeHeroImg from '../../../assets/images/distribute_hero.png'
-import appsLedgerImg from '../../../assets/images/apps_ledger.png'
-import publishingMockupImg from '../../../assets/images/publishing_dashboard_mockup.png'
-import tourDashboardMockupImg from '../../../assets/images/tour_dashboard_mockup.png'
+import labelHero1Img from '../../../assets/images/label_hero_1.png'
+import labelHero2Img from '../../../assets/images/label_hero_2.png'
+import labelHero3Img from '../../../assets/images/label_hero_3.png'
+import labelHero4Img from '../../../assets/images/label_hero_4.png'
+import labelDashboardActualEn from '../../../assets/images/label_dashboard_actual_en.png'
+import labelDashboardActualSw from '../../../assets/images/label_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 import tunelabelLogo from '../../../assets/logos/tunelabel-logo.png'
 
 const FALLBACK_LABEL_RATES = [
@@ -86,7 +89,9 @@ const FALLBACK_LABEL_RATES = [
 ];
 
 export default function LabelLandingPage({ switcher }) {
-  const { formatPrice } = useRegion();
+  const { formatPrice, language } = useRegion();
+  const isSw = language === 'sw';
+  const [previewModal, setPreviewModal] = useState(false);
   const accent = '#8b5cf6';
 
   // ================= HERO Slide Carousel State =================
@@ -145,7 +150,7 @@ export default function LabelLandingPage({ switcher }) {
       b1link: '#label-rates',
       b2: 'Explore Roster Ledgers',
       b2link: '#roster-isolation',
-      image: distributeHeroImg
+      image: labelHero1Img
     },
     {
       badge: 'Automated Recoupment Ledgers',
@@ -158,7 +163,7 @@ export default function LabelLandingPage({ switcher }) {
       b1link: '/tools',
       b2: 'Review Payout Methods',
       b2link: '#recoupment',
-      image: appsLedgerImg
+      image: labelHero2Img
     },
     {
       badge: 'Bulk Ingestion & Stem Audits',
@@ -171,7 +176,7 @@ export default function LabelLandingPage({ switcher }) {
       b1link: '/register?role=label',
       b2: 'Explore Ingest Wizard',
       b2link: '#ingestion',
-      image: publishingMockupImg
+      image: labelHero3Img
     },
     {
       badge: 'Omnichannel Ticketing & Merch',
@@ -184,7 +189,7 @@ export default function LabelLandingPage({ switcher }) {
       b1link: '/apps',
       b2: 'Tour Settlement Engine',
       b2link: '#merch-pos',
-      image: tourDashboardMockupImg
+      image: labelHero4Img
     }
   ];
 
@@ -312,6 +317,11 @@ export default function LabelLandingPage({ switcher }) {
 
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
+      <SEO 
+        title="TuneLabel — Record Label Management, DDEX & Split Cascade"
+        description="The operating system for independent and major record labels. Multi-artist catalog ingestion, DDEX ERN 4.3 distribution, and Split Cascade escrow ledgers."
+        favicon="/favicons/tunelabel.png"
+      />
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
@@ -587,8 +597,15 @@ export default function LabelLandingPage({ switcher }) {
               </a>
             </div>
           </div>
-          <div className="role-showcase-image-wrap">
-            <img src={distributeHeroImg} alt="TuneMavens Label Console and Distribution" />
+          <div className="role-showcase-image-wrap" style={{ cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
+            <img 
+              src={isSw ? labelDashboardActualSw : labelDashboardActualEn} 
+              alt="Actual TuneMavens Label Console and Distribution" 
+              style={{ borderRadius: '6px', border: '1px solid rgba(168, 85, 247, 0.4)', boxShadow: '0 16px 40px rgba(0,0,0,0.7)', width: '100%', height: 'auto' }}
+            />
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#a855f7', fontWeight: 600, textAlign: 'center' }}>
+              Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
+            </div>
           </div>
         </section>
 
@@ -979,6 +996,18 @@ export default function LabelLandingPage({ switcher }) {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* High-Resolution Screenshot Modal */}
+      {previewModal && (
+        <div className="preview-modal-backdrop" onClick={() => setPreviewModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ maxWidth: '95vw', maxHeight: '95vh', overflow: 'auto', position: 'relative', background: '#090d1f', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '8px', borderRadius: '3px', cursor: 'pointer' }}>
+              <RiCloseFill size={20} />
+            </button>
+            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneLabel Executive Console · Actual System Interface</h3>
+            <img src={isSw ? labelDashboardActualSw : labelDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
           </div>
         </div>
       )}

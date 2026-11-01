@@ -21,7 +21,9 @@ import './RoleLandingShared.css'
 import { useRegion } from '../../../RegionContext.jsx'
 import { getServiceUrl } from '../../../components/PerfectForSidebar.jsx'
 import syncHeaderImg from '../../../assets/images/sync_header.png'
-import userSupervisorImg from '../../../assets/images/user_supervisor.png'
+import supervisorDashboardActualEn from '../../../assets/images/supervisor_dashboard_actual_en.png'
+import supervisorDashboardActualSw from '../../../assets/images/supervisor_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 import appsSyncImg from '../../../assets/images/apps_sync.png'
 import heroMusic4Img from '../../../assets/images/hero_music_4.png'
 import syncLogo from '../../../assets/logos/syncmavens-logo.png'
@@ -86,7 +88,9 @@ const FALLBACK_SUPERVISOR_RATES = [
 ];
 
 export default function SupervisorLandingPage({ switcher }) {
-  const { formatPrice } = useRegion();
+  const { formatPrice, language } = useRegion();
+  const isSw = language === 'sw';
+  const [previewModal, setPreviewModal] = useState(false);
   const accent = '#10b981';
   const syncMavensUrl = getServiceUrl('syncmavens');
 
@@ -313,6 +317,11 @@ export default function SupervisorLandingPage({ switcher }) {
 
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
+      <SEO 
+        title="SyncMavens — AI-Assisted Film & TV Sync Marketplace"
+        description="Connect film supervisors, advertising agencies, and game studios with 100% pre-cleared African and diaspora commercial tracks with executed split sheets."
+        favicon="/favicons/syncmavens.png"
+      />
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
@@ -965,6 +974,18 @@ export default function SupervisorLandingPage({ switcher }) {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* High-Resolution Screenshot Modal */}
+      {previewModal && (
+        <div className="preview-modal-backdrop" onClick={() => setPreviewModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ maxWidth: '95vw', maxHeight: '95vh', overflow: 'auto', position: 'relative', background: '#090d1f', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '8px', borderRadius: '3px', cursor: 'pointer' }}>
+              <RiCloseFill size={20} />
+            </button>
+            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>SyncMavens Supervisor Deal Desk · Actual System Interface</h3>
+            <img src={isSw ? supervisorDashboardActualSw : supervisorDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
           </div>
         </div>
       )}

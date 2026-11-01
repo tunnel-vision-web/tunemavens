@@ -25,6 +25,8 @@ import { useRegion } from '../../../RegionContext.jsx'
 import { AUTHORITATIVE_AD_RATES } from '../../../data/authoritativeAdRates.js'
 import { AUTHORITATIVE_PODCAST_SHOWS, PodcasterEpkModal } from '../../../components/podcasts/PodcastStreamingHub.jsx'
 import creatorDashboardActualEn from '../../../assets/images/creator_dashboard_actual_en.png'
+import creatorDashboardActualSw from '../../../assets/images/creator_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 
 export default function PodcasterLandingPage({ switcher }) {
   const { formatPrice, currencyInfo } = useRegion();
@@ -65,6 +67,11 @@ export default function PodcasterLandingPage({ switcher }) {
 
   return (
     <div className="role-landing-view podcaster-landing-view" data-testid="podcaster-landing-page">
+      <SEO 
+        title="TunePod — Podcaster Studio, Dynamic Ads & Show Monetization"
+        description="The operating system for podcasters, voice artists, and talk shows across Africa and global diaspora."
+        favicon="/favicons/tunepod.png"
+      />
       {switcher}
 
       {/* Hero Section */}
@@ -494,7 +501,7 @@ export default function PodcasterLandingPage({ switcher }) {
 
           <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
             <img 
-              src={creatorDashboardActualEn} 
+              src={isSw ? creatorDashboardActualSw : creatorDashboardActualEn} 
               alt="TuneMavens Podcaster Studio Dashboard" 
               style={{ 
                 maxWidth: '100%', 
@@ -505,7 +512,7 @@ export default function PodcasterLandingPage({ switcher }) {
               }}
             />
             <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#00f2fe', fontWeight: 600 }}>
-              Click to view high-resolution interactive dashboard preview
+              Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
             </div>
           </div>
         </div>
@@ -519,7 +526,7 @@ export default function PodcasterLandingPage({ switcher }) {
               <RiCloseFill size={20} />
             </button>
             <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneMavens Podcaster Studio A Actual System Interface</h3>
-            <img src={creatorDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '4px' }} />
+            <img src={isSw ? creatorDashboardActualSw : creatorDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '4px' }} />
           </div>
         </div>
       )}

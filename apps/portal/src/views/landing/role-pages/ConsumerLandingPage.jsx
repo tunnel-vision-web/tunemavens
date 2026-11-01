@@ -21,7 +21,9 @@ import './RoleLandingShared.css'
 import { useRegion } from '../../../RegionContext.jsx'
 import { getServiceUrl } from '../../../components/PerfectForSidebar.jsx'
 import listenHeroImg from '../../../assets/images/listen_hero.png'
-import consumerAppImg from '../../../assets/images/consumer_app.png'
+import consumerDashboardActualEn from '../../../assets/images/consumer_dashboard_actual_en.png'
+import consumerDashboardActualSw from '../../../assets/images/consumer_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 import tunestreamHeaderImg from '../../../assets/images/tunestream_header.png'
 import tunestreamHeader2Img from '../../../assets/images/tunestream_header_2.png'
 import listenLogo from '../../../assets/logos/tunestream-logo.png'
@@ -86,7 +88,9 @@ const FALLBACK_CONSUMER_RATES = [
 ];
 
 export default function ConsumerLandingPage({ switcher }) {
-  const { formatPrice } = useRegion();
+  const { formatPrice, language } = useRegion();
+  const isSw = language === 'sw';
+  const [previewModal, setPreviewModal] = useState(false);
   const accent = '#ec4899';
   const tuneStreamUrl = getServiceUrl('tunestream');
 
@@ -314,6 +318,11 @@ export default function ConsumerLandingPage({ switcher }) {
 
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
+      <SEO 
+        title="TuneStream — Music Streaming Built for Creators"
+        description="High-fidelity 24-bit FLAC audio, direct artist credit tipping, and offline caching with zero monthly subscriptions."
+        favicon="/favicons/tunestream.png"
+      />
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
@@ -969,6 +978,18 @@ export default function ConsumerLandingPage({ switcher }) {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* High-Resolution Screenshot Modal */}
+      {previewModal && (
+        <div className="preview-modal-backdrop" onClick={() => setPreviewModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ maxWidth: '95vw', maxHeight: '95vh', overflow: 'auto', position: 'relative', background: '#090d1f', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '8px', borderRadius: '3px', cursor: 'pointer' }}>
+              <RiCloseFill size={20} />
+            </button>
+            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneStream Hi-Fi Player Console · Actual System Interface</h3>
+            <img src={isSw ? consumerDashboardActualSw : consumerDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
           </div>
         </div>
       )}

@@ -19,10 +19,13 @@ import {
 
 import './RoleLandingShared.css'
 import { useRegion } from '../../../RegionContext.jsx'
-import headerImg from '../../../assets/images/header_tools.png'
-import appsLedgerImg from '../../../assets/images/apps_ledger.png'
-import heroMusic4Img from '../../../assets/images/hero_music_4.png'
-import heroMusic3Img from '../../../assets/images/hero_music_3.png'
+import djHero1Img from '../../../assets/images/dj_hero_1.png'
+import djHero2Img from '../../../assets/images/dj_hero_2.png'
+import djHero3Img from '../../../assets/images/dj_hero_3.png'
+import djHero4Img from '../../../assets/images/dj_hero_4.png'
+import djDashboardActualEn from '../../../assets/images/dj_dashboard_actual_en.png'
+import djDashboardActualSw from '../../../assets/images/dj_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 import tunedjLogo from '../../../assets/logos/tunedj-logo.png'
 
 const FALLBACK_DJ_RATES = [
@@ -84,7 +87,9 @@ const FALLBACK_DJ_RATES = [
 ];
 
 export default function DjLandingPage({ switcher }) {
-  const { formatPrice } = useRegion();
+  const { formatPrice, language } = useRegion();
+  const isSw = language === 'sw';
+  const [previewModal, setPreviewModal] = useState(false);
   const accent = '#14b8a6';
 
   // ================= HERO Slide Carousel State =================
@@ -143,7 +148,7 @@ export default function DjLandingPage({ switcher }) {
       b1link: '#dj-rates',
       b2: 'Explore Lossless Vault',
       b2link: '#pool-capabilities',
-      image: headerImg
+      image: djHero1Img
     },
     {
       badge: 'Stem Clearance & Dubplate Engine',
@@ -156,7 +161,7 @@ export default function DjLandingPage({ switcher }) {
       b1link: '/register?role=dj',
       b2: 'Stem Clearance Protocol',
       b2link: '#stem-clearance',
-      image: appsLedgerImg
+      image: djHero2Img
     },
     {
       badge: 'Curated Extended DJ Edits',
@@ -169,7 +174,7 @@ export default function DjLandingPage({ switcher }) {
       b1link: '/tools',
       b2: 'Edit Structure Specs',
       b2link: '#edit-specs',
-      image: heroMusic4Img
+      image: djHero3Img
     },
     {
       badge: 'Early Access Artist Drops',
@@ -182,7 +187,7 @@ export default function DjLandingPage({ switcher }) {
       b1link: '/register?role=dj',
       b2: 'Label Feedback Engine',
       b2link: '#feedback-loop',
-      image: heroMusic3Img
+      image: djHero4Img
     }
   ];
 
@@ -309,6 +314,11 @@ export default function DjLandingPage({ switcher }) {
 
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
+      <SEO 
+        title="TuneDJ — Pioneer CDJ Record Pool, Stems & Dubplates"
+        description="Pristine lossless record pools, stem separation clearances, and unreleased artist dubplates for club, festival, and touring DJs."
+        favicon="/favicons/tunedj.png"
+      />
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
@@ -584,8 +594,15 @@ export default function DjLandingPage({ switcher }) {
               </a>
             </div>
           </div>
-          <div className="role-showcase-image-wrap">
-            <img src={appsLedgerImg} alt="TuneMavens DJ Pool and Stem Clearance Engine" />
+          <div className="role-showcase-image-wrap" style={{ cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
+            <img 
+              src={isSw ? djDashboardActualSw : djDashboardActualEn} 
+              alt="Actual TuneMavens DJ Pool and Stem Clearance Engine" 
+              style={{ borderRadius: '6px', border: '1px solid rgba(20, 184, 166, 0.4)', boxShadow: '0 16px 40px rgba(0,0,0,0.7)', width: '100%', height: 'auto' }}
+            />
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#14b8a6', fontWeight: 600, textAlign: 'center' }}>
+              Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
+            </div>
           </div>
         </section>
 
@@ -977,6 +994,18 @@ export default function DjLandingPage({ switcher }) {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* High-Resolution Screenshot Modal */}
+      {previewModal && (
+        <div className="preview-modal-backdrop" onClick={() => setPreviewModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ maxWidth: '95vw', maxHeight: '95vh', overflow: 'auto', position: 'relative', background: '#090d1f', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '8px', borderRadius: '3px', cursor: 'pointer' }}>
+              <RiCloseFill size={20} />
+            </button>
+            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneDJ Pool & Stem Clearance Console · Actual System Interface</h3>
+            <img src={isSw ? djDashboardActualSw : djDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
           </div>
         </div>
       )}

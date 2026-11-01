@@ -37,14 +37,19 @@ import affiliateHero2Img from '../../assets/images/affiliate_hero_2.png'
 import affiliateHero3Img from '../../assets/images/affiliate_hero_3.png'
 import affiliateHero4Img from '../../assets/images/affiliate_hero_4.png'
 import affiliateHero5Img from '../../assets/images/affiliate_hero_5.png'
+import affiliateDashboardActualEn from '../../assets/images/affiliate_dashboard_actual_en.png'
+import affiliateDashboardActualSw from '../../assets/images/affiliate_dashboard_actual_sw.png'
 
 import './AffiliatesView.css'
 
 export default function AffiliatesView({ sessionUser }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { country } = useRegion() || {};
+  const { country, language } = useRegion() || {};
   const isWestern = ['US', 'GB'].includes(country);
+  const isSw = language === 'sw';
+
+  const [previewModal, setPreviewModal] = useState(false);
 
   // Hero Carousel State
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -438,6 +443,7 @@ export default function AffiliatesView({ sessionUser }) {
       <SEO 
         title="Music Affiliate Programme — Earn up to 12% Revenue Share | TuneMavens"
         description="Join the TuneMavens Affiliate Scheme modeled around Ditto Music. Earn 3% to 12% lifetime commissions on music streaming, lossless album sales, stems, and sync licensing."
+        favicon="/favicons/affiliates.png"
       />
 
       {/* ================= HERO Carousel (Kenyan & Multicultural Principle Subjects) ================= */}
@@ -917,6 +923,50 @@ export default function AffiliatesView({ sessionUser }) {
           </div>
         </section>
 
+
+        {/* ================= Actual System Screenshot Preview ================= */}
+        <section style={{ padding: '70px 0', background: '#060914', borderTop: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
+          <div className="container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--cyan)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', display: 'inline-block', marginBottom: '8px' }}>
+              ACTUAL PLATFORM DASHBOARD PREVIEW
+            </span>
+            <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#fff', margin: '0 0 16px 0', fontFamily: 'Sansation, sans-serif' }}>
+              The TuneMavens Affiliate Growth Command Center
+            </h2>
+            <p style={{ fontSize: '14px', color: '#94a3b8', maxWidth: '720px', margin: '0 auto 36px auto', lineHeight: 1.7 }}>
+              Explore the authentic, live system interface where affiliates manage referral codes, track real-time audience conversions, and execute instant Safaricom M-Pesa STK push and global multi-currency disbursements.
+            </p>
+
+            <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', cursor: 'pointer' }} onClick={() => setPreviewModal(true)}>
+              <img 
+                src={isSw ? affiliateDashboardActualSw : affiliateDashboardActualEn} 
+                alt="Actual TuneMavens Affiliate Dashboard Console" 
+                style={{ 
+                  maxWidth: '100%', 
+                  height: 'auto', 
+                  borderRadius: '6px', 
+                  border: '1px solid rgba(34, 211, 238, 0.3)',
+                  boxShadow: '0 24px 60px rgba(0,0,0,0.85)'
+                }}
+              />
+              <div style={{ marginTop: '12px', fontSize: '12.5px', color: 'var(--cyan)', fontWeight: 600 }}>
+                Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* High-Resolution Screenshot Modal */}
+        {previewModal && (
+          <div className="aff-modal-backdrop" onClick={() => setPreviewModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+            <div style={{ position: 'relative', maxWidth: '1400px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+              <button onClick={() => setPreviewModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px', borderRadius: '4px', cursor: 'pointer', zIndex: 10 }}>
+                <RiCloseLine size={24} />
+              </button>
+              <img src={isSw ? affiliateDashboardActualSw : affiliateDashboardActualEn} alt="Actual Affiliate Dashboard Console" style={{ width: '100%', height: 'auto', borderRadius: '6px', border: '1px solid #22d3ee' }} />
+            </div>
+          </div>
+        )}
 
         {/* ================= Bottom CTA ================= */}
         <section className="affiliates-bottom-banner">

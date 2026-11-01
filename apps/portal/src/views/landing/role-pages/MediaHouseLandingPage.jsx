@@ -19,7 +19,9 @@ import {
 import './RoleLandingShared.css'
 import { useRegion } from '../../../RegionContext.jsx'
 import headerImg from '../../../assets/images/header_apps.png'
-import publishingMockupImg from '../../../assets/images/publishing_dashboard_mockup.png'
+import mediahouseDashboardActualEn from '../../../assets/images/mediahouse_dashboard_actual_en.png'
+import mediahouseDashboardActualSw from '../../../assets/images/mediahouse_dashboard_actual_sw.png'
+import SEO from '../../../components/common/SEO.jsx'
 import tunestreamHeader3Img from '../../../assets/images/tunestream_header_3.png'
 import tourDashboardMockupImg from '../../../assets/images/tour_dashboard_mockup.png'
 import tunemediaLogo from '../../../assets/logos/tunemedia-logo.png'
@@ -84,7 +86,9 @@ const FALLBACK_MEDIA_RATES = [
 ];
 
 export default function MediaHouseLandingPage({ switcher }) {
-  const { formatPrice } = useRegion();
+  const { formatPrice, language } = useRegion();
+  const isSw = language === 'sw';
+  const [previewModal, setPreviewModal] = useState(false);
   const accent = '#3b82f6';
 
   // ================= HERO Slide Carousel State =================
@@ -310,6 +314,11 @@ export default function MediaHouseLandingPage({ switcher }) {
 
   return (
     <div className="role-page-wrapper" style={{ '--role-accent': accent }}>
+      <SEO 
+        title="TuneMedia — Radio Syndication & Broadcasting Rights Desk"
+        description="Automated broadcast cue sheet generation, synchronized web radio streams, and instant mechanical royalty clearing for media networks."
+        favicon="/favicons/tunemedia.png"
+      />
       {/* ================= 1. Interactive HERO Slide Carousel ================= */}
       <section 
         className="hw role-hero-wrapper"
@@ -977,6 +986,18 @@ export default function MediaHouseLandingPage({ switcher }) {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* High-Resolution Screenshot Modal */}
+      {previewModal && (
+        <div className="preview-modal-backdrop" onClick={() => setPreviewModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ maxWidth: '95vw', maxHeight: '95vh', overflow: 'auto', position: 'relative', background: '#090d1f', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreviewModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '8px', borderRadius: '3px', cursor: 'pointer' }}>
+              <RiCloseFill size={20} />
+            </button>
+            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 14px 0' }}>TuneMedia Broadcast Console · Actual System Interface</h3>
+            <img src={isSw ? mediahouseDashboardActualSw : mediahouseDashboardActualEn} alt="Actual System Screenshot" style={{ width: '100%', height: 'auto', borderRadius: '3px' }} />
           </div>
         </div>
       )}
