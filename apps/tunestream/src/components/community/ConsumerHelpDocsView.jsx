@@ -8,7 +8,9 @@ import {
   RiQuestionFill,
   RiThumbUpLine,
   RiThumbDownLine,
-  RiCustomerService2Fill
+  RiCustomerService2Fill,
+  RiFilter3Line,
+  RiCloseLine
 } from 'react-icons/ri';
 
 import {
@@ -23,12 +25,21 @@ export default function ConsumerHelpDocsView({
 }) {
   const [docCategory, setDocCategory] = useState('all');
   const [docSearch, setDocSearch] = useState('');
+  const [docSort, setDocSort] = useState('relevance');
   const [activeDocArticle, setActiveDocArticle] = useState(null);
   const [docFeedbackMap, setDocFeedbackMap] = useState({});
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
 
+  const docCategoryCounts = useMemo(() => {
+    const counts = { all: CONSUMER_DOC_ARTICLES.length };
+    CONSUMER_DOC_ARTICLES.forEach((a) => {
+      counts[a.categoryId] = (counts[a.categoryId] || 0) + 1;
+    });
+    return counts;
+  }, []);
+
   const filteredDocArticles = useMemo(() => {
-    return CONSUMER_DOC_ARTICLES.filter((article) => {
+    let list = CONSUMER_DOC_ARTICLES.filter((article) => {
       const matchesCategory = docCategory === 'all' || article.categoryId === docCategory;
       const q = docSearch.toLowerCase().trim();
       const matchesSearch =
@@ -39,7 +50,15 @@ export default function ConsumerHelpDocsView({
         (article.steps && article.steps.some((s) => s.title.toLowerCase().includes(q) || s.detail.toLowerCase().includes(q)));
       return matchesCategory && matchesSearch;
     });
-  }, [docCategory, docSearch]);
+
+    if (docSort === 'alphabetical') {
+      list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (docSort === 'read-time') {
+      const parseTime = (str) => parseInt(str) || 0;
+      list = [...list].sort((a, b) => parseTime(a.readTime) - parseTime(b.readTime));
+    }
+    return list;
+  }, [docCategory, docSearch, docSort]);
 
   return (
     <div className="consumer-help-docs-view" style={{ width: '100%', boxSizing: 'border-box' }}>
@@ -243,61 +262,224 @@ export default function ConsumerHelpDocsView({
             </div>
           </div>
         ) : (
-          /* Documentation Guides List & Search */
-          <div>
-            {/* Search Bar & Category Filter */}
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ position: 'relative', flex: '1 1 300px' }}>
-                <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} size={16} />
+          /* Documentation Guides List & Search with 20% Left Sidebar */
+          <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            {/* Left Sidebar (20% of main container) */}
+            <aside style={{
+              flex: '0 0 20%',
+              minWidth: '220px',
+              maxWidth: '260px',
+              background: '#090d1f',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '4px',
+              padding: '20px 16px',
+              boxSizing: 'border-box',
+              textAlign: 'left',
+              position: 'sticky',
+              top: '20px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#22d3ee', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RiFilter3Line size={14} /> Filter &amp; Sort
+                </span>
+                {(docCategory !== 'all' || docSearch || docSort !== 'relevance') && (
+                  <button
+                    type="button"
+                    onClick={() => { setDocCategory('all'); setDocSearch(''); setDocSort('relevance'); }}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', padding: 0 }}
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+
+              {/* Search Box */}
+              <div style={{ position: 'relative', marginBottom: '20px' }}>
+                <RiSearchLine style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} size={14} />
                 <input
                   type="text"
                   value={docSearch}
                   onChange={(e) => setDocSearch(e.target.value)}
-                  placeholder="Search guides: HiFi playback, offline caching, tipping, playlists..."
+                  placeholder="Search guides..."
                   style={{
                     width: '100%',
-                    background: '#090d1f',
+                    background: '#050814',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
-                    padding: '10px 14px 10px 38px',
+                    padding: '8px 10px 8px 32px',
                     borderRadius: '3px',
                     color: '#fff',
-                    fontSize: '13px',
-                    boxSizing: 'border-box'
+                    fontSize: '12px',
+                    boxSizing: 'border-box',
+                    outline: 'none'
                   }}
                 />
+                {docSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setDocSearch('')}
+                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+                  >
+                    <RiCloseLine size={14} />
+                  </button>
+                )}
               </div>
 
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {CONSUMER_DOC_CATEGORIES.map((cat) => (
+              {/* Sort Controls */}
+              <div style={{ marginBottom: '22px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                  Sort Guides
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {[
+                    { id: 'relevance', label: 'Recommended' },
+                    { id: 'alphabetical', label: 'Alphabetical (A–Z)' },
+                    { id: 'read-time', label: 'Quickest Walkthroughs' }
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setDocSort(s.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '7px 10px',
+                        borderRadius: '3px',
+                        border: docSort === s.id ? '1px solid #22d3ee' : '1px solid transparent',
+                        background: docSort === s.id ? 'rgba(34, 211, 238, 0.12)' : 'transparent',
+                        color: docSort === s.id ? '#22d3ee' : '#94a3b8',
+                        fontSize: '12px',
+                        fontWeight: docSort === s.id ? '700' : '500',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span>{s.label}</span>
+                      {docSort === s.id && <RiCheckLine size={13} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Categories */}
+              <div style={{ marginBottom: '22px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                  Categories
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {CONSUMER_DOC_CATEGORIES.map((cat) => {
+                    const isActive = docCategory === cat.id;
+                    const count = docCategoryCounts[cat.id] || 0;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setDocCategory(cat.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 10px',
+                          borderRadius: '3px',
+                          border: isActive ? '1px solid #22d3ee' : '1px solid rgba(255, 255, 255, 0.05)',
+                          background: isActive ? 'rgba(34, 211, 238, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                          color: isActive ? '#22d3ee' : '#cbd5e1',
+                          fontSize: '12px',
+                          fontWeight: isActive ? '700' : '500',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '6px' }}>
+                          {cat.label}
+                        </span>
+                        <span style={{
+                          fontSize: '10.5px',
+                          padding: '2px 6px',
+                          borderRadius: '10px',
+                          background: isActive ? 'rgba(34, 211, 238, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                          color: isActive ? '#22d3ee' : '#64748b'
+                        }}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Support Desk Prompt in Sidebar */}
+              {onNavigateToSupport && (
+                <div style={{
+                  padding: '12px',
+                  background: 'rgba(34, 211, 238, 0.05)',
+                  border: '1px solid rgba(34, 211, 238, 0.15)',
+                  borderRadius: '3px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>
+                    Need personal assistance?
+                  </div>
                   <button
-                    key={cat.id}
                     type="button"
-                    onClick={() => setDocCategory(cat.id)}
+                    onClick={onNavigateToSupport}
                     style={{
-                      padding: '6px 14px',
+                      width: '100%',
+                      padding: '7px 10px',
+                      background: '#22d3ee',
+                      color: '#050814',
+                      border: 'none',
                       borderRadius: '3px',
-                      border: docCategory === cat.id ? '1px solid #22d3ee' : '1px solid rgba(255, 255, 255, 0.1)',
-                      background: docCategory === cat.id ? 'rgba(34, 211, 238, 0.15)' : '#090d1f',
-                      color: docCategory === cat.id ? '#22d3ee' : '#94a3b8',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      cursor: 'pointer'
+                      fontWeight: '700',
+                      fontSize: '11.5px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
                     }}
                   >
-                    {cat.label}
+                    <RiCustomerService2Fill size={14} /> Open Support Desk
                   </button>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
+            </aside>
 
-            {/* Guides Grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-              gap: '20px',
-              textAlign: 'left',
-              marginBottom: '48px'
-            }}>
+            {/* Main Content Area (80% of main container) */}
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: 0 }}>
+                    {docCategory === 'all' ? 'All Documentation & Walkthroughs' : CONSUMER_DOC_CATEGORIES.find(c => c.id === docCategory)?.label}
+                  </h2>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>
+                    Showing {filteredDocArticles.length} of {CONSUMER_DOC_ARTICLES.length} guides
+                    {docSearch ? ` matching "${docSearch}"` : ''}
+                  </span>
+                </div>
+              </div>
+
+              {filteredDocArticles.length === 0 ? (
+                <div style={{ padding: '48px 24px', textAlign: 'center', background: '#090d1f', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '4px', marginBottom: '40px' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '14px' }}>No guides match your search or selected category.</p>
+                  <button
+                    type="button"
+                    onClick={() => { setDocCategory('all'); setDocSearch(''); setDocSort('relevance'); }}
+                    style={{ padding: '6px 14px', background: 'rgba(34, 211, 238, 0.15)', border: '1px solid #22d3ee', color: '#22d3ee', borderRadius: '3px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: '20px',
+                  textAlign: 'left',
+                  marginBottom: '48px'
+                }}>
               {filteredDocArticles.map((article) => (
                 <div
                   key={article.id}
@@ -357,6 +539,7 @@ export default function ConsumerHelpDocsView({
                 </div>
               ))}
             </div>
+            )}
 
             {/* Frequently Asked Questions Accordion */}
             <div style={{
@@ -463,6 +646,7 @@ export default function ConsumerHelpDocsView({
                   </button>
                 )}
               </div>
+            </div>
             </div>
           </div>
         )}

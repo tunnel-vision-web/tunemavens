@@ -243,6 +243,36 @@ export const CONTRACTED_CREATOR_CATALOG = {
   ]
 };
 
+const DEFAULT_SPLIT_SHEETS_VAULT = [
+  {
+    id: 'sheet_001',
+    title: 'Nairobi Cyberwave (Master)',
+    isrc: 'KE-TM1-26-00042',
+    iswc: 'T-345.987.123-1',
+    status: 'Locked & Verified',
+    collaborators: 'Artist (60%), Producer (25%), Co-Writer (15%)',
+    lastUpdated: '2026-03-01'
+  },
+  {
+    id: 'sheet_002',
+    title: 'Sunset over Rift Valley',
+    isrc: 'KE-TM1-26-00043',
+    iswc: 'T-345.987.123-2',
+    status: 'Locked & Verified',
+    collaborators: 'Artist (70%), Producer (30%)',
+    lastUpdated: '2026-03-05'
+  },
+  {
+    id: 'sheet_003',
+    title: 'Afro-Synth Cascade',
+    isrc: 'KE-TM1-26-00044',
+    iswc: 'T-345.987.123-3',
+    status: 'Pending Signature',
+    collaborators: 'Artist (50%), Producer (50%)',
+    lastUpdated: '2026-03-12'
+  }
+];
+
 export default function TuneLedgerSplitCascadePanel({
   sessionUser,
   tracks = [],
@@ -384,6 +414,9 @@ export default function TuneLedgerSplitCascadePanel({
     return rows;
   }, [isVc, vcContracts, ledgerRows]);
 
+    // Registered Split Sheets Vault State
+  const [splitSheetsVault, setSplitSheetsVault] = useState(DEFAULT_SPLIT_SHEETS_VAULT);
+
   // Derived effective split sheets strictly for contracted creators
   const effectiveSplitSheets = useMemo(() => {
     if (!isVc) return splitSheetsVault;
@@ -498,36 +531,7 @@ export default function TuneLedgerSplitCascadePanel({
   const [parsedStatementRows, setParsedStatementRows] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
 
-  // Registered Split Sheets Vault State
-  const [splitSheetsVault, setSplitSheetsVault] = useState([
-    {
-      id: 'sheet_001',
-      title: 'Nairobi Cyberwave (Master)',
-      isrc: 'KE-TM1-26-00042',
-      iswc: 'T-345.987.123-1',
-      status: 'Locked & Verified',
-      collaborators: 'Artist (60%), Producer (25%), Co-Writer (15%)',
-      lastUpdated: '2026-03-01'
-    },
-    {
-      id: 'sheet_002',
-      title: 'Sunset over Rift Valley',
-      isrc: 'KE-TM1-26-00043',
-      iswc: 'T-345.987.123-2',
-      status: 'Locked & Verified',
-      collaborators: 'Artist (70%), Producer (30%)',
-      lastUpdated: '2026-03-05'
-    },
-    {
-      id: 'sheet_003',
-      title: 'Afro-Synth Cascade',
-      isrc: 'KE-TM1-26-00044',
-      iswc: 'T-345.987.123-3',
-      status: 'Pending Signature',
-      collaborators: 'Artist (50%), Producer (50%)',
-      lastUpdated: '2026-03-12'
-    }
-  ]);
+
 
   // Track selection change handler
   const handleSelectTrack = (trackId) => {

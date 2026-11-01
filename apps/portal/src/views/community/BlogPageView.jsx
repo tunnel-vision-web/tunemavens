@@ -12,7 +12,9 @@ import {
   RiBookOpenFill,
   RiFireFill,
   RiMailSendLine,
-  RiCheckboxCircleFill
+  RiCheckboxCircleFill,
+  RiFilter3Line,
+  RiCloseLine
 } from 'react-icons/ri';
 
 import PageHeader from '../../components/common/PageHeader.jsx';
@@ -35,6 +37,7 @@ export default function BlogPageView({ sessionUser }) {
   // State
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [blogSort, setBlogSort] = useState('newest');
   const [articles, setArticles] = useState(INITIAL_BLOG_ARTICLES);
   const [activeArticle, setActiveArticle] = useState(null);
   const [commentsMap, setCommentsMap] = useState(() => {
@@ -98,9 +101,32 @@ export default function BlogPageView({ sessionUser }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [activeArticle]);
 
-  // Filtered Articles for List View
+  // Category Counts for Blog
+  const blogCategoryCounts = useMemo(() => {
+    const counts = { all: articles.length };
+    articles.forEach(art => {
+      BLOG_CATEGORIES.forEach(c => {
+        if (c.id !== 'all' && (
+          art.category.toLowerCase().includes(c.id.toLowerCase()) ||
+          (c.id === 'splits' && art.category.includes('Splits')) ||
+          (c.id === 'sync' && art.category.includes('Sync')) ||
+          (c.id === 'mastering' && art.category.includes('Mastering')) ||
+          (c.id === 'creator' && art.category.includes('Creator')) ||
+          (c.id === 'touring' && art.category.includes('Touring')) ||
+          (c.id === 'publishing' && art.category.includes('Publishing')) ||
+          (c.id === 'crm' && art.category.includes('CRM')) ||
+          (c.id === 'ai' && art.category.includes('AI'))
+        )) {
+          counts[c.id] = (counts[c.id] || 0) + 1;
+        }
+      });
+    });
+    return counts;
+  }, [articles]);
+
+  // Filtered & Sorted Articles for List View
   const filteredArticles = useMemo(() => {
-    return articles.filter(art => {
+    let list = articles.filter(art => {
       const matchCat =
         selectedCategory === 'all' ||
         art.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
@@ -122,7 +148,15 @@ export default function BlogPageView({ sessionUser }) {
 
       return matchCat && matchSearch;
     });
-  }, [articles, selectedCategory, searchQuery]);
+
+    if (blogSort === 'claps') {
+      list = [...list].sort((a, b) => (b.claps || 0) - (a.claps || 0));
+    } else if (blogSort === 'reading-time') {
+      const parseTime = (str) => parseInt(str) || 0;
+      list = [...list].sort((a, b) => parseTime(a.reading_time) - parseTime(b.reading_time));
+    }
+    return list;
+  }, [articles, selectedCategory, searchQuery, blogSort]);
 
   const featuredArticle = useMemo(() => {
     return articles.find(a => a.featured) || articles[0];
@@ -557,118 +591,196 @@ export default function BlogPageView({ sessionUser }) {
           </div>
         ) : (
           /* ========================================================= */
-          /* BLOG DIRECTORY / LIST VIEW                                */
+          /* BLOG DIRECTORY / LIST VIEW with 20% Left Sidebar          */
           /* ========================================================= */
-          <div>
-            {/* Category Filter Pills & Search Bar */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '20px',
-                marginBottom: '40px'
-              }}
-            >
-              {/* Search & Meta Bar */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '16px',
-                  flexWrap: 'wrap'
-                }}
-              >
-                <div>
-                  <h2 style={{ fontSize: '26px', fontWeight: 700, color: '#ffffff', margin: 0, textAlign: 'left' }}>
-                    Creator Stories &amp; Industry Insights
-                  </h2>
-                  <p style={{ fontSize: '14px', color: '#94a3b8', margin: '4px 0 0 0', textAlign: 'left' }}>
-                    Authoritative breakdowns of split cascades, sync briefs, mastering standards, and web worlds.
-                  </p>
-                </div>
+          <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            {/* Left Sidebar (20% of main container) */}
+            <aside style={{
+              flex: '0 0 20%',
+              minWidth: '220px',
+              maxWidth: '260px',
+              background: '#0d1527',
+              border: '1px solid rgba(0, 240, 255, 0.18)',
+              borderRadius: '4px',
+              padding: '20px 16px',
+              boxSizing: 'border-box',
+              textAlign: 'left',
+              position: 'sticky',
+              top: '20px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#00f0ff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RiFilter3Line size={14} /> Filter &amp; Sort
+                </span>
+                {(selectedCategory !== 'all' || searchQuery || blogSort !== 'newest') && (
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedCategory('all'); setSearchQuery(''); setBlogSort('newest'); }}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', padding: 0 }}
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
 
-                {/* Search Input Box */}
-                <div style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
-                  <RiSearchLine
-                    size={16}
-                    color="#00f0ff"
-                    style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }}
-                  />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search articles, topics, or authors..."
-                    style={{
-                      width: '100%',
-                      background: '#0d1527',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '3px',
-                      padding: '10px 14px 10px 38px',
-                      color: '#ffffff',
-                      fontSize: '13px',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = '#00f0ff'; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'; }}
-                  />
-                  {searchQuery && (
+              {/* In-Sidebar Search Input */}
+              <div style={{ position: 'relative', marginBottom: '20px' }}>
+                <RiSearchLine style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#00f0ff' }} size={14} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search articles..."
+                  style={{
+                    width: '100%',
+                    background: '#060813',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    padding: '8px 10px 8px 32px',
+                    borderRadius: '3px',
+                    color: '#fff',
+                    fontSize: '12px',
+                    boxSizing: 'border-box',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#00f0ff'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'; }}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+                  >
+                    <RiCloseLine size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Sort Articles Selection */}
+              <div style={{ marginBottom: '22px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                  Sort Articles
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {[
+                    { id: 'newest', label: 'Latest Published' },
+                    { id: 'claps', label: 'Most Clapped / Popular' },
+                    { id: 'reading-time', label: 'Reading Duration' }
+                  ].map((s) => (
                     <button
-                      onClick={() => setSearchQuery('')}
+                      key={s.id}
+                      type="button"
+                      onClick={() => setBlogSort(s.id)}
                       style={{
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '7px 10px',
+                        borderRadius: '3px',
+                        border: blogSort === s.id ? '1px solid #00f0ff' : '1px solid transparent',
+                        background: blogSort === s.id ? 'rgba(0, 240, 255, 0.12)' : 'transparent',
+                        color: blogSort === s.id ? '#00f0ff' : '#94a3b8',
+                        fontSize: '12px',
+                        fontWeight: blogSort === s.id ? '700' : '500',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span>{s.label}</span>
+                      {blogSort === s.id && <RiCheckLine size={13} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Categories Vertical Menu */}
+              <div style={{ marginBottom: '22px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                  Categories
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {BLOG_CATEGORIES.map(cat => {
+                    const isActive = selectedCategory === cat.id;
+                    const count = blogCategoryCounts[cat.id] || 0;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 10px',
+                          borderRadius: '3px',
+                          border: isActive ? '1px solid #00f0ff' : '1px solid rgba(255, 255, 255, 0.05)',
+                          background: isActive ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                          color: isActive ? '#00f0ff' : '#cbd5e1',
+                          fontSize: '12px',
+                          fontWeight: isActive ? '700' : '500',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '6px' }}>
+                          {cat.label}
+                        </span>
+                        <span style={{
+                          fontSize: '10.5px',
+                          padding: '2px 6px',
+                          borderRadius: '10px',
+                          background: isActive ? 'rgba(0, 240, 255, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                          color: isActive ? '#00f0ff' : '#64748b'
+                        }}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Topic Tags */}
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                  Popular Topics
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {['Waterfall Splits', 'Sync Briefs', 'MasterLab LUFS', 'M-Pesa STK', 'DDEX ERN', 'Touring'].map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setSearchQuery(t)}
+                      style={{
+                        padding: '4px 8px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '3px',
                         color: '#94a3b8',
+                        fontSize: '11px',
                         cursor: 'pointer'
                       }}
                     >
-                      ✕
+                      #{t}
                     </button>
-                  )}
+                  ))}
                 </div>
               </div>
+            </aside>
 
-              {/* Category Filter Buttons Strip */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  overflowX: 'auto',
-                  paddingBottom: '8px'
-                }}
-              >
-                {BLOG_CATEGORIES.map(cat => {
-                  const isActive = selectedCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '3px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        border: '1px solid ' + (isActive ? '#00f0ff' : 'rgba(255, 255, 255, 0.1)'),
-                        background: isActive ? '#00f0ff' : '#0d1527',
-                        color: isActive ? '#060813' : '#cbd5e1',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      {cat.label}
-                    </button>
-                  );
-                })}
+            {/* Main Content Area (80% of main container) */}
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+                  Creator Stories &amp; Industry Insights
+                </h2>
+                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>
+                  Showing {filteredArticles.length} of {articles.length} essays &amp; masterclasses
+                  {searchQuery ? ` matching "${searchQuery}"` : ''}
+                </p>
               </div>
-            </div>
 
             {/* Featured Article Spotlight Card (only if showing all & no active search query) */}
             {selectedCategory === 'all' && !searchQuery && featuredArticle && (
@@ -902,6 +1014,7 @@ export default function BlogPageView({ sessionUser }) {
                   <RiMailSendLine size={16} /> Subscribe
                 </button>
               </div>
+            </div>
             </div>
           </div>
         )}

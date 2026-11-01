@@ -24,7 +24,8 @@ import {
   RiRobot2Fill,
   RiLifebuoyFill,
   RiSendPlaneFill,
-  RiSparklingFill
+  RiSparklingFill,
+  RiFilter3Line
 } from 'react-icons/ri'
 
 import PageHeader from '../../components/common/PageHeader.jsx'
@@ -41,6 +42,7 @@ export default function HelpView({ sessionUser }) {
   const location = useLocation();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [helpSort, setHelpSort] = useState('relevance');
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [showHelpDocModal, setShowHelpDocModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -174,6 +176,18 @@ export default function HelpView({ sessionUser }) {
     });
     return counts;
   }, []);
+
+  // Filtered & Sorted Articles based on Category, Search Query & Sort selection
+  const sortedArticles = useMemo(() => {
+    let list = [...filteredArticles];
+    if (helpSort === 'az') {
+      list.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (helpSort === 'reading-time') {
+      const parseTime = (str) => parseInt(str) || 0;
+      list.sort((a, b) => parseTime(a.readingTime) - parseTime(b.readingTime));
+    }
+    return list;
+  }, [filteredArticles, helpSort]);
 
   // Quick tag search trigger
   const handleQuickTagClick = (tag) => {
@@ -374,156 +388,318 @@ export default function HelpView({ sessionUser }) {
           </div>
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="help-category-tabs">
-          {HELP_CATEGORIES.map(cat => {
-            const isActive = activeCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                className={`help-cat-btn ${isActive ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat.id)}
-              >
-                <span>{cat.label}</span>
-                <span className="help-cat-count">{categoryCounts[cat.id] || 0}</span>
-              </button>
-            );
-          })}
-        </div>
+        {/* Main 2-Column Container: 20% Left Sidebar & 80% Articles Area */}
+        <div className="help-content-layout" style={{ display: 'flex', gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '60px' }}>
+          {/* Left Sidebar (20% of main container) */}
+          <aside className="help-sidebar-filter" style={{
+            flex: '0 0 20%',
+            minWidth: '220px',
+            maxWidth: '260px',
+            background: 'rgba(14, 20, 42, 0.75)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '6px',
+            padding: '20px 16px',
+            boxSizing: 'border-box',
+            textAlign: 'left',
+            position: 'sticky',
+            top: '20px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <span style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--cyan, #00f0ff)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <RiFilter3Line size={14} /> Filter &amp; Sort
+              </span>
+              {(activeCategory !== 'all' || searchQuery || helpSort !== 'relevance') && (
+                <button
+                  type="button"
+                  onClick={() => { setActiveCategory('all'); setSearchQuery(''); setHelpSort('relevance'); }}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', padding: 0 }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
 
-        {/* Articles Section Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: 0 }}>
-              {activeCategory === 'all' ? 'All Knowledge Base Articles' : HELP_CATEGORIES.find(c => c.id === activeCategory)?.label}
-            </h3>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>
-              Showing {filteredArticles.length} article{filteredArticles.length === 1 ? '' : 's'}
-              {searchQuery && ` matching "${searchQuery}"`}
-            </p>
-          </div>
+            {/* In-Sidebar Search */}
+            <div style={{ position: 'relative', marginBottom: '20px' }}>
+              <RiSearchLine style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} size={14} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search articles..."
+                style={{
+                  width: '100%',
+                  background: '#050814',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  padding: '8px 10px 8px 32px',
+                  borderRadius: '3px',
+                  color: '#fff',
+                  fontSize: '12px',
+                  boxSizing: 'border-box',
+                  outline: 'none'
+                }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+                >
+                  <RiCloseLine size={14} />
+                </button>
+              )}
+            </div>
 
-          {/* Top Right Corner Action Buttons: Need Help & Ask AI */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {searchQuery && (
-              <button 
-                type="button" 
-                onClick={() => { setSearchQuery(''); setActiveCategory('all'); }} 
-                style={{ background: 'none', border: 'none', color: 'var(--cyan)', fontSize: '13px', cursor: 'pointer', fontWeight: 600, marginRight: '4px' }}
-              >
-                Reset Filters
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setShowHelpDocModal(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: '12.5px',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              title="Need help? View articles related to this section"
-            >
-              <RiCustomerService2Fill size={15} color="#0ea5e9" />
-              Need Help?
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowAiModal(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid rgba(0, 240, 255, 0.4)',
-                background: 'rgba(0, 240, 255, 0.12)',
-                color: 'var(--cyan, #00f0ff)',
-                fontWeight: 700,
-                fontSize: '12.5px',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              title="Ask TuneSupport AI a question in real time"
-            >
-              <RiRobot2Fill size={15} />
-              Ask AI
-            </button>
-          </div>
-        </div>
-
-        {/* Articles Grid */}
-        {filteredArticles.length === 0 ? (
-          <div className="glass-panel" style={{ padding: '60px 20px', textAlign: 'center', marginBottom: '60px' }}>
-            <RiBookOpenFill size={48} style={{ color: '#64748b', margin: '0 auto 16px' }} />
-            <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>No articles match your query</h4>
-            <p style={{ fontSize: '14px', color: '#94a3b8', maxWidth: '440px', margin: '0 auto 20px' }}>
-              Try searching with broader terms like "publishing", "royalties", "split sheets", or "streaming", or reach out to our support desk below.
-            </p>
-            <button 
-              type="button" 
-              className="btn-primary" 
-              style={{ padding: '8px 20px', borderRadius: '4px' }}
-              onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
-            >
-              Clear Search
-            </button>
-          </div>
-        ) : (
-          <div className="help-articles-grid">
-            {filteredArticles.map(article => (
-              <div 
-                key={article.id} 
-                className="help-article-card"
-                onClick={() => { setSelectedArticle(article); setShowHelpDocModal(true); setFeedbackGiven(false); }}
-                tabIndex={0}
-                role="button"
-                onKeyDown={(e) => { if (e.key === 'Enter') { setSelectedArticle(article); setShowHelpDocModal(true); } }}
-              >
-                <div>
-                  <div className="help-article-card-header">
-                    <span className={`help-tag-badge ${getCategoryBadgeClass(article.category)}`}>
-                      {article.category === 'publishing' && 'Publishing'}
-                      {article.category === 'business' && 'Business'}
-                      {article.category === 'services' && 'Services'}
-                      {article.category === 'royalties' && 'Royalties'}
-                      {article.category === 'account' && 'Account'}
-                    </span>
-                    <span className="help-read-time">
-                      <RiTimeLine size={13} />
-                      {article.readingTime}
-                    </span>
-                  </div>
-                  <h4 className="help-article-title">{article.title}</h4>
-                  <p className="help-article-excerpt">{article.excerpt}</p>
-                </div>
-
-                <div className="help-article-footer">
-                  <div className="help-article-tags">
-                    {article.tags.slice(0, 3).map(tag => (
-                      <span key={tag} className="help-small-tag">#{tag}</span>
-                    ))}
-                  </div>
-                  <span className="help-read-action">
-                    Read Guide <RiArrowRightLine size={14} />
-                  </span>
-                </div>
+            {/* Sort Filter */}
+            <div style={{ marginBottom: '22px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                Sort Articles
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {[
+                  { id: 'relevance', label: 'Recommended Topics' },
+                  { id: 'az', label: 'Alphabetical (A–Z)' },
+                  { id: 'reading-time', label: 'Reading Duration' }
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setHelpSort(s.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '7px 10px',
+                      borderRadius: '3px',
+                      border: helpSort === s.id ? '1px solid var(--cyan)' : '1px solid transparent',
+                      background: helpSort === s.id ? 'rgba(34, 211, 238, 0.12)' : 'transparent',
+                      color: helpSort === s.id ? 'var(--cyan)' : '#94a3b8',
+                      fontSize: '12px',
+                      fontWeight: helpSort === s.id ? '700' : '500',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>{s.label}</span>
+                    {helpSort === s.id && <RiCheckLine size={13} />}
+                  </button>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Categories Vertical Menu */}
+            <div style={{ marginBottom: '22px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                Categories
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {HELP_CATEGORIES.map(cat => {
+                  const isActive = activeCategory === cat.id;
+                  const count = categoryCounts[cat.id] || 0;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setActiveCategory(cat.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '8px 10px',
+                        borderRadius: '3px',
+                        border: isActive ? '1px solid var(--cyan)' : '1px solid rgba(255, 255, 255, 0.05)',
+                        background: isActive ? 'rgba(34, 211, 238, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                        color: isActive ? 'var(--cyan)' : '#cbd5e1',
+                        fontSize: '12px',
+                        fontWeight: isActive ? '700' : '500',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '6px' }}>
+                        {cat.label}
+                      </span>
+                      <span style={{
+                        fontSize: '10.5px',
+                        padding: '2px 6px',
+                        borderRadius: '10px',
+                        background: isActive ? 'rgba(34, 211, 238, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                        color: isActive ? 'var(--cyan)' : '#64748b'
+                      }}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Popular Topics */}
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                Popular Topics
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {['Split Sheets', 'The MLC', 'ASCAP & BMI', 'Lossless Audio', 'Sync Briefs', 'Recoupment Math'].map(tag => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleQuickTagClick(tag)}
+                    style={{
+                      padding: '4px 8px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '3px',
+                      color: '#94a3b8',
+                      fontSize: '11px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Articles Area (80% of main container) */}
+          <div className="help-main-articles-area" style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+            {/* Articles Section Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: 0 }}>
+                  {activeCategory === 'all' ? 'All Knowledge Base Articles' : HELP_CATEGORIES.find(c => c.id === activeCategory)?.label}
+                </h3>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>
+                  Showing {sortedArticles.length} article{sortedArticles.length === 1 ? '' : 's'}
+                  {searchQuery && ` matching "${searchQuery}"`}
+                </p>
+              </div>
+
+              {/* Top Right Corner Action Buttons: Need Help & Ask AI */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                {searchQuery && (
+                  <button 
+                    type="button" 
+                    onClick={() => { setSearchQuery(''); setActiveCategory('all'); }} 
+                    style={{ background: 'none', border: 'none', color: 'var(--cyan)', fontSize: '13px', cursor: 'pointer', fontWeight: 600, marginRight: '4px' }}
+                  >
+                    Reset Filters
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowHelpDocModal(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '12.5px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Need help? View articles related to this section"
+                >
+                  <RiCustomerService2Fill size={15} color="#0ea5e9" />
+                  Need Help?
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAiModal(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(0, 240, 255, 0.4)',
+                    background: 'rgba(0, 240, 255, 0.12)',
+                    color: 'var(--cyan, #00f0ff)',
+                    fontWeight: 700,
+                    fontSize: '12.5px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Ask TuneSupport AI a question in real time"
+                >
+                  <RiRobot2Fill size={15} />
+                  Ask AI
+                </button>
+              </div>
+            </div>
+
+            {/* Articles Grid */}
+            {sortedArticles.length === 0 ? (
+              <div className="glass-panel" style={{ padding: '60px 20px', textAlign: 'center', marginBottom: '60px' }}>
+                <RiBookOpenFill size={48} style={{ color: '#64748b', margin: '0 auto 16px' }} />
+                <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>No articles match your query</h4>
+                <p style={{ fontSize: '14px', color: '#94a3b8', maxWidth: '440px', margin: '0 auto 20px' }}>
+                  Try searching with broader terms like "publishing", "royalties", "split sheets", or "streaming", or reach out to our support desk below.
+                </p>
+                <button 
+                  type="button" 
+                  className="btn-primary" 
+                  style={{ padding: '8px 20px', borderRadius: '4px' }}
+                  onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
+                >
+                  Clear Search
+                </button>
+              </div>
+            ) : (
+              <div className="help-articles-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+                {sortedArticles.map(article => (
+                  <div 
+                    key={article.id} 
+                    className="help-article-card"
+                    onClick={() => { setSelectedArticle(article); setShowHelpDocModal(true); setFeedbackGiven(false); }}
+                    tabIndex={0}
+                    role="button"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { setSelectedArticle(article); setShowHelpDocModal(true); } }}
+                  >
+                    <div>
+                      <div className="help-article-card-header">
+                        <span className={`help-tag-badge ${getCategoryBadgeClass(article.category)}`}>
+                          {article.category === 'publishing' && 'Publishing'}
+                          {article.category === 'business' && 'Business'}
+                          {article.category === 'services' && 'Services'}
+                          {article.category === 'royalties' && 'Royalties'}
+                          {article.category === 'account' && 'Account'}
+                        </span>
+                        <span className="help-read-time">
+                          <RiTimeLine size={13} />
+                          {article.readingTime}
+                        </span>
+                      </div>
+                      <h4 className="help-article-title">{article.title}</h4>
+                      <p className="help-article-excerpt">{article.excerpt}</p>
+                    </div>
+
+                    <div className="help-article-footer">
+                      <div className="help-article-tags">
+                        {article.tags.slice(0, 3).map(tag => (
+                          <span key={tag} className="help-small-tag">#{tag}</span>
+                        ))}
+                      </div>
+                      <span className="help-read-action">
+                        Read Guide <RiArrowRightLine size={14} />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Direct Platform Help Channels */}
         <div style={{ marginTop: '20px', marginBottom: '70px' }}>

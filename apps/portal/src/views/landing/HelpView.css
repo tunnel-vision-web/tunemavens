@@ -691,3 +691,34 @@
     padding: 20px;
   }
 }
+
+
+/* Help 20% Sidebar Layout */
+.help-content-layout {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  margin-bottom: 60px;
+}
+
+.help-sidebar-filter {
+  flex: 0 0 20%;
+  min-width: 220px;
+  max-width: 260px;
+}
+
+.help-main-articles-area {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .help-content-layout {
+    flex-direction: column;
+  }
+  .help-sidebar-filter {
+    flex: 1 1 100%;
+    max-width: 100%;
+    position: static !important;
+  }
+}

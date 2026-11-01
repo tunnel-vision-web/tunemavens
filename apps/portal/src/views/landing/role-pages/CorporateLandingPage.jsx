@@ -27,6 +27,7 @@ import headerAppsImg from '../../../assets/images/header_apps.png'
 import corporateDashboardActualEn from '../../../assets/images/corporate_dashboard_actual_en.png'
 import corporateDashboardActualSw from '../../../assets/images/corporate_dashboard_actual_sw.png'
 import SEO from '../../../components/common/SEO.jsx'
+import userManagerImg from '../../../assets/images/user_manager.png'
 import headerAboutImg from '../../../assets/images/header_about.png'
 import tunecorpLogo from '../../../assets/logos/tunecorp-logo.png'
 

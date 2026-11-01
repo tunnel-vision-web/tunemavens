@@ -78,7 +78,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
-import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi } from './lib/api.js'
+import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi, normalizeMediaUrl } from './lib/api.js'
 import { reconcileUserApps, persistAppActivation, getStoredActivatedApps, DEFAULT_ACTIVE_APPS_BY_ROLE, saveStoredActivatedApps, saveStoredDeactivatedApps } from './lib/activatedApps.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
@@ -151,6 +151,7 @@ import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx'
 import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog.js'
 import MpesaPosTerminal from './components/demos/MpesaPosTerminal.jsx'
 import DistributionTrackerApp from './components/demos/DistributionTrackerApp.jsx'
+import PublishingTrackerApp from './components/demos/PublishingTrackerApp.jsx'
 import HostingManagerApp from './components/demos/HostingManagerApp.jsx'
 import VcDashboardPanel from './components/vc/VcDashboardPanel.jsx'
 
@@ -1678,37 +1679,13 @@ function DashboardView({
       case 'distribution-tracker':
         return (
           <div style={{ padding: '24px 32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Global Delivery Radar</span>
-                <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: '4px 0 0', fontFamily: 'Sansation, sans-serif' }}>Distribution Tracker</h2>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  onClick={() => setActiveTab('distribution-election')} 
-                  className="btn-secondary" 
-                  style={{ padding: '8px 16px', fontSize: '12px' }}
-                >
-                  Deal Election Contracts
-                </button>
-              </div>
-            </div>
-            <DistributionTrackerApp sessionUser={activeUser} />
+            <DistributionTrackerApp sessionUser={activeUser} initialTab="pipeline" />
           </div>
         );
       case 'distribution-election':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button 
-                onClick={() => setActiveTab('distribution-tracker')} 
-                className="btn-primary" 
-                style={{ padding: '8px 16px', fontSize: '12px', background: '#f59e0b', color: '#090d1f', fontWeight: 700 }}
-              >
-                Open Distribution Radar
-              </button>
-            </div>
-            <DistributionElectionPanel sessionUser={activeUser} />
+          <div style={{ padding: '24px 32px' }}>
+            <DistributionTrackerApp sessionUser={activeUser} initialTab="setup" />
           </div>
         );
       case 'hosting-manager':
@@ -1749,8 +1726,10 @@ function DashboardView({
         );
       case 'promoted-acts':
         return <PromotedActsAdminPanel />;
+      case 'publishing-tracker':
+        return <PublishingTrackerApp sessionUser={activeUser} initialTab="pipeline" />;
       case 'publishing-election':
-        return <PublishingElectionPanel sessionUser={activeUser} />;
+        return <PublishingTrackerApp sessionUser={activeUser} initialTab="setup" />;
       case 'social-ai':
         return (
           <SocialAiPanel 

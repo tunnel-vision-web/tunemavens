@@ -1361,7 +1361,7 @@ export function ContractDrawer({ contract, onClose, onUpdated, sessionUser }) {
                 {c.negotiable && proposingClause !== c.id && (
                   <button type="button" onClick={() => { setProposingClause(c.id); setProposalBody(c.body); }} data-testid={`clause-propose-btn-${c.id}`}
                     style={{ marginTop: '6px', padding: '4px 10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', borderRadius: '3px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    <RiPenBrushFill size={11} style={{ display: 'inline', marginRight: 4 }} /> Propose an edit
+                    <RiPenNibFill size={11} style={{ display: 'inline', marginRight: 4 }} /> Propose an edit
                   </button>
                 )}
                 {proposingClause === c.id && (

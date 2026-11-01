@@ -458,7 +458,7 @@ export default function AffiliatesView({ sessionUser }) {
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 filter: currentSlide === idx 
-                  ? (titleHovered ? 'brightness(1.05) blur(0px)' : 'brightness(0.7) blur(1.5px)')
+                  ? (titleHovered ? 'brightness(1.05) blur(0px)' : 'brightness(0.85) blur(0px)')
                   : 'none',
                 transform: currentSlide === idx && titleHovered ? 'scale(1.04)' : 'scale(1)',
                 transition: 'filter 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)'

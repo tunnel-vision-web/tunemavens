@@ -296,6 +296,63 @@ export const affiliatesApi = {
  * Normalizes backend media and artwork URLs to support relative same-origin reverse-proxying.
  * Converts absolute http://localhost:8001/uploads/... or http://127.0.0.1:8001/... to /uploads/...
  */
+
+
+export const publishingApi = {
+  getSocieties: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.search) q.append('search', params.search);
+    if (params.region && params.region !== 'all') q.append('region', params.region);
+    if (params.type && params.type !== 'all') q.append('type', params.type);
+    if (params.direct_only) q.append('direct_only', 'true');
+    const qs = q.toString();
+    return request('/api/publishing/societies' + (qs ? '?' + qs : ''));
+  },
+  getSociety: (id) => request('/api/publishing/societies/' + encodeURIComponent(id)),
+  getStats: () => request('/api/publishing/stats'),
+  getWorks: () => request('/api/publishing/works'),
+  registerWork: (payload) => request('/api/publishing/works', { method: 'POST', body: payload }),
+  exportCwr: (payload = {}) => request('/api/publishing/cwr-export', { method: 'POST', body: payload }),
+  getAdminQueue: () => request('/api/publishing/admin/queue'),
+  verifyAdminWork: (workCode) => request('/api/publishing/admin/queue/' + encodeURIComponent(workCode) + '/verify', { method: 'POST' }),
+};
+
+export const distroApi = {
+  getOutlets: () => request('/api/distro/outlets'),
+  getReleases: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.persona) q.append('persona', params.persona);
+    if (params.artist) q.append('artist', params.artist);
+    if (params.status && params.status !== 'all') q.append('status', params.status);
+    if (params.search) q.append('search', params.search);
+    const qs = q.toString();
+    return request('/api/distro/releases' + (qs ? '?' + qs : ''));
+  },
+  createRelease: (payload) => request('/api/distro/releases', { method: 'POST', body: payload }),
+  getRelease: (id) => request('/api/distro/releases/' + encodeURIComponent(id)),
+  updateRelease: (id, payload) => request('/api/distro/releases/' + encodeURIComponent(id), { method: 'PUT', body: payload }),
+  deliverRelease: (id, payload = {}) => request('/api/distro/releases/' + encodeURIComponent(id) + '/deliver', { method: 'POST', body: payload }),
+  takedownRelease: (id, payload = {}) => request('/api/distro/releases/' + encodeURIComponent(id) + '/takedown', { method: 'POST', body: payload }),
+  bulkDeliver: (payload) => request('/api/distro/bulk-deliver', { method: 'POST', body: payload }),
+  getSheet: (id) => request('/api/distro/releases/' + encodeURIComponent(id) + '/sheet'),
+  getStats: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.persona) q.append('persona', params.persona);
+    if (params.outlet && params.outlet !== 'all') q.append('outlet', params.outlet);
+    if (params.period) q.append('period', params.period);
+    if (params.release_id) q.append('release_id', params.release_id);
+    if (params.artist_id) q.append('artist_id', params.artist_id);
+    const qs = q.toString();
+    return request('/api/distro/stats' + (qs ? '?' + qs : ''));
+  },
+  simulateSync: () => request('/api/distro/stats/simulate-sync', { method: 'POST' }),
+  getRoster: () => request('/api/distro/roster'),
+  getAdminPipeline: () => request('/api/distro/admin/pipeline'),
+  adminOverrideStatus: (payload) => request('/api/distro/admin/override-status', { method: 'POST', body: payload }),
+  generateIsrc: () => request('/api/distro/generate-isrc', { method: 'POST' }),
+  generateUpc: () => request('/api/distro/generate-upc', { method: 'POST' }),
+};
+
 export function normalizeMediaUrl(url) {
   if (!url || typeof url !== 'string') return '';
   const trimmed = url.trim();

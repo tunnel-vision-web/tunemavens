@@ -141,3 +141,10 @@ npm test
 - **Revised Persona Product Brands:** Podcasters (**Tunepod**), VCs (**Tune Capital**), Corporates (**Tunecorp**), Record Labels (**Tunelabel**), Media Houses (**Tunemedia**), and DJs (**tunedj**) each featuring distinct analogous accents matching their landing page themes.
 - **120% Icon Sizing Standard:** Synchronized chevron icon height to 120% of wordmark font height (40px icon vs 33px font), vertically centered platformwide.
 - **Perfect For Carousel Integration:** Homepage carousel and role directories updated with authoritative persona brand assets.
+
+
+### 13. Music Supervisor Dynamic Licensing & Zero-Package Architecture
+- **Zero-Package & Zero-Credit Protocol:** Supervisors never pay for packages, credits, or subscriptions. Full discovery suite (search, AI scene brief matching, cutting room stem auditions, playlists, cue sheet generation) is 100% free.
+- **Per-Track Dynamic Licensing:** Transparent licensing calibrated strictly by Production Use Case (Film, TV, Commercial, Gaming), Territory (Regional, Continental, Worldwide), Term/Duration (1-Year, 3-Year, Perpetuity), and IP Tier.
+- **In-App Deal Desk Negotiation:** Supervisors submit custom offers, negotiate counter-offers with rights holders, and close deals securely under TuneLedger escrow.
+- **SyncMavens Green Brand Harmonization:** Harmonized `syncmavens-logo.png` to Emerald Green (`#10b981`) matching the SyncMavens landing page theme.

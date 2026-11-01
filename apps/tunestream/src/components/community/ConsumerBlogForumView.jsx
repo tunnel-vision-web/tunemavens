@@ -14,7 +14,9 @@ import {
   RiSendPlaneFill,
   RiCloseLine,
   RiAddLine,
-  RiFireFill
+  RiFireFill,
+  RiFilter3Line,
+  RiArrowUpDownLine
 } from 'react-icons/ri';
 
 import {
@@ -158,6 +160,7 @@ export default function ConsumerBlogForumView({
   // Blog state
   const [blogCategory, setBlogCategory] = useState('all');
   const [blogSearch, setBlogSearch] = useState('');
+  const [blogSort, setBlogSort] = useState('newest');
   const [activeBlogArticle, setActiveBlogArticle] = useState(null);
   const [blogLikes, setBlogLikes] = useState({});
   const [blogComments, setBlogComments] = useState(INITIAL_CONSUMER_BLOG_COMMENTS);
@@ -167,6 +170,7 @@ export default function ConsumerBlogForumView({
   // Forum state
   const [forumCategory, setForumCategory] = useState('all');
   const [forumSearch, setForumSearch] = useState('');
+  const [forumSort, setForumSort] = useState('upvotes');
   const [forumTopics, setForumTopics] = useState(INITIAL_FORUM_TOPICS);
   const [activeForumTopic, setActiveForumTopic] = useState(null);
   const [showNewTopicForm, setShowNewTopicForm] = useState(false);
@@ -175,9 +179,27 @@ export default function ConsumerBlogForumView({
   const [newTopicBody, setNewTopicBody] = useState('');
   const [newReplyText, setNewReplyText] = useState('');
 
-  // Filtered blog articles
+  // Blog Category Counts
+  const blogCategoryCounts = useMemo(() => {
+    const counts = { all: CONSUMER_BLOG_ARTICLES.length };
+    CONSUMER_BLOG_ARTICLES.forEach((a) => {
+      counts[a.categoryId] = (counts[a.categoryId] || 0) + 1;
+    });
+    return counts;
+  }, []);
+
+  // Forum Category Counts
+  const forumCategoryCounts = useMemo(() => {
+    const counts = { all: forumTopics.length };
+    forumTopics.forEach((t) => {
+      counts[t.categoryId] = (counts[t.categoryId] || 0) + 1;
+    });
+    return counts;
+  }, [forumTopics]);
+
+  // Filtered & Sorted blog articles
   const filteredBlogArticles = useMemo(() => {
-    return CONSUMER_BLOG_ARTICLES.filter((article) => {
+    let list = CONSUMER_BLOG_ARTICLES.filter((article) => {
       const matchesCategory = blogCategory === 'all' || article.categoryId === blogCategory;
       const q = blogSearch.toLowerCase().trim();
       const matchesSearch =
@@ -188,11 +210,23 @@ export default function ConsumerBlogForumView({
         (article.tags && article.tags.some((t) => t.toLowerCase().includes(q)));
       return matchesCategory && matchesSearch;
     });
-  }, [blogCategory, blogSearch]);
 
-  // Filtered forum topics
+    if (blogSort === 'popular') {
+      list = [...list].sort((a, b) => {
+        const aClaps = (a.claps || 0) + (blogLikes[a.slug] ? 1 : 0);
+        const bClaps = (b.claps || 0) + (blogLikes[b.slug] ? 1 : 0);
+        return bClaps - aClaps;
+      });
+    } else if (blogSort === 'reading-time') {
+      const parseTime = (str) => parseInt(str) || 0;
+      list = [...list].sort((a, b) => parseTime(a.reading_time) - parseTime(b.reading_time));
+    }
+    return list;
+  }, [blogCategory, blogSearch, blogSort, blogLikes]);
+
+  // Filtered & Sorted forum topics
   const filteredForumTopics = useMemo(() => {
-    return forumTopics.filter((topic) => {
+    let list = forumTopics.filter((topic) => {
       const matchesCategory = forumCategory === 'all' || topic.categoryId === forumCategory;
       const q = forumSearch.toLowerCase().trim();
       const matchesSearch =
@@ -203,7 +237,14 @@ export default function ConsumerBlogForumView({
         topic.categoryLabel.toLowerCase().includes(q);
       return matchesCategory && matchesSearch;
     });
-  }, [forumTopics, forumCategory, forumSearch]);
+
+    if (forumSort === 'upvotes') {
+      list = [...list].sort((a, b) => (b.upvotes || 0) - (a.upvotes || 0));
+    } else if (forumSort === 'replies') {
+      list = [...list].sort((a, b) => (b.replies?.length || 0) - (a.replies?.length || 0));
+    }
+    return list;
+  }, [forumTopics, forumCategory, forumSearch, forumSort]);
 
   const handleToggleLike = (slug) => {
     setBlogLikes((prev) => ({
@@ -656,58 +697,187 @@ export default function ConsumerBlogForumView({
               </div>
             </article>
           ) : (
-            /* Articles Grid */
-            <div>
-              <div style={{ display: 'flex', gap: '16px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: '1 1 300px' }}>
-                  <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} size={16} />
+            /* Articles Directory with 20% Left Sidebar */
+            <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              {/* Left Sidebar (20% of main container) */}
+              <aside style={{
+                flex: '0 0 20%',
+                minWidth: '220px',
+                maxWidth: '260px',
+                background: '#090d1f',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '4px',
+                padding: '20px 16px',
+                boxSizing: 'border-box',
+                textAlign: 'left',
+                position: 'sticky',
+                top: '20px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <RiFilter3Line size={14} /> Filter &amp; Sort
+                  </span>
+                  {(blogCategory !== 'all' || blogSearch || blogSort !== 'newest') && (
+                    <button
+                      type="button"
+                      onClick={() => { setBlogCategory('all'); setBlogSearch(''); setBlogSort('newest'); }}
+                      style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', padding: 0 }}
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+
+                {/* Search Box */}
+                <div style={{ position: 'relative', marginBottom: '20px' }}>
+                  <RiSearchLine style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} size={14} />
                   <input
                     type="text"
                     value={blogSearch}
                     onChange={(e) => setBlogSearch(e.target.value)}
-                    placeholder="Search audio guides, music culture, gear, and tipping..."
+                    placeholder="Search stories..."
                     style={{
                       width: '100%',
-                      background: '#090d1f',
+                      background: '#050814',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
-                      padding: '10px 14px 10px 38px',
+                      padding: '8px 10px 8px 32px',
                       borderRadius: '3px',
                       color: '#fff',
-                      fontSize: '13px',
-                      boxSizing: 'border-box'
+                      fontSize: '12px',
+                      boxSizing: 'border-box',
+                      outline: 'none'
                     }}
                   />
-                </div>
-
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {CONSUMER_BLOG_CATEGORIES.map((cat) => (
+                  {blogSearch && (
                     <button
-                      key={cat.id}
                       type="button"
-                      onClick={() => setBlogCategory(cat.id)}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: '3px',
-                        border: blogCategory === cat.id ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
-                        background: blogCategory === cat.id ? 'rgba(16, 185, 129, 0.15)' : '#090d1f',
-                        color: blogCategory === cat.id ? '#10b981' : '#94a3b8',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
+                      onClick={() => setBlogSearch('')}
+                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
                     >
-                      {cat.label}
+                      <RiCloseLine size={14} />
                     </button>
-                  ))}
+                  )}
                 </div>
-              </div>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-                gap: '24px',
-                textAlign: 'left'
-              }}>
+                {/* Sort Controls */}
+                <div style={{ marginBottom: '22px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                    Sort Stories
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {[
+                      { id: 'newest', label: 'Latest Published' },
+                      { id: 'popular', label: 'Most Popular / Liked' },
+                      { id: 'reading-time', label: 'Reading Duration' }
+                    ].map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setBlogSort(s.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '7px 10px',
+                          borderRadius: '3px',
+                          border: blogSort === s.id ? '1px solid #10b981' : '1px solid transparent',
+                          background: blogSort === s.id ? 'rgba(16, 185, 129, 0.12)' : 'transparent',
+                          color: blogSort === s.id ? '#10b981' : '#94a3b8',
+                          fontSize: '12px',
+                          fontWeight: blogSort === s.id ? '700' : '500',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <span>{s.label}</span>
+                        {blogSort === s.id && <RiCheckLine size={13} />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Categories */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                    Categories
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {CONSUMER_BLOG_CATEGORIES.map((cat) => {
+                      const isActive = blogCategory === cat.id;
+                      const count = blogCategoryCounts[cat.id] || 0;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setBlogCategory(cat.id)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '8px 10px',
+                            borderRadius: '3px',
+                            border: isActive ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.05)',
+                            background: isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                            color: isActive ? '#10b981' : '#cbd5e1',
+                            fontSize: '12px',
+                            fontWeight: isActive ? '700' : '500',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '6px' }}>
+                            {cat.label}
+                          </span>
+                          <span style={{
+                            fontSize: '10.5px',
+                            padding: '2px 6px',
+                            borderRadius: '10px',
+                            background: isActive ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                            color: isActive ? '#10b981' : '#64748b'
+                          }}>
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </aside>
+
+              {/* Main Content Area: 80% of main container */}
+              <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: 0 }}>
+                      {blogCategory === 'all' ? 'All Stories & Articles' : CONSUMER_BLOG_CATEGORIES.find(c => c.id === blogCategory)?.label}
+                    </h2>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      Showing {filteredBlogArticles.length} of {CONSUMER_BLOG_ARTICLES.length} stories
+                      {blogSearch ? ` matching "${blogSearch}"` : ''}
+                    </span>
+                  </div>
+                </div>
+
+                {filteredBlogArticles.length === 0 ? (
+                  <div style={{ padding: '48px 24px', textAlign: 'center', background: '#090d1f', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '4px' }}>
+                    <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '14px' }}>No stories match the active filter or search query.</p>
+                    <button
+                      type="button"
+                      onClick={() => { setBlogCategory('all'); setBlogSearch(''); setBlogSort('newest'); }}
+                      style={{ padding: '6px 14px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#10b981', borderRadius: '3px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                    gap: '20px',
+                    textAlign: 'left'
+                  }}>
                 {filteredBlogArticles.map((article) => (
                   <div
                     key={article.slug}
@@ -783,6 +953,8 @@ export default function ConsumerBlogForumView({
                     </div>
                   </div>
                 ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -792,52 +964,6 @@ export default function ConsumerBlogForumView({
       {/* VIEW B: COMMUNITY DISCUSSIONS & FORUM */}
       {subTab === 'forum' && (
         <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
-          {/* Top action bar: Search, Categories, and New Discussion button */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {FORUM_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setForumCategory(cat.id)}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: '3px',
-                    border: forumCategory === cat.id ? '1px solid #22d3ee' : '1px solid rgba(255, 255, 255, 0.1)',
-                    background: forumCategory === cat.id ? 'rgba(34, 211, 238, 0.15)' : '#090d1f',
-                    color: forumCategory === cat.id ? '#22d3ee' : '#94a3b8',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
-            {!activeForumTopic && (
-              <button
-                type="button"
-                onClick={() => setShowNewTopicForm(!showNewTopicForm)}
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: '3px',
-                  border: '1px solid #22d3ee',
-                  background: showNewTopicForm ? 'rgba(34, 211, 238, 0.2)' : '#22d3ee',
-                  color: showNewTopicForm ? '#22d3ee' : '#050814',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <RiAddLine size={16} /> {showNewTopicForm ? 'Close Form' : '+ Start New Discussion'}
-              </button>
-            )}
-          </div>
 
           {/* New Discussion Composer */}
           {showNewTopicForm && (
@@ -1149,29 +1275,207 @@ export default function ConsumerBlogForumView({
               </div>
             </div>
           ) : (
-            /* Topics List */
-            <div>
-              <div style={{ position: 'relative', marginBottom: '24px' }}>
-                <RiSearchLine style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} size={16} />
-                <input
-                  type="text"
-                  value={forumSearch}
-                  onChange={(e) => setForumSearch(e.target.value)}
-                  placeholder="Search forum topics, hardware advice, playlists..."
+            /* Forum Discussions Directory with 20% Left Sidebar */
+            <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              {/* Left Sidebar: 20% of main container */}
+              <aside style={{
+                flex: '0 0 20%',
+                minWidth: '220px',
+                maxWidth: '260px',
+                background: '#090d1f',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '4px',
+                padding: '20px 16px',
+                boxSizing: 'border-box',
+                textAlign: 'left',
+                position: 'sticky',
+                top: '20px'
+              }}>
+                {/* Start Discussion Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowNewTopicForm(!showNewTopicForm)}
                   style={{
                     width: '100%',
-                    background: '#090d1f',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    padding: '10px 14px 10px 38px',
+                    padding: '10px 14px',
                     borderRadius: '3px',
-                    color: '#fff',
-                    fontSize: '13px',
-                    boxSizing: 'border-box'
+                    border: '1px solid #22d3ee',
+                    background: showNewTopicForm ? 'rgba(34, 211, 238, 0.2)' : '#22d3ee',
+                    color: showNewTopicForm ? '#22d3ee' : '#050814',
+                    fontSize: '12.5px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    marginBottom: '18px',
+                    transition: 'all 0.15s ease'
                   }}
-                />
-              </div>
+                >
+                  <RiAddLine size={16} /> {showNewTopicForm ? 'Close Composer' : '+ New Discussion'}
+                </button>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#22d3ee', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <RiFilter3Line size={14} /> Filter &amp; Sort
+                  </span>
+                  {(forumCategory !== 'all' || forumSearch || forumSort !== 'upvotes') && (
+                    <button
+                      type="button"
+                      onClick={() => { setForumCategory('all'); setForumSearch(''); setForumSort('upvotes'); }}
+                      style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', padding: 0 }}
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+
+                {/* Forum Search Box */}
+                <div style={{ position: 'relative', marginBottom: '20px' }}>
+                  <RiSearchLine style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} size={14} />
+                  <input
+                    type="text"
+                    value={forumSearch}
+                    onChange={(e) => setForumSearch(e.target.value)}
+                    placeholder="Search topics..."
+                    style={{
+                      width: '100%',
+                      background: '#050814',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      padding: '8px 10px 8px 32px',
+                      borderRadius: '3px',
+                      color: '#fff',
+                      fontSize: '12px',
+                      boxSizing: 'border-box',
+                      outline: 'none'
+                    }}
+                  />
+                  {forumSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setForumSearch('')}
+                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+                    >
+                      <RiCloseLine size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Forum Sort Controls */}
+                <div style={{ marginBottom: '22px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                    Sort Discussions
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {[
+                      { id: 'upvotes', label: 'Top Upvoted' },
+                      { id: 'newest', label: 'Latest Activity' },
+                      { id: 'replies', label: 'Most Replies' }
+                    ].map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setForumSort(s.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '7px 10px',
+                          borderRadius: '3px',
+                          border: forumSort === s.id ? '1px solid #22d3ee' : '1px solid transparent',
+                          background: forumSort === s.id ? 'rgba(34, 211, 238, 0.12)' : 'transparent',
+                          color: forumSort === s.id ? '#22d3ee' : '#94a3b8',
+                          fontSize: '12px',
+                          fontWeight: forumSort === s.id ? '700' : '500',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <span>{s.label}</span>
+                        {forumSort === s.id && <RiCheckLine size={13} />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Forum Categories */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                    Categories
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {FORUM_CATEGORIES.map((cat) => {
+                      const isActive = forumCategory === cat.id;
+                      const count = forumCategoryCounts[cat.id] || 0;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setForumCategory(cat.id)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '8px 10px',
+                            borderRadius: '3px',
+                            border: isActive ? '1px solid #22d3ee' : '1px solid rgba(255, 255, 255, 0.05)',
+                            background: isActive ? 'rgba(34, 211, 238, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                            color: isActive ? '#22d3ee' : '#cbd5e1',
+                            fontSize: '12px',
+                            fontWeight: isActive ? '700' : '500',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '6px' }}>
+                            {cat.label}
+                          </span>
+                          <span style={{
+                            fontSize: '10.5px',
+                            padding: '2px 6px',
+                            borderRadius: '10px',
+                            background: isActive ? 'rgba(34, 211, 238, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                            color: isActive ? '#22d3ee' : '#64748b'
+                          }}>
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </aside>
+
+              {/* Main Content Area: 80% of main container */}
+              <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: 0 }}>
+                      {forumCategory === 'all' ? 'All Community Discussions' : FORUM_CATEGORIES.find(c => c.id === forumCategory)?.label}
+                    </h2>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      Showing {filteredForumTopics.length} of {forumTopics.length} discussion threads
+                      {forumSearch ? ` matching "${forumSearch}"` : ''}
+                    </span>
+                  </div>
+                </div>
+
+                {filteredForumTopics.length === 0 ? (
+                  <div style={{ padding: '48px 24px', textAlign: 'center', background: '#090d1f', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '4px' }}>
+                    <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '14px' }}>No discussions found for your search or category.</p>
+                    <button
+                      type="button"
+                      onClick={() => { setForumCategory('all'); setForumSearch(''); setForumSort('upvotes'); }}
+                      style={{ padding: '6px 14px', background: 'rgba(34, 211, 238, 0.15)', border: '1px solid #22d3ee', color: '#22d3ee', borderRadius: '3px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
                 {filteredForumTopics.map((topic) => (
                   <div
                     key={topic.id}
@@ -1264,6 +1568,8 @@ export default function ConsumerBlogForumView({
                     </div>
                   </div>
                 ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

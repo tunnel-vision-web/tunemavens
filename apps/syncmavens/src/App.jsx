@@ -4377,7 +4377,7 @@ function PricingView({ standalone }) {
       credits: isTeamMode ? 7500 : 6000, 
       desc: isTeamMode 
         ? 'Shared multi-user pool. Allows up to 5 team members to collaborate on tasks, splits, and catalogs.' 
-        : 'High-volume credits pool designed for publishing supervisors and multi-artist catalogs.' 
+        : 'High-volume credits pool designed for publishing administrators and multi-artist label catalogs.' 
     }
   ];
 

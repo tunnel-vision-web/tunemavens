@@ -617,7 +617,7 @@ Would you like me to inspect your ISRC/ISWC mapping to make sure no royalties ar
 
 You can spend these credits seamlessly across the network:
 * **MasterLab AI Mastering**: 15 credits per track master (you have enough for ${(memory.creditsBalance / 15).toFixed(0)} more masters).
-* **SyncMavens Brief Submission**: 5 credits per supervisor pitch.
+* **SyncMavens Brief Submission**: 0 platform credits (supervisors shop for music; pitching is 100% free).
 * **Custom Domain Link**: 50 credits/year for zero-config SSL.
 * **Smart Contract Execution**: 10 credits per contract.
 

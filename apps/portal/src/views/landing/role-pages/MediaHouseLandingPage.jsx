@@ -23,6 +23,7 @@ import mediahouseDashboardActualEn from '../../../assets/images/mediahouse_dashb
 import mediahouseDashboardActualSw from '../../../assets/images/mediahouse_dashboard_actual_sw.png'
 import SEO from '../../../components/common/SEO.jsx'
 import tunestreamHeader3Img from '../../../assets/images/tunestream_header_3.png'
+import publishingMockupImg from '../../../assets/images/publishing_dashboard_mockup.png'
 import tourDashboardMockupImg from '../../../assets/images/tour_dashboard_mockup.png'
 import tunemediaLogo from '../../../assets/logos/tunemedia-logo.png'
 
