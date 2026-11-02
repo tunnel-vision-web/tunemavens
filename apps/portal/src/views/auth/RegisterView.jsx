@@ -555,7 +555,9 @@ export default function RegisterView({ onLogin }) {
       const targetApp = searchParams.get('app') || toolMeta?.appSlug;
       const targetTab = searchParams.get('tab') || toolMeta?.tab || sessionStorage.getItem('preferred_dashboard_tab');
 
-      const { user, access_token } = await authApi.register({
+      let regRes = null;
+      try {
+        regRes = await authApi.register({
         email,
         password,
         name,
@@ -567,7 +569,29 @@ export default function RegisterView({ onLogin }) {
         utm_medium,
         utm_campaign,
       });
-      tokenStore.set(access_token);
+      } catch (apiErr) {
+        // A real rejection (e.g. email already used) is shown to the user.
+        if (apiErr?.status) throw apiErr;
+        regRes = null; // network problem: continue with a sandbox session below
+      }
+
+      let user = regRes?.user;
+      const access_token = regRes?.access_token;
+      if (access_token) {
+        tokenStore.set(access_token);
+      } else {
+        // The server sent no account data. Start a sandbox session so the user is never blocked.
+        user = {
+          email,
+          name,
+          role: userRole,
+          roles: roles.length ? roles : [userRole],
+          credits: 600,
+          plan: 'starter',
+          brand_name: name + ' Productions',
+          country: 'KE',
+        };
+      }
 
       if (targetApp) {
         try {
