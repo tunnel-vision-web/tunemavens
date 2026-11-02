@@ -127,7 +127,7 @@ To achieve our simultaneous launch target (**September 30, 2026**), the remainin
 | Task ID | Component / Description | Target File(s) | Status | Priority |
 |---|---|---|---|---|
 | **D-1** | **Social AI Studio Channel Recommendations:** Implement path-based format recommendations (9:16 vertical, 1:1 square, 16:9 landscape) and AI promo caption generator. | `backend/routes/social_ai_router.py` | ✅ Completed | High |
-| **D-2** | **Multi-Channel CRM Growth Engine:** Build admin campaign composer with Resend email delivery adapter and user `/inbox` message center. | `backend/routes/crm_router.py` | ✅ Completed | High |
+| **D-2** | **Multi-Channel CRM Growth Engine & Resend Email Delivery:** Admin campaign composer, Resend transactional email integration (live key verified), persona welcome dispatches, one-time SHA-256 email verification, and password recovery. | ackend/routes/crm_router.py, ackend/account_setup.py, ackend/routes/auth_router.py | ✅ Completed & Live Tested | High |
 | **D-3** | **YouTube Data API v3 Integration:** Connect YouTube API service to fetch channel metrics, subscriber counts, and video showcases for Wall of Fame profiles. | `backend/services/youtube_service.py`, `backend/routes/social_ai_router.py` | ✅ Completed | Medium |
 
 

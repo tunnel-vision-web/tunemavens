@@ -59,6 +59,17 @@ admin console with role-gated tabs, domain-mapping registry.
 - Default Kenya (`KE`) market and Kenyan Shilling (`KES` / `KSh`) currency with instant switching across 8 global markets and 8 currencies (`KES`, `TZS`, `UGX`, `NGN`, `ZAR`, `USD`, `GBP`, `EUR`).
 - 100% bidirectional English (`EN`) ↔ Kiswahili (`SW`) switching across all landing pages, 5-slide hero carousels, sidebar menu items, collapsed-sidebar tooltips, dashboard apps, and the entirety of all Blog, Help Center, In-App Documentation Modal, and Royalty Guide articles.
 
+### Phase 8.6 · Affiliate System & Instant Onboarding ✅ SHIPPED
+- Universal affiliate onboarding flow (`/affiliates`) with vanity referral codes (`?ref=YOURNAME`) and 90-day tracking cookies (`tm_aff_ref`).
+- 3% to 12% revenue compensation waterfall calculator and payout rail options (M-Pesa STK, Stripe, PayPal, Unified Credits).
+- Automatic login creation upon affiliate registration with role `affiliate` and single-use setup link dispatch.
+
+### Phase 8.7 · Omnichannel Resend Transactional Communication Architecture ✅ SHIPPED
+- Production Resend API integration (`re_9rng9mzj_...`) with automated test domain fallback (`TuneMavens <onboarding@resend.dev>`) for immediate verification.
+- Persona-tailored welcome emails across all 9 canonical roles with deep dashboard links and one-time SHA-256 confirmation URLs (`/#/verify-email?token=...`).
+- Cryptographic password recovery ingress on `LoginView.jsx` (`/#/set-password?token=...`) with single-use 72-hour tokens.
+- Diagnostic outbox staging in MongoDB `email_outbox` capturing status, provider HTTP response, and sender telemetry.
+
 ### Phase 9 · Ad Injection Platform 🟡 P2
 ### Phase 10 · Media House Routing 🟡 P2
 
@@ -66,18 +77,18 @@ admin console with role-gated tabs, domain-mapping registry.
 
 ## Community phases (NEW — cross-cutting)
 
-### Phase 2.5 · Identity & Roles 🟠 P1
+### Phase 2.5 · Identity & Roles ✅ SHIPPED
 Ships alongside Phase 2. Turns the current single-role `users.role` field
 into a first-class identity layer.
 
 **Deliverables**
-- Role picker on signup — full list (creator, supervisor, label, booking
-  agent, manager, exec, DJ, studio, consumer)
-- Role-specific landing pages (each role's public marketing surface)
-- Verified pro badge system (admin-verified toggle on the user record)
-- Role-based nav / feature gating in the dashboard
-- Backend: extend `users` model with `roles: string[]` (multi-role allowed)
-  and `pro_verified: bool`
+- Role picker on signup — full canonical 9 personas + affiliate (`creator`, `podcaster`, `label`, `dj`, `supervisor`, `media_house`, `corporate`, `consumer`, `vc`, `affiliate`) with interactive AI onboarding assistant (`Ayo`).
+- Role-specific landing pages for all 9 personas (`/for/creator`, `/for/label`, `/for/dj`, `/for/media-house`, `/for/supervisor`, `/for/consumer`, `/for/corporate`, `/for/podcaster`, `/for/vc`, `/affiliates`).
+- Verified pro badge system (admin-verified toggle on the user record).
+- Role-based nav / feature gating in the dashboard with `roleAllowed` matrix.
+- Single-use cryptographic email verification (`/#/verify-email?token=...`) with SHA-256 tokens and MongoDB `email_verified` tracking.
+- One-time password setup links (`/#/set-password?token=...`) and forgot-password recovery.
+- Backend: extend `users` model with `roles: string[]` (multi-role allowed), `pro_verified: bool`, and `email_verified: bool`.
 
 ### Phase 4.5 · Social Graph Foundation 🟠 P1
 Ships alongside Phase 4. The connectivity substrate everything else
@@ -198,7 +209,7 @@ marketplace phase — they only depend on Phase 2.5 (roles) being in place.
 |---|---|---|---|
 | Claude Sonnet 4.6 (Emergent) | Recommendation engine | 3 | ✅ Integrated |
 | YouTube Data API v3 | Wall of Fame video fetch | 5.5 | ⏳ Pending (needs Google Cloud API key) |
-| Resend | Email delivery for CRM invites | 6.5 | ⏳ Pending (needs Resend API key + verified sending domain) |
+| Resend | Email delivery for welcome, verification & CRM invites | 6.5 & 8.7 | ✅ Configured & Live Tested (HTTP 200 delivery verified via `delivered@resend.dev`, dynamic test domain fallback) |
 | ~~Twilio~~ | ~~SMS~~ | — | ❌ Deferred (out of scope for launch) |
 | ~~Instagram/X API~~ | ~~Social DM~~ | — | ❌ Never (copy-to-clipboard replaces API integration) |
 
