@@ -204,7 +204,7 @@ def switch_active_role(payload: SwitchRoleRequest, current_user: dict = Depends(
     target_role = payload.role.lower().strip()
     allowed_roles = list(current_user.get("roles", [current_user.get("role", "creator")]))
 
-    valid_canonical = ["creator", "label", "dj", "media_house", "media-house", "exec", "supervisor", "consumer", "corporate", "admin"]
+    valid_canonical = ["creator", "label", "dj", "media_house", "media-house", "media", "exec", "supervisor", "studio", "consumer", "corporate", "admin", "podcaster", "vc", "investor"]
     if target_role not in valid_canonical:
         raise HTTPException(status_code=400, detail=f"Invalid persona role '{target_role}'")
 

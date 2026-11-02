@@ -6,9 +6,10 @@ Cookies are set with COOKIE_DOMAIN so cross-subdomain SSO works in production.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
 from auth import create_access_token, get_optional_user, get_current_user, hash_password, verify_password
 from config import (
@@ -22,12 +23,106 @@ from models import AuthResponse, LoginRequest, RegisterRequest, User, UserPublic
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+DEFAULT_APPS_BY_ROLE = {
+    "creator": ["epk-builder", "catalog-porting", "split-cascade"],
+    "podcaster": ["podcaster-studio", "podcaster-episodes", "podcaster-epk", "split-cascade", "corporate-ads"],
+    "label": ["catalog-porting", "split-cascade", "publishing-election", "distribution-election", "sync-marketplace", "label-team"],
+    "dj": ["djpool", "tunemavens-library"],
+    "supervisor": ["sync-marketplace", "escrow-contracts"],
+    "studio": ["sync-marketplace", "escrow-contracts"],
+    "media_house": ["sync-marketplace", "corporate-ads"],
+    "media": ["sync-marketplace", "corporate-ads"],
+    "corporate": ["sync-marketplace", "corporate-ads"],
+    "consumer": ["tunemavens-library", "tunemavens-tips"],
+    "vc": ["vc-discover", "vc-portfolio", "vc-sponsorship", "tours-vault", "split-cascade", "escrow-contracts", "crm"],
+    "investor": ["vc-discover", "vc-portfolio", "vc-sponsorship", "tours-vault", "split-cascade", "escrow-contracts", "crm"],
+    "admin": [
+        "epk-builder", "catalog-porting", "split-cascade", "publishing-election",
+        "distribution-election", "djpool", "sync-marketplace", "escrow-contracts",
+        "tunemavens-library", "tunemavens-tips", "tunepay-inventory", "tunepay-settlement",
+        "tunepay-devices", "corporate-ads", "label-team"
+    ]
+}
+
+ROLE_DEMO_PROFILES = {
+    "creator": {
+        "email": "creator_member@tunemavens.com",
+        "name": "Aisha Okoro",
+        "brand_name": "Okoro Sounds",
+    },
+    "podcaster": {
+        "email": "podcaster_demo@tunemavens.com",
+        "name": "Zawadi Kiprop",
+        "brand_name": "AfroBeats Uncut Podcast",
+    },
+    "label": {
+        "email": "label_demo@tunemavens.com",
+        "name": "Kofi Mensah",
+        "brand_name": "Nairobi Horizon Records",
+    },
+    "dj": {
+        "email": "dj_demo@tunemavens.com",
+        "name": "DJ Kalonje",
+        "brand_name": "Street Mix Sound System",
+    },
+    "supervisor": {
+        "email": "supervisor_demo@tunemavens.com",
+        "name": "Marcus Adebayo",
+        "brand_name": "AfroSync Media Group",
+    },
+    "media_house": {
+        "email": "media_demo@tunemavens.com",
+        "name": "Capital FM Broadcast",
+        "brand_name": "Capital FM Media",
+    },
+    "corporate": {
+        "email": "corporate_demo@tunemavens.com",
+        "name": "Safaricom Brand Partnership",
+        "brand_name": "Safaricom PLC",
+    },
+    "consumer": {
+        "email": "consumer_demo@tunemavens.com",
+        "name": "Wanjiku Njeri",
+        "brand_name": "TuneStream Hi-Fi Listener",
+    },
+    "vc": {
+        "email": "vc_demo@tunemavens.com",
+        "name": "Kariuki Venture Partners",
+        "brand_name": "Atlas Tour Capital",
+    },
+}
+
+
+def normalize_role(r: str) -> str:
+    if not r:
+        return "creator"
+    r_lower = r.lower().strip()
+    if r_lower in ("artist", "producer", "creator", "creators"):
+        return "creator"
+    if r_lower in ("record label", "label", "labels"):
+        return "label"
+    if r_lower in ("dj", "djs"):
+        return "dj"
+    if r_lower in ("media house", "media_house", "media", "media-house", "broadcaster"):
+        return "media_house"
+    if r_lower in ("manager", "publisher", "supervisor", "supervisors", "studio", "exec", "music supervisor"):
+        return "supervisor"
+    if r_lower in ("fan", "consumer", "listener", "listeners"):
+        return "consumer"
+    if r_lower in ("business", "organization", "corporate", "brand", "brands"):
+        return "corporate"
+    if r_lower in ("podcaster", "podcasters", "podcast", "podcasts", "host"):
+        return "podcaster"
+    if r_lower in ("vc", "investor", "investors", "venture capital", "private equity"):
+        return "vc"
+    return r_lower
+
 
 def _to_public(user: dict) -> UserPublic:
+    role = user.get("role", "creator")
     apps = user.get("apps")
-    if apps is None:
-        role = user.get("role", "creator")
-        apps = ["epk-builder", "catalog-porting"] if role in ("creator", "label", "admin") else []
+    if not apps:
+        apps = DEFAULT_APPS_BY_ROLE.get(role, DEFAULT_APPS_BY_ROLE["creator"])
     
     # Safe name resolution across legacy and Intermaven accounts
     resolved_name = user.get("name")
@@ -45,8 +140,8 @@ def _to_public(user: dict) -> UserPublic:
         id=str(user["_id"]),
         email=user["email"],
         name=resolved_name,
-        role=user.get("role", "creator"),
-        roles=user.get("roles", ["creator"]),
+        role=role,
+        roles=user.get("roles", [role]),
         pro_verified=user.get("pro_verified", False),
         plan=user.get("plan", "starter"),
         credits=user.get("credits", 0),
@@ -78,25 +173,6 @@ def register(payload: RegisterRequest, response: Response):
     if db.users.find_one({"email": payload.email}):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
-    # Mappings to 7 canonical roles
-    def normalize_role(r: str) -> str:
-        r_lower = r.lower().strip()
-        if r_lower in ("artist", "producer", "creator"):
-            return "creator"
-        if r_lower in ("record label", "label"):
-            return "label"
-        if r_lower == "dj":
-            return "dj"
-        if r_lower in ("media house", "media_house", "media"):
-            return "media_house"
-        if r_lower in ("manager", "publisher", "supervisor", "exec"):
-            return "exec"
-        if r_lower in ("fan", "consumer"):
-            return "consumer"
-        if r_lower in ("business", "organization", "corporate"):
-            return "corporate"
-        return r_lower
-
     roles_list = []
     if payload.roles:
         roles_list = [normalize_role(r) for r in payload.roles]
@@ -107,6 +183,7 @@ def register(payload: RegisterRequest, response: Response):
         roles_list = ["creator"]
 
     primary_role = roles_list[0]
+    default_apps = DEFAULT_APPS_BY_ROLE.get(primary_role, DEFAULT_APPS_BY_ROLE["creator"])
 
     user_doc = User(
         email=payload.email,
@@ -123,7 +200,7 @@ def register(payload: RegisterRequest, response: Response):
         utm_medium=payload.utm_medium,
         utm_campaign=payload.utm_campaign,
         credits=600,  # default sandbox credit grant
-        apps=["epk-builder", "catalog-porting"] if primary_role in ("creator", "label", "admin") else [],
+        apps=default_apps,
     ).to_mongo()
 
     result = db.users.insert_one(user_doc)
@@ -165,29 +242,37 @@ def logout(response: Response, current_user: Optional[dict] = Depends(get_option
 
 
 @router.post("/demo", response_model=AuthResponse)
-def demo_login(response: Response):
-    """Sandbox/demo login helper to issue a valid JWT for testing."""
-    user = db.users.find_one({"email": "creator_member@tunemavens.com"})
-    if not user:
-        user = db.users.find_one({"role": "creator"})
+def demo_login(response: Response, role: Optional[str] = Query(None)):
+    """Sandbox/demo login helper to issue a valid JWT for testing any persona."""
+    norm_role = normalize_role(role) if role else "creator"
+    profile = ROLE_DEMO_PROFILES.get(norm_role, ROLE_DEMO_PROFILES["creator"])
+    target_email = profile["email"]
+    target_apps = DEFAULT_APPS_BY_ROLE.get(norm_role, DEFAULT_APPS_BY_ROLE["creator"])
+
+    user = db.users.find_one({"email": target_email})
     if not user:
         doc = User(
-            email="creator_member@tunemavens.com",
-            name="Aisha Okoro",
-            role="creator",
-            roles=["creator"],
-            brand_name="Okoro Sounds",
+            email=target_email,
+            password_hash=hash_password("DemoSandboxPass123!"),
+            name=profile["name"],
+            role=norm_role,
+            roles=[norm_role],
+            brand_name=profile["brand_name"],
             country="KE",
             credits=600,
-            apps=["epk-builder", "catalog-porting"]
+            apps=target_apps
         ).to_mongo()
         res = db.users.insert_one(doc)
         doc["_id"] = res.inserted_id
         user = doc
     else:
-        if not user.get("apps"):
-            db.users.update_one({"_id": user["_id"]}, {"$set": {"apps": ["epk-builder", "catalog-porting"]}})
-            user["apps"] = ["epk-builder", "catalog-porting"]
+        # Update user with active apps and role
+        db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"role": norm_role, "apps": target_apps}}
+        )
+        user["role"] = norm_role
+        user["apps"] = target_apps
 
     token = create_access_token(sub=str(user["_id"]))
     _set_cookie(response, token)

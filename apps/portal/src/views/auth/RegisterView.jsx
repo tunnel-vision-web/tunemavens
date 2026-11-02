@@ -18,6 +18,8 @@ export default function RegisterView({ onLogin }) {
     studio: 'Music Supervisor',
     corporate: 'Corporate',
     media: 'Media House',
+    podcaster: 'Podcaster',
+    vc: 'Venture Capital & Tour Financier',
   };
 
   const safeParseArray = (str, fallback = []) => {
@@ -149,7 +151,7 @@ export default function RegisterView({ onLogin }) {
     let preselected = [];
     if (toolMeta && toolMeta.role) {
       preselected = [toolMeta.role];
-    } else if (roleParam && ['consumer', 'creator', 'label', 'dj', 'studio', 'corporate', 'media'].includes(roleParam)) {
+    } else if (roleParam && ['consumer', 'creator', 'label', 'dj', 'studio', 'corporate', 'media', 'podcaster', 'vc'].includes(roleParam)) {
       preselected = [roleParam];
     } else if (roleParam === 'media_house' || roleParam === 'media-house') {
       preselected = ['media'];
@@ -231,6 +233,8 @@ export default function RegisterView({ onLogin }) {
     studio: ['Supervisor Details', 'Sync Brief AI Search'],
     corporate: ['Brand Campaign', 'Budget Options'],
     media: ['Broadcaster Info', 'Playlist Compliance'],
+    podcaster: [],
+    vc: [],
   };
 
   const getStepsForRoles = (selectedRoles) => {
@@ -437,6 +441,8 @@ export default function RegisterView({ onLogin }) {
         if (text.includes('film') || text.includes('studio')) selected.push('studio');
         if (text.includes('corp') || text.includes('brand')) selected.push('corporate');
         if (text.includes('media') || text.includes('house')) selected.push('media');
+        if (text.includes('podcast')) selected.push('podcaster');
+        if (text.includes('vc') || text.includes('venture') || text.includes('invest')) selected.push('vc');
 
         if (selected.length === 0) selected.push('consumer');
 
@@ -582,7 +588,12 @@ export default function RegisterView({ onLogin }) {
         navigate('/dashboard');
       }
     } catch (err) {
-      alert(err.message || 'Registration failed');
+      if (err?.status === 409) {
+        alert('This email already has an account. Please log in instead.');
+        navigate('/login');
+      } else {
+        alert(err?.message || 'We could not create your account. Please try again.');
+      }
     }
   };
 
@@ -789,7 +800,9 @@ export default function RegisterView({ onLogin }) {
                       { id: 'dj', emoji: '🎚️', title: 'DJ', desc: 'HQ lossless pools & stem clearances' },
                       { id: 'studio', emoji: '🎬', title: 'Music Supervisor', desc: 'Browse syncs & AI music briefs' },
                       { id: 'corporate', emoji: '📈', title: 'Corporate', desc: 'Audio ads, sponsorships & partnerships' },
-                      { id: 'media', emoji: '📺', title: 'Media House', desc: 'Broadcast licensing & compliance' }
+                      { id: 'media', emoji: '📺', title: 'Media House', desc: 'Broadcast licensing & compliance' },
+                      { id: 'podcaster', emoji: '🎙️', title: 'Podcaster', desc: 'Publish shows, find sponsors & grow listeners' },
+                      { id: 'vc', emoji: '💼', title: 'Venture Capital & Tour Financier', desc: 'Back artists, tours & catalogues' }
                     ].map(opt => {
                       const isChecked = roles.includes(opt.id);
                       return (

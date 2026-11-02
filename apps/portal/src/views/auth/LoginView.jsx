@@ -4,6 +4,23 @@ import { RiRefreshFill } from 'react-icons/ri'
 import { authApi, tokenStore } from '../../lib/api.js'
 import { reconcileUserApps } from '../../lib/activatedApps.js'
 
+const KNOWN_ROLES = ['creator', 'label', 'dj', 'media_house', 'supervisor', 'consumer', 'corporate', 'podcaster', 'vc'];
+function resolvePersonaRole() {
+  try {
+    let r = new URLSearchParams(window.location.search).get('role')
+      || localStorage.getItem('tunemavens_active_persona')
+      || '';
+    if (!r) {
+      const saved = JSON.parse(sessionStorage.getItem('signup_roles') || '[]');
+      r = Array.isArray(saved) && saved[0] ? saved[0] : '';
+    }
+    r = String(r).toLowerCase().replace('-', '_');
+    if (r === 'media') r = 'media_house';
+    if (r === 'studio' || r === 'exec') r = 'supervisor';
+    return KNOWN_ROLES.includes(r) ? r : 'creator';
+  } catch { return 'creator'; }
+}
+
 export default function LoginView({ onLogin }) {
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -17,7 +34,7 @@ export default function LoginView({ onLogin }) {
     try {
       // In sandbox/dev, /api/auth/demo mints a valid JWT for the built-in
       // creator account — no 401/409 noise from login-then-register chains.
-      const res = await authApi.demo();
+      const res = await authApi.demo(resolvePersonaRole());
       if (res?.access_token) {
         tokenStore.set(res.access_token);
         onLogin(reconcileUserApps(res.user || res));
@@ -66,14 +83,14 @@ export default function LoginView({ onLogin }) {
               email: emailVal || 'sandbox@tunemavens.com',
               password: passwordVal && passwordVal.length >= 8 ? passwordVal : 'SandboxPass123!',
               name: (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase()),
-              role: 'creator',
+              role: resolvePersonaRole(),
             });
             tokenStore.set(access_token);
             loggedInUser = user;
           } catch (regErr) {
             // 409 = email already registered — wrong password was entered
             if (regErr?.status === 409) {
-              setErrorMsg('Wrong password. Please try again.');
+              setErrorMsg('This email already has an account, but the password does not match. Please check your password and try again.');
               return;
             }
             // Any other register error — use stub session
@@ -81,7 +98,7 @@ export default function LoginView({ onLogin }) {
             loggedInUser = {
               email: emailVal || 'sandbox@tunemavens.com',
               name: stubName,
-              role: 'creator',
+              role: resolvePersonaRole(),
               credits: 600,
               plan: 'creator',
               brand_name: `${stubName} Music`,
@@ -93,7 +110,7 @@ export default function LoginView({ onLogin }) {
           loggedInUser = {
             email: emailVal || 'sandbox@tunemavens.com',
             name: stubName,
-            role: 'creator',
+            role: resolvePersonaRole(),
             credits: 600,
             plan: 'creator',
             brand_name: `${stubName} Music`,

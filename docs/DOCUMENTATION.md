@@ -2505,3 +2505,14 @@ Following user feedback on marketing messaging, design precision, and demographi
    - Injected universal `text-wrap: balance` on all hero titles, headlines, and section headers across `apps/portal/src/index.css`, `apps/portal/src/App.css`, `RoleLandingShared.css`, and `apps/tunestream/src/index.css`.
    - Injected `text-wrap: pretty` across paragraphs, descriptions, and ledes.
    - Bound the final words of hero headlines and major titles with non-breaking spaces (`\u00A0`), permanently eliminating single hanging words across responsive viewports.
+
+### 9.44.38 Unified Persona Registration & Sign-In (2 November 2026)
+
+- **Canonical roles:** creator, label, dj, media_house, supervisor, consumer, corporate, podcaster, c. Aliases (media, studio, exec, investor, etc.) normalise to these in ackend/routes/auth_router.py.
+- **Fixed:** supervisor previously became exec, which broke the dashboard. It now stays supervisor.
+- **Fixed:** new accounts for non-creator roles got an empty app list. Every role now receives its default apps (DEFAULT_APPS_BY_ROLE).
+- **POST /api/auth/demo?role=<role>** now signs in a sandbox account for any persona (previously creator only).
+- **sso_router.py** switch-role accepts podcaster, c, investor, media, studio.
+- **RegisterView.jsx:** added Podcaster and Venture Capital roles to the dropdown, URL presets and AI onboarding. An existing email now sends the user to Log In with a clear message.
+- **LoginView.jsx:** the sandbox fallback and Google/demo sign-in keep the persona the user came from instead of forcing creator. The wrong-password message is clearer.
+- **Verified:** register, login and demo return 200 with the correct role for all 9 personas and their aliases.
