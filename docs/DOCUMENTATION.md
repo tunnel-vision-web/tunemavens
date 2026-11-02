@@ -2471,3 +2471,37 @@ In response to the Technical Foundation Specification v1.3 (Nairobi / diaspora l
 
 6. **Low-Bitrate Audio Streaming Defaults (F12, Spec §4)**:
    - Confirmed [`backend/services/stream_service.py`](backend/services/stream_service.py) and [`backend/routes/stream_router.py`](backend/routes/stream_router.py) configure `low_mobile` (96 kbps AAC) as the default streaming profile for bandwidth-sensitive cellular networks in Nairobi, with studio-quality lossless FLAC (1,411 kbps) available strictly as an opt-in on Wi-Fi connections.
+
+
+### 9.44.37 Homepage Localization Parity, Redundancy Elimination, Typographic Orphan Balance & Strict 3px Radii Architecture (2 November 2026)
+
+Following user feedback on marketing messaging, design precision, and demographic representation, a comprehensive audit and upgrade of the primary marketing surface (`apps/portal/src/views/landing/HomeView.jsx`) was executed:
+
+1. **Complete Localization Flagship Content Row**:
+   - Added a dedicated flagship content row on the homepage: *Built for Local Realities & Direct Mobile Payouts*.
+   - Uses plain, understandable, and conversational English to clearly communicate local financial integration:
+     - Direct split payouts routed automatically to local African payment methods (M-Pesa, Airtel Money) and domestic banks, bypassing international wire delays.
+     - Multi-currency support allowing creators and managers to track balances and earn in KES, NGN, ZAR, USD, or GBP.
+     - Accessible navigation with 1-click language switching between plain English and Kiswahili.
+   - Paired with localized screenshot assets (`creator_dashboard_actual_sw.png` / `creator_dashboard_actual_en.png`).
+
+2. **Redundancy Elimination: Sync Placement Engine Flagship**:
+   - Removed the duplicate "Your Dedicated Web Space & Tour Hub" content row that repeated the Electronic Press Kit (EPK) value proposition.
+   - Replaced it with a high-impact flagship showcase for the **Sync Placement Engine & Music Licensing** (`apps_sync.png`), highlighting direct catalog pitching to television networks, streaming series, films, and game developers with 100% upfront sync fees.
+
+3. **Demographic Localization of Platform Visuals**:
+   - **DIY Producer Image (`user_producer.png`)**: Replaced non-localized producer imagery with an authentic, high-resolution portrait of a young contemporary Black African music producer working at a DAW console with studio headphones, MIDI controller, and modern streetwear with subtle African print accents.
+   - **Street Listener Image (`consumer_app.png`)**: Replaced non-localized street imagery with an authentic portrait of a stylish young Black African woman walking along a sunlit Nairobi avenue during golden hour, wearing wireless over-ear headphones and enjoying music on a smartphone.
+   - **Western Market Fallbacks**: Preserved Western demographic variants (`user_producer_western.png`, `consumer_app_western.png`) served dynamically when `country` resolves to US or GB via `useRegion()`.
+
+4. **Strict 3px Border Radius Architecture Across Homepage**:
+   - Enforced strict 3px border radii on all homepage buttons, cards, visual containers, and badges via scoped CSS in `App.css`, `HomeFeatureCarousel.css`, and `UserPersonaCarousel.jsx`.
+   - Converted pain point icon wrappers from circular shapes to sharp 3px rounded squares, harmonizing with the platform's core design tokens.
+
+5. **Semantic Interactive 'Perfect For' Header**:
+   - Transformed the static `<h3>Perfect for</h3>` above the carousel in `PerfectForSidebar.jsx` into a semantic React Router `<Link to="/for">`, directing users to the complete 9-role directory with subtle cyan hover transitions.
+
+6. **Platform-Wide Typographic Balance & Orphan Prevention**:
+   - Injected universal `text-wrap: balance` on all hero titles, headlines, and section headers across `apps/portal/src/index.css`, `apps/portal/src/App.css`, `RoleLandingShared.css`, and `apps/tunestream/src/index.css`.
+   - Injected `text-wrap: pretty` across paragraphs, descriptions, and ledes.
+   - Bound the final words of hero headlines and major titles with non-breaking spaces (`\u00A0`), permanently eliminating single hanging words across responsive viewports.

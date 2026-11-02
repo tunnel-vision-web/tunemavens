@@ -123,7 +123,11 @@ export function PerfectForSidebar() {
   return (
     <section className="pf-carousel-section" aria-label="Perfect for" data-testid="perfect-for-sidebar">
       <div className="container">
-        <h3 className="pf-carousel-header" data-testid="perfect-for-header">Perfect for</h3>
+        <h3 className="pf-carousel-header" data-testid="perfect-for-header">
+          <Link to="/for" className="pf-carousel-header-link">
+            Perfect for
+          </Link>
+        </h3>
         <div 
           className="pf-carousel-container"
           onMouseEnter={() => setIsPaused(true)}

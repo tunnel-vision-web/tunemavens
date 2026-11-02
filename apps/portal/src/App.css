@@ -4311,3 +4311,46 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* Strict 3px border radius for all buttons and boxes on Homepage */
+.hw .hbp,
+.hw .hbg,
+.hw .he.hbadge,
+.hw .slide-nav,
+.flagship-card,
+.flagship-visual-container,
+.flagship-image,
+.flagship-badge,
+.flagship-info .btn-primary,
+.flagship-info .btn-secondary,
+.hfc-tab-btn,
+.hfc-card,
+.hfc-badge,
+.hfc-btn-primary,
+.hfc-btn-secondary,
+.hfc-card-visual,
+.hfc-nav-btn,
+.persona-carousel,
+.persona-carousel-image-container,
+.persona-badge,
+.persona-comparison,
+.persona-carousel .btn-primary,
+.pain-card,
+.pain-icon,
+.cta-banner-panel,
+.cta-banner-panel .btn-primary,
+.cta-banner-panel .btn-secondary,
+.landing-content-main .btn-primary,
+.landing-content-main .btn-secondary {
+  border-radius: 3px !important;
+}
+
+/* Typographic balance to eliminate hanging words in hero and content */
+.ht, .ht-line, .section-title, .flagship-title, .persona-title, .hfc-title {
+  text-wrap: balance;
+}
+
+.hp, .hsub, .section-desc, .flagship-text, .persona-text, .hfc-desc, .pain-card p {
+  text-wrap: pretty;
+}

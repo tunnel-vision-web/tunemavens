@@ -15,9 +15,13 @@ import distributeHeroImg from '../../assets/images/distribute_hero.png'
 import listenHeroImg from '../../assets/images/listen_hero.png'
 
 import consumerAppImg from '../../assets/images/consumer_app.png'
+import consumerAppWesternImg from '../../assets/images/consumer_app_western.png'
 import userProducerImg from '../../assets/images/user_producer.png'
+import userProducerWesternImg from '../../assets/images/user_producer_western.png'
 import userManagerImg from '../../assets/images/user_manager.png'
-import tourDashboardMockup from '../../assets/images/tour_dashboard_mockup.png'
+import appsSyncImg from '../../assets/images/apps_sync.png'
+import creatorDashboardActualSw from '../../assets/images/creator_dashboard_actual_sw.png'
+import creatorDashboardActualEn from '../../assets/images/creator_dashboard_actual_en.png'
 
 import { PerfectForSidebar, getServiceUrl } from '../../components/PerfectForSidebar.jsx'
 import HomeFeatureCarousel from '../../components/demos/HomeFeatureCarousel.jsx'
@@ -41,6 +45,9 @@ export default function HomeView({ sessionUser }) {
   };
 
   const isWestern = ['US', 'GB'].includes(country);
+  const producerImg = isWestern ? userProducerWesternImg : userProducerImg;
+  const localizationDashboardImg = isWestern ? creatorDashboardActualEn : creatorDashboardActualSw;
+  const listenerImg = isWestern ? consumerAppWesternImg : consumerAppImg;
   const progressRef = useRef(null);
   const timerRef = useRef(null);
 
@@ -48,10 +55,10 @@ export default function HomeView({ sessionUser }) {
     { 
       dot: '#22d3ee', 
       badge: 'Music Operations & AI Suite',
-      hLine1: 'You make the art.',
-      hLine2: 'We handle the rest.',
+      hLine1: 'You make the\u00A0art.',
+      hLine2: 'We handle the\u00A0rest.',
       hLine2Color: '#22d3ee',
-      s: "Coordinate splits, mastering LUFS, and sync pitches under a single unified console.",
+      s: "Manage split sheets, polish your sound, and pitch for sync placements—all from one simple dashboard.",
       b1: 'Explore AI Tools',
       b1link: '/tools',
       b2: 'See Dashboard Apps',
@@ -59,13 +66,13 @@ export default function HomeView({ sessionUser }) {
     },
     { 
       dot: '#8b5cf6', 
-      badge: 'Automated Split Calculations',
-      hLine1: 'Spreadsheet split sheets?',
-      hLine2: 'Never again.',
+      badge: 'Simple Royalty Splits',
+      hLine1: 'Spreadsheet split\u00A0sheets?',
+      hLine2: 'Never\u00A0again.',
       hLine2Color: '#8b5cf6',
       s: isWestern 
-        ? "Define percentage rules once, ingest statement CSVs, and route digital payouts automatically via ACH, PayPal, and wire."
-        : "Define percentage rules once, ingest statement CSVs, and route digital payouts automatically to local banks and M-Pesa.",
+        ? "Set your percentage splits once, upload your earnings report, and send payouts automatically via ACH, PayPal, and wire."
+        : "Set your percentage splits once, upload your earnings report, and send payouts automatically to local banks and M-Pesa.",
       b1: 'Learn Split Ledgers',
       b1link: '/apps',
       b2: 'Explore Pricing',
@@ -73,11 +80,11 @@ export default function HomeView({ sessionUser }) {
     },
     { 
       dot: '#22d3ee', 
-      badge: 'Automated Sync Curation',
-      hLine1: 'Pitches that hit.',
-      hLine2: 'Get licensed.',
+      badge: 'Music Sync Placements',
+      hLine1: 'Pitches that\u00A0hit.',
+      hLine2: 'Get\u00A0licensed.',
       hLine2Color: '#22d3ee',
-      s: "Translate creative scene descriptors into search-friendly tags for TV & film music supervisors.",
+      s: "Describe your song in your own words, and we'll match your music to TV shows, films, and game placements.",
       b1: 'Launch SyncMavens Platform',
       b1link: syncMavensUrl,
       b2: 'Explore Sync Hub',
@@ -86,12 +93,12 @@ export default function HomeView({ sessionUser }) {
     { 
       dot: '#10b981', 
       badge: 'Global Rights & Sync',
-      hLine1: 'Distribute, sync, publish.',
-      hLine2: 'Own your rights.',
+      hLine1: 'Distribute, sync,\u00A0publish.',
+      hLine2: 'Own your\u00A0rights.',
       hLine2Color: '#10b981',
       s: isWestern
-        ? "Pitch to TV networks, distribute to 150+ stores, and collect mechanical royalties globally in USD/GBP."
-        : "Pitch to TV networks, distribute globally, and collect mechanical royalties into local mobile accounts.",
+        ? "Deliver your music to 150+ stores, pitch for TV spots, and collect your global royalties in USD or GBP."
+        : "Deliver your music to stores worldwide, pitch for TV spots, and collect your royalties straight to your mobile wallet.",
       b1: 'Start Publishing Now',
       b1link: '/publishing',
       b2: 'Learn Split Ledgers',
@@ -100,8 +107,8 @@ export default function HomeView({ sessionUser }) {
     {
       dot: '#c084fc',
       badge: 'Consumer Music Experience',
-      hLine1: 'Listen and purchase.',
-      hLine2: 'Support artists directly.',
+      hLine1: 'Listen and\u00A0purchase.',
+      hLine2: 'Support artists\u00A0directly.',
       hLine2Color: '#c084fc',
       s: isWestern
         ? "Stream high-fidelity music ad-free, buy vinyl, and purchase merchandise in USD or GBP."
@@ -113,11 +120,11 @@ export default function HomeView({ sessionUser }) {
     },
     {
       dot: '#f59e0b',
-      badge: 'Catalogue Machine & Ingest',
-      hLine1: 'Scale your catalog.',
-      hLine2: 'Ingest bulk releases.',
+      badge: 'Organize Your Catalog',
+      hLine1: 'Scale your\u00A0catalog.',
+      hLine2: 'Without the\u00A0clutter.',
       hLine2Color: '#f59e0b',
-      s: "Upload bulk statements, parse CSV roster ledgers instantly, and optimize catalog splits seamlessly.",
+      s: "Upload your full song archive, organize release credits, and keep track of everyone's share with ease.",
       b1: 'Start Bulk Ingest',
       b1link: '/register',
       b2: 'Catalogue Machine',
@@ -241,7 +248,7 @@ export default function HomeView({ sessionUser }) {
             onMouseLeave={() => setTitleHovered(false)}
             style={{ cursor: 'pointer' }}
           >
-            <div className={`he hbadge ${slideState}`}>
+            <div className={`he hbadge ${slideState}`} style={{ borderRadius: '3px' }}>
               <span 
                 className="bdot" 
                 style={{ 
@@ -268,20 +275,20 @@ export default function HomeView({ sessionUser }) {
 
             <div className={`hb hbtns ${slideState}`}>
               {currentSlideData.b1link.startsWith('http') ? (
-                <a href={currentSlideData.b1link} className="hbp" target="_blank" rel="noopener noreferrer">
+                <a href={currentSlideData.b1link} className="hbp" target="_blank" rel="noopener noreferrer" style={{ borderRadius: '3px' }}>
                   {currentSlideData.b1} <RiExternalLinkLine size={14} style={{ marginLeft: '4px' }} />
                 </a>
               ) : (
-                <Link to={resolveLink(currentSlideData.b1link)} className="hbp">
+                <Link to={resolveLink(currentSlideData.b1link)} className="hbp" style={{ borderRadius: '3px' }}>
                   {currentSlideData.b1}
                 </Link>
               )}
               {currentSlideData.b2link.startsWith('http') ? (
-                <a href={currentSlideData.b2link} className="hbg" target="_blank" rel="noopener noreferrer">
+                <a href={currentSlideData.b2link} className="hbg" target="_blank" rel="noopener noreferrer" style={{ borderRadius: '3px' }}>
                   {currentSlideData.b2} <RiExternalLinkLine size={14} style={{ marginLeft: '4px' }} />
                 </a>
               ) : (
-                <Link to={resolveLink(currentSlideData.b2link)} className="hbg">
+                <Link to={resolveLink(currentSlideData.b2link)} className="hbg" style={{ borderRadius: '3px' }}>
                   {currentSlideData.b2}
                 </Link>
               )}
@@ -290,8 +297,8 @@ export default function HomeView({ sessionUser }) {
         </div>
 
         <div className={`sui-arrows ${slideState}`}>
-          <button type="button" className="slide-nav prev" onClick={goToPrevSlide} aria-label="Previous slide">‹</button>
-          <button type="button" className="slide-nav next" onClick={goToNextSlide} aria-label="Next slide">›</button>
+          <button type="button" className="slide-nav prev" onClick={goToPrevSlide} aria-label="Previous slide" style={{ borderRadius: '3px' }}>‹</button>
+          <button type="button" className="slide-nav next" onClick={goToNextSlide} aria-label="Next slide" style={{ borderRadius: '3px' }}>›</button>
         </div>
 
         <div className={`sui-bottom ${slideState}`}>
@@ -319,75 +326,75 @@ export default function HomeView({ sessionUser }) {
         <section className="section-wrapper">
           <div className="flagship-previews">
             {/* 1. Content row for EPK Builder */}
-            <div className="flagship-card glass-panel">
-              <div className="flagship-visual-container">
-                <img src={userProducerImg} alt="TuneMavens EPK Builder Studio" className="flagship-image" />
+            <div className="flagship-card glass-panel" style={{ borderRadius: '3px' }}>
+              <div className="flagship-visual-container" style={{ borderRadius: '3px' }}>
+                <img src={producerImg} alt="TuneMavens EPK Builder Studio" className="flagship-image" style={{ borderRadius: '3px' }} />
               </div>
               <div className="flagship-info">
-                <div className="flagship-badge" style={{ color: 'var(--cyan)', borderColor: 'rgba(34, 211, 238, 0.25)' }}>
-                  EPK Builder Studio
+                <div className="flagship-badge" style={{ color: 'var(--cyan)', borderColor: 'rgba(34, 211, 238, 0.25)', borderRadius: '3px' }}>
+                  Artist EPK Builder
                 </div>
-                <h3 className="flagship-title">Interactive Electronic Press Kit Studio</h3>
+                <h3 className="flagship-title">Your Music, Bio, and Tour Dates on One Clean&nbsp;Page</h3>
                 <p className="flagship-text">
-                  Build high-converting, professional press kits that present your music and brand identity to industry decision-makers without technical friction. Designed specifically to captivate festival talent buyers, record labels, and booking agents.
+                  Share a professional electronic press kit that introduces your sound and story to festival curators, record labels, and booking agents—with zero coding required.
                 </p>
                 <ul className="flagship-bullets">
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
-                    <span>Interactive theme visualizers and customizable dark-mode design presets</span>
+                    <span>Clean, responsive design themes tailored for independent creators</span>
                   </li>
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
-                    <span>One-click bio generation with live discography and streaming track embeds</span>
+                    <span>Easy bio updates, built-in song players, and streaming track embeds</span>
                   </li>
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
-                    <span>Direct booking inquiry routing, technical stage riders, and high-res asset downloads</span>
+                    <span>Direct booking inquiry forms, tech riders, and high-res photo downloads</span>
                   </li>
                 </ul>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: 'auto' }}>
-                  <Link to="/epk" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Link to="/epk" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     Launch EPK Builder <RiArrowRightLine size={13} />
                   </Link>
-                  <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-                    Explore Creator OS
+                  <Link to="/for/creator" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                    Explore Creator Suite
                   </Link>
                 </div>
               </div>
             </div>
 
             {/* 2. Content row for Smart CRM */}
-            <div className="flagship-card glass-panel reverse">
-              <div className="flagship-visual-container">
-                <img src={userManagerImg} alt="Smart CRM and Fan Relationship Management" className="flagship-image" />
+            <div className="flagship-card glass-panel reverse" style={{ borderRadius: '3px' }}>
+              <div className="flagship-visual-container" style={{ borderRadius: '3px' }}>
+                <img src={userManagerImg} alt="Smart CRM and Fan Relationship Management" className="flagship-image" style={{ borderRadius: '3px' }} />
               </div>
               <div className="flagship-info">
-                <div className="flagship-badge" style={{ color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.25)' }}>
-                  Smart CRM
+                <div className="flagship-badge" style={{ color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.25)', borderRadius: '3px' }}>
+                  Fan Relationship Manager
                 </div>
-                <h3 className="flagship-title">Fan Relationship Management &amp; Roster CRM</h3>
+                <h3 className="flagship-title">Keep in Touch with Your Most Dedicated&nbsp;Listeners</h3>
                 <p className="flagship-text">
-                  Take direct ownership of your fanbase and eliminate algorithmic gatekeepers with a centralized contact management engine. Consolidate your core audience across every release, tour stop, and merchandise drop.
+                  Build a lasting connection with your fanbase without depending on unpredictable social media algorithms. Collect fan contacts directly from ticket sales, new releases, and merch drops.
                 </p>
                 <ul className="flagship-bullets">
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#10b981' }}><RiCheckFill size={15} /></span>
-                    <span>Automated contact capture from tour ticket pre-sales, digital vinyl, and EPK inquiries</span>
+                    <span>Effortless contact capture from tour pre-sales, song downloads, and EPK visits</span>
                   </li>
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#10b981' }}><RiCheckFill size={15} /></span>
-                    <span>VIP tier segmentation for targeted tour announcements and merchandise drops</span>
+                    <span>Group your top listeners by city for upcoming tour stops and special announcements</span>
                   </li>
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#10b981' }}><RiCheckFill size={15} /></span>
-                    <span>Direct-to-fan messaging with unified delivery tracking via Intermaven.io</span>
+                    <span>Send friendly updates with simple delivery tracking via Intermaven.io</span>
                   </li>
                 </ul>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: 'auto' }}>
-                  <Link to="/apps" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', background: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Link to="/apps" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', background: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     Open Smart CRM <RiArrowRightLine size={13} />
                   </Link>
-                  <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                  <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                     Audience Insights
                   </Link>
                 </div>
@@ -395,102 +402,140 @@ export default function HomeView({ sessionUser }) {
             </div>
 
             {/* 3. Content row for EPK Catalogue Machine */}
-            <div className="flagship-card glass-panel">
-              <div className="flagship-visual-container">
-                <img src={distributeHeroImg} alt="EPK Catalogue Machine and Track Ingestion" className="flagship-image" />
+            <div className="flagship-card glass-panel" style={{ borderRadius: '3px' }}>
+              <div className="flagship-visual-container" style={{ borderRadius: '3px' }}>
+                <img src={distributeHeroImg} alt="EPK Catalogue Machine and Track Ingestion" className="flagship-image" style={{ borderRadius: '3px' }} />
               </div>
               <div className="flagship-info">
-                <div className="flagship-badge" style={{ color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.25)' }}>
-                  EPK Catalogue Machine
+                <div className="flagship-badge" style={{ color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.25)', borderRadius: '3px' }}>
+                  Central Song Library
                 </div>
-                <h3 className="flagship-title">Central Track Ingestion &amp; Catalogue Machine</h3>
+                <h3 className="flagship-title">A Safe, Organized Home for All Your Music&nbsp;Files</h3>
                 <p className="flagship-text">
-                  The authoritative central vault engineered to ingest, organize, and protect your releases and multi-track audio stems. Synchronize high-fidelity metadata across streaming, sync licensing, and public press worlds with zero loss.
+                  Keep all your original songs, instrumental stems, and artwork organized in one safe place. Your song credits and audio metadata stay accurate whether releasing to stores or pitching for TV sync.
                 </p>
                 <ul className="flagship-bullets">
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#a855f7' }}><RiCheckFill size={15} /></span>
-                    <span>High-throughput CSV roster ingestion with automatic metadata validation</span>
+                    <span>Quick bulk file uploads with automatic credit and metadata validation</span>
                   </li>
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#a855f7' }}><RiCheckFill size={15} /></span>
-                    <span>Verified ISRC code allocation and acoustic genre classification</span>
+                    <span>Accurate ISRC tracking and intuitive musical genre classification</span>
                   </li>
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#a855f7' }}><RiCheckFill size={15} /></span>
-                    <span>Seamless real-time catalog distribution across TuneMavens, TuneStream, and SyncMavens</span>
+                    <span>Seamless catalog distribution across TuneMavens, TuneStream, and SyncMavens</span>
                   </li>
                 </ul>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: 'auto' }}>
-                  <Link to="/apps" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', background: '#a855f7', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Link to="/apps" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', background: '#a855f7', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     Open Catalogue Machine <RiArrowRightLine size={13} />
                   </Link>
-                  <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                  <Link to="/for/label" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                     Catalogue Specs
                   </Link>
                 </div>
               </div>
             </div>
 
-            {/* 4. Content row for EPK Builder (Public Web Worlds & Live Showcases) */}
-            <div className="flagship-card glass-panel reverse">
-              <div className="flagship-visual-container">
-                <img src={tourDashboardMockup} alt="EPK Builder Standalone Web Worlds and Live Showcases" className="flagship-image" />
+            {/* 4. Content row for Complete Localization (Understandable English & Local Payouts) */}
+            <div className="flagship-card glass-panel reverse" style={{ borderRadius: '3px' }}>
+              <div className="flagship-visual-container" style={{ borderRadius: '3px' }}>
+                <img src={localizationDashboardImg} alt="TuneMavens Complete Localization and Mobile Payouts" className="flagship-image" style={{ borderRadius: '3px' }} />
               </div>
               <div className="flagship-info">
-                <div className="flagship-badge" style={{ color: 'var(--cyan)', borderColor: 'rgba(34, 211, 238, 0.25)' }}>
-                  EPK Builder · Sovereign Web Worlds
+                <div className="flagship-badge" style={{ color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.25)', borderRadius: '3px' }}>
+                  Complete Localization
                 </div>
-                <h3 className="flagship-title">EPK Builder &amp; Public Press Kit Deployments</h3>
+                <h3 className="flagship-title">Built for Local Realities &amp; Direct Mobile&nbsp;Payouts</h3>
                 <p className="flagship-text">
-                  Deploy your press kit as a high-performance standalone web world hosted on custom domains or branded subdomains. Experience sovereign digital presence built on Mother-CMS architecture with instant global DNS propagation.
+                  Skip the international banking hurdles and confusing foreign exchange surprises. TuneMavens is fully adapted for African and global creators—supporting local mobile money like M-Pesa, regional bank deposits, and everyday, understandable English.
                 </p>
                 <ul className="flagship-bullets">
                   <li className="flagship-bullet-item">
-                    <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
-                    <span>Custom domain routing powered by Mother-CMS with instant global DNS propagation</span>
+                    <span className="flagship-bullet-icon" style={{ color: '#f59e0b' }}><RiCheckFill size={15} /></span>
+                    <span>Direct split payouts straight to M-Pesa, Airtel Money, and local African banks</span>
                   </li>
                   <li className="flagship-bullet-item">
-                    <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
-                    <span>Embedded 60fps audio player with stem auditioning and liner notes</span>
+                    <span className="flagship-bullet-icon" style={{ color: '#f59e0b' }}><RiCheckFill size={15} /></span>
+                    <span>Multi-currency support: earn and view balances in KES, NGN, ZAR, USD, or GBP</span>
                   </li>
                   <li className="flagship-bullet-item">
-                    <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
-                    <span>1-tap mobile money fan tipping (M-Pesa) and live ticket reservations</span>
+                    <span className="flagship-bullet-icon" style={{ color: '#f59e0b' }}><RiCheckFill size={15} /></span>
+                    <span>Clear, friendly language options with instant Kiswahili and regional language switcher</span>
                   </li>
                 </ul>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: 'auto' }}>
-                  <Link to="/epk" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    Deploy Your EPK <RiArrowRightLine size={13} />
+                  <Link to="/about" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', background: '#f59e0b', color: '#030712', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    Explore Local Features <RiArrowRightLine size={13} />
                   </Link>
-                  <Link to="/register?role=creator" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-                    Create Free Account
+                  <Link to="/pricing" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                    View Regional Rates
                   </Link>
                 </div>
               </div>
             </div>
 
-            {/* 5. Content row for Music Streaming & Purchase Marketplace */}
-            <div className="flagship-card glass-panel">
-              <div className="flagship-visual-container">
-                <img src={consumerAppImg} alt="TuneStream Music Streaming and Purchase Marketplace" className="flagship-image" />
+            {/* 5. Content row for Sync Placement & Music Licensing */}
+            <div className="flagship-card glass-panel" style={{ borderRadius: '3px' }}>
+              <div className="flagship-visual-container" style={{ borderRadius: '3px' }}>
+                <img src={appsSyncImg} alt="SyncMavens TV and Film Music Placement Engine" className="flagship-image" style={{ borderRadius: '3px' }} />
               </div>
               <div className="flagship-info">
-                <div className="flagship-badge" style={{ color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.25)' }}>
-                  Consumer Experience
+                <div className="flagship-badge" style={{ color: 'var(--cyan)', borderColor: 'rgba(34, 211, 238, 0.25)', borderRadius: '3px' }}>
+                  Sync Placement Engine
                 </div>
-                <h3 className="flagship-title">Music Streaming &amp; Purchase Marketplace</h3>
+                <h3 className="flagship-title">Get Your Music into TV Shows, Films &amp; Video&nbsp;Games</h3>
                 <p className="flagship-text">
-                  Experience pure master audio playback and direct artist commerce powered by our unified credit network. Stream without corporate ads and purchase vinyl, merchandise, and stem collectibles straight from creators.
+                  Pitch your catalog directly to music supervisors and creative directors looking for fresh sounds. Describe your tracks in simple words, and our system matches them to active sync briefs with clear, pre-cleared licensing rights.
+                </p>
+                <ul className="flagship-bullets">
+                  <li className="flagship-bullet-item">
+                    <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
+                    <span>Direct placement opportunities with television networks, streaming series, and gaming studios</span>
+                  </li>
+                  <li className="flagship-bullet-item">
+                    <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
+                    <span>Automated brief matching by scene mood, tempo, instrumentation, and vocal style</span>
+                  </li>
+                  <li className="flagship-bullet-item">
+                    <span className="flagship-bullet-icon" style={{ color: 'var(--cyan)' }}><RiCheckFill size={15} /></span>
+                    <span>Keep 100% of your upfront sync fees with clear, pre-cleared licensing terms</span>
+                  </li>
+                </ul>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: 'auto' }}>
+                  <a href={syncMavensUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ padding: '10px 22px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    Launch SyncMavens <RiExternalLinkLine size={13} />
+                  </a>
+                  <Link to="/for/supervisor" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                    Explore Sync Hub
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Content row for Music Streaming & Purchase Marketplace */}
+            <div className="flagship-card glass-panel reverse" style={{ borderRadius: '3px' }}>
+              <div className="flagship-visual-container" style={{ borderRadius: '3px' }}>
+                <img src={listenerImg} alt="TuneStream Music Streaming and Purchase Marketplace" className="flagship-image" style={{ borderRadius: '3px' }} />
+              </div>
+              <div className="flagship-info">
+                <div className="flagship-badge" style={{ color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.25)', borderRadius: '3px' }}>
+                  Listener Experience
+                </div>
+                <h3 className="flagship-title">Listen Ad-Free &amp; Support Independent&nbsp;Artists</h3>
+                <p className="flagship-text">
+                  Enjoy studio-quality music without annoying ads while directly supporting the musicians you love. Buy direct song downloads, digital vinyl, and merchandise straight from verified creators.
                 </p>
                 <ul className="flagship-bullets">
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#10b981' }}><RiCheckFill size={15} /></span>
-                    <span>24-bit/96kHz lossless uncompressed streaming with zero corporate ads</span>
+                    <span>High-resolution audio streaming with zero corporate commercial interruptions</span>
                   </li>
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#10b981' }}><RiCheckFill size={15} /></span>
-                    <span>1-tap direct artist tipping routing 100% of contributions to verified creators</span>
+                    <span>1-tap direct artist tipping where 100% of your gift goes directly to the creator</span>
                   </li>
                   <li className="flagship-bullet-item">
                     <span className="flagship-bullet-icon" style={{ color: '#10b981' }}><RiCheckFill size={15} /></span>
@@ -498,10 +543,10 @@ export default function HomeView({ sessionUser }) {
                   </li>
                 </ul>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: 'auto' }}>
-                  <a href={tuneStreamUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ padding: '10px 24px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', background: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <a href={tuneStreamUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ padding: '10px 24px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', background: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     Launch TuneStream Portal <RiExternalLinkLine size={13} />
                   </a>
-                  <Link to="/for/consumer" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                  <Link to="/for/consumer" className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '3px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                     Listener Platform
                   </Link>
                 </div>
@@ -509,7 +554,7 @@ export default function HomeView({ sessionUser }) {
             </div>
           </div>
 
-          {/* 6. Above requested Carousel */}
+          {/* Above requested Carousel */}
           <HomeFeatureCarousel sessionUser={sessionUser} />
         </section>
 
@@ -517,38 +562,38 @@ export default function HomeView({ sessionUser }) {
 
         <section className="section-wrapper text-center">
           <div className="section-header">
-            <span className="section-label">Frustrations Resolved</span>
-            <h2 className="section-title">Built for the Real Realities of Music</h2>
+            <span className="section-label">Everyday Challenges</span>
+            <h2 className="section-title">Built for Real-World Music&nbsp;Headaches</h2>
           </div>
           <div className="pain-points-grid">
-            <div className="pain-card glass-panel">
-              <div className="pain-icon"><RiStackFill size={24} /></div>
-              <h4>Spreadsheet Fatigue</h4>
-              <p><strong>Ideal for DIY Managers.</strong> We replace complex spreadsheets with automated cascade splitting rules that map directly to payment terminals.</p>
+            <div className="pain-card glass-panel" style={{ borderRadius: '3px' }}>
+              <div className="pain-icon" style={{ borderRadius: '3px' }}><RiStackFill size={24} /></div>
+              <h4>Messy Spreadsheets</h4>
+              <p><strong>Ideal for busy managers.</strong> We replace complex spreadsheets with automatic split rules that pay everyone their share without math errors.</p>
             </div>
-            <div className="pain-card glass-panel">
-              <div className="pain-icon"><RiCpuFill size={24} /></div>
-              <h4>Engineering Costs</h4>
-              <p><strong>Ideal for Touring Artists.</strong> Get mastering and compliance checks instantly without having to hire expensive studio engineers for simple reference adjustments.</p>
+            <div className="pain-card glass-panel" style={{ borderRadius: '3px' }}>
+              <div className="pain-icon" style={{ borderRadius: '3px' }}><RiCpuFill size={24} /></div>
+              <h4>High Studio Costs</h4>
+              <p><strong>Ideal for indie creators.</strong> Test your loudness and audio balance instantly so your tracks sound great on Spotify and Apple Music without steep mastering fees.</p>
             </div>
-            <div className="pain-card glass-panel">
-              <div className="pain-icon"><RiGlobalFill size={24} /></div>
-              <h4>Pitching Hurdles</h4>
-              <p><strong>Ideal for Sync Catalog Owners.</strong> Translate your tracks into structured metadata briefs so television networks and game publishers can find your songs in catalogs.</p>
+            <div className="pain-card glass-panel" style={{ borderRadius: '3px' }}>
+              <div className="pain-icon" style={{ borderRadius: '3px' }}><RiGlobalFill size={24} /></div>
+              <h4>Pitching Roadblocks</h4>
+              <p><strong>Ideal for catalog owners.</strong> Put your songs into clear, searchable terms so music supervisors for TV shows and games can quickly find and license your music.</p>
               <a href={syncMavensUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12.5px', color: 'var(--cyan)', marginTop: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600 }}>Visit SyncMavens Platform <RiExternalLinkLine size={12} /></a>
             </div>
           </div>
         </section>
 
         <section className="section-wrapper text-center cta-banner-section" style={{ marginTop: '30px', marginBottom: '30px' }}>
-          <div className="glass-panel cta-banner-panel" style={{ padding: '32px 24px', borderRadius: 'var(--r)', border: '1px solid rgba(34, 211, 238, 0.15)', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.03), rgba(139, 92, 246, 0.03))' }}>
-            <h2 className="section-title" style={{ fontSize: 'clamp(28px, 4vw, 38px)', marginBottom: '12px', fontFamily: 'Sansation, sans-serif' }}>Ready to automate your music business operations?</h2>
+          <div className="glass-panel cta-banner-panel" style={{ padding: '32px 24px', borderRadius: '3px', border: '1px solid rgba(34, 211, 238, 0.15)', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.03), rgba(139, 92, 246, 0.03))' }}>
+            <h2 className="section-title" style={{ fontSize: 'clamp(28px, 4vw, 38px)', marginBottom: '12px', fontFamily: 'Sansation, sans-serif' }}>Ready to simplify your music&nbsp;business?</h2>
             <p className="section-desc" style={{ maxWidth: '600px', margin: '0 auto 30px', color: 'var(--mu)' }}>
-              Get 150 free signup credits instantly. No credit card required. Use credits across TuneMavens and the Intermaven network.
+              Get 150 free starter credits right away. No credit card required. Use credits across TuneMavens and the entire Intermaven network.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
-              <Link to="/register" className="btn-primary" style={{ padding: '12px 28px', fontSize: '15px' }}>Start Free</Link>
-              <Link to="/pricing" className="btn-secondary" style={{ padding: '12px 28px', fontSize: '15px' }}>See Credit Packages</Link>
+              <Link to="/register" className="btn-primary" style={{ padding: '12px 28px', fontSize: '15px', borderRadius: '3px' }}>Start Free</Link>
+              <Link to="/pricing" className="btn-secondary" style={{ padding: '12px 28px', fontSize: '15px', borderRadius: '3px' }}>See Credit Packages</Link>
             </div>
           </div>
         </section>

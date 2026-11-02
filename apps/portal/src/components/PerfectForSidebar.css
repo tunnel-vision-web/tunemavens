@@ -25,6 +25,21 @@
   gap: 10px;
 }
 
+.pf-carousel-header-link {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf-carousel-header-link:hover {
+  color: var(--cyan);
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+}
+
 /* Horizontal scrolling container with gradient mask for fading edges */
 .pf-carousel-container {
   width: 100%;

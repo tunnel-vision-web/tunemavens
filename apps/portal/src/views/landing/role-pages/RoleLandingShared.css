@@ -929,3 +929,27 @@
 
 
 
+
+
+/* Typographic balance to eliminate hanging words in hero and content */
+.role-banner-title,
+.role-hero-headline,
+.role-section-title,
+.role-pillar-title,
+.role-step-title,
+.corporate-rate-title,
+.role-rate-title,
+.corporate-specs-title,
+.role-specs-title {
+  text-wrap: balance;
+}
+
+.role-banner-desc,
+.role-hero-lede,
+.role-section-desc,
+.role-pillar-desc,
+.role-step-desc,
+.corporate-text,
+.role-card p {
+  text-wrap: pretty;
+}

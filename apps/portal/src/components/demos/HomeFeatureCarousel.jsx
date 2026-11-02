@@ -1,14 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { 
-  RiBarChartFill, 
-  RiRadioFill, 
-  RiCpuFill, 
-  RiStackFill, 
   RiCheckFill, 
   RiArrowRightLine, 
-  RiExternalLinkLine,
-  RiArrowLeftLine
+  RiExternalLinkLine
 } from 'react-icons/ri'
 import { getServiceUrl } from '../PerfectForSidebar.jsx'
 import './HomeFeatureCarousel.css'
@@ -31,65 +26,65 @@ export default function HomeFeatureCarousel({ sessionUser }) {
   const modules = [
     {
       id: 'analytics',
-      tabLabel: 'Creator Analytics AI',
-      badge: 'Creator Intelligence',
-      title: 'Backend Unified Dashboard & Real-Time Analytics AI',
+      tabLabel: 'Creator Analytics',
+      badge: 'Creator Insights',
+      title: 'Simple Overview & Real-Time Music Analytics',
       accent: '#22d3ee',
-      desc: 'Data-rich operations console backed by a self-learning neural engine. Monitor live stream telemetry across web and mobile, track cross-platform network credits earnings, coordinate metadata, and let our engine refine splits and tag recommendations dynamically.',
+      desc: 'A clean, easy dashboard that shows how your music is performing. Track listeners across web and mobile, see your earnings in real time, and receive smart suggestions for release dates and audio balance.',
       highlights: [
-        'Real-time listening metrics and territorial listener heatmaps',
-        'Neural suggestions for genre tags, optimal release windows, and target LUFS',
-        'Cross-subdomain session persistence with zero credit balance drift'
+        'Live streaming metrics and visual listener maps',
+        'Helpful tips for song tags, release windows, and loudness',
+        'Unified credit balances and straightforward royalty tracking'
       ],
       primaryCta: {
-        label: 'Explore Creator Console',
+        label: 'Explore Creator Dashboard',
         to: sessionUser ? '/dashboard' : '/register?role=creator',
         isExternal: false
       },
       secondaryCta: {
-        label: 'Learn Analytics Suite',
+        label: 'See Creator Tools',
         to: '/for/creator',
         isExternal: false
       },
       image: creatorDashboardImg,
-      alt: 'TuneMavens Backend Unified Dashboard & Real-Time Analytics AI'
+      alt: 'TuneMavens Unified Dashboard & Real-Time Analytics'
     },
     {
       id: 'sync-ai',
-      tabLabel: 'Sync Brief AI',
-      badge: 'Sync Licensing',
-      title: 'Sync Brief AI & Placement Engine',
+      tabLabel: 'Sync Licensing',
+      badge: 'TV & Film Placements',
+      title: 'Sync Placement Engine & Easy Music Pitching',
       accent: '#f59e0b',
-      desc: 'Translates natural-language script notes, director cues, and creative briefs into precise search tags including BPM, instrumentation, mood, and era. Put your catalog directly in front of television, feature film, and game music supervisors on SyncMavens.',
+      desc: 'Turn everyday song descriptions into clear tags for TV and film music supervisors. Whether a director is looking for an upbeat indie track or an atmospheric acoustic cue, our system puts your songs right where buyers look.',
       highlights: [
-        'Natural-language script parsing directly to catalog search tags',
-        'Direct pipeline to 100% pre-cleared SyncMavens placement queues',
-        'Automated ASCAP, BMI, and PRS broadcast cue sheet logger'
+        'Simple song descriptions matched directly to buyer search cues',
+        'Direct access to pre-cleared TV and film opportunities on SyncMavens',
+        'Automated cue sheets to guarantee proper broadcast credits'
       ],
       primaryCta: {
-        label: 'Launch SyncMavens Platform',
+        label: 'Visit SyncMavens',
         href: syncMavensUrl,
         isExternal: true
       },
       secondaryCta: {
-        label: 'Try Sync Pitch Tool',
+        label: 'Try Song Pitching',
         to: '/tools',
         isExternal: false
       },
       image: appsSyncImg,
-      alt: 'Sync Brief AI and Placement Engine Console'
+      alt: 'Sync Brief and Placement Engine Console'
     },
     {
       id: 'mastering-ai',
-      tabLabel: 'Mastering Brief AI',
-      badge: 'Audio Engineering',
-      title: 'Mastering Brief AI & Loudness Compliance',
+      tabLabel: 'Audio Mastering',
+      badge: 'Sound Polish',
+      title: 'Audio Mastering & Streaming Loudness Check',
       accent: '#10b981',
-      desc: 'Studio-grade loudness matching and compliance checks without expensive mastering fees. Calibrate target loudness (LUFS) for Spotify (-14 LUFS), Apple Music (-16 LUFS), and TIDAL (-14 LUFS). Upload mixes, compare against reference tracks, and export broadcast-compliant masters in seconds.',
+      desc: 'Get your songs sounding full, clear, and radio-ready without expensive studio bills. Ensure your audio meets the target loudness requirements for Spotify and Apple Music in just a few clicks.',
       highlights: [
-        'Target streaming LUFS optimization with peak limiter compliance',
-        'Reference mix A/B comparison with dynamic frequency analysis',
-        'Full compatibility with 24-bit/96kHz lossless uncompressed master audio'
+        'Automatic loudness calibration for Spotify and Apple Music',
+        'Quick A/B comparisons with your favorite reference tracks',
+        'Export broadcast-ready masters in crystal-clear quality'
       ],
       primaryCta: {
         label: 'Try Mastering Tool',
@@ -97,32 +92,32 @@ export default function HomeFeatureCarousel({ sessionUser }) {
         isExternal: false
       },
       secondaryCta: {
-        label: 'Review Loudness Standards',
+        label: 'Check Loudness Guidelines',
         to: '/for/creator#pillars',
         isExternal: false
       },
       image: appsMasteringImg,
-      alt: 'Mastering Brief AI Audio Engineering Console'
+      alt: 'Mastering Audio Engineering Console'
     },
     {
       id: 'split-ledger',
-      tabLabel: 'Split Cascade Ledger',
-      badge: 'Accounting & Revenue',
-      title: 'Split Cascade Ledger & Royalty Disbursement',
+      tabLabel: 'Royalty Splits',
+      badge: 'Simple Payouts',
+      title: 'Automatic Split Sheets & Collaborator Payouts',
       accent: '#a855f7',
-      desc: 'Eliminate spreadsheet disputes and manual payout calculations. Define collaborative shares between writers, producers, session musicians, and labels once. Load your distributor statement CSV files, and let our waterfall cascade engine route automated digital payouts in seconds.',
+      desc: 'No more arguments or confusing spreadsheet formulas. Set each contributor’s percentage once, upload your earnings report from DistroKid or TuneCore, and send each person their share automatically.',
       highlights: [
-        '1-click CSV statement ingestion (DistroKid, TuneCore, CD Baby, Believe)',
-        'Automated waterfall payout disbursements to mobile money (M-Pesa) and cards',
-        'Audit-ready financial disbursement statements and clear PDF export'
+        'One-click statement uploads from DistroKid, TuneCore, and CD Baby',
+        'Automatic payouts straight to M-Pesa, bank accounts, or cards',
+        'Clear, easy-to-read payout summaries for everyone involved'
       ],
       primaryCta: {
-        label: 'Manage Roster Splits',
+        label: 'Manage Your Splits',
         to: '/apps',
         isExternal: false
       },
       secondaryCta: {
-        label: 'Explore Split Engine',
+        label: 'See How Splits Work',
         to: '/for/label',
         isExternal: false
       },
@@ -186,13 +181,13 @@ export default function HomeFeatureCarousel({ sessionUser }) {
       style={{ '--hfc-accent': current.accent }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      aria-label="Core Intelligence and Production Suite"
+      aria-label="Core Tools and Features Suite"
     >
       <div className="hfc-header">
-        <span className="hfc-eyebrow">Integrated Operations Suite</span>
-        <h2 className="hfc-section-title">Core Intelligence &amp; Automation Engines</h2>
+        <span className="hfc-eyebrow">Integrated Operations</span>
+        <h2 className="hfc-section-title">Essential Tools for Modern Musicians</h2>
         <p className="hfc-section-desc">
-          Four specialized modules powering modern music careers, catalog operations, sync licensing, and financial transparency.
+          Four dedicated modules designed to simplify release management, music licensing, sound quality, and collaborator payouts.
         </p>
       </div>
 
@@ -205,7 +200,7 @@ export default function HomeFeatureCarousel({ sessionUser }) {
             aria-selected={currentIndex === idx}
             onClick={() => goToSlide(idx)}
             className={`hfc-tab-btn ${currentIndex === idx ? 'active' : ''}`}
-            style={{ '--hfc-accent': m.accent }}
+            style={{ '--hfc-accent': m.accent, borderRadius: '3px' }}
           >
             {m.tabLabel}
           </button>
@@ -213,10 +208,10 @@ export default function HomeFeatureCarousel({ sessionUser }) {
       </div>
 
       {/* Main Slide Card */}
-      <div className="hfc-card glass-panel" key={currentIndex}>
+      <div className="hfc-card glass-panel" key={currentIndex} style={{ borderRadius: '3px' }}>
         <div className="hfc-card-content">
           <div className="hfc-badge-row">
-            <span className="hfc-badge">{current.badge}</span>
+            <span className="hfc-badge" style={{ borderRadius: '3px' }}>{current.badge}</span>
             <span className="hfc-slide-index">0{currentIndex + 1} / 0{total}</span>
           </div>
 
@@ -239,11 +234,12 @@ export default function HomeFeatureCarousel({ sessionUser }) {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="hfc-btn-primary"
+                style={{ borderRadius: '3px' }}
               >
                 {current.primaryCta.label} <RiExternalLinkLine size={14} />
               </a>
             ) : (
-              <Link to={current.primaryCta.to} className="hfc-btn-primary">
+              <Link to={current.primaryCta.to} className="hfc-btn-primary" style={{ borderRadius: '3px' }}>
                 {current.primaryCta.label} <RiArrowRightLine size={14} />
               </Link>
             )}
@@ -254,22 +250,24 @@ export default function HomeFeatureCarousel({ sessionUser }) {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="hfc-btn-secondary"
+                style={{ borderRadius: '3px' }}
               >
                 {current.secondaryCta.label} <RiExternalLinkLine size={14} />
               </a>
             ) : (
-              <Link to={current.secondaryCta.to} className="hfc-btn-secondary">
+              <Link to={current.secondaryCta.to} className="hfc-btn-secondary" style={{ borderRadius: '3px' }}>
                 {current.secondaryCta.label}
               </Link>
             )}
           </div>
         </div>
 
-        <div className="hfc-card-visual">
+        <div className="hfc-card-visual" style={{ borderRadius: '3px' }}>
           <img 
             src={current.image} 
             alt={current.alt} 
             className="hfc-image" 
+            style={{ borderRadius: '3px' }}
           />
         </div>
       </div>
@@ -282,6 +280,7 @@ export default function HomeFeatureCarousel({ sessionUser }) {
             onClick={prevSlide} 
             className="hfc-nav-btn" 
             aria-label="Previous module"
+            style={{ borderRadius: '3px' }}
           >
             ‹
           </button>
@@ -290,6 +289,7 @@ export default function HomeFeatureCarousel({ sessionUser }) {
             onClick={nextSlide} 
             className="hfc-nav-btn" 
             aria-label="Next module"
+            style={{ borderRadius: '3px' }}
           >
             ›
           </button>

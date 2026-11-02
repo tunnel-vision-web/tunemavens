@@ -70,3 +70,18 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+
+/* Universal Typographic Balance: Eliminate hanging words and orphans platform-wide */
+h1, h2, h3, h4, h5, h6,
+.ht, .htitle, .ht-line, .section-title, .flagship-title, .persona-title, .hfc-title,
+.hero-title, .role-hero-headline, .role-banner-title, .role-section-title,
+.role-pillar-title, .role-step-title, .page-header-title {
+  text-wrap: balance;
+}
+
+p, .hp, .hsub, .section-desc, .flagship-text, .persona-text, .hfc-desc,
+.role-hero-lede, .role-section-desc, .role-pillar-desc, .role-step-desc,
+.pain-card p, .hero-sub, .page-header-subtitle {
+  text-wrap: pretty;
+}
