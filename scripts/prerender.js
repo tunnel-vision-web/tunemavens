@@ -51,7 +51,7 @@ const TUNEMAVENS_ROUTES = [
     description: 'Built for independent African and diaspora artists. Build your interactive EPK web world, generate split sheets, and pitch directly to sync briefs.',
     h1: 'Built for Independent Creators & Sonic Storytellers',
     subhead: 'Take complete command of your master rights, generate immutable split sheets in basis points, and get discovered by global music supervisors.',
-    canonical: 'https://tunemavens.com/for-creators',
+    canonical: 'https://tunemavens.com/for/creator',
     ogImage: 'https://tunemavens.com/headers/discography_retina_header.jpg',
     features: [
       'Interactive EPK Builder with custom subdomains (username.tunemavens.com)',
@@ -67,7 +67,7 @@ const TUNEMAVENS_ROUTES = [
     description: 'Enterprise roster management, multi-seat A&R/accounting consoles, DDEX ingestion, and bulk payout execution across M-Pesa and international bank rails.',
     h1: 'Enterprise Infrastructure for Modern Record Labels',
     subhead: 'Orchestrate unlimited roster artists, automate recoupment waterfalls, and disburse royalty splits atomically without 180-day statement delays.',
-    canonical: 'https://tunemavens.com/for-labels',
+    canonical: 'https://tunemavens.com/for/label',
     ogImage: 'https://tunemavens.com/headers/discography_retina_header.jpg',
     features: [
       'Multi-seat collaborator roles for A&R, Legal, and Finance teams',
@@ -83,7 +83,7 @@ const TUNEMAVENS_ROUTES = [
     description: 'Direct lossless promo pool access, verified mixtape clearance escrow, and exclusive track drops from top East African and diaspora producers.',
     h1: 'The High-Fidelity Promo Pool for Professional DJs',
     subhead: 'Download pre-cleared lossless WAV/FLAC audio drops, cue-point mapped stems, and track performance attribution in real time.',
-    canonical: 'https://tunemavens.com/for-djs',
+    canonical: 'https://tunemavens.com/for/dj',
     ogImage: 'https://tunemavens.com/headers/discography_retina_header.jpg',
     features: [
       'Verified lossless audio files with BPM and key metadata',
@@ -98,7 +98,7 @@ const TUNEMAVENS_ROUTES = [
     description: 'Broadcast-cleared music stems for television, radio, film, and digital networks with verified rights documentation and automated cue sheet exports.',
     h1: 'Broadcast-Ready Licensing for Media Houses & Networks',
     subhead: 'Pre-cleared 100% one-stop master and publishing catalog with automated cue sheet generation and instant indemnification.',
-    canonical: 'https://tunemavens.com/for-mediahouses',
+    canonical: 'https://tunemavens.com/for/media-house',
     ogImage: 'https://tunemavens.com/headers/discography_retina_header.jpg',
     features: [
       'Instant sync licensing quotes powered by unified pricing calculator',
@@ -264,17 +264,19 @@ function generateHtml(route, baseHtmlTemplate) {
         </nav>
       </header>
 
-      <!-- 1-Tap Persona Switcher Toolbar per Spec §3 -->
+      <!-- 1-Tap Persona Switcher Toolbar per Spec §3 (All 9 Canonical Roles) -->
       <nav data-testid="role-switcher-toolbar" style="display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px; align-items: center;">
-        <span style="color: #8b949e; margin-right: 4px; font-size: 11px; text-transform: uppercase; font-weight: 700;">Seat:</span>
+        <span style="color: #8b949e; margin-right: 4px; font-size: 11px; text-transform: uppercase; font-weight: 700;">Role:</span>
         <a href="/for/creator" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Creators</a>
         <a href="/for/label" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Record Labels</a>
         <a href="/for/dj" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">DJs</a>
         <a href="/for/media-house" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Media Houses</a>
-        <a href="/for/supervisor" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Music Supervisors</a>
+        <a href="/for/supervisor" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Supervisors</a>
         <a href="/for/consumer" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Listeners</a>
         <a href="/for/corporate" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Corporate</a>
-        <a href="/for" style="margin-left: auto; color: #00f0ff; text-decoration: none; font-weight: 600;">All Seats →</a>
+        <a href="/for/podcaster" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">Podcasters</a>
+        <a href="/for/vc" style="padding: 4px 12px; border-radius: 999px; text-decoration: none; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">VC / Capital</a>
+        <a href="/for" style="margin-left: auto; color: #00f0ff; text-decoration: none; font-weight: 600;">All 9 Roles →</a>
       </nav>
 
       <main>

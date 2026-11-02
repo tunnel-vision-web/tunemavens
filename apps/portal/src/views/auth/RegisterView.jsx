@@ -950,7 +950,7 @@ export default function RegisterView({ onLogin }) {
                   style={{ padding: '12px', borderRadius: '4px', border: `1px solid ${selectedPricing === 'pro' ? 'var(--cyan)' : 'rgba(255,255,255,0.05)'}`, background: selectedPricing === 'pro' ? 'rgba(34,211,238,0.04)' : 'rgba(255,255,255,0.01)', cursor: 'pointer', textAlign: 'center' }}
                 >
                   <h4 style={{ fontSize: '12px', color: '#fff', margin: '0 0 2px' }}>Pro Streamer</h4>
-                  <p style={{ fontSize: '9px', color: 'var(--mu)', margin: 0 }}>500 credits / month</p>
+                  <p style={{ fontSize: '9px', color: 'var(--mu)', margin: 0 }}>500 non-expiring credits</p>
                 </div>
               </div>
             </div>

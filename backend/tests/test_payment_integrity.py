@@ -37,7 +37,7 @@ client = TestClient(app)
 
 
 def setup_test_user():
-    """Seeds a clean test user."""
+    """Seeds a clean test user with opening balance in TuneLedger (Spec Section 5.1 Row 11)."""
     test_email = "integrity_test@tunemavens.com"
     db.users.delete_many({"email": test_email})
     res = db.users.insert_one({
@@ -48,6 +48,12 @@ def setup_test_user():
         "created_at": datetime.now(timezone.utc)
     })
     user_id = str(res.inserted_id)
+    db.credit_ledger.delete_many({"user_id": user_id})
+    ledger_service.initialize_user_opening_balance(
+        user_id=user_id,
+        initial_credits=100,
+        description="Opening balance initial seed"
+    )
     token = create_access_token(sub=user_id)
     headers = {"Authorization": f"Bearer {token}"}
     return user_id, headers
@@ -286,23 +292,94 @@ def run_tests():
         payments_router.ENABLE_SANDBOX_BYPASS = orig_allow
 
     # ------------------------------------------------------------------
-    # Test 8: Startup Security Guard Aborts Insecure Production
+    # Test 8: Startup Security Guards Abort Insecure Production (Spec Section 5.1 Rows 8 & 9)
     # ------------------------------------------------------------------
-    logger.info("Test 8: Verifying startup validation check aborts if sandbox bypass is true in production...")
-    config.ENV = "production"
-    config.ENABLE_SANDBOX_BYPASS = True
-    threw_error = False
+    logger.info("Test 8: Verifying startup validation check aborts on insecure production configurations...")
+    
+    # Save original state
+    orig_db_mode = getattr(config, "DATABASE_MODE", "mock")
+    orig_mongo_url = config.MONGO_URL
+    orig_jwt = config.JWT_SECRET
+    orig_cors = config.CORS_ORIGINS
+    orig_secure = config.COOKIE_SECURE
+
     try:
-        validate_production_security()
-    except RuntimeError as e:
-        threw_error = True
-        logger.info(f"  [PASS] Caught expected security guard exception: {e}")
-        passed += 1
+        # 8a. Block sandbox bypass in production
+        config.ENV = "production"
+        config.ALLOW_SANDBOX_WEBHOOKS = False
+        config.ENABLE_SANDBOX_BYPASS = True
+        try:
+            validate_production_security()
+            assert False, "Failed to block ENABLE_SANDBOX_BYPASS in production!"
+        except RuntimeError as e:
+            assert "ENABLE_SANDBOX_BYPASS" in str(e)
+            logger.info(f"  [PASS] Caught expected sandbox guard exception: {e}")
+            passed += 1
+        finally:
+            config.ENABLE_SANDBOX_BYPASS = False
+
+        # Set valid baselines so subsequent guards can isolate their specific checks
+        config.DATABASE_MODE = "mongodb"
+        config.MONGO_URL = "mongodb://localhost:27017"
+        config.JWT_SECRET = "strong_production_secret_key_minimum_32_chars_long"
+        config.CORS_ORIGINS = ["https://tunemavens.com"]
+        config.COOKIE_SECURE = True
+
+        # 8b. Block mock database fallback in production (Row 8)
+        config.DATABASE_MODE = "mock"
+        try:
+            validate_production_security()
+            assert False, "Failed to block mock database fallback in production!"
+        except RuntimeError as e:
+            assert "mock database" in str(e)
+            logger.info(f"  [PASS] Caught expected database guard exception: {e}")
+            passed += 1
+        finally:
+            config.DATABASE_MODE = "mongodb"
+
+        # 8c. Block weak / default JWT_SECRET in production (Row 9)
+        config.JWT_SECRET = "intermaven_secret_key"
+        try:
+            validate_production_security()
+            assert False, "Failed to block default JWT_SECRET in production!"
+        except RuntimeError as e:
+            assert "JWT_SECRET" in str(e)
+            logger.info(f"  [PASS] Caught expected JWT secret guard exception: {e}")
+            passed += 1
+        finally:
+            config.JWT_SECRET = "strong_production_secret_key_minimum_32_chars_long"
+
+        # 8d. Block wildcard CORS in production (Row 9)
+        config.CORS_ORIGINS = ["*"]
+        try:
+            validate_production_security()
+            assert False, "Failed to block wildcard CORS in production!"
+        except RuntimeError as e:
+            assert "CORS_ORIGINS" in str(e)
+            logger.info(f"  [PASS] Caught expected CORS guard exception: {e}")
+            passed += 1
+        finally:
+            config.CORS_ORIGINS = ["https://tunemavens.com"]
+
+        # 8e. Block insecure cookies in production (Row 9)
+        config.COOKIE_SECURE = False
+        try:
+            validate_production_security()
+            assert False, "Failed to block COOKIE_SECURE=False in production!"
+        except RuntimeError as e:
+            assert "COOKIE_SECURE" in str(e)
+            logger.info(f"  [PASS] Caught expected cookie guard exception: {e}")
+            passed += 1
+        finally:
+            config.COOKIE_SECURE = True
+
     finally:
         config.ENV = orig_env
-        config.ENABLE_SANDBOX_BYPASS = False
-
-    assert threw_error, "Failed to block ENABLE_SANDBOX_BYPASS in production!"
+        config.DATABASE_MODE = orig_db_mode
+        config.MONGO_URL = orig_mongo_url
+        config.JWT_SECRET = orig_jwt
+        config.CORS_ORIGINS = orig_cors
+        config.COOKIE_SECURE = orig_secure
 
     # ------------------------------------------------------------------
     # Test 9: Obsolete subscription endpoints return 404
@@ -317,16 +394,38 @@ def run_tests():
     passed += 1
 
     # ------------------------------------------------------------------
-    # Test 10: TuneLedger Reconciles Perfectly
+    # Test 10: TuneLedger Reconciles Perfectly with Zero Discrepancy (Spec Section 5.1 Row 11)
     # ------------------------------------------------------------------
     logger.info("Test 10: Running TuneLedger reconciliation for test user...")
     reconcile_res = ledger_service.reconcile_user_balance(user_id)
     logger.info(f"Reconciliation result: {reconcile_res}")
-    # Note: user had 100 starting + 250 from M-Pesa + 250 from Stripe = 600 total cached
-    # Ledger entries: 250 (M-Pesa) + 250 (Stripe) = 500
-    # Let's verify ledger totals are recorded exactly
-    assert reconcile_res["ledger_balance"] == 500, f"Expected ledger balance 500, got {reconcile_res['ledger_balance']}"
-    logger.info("  [PASS] TuneLedger records accurately logged all transactions.")
+    # Starting 100 (Opening Balance) + 250 (M-Pesa) + 250 (Stripe) = 600 total cached
+    assert reconcile_res["matches"] is True, f"Expected reconciliation match, got mismatch: {reconcile_res}"
+    assert reconcile_res["discrepancy"] == 0, f"Expected 0 discrepancy, got {reconcile_res['discrepancy']}"
+    assert reconcile_res["ledger_balance"] == 600, f"Expected ledger balance 600, got {reconcile_res['ledger_balance']}"
+    assert reconcile_res["cached_balance"] == 600, f"Expected cached balance 600, got {reconcile_res['cached_balance']}"
+    logger.info("  [PASS] TuneLedger reconciliation matches perfectly with 0 discrepancy.")
+    passed += 1
+
+    # ------------------------------------------------------------------
+    # Test 10b: Auto-repair Safety Guard Preserves Legacy User Credits (Row 11)
+    # ------------------------------------------------------------------
+    logger.info("Test 10b: Verifying auto_repair safety guard preserves pre-existing user credits...")
+    legacy_user = db.users.insert_one({
+        "email": "legacy_audit@tunemavens.com",
+        "name": "Legacy User",
+        "credits": 300,
+        "created_at": datetime.now(timezone.utc)
+    })
+    legacy_id = str(legacy_user.inserted_id)
+    db.credit_ledger.delete_many({"user_id": legacy_id})
+    repair_res = ledger_service.reconcile_user_balance(legacy_id, auto_repair=True)
+    assert repair_res["matches"] is True, f"Expected auto_repair to match safely, got {repair_res}"
+    assert repair_res["cached_balance"] == 300, f"Cached balance erased: {repair_res['cached_balance']}"
+    assert repair_res["ledger_balance"] == 300, f"Ledger balance not initialized: {repair_res['ledger_balance']}"
+    db.users.delete_one({"_id": ObjectId(legacy_id)})
+    db.credit_ledger.delete_many({"user_id": legacy_id})
+    logger.info("  [PASS] Auto_repair safely initialized opening balance without erasing credits.")
     passed += 1
 
     logger.info("==================================================")

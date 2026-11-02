@@ -1159,33 +1159,33 @@ All four primary configuration workflows launch in dedicated, responsive **Modal
 
 ### 9.33 Complete Commercial Persona Landing Pages, Tier Engines & User-Scoped Permissions
 
-#### 9.33.1 Omnichannel Persona Commercial Packages & Rate Cards
-Every persona gateway across the platform now features transparent rate cards, specifications panels, and interactive reservation modals matching the Corporate benchmark:
+#### 9.33.1 Omnichannel Persona Commercial Packages & Rate Cards (Non-Expiring Credit Packs)
+Per Technical Foundation Spec §5.1 & §5.2, TuneMavens enforces a strict 100% credit-only billing architecture with **zero recurring subscriptions, no monthly locks, and non-expiring credits**. Every persona gateway features transparent one-time credit packages and volume top-ups:
 - **Creator / Artist (`/for/creator` & `CreatorLandingPage.jsx`):**
   - *Spark / Indie Starter:* $0 / Free (85/15 Net Splits, Uncapped Lossless Stream Hosting, direct fan tips).
-  - *Pro Creator Growth:* $29 / mo (90/10 Splits, Unlimited Masters & Stems, SyncMavens AI brief auto-pitching, custom subdomain, 300 TM Credits).
-  - *Studio Master & Touring:* $99 / mo (100% Royalty Take, TunePay Event Box-Office POS, automated publishing/distribution election contracts, 1,200 TM Credits).
-  - *Label-Ready Enterprise:* $299 / mo (White-glove catalog migration, dedicated agency sync licensing agent, custom apex domain SSL, 4,000 TM Credits).
-- **Record Label (`/for/labels` & `LabelLandingPage.jsx`):**
-  - *Indie Imprint:* $99 / mo (Up to 10 artists, 100 tracks, automated CSV statement parser, isolated roster accounts, 1,000 TM Credits).
-  - *Scale Label Operations:* $299 / mo (Up to 50 artists, 1,000 tracks, automated master recoupment cascades 90/10 to 50/50, multi-seat A&R/Accounting, TunePay festival ticketing settlements, 3,500 TM Credits).
-  - *Major Enterprise:* $799 / mo (Unlimited artists and catalog, white-label artist payout portal, direct mobile money bulk payouts, ERP API webhooks, 10,000 TM Credits).
-- **Music Supervisor / Studio (`/for/supervisors` & `SupervisorLandingPage.jsx`):**
+  - *Creator Starter Top-Up:* $25 / KES 3,250 one-time (250 Non-Expiring Credits, SyncMavens AI brief auto-pitching, custom subdomain).
+  - *Pro Creator Growth Pack:* $50 / KES 6,500 one-time (600 Non-Expiring Credits, automated publishing/distribution election contracts, 100% royalty take on direct sales).
+  - *Studio Master & Touring Pack:* $120 / KES 15,600 one-time (1,500 Non-Expiring Credits, TunePay Box-Office POS, priority sync brief delivery).
+- **Record Label (`/for/label` & `LabelLandingPage.jsx`):**
+  - *Indie Imprint Load:* $99 one-time (1,000 Non-Expiring Credits, up to 10 artists, automated CSV statement parser, isolated roster accounts).
+  - *Scale Label Operations Load:* $299 one-time (3,500 Non-Expiring Credits, up to 50 artists, automated master recoupment cascades 90/10 to 50/50, multi-seat A&R/Accounting).
+  - *Major Enterprise Load:* $799 one-time (10,000 Non-Expiring Credits, unlimited artists and catalog, white-label artist payout portal, direct mobile money bulk payouts, ERP API webhooks).
+- **Music Supervisor / Studio (`/for/supervisor` & `SupervisorLandingPage.jsx`):**
   - *Indie Discovery:* $0 / Free (Search 50k+ pre-cleared masters by BPM, mood, and instrumentation; watermarked stream previews).
-  - *Production Studio Pro:* $149 / mo (Unlimited scene briefs, 94%+ AI match scoring, instant multi-track stem downloads, 1-click PRO cue sheet generator, in-app escrow contracts, 1,500 TM Credits).
-  - *Network & Studio Enterprise:* $499 / mo (Full worldwide commercial indemnification, original score commissions, urgent <4-hour turnaround, 6,000 TM Credits).
-- **DJ / Curator (`/for/djs` & `DjLandingPage.jsx`):**
-  - *Club Resident:* $19 / mo (50 lossless WAV/320k downloads/mo, clean & dirty extended 8-bar intro edits, verified Rekordbox & Serato cues, 200 TM Credits).
-  - *Touring Pro DJ:* $49 / mo (Unlimited WAV downloads, isolated remix stems, unreleased artist dubplates, DMCA-safe performance clearance hashes, 600 TM Credits).
-  - *Headline & Festival Curator:* $129 / mo (Direct label promo drop inbox, syndicated TuneStream radio mix series, direct listener tipping, 1,800 TM Credits).
-- **Media House / Broadcaster (`/for/media` & `MediaHouseLandingPage.jsx`):**
-  - *Single Station / Regional:* $199 / mo (Up to 2 broadcast channels, 5,000 playlogs/mo, automated RCS Zetta/Dalet/WideOrbit ingestion, PRO discrepancy detection, 2,000 TM Credits).
-  - *Broadcaster Network Suite:* $599 / mo (Up to 10 stations, 50,000 playlogs/mo, 1-click formatted exports for ASCAP, BMI, SESAC, PRS, MCSK, native audio ad sync, 7,500 TM Credits).
-  - *Enterprise Media Conglomerate:* $1,499 / mo (Unlimited stations, continuous 24/7 acoustic fingerprinting, real-time metadata repair, statutory audit defense, 20,000 TM Credits).
-- **Music Enthusiast / Consumer (`/for/listeners` & `ConsumerLandingPage.jsx`):**
+  - *Production Studio Pro Pack:* $149 one-time (1,500 Non-Expiring Credits, unlimited scene briefs, 94%+ AI match scoring, instant multi-track stem downloads, 1-click PRO cue sheet generator).
+  - *Network & Studio Enterprise Pack:* $499 one-time (6,000 Non-Expiring Credits, full worldwide commercial indemnification, original score commissions, urgent <4-hour turnaround).
+- **DJ / Curator (`/for/dj` & `DjLandingPage.jsx`):**
+  - *Club Resident Pack:* $25 one-time (250 Non-Expiring Credits, clean & dirty extended 8-bar intro edits, verified Rekordbox & Serato cues).
+  - *Touring Pro DJ Pack:* $50 one-time (600 Non-Expiring Credits, unlimited WAV downloads, isolated remix stems, unreleased artist dubplates).
+  - *Headline & Festival Curator Pack:* $120 one-time (1,500 Non-Expiring Credits, direct label promo drop inbox, syndicated TuneStream radio mix series).
+- **Media House / Broadcaster (`/for/media-house` & `MediaHouseLandingPage.jsx`):**
+  - *Single Station Regional Load:* $199 one-time (2,000 Non-Expiring Credits, up to 2 broadcast channels, PRO discrepancy detection).
+  - *Broadcaster Network Suite Load:* $599 one-time (7,500 Non-Expiring Credits, up to 10 stations, 1-click formatted exports for ASCAP, BMI, SESAC, PRS, MCSK).
+  - *Enterprise Media Conglomerate Load:* $1,499 one-time (20,000 Non-Expiring Credits, unlimited stations, continuous 24/7 acoustic fingerprinting, statutory audit defense).
+- **Music Enthusiast / Consumer (`/for/consumer` & `ConsumerLandingPage.jsx`):**
   - *Listener Free:* $0 (High-fidelity web streaming, regional grassroots discovery, 1-tap mobile money direct creator tipping).
-  - *TuneStream VIP Audiophile:* $4.99 / mo (100% ad-free, 24-bit uncompressed FLAC streaming, 50 monthly TM credits for stems/singles, offline caching).
-  - *Patron of the Arts:* $14.99 / mo (Verified Patron badge, 7-day early album listening, 200 monthly TM credits for concert QR tickets & merch drops).
+  - *TuneStream VIP Audiophile Pack:* $4.99 one-time (50 Non-Expiring Credits, 100% ad-free, 24-bit uncompressed FLAC streaming, stems/singles tipping, offline caching).
+  - *Patron of the Arts Pack:* $14.99 one-time (200 Non-Expiring Credits, verified Patron badge, 7-day early album listening, concert QR tickets & merch drops).
 
 #### 9.33.2 Unified Backend Tier Engine (`backend/routes/role_tiers_router.py`)
 - **Centralized MongoDB Storage (`db.role_tiers`):** Default seed structures populate all 19 persona tiers on boot with prices, credit allocations, key metrics, and deliverables.
@@ -1800,7 +1800,7 @@ Allows creators and administrators to update or regenerate custom headers via na
    - Region-aware pricing formatted via `RegionContext` (`formatPrice`).
    - 4 High-contrast dark cards adhering strictly to brand guidelines (3px border radius, `#090d1f` background, solid border accents, zero pill gradients):
      - **TuneStream Free**: $0 / Free Forever, ad-supported, 150 shared registration credits, 160kbps standard streaming, crate building, and creator following.
-     - **HiFi Individual**: $4.99/mo (or $3.99/mo annual), Lossless 24-bit / 48kHz FLAC master audio, 100% ad-free, 8GB smart offline library caching, direct creator tipping enabled, 500 bonus credits/month, bit-perfect DAC pass, unlimited skips.
+     - **HiFi Individual Credit Pack**: $4.99 one-time (500 Non-Expiring Credits), Lossless 24-bit / 48kHz FLAC master audio, 100% ad-free, 8GB smart offline library caching, direct creator tipping enabled, bit-perfect DAC pass, unlimited skips.
      - **TuneStream Duo**: $7.99/mo (or $6.39/mo annual), 2 independent accounts, weekly shared Duo Mix playlist, 2 devices with 8GB offline storage each, 1,000 monthly credits.
      - **TuneStream Family**: $9.99/mo (or $7.99/mo annual), up to 6 independent accounts, parental controls & explicit lyrics filter, Family Mix playlist, 6 offline devices, 1,500 monthly credits.
    - Student 50% discount verification banner ($2.49/mo).
@@ -2434,5 +2434,40 @@ Allows creators and administrators to update or regenerate custom headers via na
 4. **SyncMavens Emerald Green Brand Identity Harmonization**:
    - Harmonized `syncmavens-logo.png` (`apps/portal/src/assets/logos/syncmavens-logo.png` and `apps/syncmavens/src/assets/syncmavens-logo.png`) with Emerald Green (`#10b981`), replacing legacy blue-gray tints to achieve complete aesthetic parity with the SyncMavens landing page and supervisor workspace.
 
+### 9.44.36 Technical Foundation Specification v1.3 Alignment & Launch Hardening (2 November 2026)
 
+In response to the Technical Foundation Specification v1.3 (Nairobi / diaspora launch draft), all open findings (F13 to F17) and integrity requirements were systematically audited, implemented, and verified:
 
+1. **Production Startup Security & Health Probe Monitoring (F13, Spec §5.1 Rows 8 & 9)**:
+   - **Database Fallback Guard**: In [`backend/config.py`](backend/config.py), production environments (`ENV == "production"`) strictly require a reachable MongoDB instance via `MONGO_URL`. Startup immediately aborts with `RuntimeError` on missing variables or ping failure, permanently preventing accidental in-memory `mongomock` fallback that would risk losing user balances or ledger transactions.
+   - **Active Database Mode Export**: Added `DATABASE_MODE = "mongodb" | "mock"` export in `config.py`.
+   - **Health Check Introspection**: Updated `/api/health` and `/health` in [`backend/server.py`](backend/server.py) to return `"database_mode": DATABASE_MODE` alongside liveness and MongoDB sanity indicators.
+   - **Production Credential & Origin Guards**: In `validate_production_security()`, startup is immediately halted in production if:
+     - `JWT_SECRET` is unset, matches public repository defaults (`"intermaven_secret_key"`), or contains fewer than 32 characters.
+     - `CORS_ORIGINS` contains wildcard `'*'` or is unconfigured.
+     - `COOKIE_SECURE` is False.
+     - `ENABLE_SANDBOX_BYPASS` or `ALLOW_SANDBOX_WEBHOOKS` is True.
+
+2. **Pinned Production Dependencies & Continuous Verification (F14, Spec §5.1 Row 10)**:
+   - **Complete Package Manifest**: Updated [`backend/requirements.txt`](backend/requirements.txt) to include all startup dependencies with pinned versions (`fastapi==0.118.0`, `uvicorn==0.34.0`, `pymongo==4.13.2`, `motor==3.7.1`, `python-jose[cryptography]==3.5.0`, `passlib[bcrypt]==1.7.4`, `pydantic[email]==2.11.10`, `python-dotenv==1.0.1`, `python-multipart==0.0.20`, `requests==2.32.3`, `Pillow==10.4.0`, `boto3==1.35.40`, `stripe==10.12.0`, `sentry-sdk==2.16.0`, `mongomock==4.3.0`, `httpx==0.27.2`, `pytest==8.3.3`).
+   - **Clean CI Workflow (`.github/workflows/ci.yml`)**: Created a GitHub Actions workflow that executes on push and pull requests, installing requirements into a clean environment, verifying server imports, and executing the full test suite.
+   - **Pre-Deployment Test Gate (`.github/workflows/deploy.yml`)**: Added Python test execution as a prerequisite step before VPS SSH deployment begins.
+
+3. **TuneLedger Opening Balances & Safe Balance Reconciliation (F15, Spec §5.1 Row 11)**:
+   - **Opening Balance Initialization**: Implemented `initialize_user_opening_balance()` in [`backend/services/ledger_service.py`](backend/services/ledger_service.py). Creates an append-only `OPENING_BALANCE` ledger entry (`provider: "system_migration"`) for users holding starting credits, guaranteeing full reconciliation equality.
+   - **Destructive Erasure Protection**: Updated `reconcile_user_balance()` to operate in safe report-only mode by default. If `auto_repair` is triggered for a user who had pre-existing cached credits but zero ledger records, the service automatically synthesizes an opening balance rather than wiping their balance to zero.
+   - **Zero-Discrepancy Test Suite**: Expanded [`backend/tests/test_payment_integrity.py`](backend/tests/test_payment_integrity.py) Test 10 and Test 10b to assert exact balance matches (`discrepancy == 0`) and verify legacy user credit protection.
+
+4. **100% Credit-Only Billing Language Harmonization (F16, Spec §5.2)**:
+   - **Elimination of Monthly Subscriptions**: Converted all remaining `/mo` and recurring subscription wording across documentation and interfaces into non-expiring one-time credit top-up packages.
+   - **Consumer Portal Alignment**: Updated [`ConsumerLandingPage.jsx`](apps/portal/src/views/landing/role-pages/ConsumerLandingPage.jsx) from `"$4.99 / month (50 Credits)"` to `"$4.99 one-time credit reload (50 Credits)"`.
+   - **Registration Flow Alignment**: Updated [`RegisterView.jsx`](apps/portal/src/views/auth/RegisterView.jsx) from `"500 credits / month"` to `"500 non-expiring credits"`.
+
+5. **Landing Page Registry, 9-Role Prerendering & Canonical Scheme (F17, Spec §3)**:
+   - **Registry & Hub Harmonization**: Updated [`shared/landing_page_registry.json`](shared/landing_page_registry.json) hub page CTA from `"Explore All 7 Seats"` to `"Explore All 9 Roles"` to reflect the complete canon (Creator, Record Label, DJ, Media House, Supervisor, Consumer, Corporate, Podcaster, VC / Capital).
+   - **Multi-Role Toolbar**: Updated 1-tap persona switcher toolbar in [`scripts/prerender.js`](scripts/prerender.js) to display all 9 roles.
+   - **Static HTML Generation**: Generated full semantic HTML artifacts (`index.html`) for `/for/podcaster`, `/for/vc`, `/for`, and all role pages with per-route Open Graph meta tags, canonical links, and `<h1>` headers.
+   - **Canonical URL 301 Redirects**: Aligned all audience routes to `/for/<role>` scheme, mapping 301 permanent redirects for legacy `/for-*` URLs in both [`backend/routes/seo_router.py`](backend/routes/seo_router.py) and [`deploy/nginx.conf`](deploy/nginx.conf).
+
+6. **Low-Bitrate Audio Streaming Defaults (F12, Spec §4)**:
+   - Confirmed [`backend/services/stream_service.py`](backend/services/stream_service.py) and [`backend/routes/stream_router.py`](backend/routes/stream_router.py) configure `low_mobile` (96 kbps AAC) as the default streaming profile for bandwidth-sensitive cellular networks in Nairobi, with studio-quality lossless FLAC (1,411 kbps) available strictly as an opt-in on Wi-Fi connections.

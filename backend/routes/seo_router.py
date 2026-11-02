@@ -31,13 +31,16 @@ def _get_host_and_scheme(request: Request) -> tuple[str, str]:
 HOST_ROUTES = {
     "tunemavens.com": [
         {"path": "", "changefreq": "daily", "priority": "1.0"},
-        {"path": "/for-creators", "changefreq": "weekly", "priority": "0.9"},
-        {"path": "/for-labels", "changefreq": "weekly", "priority": "0.9"},
-        {"path": "/for-djs", "changefreq": "weekly", "priority": "0.9"},
-        {"path": "/for-mediahouses", "changefreq": "weekly", "priority": "0.9"},
-        {"path": "/for-producers", "changefreq": "weekly", "priority": "0.9"},
-        {"path": "/for-supervisors", "changefreq": "weekly", "priority": "0.9"},
-        {"path": "/for-corporate", "changefreq": "weekly", "priority": "0.8"},
+        {"path": "/for", "changefreq": "daily", "priority": "0.95"},
+        {"path": "/for/creator", "changefreq": "weekly", "priority": "0.9"},
+        {"path": "/for/label", "changefreq": "weekly", "priority": "0.9"},
+        {"path": "/for/dj", "changefreq": "weekly", "priority": "0.9"},
+        {"path": "/for/media-house", "changefreq": "weekly", "priority": "0.9"},
+        {"path": "/for/supervisor", "changefreq": "weekly", "priority": "0.9"},
+        {"path": "/for/consumer", "changefreq": "weekly", "priority": "0.9"},
+        {"path": "/for/corporate", "changefreq": "weekly", "priority": "0.9"},
+        {"path": "/for/podcaster", "changefreq": "weekly", "priority": "0.9"},
+        {"path": "/for/vc", "changefreq": "weekly", "priority": "0.9"},
         {"path": "/pricing", "changefreq": "weekly", "priority": "0.9"},
         {"path": "/about", "changefreq": "monthly", "priority": "0.7"},
         {"path": "/publishing", "changefreq": "weekly", "priority": "0.8"},
@@ -291,3 +294,26 @@ def get_item_schema(schema_type: str, item_id: str):
         }
 
     raise HTTPException(status_code=400, detail=f"Unsupported schema type '{schema_type}'")
+
+# --- Legacy Route 301 Redirects per Technical Foundation Spec §3 ---
+from fastapi.responses import RedirectResponse
+
+LEGACY_REDIRECT_MAP = {
+    "/for-creators": "/for/creator",
+    "/for-labels": "/for/label",
+    "/for-djs": "/for/dj",
+    "/for-mediahouses": "/for/media-house",
+    "/for-producers": "/for/creator",
+    "/for-supervisors": "/for/supervisor",
+    "/for-corporate": "/for/corporate",
+}
+
+for legacy_path, target_path in LEGACY_REDIRECT_MAP.items():
+    def _make_redirect_handler(target):
+        return lambda: RedirectResponse(url=target, status_code=301)
+    router.add_api_route(
+        legacy_path,
+        _make_redirect_handler(target_path),
+        methods=["GET"],
+        include_in_schema=False
+    )

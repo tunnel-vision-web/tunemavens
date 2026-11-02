@@ -152,10 +152,10 @@
     ],
     "product": "tunestream",
     "audience": "Everyday Listeners & Music Enthusiasts",
-    "headline": "Music Streaming Built for Creators — 95% Direct Fan Tipping",
+    "headline": "Music Streaming Built for Creators \u2014 95% Direct Fan Tipping",
     "subhead": "Experience next-generation music streaming built on the Intermaven network. Support your favorite creators with direct credit tips and listen in lossless fidelity.",
     "proof_points": [
-      "Direct fan credit tipping — 95% of proceeds flow to the artist ledger",
+      "Direct fan credit tipping \u2014 95% of proceeds flow to the artist ledger",
       "Adaptive low-bitrate streaming engineered for mobile data in Nairobi",
       "Lossless studio-grade FLAC playback when connected to Wi-Fi",
       "Verified play accounting with strict anti-bot and fraud filtering"
@@ -271,14 +271,14 @@
     "product": "tunemavens",
     "audience": "Music Industry Ecosystem",
     "headline": "Who is TuneMavens For? Dedicated Infrastructure for Every Industry Seat",
-    "subhead": "TuneMavens unifies the 7 essential roles in music into one interoperable operating system. Select your seat below to explore features tailored specifically for your workflow.",
+    "subhead": "TuneMavens unifies the 9 essential roles in music into one interoperable operating system. Select your seat below to explore features tailored specifically for your workflow.",
     "proof_points": [
-      "7 Specialized Seats: Creator, Record Label, DJ, Media House, Supervisor, Consumer, and Corporate",
+      "9 Specialized Roles: Creator, Record Label, DJ, Media House, Supervisor, Consumer, Corporate, Podcaster, and VC / Capital",
       "Seamless 1-tap switching between personas with preserved context",
-      "Zero monthly subscriptions — 100% unified non-expiring credit ledger"
+      "Zero monthly subscriptions \u2014 100% unified non-expiring credit ledger"
     ],
     "primary_cta": {
-      "text": "Explore All 7 Seats",
+      "text": "Explore All 9 Roles",
       "href": "/for"
     },
     "signup_role": "creator",

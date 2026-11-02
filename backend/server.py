@@ -13,7 +13,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db, validate_production_security
+from config import CORS_ORIGINS, DB_NAME, MONGO_URL, db, validate_production_security, DATABASE_MODE
 from routes import (
     admin_router, auth_router, contracts_router, dashboard_router,
     deals_router, users_router, sso_router, payments_router,
@@ -176,11 +176,12 @@ def health():
         mongo_ok = True
     except Exception as e:
         mongo_ok = False
-        return {"status": "degraded", "mongo": False, "error": str(e), "db": DB_NAME}
+        return {"status": "degraded", "mongo": False, "database_mode": DATABASE_MODE, "error": str(e), "db": DB_NAME}
     return {
         "status": "ok",
         "service": "intermaven-network-api",
         "mongo": mongo_ok,
+        "database_mode": DATABASE_MODE,
         "db": DB_NAME,
         "sentry_enabled": bool(os.environ.get("SENTRY_DSN")),
         "uptime_monitoring": "active",

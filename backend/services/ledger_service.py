@@ -6,6 +6,7 @@ Per Technical Foundation Spec §5.1 & §5.2:
 - Atomic balance operations against MongoDB.
 - Daily / on-demand reconciliation between cached user balance and ledger sum.
 - Idempotency guarantees to prevent replay attacks and duplicate payouts/credits.
+- Safe reconciliation: Opening-balance entries for legacy users to prevent credit erasure (Row 11).
 """
 from datetime import datetime, timezone
 import logging
@@ -39,12 +40,11 @@ def record_transaction(
     metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Records an append-only transaction in the credit ledger and atomically
-
     updates the user's cached balance.
 
     :param user_id: ID of the user.
     :param amount: Signed integer (positive for reload/grant/refund, negative for spend).
-    :param entry_type: E.g. 'CREDIT_RELOAD', 'CREDIT_SPEND', 'PROMO_GRANT', 'DISPUTE_REFUND'.
+    :param entry_type: E.g. 'CREDIT_RELOAD', 'CREDIT_SPEND', 'PROMO_GRANT', 'DISPUTE_REFUND', 'OPENING_BALANCE'.
     :param provider: Payment rail or authority: 'stripe', 'mpesa_daraja', 'system', 'admin'.
     :param provider_ref: External transaction ID, receipt number, or order ID.
     :param idempotency_key: Unique string to prevent duplicate postings.
@@ -128,6 +128,58 @@ def record_transaction(
     }
 
 
+def initialize_user_opening_balance(
+    user_id: Any,
+    initial_credits: Optional[int] = None,
+    description: str = "Opening balance initialization",
+    force: bool = False,
+) -> Dict[str, Any]:
+    """Writes an immutable opening-balance ledger entry for a user (Spec §5.1 Row 11).
+
+    Ensures that existing users who held credits before the ledger existed do not suffer
+    reconciliation mismatches or accidental balance erasure when reconciliation runs.
+    """
+    norm_id = _normalize_user_id(user_id)
+    norm_id_str = str(norm_id)
+    user_doc = db.users.find_one({"_id": norm_id})
+    if not user_doc:
+        raise ValueError(f"User {user_id} not found when initializing opening balance.")
+
+    credits_to_record = initial_credits if initial_credits is not None else int(user_doc.get("credits", 0))
+    if credits_to_record <= 0:
+        return {"status": "skipped", "reason": "No positive starting balance to record", "amount": 0}
+
+    # Check if user already has an opening balance entry
+    existing_opening = db.credit_ledger.find_one({"user_id": norm_id_str, "entry_type": "OPENING_BALANCE"})
+    if existing_opening and not force:
+        return {"status": "already_initialized", "ledger_entry": existing_opening}
+
+    # Check if user already has ledger activity
+    existing_count = db.credit_ledger.count_documents({"user_id": norm_id_str})
+    if existing_count > 0 and not force:
+        logger.info(f"[TuneLedger] User {norm_id} already has {existing_count} ledger entries. Skipping opening balance.")
+        return {"status": "already_active", "existing_entries": existing_count}
+
+    now = datetime.now(timezone.utc)
+    idempotency_key = f"OPENING-BAL-{norm_id_str}"
+    ledger_entry = {
+        "user_id": norm_id_str,
+        "amount": int(credits_to_record),
+        "balance_after": int(credits_to_record),
+        "currency": "CREDITS",
+        "entry_type": "OPENING_BALANCE",
+        "provider": "system_migration",
+        "provider_ref": idempotency_key,
+        "idempotency_key": idempotency_key,
+        "description": description,
+        "metadata": {"initial_cached_balance": int(user_doc.get("credits", 0))},
+        "created_at": now
+    }
+    db.credit_ledger.insert_one(ledger_entry)
+    logger.info(f"[TuneLedger] Recorded opening balance of +{credits_to_record} credits for user {norm_id_str}.")
+    return {"status": "success", "ledger_entry": ledger_entry}
+
+
 def get_ledger_balance(user_id: Any) -> int:
     """Calculates the absolute sum of all ledger entries for a user."""
     norm_id_str = str(_normalize_user_id(user_id))
@@ -141,8 +193,18 @@ def get_ledger_balance(user_id: Any) -> int:
     return int(res[0].get("total", 0))
 
 
-def reconcile_user_balance(user_id: Any, auto_repair: bool = False) -> Dict[str, Any]:
-    """Reconciles the user's cached balance with the immutable ledger sum."""
+def reconcile_user_balance(
+    user_id: Any,
+    auto_repair: bool = False,
+    allow_destructive_zero: bool = False
+) -> Dict[str, Any]:
+    """Reconciles the user's cached balance with the immutable ledger sum.
+
+    Per Technical Foundation Spec §5.1 Row 11:
+    - Runs in report-only mode by default (auto_repair=False).
+    - If auto_repair is invoked and a pre-existing user had cached credits with zero ledger records,
+      creates an opening-balance ledger entry instead of destroying their balance.
+    """
     norm_id = _normalize_user_id(user_id)
     user_doc = db.users.find_one({"_id": norm_id})
     if not user_doc:
@@ -153,13 +215,33 @@ def reconcile_user_balance(user_id: Any, auto_repair: bool = False) -> Dict[str,
     matches = (cached_balance == ledger_sum)
 
     repaired = False
+    discrepancy = cached_balance - ledger_sum
+
     if not matches and auto_repair:
-        db.users.update_one(
-            {"_id": norm_id},
-            {"$set": {"credits": ledger_sum, "reconciled_at": datetime.now(timezone.utc)}}
-        )
-        repaired = True
-        logger.warning(f"[TuneLedger] Auto-repaired user {norm_id}: cached {cached_balance} -> ledger {ledger_sum}")
+        ledger_count = db.credit_ledger.count_documents({"user_id": str(norm_id)})
+        if ledger_count == 0 and cached_balance > 0 and not allow_destructive_zero:
+            # Prevent destructive zeroing of pre-existing user balances (Spec §5.1 Row 11)
+            logger.warning(
+                f"[TuneLedger SAFETY GUARD] User {norm_id} has cached balance {cached_balance} "
+                f"but zero ledger entries. Auto-initializing opening balance instead of erasing credits."
+            )
+            initialize_user_opening_balance(
+                user_id=norm_id,
+                initial_credits=cached_balance,
+                description="Auto-reconciliation opening balance recovery"
+            )
+            ledger_sum = get_ledger_balance(norm_id)
+            matches = (cached_balance == ledger_sum)
+            repaired = True
+            discrepancy = 0
+        else:
+            db.users.update_one(
+                {"_id": norm_id},
+                {"$set": {"credits": ledger_sum, "reconciled_at": datetime.now(timezone.utc)}}
+            )
+            repaired = True
+            logger.warning(f"[TuneLedger] Auto-repaired user {norm_id}: cached {cached_balance} -> ledger {ledger_sum}")
+            discrepancy = 0
 
     return {
         "user_id": str(norm_id),
@@ -167,18 +249,20 @@ def reconcile_user_balance(user_id: Any, auto_repair: bool = False) -> Dict[str,
         "ledger_balance": ledger_sum,
         "matches": matches,
         "auto_repaired": repaired,
-        "discrepancy": cached_balance - ledger_sum
+        "discrepancy": discrepancy
     }
 
 
-def reconcile_all_users(auto_repair: bool = False) -> Dict[str, Any]:
-    """Scans all users and validates cached balances against ledger totals."""
+def reconcile_all_users(auto_repair: bool = False, allow_destructive_zero: bool = False) -> Dict[str, Any]:
+    """Scans all users and validates cached balances against ledger totals.
+    Runs in report-only mode by default.
+    """
     users = list(db.users.find({}, {"_id": 1, "email": 1, "credits": 1}))
     discrepancies = []
     total_checked = len(users)
 
     for u in users:
-        res = reconcile_user_balance(u["_id"], auto_repair=auto_repair)
+        res = reconcile_user_balance(u["_id"], auto_repair=auto_repair, allow_destructive_zero=allow_destructive_zero)
         if not res.get("matches", True):
             res["email"] = u.get("email")
             discrepancies.append(res)

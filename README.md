@@ -148,3 +148,12 @@ npm test
 - **Per-Track Dynamic Licensing:** Transparent licensing calibrated strictly by Production Use Case (Film, TV, Commercial, Gaming), Territory (Regional, Continental, Worldwide), Term/Duration (1-Year, 3-Year, Perpetuity), and IP Tier.
 - **In-App Deal Desk Negotiation:** Supervisors submit custom offers, negotiate counter-offers with rights holders, and close deals securely under TuneLedger escrow.
 - **SyncMavens Green Brand Harmonization:** Harmonized `syncmavens-logo.png` to Emerald Green (`#10b981`) matching the SyncMavens landing page theme.
+
+### 14. Technical Foundation Specification v1.3 Hardening & Launch Verification
+- **Production Startup Security Guards**: Refuses startup in production if `MONGO_URL` is unreachable (blocking in-memory mock fallback), if `JWT_SECRET` is insecure or default, if CORS uses wildcards, or if cookies lack `Secure=True`.
+- **Health Check Introspection**: `/api/health` reports active `database_mode` (`"mongodb"` vs `"mock"`).
+- **Pinned Dependencies & CI Suite**: Full requirements manifest pinned in `backend/requirements.txt`, with continuous integration in `.github/workflows/ci.yml` and pre-deploy test verification in `.github/workflows/deploy.yml`.
+- **TuneLedger Safe Balance Reconciliation**: Opening balances initialized automatically for pre-existing credit holders; `reconcile_user_balance()` safeguards user balances from accidental zeroing under `auto_repair`.
+- **100% Credit-Only Billing**: All monthly recurring subscription wording removed in favor of non-expiring one-time credit top-up packages across all documentation, registration, and landing views.
+- **Per-Audience Prerender & Canonical Scheme**: Semantic HTML generated for all 9 canonical roles (`/for/creator`, `/for/label`, `/for/dj`, `/for/media-house`, `/for/supervisor`, `/for/consumer`, `/for/corporate`, `/for/podcaster`, `/for/vc`) and hub (`/for`), with 301 redirects from legacy `/for-*` URLs in FastAPI and nginx.
+- **Verified Audio Streaming Defaults**: TuneStream streaming defaults to 96 kbps AAC data-saver profile for East African mobile data savings, reserving uncompressed FLAC for opt-in Wi-Fi streaming.

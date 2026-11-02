@@ -118,7 +118,7 @@ export default function ConsumerLandingPage({ switcher }) {
     contact_phone: '',
     tier_slug: 'listener-vip',
     favorite_genres: 'Afrobeats, Amapiano & Deep House',
-    estimated_budget: '$4.99 / month (50 Credits)',
+    estimated_budget: '$4.99 one-time credit reload (50 Credits)',
     notes: ''
   });
 
@@ -926,14 +926,14 @@ export default function ConsumerLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `${formatPrice(found.price_usd)} / ${found.billing_period || 'month'}`) : `${formatPrice(4.99)} / month`
+                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `${formatPrice(found.price_usd)} (${found.credits?.toLocaleString() || '50'} Credits) · ${found.billing_period || 'one-time'}`) : `${formatPrice(4.99)} (50 Credits) · one-time`
                           });
                         }}
                         style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
                       >
                         <option value="listener-free">Listener Free — $0 / Free · High-Fidelity Web Stream</option>
-                        <option value="listener-vip">TuneStream VIP Audiophile — {formatPrice(4.99)}/mo (50 Credits) · Ad-Free FLAC</option>
-                        <option value="listener-patron">Patron of the Arts — {formatPrice(14.99)}/mo (200 Credits) · VIP Tour Passes</option>
+                        <option value="listener-vip">TuneStream VIP Audiophile — {formatPrice(4.99)} one-time (50 Credits) · Ad-Free FLAC</option>
+                        <option value="listener-patron">Patron of the Arts — {formatPrice(14.99)} one-time (200 Credits) · VIP Tour Passes</option>
                       </select>
                     </div>
 

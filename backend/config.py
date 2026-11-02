@@ -14,23 +14,42 @@ backend_env = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=backend_env)
 load_dotenv()
 
+# --- Environment & Security Guards (Technical Foundation Spec §5.1) ---
+ENV = os.environ.get("ENV", "development").lower()
+ENABLE_SANDBOX_BYPASS = os.environ.get("ENABLE_SANDBOX_BYPASS", "false").lower() == "true"
+ALLOW_SANDBOX_WEBHOOKS = os.environ.get("ALLOW_SANDBOX_WEBHOOKS", "false").lower() == "true"
+
 # --- Mongo (shared with intermaven.io) ---
 MONGO_URL = os.environ.get("MONGO_URL")
 DB_NAME = os.environ.get("DB_NAME", "intermaven")
+DATABASE_MODE = "mongodb"
 
 if not MONGO_URL:
+    if ENV == "production":
+        raise RuntimeError(
+            "FATAL CONFIGURATION ERROR: MONGO_URL is missing in production! "
+            "Production systems must connect to a persistent MongoDB instance and must never fall back to an in-memory mock database."
+        )
     import mongomock
     _client = mongomock.MongoClient()
     db = _client[DB_NAME]
+    DATABASE_MODE = "mock"
 else:
     try:
         _client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=2000)
         _client.admin.command('ping')
         db = _client[DB_NAME]
-    except Exception:
+        DATABASE_MODE = "mongodb"
+    except Exception as e:
+        if ENV == "production":
+            raise RuntimeError(
+                f"FATAL CONFIGURATION ERROR: Failed to connect to MongoDB in production: {e}. "
+                "Production systems must not fall back to an in-memory mock database."
+            )
         import mongomock
         _client = mongomock.MongoClient()
         db = _client[DB_NAME]
+        DATABASE_MODE = "mock"
 
 # --- JWT (shared with intermaven.io) ---
 JWT_SECRET = os.environ.get("JWT_SECRET", "intermaven_secret_key")
@@ -46,16 +65,11 @@ COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax")
 _cors = os.environ.get("CORS_ORIGINS", "*")
 CORS_ORIGINS = [o.strip() for o in _cors.split(",")] if _cors != "*" else ["*"]
 
-# --- Environment & Security Guards (Technical Foundation Spec §5.1) ---
-ENV = os.environ.get("ENV", "development").lower()
-ENABLE_SANDBOX_BYPASS = os.environ.get("ENABLE_SANDBOX_BYPASS", "false").lower() == "true"
-ALLOW_SANDBOX_WEBHOOKS = os.environ.get("ALLOW_SANDBOX_WEBHOOKS", "false").lower() == "true"
-
 
 def validate_production_security():
-    """Startup verification: ensures insecure sandbox endpoints and bypasses
-
-    cannot run under production configuration.
+    """Startup verification: ensures insecure sandbox endpoints, bypasses,
+    default JWT secrets, wildcard CORS, insecure cookies, and mock databases
+    cannot run under production configuration (Technical Foundation Spec §5.1, Rows 8 & 9).
     """
     if ENV == "production":
         if ENABLE_SANDBOX_BYPASS:
@@ -67,6 +81,27 @@ def validate_production_security():
             raise RuntimeError(
                 "FATAL CONFIGURATION ERROR: ALLOW_SANDBOX_WEBHOOKS is set to True in production! "
                 "Production webhooks must strictly require cryptographic signature validation."
+            )
+        if DATABASE_MODE != "mongodb" or not MONGO_URL:
+            raise RuntimeError(
+                "FATAL CONFIGURATION ERROR: In-memory mock database is active in production! "
+                "Production systems must connect to a verified MongoDB instance."
+            )
+        INSECURE_SECRETS = {"intermaven_secret_key", "secret", "changeme", "default_secret", ""}
+        if not JWT_SECRET or JWT_SECRET in INSECURE_SECRETS or len(JWT_SECRET) < 32:
+            raise RuntimeError(
+                "FATAL CONFIGURATION ERROR: Production JWT_SECRET is unset, weak, or matches the public default! "
+                "Production must use a high-entropy secret of at least 32 characters."
+            )
+        if not CORS_ORIGINS or "*" in CORS_ORIGINS:
+            raise RuntimeError(
+                "FATAL CONFIGURATION ERROR: CORS_ORIGINS contains wildcard '*' or is empty in production! "
+                "Production systems must specify explicit trusted domain origins."
+            )
+        if not COOKIE_SECURE:
+            raise RuntimeError(
+                "FATAL CONFIGURATION ERROR: COOKIE_SECURE is False in production! "
+                "Production cookies must be served over HTTPS with Secure=True."
             )
 
 
