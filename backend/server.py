@@ -24,6 +24,7 @@ from routes import (
     affiliate_router, tours_router, vc_router, events_router, podcasts_router,
     publishing_router
 )
+from routes.communications_router import router as communications_router
 from routes.admin_router import seed_domain_mappings_if_empty
 
 logger = logging.getLogger(__name__)
@@ -116,6 +117,7 @@ app.include_router(vc_router)
 app.include_router(events_router)
 app.include_router(podcasts_router)
 app.include_router(publishing_router)
+app.include_router(communications_router)
 
 
 @app.exception_handler(StarletteHTTPException)

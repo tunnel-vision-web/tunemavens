@@ -362,6 +362,27 @@ export const distroApi = {
   generateUpc: () => request('/api/distro/generate-upc', { method: 'POST' }),
 };
 
+export const communicationsApi = {
+  getLogs: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.q) q.append('q', params.q);
+    if (params.role && params.role !== 'all') q.append('role', params.role);
+    if (params.event_type && params.event_type !== 'all') q.append('event_type', params.event_type);
+    if (params.status && params.status !== 'all') q.append('status', params.status);
+    if (params.archived !== undefined) q.append('archived', String(params.archived));
+    if (params.page) q.append('page', String(params.page));
+    if (params.limit) q.append('limit', String(params.limit));
+    const qs = q.toString();
+    return request('/api/communications/logs' + (qs ? '?' + qs : ''));
+  },
+  getStats: () => request('/api/communications/stats'),
+  getDetail: (msgId) => request('/api/communications/detail/' + encodeURIComponent(msgId)),
+  archiveMessage: (msgId) => request('/api/communications/archive/' + encodeURIComponent(msgId), { method: 'POST' }),
+  unarchiveMessage: (msgId) => request('/api/communications/unarchive/' + encodeURIComponent(msgId), { method: 'POST' }),
+  resendMessage: (msgId) => request('/api/communications/resend/' + encodeURIComponent(msgId), { method: 'POST' }),
+  getExportUrl: () => `${BASE}/api/communications/export`,
+};
+
 export function normalizeMediaUrl(url) {
   if (!url || typeof url !== 'string') return '';
   const trimmed = url.trim();

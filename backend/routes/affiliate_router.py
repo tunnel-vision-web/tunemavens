@@ -6,6 +6,8 @@ and administrator payout orchestration (Credits, M-Pesa, Stripe, PayPal).
 """
 import logging
 import os
+import secrets
+import string
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
@@ -17,11 +19,35 @@ from pydantic import BaseModel, EmailStr, Field
 from auth import get_current_user, get_optional_user
 from config import db
 from models import User
-from account_setup import create_setup_token, send_affiliate_welcome
+from account_setup import (
+    create_setup_token,
+    send_affiliate_welcome,
+    send_payout_dispatched_notification,
+    send_affiliate_conversion_notification,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/affiliates", tags=["affiliates"])
+
+def generate_unique_affiliate_code(name: str, custom_ref: Optional[str] = None) -> str:
+    """Generate a collision-free affiliate referral code with a distinct 4-character unique identifier.
+    Example: MARCUS-7K3P, AFROVIBE-9B2F, or MAVEN-4W8D.
+    """
+    raw = (custom_ref or name.split()[0]).upper().strip()
+    prefix = "".join(ch for ch in raw if ch.isalnum()) or "MAVEN"
+    prefix = prefix[:8]
+    
+    # Character set without visually ambiguous 0/O, 1/I
+    chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+    for _ in range(50):
+        suffix = "".join(secrets.choice(chars) for _ in range(4))
+        candidate = f"{prefix}-{suffix}"
+        if not db.affiliates.find_one({"ref_code": candidate}):
+            return candidate
+
+    return f"{prefix}-{secrets.token_hex(2).upper()}"
+
 
 # ======================================================================
 # Default 3% to 12% Compensation Matrix Seed
@@ -533,16 +559,8 @@ def apply_for_affiliate(app_data: AffiliateApplicationRequest, response: Respons
             }
         }
 
-    # Generate or clean referral code
-    ref_candidate = (app_data.custom_ref or app_data.name.split()[0]).upper().replace(" ", "")
-    # Ensure uniqueness
-    base_ref = "".join(ch for ch in ref_candidate if ch.isalnum()) or "MAVEN"
-    final_ref = base_ref[:10]
-    
-    count = 1
-    while db.affiliates.find_one({"ref_code": final_ref}):
-        final_ref = f"{base_ref[:8]}{count}"
-        count += 1
+    # Generate collision-free referral code with distinct 4-character unique identifier
+    final_ref = generate_unique_affiliate_code(app_data.name, app_data.custom_ref)
 
     aff_id = f"aff_{uuid.uuid4().hex[:10]}"
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -864,6 +882,21 @@ def execute_batch_payout(payload: BatchPayoutRequest, user=Depends(get_optional_
         total_disbursed += amt
         paid_count += 1
 
+        # Dispatch payout disbursement notification
+        if aff.get("email"):
+            try:
+                send_payout_dispatched_notification(
+                    to=aff["email"],
+                    name=aff.get("name") or "",
+                    amount=amt,
+                    currency="USD",
+                    method=aff.get("payout_method") or "Credits",
+                    ref_id=batch_id,
+                    role="affiliate"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to dispatch payout email to {aff.get('email')}: {e}")
+
     # Record payout record
     db.affiliate_payouts.insert_one({
         "id": batch_id,
@@ -1030,6 +1063,19 @@ def simulate_affiliate_conversion(payload: ConversionSimulationRequest):
             }
         }
     )
+
+    # Dispatch affiliate conversion notification
+    if aff.get("email"):
+        try:
+            send_affiliate_conversion_notification(
+                to=aff["email"],
+                name=aff.get("name") or "",
+                ref_code=clean_ref,
+                commission_amount=commission,
+                item_name=item_title
+            )
+        except Exception as e:
+            logger.warning(f"Failed to dispatch conversion email to {aff.get('email')}: {e}")
 
     # Fetch updated affiliate profile
     updated_aff = db.affiliates.find_one({"_id": aff["_id"]}, {"_id": 0})

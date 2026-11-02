@@ -25,7 +25,8 @@ import {
   RiSkipBackFill, RiSkipForwardFill, RiShuffleLine, RiRepeat2Line, RiRepeatOneLine, RiPlayList2Line, RiFolderMusicLine, RiTableLine, RiFileList3Line, RiMagicLine, RiUploadCloud2Line, RiDiscLine, RiEditLine, RiCloseLine, RiMenuFoldLine, RiMenuUnfoldLine, RiVolumeUpFill, RiVolumeMuteFill, RiArrowLeftLine, RiSaveLine, RiAddLine, RiDeleteBin6Line,
   RiSubtractLine, RiExternalLinkLine, RiSparklingLine, RiPaletteLine, RiImageAddLine, RiArrowUpSLine, RiArrowDownSLine, RiStarLine, RiMusic2Line, RiSearchLine,
   RiPriceTag3Fill, RiLayoutMasonryFill, RiMegaphoneFill, RiUserSharedFill, RiTeamFill,
-  RiShieldCheckFill, RiCustomerService2Fill, RiFundsBoxFill, RiSparklingFill, RiCompass3Fill
+  RiShieldCheckFill, RiCustomerService2Fill, RiFundsBoxFill, RiSparklingFill, RiCompass3Fill,
+  RiMailSendLine, RiInboxArchiveLine
 } from 'react-icons/ri'
 
 // Local assets
@@ -156,6 +157,7 @@ import DistributionTrackerApp from './components/demos/DistributionTrackerApp.js
 import PublishingTrackerApp from './components/demos/PublishingTrackerApp.jsx'
 import HostingManagerApp from './components/demos/HostingManagerApp.jsx'
 import VcDashboardPanel from './components/vc/VcDashboardPanel.jsx'
+import CommunicationsVaultPanel from './components/communications/CommunicationsVaultPanel.jsx'
 
 
 // ================= Dashboard Apps View =================
@@ -884,6 +886,18 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
               </button>
               <button
                 className="topbar-menu-item"
+                style={{ color: '#22d3ee' }}
+                onClick={() => {
+                  setAccountOpen(false);
+                  setActiveTab('communications');
+                }}
+                data-testid="topbar-menu-communications-vault"
+              >
+                <RiMailSendLine size={14} />
+                <span>Communications Vault</span>
+              </button>
+              <button
+                className="topbar-menu-item"
                 onClick={() => { setActiveTab('profile'); setAccountOpen(false); }}
                 data-testid="topbar-menu-account-settings"
               >
@@ -922,6 +936,11 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
 // Collapsed sidebar navigation items icon representations & descriptions
 const NAV_ITEM_DESCRIPTIONS = {
+  communications: {
+    title: 'Communications Hub & Audit Vault',
+    desc: 'Audit outbound transactional messages, Resend deliverability logs, credit updates, and security notifications',
+    category: 'Admin'
+  },
   'vc-discover': {
     title: 'Discover Creators & Catalog',
     desc: 'Browse creators & catalogue, audit historical performance telemetry & AI growth projections, and execute financing agreements online',
@@ -1762,6 +1781,14 @@ function DashboardView({
         return <CorporateAdsPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
       case 'affiliates':
         return <AffiliateAdminPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
+      case 'communications':
+      case 'communications-vault':
+      case 'audit-vault':
+        return (
+          <CommunicationsVaultPanel
+            currentUser={sessionUser}
+          />
+        );
       case 'support':
         return (
           <SupportTicketsPanel 
@@ -1865,6 +1892,7 @@ function DashboardView({
       'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: RiStarFill, category: 'Admin' },
       'corporate-ads': { id: 'corporate-ads', label: 'Corporate Ads & Rates', icon: RiMegaphoneFill, category: role === 'admin' ? 'Admin' : 'Brand Sponsorships' },
       affiliates: { id: 'affiliates', label: 'Affiliate Programme', icon: RiUserSharedFill, category: role === 'admin' ? 'Admin' : (role === 'affiliate' ? 'Affiliate Partner' : 'Creator Tools') },
+      communications: { id: 'communications', label: 'Communications Vault', icon: RiMailSendLine, category: role === 'admin' ? 'Admin' : 'Creator Tools' },
     };
 
     let visibleKeys = [];

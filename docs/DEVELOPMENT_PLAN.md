@@ -233,3 +233,12 @@ marketplace phase — they only depend on Phase 2.5 (roles) being in place.
 4. **Unified Sync Admin:** A prominent CTA button routes validated users into the unified sync dashboard containing operations (Briefs, Catalog) and transactions (Pitches, Ledger) views.
 5. **Unified Backend Support:** The backend FastAPI server utilizes unified Mongo collections (`briefs`, `pitches`, `catalogs`) to synchronize licensing statuses and splits across all subdomains.
 
+### Communications Hub & Audit Vault and Affiliate Referral Identifiers
+1. **Collision-Free Affiliate Codes:** Every affiliate registration attaches a distinct 4-character alphanumeric unique identifier (e.g., `MARCUS-7K3P`, `AFROVIBE-9B2F`) ensuring immutable tracking across 90-day cookie windows.
+2. **Cross-Persona Communication Protocols:** Comprehensive event triggers for key activities:
+   - Credit balance reloads, spends, and awards wired directly into `TuneLedger` (`ledger_service.record_transaction`).
+   - Security alerts on password modifications and setup.
+   - Payout disbursement notices across M-Pesa, Stripe, PayPal, and Credits.
+   - Affiliate commission awards on referree conversions.
+   - Contract invitations, proposals, and cryptographic execution receipts.
+3. **Audit Vault & Telemetry Hub:** Unified `communications` database collection with full message history, HTML rendered sandboxes, Resend API status codes, 1-click re-send capabilities, and compliance archiving.

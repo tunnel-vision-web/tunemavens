@@ -2538,7 +2538,40 @@ Following user feedback on marketing messaging, design precision, and demographi
 
 ### 9.44.41 Production Resend Integration, Live API Key Delivery Verification & Dynamic Sandbox Fallback Architecture (2 November 2026)
 
-- **Production Resend Integration:** Configured live Resend API key (e_9rng9mzj_...) within local runtime environment files (.env and ackend/.env), strictly guarded from Git source control via .gitignore.
+- **Production Resend Integration:** Configured live Resend API key (
+e_9rng9mzj_...) within local runtime environment files (.env and ackend/.env), strictly guarded from Git source control via .gitignore.
 - **Live Delivery Verification:** Validated end-to-end HTTP request dispatch from FastAPI backend to https://api.resend.com/emails. Verified delivery to Resend's test recipient inbox (delivered@resend.dev), receiving confirmed HTTP 200 OK responses recorded in MongoDB email_outbox with status sent.
 - **Dynamic Unverified Domain Fallback:** Implemented automated retry logic in [backend/account_setup.py](file:///c:/BOCM/Apps/tunemavens/backend/account_setup.py). If custom domain verification (	unemavens.com) is pending in the Resend dashboard and the API returns a 403 domain validation status, the system automatically retries dispatch via TuneMavens <onboarding@resend.dev>, preventing customer sign-up disruptions.
-- **Provider Telemetry & Audit Trail:** Enhanced the MongoDB email_outbox schema with provider_status, rom_addr, and esend_response metadata fields, enabling real-time inspection of delivery attempts and provider diagnostics.
+- **Provider Telemetry & Audit Trail:** Enhanced the MongoDB email_outbox schema with provider_status, from_addr, and 
+esend_response metadata fields, enabling real-time inspection of delivery attempts and provider diagnostics.
+
+### 9.44.42 Affiliate Unique Referral Identifiers, Cross-Persona Communication Protocols & Communications Audit Vault (2 November 2026)
+
+- **Unique Affiliate Referral Identifiers:**
+  - Upgraded referral code generation in `backend/routes/affiliate_router.py` and `apps/portal/src/views/landing/AffiliatesView.jsx`.
+  - Every newly registered affiliate automatically receives a distinct, collision-free 4-character alphanumeric unique identifier appended to their sanitized name or custom code (e.g., `MARCUS-7K3P`, `KIPCHOGE-J26H`, `AFROVIBE-9B2F`).
+  - Character set excludes visually confusing characters (`0/O`, `1/I`) and queries MongoDB `affiliates` to guarantee 100% uniqueness across referral links (`https://tunemavens.com?ref=MARCUS-7K3P`).
+
+- **Cross-Persona Communication Protocols Across Key Activities:**
+  - Standardized transaction notification templates adhering strictly to TuneMavens ecosystem dark branding and strict 3px border radius on all buttons, badges, and cards.
+  - Implemented event dispatchers in `backend/account_setup.py` wired into core services:
+    - `send_credit_balance_notification`: Atomic ledger updates in `backend/services/ledger_service.py` notify users of credit reloads, promotional grants, and item spends with their updated balance and transaction reference.
+    - `send_password_changed_notification`: Security alerts dispatched immediately upon password changes in `backend/routes/auth_router.py`.
+    - `send_payout_dispatched_notification`: Dispatched to affiliates and rights-holders when payouts are executed via M-Pesa, Stripe, PayPal, or Credits in `backend/routes/affiliate_router.py`.
+    - `send_affiliate_conversion_notification`: Dispatched to affiliates when referrees purchase albums, stems, or subscriptions.
+    - `send_contract_invitation_notification` & `send_contract_executed_notification`: Dispatched in `backend/routes/contracts_router.py` for contract negotiations, proposals, and final cryptographic executions.
+
+- **Communications Hub & Audit Vault Application:**
+  - **Backend Router (`backend/routes/communications_router.py`):**
+    - `GET /api/communications/logs`: Paginated, multi-filter query engine filtering by recipient, subject, persona role, event type, delivery status, and archive state.
+    - `GET /api/communications/stats`: Aggregate deliverability analytics, total/active/archived counts, persona distribution, and event frequency.
+    - `GET /api/communications/detail/{id}`: Detailed inspection endpoint with rendered HTML, plain-text fallback, and metadata.
+    - `POST /api/communications/archive/{id}` & `POST /api/communications/unarchive/{id}`: Compliance lifecycle management.
+    - `POST /api/communications/resend/{id}`: 1-click re-send attempt through Resend API.
+    - `GET /api/communications/export`: Streamed CSV audit log for ecosystem compliance and legal auditing.
+  - **Frontend Interface (`apps/portal/src/components/communications/CommunicationsVaultPanel.jsx`):**
+    - Built with strict 3px border-radius design protocol and glassmorphic dark palette.
+    - Features live KPI metrics row (Total Messages, Deliverability Rate %, Active vs Archived, Resend API status).
+    - Comprehensive filtering toolbar (search, persona dropdown, event dropdown, status dropdown, archive tabs).
+    - Deep inspection modal featuring Sandboxed HTML Render Preview, Pre-formatted Plain Text, Provider Audit Telemetry, and Raw JSON payload.
+    - Integrated into `apps/portal/src/App.jsx` under `communications` tab and accessible via topbar and navigation.

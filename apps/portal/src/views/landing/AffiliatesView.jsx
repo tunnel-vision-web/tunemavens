@@ -384,7 +384,11 @@ export default function AffiliatesView({ sessionUser }) {
         setApplySuccessData({ tier: 'scout', ...res.affiliate, email: res.email || cleanEmail, email_status: res.email_status, needs_password: res.needs_password });
       } else if (!res) {
         // Server sent nothing back: still give the user their link so sign-up is never blocked
-        const code = ((payload.custom_ref || cleanName.split(' ')[0]).toUpperCase().replace(/[^A-Z0-9]/g, '') || 'MAVEN').slice(0, 10);
+        const rawPrefix = ((payload.custom_ref || cleanName.split(' ')[0]).toUpperCase().replace(/[^A-Z0-9]/g, '') || 'MAVEN').slice(0, 8);
+        const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+        let suffix = '';
+        for (let i = 0; i < 4; i++) suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+        const code = `${rawPrefix}-${suffix}`;
         setApplySuccessData({
           tier: 'scout',
           ref_code: code,

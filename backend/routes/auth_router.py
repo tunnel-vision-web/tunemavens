@@ -22,7 +22,7 @@ from config import (
 from models import AuthResponse, LoginRequest, RegisterRequest, User, UserPublic
 from account_setup import (
     consume_setup_token, create_setup_token, send_affiliate_welcome,
-    send_password_reset_email, send_welcome_email,
+    send_password_changed_notification, send_password_reset_email, send_welcome_email,
 )
 from pydantic import BaseModel
 
@@ -318,6 +318,18 @@ def set_password(payload: SetPasswordRequest, response: Response):
         raise HTTPException(status_code=400, detail="This link is not valid.")
     db.users.update_one({"_id": oid}, {"$set": {"password_hash": hash_password(payload.password), "email_verified": True}})
     user["password_hash"] = "set"
+    
+    # Send security notification of password change
+    if user.get("email"):
+        try:
+            send_password_changed_notification(
+                to=user["email"],
+                name=user.get("name") or "",
+                role=user.get("role") or "creator"
+            )
+        except Exception as e:
+            pass
+
     token = create_access_token(sub=str(oid))
     _set_cookie(response, token)
     return AuthResponse(user=_to_public(user), access_token=token)

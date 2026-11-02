@@ -28,6 +28,10 @@ from auth import get_current_user
 from config import db
 from models import Contract, ContractClause, ContractInvitee, ContractProposal
 from services.contract_templates import build_contract
+from account_setup import (
+    send_contract_invitation_notification,
+    send_contract_executed_notification,
+)
 
 router = APIRouter(prefix="/api/contracts", tags=["contracts"])
 
@@ -171,6 +175,18 @@ def invite_party(contract_id: str, payload: InviteRequest, current_user: dict = 
         {"_id": ObjectId(contract_id)},
         {"$set": _to_update(contract)},
     )
+    # Dispatch communication record for contract invitation
+    try:
+        send_contract_invitation_notification(
+            to=payload.email.lower(),
+            name=existing_user.get("name") if existing_user else "",
+            contract_title=contract.title or "TuneMavens Agreement",
+            contract_id=contract_id,
+            inviter_name=current_user.get("name") or "A TuneMavens Partner",
+            role=current_user.get("role") or "creator"
+        )
+    except Exception:
+        pass
     return _serialise(contract)
 
 
@@ -229,6 +245,24 @@ def sign_contract(contract_id: str, current_user: dict = Depends(get_current_use
             inv.signed_at = now
     if contract.owner_signed_at and all(i.signed_at for i in contract.invitees):
         contract.status = "signed"
+        # Dispatch execution notifications to all parties
+        try:
+            owner_user = db.users.find_one({"_id": ObjectId(contract.owner_id)})
+            all_emails = [inv.email for inv in contract.invitees if inv.email]
+            if owner_user and owner_user.get("email"):
+                all_emails.append(owner_user["email"])
+            counterparties_str = ", ".join(inv.email for inv in contract.invitees)
+            for em in set(all_emails):
+                send_contract_executed_notification(
+                    to=em,
+                    name="",
+                    contract_title=contract.title or "TuneMavens Agreement",
+                    contract_id=contract_id,
+                    counterparties=counterparties_str,
+                    role="creator"
+                )
+        except Exception:
+            pass
     contract.updated_at = now
     db.contracts.update_one({"_id": ObjectId(contract_id)}, {"$set": _to_update(contract)})
     return _serialise(contract)

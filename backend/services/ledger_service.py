@@ -120,6 +120,22 @@ def record_transaction(
         f"({entry_type} via {provider}, ref: {provider_ref}). New balance: {new_balance}"
     )
 
+    # Dispatch communication notification for credit adjustments
+    if entry_type != "OPENING_BALANCE" and updated_user and updated_user.get("email"):
+        try:
+            from account_setup import send_credit_balance_notification
+            send_credit_balance_notification(
+                to=updated_user["email"],
+                name=updated_user.get("name") or "",
+                delta=amount,
+                new_balance=new_balance,
+                reason=description or f"{entry_type} via {provider}",
+                role=updated_user.get("role") or "creator",
+                tx_id=provider_ref or idempotency_key
+            )
+        except Exception as e:
+            logger.warning(f"[TuneLedger] Failed to dispatch credit notification email: {e}")
+
     return {
         "status": "success",
         "ledger_entry": ledger_entry,
