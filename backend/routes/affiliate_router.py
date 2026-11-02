@@ -16,6 +16,8 @@ from pydantic import BaseModel, EmailStr, Field
 
 from auth import get_current_user, get_optional_user
 from config import db
+from models import User
+from account_setup import create_setup_token, send_affiliate_welcome
 
 logger = logging.getLogger(__name__)
 
@@ -513,6 +515,10 @@ def apply_for_affiliate(app_data: AffiliateApplicationRequest, response: Respons
     # Check if already registered
     existing = db.affiliates.find_one({"email": clean_email})
     if existing:
+        _existing_user = db.users.find_one({"email": clean_email})
+        _tok = create_setup_token(str(_existing_user["_id"])) if (_existing_user and not _existing_user.get("password_hash")) else None
+        send_affiliate_welcome(clean_email, existing.get("name", ""), existing["ref_code"],
+                               f"https://tunemavens.com?ref={existing['ref_code']}", _tok)
         return {
             "status": "already_registered",
             "message": "You are already registered in the TuneMavens Affiliate Program.",
@@ -565,6 +571,28 @@ def apply_for_affiliate(app_data: AffiliateApplicationRequest, response: Respons
 
     db.affiliates.insert_one(new_profile)
 
+    # Create the login account (no password yet) and email a one-time setup link.
+    referral_url = f"https://tunemavens.com?ref={final_ref}"
+    setup_token = None
+    user_row = db.users.find_one({"email": clean_email})
+    if not user_row:
+        res_u = db.users.insert_one(User(
+            email=clean_email,
+            name=app_data.name.strip(),
+            role="affiliate",
+            roles=["affiliate"],
+            plan="starter",
+            credits=0,
+            brand_name=app_data.name.strip(),
+            apps=["affiliates", "split-cascade", "tunemavens-library"],
+            signup_page="affiliate_program",
+        ).to_mongo())
+        user_id = str(res_u.inserted_id)
+        setup_token = create_setup_token(user_id)
+    elif not user_row.get("password_hash"):
+        setup_token = create_setup_token(str(user_row["_id"]))
+    email_status = send_affiliate_welcome(clean_email, app_data.name.strip(), final_ref, referral_url, setup_token)
+
     # Set affiliate cookie on response for instant self-attribution testing (90 days)
     response.set_cookie(
         key="tm_aff_ref",
@@ -585,7 +613,10 @@ def apply_for_affiliate(app_data: AffiliateApplicationRequest, response: Respons
             "referral_url": f"https://tunemavens.com?ref={final_ref}",
             "payout_method": app_data.payout_method,
             "cookie_days": 90
-        }
+        },
+        "email": clean_email,
+        "email_status": email_status,
+        "needs_password": bool(setup_token)
     }
 
 

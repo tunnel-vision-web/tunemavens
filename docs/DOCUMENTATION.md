@@ -2516,3 +2516,14 @@ Following user feedback on marketing messaging, design precision, and demographi
 - **RegisterView.jsx:** added Podcaster and Venture Capital roles to the dropdown, URL presets and AI onboarding. An existing email now sends the user to Log In with a clear message.
 - **LoginView.jsx:** the sandbox fallback and Google/demo sign-in keep the persona the user came from instead of forcing creator. The wrong-password message is clearer.
 - **Verified:** register, login and demo return 200 with the correct role for all 9 personas and their aliases.
+
+### 9.44.39 Affiliate Account Creation, Resend Email & One-Time Set-Password Link (2 November 2026)
+
+- **Sign-up now creates a login.** POST /api/affiliates/apply saves the affiliate, creates a user with role ffiliate and no password, and emails a one-time link. No password is typed on the form.
+- **Email via Resend** (ackend/account_setup.py). Set RESEND_API_KEY, RESEND_FROM, PUBLIC_APP_URL (see .env.example). With no key nothing is sent and the message is saved to email_outbox, so development works and nothing is lost silently.
+- **Set-password link:** /#/set-password?token=.... Tokens are random, single use, expire after 72 hours (SETUP_TOKEN_HOURS) and are stored only as SHA-256 hashes. The token is never returned by the API.
+- **New endpoints:** POST /api/auth/set-password (sets the password, signs the user in) and POST /api/auth/request-setup-link (re-sends the email; the reply is identical for unknown emails).
+- **Portal:** new SetPasswordView.jsx (with a "send me a new link" box). The affiliate success screen now says "Check your email" and shows a fallback if sending failed.
+- **Existing affiliates** who apply again get a fresh link if they never set a password, otherwise a login link.
+- **Not built yet:** SMS/WhatsApp confirmation, and blocking payouts until the email is verified (the link sets email_verified).
+- **Verified locally:** apply, link in email, short and bad token rejected, set password, login, token reuse rejected, resend and re-apply.

@@ -20,6 +20,8 @@ from config import (
     db,
 )
 from models import AuthResponse, LoginRequest, RegisterRequest, User, UserPublic
+from account_setup import consume_setup_token, create_setup_token, send_affiliate_welcome
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -34,6 +36,7 @@ DEFAULT_APPS_BY_ROLE = {
     "media": ["sync-marketplace", "corporate-ads"],
     "corporate": ["sync-marketplace", "corporate-ads"],
     "consumer": ["tunemavens-library", "tunemavens-tips"],
+    "affiliate": ["affiliates", "split-cascade", "tunemavens-library"],
     "vc": ["vc-discover", "vc-portfolio", "vc-sponsorship", "tours-vault", "split-cascade", "escrow-contracts", "crm"],
     "investor": ["vc-discover", "vc-portfolio", "vc-sponsorship", "tours-vault", "split-cascade", "escrow-contracts", "crm"],
     "admin": [
@@ -113,6 +116,8 @@ def normalize_role(r: str) -> str:
         return "corporate"
     if r_lower in ("podcaster", "podcasters", "podcast", "podcasts", "host"):
         return "podcaster"
+    if r_lower in ("affiliate", "affiliates", "referrer"):
+        return "affiliate"
     if r_lower in ("vc", "investor", "investors", "venture capital", "private equity"):
         return "vc"
     return r_lower
@@ -277,3 +282,49 @@ def demo_login(response: Response, role: Optional[str] = Query(None)):
     token = create_access_token(sub=str(user["_id"]))
     _set_cookie(response, token)
     return AuthResponse(user=_to_public(user), access_token=token)
+
+
+class SetPasswordRequest(BaseModel):
+    token: str
+    password: str
+
+
+class SetupLinkRequest(BaseModel):
+    email: str
+
+
+@router.post("/set-password", response_model=AuthResponse)
+def set_password(payload: SetPasswordRequest, response: Response):
+    """Finish account setup from the emailed one-time link, then sign the user in."""
+    if len(payload.password or "") < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
+    user_id = consume_setup_token(payload.token)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="This link has expired or was already used. Please request a new one.")
+    try:
+        oid = ObjectId(user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="This link is not valid.")
+    user = db.users.find_one({"_id": oid})
+    if not user:
+        raise HTTPException(status_code=400, detail="This link is not valid.")
+    db.users.update_one({"_id": oid}, {"$set": {"password_hash": hash_password(payload.password), "email_verified": True}})
+    user["password_hash"] = "set"
+    token = create_access_token(sub=str(oid))
+    _set_cookie(response, token)
+    return AuthResponse(user=_to_public(user), access_token=token)
+
+
+@router.post("/request-setup-link")
+def request_setup_link(payload: SetupLinkRequest):
+    """Re-send the password-setup email. Always answers the same way so emails cannot be probed."""
+    email = (payload.email or "").strip().lower()
+    user = db.users.find_one({"email": email})
+    if user:
+        aff = db.affiliates.find_one({"email": email}) or {}
+        token = create_setup_token(str(user["_id"]))
+        send_affiliate_welcome(
+            email, user.get("name") or "", aff.get("ref_code", ""),
+            f"https://tunemavens.com?ref={aff['ref_code']}" if aff.get("ref_code") else "https://tunemavens.com", token,
+        )
+    return {"ok": True, "message": "If that email has an account, we have sent a link to set your password."}

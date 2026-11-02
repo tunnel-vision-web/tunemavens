@@ -381,7 +381,7 @@ export default function AffiliatesView({ sessionUser }) {
         res = null; // network problem: fall back to a local link below
       }
       if (res && (res.status === 'success' || res.status === 'already_registered') && res.affiliate) {
-        setApplySuccessData({ tier: 'scout', ...res.affiliate });
+        setApplySuccessData({ tier: 'scout', ...res.affiliate, email: res.email || cleanEmail, email_status: res.email_status, needs_password: res.needs_password });
       } else if (!res) {
         // Server sent nothing back: still give the user their link so sign-up is never blocked
         const code = ((payload.custom_ref || cleanName.split(' ')[0]).toUpperCase().replace(/[^A-Z0-9]/g, '') || 'MAVEN').slice(0, 10);
@@ -1045,6 +1045,14 @@ export default function AffiliatesView({ sessionUser }) {
                   <p>
                     You are registered as a <strong>{applySuccessData.tier.toUpperCase()}</strong> affiliate with 90-day tracking cookies enabled.
                   </p>
+
+                  {applySuccessData.needs_password !== undefined && (
+                    <div className="aff-form-error" style={{ background: 'rgba(34,211,238,0.08)', borderColor: 'rgba(34,211,238,0.35)', color: 'var(--cyan)', textAlign: 'left' }}>
+                      {applySuccessData.email_status === 'sent'
+                        ? (<><strong>Check your email.</strong> We sent a message to {applySuccessData.email} with a button to {applySuccessData.needs_password ? 'set your password and open your dashboard' : 'log in to your dashboard'}. Look in spam if you do not see it.</>)
+                        : (<><strong>Your account is ready.</strong> We could not send the email just now. <a href="#/set-password" style={{ color: 'var(--cyan)' }}>Request a new link</a> using {applySuccessData.email}, or keep the referral link below.</>)}
+                    </div>
+                  )}
 
                   <div className="generated-link-box">
                     <span className="link-label">Your Unique Referral Link:</span>

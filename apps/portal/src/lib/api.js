@@ -89,6 +89,8 @@ export const authApi = {
   demo: (role) => request(`/api/auth/demo${role ? `?role=${encodeURIComponent(role)}` : ''}`, { method: 'POST' }),
   me: (token) => request('/api/auth/me', { token }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
+  setPassword: (payload) => request('/api/auth/set-password', { method: 'POST', body: payload }),
+  requestSetupLink: (email) => request('/api/auth/request-setup-link', { method: 'POST', body: { email } }),
 };
 
 // --- Dashboard layout (§9.6) ---
