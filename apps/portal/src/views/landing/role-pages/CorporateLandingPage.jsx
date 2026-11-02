@@ -148,6 +148,7 @@ export default function CorporateLandingPage({ switcher }) {
   const timerRef = useRef(null);
 
   // Live Rates & Booking Modal State
+  const [previewModal, setPreviewModal] = useState(false);
   const [adRates, setAdRates] = useState(AUTHORITATIVE_AD_RATES);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState(null);
