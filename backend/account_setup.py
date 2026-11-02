@@ -83,17 +83,34 @@ def send_email(to: str, subject: str, html: str, text: str = "") -> str:
             pass
         return "not_configured"
     try:
+        from_addr = RESEND_FROM
         r = requests.post(
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
-            json={"from": RESEND_FROM, "to": [to], "subject": subject, "html": html, "text": text or subject},
+            json={"from": from_addr, "to": [to], "subject": subject, "html": html, "text": text or subject},
             timeout=10,
         )
+        # If the custom domain is not yet verified in Resend, automatically fallback to onboarding@resend.dev
+        if r.status_code == 403 and "domain" in r.text.lower() and from_addr != "TuneMavens <onboarding@resend.dev>":
+            logger.info("Retrying with test domain onboarding@resend.dev (domain verification pending in Resend)")
+            from_addr = "TuneMavens <onboarding@resend.dev>"
+            r = requests.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+                json={"from": from_addr, "to": [to], "subject": subject, "html": html, "text": text or subject},
+                timeout=10,
+            )
         ok = r.status_code in (200, 201)
         if not ok:
             logger.error("Resend rejected email to %s: %s %s", to, r.status_code, r.text[:300])
         try:
-            db.email_outbox.insert_one({**record, "status": "sent" if ok else "failed", "provider_status": r.status_code})
+            db.email_outbox.insert_one({
+                **record,
+                "status": "sent" if ok else "failed",
+                "provider_status": r.status_code,
+                "from_addr": from_addr,
+                "resend_response": r.text[:200]
+            })
         except Exception:
             pass
         return "sent" if ok else "failed"
