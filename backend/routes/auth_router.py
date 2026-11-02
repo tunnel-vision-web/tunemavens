@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 
 from auth import create_access_token, get_optional_user, get_current_user, hash_password, verify_password
 from config import (
@@ -20,7 +20,10 @@ from config import (
     db,
 )
 from models import AuthResponse, LoginRequest, RegisterRequest, User, UserPublic
-from account_setup import consume_setup_token, create_setup_token, send_affiliate_welcome
+from account_setup import (
+    consume_setup_token, create_setup_token, send_affiliate_welcome,
+    send_password_reset_email, send_welcome_email,
+)
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -174,7 +177,7 @@ def _set_cookie(response: Response, token: str) -> None:
 
 
 @router.post("/register", response_model=AuthResponse)
-def register(payload: RegisterRequest, response: Response):
+def register(payload: RegisterRequest, response: Response, background_tasks: BackgroundTasks):
     if db.users.find_one({"email": payload.email}):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
@@ -210,6 +213,11 @@ def register(payload: RegisterRequest, response: Response):
 
     result = db.users.insert_one(user_doc)
     user_doc["_id"] = result.inserted_id
+
+    # Welcome + confirm-email message (skipped for sandbox/test sign-ups). Sent in the background.
+    if not payload.sandbox:
+        verify_token = create_setup_token(str(result.inserted_id), purpose="verify")
+        background_tasks.add_task(send_welcome_email, payload.email, payload.name or "", primary_role, verify_token)
 
     token = create_access_token(sub=str(result.inserted_id))
     _set_cookie(response, token)
@@ -323,8 +331,29 @@ def request_setup_link(payload: SetupLinkRequest):
     if user:
         aff = db.affiliates.find_one({"email": email}) or {}
         token = create_setup_token(str(user["_id"]))
-        send_affiliate_welcome(
-            email, user.get("name") or "", aff.get("ref_code", ""),
-            f"https://tunemavens.com?ref={aff['ref_code']}" if aff.get("ref_code") else "https://tunemavens.com", token,
-        )
+        if aff and not user.get("password_hash"):
+            send_affiliate_welcome(
+                email, user.get("name") or "", aff.get("ref_code", ""),
+                f"https://tunemavens.com?ref={aff['ref_code']}" if aff.get("ref_code") else "https://tunemavens.com", token,
+            )
+        else:
+            send_password_reset_email(email, user.get("name") or "", token)
     return {"ok": True, "message": "If that email has an account, we have sent a link to set your password."}
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+@router.post("/verify-email")
+def verify_email(payload: VerifyEmailRequest):
+    """Confirm an email address from the one-time link in the welcome email."""
+    user_id = consume_setup_token(payload.token, purpose="verify")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="This confirmation link has expired or was already used.")
+    try:
+        oid = ObjectId(user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="This link is not valid.")
+    db.users.update_one({"_id": oid}, {"$set": {"email_verified": True}})
+    return {"ok": True, "message": "Your email is confirmed."}

@@ -84,6 +84,7 @@ export default function LoginView({ onLogin }) {
               password: passwordVal && passwordVal.length >= 8 ? passwordVal : 'SandboxPass123!',
               name: (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase()),
               role: resolvePersonaRole(),
+              sandbox: true,
             });
             tokenStore.set(access_token);
             loggedInUser = user;
@@ -202,7 +203,7 @@ export default function LoginView({ onLogin }) {
         </button>
       </form>
       <p style={{ fontSize: '12px', color: 'var(--mu)', marginTop: '16px', textAlign: 'center', margin: '16px 0 0' }}>
-        Don't have an account? <Link to="/register" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
+        <Link to="/set-password" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>Forgot your password?</Link><br />Don't have an account? <Link to="/register" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
       </p>
     </div>
   );

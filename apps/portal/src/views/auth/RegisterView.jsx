@@ -357,6 +357,7 @@ export default function RegisterView({ onLogin }) {
       role: activeTool?.role || 'creator',
       brand_name: 'Alex Rivera Productions',
       country: 'KE',
+      sandbox: true,
     }).then(({ user, access_token }) => {
       tokenStore.set(access_token);
       if (targetApp) {
@@ -602,7 +603,7 @@ export default function RegisterView({ onLogin }) {
       }
 
       onLogin(reconcileUserApps(user));
-      alert(`SSO registration successfully complete! Welcome, ${name}!`);
+      alert(access_token && regRes ? `Welcome, ${name}! We sent a confirmation email to ${email}. Please check your inbox.` : `Welcome, ${name}!`);
       clearSignupMemory();
 
       if (targetTab) {

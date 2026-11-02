@@ -117,6 +117,7 @@ class RegisterRequest(BaseModel):
     signup_source: Optional[str] = None
     utm_medium: Optional[str] = None
     utm_campaign: Optional[str] = None
+    sandbox: Optional[bool] = False  # test/sandbox sign-ups never send email
 
 
 class LoginRequest(BaseModel):

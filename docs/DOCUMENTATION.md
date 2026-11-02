@@ -2527,3 +2527,11 @@ Following user feedback on marketing messaging, design precision, and demographi
 - **Existing affiliates** who apply again get a fresh link if they never set a password, otherwise a login link.
 - **Not built yet:** SMS/WhatsApp confirmation, and blocking payouts until the email is verified (the link sets email_verified).
 - **Verified locally:** apply, link in email, short and bad token rejected, set password, login, token reuse rejected, resend and re-apply.
+
+### 9.44.40 Omnichannel Welcome Communication, Email Verification & Password Recovery Across All Personas (2 November 2026)
+
+- **Persona-Specific Welcome & Verification:** Extended the Resend transactional email architecture across all 9 canonical personas (creator, podcaster, label, dj, supervisor, media_house, corporate, consumer, c). Every registered user receives a welcome email with persona-tailored onboarding copy, dashboard deep-link, and a cryptographic one-time email confirmation link (/#/verify-email?token=...).
+- **Dedicated Email Verification Endpoint & View:** Added POST /api/auth/verify-email and created [VerifyEmailView.jsx](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/auth/VerifyEmailView.jsx) with 3px border-radii branding, validating SHA-256 tokens and setting email_verified=True on the MongoDB user document.
+- **Password Recovery & Reset Integration:** Added "Forgot your password?" recovery ingress on [LoginView.jsx](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/auth/LoginView.jsx) linking to [SetPasswordView.jsx](file:///c:/BOCM/Apps/tunemavens/apps/portal/src/views/auth/SetPasswordView.jsx), triggering POST /api/auth/request-setup-link and dispatching single-use password reset emails.
+- **Sandbox Test Mode Preservation:** Preserved the auto-sandbox demo login buttons across the portal so developers and evaluators can continue testing all 9 personas without waiting for live Resend deliveries (sandbox: true bypass flag prevents outbox clutter during testing).
+- **Outbox Audit Trail:** When RESEND_API_KEY is not present, emails are safely staged to the MongoDB email_outbox collection for diagnostic inspection.

@@ -117,6 +117,7 @@ import {
 import LoginView from './views/auth/LoginView.jsx'
 import RegisterView from './views/auth/RegisterView.jsx'
 import SetPasswordView from './views/auth/SetPasswordView.jsx'
+import VerifyEmailView from './views/auth/VerifyEmailView.jsx'
 import CreatorEpkView, { EPK_THEMES } from './views/creator/CreatorEpkView.jsx'
 import EpkWizard from './components/EpkWizard.jsx'
 import DashboardCmsStudio from './components/DashboardCmsStudio.jsx'
@@ -10351,7 +10352,7 @@ function AppContent({
     }
   }, [location.pathname]);
 
-  const isAuthModalActive = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/set-password';
+  const isAuthModalActive = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/set-password' || location.pathname === '/verify-email';
   const backgroundLocation = isAuthModalActive ? { pathname: lastNonAuthPath } : location;
 
   return (
@@ -10641,6 +10642,7 @@ function AppContent({
             <Route path="/login" element={<LoginView onLogin={handleLogin} />} />
             <Route path="/register" element={<RegisterView onLogin={handleLogin} />} />
             <Route path="/set-password" element={<SetPasswordView onLogin={handleLogin} />} />
+            <Route path="/verify-email" element={<VerifyEmailView />} />
           </Routes>
         </div>
       )}
