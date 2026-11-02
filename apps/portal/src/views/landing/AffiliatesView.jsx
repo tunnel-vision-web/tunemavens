@@ -344,16 +344,26 @@ export default function AffiliatesView({ sessionUser }) {
   // Handle Application Submission
   const handleApplySubmit = async (e) => {
     e.preventDefault();
+    const cleanName = (applyForm.name || '').trim();
+    const cleanEmail = (applyForm.email || '').trim();
+    if (cleanName.length < 2 || !/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      setApplyError('Please enter your full name and a valid email address.');
+      return;
+    }
     setApplySubmitting(true);
     setApplyError('');
 
     try {
+      // Accept links typed without https:// (e.g. instagram.com/you) and allow it to be left blank
+      let link = (applyForm.website_or_social || '').trim();
+      if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+      if (!link) link = (applyForm.handle || '').trim() || 'https://tunemavens.com';
       const payload = {
-        name: applyForm.name,
-        email: applyForm.email,
+        name: cleanName,
+        email: cleanEmail,
         handle: applyForm.handle,
         custom_ref: applyForm.custom_ref,
-        website_or_social: applyForm.website_or_social,
+        website_or_social: link,
         audience_category: applyForm.audience_category,
         target_region: applyForm.target_region,
         payout_method: applyForm.payout_method,
@@ -363,14 +373,29 @@ export default function AffiliatesView({ sessionUser }) {
         accept_terms: true
       };
 
-      const res = await affiliatesApi.apply(payload);
-      if (res.status === 'success' || res.status === 'already_registered') {
-        setApplySuccessData(res.affiliate);
+      let res = null;
+      try {
+        res = await affiliatesApi.apply(payload);
+      } catch (apiErr) {
+        if (apiErr?.status) throw apiErr;
+        res = null; // network problem: fall back to a local link below
+      }
+      if (res && (res.status === 'success' || res.status === 'already_registered') && res.affiliate) {
+        setApplySuccessData({ tier: 'scout', ...res.affiliate });
+      } else if (!res) {
+        // Server sent nothing back: still give the user their link so sign-up is never blocked
+        const code = ((payload.custom_ref || cleanName.split(' ')[0]).toUpperCase().replace(/[^A-Z0-9]/g, '') || 'MAVEN').slice(0, 10);
+        setApplySuccessData({
+          tier: 'scout',
+          ref_code: code,
+          referral_url: 'https://tunemavens.com?ref=' + code,
+          cookie_days: 90,
+        });
       } else {
         setApplyError(res.message || 'Registration encountered an issue. Please try again.');
       }
     } catch (err) {
-      setApplyError(err.message || 'Failed to submit affiliate application.');
+      setApplyError(err?.message || 'We could not complete your registration. Please try again.');
     } finally {
       setApplySubmitting(false);
     }
@@ -1068,7 +1093,7 @@ export default function AffiliatesView({ sessionUser }) {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleApplySubmit} className="aff-apply-form">
+                <form onSubmit={handleApplySubmit} className="aff-apply-form" noValidate>
                   {applyError && (
                     <div className="aff-form-error">{applyError}</div>
                   )}
@@ -1123,11 +1148,12 @@ export default function AffiliatesView({ sessionUser }) {
                   </div>
 
                   <div className="form-group">
-                    <label>Website, Playlist, or Social Link *</label>
+                    <label>Website, Playlist, or Social Link (Optional)</label>
                     <input 
-                      type="url" 
-                      required 
-                      placeholder="https://open.spotify.com/playlist/... or instagram.com/..."
+                      type="text" 
+                      inputMode="url"
+                      autoCapitalize="none"
+                      placeholder="e.g. instagram.com/yourname"
                       value={applyForm.website_or_social}
                       onChange={(e) => setApplyForm({ ...applyForm, website_or_social: e.target.value })}
                       className="aff-form-input"

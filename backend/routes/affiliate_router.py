@@ -442,7 +442,7 @@ class AffiliateApplicationRequest(BaseModel):
     email: EmailStr
     handle: Optional[str] = None
     custom_ref: Optional[str] = None
-    website_or_social: str = Field(..., min_length=3)
+    website_or_social: str = Field(default="https://tunemavens.com", min_length=3)
     audience_category: str = "creator"  # creator, curator, podcaster, blogger, label
     target_region: str = "global"       # global, us, uk, kenya, nigeria, sa
     payout_method: str = "mpesa"        # mpesa, credits, stripe, paypal
