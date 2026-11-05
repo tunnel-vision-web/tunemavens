@@ -11184,6 +11184,12 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
   const [isManual, setIsManual] = React.useState(false);
   const [selectedChannels, setSelectedChannels] = React.useState(['instagram', 'facebook']);
 
+  const filteredAssets = React.useMemo(() => {
+    if (!Array.isArray(assets)) return [];
+    if (assetFilter === 'all') return assets;
+    return assets.filter(a => a?.media_type === assetFilter);
+  }, [assets, assetFilter]);
+
   const loadAssets = async () => {
     try {
       const list = await socialAiApi.listAssets();
@@ -11608,7 +11614,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
                 background: '#00f0ff',
                 color: '#000',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 padding: '8px 16px',
                 fontSize: '12px',
                 fontWeight: 800,
@@ -11641,7 +11647,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
                 color: assetFilter === f.id ? '#000' : '#cbd5e1',
                 border: assetFilter === f.id ? 'none' : '1px solid rgba(255,255,255,0.12)',
                 padding: '5px 14px',
-                borderRadius: '20px',
+                borderRadius: '3px',
                 fontWeight: 700,
                 fontSize: '11px',
                 cursor: 'pointer'
@@ -11653,7 +11659,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
         </div>
 
         {filteredAssets.length === 0 ? (
-          <div style={{ padding: '30px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '6px' }}>
+          <div style={{ padding: '30px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '3px' }}>
             <span style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>
               No {assetFilter !== 'all' ? assetFilter : ''} assets found in cloud vault. Use the generator above or click "Upload Audio / Media File" to store content.
             </span>
@@ -11667,7 +11673,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
                 style={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  borderRadius: '6px', 
+                  borderRadius: '3px', 
                   overflow: 'hidden', 
                   border: '1px solid rgba(255,255,255,0.06)',
                   background: 'rgba(15, 23, 42, 0.4)'
