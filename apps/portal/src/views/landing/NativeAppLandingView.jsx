@@ -271,7 +271,7 @@ const NATIVE_APP_LANDING_DATA = {
       { q: 'Can I manage POS devices from the web?', a: 'Yes  -  the admin console has a dedicated POS Devices panel for provisioning, monitoring, and remote-wipe.' },
       { q: 'What happens if the device goes offline?', a: 'Payments queue locally with cryptographic receipts. They settle the instant the device reconnects.' },
     ],
-    pricingLine: 'Included with Label Tiers · Top-Ups from KSh 250 / $2.50 (250 Credits) · Instant Settlements',
+    pricingLine: 'Included with Label Tiers · Top-Ups from KSh 5,000 / $50.00 (5,000 Credits) up to 20,000 Credits · Instant Settlements',
   },
 };
 

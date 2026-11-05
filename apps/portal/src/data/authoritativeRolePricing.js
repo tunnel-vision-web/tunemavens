@@ -302,40 +302,40 @@ export const AUTHORITATIVE_DJ_PACKAGES = [
 export const AUTHORITATIVE_LABEL_PACKAGES = [
   {
     role: 'label',
-    slug: 'label-indie',
-    name: 'Indie Imprint Load',
-    tier_badge: 'Starter Roster',
-    price_usd: 99.0,
+    slug: 'label-team-starter',
+    name: 'Label & Teams Starter Floor',
+    tier_badge: 'Label Floor',
+    price_usd: 50.0,
     billing_period: 'one-time credit reload',
-    credits: 1000,
-    key_metric: 'Up to 10 Signed Artists · 100 Tracks',
+    credits: 5000,
+    key_metric: '5,000 Credits ($50.00 / KSh 5,000) · Up to 10 Signed Artists',
     features: [
-      'Manage up to 10 signed creator profiles with isolated roster seats',
+      'Universal label floor: 5,000 TM Credits loaded to your label ledger (5,000 KES / $50.00 USD)',
+      'Manage up to 10 signed creator profiles with isolated roster seats and catalog analytics',
       'Automated CSV statement parser (DistroKid, TuneCore, FUGA, Orchard)',
-      'Split Cascade net calculations with advance balance tracking',
-      'Pre-cleared label roster sync pitching on SyncMavens',
-      '1,000 unified credits load with zero monthly recurring charges',
-      'Standard email & chat label support'
+      'Split Cascade net calculations with advance balance tracking and recoupment',
+      'Pre-cleared label roster sync pitching on SyncMavens network',
+      'Standard email & dedicated chat label operations support'
     ],
     is_popular: false,
-    cta: 'Start Indie Imprint'
+    cta: 'Start Label Floor'
   },
   {
     role: 'label',
     slug: 'label-growth',
-    name: 'Scale Label Operations Load',
+    name: 'Scale Label Operations',
     tier_badge: 'Most Popular',
-    price_usd: 299.0,
+    price_usd: 100.0,
     billing_period: 'one-time credit reload',
-    credits: 3500,
-    key_metric: 'Up to 50 Signed Artists · 1,000 Tracks',
+    credits: 10000,
+    key_metric: '10,000 Credits ($100.00 / KSh 10,000) · Up to 50 Signed Artists',
     features: [
-      'Up to 50 active artists & 1,000 master tracks with stem archives',
+      '10,000 TM Credits load (10,000 KES / $100.00 USD) with zero monthly subscriptions',
+      'Up to 50 active artists & 1,000 master tracks with multi-stem cloud archives',
       'Automated master advance recoupment cascades (90/10 down to 50/50)',
-      'Role-based staff permissions (A&R, Legal, Head of Accounting)',
+      'Role-based staff permissions (A&R, Legal Counsel, Head of Accounting)',
       'TunePay live tour merch & festival ticket box-office settlement',
-      'Intermaven Smart CRM automated roster fan broadcasts (WhatsApp/SMS)',
-      '3,500 unified credits load with zero monthly recurring charges'
+      'Intermaven Smart CRM automated roster fan broadcasts (WhatsApp/SMS)'
     ],
     is_popular: true,
     cta: 'Scale Label Operations'
@@ -343,19 +343,19 @@ export const AUTHORITATIVE_LABEL_PACKAGES = [
   {
     role: 'label',
     slug: 'label-enterprise',
-    name: 'Major / Conglomerate Enterprise Load',
+    name: 'Major / Conglomerate Enterprise',
     tier_badge: 'Unlimited Scale',
-    price_usd: 799.0,
+    price_usd: 200.0,
     billing_period: 'one-time credit reload',
-    credits: 10000,
-    key_metric: 'Unlimited Artists & Masters · Custom White-Label',
+    credits: 20000,
+    key_metric: '20,000 Credits ($200.00 / KSh 20,000) · Unlimited Artists & Masters',
     features: [
-      'Unlimited roster size and unlimited catalog ingestion',
-      'Custom white-labeled artist portal for signing and settlement',
+      '20,000 TM Credits load (20,000 KES / $200.00 USD) for massive catalog throughput',
+      'Unlimited roster size and unlimited catalog ingestion with custom white-labeled portal',
       'Direct bank rail & mobile money bulk payouts (M-Pesa B2C, ACH, SWIFT)',
       'Full ERP & accounting API webhooks for QuickBooks / NetSuite sync',
       'Priority Sync Brief placement exclusivity across SyncMavens network',
-      '10,000 unified credits load, custom SLA & 24/7 dedicated engineering support'
+      'Custom enterprise SLA & 24/7 dedicated engineering support'
     ],
     is_popular: false,
     cta: 'Request Enterprise Agreement'

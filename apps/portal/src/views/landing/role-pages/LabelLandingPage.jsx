@@ -31,14 +31,14 @@ import tunelabelLogo from '../../../assets/logos/tunelabel-logo.png'
 const FALLBACK_LABEL_RATES = [
   {
     slug: 'label-team-starter',
-    name: 'Label & Teams Starter',
+    name: 'Label & Teams Starter Floor',
     tier_badge: 'Label Floor',
-    price_usd: 75.0,
+    price_usd: 50.0,
     billing_period: 'one-time credit reload',
-    credits: 7500,
-    key_metric: '7,500 Credits · Up to 10 Artists · 100 Tracks',
+    credits: 5000,
+    key_metric: '5,000 Credits ($50.00 / KSh 5,000) · Up to 10 Artists · 100 Tracks',
     features: [
-      'Universal label floor: 7,500 TM Credits loaded to your label ledger (7,500 KES / $75.00 USD)',
+      'Universal label floor: 5,000 TM Credits loaded to your label ledger (5,000 KES / $50.00 USD)',
       'Manage up to 10 signed creator profiles with isolated roster seats and catalog analytics',
       'Automated CSV statement parser (DistroKid, TuneCore, FUGA, Orchard)',
       'Split Cascade net calculations with advance balance tracking and recoupment',
@@ -46,18 +46,18 @@ const FALLBACK_LABEL_RATES = [
       'Standard email & dedicated chat label operations support'
     ],
     is_popular: false,
-    cta: 'Start Label Starter'
+    cta: 'Start Label Starter Floor'
   },
   {
     slug: 'label-growth',
     name: 'Scale Label Operations',
     tier_badge: 'Most Popular',
-    price_usd: 150.0,
+    price_usd: 100.0,
     billing_period: 'one-time credit reload',
-    credits: 15000,
-    key_metric: '15,000 Credits · Up to 50 Artists · 1,000 Tracks',
+    credits: 10000,
+    key_metric: '10,000 Credits ($100.00 / KSh 10,000) · Up to 50 Artists · 1,000 Tracks',
     features: [
-      '15,000 TM Credits load (15,000 KES / $150.00 USD) with zero monthly subscriptions',
+      '10,000 TM Credits load (10,000 KES / $100.00 USD) with zero monthly subscriptions',
       'Up to 50 active artists & 1,000 master tracks with multi-stem cloud archives',
       'Automated master advance recoupment cascades (90/10 down to 50/50)',
       'Role-based staff permissions (A&R, Legal Counsel, Head of Accounting)',
@@ -71,12 +71,12 @@ const FALLBACK_LABEL_RATES = [
     slug: 'label-enterprise',
     name: 'Major / Conglomerate Enterprise',
     tier_badge: 'Unlimited Scale',
-    price_usd: 500.0,
+    price_usd: 200.0,
     billing_period: 'one-time credit reload',
-    credits: 50000,
-    key_metric: '50,000 Credits · Unlimited Artists · White-Label',
+    credits: 20000,
+    key_metric: '20,000 Credits ($200.00 / KSh 20,000) · Unlimited Artists · White-Label',
     features: [
-      '50,000 TM Credits load (50,000 KES / $500.00 USD) for massive catalog throughput',
+      '20,000 TM Credits load (20,000 KES / $200.00 USD) for massive catalog throughput',
       'Unlimited roster size and unlimited catalog ingestion with custom white-labeled portal',
       'Direct bank rail & mobile money bulk payouts (M-Pesa B2C, ACH, SWIFT)',
       'Full ERP & accounting API webhooks for QuickBooks / NetSuite sync',

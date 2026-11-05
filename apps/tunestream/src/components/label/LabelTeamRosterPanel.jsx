@@ -12,35 +12,35 @@ import CreditReloadModal from '../common/CreditReloadModal.jsx';
 export const LABEL_TIERS = {
   indie: {
     id: 'indie',
-    name: 'Indie Imprint Load',
-    price: '1,000 Credits',
-    priceUsd: '$99 one-time',
-    creditsAmount: 1000,
-    maxSeats: 3,
-    maxRoster: 5,
-    description: '1,000 unified credits load. Covers up to 5 signed artist rosters with 3 collaborator seats. Zero monthly fees.',
-    features: ['5 Artist Rosters', '3 Team Collaborator Seats', 'Automated Split Cascades', 'One-Stop Pre-Cleared Sync', 'Zero Monthly Charges']
+    name: 'Label Starter Floor',
+    price: '5,000 Credits',
+    priceUsd: '$50.00 (KSh 5,000)',
+    creditsAmount: 5000,
+    maxSeats: 5,
+    maxRoster: 10,
+    description: '5,000 unified credits load (KSh 5,000 / $50.00 USD). Accessible label floor for up to 10 signed artist rosters with 5 collaborator seats. Zero monthly fees.',
+    features: ['10 Artist Rosters', '5 Team Collaborator Seats', 'Automated Split Cascades', 'One-Stop Pre-Cleared Sync', 'Zero Monthly Charges']
   },
   scale: {
     id: 'scale',
-    name: 'Scale Operations Load',
-    price: '3,500 Credits',
-    priceUsd: '$299 one-time',
-    creditsAmount: 3500,
-    maxSeats: 10,
-    maxRoster: 25,
-    description: '3,500 unified credits load. Designed for scaling independent labels with up to 25 artist rosters and 10 collaborator seats. Zero monthly fees.',
-    features: ['25 Artist Rosters', '10 Team Collaborator Seats', 'Accounting & ERP Webhooks', 'Priority Sync Placement', 'Zero Monthly Charges']
+    name: 'Scale Label Operations',
+    price: '10,000 Credits',
+    priceUsd: '$100.00 (KSh 10,000)',
+    creditsAmount: 10000,
+    maxSeats: 15,
+    maxRoster: 50,
+    description: '10,000 unified credits load (KSh 10,000 / $100.00 USD). Designed for scaling independent labels with up to 50 artist rosters and 15 collaborator seats. Zero monthly fees.',
+    features: ['50 Artist Rosters', '15 Team Collaborator Seats', 'Accounting & ERP Webhooks', 'Priority Sync Placement', 'Zero Monthly Charges']
   },
   enterprise: {
     id: 'enterprise',
-    name: 'Enterprise Conglomerate Load',
-    price: '10,000 Credits',
-    priceUsd: '$799 one-time',
-    creditsAmount: 10000,
+    name: 'Major Label Enterprise',
+    price: '20,000 Credits',
+    priceUsd: '$200.00 (KSh 20,000)',
+    creditsAmount: 20000,
     maxSeats: 9999,
     maxRoster: 9999,
-    description: '10,000 unified credits load. Unlimited capacity for major catalogs, worldwide distributor imprints, and large multi-team operations.',
+    description: '20,000 unified credits load (KSh 20,000 / $200.00 USD). Unlimited capacity for major catalogs, worldwide distributor imprints, and large multi-team operations.',
     features: ['Unlimited Artist Rosters', 'Unlimited Team Seats', 'White-Glove DDEX Ingestion', 'Dedicated Sync Director', 'Zero Monthly Charges']
   }
 };

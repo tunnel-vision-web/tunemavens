@@ -94,15 +94,39 @@ CREDIT_PACKAGES: Dict[str, Dict[str, Any]] = {
     },
     "label-team-starter": {
         "id": "label-team-starter",
-        "name": "Label & Teams Starter",
-        "credits": 7500,
-        "price_usd": 75.00,
-        "price_kes": 7500,
+        "name": "Label Starter Floor",
+        "credits": 5000,
+        "price_usd": 50.00,
+        "price_kes": 5000,
         "target_role": "label",
-        "badge": "Label & Teams",
+        "badge": "Label Floor",
         "badge_color": "#a855f7",
-        "description": "Dedicated enterprise starter package for record labels, management teams, and multi-artist rosters.",
-        "deliverables": ["7,500 Non-Expiring Credits", "Multi-Seat Team Accounts", "Multi-Artist Roster Management", "Direct Split Cascade Payouts"]
+        "description": "Universal label entry floor for up to 10 signed artists, CSV statement parsing, and split cascades.",
+        "deliverables": ["5,000 Non-Expiring Credits (KSh 5,000 / $50.00)", "Up to 10 Signed Artists", "Statement CSV Parser", "Split Cascade Net Ledgers"]
+    },
+    "label-growth": {
+        "id": "label-growth",
+        "name": "Scale Label Operations",
+        "credits": 10000,
+        "price_usd": 100.00,
+        "price_kes": 10000,
+        "target_role": "label",
+        "badge": "Most Popular",
+        "badge_color": "#22d3ee",
+        "description": "Designed for scaling independent labels with up to 50 artist rosters and automated recoupment cascades.",
+        "deliverables": ["10,000 Non-Expiring Credits (KSh 10,000 / $100.00)", "Up to 50 Artist Rosters", "Automated Advance Recoupment", "Role-Based Staff Permissions"]
+    },
+    "label-enterprise": {
+        "id": "label-enterprise",
+        "name": "Major / Conglomerate Enterprise",
+        "credits": 20000,
+        "price_usd": 200.00,
+        "price_kes": 20000,
+        "target_role": "label",
+        "badge": "Enterprise Scale",
+        "badge_color": "#00f2fe",
+        "description": "Full-scale enterprise credit load for high-volume catalogs, white-label portals, and bulk mobile money payouts.",
+        "deliverables": ["20,000 Non-Expiring Credits (KSh 20,000 / $200.00)", "Unlimited Catalog Ingestion", "Bulk M-Pesa & Bank Rails", "Enterprise ERP Webhooks"]
     }
 }
 

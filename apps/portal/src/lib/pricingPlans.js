@@ -11,7 +11,9 @@
  * - Growth: KSH 500 / $5.00 (500 Credits)
  * - Pro: KSH 1,000 / $10.00 (1,000 Credits)
  * - Studio: KSH 5,000 / $50.00 (5,000 Credits)
- * - Label / Teams: KSH 7,500 / $75.00 (7,500 Credits)
+ * - Label Starter Floor: KSH 5,000 / $50.00 (5,000 Credits)
+ * - Label Scale Operations: KSH 10,000 / $100.00 (10,000 Credits)
+ * - Label Enterprise: KSH 20,000 / $200.00 (20,000 Credits)
  */
 
 export const CREDIT_EXCHANGE_RATE = {
@@ -72,15 +74,39 @@ export const CREDIT_LOAD_PACKAGES = [
   },
   {
     id: 'label-team-starter',
-    name: 'Label & Teams Starter',
+    name: 'Label Starter Floor',
     targetRole: 'label',
-    credits: 7500,
-    priceUsd: 75.00,
-    priceKes: 7500,
-    badge: 'Label & Teams',
+    credits: 5000,
+    priceUsd: 50.00,
+    priceKes: 5000,
+    badge: 'Label Floor',
     badgeColor: '#a855f7',
-    desc: 'Dedicated enterprise starter package for record labels, management teams, and multi-artist rosters.',
-    features: ['7,500 Non-Expiring Credits', 'Multi-Seat Team Accounts', 'Multi-Artist Roster Management', 'Direct Split Cascade Payouts']
+    desc: 'Accessible entry-level label reload for up to 10 signed artists, CSV statement parsing, and split cascades.',
+    features: ['5,000 Non-Expiring Credits (KSh 5,000 / $50.00)', 'Up to 10 Signed Artists', 'Statement CSV Parser', 'Split Cascade Net Ledgers']
+  },
+  {
+    id: 'label-growth',
+    name: 'Scale Label Operations',
+    targetRole: 'label',
+    credits: 10000,
+    priceUsd: 100.00,
+    priceKes: 10000,
+    badge: 'Most Popular',
+    badgeColor: '#22d3ee',
+    desc: 'Designed for scaling independent labels with up to 50 artist rosters and automated recoupment cascades.',
+    features: ['10,000 Non-Expiring Credits (KSh 10,000 / $100.00)', 'Up to 50 Artist Rosters', 'Automated Advance Recoupment', 'Role-Based Staff Permissions']
+  },
+  {
+    id: 'label-enterprise',
+    name: 'Major Label Enterprise',
+    targetRole: 'label',
+    credits: 20000,
+    priceUsd: 200.00,
+    priceKes: 20000,
+    badge: 'Enterprise Scale',
+    badgeColor: '#00f2fe',
+    desc: 'Maximum enterprise package for major catalogs, worldwide imprints, and white-label portals.',
+    features: ['20,000 Non-Expiring Credits (KSh 20,000 / $200.00)', 'Unlimited Catalog Ingestion', 'White-Label Artist Portal', 'Bulk M-Pesa & Bank Payouts']
   }
 ];
 
