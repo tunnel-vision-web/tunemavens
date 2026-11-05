@@ -670,17 +670,31 @@ export default function CommunicationsVaultPanel({ currentUser }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              background: '#0d1522',
-              border: '1px solid #1e293b',
-              borderRadius: '4px',
-              padding: '6px 12px',
-              fontSize: '11px',
-              color: '#94a3b8',
-              fontFamily: 'monospace',
-            }}>
-              Monthly Free Conversations: <span style={{ color: '#22d3ee', fontWeight: '700' }}>1,000 / mo</span>
-            </div>
+            {(currentUser?.role === 'admin' || currentUser?.is_admin || waStatus?.role === 'admin') ? (
+              <div style={{
+                background: '#0d1522',
+                border: '1px solid #1e293b',
+                borderRadius: '4px',
+                padding: '6px 12px',
+                fontSize: '11px',
+                color: '#94a3b8',
+                fontFamily: 'monospace',
+              }}>
+                Monthly Cloud Quota: <span style={{ color: '#22d3ee', fontWeight: '700' }}>1,000 / mo</span>
+              </div>
+            ) : (
+              <div style={{
+                background: 'rgba(37,211,102,0.08)',
+                border: '1px solid rgba(37,211,102,0.25)',
+                borderRadius: '4px',
+                padding: '6px 12px',
+                fontSize: '11px',
+                color: '#25d366',
+                fontWeight: '600',
+              }}>
+                Meta Cloud Rail: Verified Active
+              </div>
+            )}
             <button
               onClick={fetchWaStatus}
               title="Refresh WhatsApp Status"
@@ -781,7 +795,7 @@ export default function CommunicationsVaultPanel({ currentUser }) {
                   RELOAD REQUIRED (MIN KES 500 / $5.00)
                 </div>
                 <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
-                  To protect our 1,000 free monthly conversations, creators must load at least <strong>KES 500 ($5.00)</strong> to activate automated WhatsApp delivery.
+                  Automated WhatsApp delivery requires a minimum wallet reload of <strong>KES 500 ($5.00)</strong> into TuneLedger. Music supervisors, record labels, and corporates enjoy complimentary access.
                 </div>
               </div>
             )}

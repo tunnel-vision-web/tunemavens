@@ -2641,3 +2641,25 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Returns real-time user eligibility, tier classification (`complimentary_vip`, `funded_creator`, `unfunded`), 24-hour window countdown (`in_24h_window`, `window_expires_in_hours`), verified business phone number, and personalized `initiate_url`.
   - **In-App Governance UI (`CommunicationsVaultPanel.jsx`):**
     - Embedded prominent WhatsApp Status & Handshake Card displaying live tier badges, 24-hour window timer, 1-click handshake dispatch button, and responsive QR code scan modal.
+    - **Private Quota Privacy Policy:** Internal Meta monthly conversation quotas (1,000/mo) are strictly restricted to administrators (`currentUser.role === 'admin'`). Standard creators see verified active rail badges and simple deposit threshold requirements without exposing internal platform limits.
+
+- **Interactive Persona Dashboard Guided Tour System:**
+  - **Persona-Tailored Walkthrough Matrix (`DashboardTourModal.jsx`):**
+    - Guided step-by-step onboarding walkthrough custom-crafted for all 11 ecosystem personas:
+      - **Creator / Artist (`creator`):** Studio EPK Builder, Global Catalogue Porting, Split Cascade Waterfalls, Sync Briefs & Communications Alerts.
+      - **Music Supervisor (`supervisor`):** Sync Marketplace Search Filters, Stem Auditioning, Escrow Contracts & 1-Click Clearances, Complimentary VIP WhatsApp Access.
+      - **Record Label (`label`):** Multi-Artist Roster Command, Batch Discography Ingestion, Programmatic Advance Recoupment, Sync Pitching, VIP Push Notifications.
+      - **Corporate Brand (`corporate`):** Commercial Ad Flights & Sound Branding, Bespoke Brief Commissioning, TuneLedger Escrow Invoicing, VIP Channels.
+      - **DJ / Curator (`dj`):** Curated DJ Pool Downloads, Lossless Audio with Camelot Keys/BPM, Direct Creator Tip Jars.
+      - **Podcaster (`podcaster`):** Show RSS Distribution, Public Podcast EPK & Sponsor Decks, Programmatic Ad Slot Bidding.
+      - **Media House (`media_house`):** Broadcaster Cue Sheets, Commercial Television Sync Vault, CMO Reporting & Compliance Logs.
+      - **Affiliate Partner (`affiliate`):** 3% to 12% Ditto-Modeled Commission Matrix, 90-Day Cookie Attribution Engine, Instant Mobile STK Payouts.
+      - **Tour Venture Capital (`vc`):** Senior-Secured Tour Facility Syndicates, Automated Box-Office Recoupment Waterfalls (24% target IRR), Growth Telemetry.
+      - **Consumer / Fan (`consumer`):** 24-Bit / 96kHz Audiophile Player, 100% Direct Artist Micro-Tips, Concert Passes & Masterclasses.
+      - **Platform Administrator (`admin`):** 14-App Global Cloud Telemetry, Persona Simulator & Live Switching, Communications Audit Vault & Webhooks, KYC Governance.
+  - **Visual Immersion & Accessibility:**
+    - Features a focused spotlight card against an authentic 0.8 opacity blackout backdrop (`rgba(0, 0, 0, 0.8)`) with `backdrop-filter: blur(5px)` to focus attention without distraction.
+    - Interactive step progress indicators with clickable dot jumps, previous/next controls, and global keyboard shortcuts (`ESC` to exit, `ArrowLeft`/`ArrowRight` to navigate).
+  - **Automated First-Access Launch & 1-Click Restart Controls:**
+    - Auto-launches smoothly upon the user's first visit to any persona workspace (persisted in `localStorage` per role via `tunemavens_tour_completed_<role>`).
+    - Prominent **"Take Tour"** action button pinned to the `DashboardTopbar` and **"Restart Dashboard Tour"** option in the account dropdown menu enabling immediate re-triggering at any time.

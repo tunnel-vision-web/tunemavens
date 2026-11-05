@@ -89,6 +89,7 @@ import Navbar from './components/common/Navbar.jsx'
 import PageHeader from './components/common/PageHeader.jsx'
 import Footer from './components/common/Footer.jsx'
 import LocaleWelcomeBanner from './components/common/LocaleWelcomeBanner.jsx'
+import DashboardTourModal from './components/common/DashboardTourModal.jsx'
 
 import HomeView from './views/landing/HomeView.jsx'
 import ToolsView from './views/landing/ToolsView.jsx'
@@ -217,7 +218,7 @@ const PERSONA_ROLES = [
   { id: 'consumer', label: 'Consumer / Fan', shortLabel: 'Consumer', shortDesc: 'Player, Library & Tips', icon: RiHeadphoneFill, color: '#6366f1' },
 ];
 
-function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab, onOpenCreditReload }) {
+function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab, onOpenCreditReload, onStartTour }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const notifRef = useRef(null);
@@ -644,6 +645,32 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           <span>Back to Site</span>
         </Link>
 
+        {/* Interactive Persona Dashboard Tour Trigger */}
+        <button
+          type="button"
+          onClick={onStartTour}
+          className="topbar-dashboard-tour-btn"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'rgba(56, 189, 248, 0.12)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            color: '#38bdf8',
+            padding: '5px 12px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+          title="Take an interactive guided tour of this dashboard (Restart anytime)"
+          data-testid="topbar-dashboard-tour-btn"
+        >
+          <RiCompass3Fill size={15} style={{ color: '#38bdf8' }} />
+          <span>Take Tour</span>
+        </button>
+
         {/* Region, Currency & Language Switcher in Dashboard */}
         <div className="dashboard-topbar-item">
           <RegionSwitcher />
@@ -903,6 +930,18 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
               >
                 <RiSettings3Fill size={14} />
                 <span>Account Settings</span>
+              </button>
+              <button
+                className="topbar-menu-item"
+                style={{ color: '#38bdf8' }}
+                onClick={() => {
+                  setAccountOpen(false);
+                  if (typeof onStartTour === 'function') onStartTour();
+                }}
+                data-testid="topbar-menu-restart-tour"
+              >
+                <RiCompass3Fill size={14} />
+                <span>Restart Dashboard Tour</span>
               </button>
               <Link
                 to="/"
@@ -1213,6 +1252,23 @@ function DashboardView({
       } catch (_) {}
     }
   }, [location.search, activeTab]);
+
+  // Interactive Persona Dashboard Guided Tour
+  const [tourOpen, setTourOpen] = useState(false);
+
+  // Auto-launch persona tour on first visit to this persona dashboard
+  useEffect(() => {
+    const roleKey = activeUser?.role || 'creator';
+    try {
+      const completed = localStorage.getItem(`tunemavens_tour_completed_${roleKey}`);
+      if (!completed) {
+        const timer = setTimeout(() => {
+          setTourOpen(true);
+        }, 800);
+        return () => clearTimeout(timer);
+      }
+    } catch (_) {}
+  }, [activeUser?.role]);
 
   // Ensure activated app choice is remembered whenever viewed or active
   useEffect(() => {
@@ -2168,6 +2224,17 @@ function DashboardView({
                 <RiPlayFill size={14} color="#00f2fe" />
                 <span>Web Player</span>
               </Link>
+
+              <button
+                type="button"
+                onClick={() => setTourOpen(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 242, 254, 0.12)', border: '1px solid rgba(0, 242, 254, 0.35)', color: '#00f2fe', padding: '6px 12px', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                title="Take an interactive guided tour of the TuneStream Listener Hub"
+                data-testid="consumer-take-tour-btn"
+              >
+                <RiCompass3Fill size={14} color="#00f2fe" />
+                <span>Take Tour</span>
+              </button>
             </div>
           </header>
 
@@ -2211,6 +2278,13 @@ function DashboardView({
             const newBal = typeof result === 'number' ? result : (result?.balance ?? ((activeUser?.credits || 0) + (result?.creditsAdded || 0)));
             setUserCredits(newBal);
           }}
+        />
+
+        <DashboardTourModal
+          isOpen={tourOpen}
+          onClose={() => setTourOpen(false)}
+          currentRole="consumer"
+          setActiveTab={setActiveTab}
         />
       </div>
     );
@@ -2411,6 +2485,7 @@ function DashboardView({
           onUpdateUser={onUpdateUser}
           activeTab={activeTab}
           onOpenCreditReload={handleOpenCreditReload}
+          onStartTour={() => setTourOpen(true)}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
           {/* Low unified credits prompt banner - Excludes affiliates and VCs since institutional accounts require 0 credits */}
@@ -2734,6 +2809,13 @@ function DashboardView({
             });
           }
         }}
+      />
+
+      <DashboardTourModal
+        isOpen={tourOpen}
+        onClose={() => setTourOpen(false)}
+        currentRole={activeUser?.role || 'creator'}
+        setActiveTab={setActiveTab}
       />
     </div>
   );

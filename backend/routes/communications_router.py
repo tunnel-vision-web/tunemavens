@@ -222,7 +222,8 @@ def get_whatsapp_status(user=Depends(get_optional_user)):
     user_ref = (user_doc.get("username") or user_doc.get("subdomain") or "creator") if user_doc else "creator"
     initiate_url = get_whatsapp_opt_in_url(user_ref)
 
-    return {
+    is_admin = bool(user_doc and str(user_doc.get("role", "")).lower() == "admin")
+    resp = {
         "status": "success",
         "is_eligible": eligibility.get("eligible", False),
         "eligibility": eligibility,
@@ -234,10 +235,12 @@ def get_whatsapp_status(user=Depends(get_optional_user)):
         "last_inbound_at": last_inbound.isoformat() if last_inbound else None,
         "initiate_url": initiate_url,
         "business_phone": WHATSAPP_DISPLAY_PHONE_NUMBER,
-        "monthly_quota_limit": 1000,
         "min_reload_kes": MIN_RELOAD_KES,
         "min_reload_usd": MIN_RELOAD_USD,
     }
+    if is_admin:
+        resp["monthly_quota_limit"] = 1000
+    return resp
 
 
 @router.get("/detail/{msg_id}")
