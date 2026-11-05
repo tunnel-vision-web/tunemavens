@@ -11,11 +11,12 @@ import io
 import logging
 import os
 import re
+import secrets
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from bson import ObjectId
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -487,3 +488,127 @@ def export_communications_csv(user=Depends(get_optional_user)):
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+# ==============================================================================
+# Meta WhatsApp Cloud API Webhook Protocol
+# ==============================================================================
+
+@router.get("/webhook")
+def verify_whatsapp_webhook(
+    hub_mode: Optional[str] = Query(None, alias="hub.mode"),
+    hub_verify_token: Optional[str] = Query(None, alias="hub.verify_token"),
+    hub_challenge: Optional[str] = Query(None, alias="hub.challenge"),
+):
+    """Handshake verification endpoint for Meta WhatsApp Cloud API webhooks.
+    
+    Meta requires:
+    1. hub.mode == 'subscribe'
+    2. hub.verify_token matching the secret configured in Meta Developer Portal
+    3. Response MUST return the raw hub.challenge string as text/plain with HTTP 200.
+    """
+    expected_token = os.environ.get("WHATSAPP_VERIFY_TOKEN", "tunemavens_whatsapp_verify_token_2026").strip()
+    
+    if hub_mode == "subscribe" and hub_verify_token == expected_token:
+        logger.info("[WhatsApp Webhook] Verification successful for Meta challenge.")
+        return Response(content=str(hub_challenge or ""), media_type="text/plain", status_code=200)
+
+    logger.warning(
+        "[WhatsApp Webhook] Verification token mismatch. Expected: '%s', Received: '%s', Mode: '%s'",
+        expected_token, hub_verify_token, hub_mode
+    )
+    raise HTTPException(status_code=403, detail="Verification token mismatch")
+
+
+@router.post("/webhook")
+async def receive_whatsapp_webhook(request: Request):
+    """Process incoming Meta WhatsApp Cloud API events.
+    
+    Handles:
+    - Outbound delivery status updates: sent, delivered, read, failed (with error logging)
+    - Inbound fan / partner messages: records them directly to db.communications ledger
+    """
+    try:
+        payload = await request.json()
+    except Exception as exc:
+        logger.error("[WhatsApp Webhook] Failed to parse JSON payload: %s", exc)
+        return Response(content="Invalid JSON", media_type="text/plain", status_code=400)
+
+    logger.info("[WhatsApp Webhook] Incoming event received: %s", payload)
+
+    entry_list = payload.get("entry", [])
+    now = datetime.now(timezone.utc)
+
+    for entry in entry_list:
+        for change in entry.get("changes", []):
+            val = change.get("value", {})
+            
+            # 1. Update Outbound Statuses (delivered, read, failed)
+            statuses = val.get("statuses", [])
+            for st in statuses:
+                msg_id = st.get("id")
+                status_name = st.get("status")  # sent, delivered, read, failed
+                errors = st.get("errors", [])
+                
+                update_fields: Dict[str, Any] = {
+                    "provider_status_text": status_name,
+                    "updated_at": now
+                }
+                if status_name == "delivered":
+                    update_fields["status"] = "delivered"
+                elif status_name == "read":
+                    update_fields["status"] = "read"
+                elif status_name == "failed":
+                    update_fields["status"] = "failed"
+                    if errors:
+                        err_msg = errors[0].get("message") or errors[0].get("title") or str(errors)
+                        update_fields["error_details"] = err_msg
+                        update_fields["provider_status"] = errors[0].get("code", 400)
+
+                if msg_id:
+                    db.communications.update_one(
+                        {"$or": [{"resend_id": msg_id}, {"metadata.provider_msg_id": msg_id}]},
+                        {"$set": update_fields}
+                    )
+
+            # 2. Record Inbound Client / Fan Messages
+            messages = val.get("messages", [])
+            contacts = val.get("contacts", [])
+            contact_name = contacts[0].get("profile", {}).get("name", "WhatsApp User") if contacts else "WhatsApp User"
+
+            for msg in messages:
+                sender_phone = msg.get("from", "")
+                msg_id = msg.get("id", "")
+                msg_text = msg.get("text", {}).get("body", "")
+                
+                if not msg_text and msg.get("type") != "text":
+                    msg_text = f"[{msg.get('type', 'media').upper()} payload received]"
+
+                inbound_doc = {
+                    "id": f"comm_wa_in_{secrets.token_hex(8)}",
+                    "to": "TuneMavens Omnichannel",
+                    "from_phone": sender_phone,
+                    "recipient_name": contact_name,
+                    "subject": f"Inbound WhatsApp: {contact_name}",
+                    "text": msg_text,
+                    "html": f"<div style='background:#202c33;color:#e9edef;padding:14px;border-radius:6px;border-left:4px solid #25d366;'><strong>{contact_name} ({sender_phone}):</strong><p style='margin:6px 0 0;'>{msg_text}</p></div>",
+                    "channel": "whatsapp",
+                    "provider": "meta_whatsapp_cloud",
+                    "direction": "inbound",
+                    "event_type": "inbound_customer_message",
+                    "role": "fan",
+                    "status": "received",
+                    "provider_status": 200,
+                    "resend_id": msg_id,
+                    "metadata": {
+                        "inbound": True,
+                        "wa_msg_id": msg_id,
+                        "raw_sender": sender_phone,
+                    },
+                    "archived": False,
+                    "created_at": now,
+                    "updated_at": now,
+                }
+                db.communications.insert_one(inbound_doc)
+
+    return {"status": "ok"}
