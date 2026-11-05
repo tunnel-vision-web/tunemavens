@@ -23,7 +23,7 @@ from config import db
 logger = logging.getLogger("tunemavens.email")
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "").strip()
-RESEND_FROM = os.environ.get("RESEND_FROM", "TuneMavens <hello@tunemavens.com>")
+RESEND_FROM = os.environ.get("RESEND_FROM", "TuneMavens <hello@contact.tunemavens.com>")
 PUBLIC_APP_URL = os.environ.get("PUBLIC_APP_URL", "https://tunemavens.com").rstrip("/")
 SETUP_TOKEN_HOURS = int(os.environ.get("SETUP_TOKEN_HOURS", "72"))
 
@@ -176,16 +176,26 @@ def send_email(
             json={"from": from_addr, "to": [to], "subject": subject, "html": html, "text": text or subject},
             timeout=10,
         )
-        # If custom domain pending verification, fallback to test domain
-        if r.status_code == 403 and "domain" in r.text.lower() and from_addr != "TuneMavens <onboarding@resend.dev>":
-            logger.info("Retrying with test domain onboarding@resend.dev (domain verification pending in Resend)")
-            from_addr = "TuneMavens <onboarding@resend.dev>"
-            r = requests.post(
-                "https://api.resend.com/emails",
-                headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
-                json={"from": from_addr, "to": [to], "subject": subject, "html": html, "text": text or subject},
-                timeout=10,
-            )
+        # If custom domain rejected or unverified, retry with verified subdomain contact.tunemavens.com
+        if r.status_code == 403 and "domain" in r.text.lower():
+            if "@contact.tunemavens.com" not in from_addr:
+                logger.info("Retrying with verified domain contact.tunemavens.com")
+                from_addr = "TuneMavens <hello@contact.tunemavens.com>"
+                r = requests.post(
+                    "https://api.resend.com/emails",
+                    headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+                    json={"from": from_addr, "to": [to], "subject": subject, "html": html, "text": text or subject},
+                    timeout=10,
+                )
+            if r.status_code == 403 and "domain" in r.text.lower() and from_addr != "TuneMavens <onboarding@resend.dev>":
+                logger.info("Retrying with test domain onboarding@resend.dev")
+                from_addr = "TuneMavens <onboarding@resend.dev>"
+                r = requests.post(
+                    "https://api.resend.com/emails",
+                    headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+                    json={"from": from_addr, "to": [to], "subject": subject, "html": html, "text": text or subject},
+                    timeout=10,
+                )
 
         ok = r.status_code in (200, 201)
         resend_json = {}
@@ -666,3 +676,8 @@ def send_contract_invitation_notification(
         recipient_name=name,
         metadata={"contract_id": contract_id, "contract_title": contract_title, "inviter": inviter_name}
     )
+
+
+# Re-export WhatsApp communication primitives
+from services.whatsapp_service import send_whatsapp, sanitize_phone_number, generate_wa_direct_url
+

@@ -13,9 +13,12 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient
+import config
+from config import db
 from server import app
 from auth import create_access_token
-from config import db
+from services import ledger_service
+from routes import payments_router
 
 client = TestClient(app)
 
@@ -77,7 +80,7 @@ def test_sso_authorization_and_token_exchange():
 
 
 def test_payment_checkout_and_webhook():
-    """Verify Stripe checkout triggers and webhook updates."""
+    """Verify Stripe checkout triggers and credit webhook fulfillment via TuneLedger."""
     # Seed a test user
     user_email = "buyer@tunemavens.com"
     db.users.delete_many({"email": user_email})
@@ -86,19 +89,24 @@ def test_payment_checkout_and_webhook():
         "name": "Buyer Tester",
         "role": "creator",
         "roles": ["creator"],
-        "plan": "starter",
-        "credits": 0,
+        "credits": 100,
     })
     user_id = str(res.inserted_id)
+    db.credit_ledger.delete_many({"user_id": user_id})
+    ledger_service.initialize_user_opening_balance(
+        user_id=user_id,
+        initial_credits=100,
+        description="Opening balance initial seed"
+    )
     auth_token = create_access_token(sub=user_id)
     cookies = {"access_token": auth_token}
 
-    # 1. Create Checkout Session
+    # 1. Create Checkout Session for credit reload
     checkout_res = client.post(
         "/api/payments/checkout-session",
         json={
-            "item_type": "subscription",
-            "item_id": "professional",
+            "item_type": "credits",
+            "item_id": "creator-starter",
             "quantity": 1,
         },
         cookies=cookies,
@@ -110,18 +118,47 @@ def test_payment_checkout_and_webhook():
 
     session_id = sess_data["session_id"]
 
-    # 2. Bypass/Settle Sandbox Session
-    bypass_res = client.post(
-        f"/api/payments/sandbox-bypass?session_id={session_id}",
-        cookies=cookies,
-    )
-    assert bypass_res.status_code == 200
-    assert bypass_res.json()["status"] == "completed"
+    # 2. Fulfill via Webhook (Sandbox mode enabled in test)
+    orig_env = config.ENV
+    orig_allow = config.ALLOW_SANDBOX_WEBHOOKS
+    try:
+        config.ENV = "development"
+        payments_router.ENV = "development"
+        config.ALLOW_SANDBOX_WEBHOOKS = True
+        payments_router.ALLOW_SANDBOX_WEBHOOKS = True
 
-    # Check database updates
+        webhook_res = client.post(
+            "/api/payments/webhook",
+            json={
+                "id": f"evt_{session_id}",
+                "type": "checkout.session.completed",
+                "data": {
+                    "object": {
+                        "id": session_id,
+                        "metadata": {
+                            "user_id": user_id,
+                            "item_type": "credits",
+                            "package_id": "creator-starter",
+                            "quantity": "1",
+                        },
+                    }
+                },
+            },
+        )
+        assert webhook_res.status_code == 200
+        assert webhook_res.json()["status"] == "success"
+    finally:
+        config.ENV = orig_env
+        payments_router.ENV = orig_env
+        config.ALLOW_SANDBOX_WEBHOOKS = orig_allow
+        payments_router.ALLOW_SANDBOX_WEBHOOKS = orig_allow
+
+    # Check database updates & TuneLedger
     updated_user = db.users.find_one({"_id": res.inserted_id})
-    assert updated_user["plan"] == "professional"
-    assert updated_user["credits"] == 2000
+    assert updated_user["credits"] == 350  # 100 opening + 250 starter package
+    recon = ledger_service.reconcile_user_balance(user_id)
+    assert recon["matches"] is True
+    assert recon["discrepancy"] == 0
 
 
 def test_ticketing_and_scanner_validation():
@@ -134,7 +171,8 @@ def test_ticketing_and_scanner_validation():
         "role": "creator",
         "roles": ["creator"],
     })
-    creator_token = create_access_token(sub=str(creator_res.inserted_id))
+    creator_id = str(creator_res.inserted_id)
+    creator_token = create_access_token(sub=creator_id)
     creator_cookies = {"access_token": creator_token}
 
     # 1. Create Event
@@ -165,8 +203,39 @@ def test_ticketing_and_scanner_validation():
     assert checkout_res.status_code == 200
     session_id = checkout_res.json()["session_id"]
 
-    # Settle Sandbox Purchase
-    client.post(f"/api/payments/sandbox-bypass?session_id={session_id}", cookies=creator_cookies)
+    # Fulfill via Webhook (Sandbox mode enabled in test)
+    orig_env = config.ENV
+    orig_allow = config.ALLOW_SANDBOX_WEBHOOKS
+    try:
+        config.ENV = "development"
+        payments_router.ENV = "development"
+        config.ALLOW_SANDBOX_WEBHOOKS = True
+        payments_router.ALLOW_SANDBOX_WEBHOOKS = True
+
+        webhook_res = client.post(
+            "/api/payments/webhook",
+            json={
+                "id": f"evt_ticket_{session_id}",
+                "type": "checkout.session.completed",
+                "data": {
+                    "object": {
+                        "id": session_id,
+                        "metadata": {
+                            "user_id": creator_id,
+                            "item_type": "ticket",
+                            "item_id": event_id,
+                            "quantity": "1",
+                        },
+                    }
+                },
+            },
+        )
+        assert webhook_res.status_code == 200
+    finally:
+        config.ENV = orig_env
+        payments_router.ENV = orig_env
+        config.ALLOW_SANDBOX_WEBHOOKS = orig_allow
+        payments_router.ALLOW_SANDBOX_WEBHOOKS = orig_allow
 
     # 3. Retrieve Purchased Ticket
     tickets_res = client.get("/api/tickets/my-tickets", cookies=creator_cookies)

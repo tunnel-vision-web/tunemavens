@@ -20,6 +20,8 @@ import {
   RiTimeLine,
   RiUserSharedLine,
   RiSendPlaneLine,
+  RiWhatsappFill,
+  RiWhatsappLine,
 } from 'react-icons/ri';
 import { communicationsApi } from '../../lib/api';
 
@@ -66,10 +68,23 @@ export default function CommunicationsVaultPanel({ currentUser }) {
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedEventType, setSelectedEventType] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedChannel, setSelectedChannel] = useState('all'); // 'all', 'email', 'whatsapp'
   const [archiveFilter, setArchiveFilter] = useState('false'); // 'false' = active, 'true' = archived, 'all' = all
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Test Protocol Modal State
+  const [testModalOpen, setTestModalOpen] = useState(false);
+  const [testTab, setTestTab] = useState('email'); // 'email' | 'whatsapp'
+  const [testEmailTo, setTestEmailTo] = useState('mavenmusicorum@gmail.com');
+  const [testEmailSubject, setTestEmailSubject] = useState('TuneMavens Protocol Diagnostic Test');
+  const [testEmailMsg, setTestEmailMsg] = useState('Verifying transactional email deliverability via contact.tunemavens.com (Resend).');
+  const [testWaPhone, setTestWaPhone] = useState('+254700000000');
+  const [testWaName, setTestWaName] = useState('Valued Creator');
+  const [testWaMsg, setTestWaMsg] = useState('TuneMavens Omnichannel Protocol Alert: WhatsApp communications verified and active.');
+  const [testSubmitting, setTestSubmitting] = useState(false);
+  const [testFeedback, setTestFeedback] = useState(null);
 
   // Modal inspection state
   const [inspectModalOpen, setInspectModalOpen] = useState(false);
@@ -86,6 +101,18 @@ export default function CommunicationsVaultPanel({ currentUser }) {
     }, 300);
     return () => clearTimeout(handler);
   }, [searchQuery]);
+
+  // Handle ESC key to dismiss any open modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (testModalOpen) setTestModalOpen(false);
+        if (inspectModalOpen) setInspectModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [testModalOpen, inspectModalOpen]);
 
   // Load stats
   const fetchStats = async () => {
@@ -112,6 +139,7 @@ export default function CommunicationsVaultPanel({ currentUser }) {
         role: selectedRole,
         event_type: selectedEventType,
         status: selectedStatus,
+        channel: selectedChannel,
         archived: archiveFilter,
         page: currentPage,
         limit: 20,
@@ -137,7 +165,7 @@ export default function CommunicationsVaultPanel({ currentUser }) {
 
   useEffect(() => {
     fetchLogs();
-  }, [debouncedSearch, selectedRole, selectedEventType, selectedStatus, archiveFilter, currentPage]);
+  }, [debouncedSearch, selectedRole, selectedEventType, selectedStatus, selectedChannel, archiveFilter, currentPage]);
 
   // Handle Archive / Unarchive
   const handleToggleArchive = async (msg) => {
@@ -191,6 +219,61 @@ export default function CommunicationsVaultPanel({ currentUser }) {
   // Download CSV
   const handleExportCsv = () => {
     window.open(communicationsApi.getExportUrl(), '_blank');
+  };
+
+  // Dispatch Test Email
+  const handleSendTestEmail = async () => {
+    if (!testEmailTo.trim()) {
+      setTestFeedback({ type: 'error', text: 'Recipient email address is required.' });
+      return;
+    }
+    try {
+      setTestSubmitting(true);
+      setTestFeedback(null);
+      const res = await communicationsApi.testEmail({
+        to: testEmailTo.trim(),
+        subject: testEmailSubject.trim() || 'TuneMavens Protocol Test',
+        message: testEmailMsg.trim() || 'Diagnostic verification of Resend delivery protocol.',
+        role: 'admin',
+      });
+      setTestFeedback({
+        type: res?.delivery_status === 'sent' ? 'success' : 'warning',
+        text: res?.message || `Test email dispatched to ${testEmailTo}. Delivery status: ${res?.delivery_status}`,
+      });
+      await Promise.all([fetchLogs(), fetchStats()]);
+    } catch (err) {
+      setTestFeedback({ type: 'error', text: err?.message || 'Failed to dispatch test email.' });
+    } finally {
+      setTestSubmitting(false);
+    }
+  };
+
+  // Dispatch Test WhatsApp
+  const handleSendTestWhatsapp = async () => {
+    if (!testWaPhone.trim()) {
+      setTestFeedback({ type: 'error', text: 'Recipient phone number is required.' });
+      return;
+    }
+    try {
+      setTestSubmitting(true);
+      setTestFeedback(null);
+      const res = await communicationsApi.testWhatsapp({
+        to: testWaPhone.trim(),
+        message: testWaMsg.trim() || 'TuneMavens Omnichannel Protocol Alert: WhatsApp communication channel verified.',
+        recipient_name: testWaName.trim() || 'Valued Partner',
+        role: 'admin',
+      });
+      setTestFeedback({
+        type: 'success',
+        text: `WhatsApp protocol test registered! ${res?.direct_url ? '1-click wa.me link generated.' : ''}`,
+        direct_url: res?.direct_url,
+      });
+      await Promise.all([fetchLogs(), fetchStats()]);
+    } catch (err) {
+      setTestFeedback({ type: 'error', text: err?.message || 'Failed to dispatch test WhatsApp.' });
+    } finally {
+      setTestSubmitting(false);
+    }
   };
 
   // Format timestamp
@@ -264,6 +347,48 @@ export default function CommunicationsVaultPanel({ currentUser }) {
 
         {/* Global Toolbar Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={() => { setTestTab('whatsapp'); setTestFeedback(null); setTestModalOpen(true); }}
+            style={{
+              background: 'rgba(37,211,102,0.14)',
+              color: '#25d366',
+              border: '1px solid rgba(37,211,102,0.35)',
+              borderRadius: '3px',
+              padding: '8px 14px',
+              fontSize: '13px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+            title="Compose and dispatch outbound message via WhatsApp Protocol"
+          >
+            <RiWhatsappFill size={15} />
+            Send WhatsApp
+          </button>
+
+          <button
+            onClick={() => { setTestTab('email'); setTestFeedback(null); setTestModalOpen(true); }}
+            style={{
+              background: 'rgba(34,211,238,0.12)',
+              color: '#22d3ee',
+              border: '1px solid rgba(34,211,238,0.3)',
+              borderRadius: '3px',
+              padding: '8px 14px',
+              fontSize: '13px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+            title="Send real-time diagnostic test via Resend Email Protocol"
+          >
+            <RiMailSendLine size={15} />
+            Test Email
+          </button>
+
           <button
             onClick={() => { fetchLogs(); fetchStats(); }}
             style={{
@@ -411,7 +536,7 @@ export default function CommunicationsVaultPanel({ currentUser }) {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <span style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Provider Rail
+              Omnichannel Rails
             </span>
             <span style={{
               background: 'rgba(16,185,129,0.15)',
@@ -421,14 +546,16 @@ export default function CommunicationsVaultPanel({ currentUser }) {
               fontWeight: '700',
               padding: '2px 6px',
             }}>
-              LIVE
+              ACTIVE
             </span>
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: '#22d3ee' }}>
-            Resend REST API
+          <div style={{ fontSize: '16px', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#22d3ee' }}>Resend</span>
+            <span style={{ color: '#64748b' }}>&amp;</span>
+            <span style={{ color: '#25d366' }}>WhatsApp</span>
           </div>
-          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-            Automatic fallback + sandbox outbox
+          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+            {stats?.by_channel?.email ?? 0} Email • {stats?.by_channel?.whatsapp ?? 0} WhatsApp
           </div>
         </div>
       </div>
@@ -642,6 +769,29 @@ export default function CommunicationsVaultPanel({ currentUser }) {
               <option value="failed">Failed Delivery</option>
             </select>
           </div>
+
+          {/* Channel Filter */}
+          <div>
+            <select
+              value={selectedChannel}
+              onChange={(e) => { setSelectedChannel(e.target.value); setCurrentPage(1); }}
+              style={{
+                width: '100%',
+                background: '#090d16',
+                border: '1px solid #1e293b',
+                borderRadius: '3px',
+                color: '#f8fafc',
+                padding: '9px 12px',
+                fontSize: '13px',
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">All Channels (Omnichannel)</option>
+              <option value="email">Email (Resend)</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -785,14 +935,27 @@ export default function CommunicationsVaultPanel({ currentUser }) {
                         </div>
                       </td>
 
-                      {/* Rail / Provider */}
+                      {/* Rail / Channel / Provider */}
                       <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                        <div style={{ fontSize: '12px', color: '#cbd5e1' }}>
-                          Resend API
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
-                          {item.resend_id ? item.resend_id.slice(0, 14) + '...' : (item.from_addr ? item.from_addr.split('<')[0] : 'onboarding')}
-                        </div>
+                        {item.channel === 'whatsapp' ? (
+                          <>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#25d366', fontWeight: '700' }}>
+                              <RiWhatsappFill size={14} /> WhatsApp
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace', marginTop: '2px' }}>
+                              {item.provider || 'direct_gateway'}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#22d3ee', fontWeight: '700' }}>
+                              <RiMailLine size={14} /> Resend Email
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace', marginTop: '2px' }}>
+                              {item.resend_id ? item.resend_id.slice(0, 14) + '...' : (item.from_addr ? item.from_addr.split('<')[0] : 'contact')}
+                            </div>
+                          </>
+                        )}
                       </td>
 
                       {/* Timestamp */}
@@ -825,13 +988,39 @@ export default function CommunicationsVaultPanel({ currentUser }) {
                             Inspect
                           </button>
 
+                          {/* Direct WhatsApp Open */}
+                          {item.channel === 'whatsapp' && item.metadata?.direct_wa_url && (
+                            <a
+                              href={item.metadata.direct_wa_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                background: 'rgba(37,211,102,0.15)',
+                                color: '#25d366',
+                                border: '1px solid rgba(37,211,102,0.4)',
+                                borderRadius: '3px',
+                                padding: '6px 10px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                textDecoration: 'none',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                              title="Open pre-composed message directly in WhatsApp Web or App"
+                            >
+                              <RiWhatsappFill size={14} />
+                              Open WhatsApp
+                            </a>
+                          )}
+
                           {/* Re-send Button */}
                           <button
                             disabled={actionLoadingId === item.id}
                             onClick={() => handleResend(item)}
                             style={{
                               background: '#131c2d',
-                              color: '#10b981',
+                              color: item.channel === 'whatsapp' ? '#25d366' : '#10b981',
                               border: '1px solid #1e293b',
                               borderRadius: '3px',
                               padding: '6px 10px',
@@ -843,7 +1032,7 @@ export default function CommunicationsVaultPanel({ currentUser }) {
                               gap: '4px',
                               opacity: actionLoadingId === item.id ? 0.6 : 1,
                             }}
-                            title="Re-send email via Resend API"
+                            title={item.channel === 'whatsapp' ? 'Re-dispatch WhatsApp message' : 'Re-send email via Resend API'}
                           >
                             <RiSendPlaneLine size={14} />
                             Re-send
@@ -927,32 +1116,38 @@ export default function CommunicationsVaultPanel({ currentUser }) {
 
       {/* Deep Message Inspection Modal */}
       {inspectModalOpen && inspectedMessage && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px',
-        }}>
-          <div style={{
-            background: '#0d1522',
-            border: '1px solid #1e293b',
-            borderRadius: '3px',
-            width: '100%',
-            maxWidth: '840px',
-            maxHeight: '90vh',
+        <div 
+          onClick={() => setInspectModalOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(4px)',
             display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.7)',
-            overflow: 'hidden',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+            overflowY: 'auto',
           }}>
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#0d1522',
+              border: '1px solid #1e293b',
+              borderRadius: '3px',
+              width: '100%',
+              maxWidth: '840px',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.7)',
+              overflow: 'hidden',
+              margin: 'auto',
+            }}>
             {/* Modal Header */}
             <div style={{
               padding: '18px 24px',
@@ -1220,11 +1415,33 @@ export default function CommunicationsVaultPanel({ currentUser }) {
               </div>
 
               <div style={{ display: 'flex', gap: '8px' }}>
+                {inspectedMessage.channel === 'whatsapp' && inspectedMessage.metadata?.direct_wa_url && (
+                  <a
+                    href={inspectedMessage.metadata.direct_wa_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      background: '#25d366',
+                      color: '#0b141a',
+                      textDecoration: 'none',
+                      borderRadius: '3px',
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <RiWhatsappFill size={16} />
+                    Open in WhatsApp
+                  </a>
+                )}
                 <button
                   disabled={actionLoadingId === inspectedMessage.id}
                   onClick={() => handleResend(inspectedMessage)}
                   style={{
-                    background: '#10b981',
+                    background: inspectedMessage.channel === 'whatsapp' ? '#10b981' : '#22d3ee',
                     color: '#04141a',
                     border: 'none',
                     borderRadius: '3px',
@@ -1238,7 +1455,7 @@ export default function CommunicationsVaultPanel({ currentUser }) {
                   }}
                 >
                   <RiSendPlaneLine size={15} />
-                  Re-send Email Now
+                  {inspectedMessage.channel === 'whatsapp' ? 'Re-dispatch WhatsApp' : 'Re-send Email Now'}
                 </button>
                 <button
                   onClick={() => setInspectModalOpen(false)}
@@ -1256,6 +1473,380 @@ export default function CommunicationsVaultPanel({ currentUser }) {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Test Protocols Modal (Email & WhatsApp) */}
+      {testModalOpen && (
+        <div 
+          onClick={() => setTestModalOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+            overflowY: 'auto',
+          }}>
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#0d1522',
+              border: '1px solid #1e293b',
+              borderRadius: '3px',
+              width: '100%',
+              maxWidth: '580px',
+              maxHeight: 'min(90vh, 760px)',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.7)',
+              overflow: 'hidden',
+              margin: 'auto',
+            }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid #1e293b',
+              background: '#090d16',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {testTab === 'whatsapp' ? (
+                  <RiWhatsappFill size={18} style={{ color: '#25d366' }} />
+                ) : (
+                  <RiMailLine size={18} style={{ color: '#22d3ee' }} />
+                )}
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#f8fafc' }}>
+                  {testTab === 'whatsapp' ? 'Send WhatsApp Message' : 'Send Test Email'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setTestModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                title="Close modal (Esc)"
+              >
+                <RiCloseLine size={20} />
+              </button>
+            </div>
+
+            {/* Protocol Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid #1e293b', background: '#090d16', flexShrink: 0 }}>
+              <button
+                onClick={() => { setTestTab('whatsapp'); setTestFeedback(null); }}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  background: testTab === 'whatsapp' ? 'rgba(37,211,102,0.08)' : 'transparent',
+                  border: 'none',
+                  borderBottom: `2px solid ${testTab === 'whatsapp' ? '#25d366' : 'transparent'}`,
+                  color: testTab === 'whatsapp' ? '#25d366' : '#94a3b8',
+                  fontWeight: '700',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <RiWhatsappFill size={15} />
+                WhatsApp Protocol
+              </button>
+              <button
+                onClick={() => { setTestTab('email'); setTestFeedback(null); }}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  background: testTab === 'email' ? 'rgba(34,211,238,0.08)' : 'transparent',
+                  border: 'none',
+                  borderBottom: `2px solid ${testTab === 'email' ? '#22d3ee' : 'transparent'}`,
+                  color: testTab === 'email' ? '#22d3ee' : '#94a3b8',
+                  fontWeight: '700',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <RiMailLine size={15} />
+                Resend Email Protocol
+              </button>
+            </div>
+
+            {/* Modal Body (Scrollable container for expanding content) */}
+            <div style={{
+              padding: '20px',
+              flex: 1,
+              overflowY: 'auto',
+              overscrollBehavior: 'contain',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#334155 #090d16',
+            }}>
+              {testFeedback && (
+                <div style={{
+                  padding: '12px 14px',
+                  marginBottom: '16px',
+                  borderRadius: '3px',
+                  fontSize: '13px',
+                  background: testFeedback.type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+                  border: `1px solid ${testFeedback.type === 'error' ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)'}`,
+                  color: testFeedback.type === 'error' ? '#fca5a5' : '#6ee7b7',
+                  wordBreak: 'break-word',
+                }}>
+                  <div>{testFeedback.text}</div>
+                  {testFeedback.direct_url && (
+                    <div style={{ marginTop: '10px' }}>
+                      <a
+                        href={testFeedback.direct_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: '#25d366',
+                          color: '#0b141a',
+                          padding: '6px 12px',
+                          borderRadius: '3px',
+                          fontWeight: '700',
+                          fontSize: '12px',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <RiWhatsappFill size={14} />
+                        Open Direct Chat (wa.me)
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {testTab === 'email' ? (
+                <div>
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px', fontWeight: '600' }}>
+                      Recipient Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={testEmailTo}
+                      onChange={(e) => setTestEmailTo(e.target.value)}
+                      placeholder="e.g. yourname@domain.com"
+                      style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        background: '#090d16',
+                        border: '1px solid #1e293b',
+                        borderRadius: '3px',
+                        color: '#f8fafc',
+                        padding: '9px 12px',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                      Sender Identity: <code>hello@contact.tunemavens.com</code> (Verified)
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px', fontWeight: '600' }}>
+                      Subject Line
+                    </label>
+                    <input
+                      type="text"
+                      value={testEmailSubject}
+                      onChange={(e) => setTestEmailSubject(e.target.value)}
+                      style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        background: '#090d16',
+                        border: '1px solid #1e293b',
+                        borderRadius: '3px',
+                        color: '#f8fafc',
+                        padding: '9px 12px',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '18px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px', fontWeight: '600' }}>
+                      Message Content
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={testEmailMsg}
+                      onChange={(e) => setTestEmailMsg(e.target.value)}
+                      style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        background: '#090d16',
+                        border: '1px solid #1e293b',
+                        borderRadius: '3px',
+                        color: '#f8fafc',
+                        padding: '10px 12px',
+                        fontSize: '13px',
+                        outline: 'none',
+                        resize: 'vertical',
+                        minHeight: '80px',
+                        maxHeight: '260px',
+                        fontFamily: 'inherit',
+                        lineHeight: '1.5',
+                      }}
+                    />
+                  </div>
+                  <button
+                    disabled={testSubmitting}
+                    onClick={handleSendTestEmail}
+                    style={{
+                      width: '100%',
+                      background: '#22d3ee',
+                      color: '#04141a',
+                      border: 'none',
+                      borderRadius: '3px',
+                      padding: '10px',
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <RiMailSendLine size={16} />
+                    {testSubmitting ? 'Dispatching via Resend...' : 'Send Test Email Now'}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{
+                    background: 'rgba(37,211,102,0.08)',
+                    border: '1px solid rgba(37,211,102,0.25)',
+                    borderRadius: '3px',
+                    padding: '10px 14px',
+                    marginBottom: '16px',
+                    fontSize: '12px',
+                    color: '#cbd5e1',
+                    lineHeight: '1.5',
+                  }}>
+                    <strong style={{ color: '#25d366' }}>Omnichannel WhatsApp Rail:</strong>
+                    {' '}Dispatches automated WhatsApp push messages to registered mobile phones and generates direct <strong>wa.me Click-to-Chat URLs</strong>.
+                    <div style={{ marginTop: '4px', color: '#94a3b8', fontSize: '11px' }}>
+                      Meta WhatsApp Cloud API active. Recipient phone numbers must include country code (e.g. <code>+254 722 520 040</code>).
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px', fontWeight: '600' }}>
+                      Recipient Phone Number (International E.164)
+                    </label>
+                    <input
+                      type="tel"
+                      value={testWaPhone}
+                      onChange={(e) => setTestWaPhone(e.target.value)}
+                      placeholder="e.g. +254 722 520 040 or +1 (555) 019-2834"
+                      style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        background: '#090d16',
+                        border: '1px solid #1e293b',
+                        borderRadius: '3px',
+                        color: '#f8fafc',
+                        padding: '9px 12px',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                      Supports international E.164 format and automated server push + click-to-chat dispatch
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px', fontWeight: '600' }}>
+                      Recipient Name
+                    </label>
+                    <input
+                      type="text"
+                      value={testWaName}
+                      onChange={(e) => setTestWaName(e.target.value)}
+                      style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        background: '#090d16',
+                        border: '1px solid #1e293b',
+                        borderRadius: '3px',
+                        color: '#f8fafc',
+                        padding: '9px 12px',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '18px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px', fontWeight: '600' }}>
+                      WhatsApp Message Body
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={testWaMsg}
+                      onChange={(e) => setTestWaMsg(e.target.value)}
+                      style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        background: '#090d16',
+                        border: '1px solid #1e293b',
+                        borderRadius: '3px',
+                        color: '#f8fafc',
+                        padding: '10px 12px',
+                        fontSize: '13px',
+                        outline: 'none',
+                        resize: 'vertical',
+                        minHeight: '80px',
+                        maxHeight: '260px',
+                        fontFamily: 'inherit',
+                        lineHeight: '1.5',
+                      }}
+                    />
+                  </div>
+                  <button
+                    disabled={testSubmitting}
+                    onClick={handleSendTestWhatsapp}
+                    style={{
+                      width: '100%',
+                      background: '#25d366',
+                      color: '#04141a',
+                      border: 'none',
+                      borderRadius: '3px',
+                      padding: '10px',
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <RiWhatsappFill size={16} />
+                    {testSubmitting ? 'Dispatching...' : 'Dispatch WhatsApp Message'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

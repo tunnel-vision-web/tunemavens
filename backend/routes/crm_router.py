@@ -91,6 +91,41 @@ def dispatch_campaign(campaign_id: str, current_user: dict = Depends(get_current
         
     if inbox_docs:
         db.user_inbox.insert_many(inbox_docs)
+
+    # Dispatch to Communications Vault across Email & WhatsApp
+    try:
+        from account_setup import send_email, _email_wrapper
+        from services.whatsapp_service import send_whatsapp
+        for user_doc in matched_users:
+            u_email = user_doc.get("email")
+            u_phone = user_doc.get("phone")
+            u_name = user_doc.get("full_name") or user_doc.get("username", "")
+            u_role = (user_doc.get("roles") or ["general"])[0]
+
+            if u_phone:
+                send_whatsapp(
+                    to=u_phone,
+                    message=f"*{campaign.subject}*\n\n{campaign.body}",
+                    recipient_name=u_name,
+                    role=u_role,
+                    event_type="crm_campaign_outreach",
+                    metadata={"campaign_id": campaign_id}
+                )
+            if u_email:
+                inner_html = f"<div style='font-size:16px;font-weight:700;color:#22d3ee;margin-bottom:12px;'>{campaign.subject}</div><p style='color:#cbd5e1;font-size:14px;line-height:1.6;'>{campaign.body}</p>"
+                html = _email_wrapper(inner_html, campaign.subject, u_role)
+                send_email(
+                    to=u_email,
+                    subject=campaign.subject,
+                    html=html,
+                    text=campaign.body,
+                    event_type="crm_campaign_outreach",
+                    role=u_role,
+                    recipient_name=u_name,
+                    metadata={"campaign_id": campaign_id}
+                )
+    except Exception as exc:
+        logger.warning(f"Outbound comm dispatch error in campaign: {exc}")
     
     db.crm_campaigns.update_one(
         {"_id": oid},

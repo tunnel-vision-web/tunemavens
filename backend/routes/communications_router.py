@@ -164,6 +164,13 @@ def get_communication_stats(user=Depends(get_optional_user)):
     ]
     by_event_type = {doc["_id"] or "general": doc["count"] for doc in db.communications.aggregate(type_pipeline)}
 
+    # Aggregate by channel
+    channel_pipeline = [
+        {"$group": {"_id": "$channel", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    by_channel = {doc["_id"] or "email": doc["count"] for doc in db.communications.aggregate(channel_pipeline)}
+
     return {
         "status": "success",
         "total_count": total,
@@ -174,7 +181,8 @@ def get_communication_stats(user=Depends(get_optional_user)):
         "active_count": active_count,
         "deliverability_rate": deliverability_rate,
         "by_persona": by_persona,
-        "by_event_type": by_event_type
+        "by_event_type": by_event_type,
+        "by_channel": by_channel,
     }
 
 
@@ -243,7 +251,7 @@ def unarchive_communication(msg_id: str, user=Depends(get_optional_user)):
 
 @router.post("/resend/{msg_id}")
 def resend_communication(msg_id: str, user=Depends(get_optional_user)):
-    """Trigger an immediate re-send attempt of a previous communication through Resend."""
+    """Trigger an immediate re-send attempt of a previous communication through Resend or WhatsApp."""
     doc = db.communications.find_one({"id": msg_id})
     if not doc:
         try:
@@ -252,6 +260,25 @@ def resend_communication(msg_id: str, user=Depends(get_optional_user)):
             pass
     if not doc:
         raise HTTPException(status_code=404, detail="Communication record not found.")
+
+    channel = (doc.get("channel") or "email").lower()
+    if channel == "whatsapp":
+        from services.whatsapp_service import send_whatsapp
+        res = send_whatsapp(
+            to=doc["to"],
+            message=doc.get("text") or doc.get("subject", ""),
+            recipient_name=doc.get("recipient_name", ""),
+            role=doc.get("role", "general"),
+            event_type=doc.get("event_type", "notification"),
+            metadata={**doc.get("metadata", {}), "resent_from_id": msg_id}
+        )
+        return {
+            "status": "success",
+            "channel": "whatsapp",
+            "resend_result": res.get("status", "sent"),
+            "direct_url": res.get("direct_url", ""),
+            "message": f"WhatsApp communication re-dispatched to {doc['to']}."
+        }
 
     from account_setup import send_email
     status = send_email(
@@ -267,9 +294,139 @@ def resend_communication(msg_id: str, user=Depends(get_optional_user)):
 
     return {
         "status": "success",
+        "channel": "email",
         "resend_result": status,
         "message": f"Message re-dispatched to {doc['to']}. Delivery status: {status}"
     }
+
+
+class TestEmailRequest(BaseModel):
+    to: str
+    subject: Optional[str] = "TuneMavens Email Protocol Diagnostic"
+    message: Optional[str] = "This is a diagnostic message verifying outbound email deliverability via Resend."
+    role: Optional[str] = "general"
+    recipient_name: Optional[str] = ""
+
+
+class TestWhatsappRequest(BaseModel):
+    to: str
+    message: Optional[str] = "TuneMavens Omnichannel Protocol Alert: WhatsApp communication channel verified successfully."
+    role: Optional[str] = "general"
+    recipient_name: Optional[str] = ""
+
+
+class SendCommunicationRequest(BaseModel):
+    to: str
+    channel: str = "email"
+    subject: Optional[str] = ""
+    message: str
+    role: Optional[str] = "general"
+    event_type: Optional[str] = "general"
+    recipient_name: Optional[str] = ""
+
+
+@router.post("/test-email")
+def test_email_dispatch(payload: TestEmailRequest, user=Depends(get_optional_user)):
+    """Dispatch a direct test email to verify DNS and Resend delivery protocol."""
+    from account_setup import send_email, _email_wrapper, _button, PUBLIC_APP_URL
+    inner_html = f"""
+<div style="background:#131c2d;border:1px solid #1e293b;border-radius:3px;padding:20px;margin:20px 0;">
+  <div style="font-size:16px;font-weight:700;color:#22d3ee;margin-bottom:8px;">Protocol Verification: ACTIVE</div>
+  <p style="margin:0 0 12px 0;color:#cbd5e1;font-size:14px;">
+    {payload.message}
+  </p>
+  <div style="font-size:12px;color:#64748b;font-family:monospace;">
+    Timestamp: {datetime.now(timezone.utc).isoformat()} UTC<br/>
+    Sender Identity: TuneMavens &lt;hello@contact.tunemavens.com&gt;<br/>
+    DNS Status: Verified (DKIM & SPF Authentication Active)
+  </div>
+</div>
+<div style="margin:20px 0;">
+  {_button(f"{PUBLIC_APP_URL}/#/dashboard", "Open TuneMavens Console")}
+</div>
+"""
+    html = _email_wrapper(inner_html, payload.subject, payload.role)
+    status_val = send_email(
+        to=payload.to,
+        subject=payload.subject,
+        html=html,
+        text=payload.message,
+        event_type="protocol_diagnostic_test",
+        role=payload.role,
+        recipient_name=payload.recipient_name,
+        metadata={"diagnostic": True, "initiated_by": "admin_test"}
+    )
+
+    return {
+        "status": "success",
+        "delivery_status": status_val,
+        "recipient": payload.to,
+        "message": f"Test email dispatched to {payload.to} with status '{status_val}'."
+    }
+
+
+@router.post("/test-whatsapp")
+def test_whatsapp_dispatch(payload: TestWhatsappRequest, user=Depends(get_optional_user)):
+    """Dispatch a direct test message to verify WhatsApp communication protocol."""
+    from services.whatsapp_service import send_whatsapp
+    res = send_whatsapp(
+        to=payload.to,
+        message=payload.message,
+        recipient_name=payload.recipient_name,
+        role=payload.role,
+        event_type="protocol_diagnostic_test",
+        metadata={"diagnostic": True, "initiated_by": "admin_test"}
+    )
+
+    return {
+        "status": "success",
+        "delivery_status": res.get("status", "sent"),
+        "comm_id": res.get("comm_id"),
+        "direct_url": res.get("direct_url"),
+        "recipient": payload.to,
+        "message": f"WhatsApp protocol test registered for {payload.to}."
+    }
+
+
+@router.post("/send")
+def send_communication(payload: SendCommunicationRequest, user=Depends(get_optional_user)):
+    """Universal dispatcher for outbound communications across email and WhatsApp."""
+    channel = (payload.channel or "email").lower()
+    if channel == "whatsapp":
+        from services.whatsapp_service import send_whatsapp
+        res = send_whatsapp(
+            to=payload.to,
+            message=payload.message,
+            recipient_name=payload.recipient_name,
+            role=payload.role,
+            event_type=payload.event_type,
+            metadata={"origin": "universal_send_api"}
+        )
+        return {
+            "status": "success",
+            "channel": "whatsapp",
+            "delivery_status": res.get("status"),
+            "comm_id": res.get("comm_id"),
+            "direct_url": res.get("direct_url")
+        }
+    else:
+        from account_setup import send_email, _email_wrapper
+        html = _email_wrapper(f"<p>{payload.message}</p>", payload.subject or "Notification", payload.role)
+        status_val = send_email(
+            to=payload.to,
+            subject=payload.subject or "TuneMavens Ecosystem Notification",
+            html=html,
+            text=payload.message,
+            event_type=payload.event_type,
+            role=payload.role,
+            recipient_name=payload.recipient_name,
+            metadata={"origin": "universal_send_api"}
+        )
+        return {
+            "status": "success",
+            "channel": "email",
+            "delivery_status": status_val
+        }
 
 
 @router.get("/export")

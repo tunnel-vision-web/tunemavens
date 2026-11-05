@@ -1468,7 +1468,7 @@ function DashboardView({
     const roleAllowed = {
       vc: ['home', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
       investor: ['home', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
-      admin: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
+      admin: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
       corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
@@ -1479,7 +1479,7 @@ function DashboardView({
       podcaster: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
       consumer: ['home', 'explore', 'podcasts', 'podcaster-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
       affiliate: ['home', 'affiliates', 'podcasts', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
-      creator: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support']
+      creator: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
     if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
@@ -1898,7 +1898,7 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
+        visibleKeys = ['home', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
         break;
       case 'affiliate':
         visibleKeys = ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'support'];
@@ -1932,7 +1932,7 @@ function DashboardView({
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'podcaster-studio', 'podcasts', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'podcaster-studio', 'podcasts', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'communications', 'support'];
         break;
     }
 

@@ -2575,3 +2575,35 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Comprehensive filtering toolbar (search, persona dropdown, event dropdown, status dropdown, archive tabs).
     - Deep inspection modal featuring Sandboxed HTML Render Preview, Pre-formatted Plain Text, Provider Audit Telemetry, and Raw JSON payload.
     - Integrated into `apps/portal/src/App.jsx` under `communications` tab and accessible via topbar and navigation.
+
+
+### 9.44.43 Omnichannel WhatsApp Protocol, Meta Cloud API Dispatcher & Responsive Modal Experience (5 November 2026)
+
+- **Omnichannel Communication Architecture:**
+  - **Multi-Rail Delivery Engine:** Extended the ecosystem communications stack beyond email to natively support outbound **WhatsApp Messaging** alongside **Resend Transactional Email** (`hello@contact.tunemavens.com`).
+  - **Meta WhatsApp Cloud API Service (`backend/services/whatsapp_service.py`):**
+    - International E.164 phone sanitization (standardizes formats like `+254 722 520 040`, `0722520040`, and `(254) 722-520-040` into clean digits `254722520040`).
+    - Direct server-to-phone automated push using Meta Graph Cloud API (`https://graph.facebook.com/v20.0/{phone_number_id}/messages`) configured with `WHATSAPP_API_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID`.
+    - Automated conversation-window fallback: attempts custom text dispatch and falls back to pre-approved templates (such as `hello_world`) if the recipient is outside Meta's 24-hour inbound customer-service window.
+    - Universal `wa.me` direct click-to-chat URL generation allowing instantaneous web or mobile app conversation launch with pre-encoded payloads.
+    - Comprehensive ledger auditing into MongoDB `db.communications` recording communication ID, channel (`whatsapp`), provider HTTP status code, message payload, and metadata.
+
+- **Backend Routing Extensions (`backend/routes/communications_router.py` & `crm_router.py`):**
+  - `POST /api/communications/test-whatsapp`: Diagnostic endpoint for immediate live WhatsApp protocol testing.
+  - `POST /api/communications/test-email`: Immediate Resend deliverability verification endpoint.
+  - `POST /api/communications/send`: Universal multi-channel message dispatcher routing to WhatsApp or Resend Email based on payload `channel`.
+  - `GET /api/communications/stats`: Analytics aggregation updated with `by_channel` metrics (`stats.by_channel.email` vs `stats.by_channel.whatsapp`).
+  - `GET /api/communications/logs`: Added `channel` query filter (`email` vs `whatsapp`) and CSV export multi-channel tracking.
+  - `POST /api/crm/campaigns`: Enhanced to trigger both automated WhatsApp push broadcasts and targeted emails across artist fanbases.
+
+- **Responsive Modal Architecture & UX Enhancements (`apps/portal/src/components/communications/`):**
+  - **Click-Outside Modal Dismissal:** Backdrops across `CommunicationsVaultPanel` (Send/Test Protocols modal, Deep Inspection modal) and `SmartCrmStudioPanel` (Add Lead modal) now dismiss smoothly when clicking outside the dialog content.
+  - **Event Propagation Protection:** Modal dialog containers intercept click events with `e.stopPropagation()` so interacting with inputs, tabs, textareas, or buttons never triggers accidental dismissal.
+  - **Keyboard Escape Accessibility:** Global `keydown` listeners detect the `Escape` key to instantly close active modals.
+  - **Scrollable Expandable Modal Body:**
+    - Outer modal overlay supports `overflow-y: auto` for constrained displays.
+    - Inner dialog card is bounded by `max-height: min(90vh, 760px)` with `display: flex; flex-direction: column`.
+    - Modal header and protocol tabs stay locked in view (`flex-shrink: 0`).
+    - Modal body is configured with `flex: 1`, `overflow-y: auto`, `overscroll-behavior: contain`, and thin custom scrollbars (`scrollbarWidth: thin`), allowing content to gracefully expand when entering long messages or displaying live delivery alerts without clipping action buttons or breaking viewport layout.
+    - Textarea inputs support vertical resizing (`resize: vertical`, `min-height: 80px`, `max-height: 260px`).
+  - **One-Click Action Buttons:** Direct "Send WhatsApp" and "Test Email" buttons placed directly in the Communications Vault toolbar.

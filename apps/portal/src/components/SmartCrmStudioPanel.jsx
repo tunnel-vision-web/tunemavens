@@ -1575,32 +1575,40 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
 
       {/* Add Lead / Fan Modal */}
       {addLeadModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100000,
-          padding: '20px'
-        }}>
-          <div style={{
-            width: '100%',
-            maxWidth: '520px',
-            background: '#090d1a',
-            border: '1px solid rgba(0,240,255,0.3)',
-            borderRadius: '8px',
-            padding: '24px',
+        <div 
+          onClick={() => setAddLeadModalOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.9)'
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100000,
+            padding: '20px',
+            overflowY: 'auto'
           }}>
+          <div 
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '520px',
+              maxHeight: 'min(90vh, 700px)',
+              overflowY: 'auto',
+              background: '#090d1a',
+              border: '1px solid rgba(0,240,255,0.3)',
+              borderRadius: '8px',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.9)',
+              margin: 'auto'
+            }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, color: '#fff' }}>
                 Add New Contact to Smart CRM

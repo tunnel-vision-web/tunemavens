@@ -369,6 +369,7 @@ export const communicationsApi = {
     if (params.role && params.role !== 'all') q.append('role', params.role);
     if (params.event_type && params.event_type !== 'all') q.append('event_type', params.event_type);
     if (params.status && params.status !== 'all') q.append('status', params.status);
+    if (params.channel && params.channel !== 'all') q.append('channel', params.channel);
     if (params.archived !== undefined) q.append('archived', String(params.archived));
     if (params.page) q.append('page', String(params.page));
     if (params.limit) q.append('limit', String(params.limit));
@@ -380,6 +381,9 @@ export const communicationsApi = {
   archiveMessage: (msgId) => request('/api/communications/archive/' + encodeURIComponent(msgId), { method: 'POST' }),
   unarchiveMessage: (msgId) => request('/api/communications/unarchive/' + encodeURIComponent(msgId), { method: 'POST' }),
   resendMessage: (msgId) => request('/api/communications/resend/' + encodeURIComponent(msgId), { method: 'POST' }),
+  testEmail: (payload) => request('/api/communications/test-email', { method: 'POST', body: payload }),
+  testWhatsapp: (payload) => request('/api/communications/test-whatsapp', { method: 'POST', body: payload }),
+  sendMessage: (payload) => request('/api/communications/send', { method: 'POST', body: payload }),
   getExportUrl: () => `${BASE}/api/communications/export`,
 };
 
