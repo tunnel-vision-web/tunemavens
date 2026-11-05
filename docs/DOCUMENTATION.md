@@ -2659,6 +2659,29 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
       - *Fair Payouts & Splits:* "Decide who gets paid for each song. When your music earns money, your producers and collaborators get paid straight to their mobile money or bank accounts without disputes."
       - *Wallet & Credits:* "Top up anytime using M-Pesa or card whenever you want to use mastering tools or receive automated phone alerts—no monthly subscription."
       - *Instant Alerts:* "Get notified directly on WhatsApp or email whenever someone wants to license your song or whenever your royalties arrive."
+  - **Extensive Full-Dashboard Admin Guided Tour (21-Step Complete Coverage):**
+    - Specially designed comprehensive 21-step interactive tour covering every single operational pillar, navigation item, and workspace tool across the Administrator Console:
+      1. **Platform Control Room (`[data-tour="sidebar-nav"]`):** Central command room overview for all music catalogs, users, automated payouts, messaging, and system tools.
+      2. **Live Key Metrics (`[data-tour="admin-overview-stats"]`):** Real-time platform telemetry: active corporate ad spend, verified stream impressions, and system credit balances.
+      3. **Growth & Delivery Trends (`[data-tour="admin-overview-chart"]`):** Month-over-month interactive analytics chart tracking streaming reach and advertising delivery.
+      4. **Role Simulator (`[data-tour="topbar-account"]`):** 1-click persona switcher allowing admins to test the live platform through the eyes of any user role (Creator, Supervisor, Label, DJ, etc.).
+      5. **Credits & Reload System (`[data-tour="topbar-credits"]`):** Pay-as-you-go credit system for mastering and phone alerts with zero monthly subscriptions.
+      6. **Real-Time Notifications (`[data-tour="topbar-notifications"]`):** Instant alerts on payout disbursements, new sync licenses, split approvals, and verification requests.
+      7. **Admin Team & Staff Seats (`[data-tour="nav-admin-team"]`):** Team invitation and role permission controls for moderators, curators, and finance staff.
+      8. **Communications Vault & WhatsApp (`[data-tour="nav-communications"]`):** Omnichannel delivery, inbound handshakes, and private monthly messaging quota controls.
+      9. **Corporate Ads & Audio Flights (`[data-tour="nav-corporate-ads"]`):** Brand ad campaign management, sponsorship rates, and audio jingle placements.
+      10. **Affiliate Programme & Referrals (`[data-tour="nav-affiliates"]`):** Partner network management, referral links, and automated weekly mobile payouts.
+      11. **Catalogue Machine & Master Songs (`[data-tour="nav-catalog"]`):** Discography inspection, metadata verification, and global streaming readiness.
+      12. **Digital Press Kit (EPK) Builder (`[data-tour="nav-epk-builder"]`):** Public artist media kits and websites for booking agents, promoters, and fans.
+      13. **Split Cascade & Royalty Payouts (`[data-tour="nav-splits"]`):** Programmatic royalty sharing and dispute-free collaborator payouts via M-Pesa or bank transfer.
+      14. **Sync Marketplace & Briefs (`[data-tour="nav-sync"]`):** Pre-cleared music licensing for movies, TV series, commercials, and video games.
+      15. **Digital Contracts & Escrow (`[data-tour="nav-escrow"]`):** Legally binding agreements and safe escrow funds protection.
+      16. **DJ Record Pool & Club Edits (`[data-tour="nav-djpool"]`):** Exclusive club crates, extended intros, and clean radio edits for professional DJs.
+      17. **Podcaster Studio & RSS Feeds (`[data-tour="nav-podcaster-studio"]`):** Episode hosting, -16 LUFS mastering, guest releases, and multi-platform podcast distribution.
+      18. **TunePay POS & Event Commerce (`[data-tour="nav-pos-inventory"]`):** On-site concert merchandise sales, POS card/M-Pesa payment terminals, and instant settlements.
+      19. **Custom Domains & Web Setup (`[data-tour="nav-domain-mappings"]`):** Custom web domains and public layout configurations for artist sites.
+      20. **App Marketplace & Add-Ons (`[data-tour="nav-app-marketplace"]`):** Modular workspace apps including AI social tools and Smart CRM.
+      21. **Support, Helpdesk & Restarting Tour (`[data-tour="topbar-tour-btn"]`):** Support documentation, claim arbitrations, and 1-click tour restart trigger.
   - **Persona-Tailored Walkthrough Matrix:**
     - Step-by-step guided spotlight walkthroughs tailored for all 11 ecosystem personas (`creator`, `supervisor`, `label`, `corporate`, `dj`, `podcaster`, `media_house`, `affiliate`, `vc`, `consumer`, `admin`).
   - **Automated First-Access Launch & 1-Click Restart Controls:**

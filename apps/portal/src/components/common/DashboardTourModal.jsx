@@ -388,26 +388,172 @@ export const PERSONA_TOUR_DATA = {
     color: '#ef4444',
     steps: [
       {
-        title: 'Admin Operations Hub',
-        badge: 'Platform Admin',
+        title: 'Platform Control Room',
+        badge: 'System Command',
+        tab: 'home',
         targetSelector: '[data-tour="sidebar-nav"]',
-        description: 'Welcome to the platform control room. From here you can oversee operations, monitor system health, and test any user experience.',
-        highlight: 'Complete platform control and monitoring',
+        description: 'Welcome to your central platform control room. As an administrator, you have complete visibility and control over all music catalogs, users, automated payouts, messaging, and system tools.',
+        highlight: 'Your full-access pass to every tool across TuneMavens',
       },
       {
-        title: 'Test Any User Role',
-        badge: 'Role Switcher',
-        targetSelector: '[data-tour="topbar-simulation-badge"]',
-        description: 'Click your account menu or topbar pill anytime to switch into any persona (Creator, Supervisor, Label, DJ, etc.) to verify features firsthand.',
-        highlight: 'Instantly view the platform as any persona',
+        title: 'Live Activity & Key Numbers',
+        badge: 'Live Metrics',
+        tab: 'home',
+        targetSelector: '[data-tour="admin-overview-stats"]',
+        description: 'These overview cards show real-time platform vitals: active corporate advertising spend, verified audio stream counts, and system credit balances across all users.',
+        highlight: 'Real-time vitals updated live as users interact',
       },
       {
-        title: 'Communications & Private Quotas',
-        badge: 'Alerts & Messages',
-        tab: 'communications-vault',
-        targetSelector: '[data-tour="nav-communications-vault"]',
-        description: 'Manage WhatsApp and email delivery. Internal messaging quotas remain strictly private and visible only to administrators.',
-        highlight: 'Secure messaging with admin-only quota controls',
+        title: 'Growth & Delivery Trends',
+        badge: 'Analytics Chart',
+        tab: 'home',
+        targetSelector: '[data-tour="admin-overview-chart"]',
+        description: 'This interactive chart tracks month-over-month performance. You can review streaming milestones, brand ad reach, and revenue progress across all music genres.',
+        highlight: 'Visual performance tracking at a glance',
+      },
+      {
+        title: 'Experience Any User Role',
+        badge: 'Role Simulator',
+        tab: 'home',
+        targetSelector: '[data-tour="topbar-account"]',
+        description: 'Click your account menu or avatar anytime to switch into any persona: Creator, Music Supervisor, Record Label, Corporate Brand, DJ, Podcaster, Affiliate, or Investor. This lets you test the exact experience each user sees.',
+        highlight: 'Test and verify the platform from any user perspective',
+      },
+      {
+        title: 'Credits & Reload System',
+        badge: 'Wallet & Top-Ups',
+        tab: 'home',
+        targetSelector: '[data-tour="topbar-credits"]',
+        description: 'Shows platform credit balances. Users buy credits using M-Pesa or credit card to pay for mastering and messaging without monthly commitments. Admins can inspect and test sandbox balances here.',
+        highlight: 'Pay-as-you-go credits with zero monthly subscriptions',
+      },
+      {
+        title: 'Real-Time Notifications',
+        badge: 'Action Alerts',
+        tab: 'home',
+        targetSelector: '[data-tour="topbar-notifications"]',
+        description: 'Get instant alerts whenever key events occur—such as new sync licensing inquiries, payout disbursements, pending split approvals, or user verification requests.',
+        highlight: 'Stay informed on critical platform events',
+      },
+      {
+        title: 'Admin Team & Staff Seats',
+        badge: 'Staff Management',
+        tab: 'admin-team',
+        targetSelector: '[data-tour="nav-admin-team"]',
+        description: 'Invite team members, assign operational seats, and manage permissions for platform moderators, music curators, and finance administrators.',
+        highlight: 'Secure access control for your operational team',
+      },
+      {
+        title: 'Communications Vault & WhatsApp',
+        badge: 'Messaging Vault',
+        tab: 'communications',
+        targetSelector: '[data-tour="nav-communications"]',
+        description: 'Manage real-time WhatsApp and email delivery. You can initiate inbound handshakes, test automated notifications, and oversee private monthly messaging quotas.',
+        highlight: 'Automated, reliable phone notifications with admin-only quota controls',
+      },
+      {
+        title: 'Corporate Ads & Audio Flights',
+        badge: 'Brand Sponsorships',
+        tab: 'corporate-ads',
+        targetSelector: '[data-tour="nav-corporate-ads"]',
+        description: 'Set commercial sponsorship rates, track audio jingles and ad placements across TuneStream players and podcasts, and review brand campaign performance.',
+        highlight: 'Monetize streaming audio with brand sponsorships',
+      },
+      {
+        title: 'Affiliate Programme & Referrals',
+        badge: 'Affiliate Hub',
+        tab: 'affiliates',
+        targetSelector: '[data-tour="nav-affiliates"]',
+        description: 'Manage promotional partners and ambassadors. Review referral commission rates, track invite links, and ensure automated weekly mobile money payouts.',
+        highlight: 'Drive organic platform growth with transparent commissions',
+      },
+      {
+        title: 'Catalogue Machine & Master Songs',
+        badge: 'Music Catalog',
+        tab: 'catalog',
+        targetSelector: '[data-tour="nav-catalog"]',
+        description: 'Inspect all music uploaded across the platform. Verify song titles, cover artwork, audio formats, and international streaming readiness.',
+        highlight: 'Maintain high audio and metadata standards',
+      },
+      {
+        title: 'Digital Press Kit (EPK) Builder',
+        badge: 'Artist Websites',
+        tab: 'epk-builder',
+        targetSelector: '[data-tour="nav-epk-builder"]',
+        description: 'Where artists build responsive websites showcasing their music, tour dates, high-res photos, and biographies to pitch to festival organizers and labels.',
+        highlight: 'Empower creators to look professional for bookers',
+      },
+      {
+        title: 'Split Cascade & Royalty Payouts',
+        badge: 'Royalty Splits',
+        tab: 'splits',
+        targetSelector: '[data-tour="nav-splits"]',
+        description: 'Set up and inspect automated royalty sharing. When a track earns money, collaborator splits (for producers, writers, and artists) are paid automatically to mobile money or bank accounts.',
+        highlight: 'Zero payment confusion or collaborator disputes',
+      },
+      {
+        title: 'Sync Marketplace & Briefs',
+        badge: 'Film & TV Sync',
+        tab: 'sync',
+        targetSelector: '[data-tour="nav-sync"]',
+        description: 'Where music supervisors search and license 100% pre-cleared tracks for movies, TV series, video games, and advertising campaigns.',
+        highlight: 'Connecting authentic music with global media projects',
+      },
+      {
+        title: 'Digital Contracts & Escrow',
+        badge: 'Safe Contracts',
+        tab: 'escrow',
+        targetSelector: '[data-tour="nav-escrow"]',
+        description: 'Review signed licensing agreements and escrow transactions. Funds are held safely until contracts are mutually executed, protecting both creators and buyers.',
+        highlight: 'Complete legal security with digital escrow',
+      },
+      {
+        title: 'DJ Record Pool & Club Edits',
+        badge: 'DJ Community',
+        tab: 'djpool',
+        targetSelector: '[data-tour="nav-djpool"]',
+        description: 'Curated crates of extended intros, clean radio cuts, and trending African club tracks built specifically for professional club and broadcast DJs.',
+        highlight: 'Equip working DJs with fresh club-ready tracks',
+      },
+      {
+        title: 'Podcaster Studio & RSS Feeds',
+        badge: 'Podcasts & Shows',
+        tab: 'podcaster-studio',
+        targetSelector: '[data-tour="nav-podcaster-studio"]',
+        description: 'Manage podcast episodes, audio mastering, guest releases, and automatic distribution to Apple Podcasts, Spotify, and YouTube.',
+        highlight: 'A complete home for African podcast creators',
+      },
+      {
+        title: 'TunePay POS & Event Commerce',
+        badge: 'Live Merch Sales',
+        tab: 'pos-inventory',
+        targetSelector: '[data-tour="nav-pos-inventory"]',
+        description: 'Manage live merchandise sales for concert tours and festival booths. Supports on-site card and M-Pesa payments with instant settlement.',
+        highlight: 'Sell merch at live events with instant mobile checkout',
+      },
+      {
+        title: 'Custom Domains & Web Setup',
+        badge: 'Custom Domains',
+        tab: 'domain-mappings',
+        targetSelector: '[data-tour="nav-domain-mappings"]',
+        description: 'Connect custom internet domains (like yourname.com) directly to artist EPKs and manage public website layout templates.',
+        highlight: 'Give artists their own custom web identity',
+      },
+      {
+        title: 'App Marketplace & Add-Ons',
+        badge: 'App Ecosystem',
+        tab: 'app-marketplace',
+        targetSelector: '[data-tour="nav-app-marketplace"]',
+        description: 'Browse, activate, or disable modular platform apps—such as AI social caption generators, smart CRM, and third-party integrations.',
+        highlight: 'Customize workspace capabilities as needed',
+      },
+      {
+        title: "You're All Set! Restart Anytime",
+        badge: 'Support & Tour Help',
+        tab: 'support',
+        targetSelector: '[data-tour="topbar-tour-btn"]',
+        description: "That covers the entire admin dashboard! You can restart this tour anytime with a single click right here on the 'Take Tour' button, or explore help articles in the Support tab.",
+        highlight: "Click 'Take Tour' anytime to replay this guided walkthrough",
       },
     ],
   },
@@ -458,6 +604,7 @@ export default function DashboardTourModal({
     if (!targetEl && step.tab) {
       targetEl = document.querySelector(`[data-tour="nav-${step.tab}"]`) ||
                  document.querySelector(`button[data-tab="${step.tab}"]`) ||
+                 document.querySelector(`[data-tour="nav-${step.tab.replace('-vault', '')}"]`) ||
                  document.querySelector(`button[data-tour="nav-${step.tab}"]`);
     }
 
@@ -469,6 +616,11 @@ export default function DashboardTourModal({
     }
 
     if (targetEl) {
+      // Ensure target element is brought into view inside its scrollable parent
+      try {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      } catch (_) {}
+
       const rect = targetEl.getBoundingClientRect();
       // If element is actually on screen with non-zero dimensions
       if (rect.width > 0 && rect.height > 0) {
@@ -486,10 +638,9 @@ export default function DashboardTourModal({
         const winHeight = window.innerHeight;
         const cardWidth = Math.min(460, winWidth - 32);
         const cardHeightEstimate = 320;
-        const padding = 12;
 
-        // If target is in the sidebar (left side of screen)
-        if (rect.right < winWidth * 0.45) {
+        // A. If target is in the sidebar (left side of screen)
+        if (rect.right < winWidth * 0.42) {
           const idealLeft = rect.right + 20;
           const idealTop = Math.max(16, Math.min(rect.top - 10, winHeight - cardHeightEstimate - 16));
           setPopoverPos({
@@ -501,10 +652,10 @@ export default function DashboardTourModal({
             placement: 'right',
           });
         }
-        // If target is in the topbar (top of screen)
-        else if (rect.top < 120) {
+        // B. If target is in the topbar (top of screen)
+        else if (rect.top < 110) {
           const idealTop = rect.bottom + 16;
-          const idealLeft = Math.max(16, Math.min(rect.left - 40, winWidth - cardWidth - 16));
+          const idealLeft = Math.max(16, Math.min(rect.left - 60, winWidth - cardWidth - 16));
           setPopoverPos({
             position: 'fixed',
             left: `${idealLeft}px`,
@@ -514,20 +665,45 @@ export default function DashboardTourModal({
             placement: 'bottom',
           });
         }
-        // Otherwise position adjacent or nicely centered
+        // C. Target is in main content area
         else {
-          const idealLeft = Math.max(16, Math.min(rect.left, winWidth - cardWidth - 16));
-          const idealTop = rect.bottom + 16 <= winHeight - cardHeightEstimate
-            ? rect.bottom + 16
-            : Math.max(16, rect.top - cardHeightEstimate - 16);
-          setPopoverPos({
-            position: 'fixed',
-            left: `${idealLeft}px`,
-            top: `${idealTop}px`,
-            transform: 'none',
-            isFloating: true,
-            placement: 'bottom',
-          });
+          // If wide element or card in main content
+          const canFitBelow = rect.bottom + 16 + cardHeightEstimate <= winHeight;
+          const canFitAbove = rect.top - 16 - cardHeightEstimate >= 16;
+
+          if (canFitBelow) {
+            const idealLeft = Math.max(16, Math.min(rect.left, winWidth - cardWidth - 16));
+            setPopoverPos({
+              position: 'fixed',
+              left: `${idealLeft}px`,
+              top: `${rect.bottom + 16}px`,
+              transform: 'none',
+              isFloating: true,
+              placement: 'bottom',
+            });
+          } else if (canFitAbove) {
+            const idealLeft = Math.max(16, Math.min(rect.left, winWidth - cardWidth - 16));
+            setPopoverPos({
+              position: 'fixed',
+              left: `${idealLeft}px`,
+              top: `${rect.top - cardHeightEstimate - 16}px`,
+              transform: 'none',
+              isFloating: true,
+              placement: 'top',
+            });
+          } else {
+            // Floating dock at bottom-right of viewport to avoid covering the spotlight
+            setPopoverPos({
+              position: 'fixed',
+              right: '24px',
+              bottom: '24px',
+              left: 'auto',
+              top: 'auto',
+              transform: 'none',
+              isFloating: true,
+              placement: 'dock-bottom-right',
+            });
+          }
         }
         return;
       }
@@ -554,18 +730,20 @@ export default function DashboardTourModal({
       setActiveTab(step.tab);
     }
 
-    // Give DOM a frame to switch and render tab content
+    // Multiple micro-frames ensure DOM switches tabs and finishes smooth scrolling
     updateTargetPosition();
-    const t1 = setTimeout(updateTargetPosition, 80);
-    const t2 = setTimeout(updateTargetPosition, 260);
+    const t1 = setTimeout(updateTargetPosition, 60);
+    const t2 = setTimeout(updateTargetPosition, 180);
+    const t3 = setTimeout(updateTargetPosition, 340);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [isOpen, currentStep, steps, setActiveTab, updateTargetPosition]);
 
-  // Listen to window resize and scroll events
+  // Listen to window resize and capture-phase scroll events
   useEffect(() => {
     if (!isOpen) return;
 
@@ -714,6 +892,8 @@ export default function DashboardTourModal({
           position: popoverPos.position || 'fixed',
           top: popoverPos.top,
           left: popoverPos.left,
+          right: popoverPos.right,
+          bottom: popoverPos.bottom,
           transform: popoverPos.transform || 'none',
           zIndex: 10003,
           width: 'min(460px, calc(100vw - 32px))',
@@ -802,7 +982,7 @@ export default function DashboardTourModal({
         </div>
 
         {/* Clickable Progress Dots */}
-        <div style={{ display: 'flex', gap: '5px', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '4px', width: '100%' }}>
           {steps.map((_, idx) => (
             <div
               key={idx}

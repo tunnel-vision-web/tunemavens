@@ -773,6 +773,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
             onClick={() => { setAccountOpen(o => !o); setNotifOpen(false); }}
             title="Account & Profile"
             data-testid="topbar-account-button"
+            data-tour="topbar-account"
           >
             <span className="topbar-avatar" style={{ background: currentRoleObj?.color || '#0ea5e9', color: '#060813' }}>{initial}</span>
             <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15, textAlign: 'left' }}>
@@ -2433,7 +2434,7 @@ function DashboardView({
           </ul>
         </div>
 
-        <div className="dashboard-sidebar-footer">
+        <div className="dashboard-sidebar-footer" data-tour="sidebar-profile-card">
           <div className="dashboard-profile-card">
             <div className="dashboard-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(34, 211, 238, 0.1)', color: 'var(--cyan)', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
               {sessionUser.name ? sessionUser.name.charAt(0) : 'A'}
@@ -5393,14 +5394,14 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
 
   return (
     <div>
-      <div className="dashboard-panel-header">
+      <div className="dashboard-panel-header" data-tour="admin-overview-header">
         <h2 style={{ fontSize: '20px', fontWeight: '800', textTransform: 'capitalize', letterSpacing: '0.5px' }}>Dashboard</h2>
         <p style={{ fontSize: '13px', color: 'var(--mu)', marginTop: '4px' }}>
           Welcome back, {sessionUser.name || 'Creator'}! Managing {data.title}.
         </p>
       </div>
 
-      <div className="dashboard-grid-3">
+      <div className="dashboard-grid-3" data-tour="admin-overview-stats">
         <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div className="stat-label">
@@ -5471,7 +5472,7 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
       </div>
 
       {/* Charts and Details Segment */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '24px' }} data-tour="admin-overview-chart">
         <div className="dashboard-card">
           <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff' }}>{data.chartTitle}</h3>
           
