@@ -358,10 +358,16 @@ def test_email_dispatch(payload: TestEmailRequest, user=Depends(get_optional_use
     )
 
     return {
-        "status": "success",
+        "status": "success" if status_val == "sent" else "failed",
         "delivery_status": status_val,
         "recipient": payload.to,
-        "message": f"Test email dispatched to {payload.to} with status '{status_val}'."
+        "recipient_name": payload.recipient_name,
+        "subject": payload.subject,
+        "message": payload.message,
+        "provider": "resend",
+        "provider_status": 200 if status_val == "sent" else 400,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "notice": f"Test email dispatched to {payload.to} with status '{status_val}'."
     }
 
 
@@ -378,13 +384,22 @@ def test_whatsapp_dispatch(payload: TestWhatsappRequest, user=Depends(get_option
         metadata={"diagnostic": True, "initiated_by": "admin_test"}
     )
 
+    delivery_status = res.get("status", "sent")
     return {
-        "status": "success",
-        "delivery_status": res.get("status", "sent"),
+        "status": "success" if delivery_status == "sent" else "failed",
+        "delivery_status": delivery_status,
         "comm_id": res.get("comm_id"),
         "direct_url": res.get("direct_url"),
         "recipient": payload.to,
-        "message": f"WhatsApp protocol test registered for {payload.to}."
+        "recipient_name": payload.recipient_name,
+        "provider": res.get("provider", "meta_whatsapp_cloud"),
+        "provider_status": res.get("provider_status", 200),
+        "provider_msg_id": res.get("provider_msg_id", ""),
+        "message_status": res.get("message_status", "accepted"),
+        "error_details": res.get("error_details"),
+        "message": payload.message,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "notice": f"WhatsApp protocol test registered for {payload.to}."
     }
 
 

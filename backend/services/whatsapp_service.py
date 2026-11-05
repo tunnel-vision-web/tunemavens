@@ -166,12 +166,27 @@ def send_whatsapp(
                 }
                 r = requests.post(url, json=payload_tpl, headers=headers, timeout=10)
 
-            res_json = r.json() if r.status_code == 200 else {}
+            res_json = {}
+            try:
+                res_json = r.json()
+            except Exception:
+                res_json = {}
+
             provider_msg_id = (
                 res_json.get("messages", [{}])[0].get("id")
-                if "messages" in res_json
+                if "messages" in res_json and isinstance(res_json["messages"], list) and res_json["messages"]
                 else ""
             )
+            message_status = (
+                res_json.get("messages", [{}])[0].get("message_status", "accepted")
+                if "messages" in res_json and isinstance(res_json["messages"], list) and res_json["messages"]
+                else ("accepted" if r.status_code == 200 else "failed")
+            )
+
+            error_msg = ""
+            if r.status_code != 200:
+                err_obj = res_json.get("error", {})
+                error_msg = err_obj.get("message") or err_obj.get("error_data", {}).get("details") or r.text[:300]
 
             status_val = "sent" if r.status_code == 200 else "failed"
             record = {
@@ -180,7 +195,7 @@ def send_whatsapp(
                 "status": status_val,
                 "provider_status": r.status_code,
                 "resend_id": provider_msg_id,
-                "resend_response": r.text[:300],
+                "resend_response": error_msg if error_msg else r.text[:300],
             }
             db.communications.insert_one(record)
             return {
@@ -190,6 +205,8 @@ def send_whatsapp(
                 "direct_url": direct_url,
                 "provider_status": r.status_code,
                 "provider_msg_id": provider_msg_id,
+                "message_status": message_status,
+                "error_details": error_msg or None,
             }
         except Exception as exc:
             logger.error("Meta WhatsApp Cloud API error: %s", exc)

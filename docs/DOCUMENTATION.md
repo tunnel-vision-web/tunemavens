@@ -2607,3 +2607,9 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Modal body is configured with `flex: 1`, `overflow-y: auto`, `overscroll-behavior: contain`, and thin custom scrollbars (`scrollbarWidth: thin`), allowing content to gracefully expand when entering long messages or displaying live delivery alerts without clipping action buttons or breaking viewport layout.
     - Textarea inputs support vertical resizing (`resize: vertical`, `min-height: 80px`, `max-height: 260px`).
   - **One-Click Action Buttons:** Direct "Send WhatsApp" and "Test Email" buttons placed directly in the Communications Vault toolbar.
+  - **In-Modal Real-Time Delivery Confirmation Screen:**
+    - Transition state replacing compose inputs with an authoritative delivery confirmation report upon dispatch.
+    - Features animated delivery status badge (Sent/Accepted vs Provider Warning), network rail telemetry (Meta Cloud API vs Resend), recipient formatting, HTTP response codes, provider message ID (`wamid`), and Mongo vault audit ID.
+    - Embedded 1-click branded WhatsApp action button (`wa.me`) enabling direct instant chat launch with recipient and message body pre-filled.
+    - Explains Meta developer sandbox constraints (in development mode, Meta Cloud API only delivers automated pushes to verified numbers on the developer dashboard recipient list; direct `wa.me` links bypass this restriction).
+    - Includes interactive message bubble preview and "Send Another Message" / "Done & View in Vault" navigation.
