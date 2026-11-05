@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   RiCompass3Line,
   RiSparklingLine,
@@ -6,7 +6,6 @@ import {
   RiArrowRightLine,
   RiArrowLeftLine,
   RiCheckLine,
-  RiRefreshLine,
   RiMicFill,
   RiDiscFill,
   RiEqualizerFill,
@@ -17,8 +16,13 @@ import {
   RiFundsBoxFill,
   RiHeadphoneFill,
   RiShieldFill,
+  RiEyeFill,
 } from 'react-icons/ri';
 
+/**
+ * Persona Tour Data with simple, friendly, jargon-free explanations.
+ * Each step specifies targetSelector so the tour spotlights the actual live UI element.
+ */
 export const PERSONA_TOUR_DATA = {
   creator: {
     label: 'Creator / Artist & Producer',
@@ -26,39 +30,51 @@ export const PERSONA_TOUR_DATA = {
     color: '#22d3ee',
     steps: [
       {
-        title: 'Welcome to TuneMavens Studio',
-        badge: 'Studio Command',
-        tab: 'epk-builder',
-        description: 'Welcome to your complete music business operating system! Here you manage your artist identity, lossless master distribution, automated split waterfalls, and sync licensing opportunities.',
-        highlight: 'Your all-in-one music career launchpad',
+        title: 'Welcome to Your Studio',
+        badge: 'Studio Overview',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'This is your creative headquarters. Everything you need—from setting up your artist profile to uploading songs and checking payments—is right here on the menu.',
+        highlight: 'Your complete music workspace in one place',
       },
       {
-        title: 'Digital Press Kit & EPK Studio',
-        badge: 'Artist Identity',
+        title: 'Your Artist Profile & Website',
+        badge: 'Artist Page',
         tab: 'epk-builder',
-        description: 'Design a verified, responsive Electronic Press Kit (EPK) with high-res hero banners, bios, social embeds, audio showcases, and downloadable press assets ready for record labels and festival booking agents.',
-        highlight: 'One-click public URL ready for industry pitching',
+        targetSelector: '[data-tour="nav-epk-builder"]',
+        description: 'Build a clean, professional profile with your music, bio, photos, and social links. You get a public link you can send to festival bookers, promoters, and fans.',
+        highlight: 'Share one simple link with the world',
       },
       {
-        title: 'Catalogue Porting & Audio Ingestion',
-        badge: 'Global Distribution',
+        title: 'Upload Your Songs',
+        badge: 'Music Uploads',
         tab: 'catalog-porting',
-        description: 'Upload high-fidelity WAV or FLAC masters, validate ISRC codes, customize release artwork, and deploy directly across 150+ global DSPs (Spotify, Apple Music, Boomplay, Audiomack) with zero middleman deductions.',
-        highlight: 'ISRC validation and lossless stem storage',
+        targetSelector: '[data-tour="nav-catalog-porting"]',
+        description: 'Upload your music with clear song titles and cover art. We help make sure everything is formatted properly before releasing to Spotify, Apple Music, and Boomplay.',
+        highlight: 'Get your songs ready for listeners everywhere',
       },
       {
-        title: 'Split Cascade & Payout Waterfalls',
-        badge: 'TuneLedger Liquidity',
+        title: 'Fair & Automatic Payouts',
+        badge: 'Share Earnings',
         tab: 'split-cascade',
-        description: 'Set programmatic, waterfall royalty splits. Automatically recoup studio recording outlays first, disburse producer points, and stream net master and publishing equity straight to collaborator M-Pesa STK or bank accounts.',
-        highlight: 'Eliminate split disputes with automated accounting',
+        targetSelector: '[data-tour="nav-split-cascade"]',
+        description: 'Decide who gets paid for each song. When your music earns money, your producers and collaborators get paid straight to their mobile money or bank accounts without disputes.',
+        highlight: 'No more arguments or confusing payment spreadsheets',
       },
       {
-        title: 'Communications Vault & Real-Time WhatsApp Alerts',
-        badge: 'Omnichannel Alerts',
+        title: 'Your Balance & Credits',
+        badge: 'Wallet & Tools',
+        tab: 'epk-builder',
+        targetSelector: '[data-tour="topbar-credits"]',
+        description: 'This is your credit balance. Top up anytime using M-Pesa or card whenever you want to use song mastering tools or receive automated phone alerts.',
+        highlight: 'Top up only when you need it—no monthly subscription',
+      },
+      {
+        title: 'Instant Phone Alerts',
+        badge: 'WhatsApp Alerts',
         tab: 'communications-vault',
-        description: 'Receive instant deal offers, placement notices, and contract updates directly on your smartphone via WhatsApp or email. Complete your 1-click inbound handshake in the vault to open your free 24-hour customer service window.',
-        highlight: 'Direct push notifications for high-velocity sync deals',
+        targetSelector: '[data-tour="nav-communications-vault"]',
+        description: 'Get notified directly on WhatsApp or email whenever someone wants to license your song or whenever your royalties arrive.',
+        highlight: 'Never miss an opportunity or payment',
       },
     ],
   },
@@ -69,321 +85,329 @@ export const PERSONA_TOUR_DATA = {
     color: '#ec4899',
     steps: [
       {
-        title: 'Music Supervisor Sync Suite',
-        badge: 'Sync Licensing',
-        tab: 'sync-marketplace',
-        description: 'Welcome to the Music Supervisor Portal. Search, audition, and license 100% pre-cleared, one-stop indie masters and publisher-cleared works for film, television, games, and streaming commercials.',
-        highlight: 'Pre-cleared masters with zero copyright friction',
+        title: 'Music for Film, TV & Ads',
+        badge: 'Sync Suite',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'Find authentic, high-quality African music for your films, television series, video games, and commercials. Every track is ready to license right away.',
+        highlight: '100% pre-cleared music with zero copyright delays',
       },
       {
-        title: 'Sync Marketplace & Search Filters',
-        badge: 'Smart Discovery',
+        title: 'Search & Audition Music',
+        badge: 'Search & Listen',
         tab: 'sync-marketplace',
-        description: 'Filter thousands of authentic tracks by tempo, musical key, vocal type, emotional mood, cue points, and regional authenticity (Afro-fusion, Amapiano, Benga, Drill). Audition lossless audio and download stems on demand.',
-        highlight: 'Instant stem preview and cue sheet metadata',
+        targetSelector: '[data-tour="nav-sync-marketplace"]',
+        description: 'Search songs by mood, tempo, genre, or instrument. Audition tracks immediately and download instrumental versions to test in your project video timeline.',
+        highlight: 'Find and test the right track in seconds',
       },
       {
-        title: 'Escrow Contracts & 1-Click Clearances',
+        title: 'Safe Licensing Agreements',
         badge: 'Legal Clearance',
         tab: 'escrow-contracts',
-        description: 'Issue standardized synchronization contracts backed by programmatic TuneLedger escrow. Counterparties sign digitally with instant legal clearance, indemnifying your production against copyright disputes.',
-        highlight: 'Automated escrow protection and signed PDF licenses',
+        targetSelector: '[data-tour="nav-escrow-contracts"]',
+        description: 'Complete licensing agreements online with one click. Payments are held safely until contracts are signed, giving your production complete legal protection.',
+        highlight: 'Instant digital signing and clear copyright ownership',
       },
       {
-        title: 'Complimentary VIP WhatsApp Dispatch',
-        badge: 'VIP Messaging',
-        tab: 'communications-vault',
-        description: 'Music supervisors enjoy complimentary, unlimited WhatsApp messaging across our network. Negotiate directly with artist teams, request custom edits, and receive split clearances in minutes.',
-        highlight: '100% free VIP WhatsApp delivery with zero credit reload fees',
+        title: 'Complimentary VIP WhatsApp',
+        badge: 'Free VIP Alerts',
+        tab: 'sync-marketplace',
+        targetSelector: '[data-tour="topbar-notifications"]',
+        description: 'Music supervisors get free, unlimited WhatsApp messaging. Talk directly with artist teams and request custom edits without any credit fees.',
+        highlight: 'Direct chat with creators at zero cost',
       },
     ],
   },
 
   label: {
-    label: 'Record Label / Publisher',
+    label: 'Record Label & Publisher',
     icon: RiDiscFill,
     color: '#a855f7',
     steps: [
       {
-        title: 'Record Label Roster Operations',
-        badge: 'Roster Command',
-        tab: 'label-team',
-        description: 'Manage your multi-artist roster, mechanical rights, global distribution pipelines, and master collections from one central operational console.',
-        highlight: 'Multi-artist administration and team access controls',
+        title: 'Manage Your Label Roster',
+        badge: 'Label Roster',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'Oversee all your signed artists, album releases, and team members from one organized dashboard.',
+        highlight: 'Complete control of your label in one place',
       },
       {
-        title: 'Catalogue Porting & Batch Ingestion',
-        badge: 'Batch Distribution',
+        title: 'Your Music Catalogue',
+        badge: 'Song Library',
         tab: 'catalog-porting',
-        description: 'Batch-port catalogue albums, assign and validate ISRC and ISWC metadata, update release artwork across entire discographies, and monitor DSP ingestion statuses in real time.',
-        highlight: 'High-throughput catalogue deployment across all global DSPs',
+        targetSelector: '[data-tour="nav-catalog-porting"]',
+        description: 'View and manage all releases across your artists. Keep audio masters, artwork, and release dates tidy and up-to-date.',
+        highlight: 'Keep your entire song catalog organized',
       },
       {
-        title: 'Programmatic Advance Recoupment',
-        badge: 'Advance Recoupment',
+        title: 'Automated Artist Splits',
+        badge: 'Automated Payouts',
         tab: 'split-cascade',
-        description: 'Track artist advance balances and recoupment velocity with programmatic accuracy. TuneLedger automatically sweeps 100% of incoming master revenues toward recoupment before distributing profit shares.',
-        highlight: 'Zero manual spreadsheet accounting or payout delays',
+        targetSelector: '[data-tour="nav-split-cascade"]',
+        description: 'Recoup studio costs first, then share earnings automatically with your artists and producers via M-Pesa or bank transfer.',
+        highlight: 'Transparent accounting with zero manual math',
       },
       {
-        title: 'Sync Pitching & Global Brand Opportunities',
-        badge: 'Commercial Sync',
+        title: 'License Roster Music for TV & Brands',
+        badge: 'Sync Licensing',
         tab: 'sync-marketplace',
-        description: 'Pitch your label roster directly into Hollywood, European, and regional commercial sync briefs. Submit pre-cleared tracks with confirmed splits to lock high-value synchronization fees.',
-        highlight: 'Commercial brand deals and television cue placements',
-      },
-      {
-        title: 'Complimentary VIP Communications',
-        badge: 'VIP Communications',
-        tab: 'communications-vault',
-        description: 'Record labels receive complimentary VIP WhatsApp push notifications for signed contracts, delivery receipts, and sync deal inquiries without wallet balance constraints.',
-        highlight: 'Real-time multi-channel notifications across email and WhatsApp',
+        targetSelector: '[data-tour="nav-sync-marketplace"]',
+        description: 'Pitch your artists’ songs directly to movie producers, advertising agencies, and TV networks to earn extra revenue.',
+        highlight: 'Open up new revenue streams for your artists',
       },
     ],
   },
 
   corporate: {
-    label: 'Corporate Brand / Advertiser',
+    label: 'Corporate Brand & Marketing',
     icon: RiMegaphoneFill,
     color: '#f97316',
     steps: [
       {
-        title: 'Corporate Brand Music & Sponsorship Suite',
-        badge: 'Brand Licensing',
-        tab: 'corporate-ads',
-        description: 'License authentic commercial music and partner with leading audio creators for radio, television, digital campaigns, and experiential sponsorships with full legal indemnity.',
-        highlight: 'Legally cleared commercial sound for corporate campaigns',
+        title: 'Brand Music & Sponsorships',
+        badge: 'Brand Marketing',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'License authentic African music for your advertising campaigns, brand jingles, and event sponsorships with zero copyright worries.',
+        highlight: 'Safe, copyright-cleared music for commercial use',
       },
       {
-        title: 'Curated Sync Brief Publishing',
-        badge: 'Custom Briefs',
+        title: 'Find Commercial Music',
+        badge: 'Ad Music Library',
         tab: 'sync-marketplace',
-        description: 'Publish custom commercial music briefs and creative moodboards directly to verified creators and record labels to commission bespoke brand sonic identities and anthems.',
-        highlight: 'Direct commissioning of sonic branding from top creators',
+        targetSelector: '[data-tour="nav-sync-marketplace"]',
+        description: 'Discover trending songs and custom background music pre-cleared for YouTube, Instagram, TV, and radio commercials.',
+        highlight: 'Instant licensing for commercial broadcasts',
       },
       {
-        title: 'Escrow Settlements & Invoicing',
-        badge: 'Safe Escrow',
-        tab: 'escrow-contracts',
-        description: 'Fund commercial licensing budgets securely through TuneLedger escrow accounts. Funds disburse to creators only upon verified delivery and commercial broadcast clearances.',
-        highlight: 'Zero-risk milestone payments with automated tax invoices',
-      },
-      {
-        title: 'VIP Direct Omnichannel Communications',
-        badge: 'VIP Support',
-        tab: 'communications-vault',
-        description: 'Corporate marketing teams enjoy complimentary VIP WhatsApp and priority email channels to coordinate urgent commercial clearance deadlines.',
-        highlight: '100% complimentary VIP access for corporate brands',
+        title: 'Track Audio Ad Flights',
+        badge: 'Campaign Flights',
+        tab: 'corporate-ads',
+        targetSelector: '[data-tour="nav-corporate-ads"]',
+        description: 'Monitor your brand sponsorships and audio commercial placements with live analytics and audience reach numbers.',
+        highlight: 'Reach genuine music fans across Africa',
       },
     ],
   },
 
   dj: {
-    label: 'DJ / Curator',
+    label: 'Professional DJ & Curator',
     icon: RiRadioFill,
-    color: '#f59e0b',
+    color: '#3b82f6',
     steps: [
       {
-        title: 'DJ Pool & Curation Studio',
-        badge: 'DJ Pool Access',
+        title: 'Welcome to the DJ Record Pool',
+        badge: 'DJ Headquarters',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'Get club-ready edits, extended intros, instrumentals, and trending African tracks ready to load straight into your DJ software.',
+        highlight: 'High-quality tracks ready for your sets',
+      },
+      {
+        title: 'Download Crates & New Tracks',
+        badge: 'Crates & Edits',
         tab: 'djpool',
-        description: 'Access exclusive club edits, extended intros, clean radio passes, instrumentals, and lossless DJ drops formatted for Serato, Rekordbox, and Traktor.',
-        highlight: 'Club-ready audio masters curated directly from producers',
+        targetSelector: '[data-tour="nav-djpool"]',
+        description: 'Browse songs by BPM, key, and dance style. Download lossless audio for Rekordbox, Serato, or USB flash drives.',
+        highlight: 'Stay ahead with fresh, exclusive club tracks',
       },
       {
-        title: 'Lossless Library & Key / BPM Detection',
-        badge: 'Fidelity & Tags',
-        tab: 'tunemavens-library',
-        description: 'Browse lossless tracks complete with exact Camelot musical keys, BPM values, energy ratings, and genre tags for seamless harmonic mixing.',
-        highlight: 'Audiophile audio files with precise harmonic metadata',
-      },
-      {
-        title: 'Direct Creator Tip Jars',
-        badge: 'Artist Tips',
+        title: 'Live Crowd Tips & Requests',
+        badge: 'Live Tips',
         tab: 'tunemavens-tips',
-        description: 'Send direct tips via M-Pesa STK or card straight to independent producers whose tracks ignite your live sets, forging direct creative partnerships.',
-        highlight: '100% direct tips delivered to artists without middleman cuts',
+        targetSelector: '[data-tour="nav-tunemavens-tips"]',
+        description: 'Let partygoers tip you and send song requests straight to your phone via QR code or M-Pesa while you perform.',
+        highlight: 'Earn tips directly from the dancefloor',
       },
     ],
   },
 
   podcaster: {
-    label: 'Podcaster / Show Host',
-    icon: RiMicFill,
-    color: '#ec4899',
+    label: 'Podcaster & Broadcaster',
+    icon: RiGlobalFill,
+    color: '#eab308',
     steps: [
       {
-        title: 'Podcaster Studio & Episode Distribution',
-        badge: 'Podcast Studio',
+        title: 'Welcome to Podcast Studio',
+        badge: 'Podcast Hub',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'Host your episodes, add cleared theme music, and connect with brand sponsors all in one place.',
+        highlight: 'Everything your show needs to grow',
+      },
+      {
+        title: 'Publish Episodes',
+        badge: 'Episodes',
         tab: 'podcaster-studio',
-        description: 'Manage show feeds, publish podcast episodes with lossless audio masters, and distribute across Spotify, Apple Podcasts, and Google Podcasts seamlessly.',
-        highlight: 'Automated RSS distribution and high-fidelity mastering',
+        targetSelector: '[data-tour="nav-podcaster-studio"]',
+        description: 'Upload audio episodes and distribute them seamlessly to Apple Podcasts, Spotify, and YouTube.',
+        highlight: 'One-click podcast distribution',
       },
       {
-        title: 'Podcast EPK & Sponsor Pitch Deck',
-        badge: 'Sponsor Deck',
-        tab: 'podcaster-epk',
-        description: 'Showcase your show metrics, audience demographics, monthly download velocity, and host-read rate cards to attract premium advertising sponsors.',
-        highlight: 'Public verified press kit ready for corporate ad buyers',
-      },
-      {
-        title: 'Corporate Ad Slot Marketplace',
-        badge: 'Ad Monetization',
+        title: 'Get Brand Sponsors',
+        badge: 'Sponsorships',
         tab: 'corporate-ads',
-        description: 'Connect with verified corporate advertisers seeking pre-roll, mid-roll, and host-read sponsorship placements on top regional podcasts.',
-        highlight: 'Programmatic ad placement with direct escrow settlements',
+        targetSelector: '[data-tour="nav-corporate-ads"]',
+        description: 'Match with brands looking to sponsor podcasts and earn money from your listener audience.',
+        highlight: 'Turn your listeners into steady income',
       },
     ],
   },
 
   media_house: {
-    label: 'Media House & Broadcaster',
+    label: 'Media House & TV/Radio',
     icon: RiGlobalFill,
     color: '#10b981',
     steps: [
       {
-        title: 'Broadcaster Music Operations',
-        badge: 'Broadcast Hub',
-        tab: 'sync-marketplace',
-        description: 'Streamline music cue sheets, commercial broadcast licensing, and royalty compliance across television networks, radio stations, and digital channels.',
-        highlight: 'Broadcaster-grade licensing with comprehensive legal indemnity',
+        title: 'Media House Broadcast Suite',
+        badge: 'Broadcast Suite',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'Access cleared music libraries, cue sheets, and commercial audio spots for your radio station or TV channel.',
+        highlight: 'Safe music programming for broadcast',
       },
       {
-        title: 'Pre-Cleared Commercial Vault',
-        badge: 'Broadcast Scores',
+        title: 'Broadcast Music Library',
+        badge: 'Cleared Music',
         tab: 'sync-marketplace',
-        description: 'Instant access to television-cleared background scores, theme music, and broadcast stingers with verified master and publishing rights metadata.',
-        highlight: 'Instantly auditable music library ready for airplay',
+        targetSelector: '[data-tour="nav-sync-marketplace"]',
+        description: 'Find theme songs, background beds, and hits pre-cleared for television and radio broadcast without copyright takedowns.',
+        highlight: 'Instant cue sheets and broadcast clearance',
       },
       {
-        title: 'Automated Cue Sheets & Compliance',
-        badge: 'CMO Compliance',
-        tab: 'escrow-contracts',
-        description: 'Export certified broadcast logs and cue sheet reports for regional CMOs (MCSK, KAMP, PRISK, PRS) in seconds, eliminating compliance headaches.',
-        highlight: 'One-click cue sheet generation for royalty reporting',
+        title: 'Manage Audio Ads & Jingles',
+        badge: 'Ad Management',
+        tab: 'corporate-ads',
+        targetSelector: '[data-tour="nav-corporate-ads"]',
+        description: 'Schedule, traffic, and report on brand commercials and sponsor announcements playing on your broadcast channels.',
+        highlight: 'Accurate play counts and advertiser reports',
       },
     ],
   },
 
   affiliate: {
-    label: 'Affiliate Partner / Creator Scout',
+    label: 'Ambassador & Affiliate',
     icon: RiCoinsFill,
-    color: '#22d3ee',
+    color: '#06b6d4',
     steps: [
       {
-        title: 'Affiliate & Ambassador Command Console',
-        badge: 'Commission Hub',
-        tab: 'affiliates',
-        description: 'Earn recurring 3% to 12% multi-stream commissions modeled on Ditto Music\'s partner framework across streaming, lossless sales, sync licensing, and VIP tour passes.',
-        highlight: 'Multi-stream recurring commissions on all referred commerce',
+        title: 'Welcome to Partner Hub',
+        badge: 'Partner Hub',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'Earn money by introducing artists, producers, and labels to TuneMavens. You earn every time they release music or license tracks.',
+        highlight: 'Zero fees to join—start earning immediately',
       },
       {
-        title: 'Referral Engine & 90-Day Tracking Cookies',
-        badge: 'Cookie Attribution',
+        title: 'Your Personal Invite Link',
+        badge: 'Invite Link',
         tab: 'affiliates',
-        description: 'Generate campaign-specific referral links with persistent 90-day tracking cookies operating seamlessly across TuneMavens, TuneStream, and SyncMavens.',
-        highlight: 'Persistent 90-day cross-domain cookie attribution',
+        targetSelector: '[data-tour="nav-affiliates"]',
+        description: 'Grab your unique referral link or QR code to share on Instagram, WhatsApp, TikTok, or at studio sessions.',
+        highlight: 'Track every click and signup in real-time',
       },
       {
-        title: 'Real-Time Payout Rails & Mobile STK',
-        badge: 'Instant Liquidity',
-        tab: 'affiliates',
-        description: 'Track earned commissions on TuneLedger in real time and initiate instant automated disbursements to M-Pesa STK or global bank accounts.',
-        highlight: 'Zero minimum payout wait times via mobile money STK',
+        title: 'Automatic Weekly Payouts',
+        badge: 'Weekly Payouts',
+        tab: 'split-cascade',
+        targetSelector: '[data-tour="nav-split-cascade"]',
+        description: 'Link your M-Pesa or bank account. Your commissions are sent directly to your phone every week automatically.',
+        highlight: 'Fast mobile payouts with zero deductions',
       },
     ],
   },
 
   vc: {
-    label: 'Tour Venture Capital (VC) & Investor',
+    label: 'Tour Investor & LP',
     icon: RiFundsBoxFill,
     color: '#00f2fe',
     steps: [
       {
-        title: 'Tour Capital & Senior Debt Syndicate Vault',
-        badge: 'Tour Capital',
+        title: 'Tour Capital & Live Music Finance',
+        badge: 'Tour Finance',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'Invest in live concert tours, artist showcases, and festival stages across Africa with complete financial transparency.',
+        highlight: 'Direct investment in live music tours',
+      },
+      {
+        title: 'Live Tour Opportunities',
+        badge: 'Tour Facilities',
         tab: 'tours-vault',
-        description: 'Deploy institutional capital into high-velocity live concert tours, music festivals, and artist advances backed by senior-secured box-office liquidation waterfalls.',
-        highlight: 'Institutional LP facilities with 24% target IRR metrics',
+        targetSelector: '[data-tour="nav-tours-vault"]',
+        description: 'Review active live tours, projected returns, and real-time ticket sales velocity before committing capital.',
+        highlight: 'Real-time ticket sales pacing and transparent budgets',
       },
       {
-        title: 'Automated Split Cascade Recoupment',
-        badge: 'Waterfall Liquidity',
+        title: 'Priority Repayment Waterfall',
+        badge: 'Priority Returns',
         tab: 'split-cascade',
-        description: 'Monitor tour box-office velocity and recoupment milestones in real time. 100% of initial ticket revenues sweep automatically to repay principal plus target IRR.',
-        highlight: 'Programmatic principal sweep before artist profit distribution',
-      },
-      {
-        title: 'Creator Discovery & Growth Telemetry',
-        badge: 'Growth Analytics',
-        tab: 'vc-discover',
-        description: 'Identify breakout touring artists using cross-platform telemetry, streaming acceleration, and historical box-office sell-through velocities.',
-        highlight: 'Data-driven underwriting for live music advance syndicates',
+        targetSelector: '[data-tour="nav-split-cascade"]',
+        description: 'Track incoming concert box office revenue. Your capital investment and returns are paid out first before other expenses.',
+        highlight: 'Automated, senior-priority recoupment',
       },
     ],
   },
 
   consumer: {
-    label: 'Consumer / Fan',
+    label: 'Fan & Music Listener',
     icon: RiHeadphoneFill,
     color: '#6366f1',
     steps: [
       {
-        title: 'TuneStream 24-Bit Lossless Player',
-        badge: 'Lossless Audio',
-        tab: 'stream-controls',
-        description: 'Experience studio-master lossless streaming audio with audiophile fidelity, dynamic synced lyrics, and interactive liner notes from creators worldwide.',
-        highlight: 'Audiophile 24-bit audio playback direct from the master studio',
+        title: 'Welcome to TuneStream',
+        badge: 'Hi-Fi Music',
+        targetSelector: '[data-tour="consumer-sidebar"]',
+        description: 'Experience studio-quality music streaming from your favorite African artists, completely free from monthly subscription fees.',
+        highlight: 'Studio-quality audio for real music fans',
       },
       {
-        title: 'Direct Creator Tip Jars',
-        badge: '100% Direct Tips',
+        title: 'Discover Mixes & Songs',
+        badge: 'For You',
+        tab: 'home',
+        targetSelector: '[data-tour="nav-home"]',
+        description: 'Explore handpicked African DJ mixes, trending songs, and fresh releases tailored to your musical taste.',
+        highlight: 'Fresh music curated for you every day',
+      },
+      {
+        title: 'Your Saved Collection',
+        badge: 'My Library',
+        tab: 'library',
+        targetSelector: '[data-tour="nav-library"]',
+        description: 'Access your favorite tracks, created playlists, and offline downloads in one easy place.',
+        highlight: 'All your favorite songs kept safe',
+      },
+      {
+        title: 'Send Love & Direct Artist Tips',
+        badge: 'Support Artists',
         tab: 'tips',
-        description: 'Send direct tips to your favorite independent musicians via M-Pesa or card. 100% of your tip goes directly to the creator with zero platform deduction.',
-        highlight: 'Empower independent artists directly with instant micro-tips',
-      },
-      {
-        title: 'Concert Tickets & VIP Tour Passes',
-        badge: 'Live Events',
-        tab: 'concerts',
-        description: 'Book VIP tour passes, concert tickets, and hands-on production masterclasses with touring musicians directly through the platform.',
-        highlight: 'Exclusive VIP access to concert soundchecks and workshops',
+        targetSelector: '[data-tour="nav-tips"]',
+        description: 'Send instant tips directly to artists via M-Pesa or card. 100% of your tip goes straight into the artist’s pocket.',
+        highlight: 'Direct support that artists actually receive',
       },
     ],
   },
 
   admin: {
-    label: 'Platform Administrator',
+    label: 'Administrator & Operations',
     icon: RiShieldFill,
-    color: '#38bdf8',
+    color: '#ef4444',
     steps: [
       {
-        title: 'Global Platform Command & Telemetry',
-        badge: 'System Overseer',
-        tab: 'admin-dashboard',
-        description: 'Monitor all 14 ecosystem applications, multi-domain routing, MongoDB Atlas replica sets, Sentry exception telemetry, and live health check probes.',
-        highlight: 'Real-time cloud infrastructure monitoring and health telemetry',
+        title: 'Admin Operations Hub',
+        badge: 'Platform Admin',
+        targetSelector: '[data-tour="sidebar-nav"]',
+        description: 'Welcome to the platform control room. From here you can oversee operations, monitor system health, and test any user experience.',
+        highlight: 'Complete platform control and monitoring',
       },
       {
-        title: 'Persona Simulator & Live Role Switching',
-        badge: 'Persona Simulator',
-        tab: 'admin-dashboard',
-        description: 'Seamlessly switch into any persona (Creator, Label, Supervisor, Corporate, DJ, VC) with 1-click simulation to audit tools, permissions, and user onboarding.',
-        highlight: 'Instant audit verification of every persona workspace',
+        title: 'Test Any User Role',
+        badge: 'Role Switcher',
+        targetSelector: '[data-tour="topbar-simulation-badge"]',
+        description: 'Click your account menu or topbar pill anytime to switch into any persona (Creator, Supervisor, Label, DJ, etc.) to verify features firsthand.',
+        highlight: 'Instantly view the platform as any persona',
       },
       {
-        title: 'Communications Vault & Meta Webhook Telemetry',
-        badge: 'Audit Vault',
+        title: 'Communications & Private Quotas',
+        badge: 'Alerts & Messages',
         tab: 'communications-vault',
-        description: 'Inspect live email deliverability, Meta WhatsApp webhook handshake events, 1,000-message monthly quota limits, and complete audit ledgers across all users.',
-        highlight: 'Authoritative audit trail for all transactional communications',
-      },
-      {
-        title: 'Role Tiers, KYC & Dispute Settlement',
-        badge: 'Platform Governance',
-        tab: 'contracts',
-        description: 'Audit contracts, manage payout disbursements, verify creator credentials, configure role tiers, and resolve copyright disputes across the ecosystem.',
-        highlight: 'Comprehensive governance across all ecosystem transactions',
+        targetSelector: '[data-tour="nav-communications-vault"]',
+        description: 'Manage WhatsApp and email delivery. Internal messaging quotas remain strictly private and visible only to administrators.',
+        highlight: 'Secure messaging with admin-only quota controls',
       },
     ],
   },
@@ -395,156 +419,367 @@ export default function DashboardTourModal({
   currentRole = 'creator',
   setActiveTab,
 }) {
-  const personaData = PERSONA_TOUR_DATA[currentRole] || PERSONA_TOUR_DATA.creator;
+  const effectiveRole = (currentRole === 'investor' ? 'vc' : currentRole) || 'creator';
+  const personaData = PERSONA_TOUR_DATA[effectiveRole] || PERSONA_TOUR_DATA.creator;
   const steps = personaData.steps || [];
-  const [currentStep, setCurrentStep] = useState(0);
 
-  // Reset to step 0 whenever the modal opens or role changes
+  const [currentStep, setCurrentStep] = useState(0);
+  const [targetRect, setTargetRect] = useState(null);
+  const [popoverPos, setPopoverPos] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', isFloating: false });
+  const cardRef = useRef(null);
+
+  // Reset step counter whenever the tour opens or role changes
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(0);
-      // Automatically switch to first step's tab if specified
-      if (steps[0]?.tab && typeof setActiveTab === 'function') {
-        setActiveTab(steps[0].tab);
+    }
+  }, [isOpen, effectiveRole]);
+
+  // Measure and compute the target element's bounding rect
+  const updateTargetPosition = useCallback(() => {
+    if (!isOpen || steps.length === 0) {
+      setTargetRect(null);
+      return;
+    }
+
+    const step = steps[currentStep];
+    if (!step) return;
+
+    let targetEl = null;
+
+    // 1. Try primary selector
+    if (step.targetSelector) {
+      try {
+        targetEl = document.querySelector(step.targetSelector);
+      } catch (_) {}
+    }
+
+    // 2. Fallback to tab selector if primary not found
+    if (!targetEl && step.tab) {
+      targetEl = document.querySelector(`[data-tour="nav-${step.tab}"]`) ||
+                 document.querySelector(`button[data-tab="${step.tab}"]`) ||
+                 document.querySelector(`button[data-tour="nav-${step.tab}"]`);
+    }
+
+    // 3. Fallback to general sidebar/content if available
+    if (!targetEl && step.targetSelector === '[data-tour="sidebar-nav"]') {
+      targetEl = document.querySelector('[data-tour="sidebar-nav"]') ||
+                 document.querySelector('[data-tour="sidebar"]') ||
+                 document.querySelector('[data-tour="consumer-sidebar"]');
+    }
+
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      // If element is actually on screen with non-zero dimensions
+      if (rect.width > 0 && rect.height > 0) {
+        setTargetRect({
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          bottom: rect.bottom,
+          right: rect.right,
+        });
+
+        // Compute floating card position adjacent to target
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        const cardWidth = Math.min(460, winWidth - 32);
+        const cardHeightEstimate = 320;
+        const padding = 12;
+
+        // If target is in the sidebar (left side of screen)
+        if (rect.right < winWidth * 0.45) {
+          const idealLeft = rect.right + 20;
+          const idealTop = Math.max(16, Math.min(rect.top - 10, winHeight - cardHeightEstimate - 16));
+          setPopoverPos({
+            position: 'fixed',
+            left: `${idealLeft}px`,
+            top: `${idealTop}px`,
+            transform: 'none',
+            isFloating: true,
+            placement: 'right',
+          });
+        }
+        // If target is in the topbar (top of screen)
+        else if (rect.top < 120) {
+          const idealTop = rect.bottom + 16;
+          const idealLeft = Math.max(16, Math.min(rect.left - 40, winWidth - cardWidth - 16));
+          setPopoverPos({
+            position: 'fixed',
+            left: `${idealLeft}px`,
+            top: `${idealTop}px`,
+            transform: 'none',
+            isFloating: true,
+            placement: 'bottom',
+          });
+        }
+        // Otherwise position adjacent or nicely centered
+        else {
+          const idealLeft = Math.max(16, Math.min(rect.left, winWidth - cardWidth - 16));
+          const idealTop = rect.bottom + 16 <= winHeight - cardHeightEstimate
+            ? rect.bottom + 16
+            : Math.max(16, rect.top - cardHeightEstimate - 16);
+          setPopoverPos({
+            position: 'fixed',
+            left: `${idealLeft}px`,
+            top: `${idealTop}px`,
+            transform: 'none',
+            isFloating: true,
+            placement: 'bottom',
+          });
+        }
+        return;
       }
     }
-  }, [isOpen, currentRole]);
 
-  // Handle ESC key to dismiss tour
+    // Default centered position if no target is active
+    setTargetRect(null);
+    setPopoverPos({
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      isFloating: false,
+      placement: 'center',
+    });
+  }, [isOpen, currentStep, steps]);
+
+  // Activate tab and re-measure whenever current step changes
   useEffect(() => {
     if (!isOpen) return;
+
+    const step = steps[currentStep];
+    if (step?.tab && typeof setActiveTab === 'function') {
+      setActiveTab(step.tab);
+    }
+
+    // Give DOM a frame to switch and render tab content
+    updateTargetPosition();
+    const t1 = setTimeout(updateTargetPosition, 80);
+    const t2 = setTimeout(updateTargetPosition, 260);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [isOpen, currentStep, steps, setActiveTab, updateTargetPosition]);
+
+  // Listen to window resize and scroll events
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleResize = () => updateTargetPosition();
+    const handleScroll = () => updateTargetPosition();
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [isOpen, updateTargetPosition]);
+
+  // Keyboard navigation: Escape closes, ArrowRight next, ArrowLeft prev
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         handleEndTour();
-      } else if (e.key === 'ArrowRight' && currentStep < steps.length - 1) {
-        handleNext();
-      } else if (e.key === 'ArrowLeft' && currentStep > 0) {
-        handlePrev();
+      } else if (e.key === 'ArrowRight') {
+        if (currentStep < steps.length - 1) {
+          setCurrentStep((prev) => prev + 1);
+        } else {
+          handleEndTour();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (currentStep > 0) {
+          setCurrentStep((prev) => prev - 1);
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, currentStep, steps.length]);
 
   if (!isOpen || steps.length === 0) return null;
 
-  const step = steps[currentStep];
+  const step = steps[currentStep] || steps[0];
   const PersonaIcon = personaData.icon || RiCompass3Line;
   const isFirst = currentStep === 0;
   const isLast = currentStep === steps.length - 1;
 
+  const handleEndTour = () => {
+    try {
+      localStorage.setItem(`tunemavens_tour_seen_${effectiveRole}`, 'true');
+    } catch (_) {}
+    onClose();
+  };
+
   const handleNext = () => {
-    if (!isLast) {
-      const nextStepIndex = currentStep + 1;
-      setCurrentStep(nextStepIndex);
-      const nextTab = steps[nextStepIndex]?.tab;
-      if (nextTab && typeof setActiveTab === 'function') {
-        setActiveTab(nextTab);
-      }
-    } else {
+    if (isLast) {
       handleEndTour();
+    } else {
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (!isFirst) {
-      const prevStepIndex = currentStep - 1;
-      setCurrentStep(prevStepIndex);
-      const prevTab = steps[prevStepIndex]?.tab;
-      if (prevTab && typeof setActiveTab === 'function') {
-        setActiveTab(prevTab);
-      }
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
-  const handleEndTour = () => {
-    try {
-      localStorage.setItem(`tunemavens_tour_completed_${currentRole}`, 'true');
-    } catch (_) {}
-    if (typeof onClose === 'function') {
-      onClose();
-    }
-  };
+  const pad = 8; // Spotlight breathing margin
 
   return (
-    <div
-      onClick={handleEndTour}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)', // Exactly .8 opacity as specified
-        backdropFilter: 'blur(5px)',
-        WebkitBackdropFilter: 'blur(5px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10000,
-        padding: '20px',
-        animation: 'fadeIn 0.25s ease-out',
-      }}
-      data-testid="dashboard-tour-overlay"
-    >
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'auto' }}>
+      {/* 
+        Full Screen SVG Cutout Overlay with 0.8 Blackout Opacity:
+        The mask uses white for the 0.8 blackout area and black for the clear spotlight hole.
+      */}
+      <svg
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 10001,
+          pointerEvents: 'none',
+        }}
+      >
+        <defs>
+          <mask id="dashboard-tour-spotlight-mask">
+            {/* White base makes the 0.8 blackout visible everywhere */}
+            <rect x="0" y="0" width="100%" height="100%" fill="#ffffff" />
+            {/* Black hole cuts out the target element so the dashboard underneath is crystal-clear */}
+            {targetRect && (
+              <rect
+                x={Math.max(0, targetRect.left - pad)}
+                y={Math.max(0, targetRect.top - pad)}
+                width={targetRect.width + pad * 2}
+                height={targetRect.height + pad * 2}
+                rx="8"
+                ry="8"
+                fill="#000000"
+              />
+            )}
+          </mask>
+        </defs>
+
+        {/* 
+          0.8 Opacity Filter Layer:
+          User clicks anywhere on the dark backdrop to safely exit the tour anytime.
+        */}
+        <rect
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          fill="rgba(0, 0, 0, 0.8)"
+          mask="url(#dashboard-tour-spotlight-mask)"
+          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+          onClick={handleEndTour}
+          title="Click anywhere on backdrop to end tour"
+        />
+      </svg>
+
+      {/* Pulsing Highlight Border around the spotlighted section */}
+      {targetRect && (
+        <div
+          style={{
+            position: 'fixed',
+            left: `${Math.max(0, targetRect.left - pad)}px`,
+            top: `${Math.max(0, targetRect.top - pad)}px`,
+            width: `${targetRect.width + pad * 2}px`,
+            height: `${targetRect.height + pad * 2}px`,
+            borderRadius: '8px',
+            border: `2px solid ${personaData.color}`,
+            boxShadow: `0 0 0 3px ${personaData.color}33, 0 0 25px ${personaData.color}77`,
+            pointerEvents: 'none',
+            zIndex: 10002,
+            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        />
+      )}
+
+      {/* Interactive Tour Card Popover */}
       <div
+        ref={cardRef}
         onClick={(e) => e.stopPropagation()}
         style={{
+          position: popoverPos.position || 'fixed',
+          top: popoverPos.top,
+          left: popoverPos.left,
+          transform: popoverPos.transform || 'none',
+          zIndex: 10003,
+          width: 'min(460px, calc(100vw - 32px))',
           background: 'linear-gradient(145deg, #0d1522 0%, #080d16 100%)',
-          border: `1px solid ${personaData.color}55`,
+          border: `1px solid ${personaData.color}66`,
           borderRadius: '12px',
-          maxWidth: '560px',
-          width: '100%',
-          padding: '28px 30px',
-          boxShadow: `0 24px 60px rgba(0,0,0,0.8), 0 0 35px ${personaData.color}22`,
-          position: 'relative',
+          padding: '24px 26px',
+          boxShadow: `0 24px 60px rgba(0,0,0,0.9), 0 0 35px ${personaData.color}22`,
           color: '#f8fafc',
           display: 'flex',
           flexDirection: 'column',
-          gap: '18px',
+          gap: '16px',
+          pointerEvents: 'auto',
+          animation: 'tourFadeIn 0.2s ease-out',
         }}
         data-testid="dashboard-tour-card"
       >
-        {/* Top Header: Persona Badge, Step Counter & Close */}
+        {/* Header: Persona Role, Section Badge & Close */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              background: `${personaData.color}22`,
-              border: `1px solid ${personaData.color}55`,
-              color: personaData.color,
-              padding: '6px 10px',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '12px',
-              fontWeight: 800,
-              letterSpacing: '0.5px',
-              textTransform: 'uppercase',
-            }}>
-              <PersonaIcon size={15} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <div
+              style={{
+                background: `${personaData.color}22`,
+                border: `1px solid ${personaData.color}55`,
+                color: personaData.color,
+                padding: '4px 9px',
+                borderRadius: '5px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.4px',
+                textTransform: 'uppercase',
+              }}
+            >
+              <PersonaIcon size={14} />
               <span>{personaData.label}</span>
             </div>
-            <span style={{
-              fontSize: '11px',
-              background: 'rgba(255,255,255,0.08)',
-              color: '#94a3b8',
-              padding: '3px 8px',
-              borderRadius: '4px',
-              fontFamily: 'monospace',
-              fontWeight: 700,
-            }}>
+            <span
+              style={{
+                fontSize: '10.5px',
+                background: 'rgba(255,255,255,0.08)',
+                color: '#94a3b8',
+                padding: '3px 7px',
+                borderRadius: '4px',
+                fontWeight: 700,
+              }}
+            >
               {step.badge}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{
-              fontSize: '12px',
-              color: '#94a3b8',
-              fontFamily: 'monospace',
-              fontWeight: 700,
-            }}>
-              Step {currentStep + 1} of {steps.length}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span
+              style={{
+                fontSize: '11.5px',
+                color: '#94a3b8',
+                fontFamily: 'monospace',
+                fontWeight: 700,
+              }}
+            >
+              {currentStep + 1} / {steps.length}
             </span>
             <button
+              type="button"
               onClick={handleEndTour}
               style={{
                 background: 'transparent',
@@ -558,30 +793,26 @@ export default function DashboardTourModal({
                 borderRadius: '4px',
                 transition: 'color 0.15s ease',
               }}
-              title="End Tour (ESC)"
+              title="End Tour (Escape)"
+              data-testid="dashboard-tour-close-btn"
             >
               <RiCloseLine size={20} />
             </button>
           </div>
         </div>
 
-        {/* Step Progress Dots */}
-        <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+        {/* Clickable Progress Dots */}
+        <div style={{ display: 'flex', gap: '5px', width: '100%' }}>
           {steps.map((_, idx) => (
             <div
               key={idx}
-              onClick={() => {
-                setCurrentStep(idx);
-                if (steps[idx]?.tab && typeof setActiveTab === 'function') {
-                  setActiveTab(steps[idx].tab);
-                }
-              }}
+              onClick={() => setCurrentStep(idx)}
               style={{
                 flex: 1,
                 height: '4px',
                 borderRadius: '2px',
-                background: idx === currentStep 
-                  ? personaData.color 
+                background: idx === currentStep
+                  ? personaData.color
                   : (idx < currentStep ? `${personaData.color}77` : 'rgba(255,255,255,0.12)'),
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -591,57 +822,65 @@ export default function DashboardTourModal({
           ))}
         </div>
 
-        {/* Main Body: Step Title & Detailed Content */}
-        <div style={{ margin: '4px 0' }}>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: 800,
-            color: '#f8fafc',
-            marginBottom: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}>
-            <RiSparklingLine size={22} style={{ color: personaData.color }} />
+        {/* Step Title & Clear Description */}
+        <div>
+          <h2
+            style={{
+              fontSize: '18px',
+              fontWeight: 800,
+              color: '#f8fafc',
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <RiSparklingLine size={20} style={{ color: personaData.color, flexShrink: 0 }} />
             <span>{step.title}</span>
           </h2>
 
-          <p style={{
-            fontSize: '14px',
-            lineHeight: 1.65,
-            color: '#cbd5e1',
-            margin: '0 0 14px 0',
-          }}>
+          <p
+            style={{
+              fontSize: '13.5px',
+              lineHeight: 1.6,
+              color: '#cbd5e1',
+              margin: '0 0 12px 0',
+            }}
+          >
             {step.description}
           </p>
 
-          {/* Key Value Spotlight Box */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderLeft: `3px solid ${personaData.color}`,
-            borderRadius: '0 6px 6px 0',
-            padding: '10px 14px',
-            fontSize: '12px',
-            color: '#e2e8f0',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}>
-            <span style={{ color: personaData.color, fontSize: '14px' }}>💡</span>
+          {/* Key Benefit Highlight */}
+          <div
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderLeft: `3px solid ${personaData.color}`,
+              borderRadius: '0 6px 6px 0',
+              padding: '9px 12px',
+              fontSize: '12px',
+              color: '#e2e8f0',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <span style={{ color: personaData.color, fontSize: '13px' }}>💡</span>
             <span>{step.highlight}</span>
           </div>
         </div>
 
-        {/* Footer Actions: End Tour, Prev, Next */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          paddingTop: '16px',
-          marginTop: '6px',
-        }}>
+        {/* Footer: End Tour, Back, Next */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: '14px',
+            marginTop: '2px',
+          }}
+        >
           <button
             type="button"
             onClick={handleEndTour}
@@ -652,15 +891,16 @@ export default function DashboardTourModal({
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
-              padding: '8px 12px',
+              padding: '6px 10px',
               borderRadius: '4px',
               transition: 'color 0.15s ease',
             }}
+            data-testid="dashboard-tour-end-btn"
           >
-            End Tour
+            ✕ End Tour
           </button>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
               onClick={handlePrev}
@@ -670,17 +910,18 @@ export default function DashboardTourModal({
                 color: isFirst ? '#475569' : '#e2e8f0',
                 border: '1px solid #334155',
                 borderRadius: '6px',
-                padding: '8px 14px',
+                padding: '7px 13px',
                 fontSize: '12px',
                 fontWeight: 700,
                 cursor: isFirst ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '5px',
                 opacity: isFirst ? 0.5 : 1,
               }}
+              data-testid="dashboard-tour-prev-btn"
             >
-              <RiArrowLeftLine size={14} />
+              <RiArrowLeftLine size={13} />
               <span>Back</span>
             </button>
 
@@ -692,19 +933,20 @@ export default function DashboardTourModal({
                 color: '#080d16',
                 border: 'none',
                 borderRadius: '6px',
-                padding: '8px 18px',
+                padding: '7px 16px',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '5px',
                 boxShadow: `0 4px 14px ${personaData.color}44`,
                 transition: 'all 0.15s ease',
               }}
+              data-testid="dashboard-tour-next-btn"
             >
               <span>{isLast ? 'Finish Tour' : 'Next'}</span>
-              {isLast ? <RiCheckLine size={15} /> : <RiArrowRightLine size={15} />}
+              {isLast ? <RiCheckLine size={14} /> : <RiArrowRightLine size={14} />}
             </button>
           </div>
         </div>

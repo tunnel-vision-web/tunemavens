@@ -2643,23 +2643,25 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Embedded prominent WhatsApp Status & Handshake Card displaying live tier badges, 24-hour window timer, 1-click handshake dispatch button, and responsive QR code scan modal.
     - **Private Quota Privacy Policy:** Internal Meta monthly conversation quotas (1,000/mo) are strictly restricted to administrators (`currentUser.role === 'admin'`). Standard creators see verified active rail badges and simple deposit threshold requirements without exposing internal platform limits.
 
-- **Interactive Persona Dashboard Guided Tour System:**
-  - **Persona-Tailored Walkthrough Matrix (`DashboardTourModal.jsx`):**
-    - Guided step-by-step onboarding walkthrough custom-crafted for all 11 ecosystem personas:
-      - **Creator / Artist (`creator`):** Studio EPK Builder, Global Catalogue Porting, Split Cascade Waterfalls, Sync Briefs & Communications Alerts.
-      - **Music Supervisor (`supervisor`):** Sync Marketplace Search Filters, Stem Auditioning, Escrow Contracts & 1-Click Clearances, Complimentary VIP WhatsApp Access.
-      - **Record Label (`label`):** Multi-Artist Roster Command, Batch Discography Ingestion, Programmatic Advance Recoupment, Sync Pitching, VIP Push Notifications.
-      - **Corporate Brand (`corporate`):** Commercial Ad Flights & Sound Branding, Bespoke Brief Commissioning, TuneLedger Escrow Invoicing, VIP Channels.
-      - **DJ / Curator (`dj`):** Curated DJ Pool Downloads, Lossless Audio with Camelot Keys/BPM, Direct Creator Tip Jars.
-      - **Podcaster (`podcaster`):** Show RSS Distribution, Public Podcast EPK & Sponsor Decks, Programmatic Ad Slot Bidding.
-      - **Media House (`media_house`):** Broadcaster Cue Sheets, Commercial Television Sync Vault, CMO Reporting & Compliance Logs.
-      - **Affiliate Partner (`affiliate`):** 3% to 12% Ditto-Modeled Commission Matrix, 90-Day Cookie Attribution Engine, Instant Mobile STK Payouts.
-      - **Tour Venture Capital (`vc`):** Senior-Secured Tour Facility Syndicates, Automated Box-Office Recoupment Waterfalls (24% target IRR), Growth Telemetry.
-      - **Consumer / Fan (`consumer`):** 24-Bit / 96kHz Audiophile Player, 100% Direct Artist Micro-Tips, Concert Passes & Masterclasses.
-      - **Platform Administrator (`admin`):** 14-App Global Cloud Telemetry, Persona Simulator & Live Switching, Communications Audit Vault & Webhooks, KYC Governance.
-  - **Visual Immersion & Accessibility:**
-    - Features a focused spotlight card against an authentic 0.8 opacity blackout backdrop (`rgba(0, 0, 0, 0.8)`) with `backdrop-filter: blur(5px)` to focus attention without distraction.
-    - Interactive step progress indicators with clickable dot jumps, previous/next controls, and global keyboard shortcuts (`ESC` to exit, `ArrowLeft`/`ArrowRight` to navigate).
+- **Interactive Persona Dashboard Guided Tour & Live Spotlight System:**
+  - **Live Section Spotlight & 0.8 Opacity Cutout Architecture (`DashboardTourModal.jsx`):**
+    - Features a dynamic SVG cutout mask overlay rendered over the live dashboard:
+      - Full-screen SVG overlay with an `rgba(0, 0, 0, 0.8)` blackout fill and `<mask id="dashboard-tour-spotlight-mask">`.
+      - Precisely measures live DOM target elements (`document.querySelector(step.targetSelector)?.getBoundingClientRect()`) with padding and rounded corners (`rx="8"`), making the targeted section 100% transparent and crystal-clear while blacking out the rest of the dashboard at exactly 0.8 opacity.
+      - Draws an animated pulsating glowing border around the highlighted section in the persona's signature theme color (`border: 2px solid <color>`, `box-shadow: 0 0 25px <color>77`).
+      - Dynamically positions the tour popover card adjacent to the target element (to the right of sidebar items, below topbar items, or clamped within viewport boundaries on smaller screens).
+      - Automatically switches dashboard tabs (`setActiveTab(step.tab)`) as the user advances through the tour so the relevant section is always active on screen.
+      - Window resize and capture-phase scroll listeners ensure the spotlight remains perfectly aligned even as users scroll.
+  - **Simple, Understandable, User-Friendly Language:**
+    - Completely replaced technical and financial jargon (such as "programmatic waterfall liquidity", "ISRC sanitization", "senior-secured debt tranche", "lossless stem storage") with warm, plain, everyday English that any creator, supervisor, DJ, or investor can immediately grasp:
+      - *Artist Page & Profile:* "Build a clean, professional profile with your music, bio, photos, and social links to share one simple link with anyone."
+      - *Music Uploads:* "Upload your music with clear song titles and cover art, ready for Spotify, Apple Music, and Boomplay."
+      - *Fair Payouts & Splits:* "Decide who gets paid for each song. When your music earns money, your producers and collaborators get paid straight to their mobile money or bank accounts without disputes."
+      - *Wallet & Credits:* "Top up anytime using M-Pesa or card whenever you want to use mastering tools or receive automated phone alerts—no monthly subscription."
+      - *Instant Alerts:* "Get notified directly on WhatsApp or email whenever someone wants to license your song or whenever your royalties arrive."
+  - **Persona-Tailored Walkthrough Matrix:**
+    - Step-by-step guided spotlight walkthroughs tailored for all 11 ecosystem personas (`creator`, `supervisor`, `label`, `corporate`, `dj`, `podcaster`, `media_house`, `affiliate`, `vc`, `consumer`, `admin`).
   - **Automated First-Access Launch & 1-Click Restart Controls:**
-    - Auto-launches smoothly upon the user's first visit to any persona workspace (persisted in `localStorage` per role via `tunemavens_tour_completed_<role>`).
-    - Prominent **"Take Tour"** action button pinned to the `DashboardTopbar` and **"Restart Dashboard Tour"** option in the account dropdown menu enabling immediate re-triggering at any time.
+    - Auto-launches upon the user's first visit to any persona workspace (persisted in `localStorage` via `tunemavens_tour_seen_<role>`).
+    - Dedicated **"Take Tour"** action button pinned on the `DashboardTopbar` and **"Restart Dashboard Tour"** in the account dropdown menu allowing users to start or restart the tour at any time with a single click.
+    - Full keyboard control (`Escape` to end tour, `ArrowLeft` / `ArrowRight` to step through), clickable progress dots for jumping between steps, and `✕ End Tour` button.

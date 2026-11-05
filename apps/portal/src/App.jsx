@@ -522,6 +522,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
             onClick={() => setAccountOpen(true)}
             title="Simulating persona for admin verification. Click account dropdown to switch or reset."
             data-testid="topbar-simulation-badge"
+            data-tour="topbar-simulation-badge"
           >
             <span className="topbar-simulation-dot" />
             <span className="topbar-simulation-text">
@@ -616,6 +617,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                 ? "Unified Credits: Applies only if you use creator tools (MasterLab AI, Sync briefs, etc.). The Affiliate Dashboard requires 0 credits." 
                 : "Click to reload unified platform credits (Zero monthly charges)"}
               data-testid="topbar-unified-credits-btn"
+              data-tour="topbar-credits"
             >
               <RiCoinsFill size={15} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
               <span>{creditsCount.toLocaleString()} Credits</span>
@@ -666,6 +668,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           }}
           title="Take an interactive guided tour of this dashboard (Restart anytime)"
           data-testid="topbar-dashboard-tour-btn"
+          data-tour="topbar-tour-btn"
         >
           <RiCompass3Fill size={15} style={{ color: '#38bdf8' }} />
           <span>Take Tour</span>
@@ -683,6 +686,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
             onClick={() => { setNotifOpen(o => !o); setAccountOpen(false); }}
             title="Notifications"
             data-testid="topbar-notifications-button"
+            data-tour="topbar-notifications"
           >
             <RiBellFill size={18} />
             {unread > 0 && <span className="topbar-badge" data-testid="topbar-notifications-badge">{unread}</span>}
@@ -2076,8 +2080,8 @@ function DashboardView({
 
     return (
       <div className="dashboard-container" data-testid="tunestream-dedicated-listener-backend">
-        <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`} style={{ borderRight: '1px solid rgba(0, 242, 254, 0.14)', background: '#070b16' }}>
-          <div className="dashboard-sidebar-scroll" data-testid="dashboard-sidebar-scroll">
+        <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`} data-tour="consumer-sidebar" style={{ borderRight: '1px solid rgba(0, 242, 254, 0.14)', background: '#070b16' }}>
+          <div className="dashboard-sidebar-scroll" data-testid="dashboard-sidebar-scroll" data-tour="sidebar-scroll">
             <div className="dashboard-sidebar-header" style={{ flexDirection: 'column', gap: '6px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <Link to="/native-apps/tunestream" title="Back to TuneStream Player" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', gap: '3px' }}>
                 <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: collapsed ? '26px' : '32px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
@@ -2108,7 +2112,7 @@ function DashboardView({
             </button>
 
             {Object.entries(listenerCategories).map(([category, items]) => (
-              <div key={category} className="sidebar-category-group" style={{ marginBottom: '12px' }}>
+              <div key={category} className="sidebar-category-group" data-tour="sidebar-nav" style={{ marginBottom: '12px' }}>
                 {!collapsed && (
                   <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                     {category}
@@ -2123,6 +2127,8 @@ function DashboardView({
                         <button
                           type="button"
                           onClick={() => setActiveTab(item.id)}
+                          data-tour={`nav-${item.id}`}
+                          data-tab={item.id}
                           className={`dashboard-nav-item ${isActive ? 'active' : ''}`}
                           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
                         >
@@ -2200,6 +2206,8 @@ function DashboardView({
               <button
                 type="button"
                 onClick={() => handleOpenCreditReload('Top-Up Non-Expiring Listener TM Credits')}
+                data-tour="consumer-credits"
+                data-testid="consumer-credits-btn"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 242, 254, 0.12)', border: '1px solid rgba(0, 242, 254, 0.35)', color: '#00f2fe', padding: '6px 12px', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
               >
                 <RiCoinsFill size={15} />
@@ -2210,6 +2218,7 @@ function DashboardView({
               <button
                 type="button"
                 onClick={() => setActiveTab('listener-apps')}
+                data-tour="consumer-apps-btn"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(168, 85, 247, 0.12)', border: '1px solid rgba(168, 85, 247, 0.35)', color: '#c084fc', padding: '6px 12px', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
               >
                 <RiApps2Fill size={14} />
@@ -2231,6 +2240,7 @@ function DashboardView({
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 242, 254, 0.12)', border: '1px solid rgba(0, 242, 254, 0.35)', color: '#00f2fe', padding: '6px 12px', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
                 title="Take an interactive guided tour of the TuneStream Listener Hub"
                 data-testid="consumer-take-tour-btn"
+                data-tour="consumer-tour-btn"
               >
                 <RiCompass3Fill size={14} color="#00f2fe" />
                 <span>Take Tour</span>
@@ -2238,7 +2248,7 @@ function DashboardView({
             </div>
           </header>
 
-          <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll" style={{ padding: '24px' }}>
+          <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll" data-tour="main-content" style={{ padding: '24px' }}>
             {renderActivePanel()}
           </div>
 
@@ -2293,10 +2303,11 @@ function DashboardView({
   return (
     <div className="dashboard-container">
       {/* Sidebar Navigation */}
-      <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`} data-tour="sidebar">
         <div 
           className="dashboard-sidebar-scroll" 
           data-testid="dashboard-sidebar-scroll"
+          data-tour="sidebar-scroll"
           onScroll={() => setHoveredNavItem(null)}
         >
           <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
@@ -2346,7 +2357,7 @@ function DashboardView({
           </button>
 
           {Object.entries(getCategorizedMenu()).map(([category, items]) => (
-            <div key={category} className="sidebar-category-group" style={{ marginBottom: '12px' }}>
+            <div key={category} className="sidebar-category-group" data-tour="sidebar-nav" style={{ marginBottom: '12px' }}>
               {!collapsed && (
                 <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                   {category}
@@ -2358,6 +2369,8 @@ function DashboardView({
                   return (
                     <li key={item.id}>
                       <button 
+                        data-tour={`nav-${item.id}`}
+                        data-tab={item.id}
                         onClick={() => {
                           if (['catalog', 'epk-builder'].includes(item.id)) {
                             setCollapsed(true);
@@ -2487,7 +2500,7 @@ function DashboardView({
           onOpenCreditReload={handleOpenCreditReload}
           onStartTour={() => setTourOpen(true)}
         />
-        <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll">
+        <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll" data-tour="main-content">
           {/* Low unified credits prompt banner - Excludes affiliates and VCs since institutional accounts require 0 credits */}
           {(sessionUser?.credits ?? userCredits) < 50 && 
             sessionUser?.role !== 'affiliate' && 
