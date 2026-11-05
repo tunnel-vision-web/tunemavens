@@ -1257,6 +1257,13 @@ function DashboardView({
     return base;
   }, [sessionUser, demoFallbackUser, effectiveRole]);
 
+  const isAdminUser = Boolean(
+    sessionUser?.role === 'admin' ||
+    activeUser?.role === 'admin' ||
+    sessionUser?.email?.includes('admin') ||
+    sessionUser?.simulated_from === 'admin'
+  );
+
   useEffect(() => {
     if (!sessionUser || (activeUser && sessionUser.role !== activeUser.role)) {
       if (typeof onUpdateUser === 'function') {
