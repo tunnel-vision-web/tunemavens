@@ -29,6 +29,106 @@ TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
 TWILIO_WHATSAPP_FROM = os.environ.get("TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886").strip()
 
+# Business WhatsApp Sender Display Phone (Test or Verified Meta Number)
+WHATSAPP_DISPLAY_PHONE_NUMBER = os.environ.get("WHATSAPP_DISPLAY_PHONE_NUMBER", "+1 555-160-6136").strip()
+
+# VIP / Exempt roles that receive 100% complimentary, unlimited WhatsApp access
+EXEMPT_ROLES = {
+    "supervisor", "music_supervisor", "label", "record_label",
+    "publisher", "publishing", "corporate", "brand", "advertiser",
+    "admin", "superadmin"
+}
+
+# Minimum balance or reload required for creators/artists to safeguard the 1,000 monthly quota
+MIN_RELOAD_KES = 500.0
+MIN_RELOAD_USD = 5.0
+
+
+def check_whatsapp_eligibility(user_doc: Optional[Dict[str, Any]], custom_db=None) -> Dict[str, Any]:
+    """Verify if a user account is eligible for automated WhatsApp messaging.
+
+    Policy:
+    - Music supervisors, corporates, record labels, publishers, and admins have COMPLIMENTARY access.
+    - Creators, artists, and consumers require having reloaded at least KES 500 (or $5.00 USD)
+      into their wallet or holding >= 500 credits.
+    """
+    if not user_doc:
+        return {
+            "eligible": True,
+            "reason": "system_override",
+            "tier": "system",
+            "role": "system",
+            "notice": "System-level or diagnostic dispatch allowed"
+        }
+
+    role = str(user_doc.get("role", "creator")).lower().strip()
+    if role in EXEMPT_ROLES:
+        return {
+            "eligible": True,
+            "reason": "exempt_role",
+            "role": role,
+            "tier": "complimentary_vip",
+            "notice": f"Complimentary VIP access granted for role: {role.title()}"
+        }
+
+    _db = custom_db if custom_db is not None else db
+    user_id = str(user_doc.get("_id", ""))
+
+    lifetime_kes = 0.0
+    lifetime_usd = 0.0
+    if _db is not None and user_id:
+        try:
+            reloads = list(_db.credit_reloads.find({
+                "user_id": user_id,
+                "status": "completed"
+            }))
+            for r in reloads:
+                amt = float(r.get("amount", 0) or 0)
+                curr = str(r.get("currency", "KES")).upper().strip()
+                if curr == "KES":
+                    lifetime_kes += amt
+                elif curr in ("USD", "EUR", "GBP"):
+                    lifetime_usd += amt
+        except Exception as err:
+            logger.warning("Error computing user lifetime reloads: %s", err)
+
+    current_credits = float(user_doc.get("credits", 0) or 0)
+    is_funded = (lifetime_kes >= MIN_RELOAD_KES) or (lifetime_usd >= MIN_RELOAD_USD) or (current_credits >= MIN_RELOAD_KES)
+
+    if is_funded:
+        return {
+            "eligible": True,
+            "reason": "funded_wallet",
+            "role": role,
+            "tier": "funded_creator",
+            "lifetime_kes": lifetime_kes,
+            "lifetime_usd": lifetime_usd,
+            "credits": current_credits,
+            "notice": "Funded creator account verified (KES 500+ / $5.00+ qualified)"
+        }
+
+    return {
+        "eligible": False,
+        "reason": "insufficient_balance",
+        "role": role,
+        "tier": "unfunded",
+        "lifetime_kes": lifetime_kes,
+        "lifetime_usd": lifetime_usd,
+        "credits": current_credits,
+        "required_kes": MIN_RELOAD_KES,
+        "required_usd": MIN_RELOAD_USD,
+        "notice": "WhatsApp delivery requires a minimum wallet reload of KES 500 ($5.00). Music supervisors, record labels, and corporates receive complimentary access."
+    }
+
+
+def get_whatsapp_opt_in_url(user_ref: str = "") -> str:
+    """Generate universal wa.me direct chat link prompting the user to send the inbound handshake message."""
+    clean_digits = re.sub(r"[^\d]", "", WHATSAPP_DISPLAY_PHONE_NUMBER)
+    ref = f" TM-{user_ref.strip()}" if user_ref else ""
+    msg = f"START{ref} - Activate instant TuneMavens WhatsApp alerts for my account."
+    encoded = urllib.parse.quote(msg)
+    return f"https://wa.me/{clean_digits}?text={encoded}"
+
 
 def sanitize_phone_number(phone: str) -> str:
     """Normalize phone number to E.164 international standard."""
@@ -93,10 +193,12 @@ def send_whatsapp(
     role: str = "general",
     event_type: str = "notification",
     metadata: Optional[Dict[str, Any]] = None,
+    user_doc: Optional[Dict[str, Any]] = None,
+    enforce_quota: bool = False,
 ) -> Dict[str, Any]:
     """Dispatch a WhatsApp message and record to the communications audit vault.
 
-    Returns dict with status ('sent', 'staged', 'failed'), msg_id, and direct_url.
+    Returns dict with status ('sent', 'staged', 'failed', 'blocked'), msg_id, and direct_url.
     Never raises uncaught exceptions.
     """
     comm_id = f"comm_wa_{secrets.token_hex(8)}"
@@ -126,6 +228,28 @@ def send_whatsapp(
         "created_at": now,
         "updated_at": now,
     }
+
+    # Quota & Eligibility Enforcement
+    if enforce_quota and user_doc:
+        eligibility = check_whatsapp_eligibility(user_doc)
+        if not eligibility.get("eligible"):
+            logger.info("WhatsApp dispatch blocked by quota policy: %s", eligibility.get("notice"))
+            record = {
+                **base_record,
+                "status": "blocked",
+                "provider_status": 402,
+                "resend_response": eligibility.get("notice"),
+                "metadata": {**meta, "eligibility": eligibility},
+            }
+            db.communications.insert_one(record)
+            return {
+                "status": "blocked",
+                "comm_id": comm_id,
+                "error": "insufficient_balance",
+                "notice": eligibility.get("notice"),
+                "eligibility": eligibility,
+                "direct_url": direct_url,
+            }
 
     if not phone:
         logger.error("WhatsApp dispatch failed: invalid or empty phone number '%s'", to)

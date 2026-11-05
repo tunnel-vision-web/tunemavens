@@ -187,6 +187,59 @@ def get_communication_stats(user=Depends(get_optional_user)):
     }
 
 
+@router.get("/whatsapp-status")
+def get_whatsapp_status(user=Depends(get_optional_user)):
+    """Fetch user's WhatsApp eligibility, opt-in status, and 24h conversation window metrics."""
+    from services.whatsapp_service import (
+        check_whatsapp_eligibility,
+        get_whatsapp_opt_in_url,
+        WHATSAPP_DISPLAY_PHONE_NUMBER,
+        MIN_RELOAD_KES,
+        MIN_RELOAD_USD,
+    )
+
+    user_doc = None
+    if user and user.get("_id"):
+        user_doc = db.users.find_one({"_id": user["_id"]})
+
+    eligibility = check_whatsapp_eligibility(user_doc)
+
+    opted_in = bool(user_doc.get("whatsapp_opted_in")) if user_doc else False
+    last_inbound = user_doc.get("last_whatsapp_inbound_at") if user_doc else None
+    in_24h_window = False
+    window_expires_in_hours = 0.0
+
+    if last_inbound:
+        try:
+            inbound_dt = last_inbound if last_inbound.tzinfo else last_inbound.replace(tzinfo=timezone.utc)
+            diff_secs = (datetime.now(timezone.utc) - inbound_dt).total_seconds()
+            if diff_secs < 86400:
+                in_24h_window = True
+                window_expires_in_hours = max(0.0, round((86400 - diff_secs) / 3600.0, 1))
+        except Exception:
+            pass
+
+    user_ref = (user_doc.get("username") or user_doc.get("subdomain") or "creator") if user_doc else "creator"
+    initiate_url = get_whatsapp_opt_in_url(user_ref)
+
+    return {
+        "status": "success",
+        "is_eligible": eligibility.get("eligible", False),
+        "eligibility": eligibility,
+        "tier": eligibility.get("tier"),
+        "role": eligibility.get("role", "general"),
+        "opted_in": opted_in,
+        "in_24h_window": in_24h_window,
+        "window_expires_in_hours": window_expires_in_hours,
+        "last_inbound_at": last_inbound.isoformat() if last_inbound else None,
+        "initiate_url": initiate_url,
+        "business_phone": WHATSAPP_DISPLAY_PHONE_NUMBER,
+        "monthly_quota_limit": 1000,
+        "min_reload_kes": MIN_RELOAD_KES,
+        "min_reload_usd": MIN_RELOAD_USD,
+    }
+
+
 @router.get("/detail/{msg_id}")
 def get_communication_detail(msg_id: str, user=Depends(get_optional_user)):
     """Fetch full message content, rendered HTML, headers, and metadata for inspection."""
@@ -406,24 +459,70 @@ def test_whatsapp_dispatch(payload: TestWhatsappRequest, user=Depends(get_option
 
 @router.post("/send")
 def send_communication(payload: SendCommunicationRequest, user=Depends(get_optional_user)):
-    """Universal dispatcher for outbound communications across email and WhatsApp."""
+    """Universal dispatcher for outbound communications across email and WhatsApp.
+    
+    Enforces quota & balance policy:
+    - Music supervisors, record labels, corporates, and publishers have complimentary access.
+    - Creators and consumers require at least KES 500 ($5.00) wallet reload.
+    - If ineligible, gracefully downgrades to transactional email (Resend).
+    """
     channel = (payload.channel or "email").lower()
+    user_doc = None
+    if user and user.get("_id"):
+        user_doc = db.users.find_one({"_id": user["_id"]})
+
     if channel == "whatsapp":
-        from services.whatsapp_service import send_whatsapp
+        from services.whatsapp_service import send_whatsapp, check_whatsapp_eligibility
+
+        if user_doc:
+            eligibility = check_whatsapp_eligibility(user_doc)
+            if not eligibility.get("eligible"):
+                fallback_email = payload.to if "@" in payload.to else user_doc.get("email")
+                if fallback_email:
+                    from account_setup import send_email, _email_wrapper
+                    html = _email_wrapper(f"<p>{payload.message}</p>", payload.subject or "TuneMavens Notification", payload.role)
+                    status_val = send_email(
+                        to=fallback_email,
+                        subject=payload.subject or "TuneMavens Notification",
+                        html=html,
+                        text=payload.message,
+                        event_type=payload.event_type,
+                        role=payload.role,
+                        recipient_name=payload.recipient_name,
+                        metadata={"origin": "universal_send_api", "downgraded_from_whatsapp": True, "reason": eligibility.get("notice")}
+                    )
+                    return {
+                        "status": "fallback_email",
+                        "channel": "email",
+                        "delivery_status": status_val,
+                        "notice": f"Delivered via Email. {eligibility.get('notice')}",
+                        "eligibility": eligibility
+                    }
+                return {
+                    "status": "blocked",
+                    "channel": "whatsapp",
+                    "delivery_status": "blocked",
+                    "notice": eligibility.get("notice"),
+                    "eligibility": eligibility
+                }
+
         res = send_whatsapp(
             to=payload.to,
             message=payload.message,
             recipient_name=payload.recipient_name,
             role=payload.role,
             event_type=payload.event_type,
-            metadata={"origin": "universal_send_api"}
+            metadata={"origin": "universal_send_api"},
+            user_doc=user_doc,
+            enforce_quota=True
         )
         return {
-            "status": "success",
+            "status": "success" if res.get("status") in ("sent", "staged") else ("blocked" if res.get("status") == "blocked" else "failed"),
             "channel": "whatsapp",
             "delivery_status": res.get("status"),
             "comm_id": res.get("comm_id"),
-            "direct_url": res.get("direct_url")
+            "direct_url": res.get("direct_url"),
+            "notice": res.get("notice")
         }
     else:
         from account_setup import send_email, _email_wrapper
@@ -580,9 +679,46 @@ async def receive_whatsapp_webhook(request: Request):
                 sender_phone = msg.get("from", "")
                 msg_id = msg.get("id", "")
                 msg_text = msg.get("text", {}).get("body", "")
-                
+
                 if not msg_text and msg.get("type") != "text":
                     msg_text = f"[{msg.get('type', 'media').upper()} payload received]"
+
+                # Format international phone e.g. +254...
+                formatted_phone = f"+{sender_phone}" if not sender_phone.startswith("+") else sender_phone
+
+                # Account matching: by phone number or by TM-<username> tag in message
+                matched_user = db.users.find_one({"$or": [
+                    {"phone": formatted_phone},
+                    {"whatsapp_phone": formatted_phone},
+                    {"phone": sender_phone},
+                    {"whatsapp_phone": sender_phone}
+                ]})
+
+                account_tag_match = re.search(r"TM-([a-zA-Z0-9_\-\.]+)", msg_text, re.IGNORECASE)
+                if account_tag_match:
+                    user_tag = account_tag_match.group(1).strip()
+                    tagged_user = db.users.find_one({"$or": [
+                        {"username": user_tag},
+                        {"email": user_tag},
+                        {"subdomain": user_tag}
+                    ]})
+                    if tagged_user:
+                        matched_user = tagged_user
+
+                is_opt_in = bool("start" in msg_text.lower() or account_tag_match or matched_user)
+
+                if matched_user:
+                    db.users.update_one(
+                        {"_id": matched_user["_id"]},
+                        {
+                            "$set": {
+                                "whatsapp_opted_in": True,
+                                "whatsapp_phone": formatted_phone,
+                                "last_whatsapp_inbound_at": now,
+                                "updated_at": now
+                            }
+                        }
+                    )
 
                 inbound_doc = {
                     "id": f"comm_wa_in_{secrets.token_hex(8)}",
@@ -595,8 +731,8 @@ async def receive_whatsapp_webhook(request: Request):
                     "channel": "whatsapp",
                     "provider": "meta_whatsapp_cloud",
                     "direction": "inbound",
-                    "event_type": "inbound_customer_message",
-                    "role": "fan",
+                    "event_type": "whatsapp_opt_in_handshake" if is_opt_in else "inbound_customer_message",
+                    "role": matched_user.get("role", "creator") if matched_user else "fan",
                     "status": "received",
                     "provider_status": 200,
                     "resend_id": msg_id,
@@ -604,11 +740,34 @@ async def receive_whatsapp_webhook(request: Request):
                         "inbound": True,
                         "wa_msg_id": msg_id,
                         "raw_sender": sender_phone,
+                        "is_opt_in": is_opt_in,
+                        "matched_user_id": str(matched_user["_id"]) if matched_user else None
                     },
                     "archived": False,
                     "created_at": now,
                     "updated_at": now,
                 }
                 db.communications.insert_one(inbound_doc)
+
+                # Send automatic welcome reply to confirm handshake and 24h window
+                if is_opt_in:
+                    try:
+                        from services.whatsapp_service import send_whatsapp
+                        welcome_reply = (
+                            f"TuneMavens Alerts Active! 🚀\n\n"
+                            f"Hi {contact_name}, your WhatsApp notifications are now verified and active. "
+                            f"You will receive real-time sync deal notices, royalty updates, and split clearances directly here. "
+                            f"(24-Hour customer window is now open)."
+                        )
+                        send_whatsapp(
+                            to=formatted_phone,
+                            message=welcome_reply,
+                            recipient_name=contact_name,
+                            role=matched_user.get("role", "creator") if matched_user else "creator",
+                            event_type="whatsapp_opt_in_welcome",
+                            metadata={"auto_reply_to_inbound": msg_id}
+                        )
+                    except Exception as err:
+                        logger.warning("Auto welcome reply exception: %s", err)
 
     return {"status": "ok"}

@@ -2626,3 +2626,18 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Added dynamic host detection (`getApiBase()`) in `apps/portal/src/lib/api.js`, `apps/tunestream/src/lib/api.js`, and `apps/syncmavens/src/lib/api.js` that automatically routes all client API calls to `https://tunemavens-backend.onrender.com` in production domains while defaulting to same-origin proxies in local development environments.
     - Added tracked `.env.production` configuration across `apps/portal`, `apps/tunestream`, and `apps/syncmavens`.
     - Refactored all raw catalogue and storage fetch endpoints in `apps/portal/src/App.jsx` to inherit the unified `BASE` prefix.
+
+- **Inbound WhatsApp Handshake, 24-Hour Service Window & Quota Governance:**
+  - **Inbound Customer Initiation Architecture:**
+    - To leverage Meta's free 24-hour service conversation window, users are prompted to send an initial inbound handshake message.
+    - Users can trigger this with a single click via universal `wa.me` links pre-encoded with verification keywords (e.g., `START TM-<username>`) or scan a real-time QR code rendered on desktop displays.
+    - Meta Webhook (`POST /api/communications/webhook`) parses inbound messages, correlates the sender's phone and `TM-<username>` tag with MongoDB `db.users`, marks `whatsapp_opted_in: True`, logs `last_whatsapp_inbound_at`, and dispatches an automated confirmation welcome message back to the sender.
+  - **1,000-Message Monthly Quota Protection & Access Tier Enforcement:**
+    - Meta limits free service conversation handshakes to 1,000 per month.
+    - **Complimentary VIP Access:** Music Supervisors (`supervisor`), Record Labels (`label`), Publishers (`publisher`), Corporates/Brands (`corporate`), and Admins receive 100% complimentary, unlimited automated WhatsApp alerts with no minimum balance requirements.
+    - **Funded Creator Access:** Creators and standard consumers must have loaded a minimum cumulative amount of **KES 500 (or $5.00 USD)** into their TuneLedger wallet or maintain at least 500 credits to unlock automated WhatsApp delivery.
+    - **Graceful Fallback:** If an unfunded creator attempts to trigger WhatsApp notifications, the platform automatically routes the notification through high-deliverability **Resend Transactional Email** with an advisory notice to reload their wallet to unlock WhatsApp delivery.
+  - **New Status Diagnostic Endpoint (`GET /api/communications/whatsapp-status`):**
+    - Returns real-time user eligibility, tier classification (`complimentary_vip`, `funded_creator`, `unfunded`), 24-hour window countdown (`in_24h_window`, `window_expires_in_hours`), verified business phone number, and personalized `initiate_url`.
+  - **In-App Governance UI (`CommunicationsVaultPanel.jsx`):**
+    - Embedded prominent WhatsApp Status & Handshake Card displaying live tier badges, 24-hour window timer, 1-click handshake dispatch button, and responsive QR code scan modal.

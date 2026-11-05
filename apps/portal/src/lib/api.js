@@ -391,6 +391,7 @@ export const communicationsApi = {
     return request('/api/communications/logs' + (qs ? '?' + qs : ''));
   },
   getStats: () => request('/api/communications/stats'),
+  getWhatsappStatus: () => request('/api/communications/whatsapp-status'),
   getDetail: (msgId) => request('/api/communications/detail/' + encodeURIComponent(msgId)),
   archiveMessage: (msgId) => request('/api/communications/archive/' + encodeURIComponent(msgId), { method: 'POST' }),
   unarchiveMessage: (msgId) => request('/api/communications/unarchive/' + encodeURIComponent(msgId), { method: 'POST' }),

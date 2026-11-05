@@ -24,6 +24,8 @@ import {
   RiWhatsappLine,
   RiCheckboxCircleFill,
   RiAlertFill,
+  RiQrCodeLine,
+  RiVipCrownLine,
 } from 'react-icons/ri';
 import { communicationsApi } from '../../lib/api';
 
@@ -96,6 +98,11 @@ export default function CommunicationsVaultPanel({ currentUser }) {
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
 
+  // WhatsApp Opt-in & Quota Governance State
+  const [waStatus, setWaStatus] = useState(null);
+  const [waStatusLoading, setWaStatusLoading] = useState(true);
+  const [showQrModal, setShowQrModal] = useState(false);
+
   // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -111,11 +118,12 @@ export default function CommunicationsVaultPanel({ currentUser }) {
       if (e.key === 'Escape') {
         if (testModalOpen) setTestModalOpen(false);
         if (inspectModalOpen) setInspectModalOpen(false);
+        if (showQrModal) setShowQrModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [testModalOpen, inspectModalOpen]);
+  }, [testModalOpen, inspectModalOpen, showQrModal]);
 
   // Load stats
   const fetchStats = async () => {
@@ -129,6 +137,21 @@ export default function CommunicationsVaultPanel({ currentUser }) {
       console.error('Failed to load communication stats:', err);
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  // Load WhatsApp Eligibility & Inbound Opt-in Status
+  const fetchWaStatus = async () => {
+    try {
+      setWaStatusLoading(true);
+      const res = await communicationsApi.getWhatsappStatus();
+      if (res && res.status === 'success') {
+        setWaStatus(res);
+      }
+    } catch (err) {
+      console.warn('Failed to load WhatsApp status:', err);
+    } finally {
+      setWaStatusLoading(false);
     }
   };
 
@@ -164,6 +187,7 @@ export default function CommunicationsVaultPanel({ currentUser }) {
 
   useEffect(() => {
     fetchStats();
+    fetchWaStatus();
   }, []);
 
   useEffect(() => {
@@ -579,6 +603,399 @@ export default function CommunicationsVaultPanel({ currentUser }) {
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Activation, Handshake & Quota Governance Card */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(11,20,26,0.95) 0%, rgba(13,21,34,0.98) 100%)',
+        border: '1px solid rgba(37,211,102,0.3)',
+        borderRadius: '6px',
+        padding: '20px 22px',
+        marginBottom: '24px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Subtle decorative background glow */}
+        <div style={{
+          position: 'absolute',
+          top: '-40px',
+          right: '-40px',
+          width: '180px',
+          height: '180px',
+          background: 'radial-gradient(circle, rgba(37,211,102,0.12) 0%, rgba(37,211,102,0) 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Card Header */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          paddingBottom: '14px',
+          marginBottom: '16px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              background: 'rgba(37,211,102,0.15)',
+              padding: '8px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <RiWhatsappFill size={24} style={{ color: '#25d366' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Meta WhatsApp Inbound Handshake &amp; Real-Time Alerts Rail</span>
+                <span style={{
+                  fontSize: '10px',
+                  background: 'rgba(37,211,102,0.2)',
+                  color: '#25d366',
+                  padding: '2px 6px',
+                  borderRadius: '3px',
+                  fontWeight: '700',
+                  letterSpacing: '0.5px',
+                }}>
+                  CLOUD API v20.0
+                </span>
+              </div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                Meta grants an unrestricted 24-hour free message window when you initiate contact. Send a quick handshake to activate instant notifications.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              background: '#0d1522',
+              border: '1px solid #1e293b',
+              borderRadius: '4px',
+              padding: '6px 12px',
+              fontSize: '11px',
+              color: '#94a3b8',
+              fontFamily: 'monospace',
+            }}>
+              Monthly Free Conversations: <span style={{ color: '#22d3ee', fontWeight: '700' }}>1,000 / mo</span>
+            </div>
+            <button
+              onClick={fetchWaStatus}
+              title="Refresh WhatsApp Status"
+              style={{
+                background: '#1e293b',
+                border: 'none',
+                color: '#cbd5e1',
+                padding: '7px 10px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+              }}
+            >
+              <RiRefreshLine size={14} className={waStatusLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        </div>
+
+        {/* 3-Column Policy & Action Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '16px',
+        }}>
+          {/* Tile 1: Access Tier & Eligibility Policy */}
+          <div style={{
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: '6px',
+            padding: '14px 16px',
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+              Access Policy &amp; Monetization Tier
+            </div>
+            {waStatus?.eligibility?.tier === 'complimentary_vip' ? (
+              <div>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(244,63,94,0.15)',
+                  border: '1px solid rgba(244,63,94,0.3)',
+                  color: '#f43f5e',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '3px 8px',
+                  borderRadius: '3px',
+                  marginBottom: '8px',
+                }}>
+                  <RiVipCrownLine size={13} />
+                  COMPLIMENTARY VIP ACCESS
+                </div>
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  Music Supervisors, Record Labels, and Corporates receive <strong>complimentary, unlimited WhatsApp access</strong> with no wallet reload requirement.
+                </div>
+              </div>
+            ) : waStatus?.is_eligible ? (
+              <div>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(37,211,102,0.15)',
+                  border: '1px solid rgba(37,211,102,0.3)',
+                  color: '#25d366',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '3px 8px',
+                  borderRadius: '3px',
+                  marginBottom: '8px',
+                }}>
+                  <RiCheckboxCircleFill size={13} />
+                  QUALIFIED CREATOR (FUNDED WALLET)
+                </div>
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  Your account has met the qualifying deposit threshold (KES 500+ / $5.00+). Real-time WhatsApp notifications are unlocked!
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(245,158,11,0.15)',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  color: '#f59e0b',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '3px 8px',
+                  borderRadius: '3px',
+                  marginBottom: '8px',
+                }}>
+                  <RiAlertFill size={13} />
+                  RELOAD REQUIRED (MIN KES 500 / $5.00)
+                </div>
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  To protect our 1,000 free monthly conversations, creators must load at least <strong>KES 500 ($5.00)</strong> to activate automated WhatsApp delivery.
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tile 2: 24-Hour Customer-Service Window */}
+          <div style={{
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: '6px',
+            padding: '14px 16px',
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+              24-Hour Customer-Service Window
+            </div>
+            {waStatus?.in_24h_window ? (
+              <div>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(37,211,102,0.15)',
+                  border: '1px solid rgba(37,211,102,0.3)',
+                  color: '#25d366',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '3px 8px',
+                  borderRadius: '3px',
+                  marginBottom: '8px',
+                }}>
+                  🟢 WINDOW ACTIVE (FREE MESSAGING OPEN)
+                </div>
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  Your 24-hour service window is active for approximately <strong>{waStatus.window_expires_in_hours} hours</strong>. Our backend can send custom real-time alerts without template limits.
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(148,163,184,0.15)',
+                  border: '1px solid rgba(148,163,184,0.3)',
+                  color: '#94a3b8',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '3px 8px',
+                  borderRadius: '3px',
+                  marginBottom: '8px',
+                }}>
+                  ⚪ WINDOW AWAITING INBOUND MESSAGE
+                </div>
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  No inbound handshake in the last 24 hours. Tap <strong>Send Inbound Handshake</strong> to message our verified number and open the free 24-hour window!
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tile 3: Initiation Actions */}
+          <div style={{
+            background: 'rgba(37,211,102,0.04)',
+            border: '1px solid rgba(37,211,102,0.2)',
+            borderRadius: '6px',
+            padding: '14px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#25d366', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                Official WhatsApp Sender
+              </div>
+              <div style={{ fontSize: '14px', fontWeight: '800', color: '#f8fafc', fontFamily: 'monospace' }}>
+                {waStatus?.business_phone || '+1 555-160-6136'}
+              </div>
+              <div style={{ fontSize: '11px', color: '#8696a0', marginTop: '2px' }}>
+                Pre-coded verification keyword: <code>START TM-{(currentUser?.username || 'creator')}</code>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <button
+                onClick={() => window.open(waStatus?.initiate_url || 'https://wa.me/15551606136?text=START', '_blank')}
+                style={{
+                  flex: 1,
+                  background: '#25d366',
+                  color: '#0b141a',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 8px rgba(37,211,102,0.3)',
+                }}
+              >
+                <RiWhatsappFill size={16} />
+                Send Handshake
+              </button>
+              <button
+                onClick={() => setShowQrModal(true)}
+                title="Scan QR Code with your smartphone camera"
+                style={{
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  border: '1px solid #334155',
+                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <RiQrCodeLine size={16} />
+                QR Code
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* QR Code Handshake Modal */}
+      {showQrModal && (
+        <div
+          onClick={() => setShowQrModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '16px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#0d1522',
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              maxWidth: '380px',
+              width: '100%',
+              padding: '24px',
+              textAlign: 'center',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.7)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <RiWhatsappFill size={20} style={{ color: '#25d366' }} />
+                <span>Scan with Camera</span>
+              </div>
+              <button
+                onClick={() => setShowQrModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                <RiCloseLine size={20} />
+              </button>
+            </div>
+
+            <div style={{
+              background: '#ffffff',
+              padding: '16px',
+              borderRadius: '8px',
+              display: 'inline-block',
+              margin: '8px auto 16px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+            }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(waStatus?.initiate_url || 'https://wa.me/15551606136?text=START')}&margin=4&color=0b141a&bgcolor=ffffff`}
+                alt="Scan to open TuneMavens WhatsApp"
+                style={{ width: '220px', height: '220px', display: 'block' }}
+              />
+            </div>
+
+            <div style={{ fontSize: '13px', color: '#cbd5e1', marginBottom: '8px' }}>
+              Point your smartphone camera at this QR code to instantly launch WhatsApp with the pre-coded verification handshake.
+            </div>
+
+            <div style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace', marginBottom: '16px' }}>
+              Receiver: {waStatus?.business_phone || '+1 555-160-6136'}
+            </div>
+
+            <button
+              onClick={() => setShowQrModal(false)}
+              style={{
+                background: '#1e293b',
+                color: '#cbd5e1',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 18px',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div style={{
