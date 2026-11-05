@@ -1,19 +1,21 @@
 import React, { useState } from 'react'
-import { RiCheckboxCircleFill, RiTeamFill, RiCloseFill } from 'react-icons/ri'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { RiCheckboxCircleFill, RiArrowRightLine, RiTeamFill, RiCoinsFill } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
 import CreditReloadModal from '../../components/common/CreditReloadModal.jsx'
+import { CREDIT_LOAD_PACKAGES, CREDIT_EXCHANGE_RATE } from '../../lib/pricingPlans.js'
 
 import headerPricingImg from '../../assets/images/header_pricing.png'
 import headerPricingWesternImg from '../../assets/images/header_pricing_western.png'
 
 const PLANS = [
   {
-    name: 'Starter Top-Up',
+    name: 'Spark Free Starter',
     price: 0,
     credits: 50,
-    desc: '50 Free Signup Credits to test standard audio and sync tools.',
+    desc: '50 Free Signup Credits to test standard audio and sync pitching tools.',
+    packageId: null,
     features: [
       { text: '50 Free Signup Credits', on: true },
       { text: 'Standard sync brief generation', on: true },
@@ -24,154 +26,123 @@ const PLANS = [
     style: 'outline',
   },
   {
-    name: 'Creator Top-Up',
-    price: 9.99,
-    credits: 350,
-    desc: '350 Non-Expiring Credits. Perfect for independent artists and producers.',
+    name: 'Starter Floor',
+    price: 2.50,
+    priceKes: 250,
+    credits: 250,
+    desc: '250 Non-Expiring Credits (KSh 250). Accessible entry floor for artists, single mastering, and tips.',
+    packageId: 'starter-floor',
     features: [
-      { text: '350 Non-Expiring Credits', on: true },
+      { text: '250 Non-Expiring Credits', on: true },
+      { text: 'AI mastering (single master)', on: true },
+      { text: 'EPK builder web world setup', on: true },
+      { text: 'Direct fan tipping via mobile money', on: true },
+    ],
+    cta: 'Top-Up 250 Credits',
+    style: 'outline',
+  },
+  {
+    name: 'Growth Pack',
+    price: 5.00,
+    priceKes: 500,
+    credits: 500,
+    desc: '500 Non-Expiring Credits (KSh 500). Perfect for regular releases, WhatsApp alerts & sync briefs.',
+    packageId: 'growth-pack',
+    features: [
+      { text: '500 Non-Expiring Credits', on: true },
+      { text: 'WhatsApp Phone Alerts Enabled', on: true },
       { text: 'AI mastering (3 tracks)', on: true },
       { text: 'Sync placement submissions (5 submissions)', on: true },
       { text: 'Advanced analytics & EPK hosting', on: true },
     ],
-    cta: 'Top-Up 350 Credits',
+    cta: 'Top-Up 500 Credits',
     style: 'outline',
   },
   {
     name: 'Pro Maven Pack',
-    price: 29.99,
-    credits: 1500,
-    desc: '1,500 Non-Expiring Credits. For serious creators scaling their catalog.',
+    price: 10.00,
+    priceKes: 1000,
+    credits: 1000,
+    desc: '1,000 Non-Expiring Credits (KSh 1,000). For active creators scaling catalog and custom domains.',
+    packageId: 'pro-maven',
     features: [
-      { text: '1,500 Non-Expiring Credits', on: true },
+      { text: '1,000 Non-Expiring Credits', on: true },
+      { text: 'Custom apex domain SSL mapping', on: true },
+      { text: 'Social AI Studio marketing generator', on: true },
       { text: 'Unlimited AI mastering', on: true },
-      { text: 'Priority sync placements', on: true },
-      { text: 'Splits management & collaboration', on: true },
-      { text: 'Custom domain mapping', on: true },
+      { text: 'Priority sync placement pitching', on: true },
+      { text: 'Split Cascade collaborator ledgers', on: true },
     ],
-    cta: 'Top-Up 1,500 Credits',
+    cta: 'Top-Up 1,000 Credits',
     style: 'cyan',
     popular: true,
   },
   {
     name: 'Studio Master Pack',
-    price: 49.99,
+    price: 50.00,
+    priceKes: 5000,
     credits: 5000,
-    desc: '5,000 Non-Expiring Credits. Enterprise-grade tools for labels and managers.',
+    desc: '5,000 Non-Expiring Credits (KSh 5,000). Heavy-duty volume for stems storage, escrow, and DJ pool.',
+    packageId: 'studio-master',
     features: [
       { text: '5,000 Non-Expiring Credits', on: true },
       { text: 'Lossless multitrack stem downloads', on: true },
+      { text: 'Escrow contract legal protection', on: true },
+      { text: 'DJ Record Pool drop clearances', on: true },
       { text: 'White-label dashboards & EPKs', on: true },
-      { text: 'API access & webhooks', on: true },
       { text: 'Dedicated sync curation support', on: true },
     ],
     cta: 'Top-Up 5,000 Credits',
     style: 'outline',
   },
   {
-    name: 'Label Bulk Pool',
-    price: 149.99,
-    credits: 25000,
-    seats: 5,
-    desc: '25,000 Non-Expiring Credits. Bulk pool for multi-artist catalogs with 5 team seats.',
-    features: [
-      { text: '25,000 Non-Expiring Credits', on: true },
-      { text: '5 team seats included', on: true },
-      { text: 'Bulk catalog operations', on: true },
-      { text: 'Dedicated account manager', on: true },
-      { text: 'Priority catalog curation', on: true },
-      { text: 'Split Cascade ledger engines', on: true },
-    ],
-    cta: 'Top-Up 25,000 Credits',
-    style: 'outline',
+    name: 'Label & Teams Starter',
+    price: 75.00,
+    priceKes: 7500,
+    credits: 7500,
+    desc: '7,500 Non-Expiring Credits (KSh 7,500). Enterprise starter package with multi-seat team accounts.',
+    packageId: 'label-team-starter',
     team: true,
+    features: [
+      { text: '7,500 Non-Expiring Credits', on: true },
+      { text: 'Multi-seat team accounts included', on: true },
+      { text: 'Multi-artist roster management', on: true },
+      { text: 'Bulk catalog operations & ISRC validation', on: true },
+      { text: 'Direct mobile money bulk split payouts', on: true },
+      { text: 'Priority A&R & legal contracts desk', on: true },
+    ],
+    cta: 'Top-Up 7,500 Credits',
+    style: 'outline',
   },
 ];
 
-// Stripe Checkout Modal
-function CheckoutModal({ plan, onClose, formatPrice, currencyInfo, convertPrice }) {
-  const [loading, setLoading] = useState(false);
-
-  const handleStripeCheckout = async () => {
-    setLoading(true);
-    const amount = convertPrice(plan.price);
-    const currency = currencyInfo?.code?.toLowerCase() || 'usd';
-    
-    alert(
-      `Credit Top-Up Checkout will open for:\n\n` +
-      `Package: ${plan.name}\n` +
-      `Amount: ${currencyInfo?.symbol}${amount.toFixed(2)} ${currency.toUpperCase()} (One-Time)\n` +
-      `Credits: ${plan.credits.toLocaleString()} Non-Expiring TM Credits\n\n` +
-      `Your balance will update immediately upon checkout.`
-    );
-    setLoading(false);
-    onClose();
-  };
-
-  return (
-    <div className="auth-modal-overlay-wrapper" onClick={(e) => { if (e.target.className === 'auth-modal-overlay-wrapper') onClose(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(3,7,18,0.78)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
-      <div className="auth-modal-card glass-panel" style={{ maxWidth: '440px', width: '100%', padding: '32px', borderRadius: '12px', position: 'relative' }} onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer' }}>
-          <RiCloseFill size={20} />
-        </button>
-
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <img src="/favicon.png" alt="TuneMavens" style={{ width: '42px', height: '42px', margin: '0 auto 12px', display: 'block' }} />
-          <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>Top-Up {plan.name}</h3>
-          <p style={{ fontSize: '13px', color: 'var(--mu)', margin: 0 }}>
-            {plan.credits.toLocaleString()} non-expiring credits · {currencyInfo?.symbol}{convertPrice(plan.price).toFixed(2)} one-time
-          </p>
-        </div>
-
-        <div style={{ background: 'var(--ca)', border: '1px solid var(--b1)', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
-            <span style={{ color: 'var(--mu)' }}>Package</span>
-            <span style={{ color: '#fff', fontWeight: 600 }}>{plan.name}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
-            <span style={{ color: 'var(--mu)' }}>Credits Added</span>
-            <span style={{ color: 'var(--cyan)', fontWeight: 800 }}>+{plan.credits.toLocaleString()} TM Credits</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
-            <span style={{ color: 'var(--mu)' }}>Type</span>
-            <span style={{ color: '#fff', fontWeight: 600 }}>One-Time Top-Up</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
-            <span style={{ color: 'var(--mu)' }}>Currency</span>
-            <span style={{ color: '#fff', fontWeight: 600 }}>{currencyInfo?.code || 'USD'}</span>
-          </div>
-          <div style={{ borderTop: '1px solid var(--b1)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '16px' }}>
-            <span style={{ color: 'var(--mu)' }}>Total</span>
-            <span style={{ color: 'var(--cyan)', fontWeight: 800 }}>{currencyInfo?.symbol}{convertPrice(plan.price).toFixed(2)}</span>
-          </div>
-        </div>
-
-        {plan.seats && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.15)', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: 'var(--cyan)' }}>
-            <RiTeamFill size={16} />
-            Includes {plan.seats} team seats
-          </div>
-        )}
-
-        <button
-          onClick={handleStripeCheckout}
-          disabled={loading}
-          style={{ width: '100%', padding: '14px', background: 'var(--cyan)', color: '#060813', border: 'none', borderRadius: '6px', fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-        >
-          {loading ? 'Redirecting to Checkout…' : `Pay ${currencyInfo?.symbol}${convertPrice(plan.price).toFixed(2)} One-Time`}
-        </button>
-
-        <p style={{ fontSize: '11px', color: 'var(--mu2)', textAlign: 'center', marginTop: '12px' }}>
-          Powered by Stripe & PesaPal · Non-expiring credits · Instant top-up
-        </p>
-      </div>
-    </div>
-  );
-}
+const FAQS = [
+  {
+    q: 'How does the Unified Non-Expiring Credits model work?',
+    a: 'Instead of forcing you into recurring monthly subscriptions with high credit card churn, TuneMavens runs on a 100% usage-based Unified Credits model. 1 Credit = KSh 1.00 or $0.01 USD. Credits never expire and are shared across all tools in the TuneMavens ecosystem (EPK Builder, AI Mastering, Sync pitching, WhatsApp alerts, and TuneStream tips).',
+  },
+  {
+    q: 'What is the lowest top-up amount available?',
+    a: 'Platformwide, the entry floor top-up is as low as KSH 250 ($2.50 USD) for 250 credits. This makes it effortless to test mastering, customize your EPK, or tip an artist without financial barriers.',
+  },
+  {
+    q: 'How does the single source of truth pricing work for currencies?',
+    a: 'Our pricing maintains strict integrity: 1 Credit equals KSh 1.00 Kenyan Shilling, and 100 Credits equal $1.00 USD ($0.01 per credit). Top-ups can be completed via M-Pesa STK push or global cards.',
+  },
+  {
+    q: 'Do Administrators ever need to buy credits?',
+    a: 'Never. Platform administrators have permanent, unrestricted system access and are 100% credit-exempt across all workspaces and tools.',
+  },
+  {
+    q: 'Do credits expire if I do not release music immediately?',
+    a: 'No. TuneMavens unified credits never expire. You can load 1,000 credits today and use them 6 months or 2 years from now without forfeiture.',
+  },
+];
 
 export default function PricingView() {
-  const { formatPrice, convertPrice, currencyInfo } = useRegion();
-  const navigate = useNavigate();
+  const { formatPrice, convertPrice, currencyInfo } = useRegion()
+  const navigate = useNavigate()
+  const [openFaq, setOpenFaq] = useState(null)
   const [showReloadModal, setShowReloadModal] = useState(false);
   const [reloadReason, setReloadReason] = useState('TuneMavens Unified Platform Credits Top-Up');
   const [suggestedPackage, setSuggestedPackage] = useState(null);
@@ -181,17 +152,7 @@ export default function PricingView() {
       navigate('/register');
     } else {
       setReloadReason(`Top-Up ${plan.name} (${plan.credits.toLocaleString()} Credits)`);
-      if (plan.credits >= 10000) {
-        setSuggestedPackage('enterprise-label-load');
-      } else if (plan.credits >= 3500) {
-        setSuggestedPackage('scale-label-load');
-      } else if (plan.credits >= 1000) {
-        setSuggestedPackage('indie-label-load');
-      } else if (plan.credits >= 500) {
-        setSuggestedPackage('pro-growth');
-      } else {
-        setSuggestedPackage('creator-starter');
-      }
+      setSuggestedPackage(plan.packageId || 'starter-floor');
       setShowReloadModal(true);
     }
   };
@@ -201,13 +162,13 @@ export default function PricingView() {
       <PageHeader title="Credits & Top-Ups" bgImage={headerPricingImg} bgImageWestern={headerPricingWesternImg} breadcrumb="Credits & Pricing" />
       <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
         <p className="section-desc" style={{ textAlign: 'center', marginBottom: '40px', maxWidth: '700px', margin: '0 auto 40px' }}>
-          Top up your balance with non-expiring TM Credits. No recurring monthly subscriptions — pay only for what you use across the entire TuneMavens and Intermaven ecosystem.
+          Top up your balance with non-expiring TM Credits starting as low as KSh 250 ($2.50). No recurring monthly subscriptions — pay only for what you use across the entire TuneMavens and Intermaven ecosystem.
         </p>
         <div className="pricing-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', maxWidth: '1300px' }}>
           {PLANS.map((plan) => (
-            <div key={plan.name} className={`pricing-card glass-panel ${plan.popular ? 'premium' : ''}`}>
-              {plan.popular && <span className="pricing-badge">Most Popular</span>}
-              {plan.team && <span className="pricing-badge" style={{ background: 'var(--purple)' }}><RiTeamFill size={12} style={{ marginRight: '4px' }} />Team</span>}
+            <div key={plan.name} className={`pricing-card glass-panel ${plan.popular ? 'premium' : ''}`} style={{ borderRadius: '3px' }}>
+              {plan.popular && <span className="pricing-badge" style={{ borderRadius: '3px' }}>Most Popular</span>}
+              {plan.team && <span className="pricing-badge" style={{ background: 'var(--purple)', borderRadius: '3px' }}><RiTeamFill size={12} style={{ marginRight: '4px' }} />Teams</span>}
               <h3 className="plan-name">{plan.name}</h3>
               <div className="plan-price">
                 {plan.price === 0 ? formatPrice(0) : `${currencyInfo?.symbol || '$'}${convertPrice(plan.price).toFixed(2)}`}
@@ -221,7 +182,11 @@ export default function PricingView() {
                   </li>
                 ))}
               </ul>
-              <button className={`plan-btn ${plan.style}`} onClick={() => handleBuy(plan)}>
+              <button
+                className={`plan-btn ${plan.style}`}
+                style={{ borderRadius: '3px' }}
+                onClick={() => handleBuy(plan)}
+              >
                 {plan.cta}
               </button>
             </div>
@@ -234,7 +199,7 @@ export default function PricingView() {
           background: '#090e24',
           border: '1px solid rgba(239, 68, 68, 0.4)',
           borderLeft: '5px solid #ef4444',
-          borderRadius: '6px',
+          borderRadius: '3px',
           padding: '28px 32px',
           display: 'flex',
           justifyContent: 'space-between',
@@ -250,7 +215,7 @@ export default function PricingView() {
               Looking for Business Ad Rates &amp; Tour Sponsorships?
             </h3>
             <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0, maxWidth: '640px' }}>
-              Broadcast 15s/30s unskippable audio spots on TuneStream, sponsor creator concert tours, and capture CRM leads starting at 5,000 Unified Credits package ($499 one-time ad flight load, ~$14.99 CPM). Zero monthly charges.
+              Broadcast 15s/30s unskippable audio spots on TuneStream, sponsor creator concert tours, and capture CRM leads starting at 5,000 Unified Credits package ($50.00 / KSh 5,000 one-time load). Zero monthly charges.
             </p>
           </div>
           <button
@@ -260,7 +225,7 @@ export default function PricingView() {
               background: '#ef4444',
               color: '#fff',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '3px',
               fontWeight: 700,
               fontSize: '14px',
               cursor: 'pointer',
@@ -272,6 +237,61 @@ export default function PricingView() {
             Review Business Ad Rates &rarr;
           </button>
         </div>
+
+        {/* FAQ Section */}
+        <div style={{ marginTop: '72px', maxWidth: '800px', margin: '72px auto 0' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '8px', color: '#fff' }}>
+            Frequently Asked Questions
+          </h2>
+          <p style={{ textAlign: 'center', color: 'var(--mu)', fontSize: '14px', marginBottom: '36px' }}>
+            Everything you need to know about TuneMavens unified credits and zero-subscription pricing.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {FAQS.map((faq, idx) => {
+              const isOpen = openFaq === idx
+              return (
+                <div
+                  key={idx}
+                  className="glass-panel"
+                  style={{
+                    borderRadius: '3px',
+                    border: '1px solid var(--border-color)',
+                    overflow: 'hidden',
+                    transition: 'border-color 0.2s',
+                  }}
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    style={{
+                      width: '100%',
+                      padding: '18px 24px',
+                      background: 'none',
+                      border: 'none',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      color: '#fff',
+                      fontSize: '15px',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span>{faq.q}</span>
+                    <span style={{ fontSize: '18px', color: 'var(--cyan)', transform: isOpen ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>
+                      +
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div style={{ padding: '0 24px 20px', color: 'var(--mu)', fontSize: '14px', lineHeight: 1.6 }}>
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       <CreditReloadModal
@@ -279,10 +299,10 @@ export default function PricingView() {
         onClose={() => setShowReloadModal(false)}
         reason={reloadReason}
         suggestedPackageId={suggestedPackage}
-        onSuccess={(result) => {
-          setShowReloadModal(false);
+        onSuccess={(creditsAdded, newBalance) => {
+          console.log(`Successfully reloaded ${creditsAdded} credits. New balance: ${newBalance}`);
         }}
       />
     </>
-  );
+  )
 }

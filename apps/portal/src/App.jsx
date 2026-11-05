@@ -546,6 +546,44 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
         {/* Unified Credits Badge & Reload Trigger on Topbar */}
         {(() => {
+          const isAdmin = sessionUser?.role === 'admin';
+          if (isAdmin) {
+            return (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  background: 'rgba(14, 165, 233, 0.1)',
+                  border: '1px solid rgba(14, 165, 233, 0.35)',
+                  color: '#38bdf8',
+                  padding: '5px 12px',
+                  borderRadius: '3px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'default'
+                }}
+                title="Master Platform Administrator Console: Full unrestricted platformwide access. Administrators are permanently credit-exempt."
+                data-testid="topbar-admin-credit-exempt-badge"
+                data-tour="topbar-credits"
+              >
+                <RiShieldCheckFill size={15} style={{ color: '#38bdf8' }} />
+                <span>Admin Console</span>
+                <span style={{
+                  fontSize: '10px',
+                  background: 'rgba(14, 165, 233, 0.25)',
+                  color: '#38bdf8',
+                  padding: '1px 6px',
+                  borderRadius: '3px',
+                  fontWeight: 800,
+                  letterSpacing: '0.4px',
+                  textTransform: 'uppercase'
+                }}>
+                  Credit-Exempt
+                </span>
+              </div>
+            );
+          }
           const isVc = sessionUser?.role === 'vc' || sessionUser?.role === 'investor';
           if (isVc) {
             return (
@@ -558,13 +596,14 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                   border: '1px solid rgba(0, 242, 254, 0.35)',
                   color: '#00f2fe',
                   padding: '5px 12px',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   fontSize: '12px',
                   fontWeight: 700,
                   cursor: 'default'
                 }}
                 title="Institutional LP Syndicate Account: VCs & Investors have full platformwide access and are never charged credits."
                 data-testid="topbar-vc-credit-exempt-badge"
+                data-tour="topbar-credits"
               >
                 <RiShieldCheckFill size={15} style={{ color: '#00f2fe' }} />
                 <span>Institutional LP</span>
@@ -573,7 +612,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                   background: 'rgba(0, 242, 254, 0.2)',
                   color: '#00f2fe',
                   padding: '1px 6px',
-                  borderRadius: '2px',
+                  borderRadius: '3px',
                   fontWeight: 800,
                   letterSpacing: '0.4px',
                   textTransform: 'uppercase'
@@ -607,7 +646,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                   ? '#22d3ee'
                   : (creditsCount < 50 ? '#ef4444' : '#10b981'),
                 padding: '5px 11px',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -626,7 +665,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                 background: isAffiliate ? 'rgba(34, 211, 238, 0.25)' : (creditsCount < 50 ? '#ef4444' : '#10b981'),
                 color: isAffiliate ? '#22d3ee' : '#ffffff',
                 padding: '1px 5px',
-                borderRadius: '2px',
+                borderRadius: '3px',
                 fontWeight: 800,
                 textTransform: 'uppercase'
               }}>
@@ -800,7 +839,9 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                       {sessionUser?.role || 'creator'}
                     </span>
                     <span style={{ fontSize: '10px', color: '#64748b' }}>
-                      {sessionUser?.role === 'vc' || sessionUser?.role === 'investor' 
+                      {sessionUser?.role === 'admin'
+                        ? '· System Admin (Credit-Exempt)'
+                        : sessionUser?.role === 'vc' || sessionUser?.role === 'investor' 
                         ? '· Institutional LP (Credit-Exempt)' 
                         : `· ${sessionUser?.credits ?? 0} credits`}
                     </span>
@@ -808,36 +849,38 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                 </div>
               </div>
 
-              <div style={{ padding: '0 16px 12px 16px' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAccountOpen(false);
-                    if (typeof onOpenCreditReload === 'function') {
-                      onOpenCreditReload('Account Unified Credits Reload');
-                    }
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    width: '100%',
-                    padding: '7px 12px',
-                    background: '#10b981',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                  data-testid="topbar-dropdown-reload-credits-btn"
-                >
-                  <RiCoinsFill size={14} />
-                  <span>Reload Unified Credits</span>
-                </button>
-              </div>
+              {sessionUser?.role !== 'admin' && sessionUser?.role !== 'vc' && sessionUser?.role !== 'investor' && (
+                <div style={{ padding: '0 16px 12px 16px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAccountOpen(false);
+                      if (typeof onOpenCreditReload === 'function') {
+                        onOpenCreditReload('Account Unified Credits Reload');
+                      }
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      width: '100%',
+                      padding: '7px 12px',
+                      background: '#10b981',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '3px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                    data-testid="topbar-dropdown-reload-credits-btn"
+                  >
+                    <RiCoinsFill size={14} />
+                    <span>Reload Unified Credits</span>
+                  </button>
+                </div>
+              )}
 
               <div className="topbar-dropdown-divider" />
 
@@ -2502,11 +2545,14 @@ function DashboardView({
           onStartTour={() => setTourOpen(true)}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll" data-tour="main-content">
-          {/* Low unified credits prompt banner - Excludes affiliates and VCs since institutional accounts require 0 credits */}
+          {/* Low unified credits prompt banner - Excludes admins, affiliates, and VCs since administrators and institutional accounts are credit-exempt */}
           {(sessionUser?.credits ?? userCredits) < 50 && 
             sessionUser?.role !== 'affiliate' && 
             sessionUser?.role !== 'vc' && 
             sessionUser?.role !== 'investor' && 
+            sessionUser?.role !== 'admin' && 
+            activeUser?.role !== 'admin' &&
+            !isAdminUser &&
             activeTab !== 'affiliates' && 
             !activeTab?.startsWith('vc-') && 
             activeTab !== 'tours-vault' && (
@@ -2514,7 +2560,7 @@ function DashboardView({
               style={{
                 background: 'rgba(239, 68, 68, 0.12)',
                 border: '1px solid #ef4444',
-                borderRadius: '6px',
+                borderRadius: '3px',
                 padding: '10px 16px',
                 marginBottom: '16px',
                 display: 'flex',
@@ -2538,13 +2584,13 @@ function DashboardView({
               </div>
               <button
                 type="button"
-                onClick={() => handleOpenCreditReload('Low credit balance replenishment', 'creator-starter')}
+                onClick={() => handleOpenCreditReload('Low credit balance replenishment', 'starter-floor')}
                 style={{
                   background: '#ef4444',
                   color: '#ffffff',
                   border: 'none',
                   padding: '6px 14px',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   fontSize: '12px',
                   fontWeight: 700,
                   cursor: 'pointer'
@@ -5402,30 +5448,63 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
       </div>
 
       <div className="dashboard-grid-3" data-tour="admin-overview-stats">
-        <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '3px' }}>
           <div>
             <div className="stat-label">
-              {sessionUser?.role === 'affiliate' ? 'Studio & Tool Credits' : 'AI Credit Balance'}
+              {sessionUser?.role === 'admin' 
+                ? 'System Access & Privileges'
+                : sessionUser?.role === 'affiliate' 
+                ? 'Studio & Tool Credits' 
+                : 'AI Credit Balance'}
             </div>
-            <div className="stat-value">{userCredits} Credits</div>
-            <div className="stat-trend" style={{ color: sessionUser?.role === 'affiliate' ? 'var(--cyan)' : undefined }}>
-              {sessionUser?.role === 'affiliate' 
+            <div className="stat-value">
+              {sessionUser?.role === 'admin'
+                ? 'Unlimited (Credit-Exempt)'
+                : `${userCredits} Credits`}
+            </div>
+            <div className="stat-trend" style={{ color: (sessionUser?.role === 'admin' || sessionUser?.role === 'affiliate') ? 'var(--cyan)' : undefined }}>
+              {sessionUser?.role === 'admin'
+                ? '✨ Master Admin Console: Full Unrestricted Access'
+                : sessionUser?.role === 'affiliate' 
                 ? '✨ 0 Credits for Affiliate Dashboard (100% Free)' 
                 : '✨ Sandbox Wallet Active'}
             </div>
-            {sessionUser?.role === 'affiliate' && (
+            {sessionUser?.role === 'admin' ? (
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: '8px 0 0 0', lineHeight: '1.4' }}>
+                Administrators have permanent, 100% credit-exempt access to all infrastructure, tools, catalog indexing, and AI services. Top-ups are never required.
+              </p>
+            ) : sessionUser?.role === 'affiliate' ? (
               <p style={{ fontSize: '11px', color: '#94a3b8', margin: '8px 0 0 0', lineHeight: '1.4' }}>
                 Affiliate console, link generator, and roster management require <strong>zero credits</strong>. Credits only apply should you desire to use studio tools or sync pitching.
               </p>
-            )}
+            ) : null}
           </div>
-          <button 
-            onClick={handleBuyCredits} 
-            className="btn-primary" 
-            style={{ width: '100%', marginTop: '16px', padding: '6px', fontSize: '11px', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            {sessionUser?.role === 'affiliate' ? 'Optional: Buy Studio Tool Credits' : '+ Buy 250 Credits'}
-          </button>
+          {sessionUser?.role === 'admin' ? (
+            <div 
+              style={{ 
+                width: '100%', 
+                marginTop: '16px', 
+                padding: '7px', 
+                fontSize: '11px', 
+                borderRadius: '3px', 
+                background: 'rgba(14, 165, 233, 0.12)',
+                border: '1px solid rgba(14, 165, 233, 0.3)',
+                color: '#38bdf8',
+                textAlign: 'center',
+                fontWeight: 700
+              }}
+            >
+              Permanent Credit Exemption Active
+            </div>
+          ) : (
+            <button 
+              onClick={handleBuyCredits} 
+              className="btn-primary" 
+              style={{ width: '100%', marginTop: '16px', padding: '6px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}
+            >
+              {sessionUser?.role === 'affiliate' ? 'Optional: Buy Studio Tool Credits' : '+ Buy 250 Credits'}
+            </button>
+          )}
         </div>
 
         <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>

@@ -30,79 +30,110 @@ import createLogo from '../../../assets/logos/tunecreators-logo.png'
 
 const FALLBACK_CREATOR_RATES = [
   {
-    slug: 'creator-starter',
-    name: 'Spark / Indie Starter',
+    slug: 'creator-free',
+    name: 'Spark / Free Starter',
     tier_badge: 'Free Forever',
     price_usd: 0.0,
     billing_period: 'free access',
-    credits: 0,
-    key_metric: '85/15 Net Splits · 3 Master Tracks',
+    credits: 50,
+    key_metric: '85/15 Net Splits · 50 Free Signup Credits',
     features: [
+      '50 free signup credits for mastering & EPK testing',
       'Lossless streaming playback & 60fps waveform player',
       'Direct fan tips via M-Pesa, card & mobile wallets (100% to creator)',
       'Standard Split Cascade math engine (up to 3 collaborators)',
-      'Public EPK portfolio link on tunemavens.com',
-      'Community Discord & knowledge base access'
+      'Public EPK portfolio link on tunemavens.com'
     ],
     is_popular: false,
     cta: 'Start for Free'
   },
   {
-    slug: 'creator-pro',
-    name: 'Pro Creator Load',
-    tier_badge: 'Most Popular',
-    price_usd: 29.0,
+    slug: 'starter-floor',
+    name: 'Starter Floor',
+    tier_badge: 'Accessible Floor',
+    price_usd: 2.50,
     billing_period: 'one-time credit reload',
-    credits: 300,
-    key_metric: '90/10 Net Splits · Unlimited Catalog',
+    credits: 250,
+    key_metric: '90/10 Net Splits · 250 Credits ($2.50 / KSh 250)',
     features: [
-      'Unlimited master track & stem upload storage (WAV & stems)',
-      '90% artist royalty retention on catalog sales & streams',
-      'SyncMavens AI sync brief automatic pitch routing',
-      'Custom branded subdomain with customizable layout sections',
-      'Intermaven Smart CRM fan lead capture (WhatsApp, SMS, Email)',
-      'Social AI Studio content generator & 300 unified credits load with zero monthly fees'
+      '250 non-expiring unified credits load ($2.50 / KSh 250)',
+      'Single master track AI mastering and stem upload storage',
+      'EPK builder web world setup and bio hosting',
+      'Direct fan tipping and QR code stickers for live gigs'
+    ],
+    is_popular: false,
+    cta: 'Get Starter Floor'
+  },
+  {
+    slug: 'growth-pack',
+    name: 'Growth Pack',
+    tier_badge: 'Creator Essential',
+    price_usd: 5.00,
+    billing_period: 'one-time credit reload',
+    credits: 500,
+    key_metric: '90/10 Net Splits · 500 Credits ($5.00 / KSh 500)',
+    features: [
+      '500 non-expiring unified credits load ($5.00 / KSh 500)',
+      'WhatsApp phone alerts enabled for placements and payments',
+      'AI mastering (3 tracks) and sync brief submissions',
+      'Intermaven Smart CRM fan lead capture (WhatsApp, SMS, Email)'
+    ],
+    is_popular: false,
+    cta: 'Get Growth Pack'
+  },
+  {
+    slug: 'pro-maven',
+    name: 'Pro Maven Load',
+    tier_badge: 'Most Popular',
+    price_usd: 10.00,
+    billing_period: 'one-time credit reload',
+    credits: 1000,
+    key_metric: '95/5 Net Splits · 1,000 Credits ($10.00 / KSh 1,000)',
+    features: [
+      '1,000 non-expiring unified credits load ($10.00 / KSh 1,000)',
+      'Custom apex domain SSL mapping (yourname.com)',
+      'Social AI Studio marketing generator with zero monthly fees',
+      'Unlimited AI mastering and priority sync placement pitching',
+      'Full Split Cascade collaborator ledgers and M-Pesa automated payouts'
     ],
     is_popular: true,
-    cta: 'Get Pro Creator'
+    cta: 'Get Pro Maven'
   },
   {
-    slug: 'creator-studio',
-    name: 'Studio Master Load',
+    slug: 'studio-master',
+    name: 'Studio Master Pack',
     tier_badge: 'Full Independence',
-    price_usd: 99.0,
+    price_usd: 50.00,
     billing_period: 'one-time credit reload',
-    credits: 1200,
-    key_metric: '100% Splits · TunePay POS Merch & Tour Ticketing',
+    credits: 5000,
+    key_metric: '100% Splits · 5,000 Credits ($50.00 / KSh 5,000)',
     features: [
+      '5,000 non-expiring unified credits load ($50.00 / KSh 5,000)',
       '100% royalty take — zero commission on downloads & merchandise',
       'TunePay portable event POS ticketing & instant QR gate validation',
-      'Priority Sync Brief matching for TV commercials & Hollywood films',
-      'Automated Publishing & Distribution Election contract generation',
-      'Multi-tiered recoupment cascade for investor & producer advances',
-      '1,200 unified credits load for mastering, ads & stem distribution with zero monthly fees'
+      'Lossless multitrack stem downloads and escrow contract protection',
+      'DJ Record Pool drop clearances and priority sync pitching'
     ],
     is_popular: false,
-    cta: 'Launch Studio Plan'
+    cta: 'Get Studio Master'
   },
   {
-    slug: 'creator-enterprise',
-    name: 'Label-Ready Enterprise Load',
-    tier_badge: 'Managed Artist',
-    price_usd: 299.0,
+    slug: 'label-team-starter',
+    name: 'Label & Teams Starter',
+    tier_badge: 'Label & Teams',
+    price_usd: 75.00,
     billing_period: 'one-time credit reload',
-    credits: 4000,
-    key_metric: 'White-Glove Ingestion & Dedicated Sync Rep',
+    credits: 7500,
+    key_metric: 'Multi-Seat Team · 7,500 Credits ($75.00 / KSh 7,500)',
     features: [
-      'Dedicated sync licensing agent pitching directly to agency music supervisors',
-      'White-glove legacy catalog migration from DistroKid/TuneCore',
-      'Custom apex domain SSL mapping (yourname.com)',
-      'Automated PRO cue sheet registration (ASCAP, BMI, SESAC, MCSK)',
-      'Co-branded sponsor banners on artist concert tour passes',
-      '4,000 unified credits load & 24/7 priority executive phone support with zero monthly fees'
+      '7,500 non-expiring unified credits load ($75.00 / KSh 7,500)',
+      'Multi-seat team accounts included for management & A&R staff',
+      'Multi-artist roster management and bulk catalog operations',
+      'Direct mobile money bulk split payouts to producers and collaborators',
+      'Dedicated sync licensing agent pitching directly to agency music supervisors'
     ],
     is_popular: false,
-    cta: 'Book Artist Consultation'
+    cta: 'Get Label & Teams'
   }
 ];
 
@@ -955,15 +986,17 @@ export default function CreatorLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `${formatPrice(found.price_usd)} one-time credit reload`) : `${formatPrice(29)} one-time credit reload`
+                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `${formatPrice(found.price_usd)} one-time credit reload (${found.credits?.toLocaleString()} Credits)`) : `${formatPrice(2.50)} one-time credit reload`
                           });
                         }}
-                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff' }}
                       >
-                        <option value="creator-starter">Spark / Indie — $0 / Free · 85/15 Splits</option>
-                        <option value="creator-pro">Pro Creator Load — {formatPrice(29)} one-time (300 Credits) · 90/10 Splits</option>
-                        <option value="creator-studio">Studio Master Load — {formatPrice(99)} one-time (1,200 Credits) · 100% Splits &amp; POS</option>
-                        <option value="creator-enterprise">Label-Ready Enterprise Load — {formatPrice(299)} one-time (4,000 Credits) · White-Glove Sync</option>
+                        <option value="creator-free">Spark / Indie — $0 / Free · 50 Free Signup Credits</option>
+                        <option value="starter-floor">Starter Floor — {formatPrice(2.50)} (250 Credits / KSh 250)</option>
+                        <option value="growth-pack">Growth Pack — {formatPrice(5.00)} (500 Credits / KSh 500)</option>
+                        <option value="pro-maven">Pro Maven Load — {formatPrice(10.00)} (1,000 Credits / KSh 1,000)</option>
+                        <option value="studio-master">Studio Master Pack — {formatPrice(50.00)} (5,000 Credits / KSh 5,000)</option>
+                        <option value="label-team-starter">Label &amp; Teams Starter — {formatPrice(75.00)} (7,500 Credits / KSh 7,500)</option>
                       </select>
                     </div>
 

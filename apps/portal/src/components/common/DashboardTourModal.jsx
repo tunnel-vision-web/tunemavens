@@ -420,12 +420,12 @@ export const PERSONA_TOUR_DATA = {
         highlight: 'Test and verify the platform from any user perspective',
       },
       {
-        title: 'Credits & Reload System',
-        badge: 'Wallet & Top-Ups',
+        title: 'Platform Credit System & Balances',
+        badge: 'User Credit System',
         tab: 'home',
         targetSelector: '[data-tour="topbar-credits"]',
-        description: 'Shows platform credit balances. Users buy credits using M-Pesa or credit card to pay for mastering and messaging without monthly commitments. Admins can inspect and test sandbox balances here.',
-        highlight: 'Pay-as-you-go credits with zero monthly subscriptions',
+        description: 'Monitor platform credit circulation across creators, record labels, and listeners. Administrators have unrestricted system access and never need to load credits or pay reload fees.',
+        highlight: 'Administrators have permanent, 100% credit-exempt access',
       },
       {
         title: 'Real-Time Notifications',
@@ -840,8 +840,8 @@ export default function DashboardTourModal({
                 y={Math.max(0, targetRect.top - pad)}
                 width={targetRect.width + pad * 2}
                 height={targetRect.height + pad * 2}
-                rx="8"
-                ry="8"
+                rx="3"
+                ry="3"
                 fill="#000000"
               />
             )}
@@ -874,7 +874,7 @@ export default function DashboardTourModal({
             top: `${Math.max(0, targetRect.top - pad)}px`,
             width: `${targetRect.width + pad * 2}px`,
             height: `${targetRect.height + pad * 2}px`,
-            borderRadius: '8px',
+            borderRadius: '3px',
             border: `2px solid ${personaData.color}`,
             boxShadow: `0 0 0 3px ${personaData.color}33, 0 0 25px ${personaData.color}77`,
             pointerEvents: 'none',
@@ -899,7 +899,7 @@ export default function DashboardTourModal({
           width: 'min(460px, calc(100vw - 32px))',
           background: 'linear-gradient(145deg, #0d1522 0%, #080d16 100%)',
           border: `1px solid ${personaData.color}66`,
-          borderRadius: '12px',
+          borderRadius: '3px',
           padding: '24px 26px',
           boxShadow: `0 24px 60px rgba(0,0,0,0.9), 0 0 35px ${personaData.color}22`,
           color: '#f8fafc',
@@ -920,7 +920,7 @@ export default function DashboardTourModal({
                 border: `1px solid ${personaData.color}55`,
                 color: personaData.color,
                 padding: '4px 9px',
-                borderRadius: '5px',
+                borderRadius: '3px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -939,7 +939,7 @@ export default function DashboardTourModal({
                 background: 'rgba(255,255,255,0.08)',
                 color: '#94a3b8',
                 padding: '3px 7px',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 fontWeight: 700,
               }}
             >
@@ -970,7 +970,7 @@ export default function DashboardTourModal({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 transition: 'color 0.15s ease',
               }}
               title="End Tour (Escape)"
@@ -990,7 +990,7 @@ export default function DashboardTourModal({
               style={{
                 flex: 1,
                 height: '4px',
-                borderRadius: '2px',
+                borderRadius: '3px',
                 background: idx === currentStep
                   ? personaData.color
                   : (idx < currentStep ? `${personaData.color}77` : 'rgba(255,255,255,0.12)'),
@@ -1035,7 +1035,7 @@ export default function DashboardTourModal({
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
               borderLeft: `3px solid ${personaData.color}`,
-              borderRadius: '0 6px 6px 0',
+              borderRadius: '0 3px 3px 0',
               padding: '9px 12px',
               fontSize: '12px',
               color: '#e2e8f0',
@@ -1072,7 +1072,7 @@ export default function DashboardTourModal({
               fontWeight: 600,
               cursor: 'pointer',
               padding: '6px 10px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               transition: 'color 0.15s ease',
             }}
             data-testid="dashboard-tour-end-btn"
@@ -1089,7 +1089,7 @@ export default function DashboardTourModal({
                 background: '#1e293b',
                 color: isFirst ? '#475569' : '#e2e8f0',
                 border: '1px solid #334155',
-                borderRadius: '6px',
+                borderRadius: '3px',
                 padding: '7px 13px',
                 fontSize: '12px',
                 fontWeight: 700,
@@ -1112,7 +1112,7 @@ export default function DashboardTourModal({
                 background: personaData.color,
                 color: '#080d16',
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: '3px',
                 padding: '7px 16px',
                 fontSize: '12px',
                 fontWeight: 800,

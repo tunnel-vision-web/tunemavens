@@ -30,58 +30,58 @@ import tunelabelLogo from '../../../assets/logos/tunelabel-logo.png'
 
 const FALLBACK_LABEL_RATES = [
   {
-    slug: 'label-indie',
-    name: 'Indie Imprint Load',
-    tier_badge: 'Starter Roster',
-    price_usd: 99.0,
+    slug: 'label-team-starter',
+    name: 'Label & Teams Starter',
+    tier_badge: 'Label Floor',
+    price_usd: 75.0,
     billing_period: 'one-time credit reload',
-    credits: 1000,
-    key_metric: 'Up to 10 Signed Artists · 100 Tracks',
+    credits: 7500,
+    key_metric: '7,500 Credits · Up to 10 Artists · 100 Tracks',
     features: [
-      'Manage up to 10 signed creator profiles with isolated roster seats',
+      'Universal label floor: 7,500 TM Credits loaded to your label ledger (7,500 KES / $75.00 USD)',
+      'Manage up to 10 signed creator profiles with isolated roster seats and catalog analytics',
       'Automated CSV statement parser (DistroKid, TuneCore, FUGA, Orchard)',
-      'Split Cascade net calculations with advance balance tracking',
-      'Pre-cleared label roster sync pitching on SyncMavens',
-      '1,000 unified credits load with zero monthly recurring charges',
-      'Standard email & chat label support'
+      'Split Cascade net calculations with advance balance tracking and recoupment',
+      'Pre-cleared label roster sync pitching on SyncMavens network',
+      'Standard email & dedicated chat label operations support'
     ],
     is_popular: false,
-    cta: 'Start Indie Imprint'
+    cta: 'Start Label Starter'
   },
   {
     slug: 'label-growth',
-    name: 'Scale Label Operations Load',
+    name: 'Scale Label Operations',
     tier_badge: 'Most Popular',
-    price_usd: 299.0,
+    price_usd: 150.0,
     billing_period: 'one-time credit reload',
-    credits: 3500,
-    key_metric: 'Up to 50 Signed Artists · 1,000 Tracks',
+    credits: 15000,
+    key_metric: '15,000 Credits · Up to 50 Artists · 1,000 Tracks',
     features: [
-      'Up to 50 active artists & 1,000 master tracks with stem archives',
+      '15,000 TM Credits load (15,000 KES / $150.00 USD) with zero monthly subscriptions',
+      'Up to 50 active artists & 1,000 master tracks with multi-stem cloud archives',
       'Automated master advance recoupment cascades (90/10 down to 50/50)',
-      'Role-based staff permissions (A&R, Legal, Head of Accounting)',
+      'Role-based staff permissions (A&R, Legal Counsel, Head of Accounting)',
       'TunePay live tour merch & festival ticket box-office settlement',
-      'Intermaven Smart CRM automated roster fan broadcasts (WhatsApp/SMS)',
-      '3,500 unified credits load with zero monthly recurring charges'
+      'Intermaven Smart CRM automated roster fan broadcasts (WhatsApp/SMS)'
     ],
     is_popular: true,
     cta: 'Scale Label Operations'
   },
   {
     slug: 'label-enterprise',
-    name: 'Major / Conglomerate Enterprise Load',
+    name: 'Major / Conglomerate Enterprise',
     tier_badge: 'Unlimited Scale',
-    price_usd: 799.0,
+    price_usd: 500.0,
     billing_period: 'one-time credit reload',
-    credits: 10000,
-    key_metric: 'Unlimited Artists & Masters · Custom White-Label',
+    credits: 50000,
+    key_metric: '50,000 Credits · Unlimited Artists · White-Label',
     features: [
-      'Unlimited roster size and unlimited catalog ingestion',
-      'Custom white-labeled artist portal for signing and settlement',
+      '50,000 TM Credits load (50,000 KES / $500.00 USD) for massive catalog throughput',
+      'Unlimited roster size and unlimited catalog ingestion with custom white-labeled portal',
       'Direct bank rail & mobile money bulk payouts (M-Pesa B2C, ACH, SWIFT)',
       'Full ERP & accounting API webhooks for QuickBooks / NetSuite sync',
       'Priority Sync Brief placement exclusivity across SyncMavens network',
-      '10,000 unified credits load, custom SLA & 24/7 dedicated engineering support'
+      'Custom enterprise SLA & 24/7 dedicated engineering support'
     ],
     is_popular: false,
     cta: 'Request Enterprise Agreement'
@@ -115,10 +115,10 @@ export default function LabelLandingPage({ switcher }) {
     contact_name: '',
     contact_email: '',
     contact_phone: '',
-    tier_slug: 'label-growth',
+    tier_slug: 'label-team-starter',
     roster_size: '10-50 Signed Artists',
     current_distributor: 'DistroKid / TuneCore',
-    estimated_budget: '$299 one-time credit reload (3,500 Credits)',
+    estimated_budget: '$75.00 one-time credit reload (7,500 Credits)',
     notes: ''
   });
 
@@ -601,7 +601,7 @@ export default function LabelLandingPage({ switcher }) {
             <img 
               src={isSw ? labelDashboardActualSw : labelDashboardActualEn} 
               alt="Actual TuneMavens Label Console and Distribution" 
-              style={{ borderRadius: '6px', border: '1px solid rgba(168, 85, 247, 0.4)', boxShadow: '0 16px 40px rgba(0,0,0,0.7)', width: '100%', height: 'auto' }}
+              style={{ borderRadius: '3px', border: '1px solid rgba(168, 85, 247, 0.4)', boxShadow: '0 16px 40px rgba(0,0,0,0.7)', width: '100%', height: 'auto' }}
             />
             <div style={{ marginTop: '8px', fontSize: '12px', color: '#a855f7', fontWeight: 600, textAlign: 'center' }}>
               Click to view high-resolution interactive dashboard preview ({isSw ? 'Kiswahili' : 'English'})
@@ -799,7 +799,7 @@ export default function LabelLandingPage({ switcher }) {
               maxWidth: '560px', 
               width: '100%', 
               padding: '32px', 
-              borderRadius: '8px', 
+              borderRadius: '3px', 
               border: `1px solid ${accent}`,
               position: 'relative',
               maxHeight: '92vh',
@@ -824,7 +824,7 @@ export default function LabelLandingPage({ switcher }) {
                   background: 'rgba(34, 197, 94, 0.1)',
                   border: '1px solid rgba(34, 197, 94, 0.3)',
                   padding: '14px',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   marginBottom: '20px'
                 }}>
                   <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -841,6 +841,7 @@ export default function LabelLandingPage({ switcher }) {
                   <button 
                     onClick={() => setModalOpen(false)} 
                     className="role-btn-primary"
+                    style={{ borderRadius: '3px' }}
                   >
                     Done
                   </button>
@@ -848,6 +849,7 @@ export default function LabelLandingPage({ switcher }) {
                     to="/register?role=label" 
                     className="role-btn-secondary"
                     onClick={() => setModalOpen(false)}
+                    style={{ borderRadius: '3px' }}
                   >
                     Complete Label Registration
                   </Link>
@@ -877,7 +879,7 @@ export default function LabelLandingPage({ switcher }) {
                         placeholder="e.g. AfroVibe Records"
                         value={bookingForm.organization_name}
                         onChange={e => setBookingForm({ ...bookingForm, organization_name: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                     <div>
@@ -888,7 +890,7 @@ export default function LabelLandingPage({ switcher }) {
                         placeholder="e.g. Sarah Jenkins"
                         value={bookingForm.contact_name}
                         onChange={e => setBookingForm({ ...bookingForm, contact_name: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>
@@ -902,7 +904,7 @@ export default function LabelLandingPage({ switcher }) {
                         placeholder="ar@afroviberecords.com"
                         value={bookingForm.contact_email}
                         onChange={e => setBookingForm({ ...bookingForm, contact_email: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                     <div>
@@ -912,7 +914,7 @@ export default function LabelLandingPage({ switcher }) {
                         placeholder="+254 700 000000"
                         value={bookingForm.contact_phone}
                         onChange={e => setBookingForm({ ...bookingForm, contact_phone: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>
@@ -928,14 +930,14 @@ export default function LabelLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? `${formatPrice(found.price_usd)} one-time credit reload` : `${formatPrice(299)} one-time credit reload`
+                            estimated_budget: found ? `${formatPrice(found.price_usd)} one-time credit reload` : `${formatPrice(75)} one-time credit reload`
                           });
                         }}
-                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff' }}
                       >
-                        <option value="label-indie">Indie Imprint Load — {formatPrice(99)} one-time (1,000 Credits) · 10 Artists</option>
-                        <option value="label-growth">Scale Label Load — {formatPrice(299)} one-time (3,500 Credits) · 50 Artists</option>
-                        <option value="label-enterprise">Major Enterprise Load — {formatPrice(799)} one-time (10,000 Credits) · Unlimited</option>
+                        <option value="label-team-starter">Label &amp; Teams Starter — {formatPrice(75.00)} (7,500 Credits) · 7,500 KES Floor</option>
+                        <option value="label-growth">Scale Label Operations — {formatPrice(150.00)} (15,000 Credits) · 50 Artists</option>
+                        <option value="label-enterprise">Major Enterprise Network — {formatPrice(500.00)} (50,000 Credits) · Unlimited</option>
                       </select>
                     </div>
 
@@ -944,7 +946,7 @@ export default function LabelLandingPage({ switcher }) {
                       <select
                         value={bookingForm.roster_size}
                         onChange={e => setBookingForm({ ...bookingForm, roster_size: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff' }}
                       >
                         <option value="1-5 Signed Artists">1-5 Signed Artists</option>
                         <option value="5-15 Signed Artists">5-15 Signed Artists</option>
@@ -961,7 +963,7 @@ export default function LabelLandingPage({ switcher }) {
                       placeholder="e.g. DistroKid, TuneCore, The Orchard, FUGA, Empire"
                       value={bookingForm.current_distributor}
                       onChange={e => setBookingForm({ ...bookingForm, current_distributor: e.target.value })}
-                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                     />
                   </div>
 
@@ -972,7 +974,7 @@ export default function LabelLandingPage({ switcher }) {
                       placeholder="e.g. Need help parsing historic DistroKid CSVs and setting up 70/30 recoupment cascades..."
                       value={bookingForm.notes}
                       onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
-                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
+                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
                     />
                   </div>
 

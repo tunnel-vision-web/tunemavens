@@ -49,17 +49,35 @@ const FALLBACK_CONSUMER_RATES = [
     cta: 'Listen Free'
   },
   {
+    slug: 'listener-starter',
+    name: 'Listener Fan Starter',
+    tier_badge: 'Starter Floor',
+    price_usd: 2.50,
+    billing_period: 'one-time',
+    credits: 250,
+    key_metric: '250 Credits · Direct Artist Tipping',
+    features: [
+      'Universal floor pack: 250 TM Credits loaded to your account balance',
+      'Tip your favorite artists and vocalists directly with 1 tap',
+      'Unlock exclusive single stems, lossless track downloads, and secret drops',
+      'Full lossless FLAC web streaming across mobile and desktop',
+      'Support independent creators with direct M-Pesa or card reload'
+    ],
+    is_popular: false,
+    cta: 'Get Starter Pack'
+  },
+  {
     slug: 'listener-vip',
     name: 'TuneStream VIP Audiophile',
     tier_badge: 'Most Popular',
-    price_usd: 4.99,
+    price_usd: 5.00,
     billing_period: 'month',
-    credits: 50,
-    key_metric: 'Ad-Free Lossless Audio · 50 Credits/mo',
+    credits: 500,
+    key_metric: 'Ad-Free Lossless Audio · 500 Credits/mo',
     features: [
       '100% ad-free playback with zero audio interstitial interruptions',
       'Studio-quality 24-bit uncompressed FLAC audio streaming',
-      '50 monthly TM credits to tip artists, unlock singles, or purchase stems',
+      '500 monthly TM credits to tip artists, unlock singles, or purchase stems',
       'Offline cache playback support across mobile and desktop browsers',
       'Dynamic track lyrics, producer liner notes, and synthesizer gear specs',
       'Support creators with higher royalty payouts per stream'
@@ -71,14 +89,14 @@ const FALLBACK_CONSUMER_RATES = [
     slug: 'listener-patron',
     name: 'Patron of the Arts',
     tier_badge: 'Culture Builder',
-    price_usd: 14.99,
+    price_usd: 10.00,
     billing_period: 'month',
-    credits: 200,
-    key_metric: '200 Credits/mo · VIP Concert Passes',
+    credits: 1000,
+    key_metric: '1,000 Credits/mo · VIP Concert Passes',
     features: [
       'Exclusive verified Patron badge displayed on creator chats and live drops',
       'Early listening access to unreleased album cuts 7 days before general public',
-      '200 monthly TM credits for concert tickets, vinyl merch, and digital passes',
+      '1,000 monthly TM credits for concert tickets, vinyl merch, and digital passes',
       'Priority booking on artist live world tours with digital QR passes',
       'Direct patron Q&A channels with favorite producers and vocalists',
       'Direct contribution to independent creator development funds'
@@ -118,7 +136,7 @@ export default function ConsumerLandingPage({ switcher }) {
     contact_phone: '',
     tier_slug: 'listener-vip',
     favorite_genres: 'Afrobeats, Amapiano & Deep House',
-    estimated_budget: '$4.99 one-time credit reload (50 Credits)',
+    estimated_budget: '$5.00 credit reload (500 Credits)',
     notes: ''
   });
 
@@ -798,7 +816,7 @@ export default function ConsumerLandingPage({ switcher }) {
               maxWidth: '560px', 
               width: '100%', 
               padding: '32px', 
-              borderRadius: '8px', 
+              borderRadius: '3px', 
               border: `1px solid ${accent}`,
               position: 'relative',
               maxHeight: '92vh',
@@ -823,7 +841,7 @@ export default function ConsumerLandingPage({ switcher }) {
                   background: 'rgba(34, 197, 94, 0.1)',
                   border: '1px solid rgba(34, 197, 94, 0.3)',
                   padding: '14px',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   marginBottom: '20px'
                 }}>
                   <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -840,6 +858,7 @@ export default function ConsumerLandingPage({ switcher }) {
                   <button 
                     onClick={() => setModalOpen(false)} 
                     className="role-btn-primary"
+                    style={{ borderRadius: '3px' }}
                   >
                     Done
                   </button>
@@ -847,6 +866,7 @@ export default function ConsumerLandingPage({ switcher }) {
                     to="/register?role=consumer" 
                     className="role-btn-secondary"
                     onClick={() => setModalOpen(false)}
+                    style={{ borderRadius: '3px' }}
                   >
                     Complete Account Creation
                   </Link>
@@ -876,7 +896,7 @@ export default function ConsumerLandingPage({ switcher }) {
                         placeholder="e.g. Alex Kamau"
                         value={bookingForm.contact_name}
                         onChange={e => setBookingForm({ ...bookingForm, contact_name: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                     <div>
@@ -886,7 +906,7 @@ export default function ConsumerLandingPage({ switcher }) {
                         placeholder="e.g. @audiophile_kamau"
                         value={bookingForm.organization_name}
                         onChange={e => setBookingForm({ ...bookingForm, organization_name: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>
@@ -900,7 +920,7 @@ export default function ConsumerLandingPage({ switcher }) {
                         placeholder="alex@gmail.com"
                         value={bookingForm.contact_email}
                         onChange={e => setBookingForm({ ...bookingForm, contact_email: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                     <div>
@@ -910,7 +930,7 @@ export default function ConsumerLandingPage({ switcher }) {
                         placeholder="+254 700 000000"
                         value={bookingForm.contact_phone}
                         onChange={e => setBookingForm({ ...bookingForm, contact_phone: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>
@@ -926,14 +946,15 @@ export default function ConsumerLandingPage({ switcher }) {
                           setBookingForm({
                             ...bookingForm,
                             tier_slug: slug,
-                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `${formatPrice(found.price_usd)} (${found.credits?.toLocaleString() || '50'} Credits) · ${found.billing_period || 'one-time'}`) : `${formatPrice(4.99)} (50 Credits) · one-time`
+                            estimated_budget: found ? (found.price_usd === 0 ? 'Free Forever' : `${formatPrice(found.price_usd)} (${found.credits?.toLocaleString() || '250'} Credits) · ${found.billing_period || 'one-time'}`) : `${formatPrice(5.00)} (500 Credits) · one-time`
                           });
                         }}
-                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff' }}
+                        style={{ width: '100%', padding: '10px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff' }}
                       >
                         <option value="listener-free">Listener Free — $0 / Free · High-Fidelity Web Stream</option>
-                        <option value="listener-vip">TuneStream VIP Audiophile — {formatPrice(4.99)} one-time (50 Credits) · Ad-Free FLAC</option>
-                        <option value="listener-patron">Patron of the Arts — {formatPrice(14.99)} one-time (200 Credits) · VIP Tour Passes</option>
+                        <option value="listener-starter">Listener Fan Starter — {formatPrice(2.50)} (250 Credits) · Floor Pack</option>
+                        <option value="listener-vip">TuneStream VIP Audiophile — {formatPrice(5.00)} (500 Credits) · Ad-Free FLAC</option>
+                        <option value="listener-patron">Patron of the Arts — {formatPrice(10.00)} (1,000 Credits) · VIP Concert Passes</option>
                       </select>
                     </div>
 
@@ -943,7 +964,7 @@ export default function ConsumerLandingPage({ switcher }) {
                         type="text" 
                         value={bookingForm.favorite_genres}
                         onChange={e => setBookingForm({ ...bookingForm, favorite_genres: e.target.value })}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>
@@ -955,7 +976,7 @@ export default function ConsumerLandingPage({ switcher }) {
                       placeholder="e.g. Love Sauti Sol, Burna Boy, and underground Amapiano live sessions..."
                       value={bookingForm.notes}
                       onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
-                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
+                      style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
                     />
                   </div>
 

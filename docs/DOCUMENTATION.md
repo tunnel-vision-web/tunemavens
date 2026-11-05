@@ -2688,3 +2688,36 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Auto-launches upon the user's first visit to any persona workspace (persisted in `localStorage` via `tunemavens_tour_seen_<role>`).
     - Dedicated **"Take Tour"** action button pinned on the `DashboardTopbar` and **"Restart Dashboard Tour"** in the account dropdown menu allowing users to start or restart the tour at any time with a single click.
     - Full keyboard control (`Escape` to end tour, `ArrowLeft` / `ArrowRight` to step through), clickable progress dots for jumping between steps, and `✕ End Tour` button.
+
+### Platformwide Unified Pricing Source of Truth, Universal 3px Border Radius & Permanent Admin Credit-Exemption (2026-11-05)
+
+- **Single Source of Truth for Unified Credit Pricing (`apps/portal/src/lib/pricingPlans.js`):**
+  - Eliminated conflicting credit ratios across creator pages, listener pages, pricing views, and the credit reload modal.
+  - Implemented a clean, predictable 1:1 mathematical exchange ratio across currencies:
+    - `1 Credit = 1 KES = $0.01 USD`
+    - `$1.00 USD = 100 Credits = 100 KES`
+  - Streamlined top-up modal options to five standardized tiers with an accessible lower floor for buyers:
+    1. **Starter Floor Pack:** 250 Credits · KSH 250 / $2.50 USD — Accessible entry floor for independent creators and listeners.
+    2. **Growth Pack:** 500 Credits · KSH 500 / $5.00 USD — 2 full album masterings, 20 stem isolation stems, or VIP listener streaming.
+    3. **Pro Maven Pack:** 1,000 Credits · KSH 1,000 / $10.00 USD — Volume sync pitching, AI EPK asset rendering, and Patron concert privileges.
+    4. **Studio Master Pack:** 5,000 Credits · KSH 5,000 / $50.00 USD — Full-length catalog mastering, multi-track stems, and artist marketing blasts.
+    5. **Label & Teams Starter:** 7,500 Credits · KSH 7,500 / $75.00 USD — Dedicated multi-artist roster operations, split cascade calculations, and volume sync pitching.
+  - Custom amount top-ups enforce a 250 Credits (KSH 250 / $2.50) minimum floor and automatically calculate KES and USD totals in real time using the exact 1:1 ratio.
+
+- **Synchronized Role Landing Pages & Backend Tier Seeding:**
+  - **Creator Landing Page (`CreatorLandingPage.jsx`):** Synchronized `FALLBACK_CREATOR_RATES` and consultation booking selections to align with the single source of truth ($0 Free, $2.50 Starter, $5.00 Growth, $10.00 Pro Maven, $50.00 Studio Master, $75.00 Label Starter).
+  - **Consumer Landing Page (`ConsumerLandingPage.jsx`):** Synchronized `FALLBACK_CONSUMER_RATES` to Free ($0), Listener Fan Starter ($2.50 / 250 Credits), TuneStream VIP Audiophile ($5.00 / 500 Credits), and Patron of the Arts ($10.00 / 1,000 Credits).
+  - **Label Landing Page (`LabelLandingPage.jsx`):** Synchronized label operations tiers to start at the universal Label & Teams floor ($75.00 / 7,500 Credits), Scale Label Operations ($150.00 / 15,000 Credits), and Major Enterprise ($500.00 / 50,000 Credits).
+  - **Pricing View (`PricingView.jsx`):** Unified all pricing tiers with currency toggle (USD / KES) directly referencing the five standard platform load packages.
+  - **Backend Synchronizer (`backend/routes/role_tiers_router.py`):** Updated `DEFAULT_ROLE_TIERS` and automated database synchronization in `seed_default_role_tiers_if_empty()` to ensure MongoDB packages match the frontend single source of truth.
+
+- **Permanent Admin Credit Exemption:**
+  - Administrators are permanently credit-exempt and will never be prompted to load credits or top up anywhere across the platform:
+    - **Dashboard Topbar:** Displays a prominent, unclickable `Admin Console` `Credit-Exempt` badge (`RiShieldCheckFill`, cyan/blue theme) with `data-tour="topbar-credits"`, removing the "Top Up" button.
+    - **Account Dropdown:** Displays `System Admin (Credit-Exempt)` and suppresses the "Reload Unified Credits" action for admin sessions.
+    - **Dashboard Home Overview:** Replaces mock credit purchases and balance alerts with `System Access: Unlimited (Credit-Exempt)` and an active permanent exemption status badge.
+    - **Low-Credit Warning Banner:** Completely excluded for administrator roles (`sessionUser?.role !== 'admin' && activeUser?.role !== 'admin' && !isAdminUser`).
+    - **Dashboard Tour Step 5:** Re-scoped from admin wallet top-ups to *"Platform Credit System & Balances"*, educating administrators on how pay-as-you-go credits work across user roles while explicitly noting that administrator accounts hold unrestricted, credit-exempt access.
+
+- **Universal 3px Border Radius Standard:**
+  - Standardized all boxes, cards, panels, modals, SVG mask spotlight cutouts (`rx="3" ry="3"`), badges, pill tags, and buttons across `CreditReloadModal.jsx`, `DashboardTourModal.jsx`, `PricingView.jsx`, `ConsumerLandingPage.jsx`, `CreatorLandingPage.jsx`, `LabelLandingPage.jsx`, `RoleLandingShared.css`, and `App.css` to `borderRadius: '3px'`.

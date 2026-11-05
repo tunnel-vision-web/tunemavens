@@ -237,7 +237,7 @@
   padding: 24px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  border-radius: 3px;
   margin-bottom: 60px;
 }
 
@@ -306,7 +306,7 @@
 .role-pillar-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  border-radius: 3px;
   padding: 32px 24px;
   display: flex;
   flex-direction: column;
@@ -324,7 +324,7 @@
 .role-pillar-icon {
   width: 52px;
   height: 52px;
-  border-radius: 4px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
@@ -355,7 +355,7 @@
 .role-showcase-panel {
   background: rgba(12, 15, 32, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  border-radius: 3px;
   padding: 40px;
   margin-bottom: 72px;
   display: grid;
@@ -412,7 +412,7 @@
 
 .role-showcase-image-wrap {
   position: relative;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
@@ -440,7 +440,7 @@
 .role-workflow-step {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  border-radius: 3px;
   padding: 30px 24px;
   position: relative;
   display: flex;
@@ -452,7 +452,7 @@
 .role-workflow-icon {
   width: 52px;
   height: 52px;
-  border-radius: 4px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
@@ -505,7 +505,7 @@
   background: linear-gradient(180deg, rgba(12, 15, 32, 0.8) 0%, rgba(6, 8, 19, 0.95) 100%);
   border: 1px solid var(--role-accent, #22d3ee);
   border-left: 5px solid var(--role-accent, #22d3ee);
-  border-radius: 4px;
+  border-radius: 3px;
   padding: 48px 40px;
   text-align: center;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
@@ -750,7 +750,7 @@
 .role-rate-card {
   background: rgba(15, 23, 42, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  border-radius: 3px;
   padding: 32px 24px;
   display: flex;
   flex-direction: column;
@@ -796,7 +796,7 @@
   font-weight: 800;
   text-transform: uppercase;
   padding: 4px 10px;
-  border-radius: 2px;
+  border-radius: 3px;
   letter-spacing: 0.8px;
 }
 
@@ -845,7 +845,7 @@
   background: rgba(0, 0, 0, 0.35);
   border-left: 3px solid var(--role-accent, #ef4444);
   padding: 8px 12px;
-  border-radius: 2px;
+  border-radius: 3px;
   font-size: 12px;
   color: #cbd5e1;
   margin-bottom: 20px;
@@ -876,7 +876,7 @@
 .role-specs-panel {
   background: rgba(10, 14, 28, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  border-radius: 3px;
   padding: 28px 24px;
   margin-top: 36px;
 }
@@ -905,7 +905,7 @@
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   padding: 16px;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .corporate-spec-label,

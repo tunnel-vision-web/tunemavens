@@ -134,48 +134,48 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
     "label": [
         {
             "role": "label",
-            "slug": "label-indie",
-            "name": "Indie Imprint",
-            "tier_badge": "Starter Roster",
-            "price_usd": 99.0,
+            "slug": "label-team-starter",
+            "name": "Label & Teams Starter",
+            "tier_badge": "Label Floor",
+            "price_usd": 75.0,
             "billing_period": "one-time credit reload",
-            "credits": 1000,
-            "key_metric": "Up to 10 Signed Artists · 100 Tracks",
+            "credits": 7500,
+            "key_metric": "7,500 Credits · Up to 10 Signed Artists · 100 Tracks",
             "deliverables": [
                 "Isolated Roster Account Ledgers",
                 "Distributor Statement CSV Parser"
             ],
             "features": [
-                "Manage up to 10 signed creator profiles with isolated roster seats",
+                "Universal label floor: 7,500 TM Credits loaded to your label ledger (7,500 KES / $75.00 USD)",
+                "Manage up to 10 signed creator profiles with isolated roster seats and catalog analytics",
                 "Automated CSV statement parser (DistroKid, TuneCore, FUGA, Orchard)",
-                "Split Cascade net calculations with advance balance tracking",
-                "Pre-cleared label roster sync pitching on SyncMavens",
-                "1,000 unified credits load with zero monthly recurring charges",
-                "Standard email & chat label support"
+                "Split Cascade net calculations with advance balance tracking and recoupment",
+                "Pre-cleared label roster sync pitching on SyncMavens network",
+                "Standard email & dedicated chat label operations support"
             ],
             "is_popular": False,
-            "cta": "Start Indie Imprint"
+            "cta": "Start Label Starter"
         },
         {
             "role": "label",
             "slug": "label-growth",
             "name": "Scale Label Operations",
             "tier_badge": "Most Popular",
-            "price_usd": 299.0,
+            "price_usd": 150.0,
             "billing_period": "one-time credit reload",
-            "credits": 3500,
-            "key_metric": "Up to 50 Signed Artists · 1,000 Tracks",
+            "credits": 15000,
+            "key_metric": "15,000 Credits · Up to 50 Signed Artists · 1,000 Tracks",
             "deliverables": [
                 "Automated Master Recoupment Cascades",
                 "Multi-Seat A&R & Accounting Logins"
             ],
             "features": [
-                "Up to 50 active artists & 1,000 master tracks with stem archives",
+                "15,000 TM Credits load (15,000 KES / $150.00 USD) with zero monthly subscriptions",
+                "Up to 50 active artists & 1,000 master tracks with multi-stem cloud archives",
                 "Automated master advance recoupment cascades (90/10 down to 50/50)",
-                "Role-based staff permissions (A&R, Legal, Head of Accounting)",
+                "Role-based staff permissions (A&R, Legal Counsel, Head of Accounting)",
                 "TunePay live tour merch & festival ticket box-office settlement",
-                "Intermaven Smart CRM automated roster fan broadcasts (WhatsApp/SMS)",
-                "3,500 unified credits load with zero monthly recurring charges"
+                "Intermaven Smart CRM automated roster fan broadcasts (WhatsApp/SMS)"
             ],
             "is_popular": True,
             "cta": "Scale Label Operations"
@@ -185,21 +185,21 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "slug": "label-enterprise",
             "name": "Major / Conglomerate Enterprise",
             "tier_badge": "Unlimited Scale",
-            "price_usd": 799.0,
+            "price_usd": 500.0,
             "billing_period": "one-time credit reload",
-            "credits": 10000,
-            "key_metric": "Unlimited Artists & Masters · Custom White-Label",
+            "credits": 50000,
+            "key_metric": "50,000 Credits · Unlimited Artists & Masters · Custom White-Label",
             "deliverables": [
                 "Custom Dedicated Subdomain / Domain",
                 "Enterprise ERP API Data Webhooks"
             ],
             "features": [
-                "Unlimited roster size and unlimited catalog ingestion",
-                "Custom white-labeled artist portal for signing and settlement",
+                "50,000 TM Credits load (50,000 KES / $500.00 USD) for massive catalog throughput",
+                "Unlimited roster size and unlimited catalog ingestion with custom white-labeled portal",
                 "Direct bank rail & mobile money bulk payouts (M-Pesa B2C, ACH, SWIFT)",
                 "Full ERP & accounting API webhooks for QuickBooks / NetSuite sync",
                 "Priority Sync Brief placement exclusivity across SyncMavens network",
-                "10,000 unified credits load, custom SLA & 24/7 dedicated engineering support with zero monthly fees"
+                "Custom enterprise SLA & 24/7 dedicated engineering support"
             ],
             "is_popular": False,
             "cta": "Request Enterprise Agreement"
@@ -449,13 +449,36 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
         },
         {
             "role": "consumer",
+            "slug": "listener-starter",
+            "name": "Listener Fan Starter",
+            "tier_badge": "Starter Floor",
+            "price_usd": 2.50,
+            "billing_period": "one-time credit reload",
+            "credits": 250,
+            "key_metric": "250 Credits Load · Direct Artist Tipping",
+            "deliverables": [
+                "Universal 250 TM Credits Floor Pack",
+                "Lossless FLAC Stream Access"
+            ],
+            "features": [
+                "Universal floor pack: 250 TM Credits loaded to your account balance (250 KES / $2.50 USD)",
+                "Tip your favorite artists and vocalists directly with 1 tap",
+                "Unlock exclusive single stems, lossless track downloads, and secret drops",
+                "Full lossless FLAC web streaming across mobile and desktop",
+                "Support independent creators with direct M-Pesa or card reload"
+            ],
+            "is_popular": False,
+            "cta": "Get Starter Pack"
+        },
+        {
+            "role": "consumer",
             "slug": "listener-vip",
             "name": "TuneStream VIP Audiophile",
             "tier_badge": "Most Popular",
-            "price_usd": 4.99,
+            "price_usd": 5.00,
             "billing_period": "one-time credit reload",
-            "credits": 50,
-            "key_metric": "Ad-Free Lossless Audio · 50 Credits Load",
+            "credits": 500,
+            "key_metric": "Ad-Free Lossless Audio · 500 Credits Load",
             "deliverables": [
                 "Zero Interstitial Ads",
                 "Uncompressed FLAC / Studio Playback"
@@ -463,7 +486,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "features": [
                 "100% ad-free playback with zero audio interstitial interruptions",
                 "Studio-quality 24-bit uncompressed FLAC audio streaming",
-                "50 unified credits load to tip artists, unlock singles, or purchase stems",
+                "500 unified credits load to tip artists, unlock singles, or purchase stems",
                 "Offline cache playback support across mobile and desktop browsers",
                 "Dynamic track lyrics, producer liner notes, and synthesizer gear specs",
                 "Support creators with higher royalty payouts per stream"
@@ -476,10 +499,10 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "slug": "listener-patron",
             "name": "Patron of the Arts",
             "tier_badge": "Culture Builder",
-            "price_usd": 14.99,
+            "price_usd": 10.00,
             "billing_period": "one-time credit reload",
-            "credits": 200,
-            "key_metric": "200 Credits Load · VIP Concert Passes",
+            "credits": 1000,
+            "key_metric": "1,000 Credits Load · VIP Concert Passes",
             "deliverables": [
                 "Creator Live World Exclusive Drops",
                 "Early Album Stream Access"
@@ -487,7 +510,7 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "features": [
                 "Exclusive verified Patron badge displayed on creator chats and live drops",
                 "Early listening access to unreleased album cuts 7 days before general public",
-                "200 unified credits load for concert tickets, vinyl merch, and digital passes",
+                "1,000 unified credits load for concert tickets, vinyl merch, and digital passes",
                 "Priority booking on artist live world tours with digital QR passes",
                 "Direct patron Q&A channels with favorite producers and vocalists",
                 "Direct contribution to independent creator development funds"
@@ -648,18 +671,30 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
 
 
 def seed_default_role_tiers_if_empty():
-    """Ensure standard commercial tiers exist in db.role_tiers for all roles."""
+    """Ensure standard commercial tiers exist and are synchronized in db.role_tiers for all roles."""
     try:
-        inserted = 0
+        updated = 0
         for role_name, tiers in DEFAULT_ROLE_TIERS.items():
             for t in tiers:
                 existing = db.role_tiers.find_one({"slug": t["slug"]})
                 if not existing:
                     doc = {**t, "created_at": datetime.now(timezone.utc)}
                     db.role_tiers.insert_one(doc)
-                    inserted += 1
-        if inserted > 0:
-            logger.info(f"Successfully seeded {inserted} commercial packages into db.role_tiers")
+                    updated += 1
+                else:
+                    db.role_tiers.update_one(
+                        {"slug": t["slug"]},
+                        {"$set": {
+                            "price_usd": t["price_usd"],
+                            "credits": t["credits"],
+                            "name": t["name"],
+                            "tier_badge": t["tier_badge"],
+                            "key_metric": t["key_metric"],
+                            "features": t["features"]
+                        }}
+                    )
+                    updated += 1
+        logger.info("Synchronized commercial packages in db.role_tiers")
     except Exception as e:
         logger.warning(f"Role tiers seed warning: {e}")
 
