@@ -2721,3 +2721,36 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
 
 - **Universal 3px Border Radius Standard:**
   - Standardized all boxes, cards, panels, modals, SVG mask spotlight cutouts (`rx="3" ry="3"`), badges, pill tags, and buttons across `CreditReloadModal.jsx`, `DashboardTourModal.jsx`, `PricingView.jsx`, `ConsumerLandingPage.jsx`, `CreatorLandingPage.jsx`, `LabelLandingPage.jsx`, `RoleLandingShared.css`, and `App.css` to `borderRadius: '3px'`.
+
+### Comprehensive Dashboard Guided Tours Across All 11 Ecosystem Personas (2026-11-05)
+
+- **Comprehensive Full-Dashboard Tour Expansion (`DashboardTourModal.jsx`):**
+  - Expanded the interactive guided tour engine from the initial admin-only trial to deliver full-dashboard, high-coverage interactive tours tailored for every persona across the platform:
+    1. **Creator / Artist & Producer (19 Steps):**
+       - Studio Overview, Key Stats & Balance, Artist EPK & Website, Catalogue Machine & Releases, Split Cascades & Collaborator Payouts, Publishing Rights & PRO Registrations, Global Music Distribution Radar, Sync Marketplace & TV/Film Placement, MyContracts Escrow Clearance, DJ Record Pool & Club Edits, Podcaster Studio, TunePay Event Merch POS, Smart Fan CRM & Broadcasts, Social AI Promo Studio, Affiliate Referrals, Communications Vault & WhatsApp, Studio Tool Credits (KSH 250 floor), Action Notifications, and Tour Restart.
+    2. **Music Supervisor (10 Steps):**
+       - Supervisor Command Suite, Sync Marketplace & Auditions, Pre-Cleared Licensing Agreements & Escrow, Direct Composer & Producer CRM, Social AI Cue Matching & Visual Briefs, Supervisor Referral Network, Production App Marketplace, Complimentary Free VIP WhatsApp Messaging, Studio Profile, and Tour Restart.
+    3. **Record Label & Publisher (17 Steps):**
+       - Executive Label Headquarters, Roster & Team Seats Management, Catalogue Machine & Master Stems, Multi-Artist EPK & Press Kits, Automated Advance Recoupment & Split Cascades, Publishing Administration & PRO Elections, Global Distribution Radar, Label Sync Pitch Desk, Tour Merch POS & Box Office Settlement, Fan Club CRM & Broadcasts, Label Social AI Studio, Custom Label Apex Domains, A&R Talent Scouting Network, Label Credit Ledger (7,500 Credits floor), Real-Time Clearance & Royalty Alerts, Multi-Seat Label Administration, and Tour Controls.
+    4. **Corporate Brand & Marketing (11 Steps):**
+       - Brand Music Command Center, Audio Ad Flights & Commercial Campaigns, Commercial Music & Sync Library, Corporate Licensing Contracts & Escrow, Brand Ambassador & Influencer CRM, Social AI Campaign Content Studio, Agency Partner Network, Marketing Integrations & Apps, Campaign Delivery & Impression Alerts, Corporate Billing & Tax Profile, and Tour Controls.
+    5. **Professional DJ & Curator (12 Steps):**
+       - DJ Performance Headquarters, DJ Record Pool & Crates (BPM/Key search), Personal DJ Library & 24-bit Downloads, Live Dancefloor Tips & Song Requests via M-Pesa, 24-Bit Studio Audio EQ & DAC Settings, Club Fan List & Text Alerts, Social AI Gig Flyers & Promos, DJ App Marketplace, DJ Tool Credits Wallet (KSH 250 floor), Live Tip & Booking Notifications, DJ Profile & Residencies, and Tour Restart.
+    6. **Podcaster & Broadcaster (16 Steps):**
+       - Podcast Studio Headquarters, Fast RSS Feed Syndication, Episode Publisher & -16 LUFS Mastering, Podcaster EPK & Public Media Kit, Dynamic Ad Insertion (DAI) & Co-Host Splits, Guest Booking CRM & Broadcast Waivers, TuneStream Global Podcast Directory, Automated Co-Host Split Cascades, Corporate Sponsor Bidding, Listener Fan Club & WhatsApp Community, Social AI Chapters & Viral Clips, Custom Show Website & Apex Domains, Mastering Credits Wallet, Sponsor Offers & Tip Alerts, Show Profile & RSS Settings, and Tour Restart.
+    7. **Media House & TV/Radio (11 Steps):**
+       - Broadcast Operations Command Suite, Commercial Audio Ad Flights & Traffic Scheduling, Broadcast Music Library & Automated Cue Sheets, 24-Bit Studio Audio EQ & Peak Normalization, Broadcast Partner Syndication, Advertiser CRM, Social AI On-Air Promo Generator, Media Production App Marketplace, Programming & Compliance Alerts, Station Profile & Broadcast Licenses, and Tour Controls.
+    8. **Ambassador & Affiliate (9 Steps):**
+       - Partner Hub Command Center, Unique Invite Links & Live QR Tracking, Automated Weekly Mobile & Bank Payouts, Promotional Media Packs & Brand Assets, Commission Tiers & Performance Bonuses, 100% Free Partner Status (Zero Credits Required), Real-Time Commission Alerts, Payout Method Settings (M-Pesa/Bank), and Tour Controls.
+    9. **Tour Investor & LP (12 Steps):**
+       - Tour Capital & LP Command Center, Creator Catalog Due Diligence, Active Tour Facilities & Syndicate Tranches, Portfolio Performance & Yield Curves (18%-24% target IRR), Artist Career Sponsorships & Equity, Senior First-Dollar Recoupment Waterfall, Standardized Tour Escrow Contracts, Syndicate Investor Network & Notes, Institutional LP Credit-Exempt Status, Box Office Receipts & Dividend Alerts, Institutional Entity & Wire Settlement Rails, and Tour Controls.
+    10. **Fan & Music Listener (15 Steps):**
+        - TuneStream Listener Hub, For You & Curated African Mixes, Explore & Stream by Genre, Podcasts & Spoken Shows Directory, Live 24-Bit Studio Radio, My Collection & Playlist Crates, Live Concert Shows & VIP Passes, 24-Bit FLAC Studio EQ & Audio DAC, Offline Cache & 8GB Multi-Device Sync, 1-Tap Direct Artist Tipping (100% to creator), Universal TM Credits Balance (KSH 250 floor), Native Apps Suite (iOS, Android, Desktop), Release Drops & Artist Alerts, Listener Profile & Taste DNA, and Audio Guide Controls.
+    11. **Administrator & Operations (21 Steps):**
+        - Central Control Room, Live Key Metrics, Growth Trends, Role Simulator, Credit Circulation (Permanent Credit-Exempt Status), Notifications, Admin Team Seats, Communications Vault & WhatsApp, Corporate Ads, Affiliate Programme, Catalogue Machine, EPK Builder, Split Cascades, Sync Marketplace, Escrow Contracts, DJ Record Pool, Podcaster Studio, TunePay POS, Custom Domains, App Marketplace, and Tour Restart.
+
+- **Spotlight Masking & Interactive Navigation:**
+  - Every step targets live DOM selectors (`targetSelector`) and triggers real-time tab switching (`tab`) through `setActiveTab()`.
+  - SVG spotlight mask cutouts adhere to the universal `rx="3" ry="3"` standard with a 0.8 opacity blackout on the rest of the dashboard.
+  - Floating popovers calculate dynamic positioning (right of sidebar, bottom of topbar, or clamped dock) to never obscure active highlighted elements.
+  - Plain, warm, jargon-free explanations ensure creators, supervisors, DJs, and fans can immediately navigate their specialized workspaces with confidence.
