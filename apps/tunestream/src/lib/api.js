@@ -55,7 +55,12 @@ async function request(path, { method = 'GET', body, token } = {}) {
   }
 
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (_) {
+    data = null;
+  }
   if (!res.ok) {
     let msg = res.statusText;
     if (data?.detail) {

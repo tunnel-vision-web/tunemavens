@@ -5624,7 +5624,10 @@ function CataloguePanel({
     if (activeArtist?.subdomain === 'all') {
       setViewAllCatalogue(true);
       fetch('/api/catalog/tracks?all=true')
-        .then(res => res.ok ? res.json() : null)
+        .then(res => {
+          const ct = res.headers.get('content-type');
+          return (res.ok && ct && ct.includes('application/json')) ? res.json() : null;
+        })
         .then(data => {
           if (data) {
             const list = Array.isArray(data) ? data : (data.tracks || []);
@@ -10725,7 +10728,13 @@ function App() {
   // Persistent catalogue track synchronization from backend API
   useEffect(() => {
     fetch('/api/catalog/tracks?all=true')
-      .then(res => res.ok ? res.json() : null)
+      .then(res => {
+        const ct = res.headers.get('content-type');
+        if (res.ok && ct && ct.includes('application/json')) {
+          return res.json();
+        }
+        return null;
+      })
       .then(data => {
         if (data && Array.isArray(data.tracks) && data.tracks.length > 0) {
           const mapped = data.tracks.map(t => ({
