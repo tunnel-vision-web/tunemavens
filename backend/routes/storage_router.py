@@ -374,11 +374,11 @@ class CreditPurchaseRequest(BaseModel):
 
 STORAGE_PACKAGES = {
     "storage_500mb": {"name": "+500 MB Storage", "additional_mb": 500, "credits": 50},
-    "storage_1gb": {"name": "+1 GB Storage", "additional_mb": 1024, "credits": 90},
-    "storage_5gb": {"name": "+5 GB High-Capacity Storage", "additional_mb": 5120, "credits": 350},
+    "storage_1gb": {"name": "+1 GB Storage", "additional_mb": 1024, "credits": 100},
+    "storage_5gb": {"name": "+5 GB High-Capacity Storage", "additional_mb": 5120, "credits": 250},
     "starter_topup": {"name": "+500 MB Storage Pack", "additional_mb": 500, "credits": 50},
-    "pro_topup": {"name": "+1 GB Pro Storage Pack", "additional_mb": 1024, "credits": 90},
-    "enterprise_topup": {"name": "+5 GB Studio Storage Pack", "additional_mb": 5120, "credits": 350},
+    "pro_topup": {"name": "+1 GB Pro Storage Pack", "additional_mb": 1024, "credits": 100},
+    "enterprise_topup": {"name": "+5 GB Studio Storage Pack", "additional_mb": 5120, "credits": 250},
 }
 
 

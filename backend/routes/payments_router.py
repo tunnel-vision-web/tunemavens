@@ -42,76 +42,93 @@ except ImportError:
 
 
 # Canonical Server-Authoritative Credit Packages (Spec §5.2)
+# Unified single source of truth: 1 Credit = 1 KES = $0.01 USD
 CREDIT_PACKAGES: Dict[str, Dict[str, Any]] = {
-    "indie-label-load": {
-        "id": "indie-label-load",
-        "name": "Indie Label Credit Load",
-        "credits": 1000,
-        "price_usd": 99.0,
-        "price_kes": 12870,
-        "target_role": "label",
-        "description": "Loads 1,000 non-expiring credits. Covers 3 collaborator seats, 5 artists, and catalog ingestion.",
-        "deliverables": ["3 Collaborator Seats", "5 Artists", "Full Split Cascade Engine", "Sync Pitching Clearance"]
-    },
-    "scale-label-load": {
-        "id": "scale-label-load",
-        "name": "Scale Label Credit Load",
-        "credits": 3500,
-        "price_usd": 299.0,
-        "price_kes": 38870,
-        "target_role": "label",
-        "description": "Loads 3,500 non-expiring credits. Covers 10 collaborator seats, 25 artists, multi-seat A&R/Accounting.",
-        "deliverables": ["10 Collaborator Seats", "25 Artists", "Multi-Seat Logins", "Priority Sync Pitching"]
-    },
-    "enterprise-label-load": {
-        "id": "enterprise-label-load",
-        "name": "Enterprise Conglomerate Load",
-        "credits": 10000,
-        "price_usd": 799.0,
-        "price_kes": 103870,
-        "target_role": "label",
-        "description": "Loads 10,000 non-expiring credits. Covers unlimited collaborator seats, unlimited roster artists, and ERP webhooks.",
-        "deliverables": ["Unlimited Collaborator Seats", "Unlimited Signed Artists", "White-Glove DDEX", "Direct Rail Bulk Payouts"]
-    },
-    "creator-starter": {
-        "id": "creator-starter",
-        "name": "Creator Starter Top-Up",
+    "starter-floor": {
+        "id": "starter-floor",
+        "name": "Starter Floor",
         "credits": 250,
-        "price_usd": 25.0,
-        "price_kes": 3250,
-        "target_role": "creator",
-        "description": "250 Non-expiring credits for EPK building, AI mastering, and sync pitching.",
-        "deliverables": ["Full EPK Builder Hosting", "AI Mastering for 5 tracks", "Sync Placement Submissions"]
+        "price_usd": 2.50,
+        "price_kes": 250,
+        "target_role": "all",
+        "badge": "Starter Floor",
+        "badge_color": "#06b6d4",
+        "description": "Accessible entry-level top-up for EPK customisation, single track mastering, or listener tipping.",
+        "deliverables": ["250 Non-Expiring Credits", "Single Track AI Master", "EPK Builder Customisation", "Direct Artist Tipping"]
     },
-    "pro-creator-load": {
-        "id": "pro-creator-load",
-        "name": "Pro Growth Top-Up",
-        "credits": 600,
-        "price_usd": 50.0,
-        "price_kes": 6500,
+    "growth-pack": {
+        "id": "growth-pack",
+        "name": "Growth Pack",
+        "credits": 500,
+        "price_usd": 5.00,
+        "price_kes": 500,
         "target_role": "creator",
-        "description": "600 Non-expiring credits for regular release schedules and social marketing.",
-        "deliverables": ["Social AI Studio Generation", "Custom Subdomain Routing", "Split Cascade Ledgers"]
+        "badge": "Popular",
+        "badge_color": "#22d3ee",
+        "description": "Ample credits for regular music uploads, WhatsApp phone alerts, and sync briefs.",
+        "deliverables": ["500 Non-Expiring Credits", "WhatsApp Phone Alerts Enabled", "Sync Brief Submissions", "Multi-Track AI Mastering"]
     },
-    "studio-master-load": {
-        "id": "studio-master-load",
-        "name": "Studio Producer Pack",
-        "credits": 1500,
-        "price_usd": 120.0,
-        "price_kes": 15600,
+    "pro-maven": {
+        "id": "pro-maven",
+        "name": "Pro Maven",
+        "credits": 1000,
+        "price_usd": 10.00,
+        "price_kes": 1000,
+        "target_role": "creator",
+        "badge": "Best Value",
+        "badge_color": "#f59e0b",
+        "description": "High-volume credits for active creators, EPK custom domains, and lossless stem archiving.",
+        "deliverables": ["1,000 Non-Expiring Credits", "Custom Domain Routing", "Social AI Copywriter", "Lossless Audio Stems Storage"]
+    },
+    "studio-master": {
+        "id": "studio-master",
+        "name": "Studio Master",
+        "credits": 5000,
+        "price_usd": 50.00,
+        "price_kes": 5000,
         "target_role": "studio",
-        "description": "1,500 Non-expiring credits for high-volume audio mastering and stem distribution.",
-        "deliverables": ["Lossless Stems Storage", "Escrow Milestone Contracts", "DJ Pool Clearance"]
+        "badge": "Studio Grade",
+        "badge_color": "#ec4899",
+        "description": "Heavy-duty volume for producers, multitrack storage, escrow deals, and DJ pool drops.",
+        "deliverables": ["5,000 Non-Expiring Credits", "Unlimited AI Mastering", "Escrow Contract Protection", "DJ Record Pool Clearances"]
+    },
+    "label-team-starter": {
+        "id": "label-team-starter",
+        "name": "Label & Teams Starter",
+        "credits": 7500,
+        "price_usd": 75.00,
+        "price_kes": 7500,
+        "target_role": "label",
+        "badge": "Label & Teams",
+        "badge_color": "#a855f7",
+        "description": "Dedicated enterprise starter package for record labels, management teams, and multi-artist rosters.",
+        "deliverables": ["7,500 Non-Expiring Credits", "Multi-Seat Team Accounts", "Multi-Artist Roster Management", "Direct Split Cascade Payouts"]
     }
 }
 
-# Legacy alias map for backward compatibility
+# Legacy alias map for backward compatibility and cross-role identifiers
 PACKAGE_ALIASES: Dict[str, str] = {
-    "starter": "creator-starter",
-    "pro": "pro-creator-load",
-    "professional": "pro-creator-load",
-    "business": "scale-label-load",
-    "enterprise": "enterprise-label-load",
+    "starter": "starter-floor",
+    "floor": "starter-floor",
+    "casual-listener": "starter-floor",
+    "creator-starter": "starter-floor",
+    "listener-starter": "starter-floor",
+    "growth": "growth-pack",
+    "pro": "pro-maven",
+    "pro-creator-load": "pro-maven",
+    "professional": "pro-maven",
+    "superfan-audiophile": "pro-maven",
+    "listener-vip": "growth-pack",
+    "listener-patron": "pro-maven",
+    "studio": "studio-master",
+    "studio-master-load": "studio-master",
+    "duo-friends": "studio-master",
+    "label": "label-team-starter",
+    "label-team": "label-team-starter",
+    "indie-label-load": "label-team-starter",
+    "scale-label-load": "label-team-starter",
+    "enterprise-label-load": "label-team-starter",
+    "family-household": "label-team-starter",
 }
 
 
