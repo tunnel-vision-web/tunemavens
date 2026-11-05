@@ -922,7 +922,7 @@ export default function RegisterView({ onLogin, onClose }) {
                 >
                   <h4 style={{ fontSize: '12px', color: '#fff', margin: '0 0 2px' }}>Quick Top-Up Packs</h4>
                   <p style={{ fontSize: '10px', color: '#10b981', fontWeight: 700, margin: '0 0 4px' }}>Non-Expiring Credits</p>
-                  <p style={{ fontSize: '9px', color: 'var(--mu)', margin: 0 }}>Reload on demand from $9.99</p>
+                  <p style={{ fontSize: '9px', color: 'var(--mu)', margin: 0 }}>Reload on demand from KSh 250 / $2.50 (250 Credits)</p>
                 </div>
               </div>
             </div>

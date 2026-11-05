@@ -145,7 +145,7 @@ const NATIVE_APP_LANDING_DATA = {
       { q: 'Which devices are supported?', a: 'iOS 15+ and Android 9+. The native shells are Capacitor-wrapped, so the same engine runs on both platforms.' },
       { q: 'Does it work without reliable internet?', a: 'Yes  -  cache up to 8GB locally. Tips queue offline and settle when you reconnect.' },
     ],
-    pricingLine: 'Free tier · 150 credits at signup · unlimited streaming',
+    pricingLine: 'Always-Free (Ad-Supported) · 150 Welcome Credits · 100% Ad-Free Top-Ups from KSh 250 / $2.50 (250 Credits)',
   },
   'creator-companion': {
     slug: 'creator-companion',
@@ -223,7 +223,7 @@ const NATIVE_APP_LANDING_DATA = {
       { q: 'How are notifications delivered?', a: 'Pick a primary channel (push, email, WhatsApp, SMS). If it fails, we’ll try the next one automatically so you never miss anything.' },
       { q: 'Will my data sync if I switch phones?', a: 'Your data lives in the cloud, not on the device. Sign in on a new phone and everything is right where you left it.' },
     ],
-    pricingLine: 'Bundled with Creator Package · 1,200 credits · $29.99 one-time',
+    pricingLine: 'Included with Creator Tiers · Top-Ups from KSh 250 / $2.50 (250 Credits) · Zero Subscriptions',
   },
   tunepay: {
     slug: 'tunepay',
@@ -301,7 +301,7 @@ const NATIVE_APP_LANDING_DATA = {
       { q: 'Can I manage POS devices from the web?', a: 'Yes  -  the admin console has a dedicated POS Devices panel for provisioning, monitoring, and remote-wipe.' },
       { q: 'What happens if the device goes offline?', a: 'Payments queue locally with cryptographic receipts. They settle the instant the device reconnects.' },
     ],
-    pricingLine: 'Included in Label Bulk Package · 10,000 credits · $149.99 one-time',
+    pricingLine: 'Included with Label Tiers · Top-Ups from KSh 250 / $2.50 (250 Credits) · Instant Settlements',
   },
 };
 
@@ -1531,10 +1531,10 @@ export default function NativeAppLandingView({
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                   <th style={{ padding: '12px 16px', color: '#94a3b8', textAlign: 'left' }}>Listener Benefit</th>
-                  <th style={{ padding: '12px 16px', color: '#10b981', textAlign: 'center' }}>TuneStream Free ($0)</th>
-                  <th style={{ padding: '12px 16px', color: '#22d3ee', textAlign: 'center' }}>Casual ($9.99)</th>
-                  <th style={{ padding: '12px 16px', color: '#00f2fe', textAlign: 'center' }}>Superfan ($29.99)</th>
-                  <th style={{ padding: '12px 16px', color: '#a855f7', textAlign: 'center' }}>Duo / Family ($49.99+)</th>
+                  <th style={{ padding: '12px 16px', color: '#10b981', textAlign: 'center' }}>Always-Free ($0)</th>
+                  <th style={{ padding: '12px 16px', color: '#22d3ee', textAlign: 'center' }}>Casual Floor ($2.50 / KSh 250)</th>
+                  <th style={{ padding: '12px 16px', color: '#00f2fe', textAlign: 'center' }}>Superfan ($10.00 / KSh 1,000)</th>
+                  <th style={{ padding: '12px 16px', color: '#a855f7', textAlign: 'center' }}>Duo & Family ($50.00+ / KSh 5,000+)</th>
                 </tr>
               </thead>
               <tbody>
@@ -2973,14 +2973,14 @@ export default function NativeAppLandingView({
         popular: false
       },
       {
-        name: 'Listener Top-Up',
+        name: 'Casual Listener Floor',
         credits: 250,
-        priceUsd: 4.99,
-        tag: 'Casual Listener',
-        badgeColor: '#22d3ee',
-        desc: '250 Non-Expiring Credits. Stream up to 250 lossless FLAC tracks or tip your favourite indie creators.',
+        priceUsd: 2.50,
+        tag: 'Accessible Floor',
+        badgeColor: '#06b6d4',
+        desc: '250 Non-Expiring Credits ($2.50 / KSh 250). Universal accessible entry floor for 100% ad-free 24-bit FLAC audio and creator tipping.',
         features: [
-          '250 Non-Expiring TM Credits',
+          '250 Non-Expiring TM Credits ($2.50 / KSh 250)',
           'Lossless 24-bit / 96kHz FLAC audio',
           'Direct mid-track creator tipping',
           '1 active device 8GB offline caching'
@@ -2989,54 +2989,71 @@ export default function NativeAppLandingView({
         popular: false
       },
       {
-        name: 'Pro Maven Pack',
-        credits: 600,
-        priceUsd: 9.99,
-        tag: 'Most Popular',
-        badgeColor: '#00f0ff',
-        desc: '600 Non-Expiring Credits. Full freedom to stream, cache entire albums offline, and unlock stems.',
+        name: 'Music & Podcast Fan Pack',
+        credits: 500,
+        priceUsd: 5.00,
+        tag: 'Fan Favorite',
+        badgeColor: '#22d3ee',
+        desc: '500 Non-Expiring Credits ($5.00 / KSh 500). Full freedom to stream ad-free, cache entire albums offline, and tip artists.',
         features: [
-          '600 Non-Expiring TM Credits',
+          '500 Non-Expiring TM Credits ($5.00 / KSh 500)',
           'Multi-device 8GB offline storage',
-          'Lossless FLAC & Dolby Atmos stems',
-          'Priority VIP ticket presale access',
-          'Verified Fan badge in live chats'
+          'Lossless FLAC & Dolby Atmos playback',
+          'Priority VIP ticket presale notifications',
+          'Direct fan tipping and support'
         ],
-        ctaText: 'Top-Up 600 Credits',
-        popular: true
-      },
-      {
-        name: 'Audiophile VIP Pack',
-        credits: 1800,
-        priceUsd: 24.99,
-        tag: 'Superfan & Collector',
-        badgeColor: '#a855f7',
-        desc: '1,800 Non-Expiring Credits. For sonic purists and dedicated patrons who want master track ownership.',
-        features: [
-          '1,800 Non-Expiring TM Credits',
-          'Permanent master track purchase & download',
-          'Backstage tour RSVP discounts',
-          'Unlimited FLAC streaming sessions',
-          'Direct artist split waterfall transparency'
-        ],
-        ctaText: 'Top-Up 1,800 Credits',
+        ctaText: 'Top-Up 500 Credits',
         popular: false
       },
       {
-        name: 'Studio Superfan Pool',
-        credits: 5000,
-        priceUsd: 49.99,
-        tag: 'Patron / Label',
-        badgeColor: '#ec4899',
-        desc: '5,000 Non-Expiring Credits. Enterprise-grade pool for large families, DJ collectors, or label A&Rs.',
+        name: 'Superfan & Audiophile Pack',
+        credits: 1000,
+        priceUsd: 10.00,
+        tag: 'Most Popular',
+        badgeColor: '#00f2fe',
+        desc: '1,000 Non-Expiring Credits ($10.00 / KSh 1,000). Bit-perfect DAC streaming, permanent track downloads, and VIP badges.',
         features: [
-          '5,000 Non-Expiring TM Credits',
-          '5 shared listener profiles',
-          'Bulk lossless catalog stem exports',
-          'Direct tour venture backer eligibility',
+          '1,000 Non-Expiring TM Credits ($10.00 / KSh 1,000)',
+          'Bit-perfect DAC output & 10-band EQ',
+          'Permanent master track download credits',
+          'VIP Supporter badge on Artist & Podcaster EPKs',
+          'Unlimited FLAC streaming sessions'
+        ],
+        ctaText: 'Top-Up 1,000 Credits',
+        popular: true
+      },
+      {
+        name: 'Duo & Friends Pack',
+        credits: 5000,
+        priceUsd: 50.00,
+        tag: '2 Profiles',
+        badgeColor: '#ec4899',
+        desc: '5,000 Non-Expiring Credits ($50.00 / KSh 5,000). Share one credit vault across 2 private accounts with blended playlists.',
+        features: [
+          '5,000 Shared TM Credits ($50.00 / KSh 5,000)',
+          '2 private listener accounts with separate crates',
+          'Auto-generated Shared Duo Mix playlist',
+          'Lossless master stem downloads',
           'Dedicated creator split cascade reports'
         ],
         ctaText: 'Top-Up 5,000 Credits',
+        popular: false
+      },
+      {
+        name: 'Family & Household Vault',
+        credits: 7500,
+        priceUsd: 75.00,
+        tag: 'Household Vault',
+        badgeColor: '#a855f7',
+        desc: '7,500 Non-Expiring Credits ($75.00 / KSh 7,500). Enterprise-grade pool for up to 6 family members or label teams.',
+        features: [
+          '7,500 Household Credits ($75.00 / KSh 7,500)',
+          'Up to 6 listener accounts with parental controls',
+          'Multi-room Hi-Fi casting (Sonos, AirPlay 2)',
+          'Direct tour venture backer eligibility',
+          'Seamless fallback to Always-Free tier at 0 credits'
+        ],
+        ctaText: 'Top-Up 7,500 Credits',
         popular: false
       }
     ];
@@ -3077,7 +3094,7 @@ export default function NativeAppLandingView({
 
           <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <button 
-              onClick={() => handleQuickTopUp('Pro Maven Pack', 600, 9.99)}
+              onClick={() => handleQuickTopUp('Casual Listener Floor', 250, 2.50)}
               style={{
                 padding: '14px 32px',
                 background: '#00f0ff',
@@ -3342,9 +3359,7 @@ export default function NativeAppLandingView({
         case 'apps':
           return renderApps();
         case 'free':
-          return renderFreePlan();
         case 'premium':
-          return renderPremiumPlan();
         case 'plans':
           return (
             <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>

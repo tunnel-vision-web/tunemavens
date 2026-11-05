@@ -115,7 +115,7 @@ const NATIVE_APP_LANDING_DATA = {
       { q: 'Which devices are supported?', a: 'iOS 15+ and Android 9+. The native shells are Capacitor-wrapped, so the same engine runs on both platforms.' },
       { q: 'Does it work without reliable internet?', a: 'Yes  -  cache up to 8GB locally. Tips queue offline and settle when you reconnect.' },
     ],
-    pricingLine: 'Free tier · 150 credits at signup · unlimited streaming',
+    pricingLine: 'Always-Free (Ad-Supported) · 150 Welcome Credits · 100% Ad-Free Top-Ups from KSh 250 / $2.50 (250 Credits)',
   },
   'creator-companion': {
     slug: 'creator-companion',
@@ -193,7 +193,7 @@ const NATIVE_APP_LANDING_DATA = {
       { q: 'How are notifications delivered?', a: 'Pick a primary channel (push, email, WhatsApp, SMS). If it fails, we’ll try the next one automatically so you never miss anything.' },
       { q: 'Will my data sync if I switch phones?', a: 'Your data lives in the cloud, not on the device. Sign in on a new phone and everything is right where you left it.' },
     ],
-    pricingLine: 'Bundled with Creator Package · 1,200 credits · $29.99 one-time',
+    pricingLine: 'Included with Creator Tiers · Top-Ups from KSh 250 / $2.50 (250 Credits) · Zero Subscriptions',
   },
   tunepay: {
     slug: 'tunepay',
@@ -271,7 +271,7 @@ const NATIVE_APP_LANDING_DATA = {
       { q: 'Can I manage POS devices from the web?', a: 'Yes  -  the admin console has a dedicated POS Devices panel for provisioning, monitoring, and remote-wipe.' },
       { q: 'What happens if the device goes offline?', a: 'Payments queue locally with cryptographic receipts. They settle the instant the device reconnects.' },
     ],
-    pricingLine: 'Included in Label Bulk Package · 10,000 credits · $149.99 one-time',
+    pricingLine: 'Included with Label Tiers · Top-Ups from KSh 250 / $2.50 (250 Credits) · Instant Settlements',
   },
 };
 
@@ -1537,10 +1537,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                   <th style={{ padding: '12px 16px', color: '#94a3b8', textAlign: 'left' }}>Listener Benefit</th>
-                  <th style={{ padding: '12px 16px', color: '#10b981', textAlign: 'center' }}>TuneStream Free ($0)</th>
-                  <th style={{ padding: '12px 16px', color: '#22d3ee', textAlign: 'center' }}>Casual ($9.99)</th>
-                  <th style={{ padding: '12px 16px', color: '#00f2fe', textAlign: 'center' }}>Superfan ($29.99)</th>
-                  <th style={{ padding: '12px 16px', color: '#a855f7', textAlign: 'center' }}>Duo / Family ($49.99+)</th>
+                  <th style={{ padding: '12px 16px', color: '#10b981', textAlign: 'center' }}>Always-Free ($0)</th>
+                  <th style={{ padding: '12px 16px', color: '#22d3ee', textAlign: 'center' }}>Casual Floor ($2.50 / KSh 250)</th>
+                  <th style={{ padding: '12px 16px', color: '#00f2fe', textAlign: 'center' }}>Superfan ($10.00 / KSh 1,000)</th>
+                  <th style={{ padding: '12px 16px', color: '#a855f7', textAlign: 'center' }}>Duo & Family ($50.00+ / KSh 5,000+)</th>
                 </tr>
               </thead>
               <tbody>
@@ -3031,9 +3031,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         case 'apps':
           return renderApps();
         case 'free':
-          return renderFreePlan();
         case 'premium':
-          return renderPremiumPlan();
         case 'plans':
           return (
             <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>

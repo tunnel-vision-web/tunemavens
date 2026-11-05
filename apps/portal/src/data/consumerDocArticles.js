@@ -144,7 +144,7 @@ export const CONSUMER_DOC_ARTICLES = [
       },
       {
         title: 'Step 3: Reloading Credits with Mobile Money or Card',
-        detail: 'Click "Top Up Credits" to choose a reload pack ($4.99 for 500 credits, $9.99 for 1,200 credits, or $19.99 for 2,800 credits). Pay instantly via M-Pesa STK push, Apple Pay, Visa, or Mastercard.'
+        detail: 'Click "Top Up Credits" to choose a reload pack: Casual Listener Floor ($2.50 / KSh 250 for 250 credits), Fan Pack ($5.00 / KSh 500 for 500 credits), Pro ($10.00 / KSh 1,000 for 1,000 credits), Studio ($50.00 / KSh 5,000 for 5,000 credits), or Household/Teams ($75.00 / KSh 7,500 for 7,500 credits). Pay instantly via M-Pesa STK push, card, or bank transfer.'
       }
     ],
     faqs: [

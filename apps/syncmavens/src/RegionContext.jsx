@@ -23,8 +23,8 @@ export const useRegion = () => useContext(RegionContext) || {
   changeLanguage: () => {},
   setRegionDefaultLanguage: () => {},
   getRegionDefaultLanguage: () => 'en',
-  formatPrice: (v) => `KSh ${Math.round((v || 0) * 130).toLocaleString()}`,
-  convertPrice: (v) => Math.round((v || 0) * 130),
+  formatPrice: (v) => (v === 0 ? 'KSh 0' : `KSh ${Math.round((v || 0) * 100).toLocaleString()}`),
+  convertPrice: (v) => Math.round((v || 0) * 100),
   t: (s) => s
 };
 
@@ -54,7 +54,7 @@ export const CURRENCIES_MAP = {
 
 export const EXCHANGE_RATES = {
   USD: 1,
-  KES: 130,
+  KES: 100, // 1:1 TM Credit Protocol (1 Credit = 1 KES = $0.01 USD)
   TZS: 2600,
   UGX: 3700,
   NGN: 1500,
@@ -281,15 +281,31 @@ export function RegionProvider({ children }) {
   }, []);
 
   const convertPrice = useCallback((usdAmount) => {
-    const rate = EXCHANGE_RATES[currency] || 130;
+    if (usdAmount === 0 || usdAmount === null || usdAmount === undefined) return 0;
+    if (currency === 'USD') return usdAmount;
+    if (currency === 'KES') return Math.round(usdAmount * 100);
+    const rate = EXCHANGE_RATES[currency] || 1;
     return Math.round(usdAmount * rate);
   }, [currency]);
 
   const formatPrice = useCallback((usdAmount) => {
-    const converted = convertPrice(usdAmount);
+    if (usdAmount === 0 || usdAmount === null || usdAmount === undefined) {
+      const sym = currencyInfo?.symbol || '$';
+      return `${sym} 0`;
+    }
     const sym = currencyInfo?.symbol || '$';
+    if (currency === 'KES') {
+      const kes = Math.round(usdAmount * 100);
+      return `KSh ${kes.toLocaleString()}`;
+    }
+    if (currency === 'USD') {
+      const num = Number(usdAmount);
+      return num % 1 === 0 ? `$${num}` : `$${num.toFixed(2)}`;
+    }
+    const rate = EXCHANGE_RATES[currency] || 1;
+    const converted = Math.round(usdAmount * rate);
     return `${sym} ${converted.toLocaleString()}`;
-  }, [convertPrice, currencyInfo]);
+  }, [currency, currencyInfo]);
 
   const t = useCallback((text) => {
     if (window.SynergyLocalization && typeof window.SynergyLocalization.translateString === 'function') {
