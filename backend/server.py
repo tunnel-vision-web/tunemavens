@@ -72,14 +72,19 @@ cors_origins = CORS_ORIGINS
 if ENV == "production" and "*" in cors_origins:
     cors_origins = [
         "https://tunemavens.com",
+        "https://www.tunemavens.com",
         "https://syncmavens.com",
+        "https://www.syncmavens.com",
         "https://tunestream.co",
-        "https://intermaven.io"
+        "https://www.tunestream.co",
+        "https://intermaven.io",
+        "https://www.intermaven.io"
     ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

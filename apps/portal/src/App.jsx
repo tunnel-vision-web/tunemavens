@@ -79,7 +79,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
-import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi, normalizeMediaUrl } from './lib/api.js'
+import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi, normalizeMediaUrl, BASE } from './lib/api.js'
 import { reconcileUserApps, persistAppActivation, getStoredActivatedApps, DEFAULT_ACTIVE_APPS_BY_ROLE, saveStoredActivatedApps, saveStoredDeactivatedApps } from './lib/activatedApps.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
@@ -1336,8 +1336,8 @@ function DashboardView({
     // 1. Fetch catalog tracks for this artist or all platform tracks
     try {
       const url = (sub === 'all') 
-        ? '/api/catalog/tracks?all=true' 
-        : `/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`;
+        ? `${BASE}/api/catalog/tracks?all=true` 
+        : `${BASE}/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -1355,7 +1355,7 @@ function DashboardView({
     // 2. Fetch or update EPK layout for this artist
     if (sub !== 'all') {
       try {
-        const epkRes = await fetch(`/api/epk/${encodeURIComponent(sub)}`);
+        const epkRes = await fetch(`${BASE}/api/epk/${encodeURIComponent(sub)}`);
         if (epkRes.ok) {
           const epkData = await epkRes.json();
           setCreatorEpk({ subdomain: sub, artist_name: artist.name, ...epkData });
@@ -4738,7 +4738,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
       setLoadingProfile(true);
       try {
         const token = tokenStore?.get() || localStorage.getItem('tunemavens_token');
-        const res = await fetch('/api/users/me', {
+        const res = await fetch(`${BASE}/api/users/me`, {
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -4786,7 +4786,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
 
     try {
       const token = tokenStore?.get() || localStorage.getItem('tunemavens_token');
-      const res = await fetch('/api/users/me', {
+      const res = await fetch(`${BASE}/api/users/me`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -5623,7 +5623,7 @@ function CataloguePanel({
   useEffect(() => {
     if (activeArtist?.subdomain === 'all') {
       setViewAllCatalogue(true);
-      fetch('/api/catalog/tracks?all=true')
+      fetch(`${BASE}/api/catalog/tracks?all=true`)
         .then(res => {
           const ct = res.headers.get('content-type');
           return (res.ok && ct && ct.includes('application/json')) ? res.json() : null;
@@ -5645,7 +5645,7 @@ function CataloguePanel({
     setCurrentReleasesPage(1);
     try {
       if (next) {
-        const res = await fetch('/api/catalog/tracks?all=true');
+        const res = await fetch(`${BASE}/api/catalog/tracks?all=true`);
         if (res.ok) {
           const data = await res.json();
           const list = Array.isArray(data) ? data : (data.tracks || []);
@@ -5653,7 +5653,7 @@ function CataloguePanel({
         }
       } else {
         const sub = (activeArtist?.subdomain && activeArtist.subdomain !== 'all' ? activeArtist.subdomain : (sessionUser?.username || 'ndufo')).toLowerCase();
-        const res = await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`);
+        const res = await fetch(`${BASE}/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`);
         if (res.ok) {
           const data = await res.json();
           const list = Array.isArray(data) ? data : (data.tracks || []);
@@ -5768,7 +5768,7 @@ function CataloguePanel({
       formData.append('media_type', 'image');
       formData.append('folder', 'artwork');
       const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
-      const res = await fetch('/api/storage/upload', {
+      const res = await fetch(`${BASE}/api/storage/upload`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData
@@ -5802,7 +5802,7 @@ function CataloguePanel({
     setGeneratingAiArt(true);
     try {
       const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
-      const res = await fetch('/api/social-ai/generate-art', {
+      const res = await fetch(`${BASE}/api/social-ai/generate-art`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -5840,7 +5840,7 @@ function CataloguePanel({
         subdomain: sub
       };
 
-      const res = await fetch('/api/catalog/albums/artwork', {
+      const res = await fetch(`${BASE}/api/catalog/albums/artwork`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -5900,7 +5900,7 @@ function CataloguePanel({
       };
 
       try {
-        await fetch('/api/catalog/albums/artwork', {
+        await fetch(`${BASE}/api/catalog/albums/artwork`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -5968,7 +5968,7 @@ function CataloguePanel({
       // Push individual track updates to backend
       for (const t of editingAlbumTracks) {
         try {
-          await fetch(`/api/catalog/tracks/${encodeURIComponent(t.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
+          await fetch(`${BASE}/api/catalog/tracks/${encodeURIComponent(t.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -6146,7 +6146,7 @@ function CataloguePanel({
 
     const sub = sessionUser?.username || 'ndufo';
     try {
-      await fetch(`/api/catalog/tracks/${encodeURIComponent(editingTrack.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
+      await fetch(`${BASE}/api/catalog/tracks/${encodeURIComponent(editingTrack.isrc)}?subdomain=${encodeURIComponent(sub)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedTrack)
@@ -6171,7 +6171,7 @@ function CataloguePanel({
 
     const sub = sessionUser?.username || 'ndufo';
     try {
-      await fetch(`/api/catalog/tracks/${encodeURIComponent(targetIsrc)}?subdomain=${encodeURIComponent(sub)}`, {
+      await fetch(`${BASE}/api/catalog/tracks/${encodeURIComponent(targetIsrc)}?subdomain=${encodeURIComponent(sub)}`, {
         method: 'DELETE'
       });
     } catch (e) {
@@ -6248,7 +6248,7 @@ function CataloguePanel({
     const sub = sessionUser?.username || 'ndufo';
     for (const tr of newTracksList) {
       try {
-        await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+        await fetch(`${BASE}/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(tr)
@@ -6284,7 +6284,7 @@ function CataloguePanel({
       const sub = sessionUser?.username || 'ndufo';
       for (const tr of filteredNew) {
         try {
-          await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+          await fetch(`${BASE}/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(tr)
@@ -6335,7 +6335,7 @@ function CataloguePanel({
 
     const sub = sessionUser?.username || 'ndufo';
     try {
-      await fetch(`/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
+      await fetch(`${BASE}/api/catalog/tracks?subdomain=${encodeURIComponent(sub)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTrack)
@@ -10727,7 +10727,7 @@ function App() {
 
   // Persistent catalogue track synchronization from backend API
   useEffect(() => {
-    fetch('/api/catalog/tracks?all=true')
+    fetch(`${BASE}/api/catalog/tracks?all=true`)
       .then(res => {
         const ct = res.headers.get('content-type');
         if (res.ok && ct && ct.includes('application/json')) {
@@ -11028,7 +11028,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
       formData.append('file', file);
       formData.append('media_type', mType);
       const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || '';
-      const res = await fetch('/api/storage/upload', {
+      const res = await fetch(`${BASE}/api/storage/upload`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData

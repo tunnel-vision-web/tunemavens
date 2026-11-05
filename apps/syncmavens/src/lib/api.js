@@ -8,7 +8,21 @@
  * - `credentials: 'include'` so the HttpOnly access_token cookie is sent
  *   automatically once cross-subdomain cookies are configured in production.
  */
-const BASE = ((typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '').replace(/\/$/, '');
+export const getApiBase = () => {
+  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '';
+  if (envUrl) return envUrl.replace(/\/$/, '');
+
+  if (typeof window !== 'undefined' && window.location) {
+    const host = window.location.hostname;
+    if (host.includes('tunemavens.com') || host.includes('syncmavens.com') || host.includes('onrender.com')) {
+      return 'https://tunemavens-backend.onrender.com';
+    }
+  }
+  return '';
+};
+
+export const BASE = getApiBase();
+export const API_BASE = BASE;
 
 // Token persistence helpers (for the Bearer-token fallback path when the
 // cross-subdomain cookie isn't reachable, e.g. local dev across ports).

@@ -2613,3 +2613,16 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Embedded 1-click branded WhatsApp action button (`wa.me`) enabling direct instant chat launch with recipient and message body pre-filled.
     - Explains Meta developer sandbox constraints (in development mode, Meta Cloud API only delivers automated pushes to verified numbers on the developer dashboard recipient list; direct `wa.me` links bypass this restriction).
     - Includes interactive message bubble preview and "Send Another Message" / "Done & View in Vault" navigation.
+
+- **Hybrid Production Deployment & Multi-Origin Backend Architecture:**
+  - **Live FastAPI Backend Service:** Deployed on Render at `https://tunemavens-backend.onrender.com` connected to production MongoDB Atlas cluster (`intermaven-c.vjbwldo.mongodb.net`).
+  - **Cross-Origin Resource Sharing (CORS) Configuration:**
+    - Configured in `backend/server.py` to accept origins `https://tunemavens.com`, `https://www.tunemavens.com`, `https://syncmavens.com`, `https://www.syncmavens.com`, `https://tunestream.co`, `https://www.tunestream.co`, `https://intermaven.io`, and `https://www.intermaven.io`, with regex wildcard matching `allow_origin_regex=r"https://.*\.onrender\.com"`.
+    - Enabled credentials (`allow_credentials=True`) for secure cookie and bearer token authentication.
+  - **Meta WhatsApp Webhook Handshake & Ingestion Engine:**
+    - `GET /api/communications/webhook`: Cryptographic verification challenge endpoint handling `hub.mode=subscribe`, `hub.verify_token`, and returning raw `hub.challenge` as `text/plain` for Meta Developer Portal validation.
+    - `POST /api/communications/webhook`: Ingestion pipeline parsing inbound messages, conversation status updates (`sent`, `delivered`, `read`, `failed`), and error payloads, recording them in MongoDB `db.communications`.
+  - **Frontend Multi-Environment API Resolution:**
+    - Added dynamic host detection (`getApiBase()`) in `apps/portal/src/lib/api.js`, `apps/tunestream/src/lib/api.js`, and `apps/syncmavens/src/lib/api.js` that automatically routes all client API calls to `https://tunemavens-backend.onrender.com` in production domains while defaulting to same-origin proxies in local development environments.
+    - Added tracked `.env.production` configuration across `apps/portal`, `apps/tunestream`, and `apps/syncmavens`.
+    - Refactored all raw catalogue and storage fetch endpoints in `apps/portal/src/App.jsx` to inherit the unified `BASE` prefix.
