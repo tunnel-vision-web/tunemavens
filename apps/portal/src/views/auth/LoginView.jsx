@@ -7,9 +7,13 @@ import { reconcileUserApps } from '../../lib/activatedApps.js'
 const KNOWN_ROLES = ['creator', 'label', 'dj', 'media_house', 'supervisor', 'consumer', 'corporate', 'podcaster', 'vc'];
 function resolvePersonaRole() {
   try {
-    let r = new URLSearchParams(window.location.search).get('role')
-      || localStorage.getItem('tunemavens_active_persona')
-      || '';
+    let r = new URLSearchParams(window.location.search).get('role') || '';
+    if (!r) {
+      const stored = localStorage.getItem('tunemavens_active_persona');
+      if (stored && stored !== 'consumer') {
+        r = stored;
+      }
+    }
     if (!r) {
       const saved = JSON.parse(sessionStorage.getItem('signup_roles') || '[]');
       r = Array.isArray(saved) && saved[0] ? saved[0] : '';

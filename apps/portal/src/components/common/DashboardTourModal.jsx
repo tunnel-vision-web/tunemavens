@@ -1342,6 +1342,7 @@ export default function DashboardTourModal({
   onClose,
   currentRole = 'creator',
   setActiveTab,
+  onReturnToMain,
 }) {
   const effectiveRole = (currentRole === 'investor' ? 'vc' : currentRole) || 'creator';
   const personaData = PERSONA_TOUR_DATA[effectiveRole] || PERSONA_TOUR_DATA.creator;
@@ -1858,7 +1859,37 @@ export default function DashboardTourModal({
             ✕ End Tour
           </button>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {isLast && onReturnToMain && (
+              <button
+                type="button"
+                onClick={() => {
+                  handleEndTour();
+                  onReturnToMain();
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '3px',
+                  padding: '7px 14px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  boxShadow: '0 4px 14px rgba(14,165,233,0.35)',
+                  transition: 'all 0.15s ease',
+                }}
+                data-testid="dashboard-tour-return-main-btn"
+                title="Finish tour and return to TuneMavens Console"
+              >
+                <RiArrowLeftLine size={13} />
+                <span>Return to TuneMavens Console</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handlePrev}

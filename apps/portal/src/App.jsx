@@ -1261,8 +1261,57 @@ function DashboardView({
     sessionUser?.role === 'admin' ||
     activeUser?.role === 'admin' ||
     sessionUser?.email?.includes('admin') ||
-    sessionUser?.simulated_from === 'admin'
+    sessionUser?.simulated_from === 'admin' ||
+    (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true')
   );
+
+  const [consumerPersonaDropdownOpen, setConsumerPersonaDropdownOpen] = useState(false);
+  const consumerPersonaRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (consumerPersonaRef.current && !consumerPersonaRef.current.contains(e.target)) {
+        setConsumerPersonaDropdownOpen(false);
+      }
+    };
+    if (consumerPersonaDropdownOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [consumerPersonaDropdownOpen]);
+
+  const handleExitListenerMode = (targetRole = null) => {
+    try {
+      sessionStorage.removeItem('tunestream_active_backend');
+      sessionStorage.removeItem('preferred_dashboard_tab');
+      
+      const destinationRole = targetRole || (isAdminUser ? 'admin' : (sessionUser?.original_role || 'creator'));
+      if (destinationRole === 'admin') {
+        localStorage.removeItem('tunemavens_active_persona');
+      } else {
+        localStorage.setItem('tunemavens_active_persona', destinationRole);
+      }
+      
+      const targetApps = DEFAULT_ACTIVE_APPS_BY_ROLE[destinationRole] || DEFAULT_ACTIVE_APPS_BY_ROLE.creator;
+      const updated = {
+        ...(sessionUser || activeUser || {}),
+        role: destinationRole,
+        apps: [...targetApps],
+        is_admin: isAdminUser,
+        admin_sandbox: true,
+        simulated_role: destinationRole !== 'admin' ? destinationRole : null
+      };
+      
+      sessionStorage.setItem('tunemavens_session', JSON.stringify(updated));
+      localStorage.setItem('tunemavens_saved_user', JSON.stringify(updated));
+      
+      if (typeof onUpdateUser === 'function') {
+        onUpdateUser(updated);
+      }
+    } catch (_) {}
+    
+    window.location.href = '/dashboard?tab=home';
+  };
 
   useEffect(() => {
     if (!sessionUser || (activeUser && sessionUser.role !== activeUser.role)) {
@@ -2151,6 +2200,31 @@ function DashboardView({
                   </div>
                 </div>
               )}
+              <button
+                type="button"
+                onClick={() => handleExitListenerMode()}
+                className="dashboard-nav-item"
+                style={{
+                  marginTop: '8px',
+                  width: '100%',
+                  background: 'rgba(14, 165, 233, 0.12)',
+                  border: '1px solid rgba(14, 165, 233, 0.35)',
+                  color: '#38bdf8',
+                  fontWeight: 800,
+                  fontSize: '11px',
+                  justifyContent: 'center',
+                  padding: '8px 10px',
+                  borderRadius: '3px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                title="Exit listener mode and return to main TuneMavens workspace"
+                data-testid="consumer-sidebar-exit-btn"
+              >
+                <RiArrowLeftLine size={14} />
+                {!collapsed && (isAdminUser ? "Exit to Admin Console" : "Exit to TuneMavens Console")}
+              </button>
             </div>
 
             <button
@@ -2202,6 +2276,18 @@ function DashboardView({
 
             <ul className="dashboard-nav-list" style={{ marginTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px' }}>
               <li>
+                <button
+                  type="button"
+                  onClick={() => handleExitListenerMode()}
+                  className="dashboard-nav-item"
+                  style={{ width: '100%', border: 'none', background: 'transparent', textAlign: 'left', color: '#0ea5e9', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                  data-testid="consumer-sidebar-nav-exit-btn"
+                >
+                  <RiShieldFill size={16} />
+                  {!collapsed && (isAdminUser ? "TuneMavens Admin Studio" : "TuneMavens Creator Studio")}
+                </button>
+              </li>
+              <li>
                 <Link
                   to="/native-apps/tunestream"
                   className="dashboard-nav-item"
@@ -2229,9 +2315,27 @@ function DashboardView({
               )}
             </div>
             <button
-              onClick={onLogout}
+              onClick={() => {
+                try {
+                  localStorage.removeItem('tunemavens_token');
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('tunemavens_user');
+                  localStorage.removeItem('tunemavens_saved_user');
+                  localStorage.removeItem('tunemavens_active_persona');
+                  sessionStorage.removeItem('tunemavens_session');
+                  sessionStorage.removeItem('tunestream_active_backend');
+                  sessionStorage.removeItem('preferred_dashboard_tab');
+                  sessionStorage.removeItem('signup_roles');
+                } catch (_) {}
+                if (typeof onLogout === 'function') {
+                  onLogout();
+                } else {
+                  window.location.href = '/login';
+                }
+              }}
               className="dashboard-nav-item"
-              style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px' }}
+              style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px', cursor: 'pointer' }}
+              data-testid="consumer-logout-btn"
             >
               <RiCloseFill size={14} />
               {!collapsed && "Log Out"}
@@ -2254,6 +2358,121 @@ function DashboardView({
             </div>
 
             <div className="dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => handleExitListenerMode()}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '6px 14px',
+                  borderRadius: '3px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(14,165,233,0.35)'
+                }}
+                title="Exit listener mode and return directly to the TuneMavens Console"
+                data-testid="consumer-exit-to-tunemavens-btn"
+              >
+                <RiArrowLeftLine size={14} />
+                <span>{isAdminUser ? 'Return to Admin Console' : 'Return to TuneMavens Console'}</span>
+              </button>
+
+              <div style={{ position: 'relative' }} ref={consumerPersonaRef}>
+                <button
+                  type="button"
+                  onClick={() => setConsumerPersonaDropdownOpen(!consumerPersonaDropdownOpen)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.14)',
+                    color: '#f8fafc',
+                    padding: '6px 12px',
+                    borderRadius: '3px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                  data-testid="consumer-persona-switcher-btn"
+                  title="Switch to another persona view"
+                >
+                  <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
+                  <span>Switch Persona</span>
+                  <RiArrowDownSFill size={12} />
+                </button>
+
+                {consumerPersonaDropdownOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      zIndex: 1000,
+                      background: '#0d1322',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '3px',
+                      padding: '12px',
+                      width: '320px',
+                      boxShadow: '0 12px 36px rgba(0,0,0,0.6)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Switch Ecosystem Persona
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleExitListenerMode('admin')}
+                        style={{ background: 'transparent', border: 'none', color: '#0ea5e9', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Reset to Admin
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                      {PERSONA_ROLES.map((roleItem) => {
+                        const isActive = roleItem.id === 'consumer';
+                        const RoleIcon = roleItem.icon;
+                        return (
+                          <button
+                            key={roleItem.id}
+                            type="button"
+                            onClick={() => {
+                              setConsumerPersonaDropdownOpen(false);
+                              handleExitListenerMode(roleItem.id);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '7px 8px',
+                              background: isActive ? 'rgba(0, 242, 254, 0.12)' : 'rgba(255, 255, 255, 0.03)',
+                              border: isActive ? '1px solid #00f2fe' : '1px solid rgba(255, 255, 255, 0.06)',
+                              borderRadius: '3px',
+                              color: '#fff',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              textAlign: 'left',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <RoleIcon size={14} style={{ color: roleItem.color, flexShrink: 0 }} />
+                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {roleItem.shortLabel}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={() => handleOpenCreditReload('Top-Up Non-Expiring Listener TM Credits')}
@@ -2346,6 +2565,7 @@ function DashboardView({
           onClose={() => setTourOpen(false)}
           currentRole="consumer"
           setActiveTab={setActiveTab}
+          onReturnToMain={handleExitListenerMode}
         />
       </div>
     );
@@ -11007,6 +11227,12 @@ function App() {
   }, [catalogTracks, globalTrack]);
 
   const handleLogin = (user) => {
+    try {
+      sessionStorage.removeItem('tunestream_active_backend');
+      if (user?.role === 'admin' || user?.role === 'creator') {
+        localStorage.removeItem('tunemavens_active_persona');
+      }
+    } catch (_) {}
     const activePersona = localStorage.getItem('tunemavens_active_persona');
     const userToReconcile = (activePersona && (user.is_admin || user.role === 'admin' || localStorage.getItem('tunemavens_admin_verified') === 'true')) ? {
       ...user,
@@ -11032,10 +11258,20 @@ function App() {
       // ignore  -  clear local state regardless so the user is logged out client-side
     }
     tokenStore.clear();
+    try {
+      localStorage.removeItem('tunemavens_token');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('tunemavens_user');
+      localStorage.removeItem('tunemavens_saved_user');
+      localStorage.removeItem('tunemavens_active_persona');
+      localStorage.removeItem('tunemavens_admin_verified');
+      sessionStorage.removeItem('tunemavens_session');
+      sessionStorage.removeItem('tunestream_active_backend');
+      sessionStorage.removeItem('preferred_dashboard_tab');
+      sessionStorage.removeItem('signup_roles');
+    } catch (_) {}
     setSessionUser(null);
-    sessionStorage.removeItem('tunemavens_session');
-    localStorage.removeItem('tunemavens_saved_user');
-    localStorage.removeItem('tunemavens_active_persona');
+    window.location.href = '/login';
   };
 
   // Recognises your Intermaven session when you land on the TuneMavens app.
