@@ -4,13 +4,13 @@
 export const AUTHORITATIVE_PODCASTER_PACKAGES = [
   {
     role: 'podcaster',
-    slug: 'podcaster-starter',
+    slug: 'podcaster-free',
     name: 'Starter Cast Pool',
     tier_badge: 'Free Forever',
     price_usd: 0.0,
-    billing_period: 'forever free starter credits',
+    billing_period: 'free access',
     credits: 50,
-    key_metric: '5 Hours Audio Hosting · Fast RSS Feed',
+    key_metric: '5 Hours Audio Hosting · 50 Free Signup Credits',
     features: [
       'Automatic feed delivery to Apple Podcasts, Spotify, and TuneStream',
       '5 hours of high-quality episode audio storage with fast global playback',
@@ -24,40 +24,96 @@ export const AUTHORITATIVE_PODCASTER_PACKAGES = [
   },
   {
     role: 'podcaster',
+    slug: 'podcaster-starter',
+    name: 'Starter Host Floor',
+    tier_badge: 'Accessible Floor',
+    price_usd: 2.50,
+    billing_period: 'one-time credit reload',
+    credits: 250,
+    key_metric: '250 Credits ($2.50 / KSh 250) · Studio Sound Leveling',
+    features: [
+      '250 non-expiring unified credits load ($2.50 / KSh 250)',
+      'Studio-grade sound leveling: crisp, balanced voices on all devices',
+      'Instant voice-to-text transcripts & chapter markers (single episode)',
+      'Live Media Kit link to share verified download counts with sponsors',
+      'Direct listener tipping via M-Pesa or card with 100% creator retention'
+    ],
+    is_popular: false,
+    cta: 'Get Starter Floor'
+  },
+  {
+    role: 'podcaster',
+    slug: 'podcaster-growth',
+    name: 'Growth Show Host',
+    tier_badge: 'Active Show',
+    price_usd: 5.00,
+    billing_period: 'one-time credit reload',
+    credits: 500,
+    key_metric: '500 Credits ($5.00 / KSh 500) · WhatsApp Alerts & Transcripts',
+    features: [
+      '500 non-expiring unified credits load ($5.00 / KSh 500)',
+      'WhatsApp automated listener alerts for newly published episodes',
+      'Multi-episode automated audio cleanup and dynamic voice isolation',
+      'Split Cascade automatic payouts to co-hosts, producers & editors',
+      'Server-side dynamic ad insertion (DAI) monetization enabled'
+    ],
+    is_popular: false,
+    cta: 'Get Growth Pack'
+  },
+  {
+    role: 'podcaster',
     slug: 'podcaster-studio',
     name: 'Studio Pro Host',
     tier_badge: 'Most Popular',
-    price_usd: 19.0,
+    price_usd: 10.00,
     billing_period: 'one-time credit reload',
-    credits: 250,
-    key_metric: '25 Hours Studio Sound · Built-In Sponsor Ads',
+    credits: 1000,
+    key_metric: '1,000 Credits ($10.00 / KSh 1,000) · Built-In Sponsor Ads',
     features: [
-      'Studio-grade sound leveling: voices sound crisp, loud, and balanced everywhere',
-      'Earn from sponsors: automatically play relevant ads to your listeners',
-      'Live Media Kit: share your verified download stats with brands in one link',
-      'Automatic team payouts: send co-hosts and producers their share via M-Pesa or bank',
-      'Instant voice-to-text transcripts and clickable episode chapter markers',
-      '250 credits reload with zero monthly fees — only pay when you need credits'
+      '1,000 non-expiring unified credits load ($10.00 / KSh 1,000)',
+      'Priority matching with Corporate Brand Sponsors looking for ad spots',
+      'Custom podcast web player embed with your brand links & sponsor banners',
+      'Automated team payouts: co-hosts & editors paid automatically via M-Pesa/bank',
+      'Lossless 24-bit podcast episode archive and uncompressed stems backup',
+      'Full media kit analytics exports for sponsor RFP proposals'
     ],
     is_popular: true,
     cta: 'Go Studio Pro'
   },
   {
     role: 'podcaster',
-    slug: 'podcaster-network',
-    name: 'Network & Syndicate',
-    tier_badge: 'Multi-Show Suite',
-    price_usd: 59.0,
+    slug: 'podcaster-scale',
+    name: 'Studio Network Pack',
+    tier_badge: 'Multi-Show Scale',
+    price_usd: 50.00,
     billing_period: 'one-time credit reload',
-    credits: 850,
-    key_metric: 'Unlimited Shows · Priority Sponsor Matching',
+    credits: 5000,
+    key_metric: '5,000 Credits ($50.00 / KSh 5,000) · Multi-Show Hosting',
     features: [
-      'Manage multiple podcasts and channels all in one simple account',
-      'Priority access to corporate brand sponsors looking to book ad campaigns',
-      'Branded web player with your own links and sponsor promotional banners',
-      'Easy guest booking calendar and remote recording connections',
-      'Direct listener tipping: fans can tip you via M-Pesa or card with 0% platform take',
-      '850 credits reload and dedicated audio engineering support (no expiry)'
+      '5,000 non-expiring unified credits load ($50.00 / KSh 5,000)',
+      'Manage up to 5 individual podcast shows under a single network dashboard',
+      'Cross-show sponsor campaigns and unified audience demographics',
+      'Escrow contract agreements for guest appearances and celebrity co-hosts',
+      'Direct sponsor ad flight bidding and dynamic preroll/midroll insertion'
+    ],
+    is_popular: false,
+    cta: 'Get Studio Network'
+  },
+  {
+    role: 'podcaster',
+    slug: 'podcaster-network',
+    name: 'Syndicate & Media Suite',
+    tier_badge: 'Network & Syndicate',
+    price_usd: 75.00,
+    billing_period: 'one-time credit reload',
+    credits: 7500,
+    key_metric: '7,500 Credits ($75.00 / KSh 7,500) · Enterprise Syndicate',
+    features: [
+      '7,500 non-expiring unified credits load ($75.00 / KSh 7,500)',
+      'Unlimited shows and channels with multi-seat producer & host permissions',
+      'Direct API webhooks for enterprise radio & broadcast syndication',
+      'Priority access to corporate brand sponsors and campaign agencies',
+      'Dedicated audio engineer liaison and customized broadcast compliance'
     ],
     is_popular: false,
     cta: 'Launch Network Suite'
@@ -130,39 +186,76 @@ export const AUTHORITATIVE_VC_PACKAGES = [
 export const AUTHORITATIVE_DJ_PACKAGES = [
   {
     role: 'dj',
-    slug: 'dj-resident',
-    name: 'Club Resident Load',
-    tier_badge: 'Essential Pool',
-    price_usd: 19.0,
-    billing_period: 'one-time credit reload',
-    credits: 200,
-    key_metric: '50 Lossless Downloads · Clean & Dirty Edits',
+    slug: 'dj-free',
+    name: 'DJ Pool Discovery',
+    tier_badge: 'Free Preview',
+    price_usd: 0.0,
+    billing_period: 'free access',
+    credits: 50,
+    key_metric: 'Curated Track Search · 50 Free Signup Credits',
     features: [
       'Access curated record pools across Afrobeat, Amapiano, Hip Hop, and Dance',
       'Pre-analyzed tracks with verified BPM, musical key, and Rekordbox cue markers',
-      '50 high-speed track downloads with intro/outro extended edits (non-expiring)',
-      'Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor Pro',
+      'Listen to high-quality audio previews of club edits and extended mixes',
+      '50 free signup credits to test lossless track downloads',
       'Verified DJ identity badge on TuneStream and community forums'
     ],
     is_popular: false,
-    cta: 'Join DJ Pool'
+    cta: 'Explore DJ Pool Free'
+  },
+  {
+    role: 'dj',
+    slug: 'dj-starter',
+    name: 'Starter DJ Floor',
+    tier_badge: 'Accessible Floor',
+    price_usd: 2.50,
+    billing_period: 'one-time credit reload',
+    credits: 250,
+    key_metric: '250 Credits ($2.50 / KSh 250) · 25 Lossless Club Edits',
+    features: [
+      '250 non-expiring unified credits load ($2.50 / KSh 250)',
+      '25 lossless WAV & 320kbps MP3 club track downloads (intro/outro edits)',
+      'Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor Pro',
+      'BPM and key detection tags written directly into audio ID3 metadata',
+      'Zero monthly subscription bills — credits stay in your wallet forever'
+    ],
+    is_popular: false,
+    cta: 'Get Starter DJ Floor'
+  },
+  {
+    role: 'dj',
+    slug: 'dj-resident',
+    name: 'Club Resident Pack',
+    tier_badge: 'Resident Essential',
+    price_usd: 5.00,
+    billing_period: 'one-time credit reload',
+    credits: 500,
+    key_metric: '500 Credits ($5.00 / KSh 500) · Weekly Set Preps',
+    features: [
+      '500 non-expiring unified credits load ($5.00 / KSh 500)',
+      '50+ high-speed extended edits, transition tracks, and clean/dirty versions',
+      'WhatsApp alerts when new exclusive club promo drops arrive in your genres',
+      'Direct feedback loop to record label A&Rs on crowd reaction',
+      'Priority download bandwidth for weekend club set preparation'
+    ],
+    is_popular: false,
+    cta: 'Get Resident Pack'
   },
   {
     role: 'dj',
     slug: 'dj-touring',
     name: 'Touring Pro DJ Load',
     tier_badge: 'Most Popular',
-    price_usd: 49.0,
+    price_usd: 10.00,
     billing_period: 'one-time credit reload',
-    credits: 600,
-    key_metric: 'Unlimited Downloads · Stems & Exclusive Dubplates',
+    credits: 1000,
+    key_metric: '1,000 Credits ($10.00 / KSh 1,000) · Stems & Dubplates',
     features: [
+      '1,000 non-expiring unified credits load ($10.00 / KSh 1,000)',
+      'Exclusive unreleased artist dubplates & early club test pressings',
       'Lossless WAV masters and separated remix stems download pack',
-      'Exclusive unreleased artist dubplates & early club test pressings before public release',
-      'Digital proof clearance hashes protecting your venue and live streams from DMCA strikes',
-      'Direct feedback loop: rate unreleased tracks to send data straight to record label A&Rs',
-      '600 unified credits load for high-priority dubplate requests (zero monthly fees)',
-      'Priority download queue bandwidth for weekend set preparation'
+      'Digital proof clearance hashes protecting your sets from DMCA strikes',
+      'Live DJ set tipping integration with M-Pesa QR codes for your booth'
     ],
     is_popular: true,
     cta: 'Go Touring Pro'
@@ -170,21 +263,39 @@ export const AUTHORITATIVE_DJ_PACKAGES = [
   {
     role: 'dj',
     slug: 'dj-headliner',
-    name: 'Headline & Festival Curator Load',
+    name: 'Headline & Festival Curator',
     tier_badge: 'Taste-Maker',
-    price_usd: 129.0,
+    price_usd: 50.00,
     billing_period: 'one-time credit reload',
-    credits: 1800,
-    key_metric: 'Direct Label Drop Inbox & Radio Mix Distribution',
+    credits: 5000,
+    key_metric: '5,000 Credits ($50.00 / KSh 5,000) · Radio Mix Syndication',
     features: [
-      'Personalized promo inbox where top labels send unreleased tracks directly for your sets',
-      'Host verified syndicated mix series & live DJ sessions on TuneStream Web Radio',
+      '5,000 non-expiring unified credits load ($50.00 / KSh 5,000)',
+      'Host verified syndicated mix series & live DJ sessions on TuneStream Radio',
+      'Personalized promo inbox where top labels send unreleased tracks directly',
       'Monetize live DJ sets with direct listener tipping and listener tip splits',
-      'VIP access to artist tour soundchecks and festival press rooms',
-      '1,800 unified credits load & personal artist liaison support (zero monthly fees)'
+      'VIP access to artist tour soundchecks and festival press rooms'
     ],
     is_popular: false,
-    cta: 'Apply for Headliner Tier'
+    cta: 'Get Headliner Pack'
+  },
+  {
+    role: 'dj',
+    slug: 'dj-enterprise',
+    name: 'Agency & Record Pool Enterprise',
+    tier_badge: 'Agency & Roster',
+    price_usd: 75.00,
+    billing_period: 'one-time credit reload',
+    credits: 7500,
+    key_metric: '7,500 Credits ($75.00 / KSh 7,500) · Multi-DJ Agency Suite',
+    features: [
+      '7,500 non-expiring unified credits load ($75.00 / KSh 7,500)',
+      'Multi-DJ roster management for booking agencies and DJ crews',
+      'Direct label partnership pool agreements and white-label promo vaults',
+      'Dedicated audio engineer support and priority stem delivery pipeline'
+    ],
+    is_popular: false,
+    cta: 'Apply for Agency Tier'
   }
 ];
 

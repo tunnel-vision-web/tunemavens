@@ -41,94 +41,134 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "name": "Spark / Indie Starter",
             "tier_badge": "Free Forever",
             "price_usd": 0.0,
-            "billing_period": "one-time credit reload",
-            "credits": 0,
-            "key_metric": "85/15 Net Splits · 3 Master Tracks",
+            "billing_period": "free access",
+            "credits": 50,
+            "key_metric": "85/15 Net Splits · 50 Free Signup Credits",
             "deliverables": [
                 "Uncapped lossless stream hosting on TuneStream",
                 "Creator Web World basic bio & links"
             ],
             "features": [
+                "50 free signup credits for mastering & EPK testing",
                 "Lossless streaming playback & 60fps waveform player",
                 "Direct fan tips via M-Pesa, card & mobile wallets (100% to creator)",
                 "Standard Split Cascade math engine (up to 3 collaborators)",
-                "Public EPK portfolio link on tunemavens.com",
-                "Community Discord & knowledge base access"
+                "Public EPK portfolio link on tunemavens.com"
             ],
             "is_popular": False,
             "cta": "Start for Free"
         },
         {
             "role": "creator",
-            "slug": "creator-pro",
-            "name": "Pro Creator Growth",
-            "tier_badge": "Most Popular",
-            "price_usd": 29.0,
+            "slug": "starter-floor",
+            "name": "Starter Floor",
+            "tier_badge": "Accessible Floor",
+            "price_usd": 2.50,
             "billing_period": "one-time credit reload",
-            "credits": 300,
-            "key_metric": "90/10 Net Splits · Unlimited Catalog",
+            "credits": 250,
+            "key_metric": "90/10 Net Splits · 250 Credits ($2.50 / KSh 250)",
             "deliverables": [
-                "Custom Subdomain (artist.tunemavens.com)",
-                "Sync Brief AI Match Submission"
+                "Single Track AI Master",
+                "EPK Builder Web World"
             ],
             "features": [
-                "Unlimited master track & stem upload storage (WAV & stems)",
-                "90% artist royalty retention on catalog sales & streams",
-                "SyncMavens AI sync brief automatic pitch routing",
-                "Custom branded subdomain with customizable layout sections",
-                "Intermaven Smart CRM fan lead capture (WhatsApp, SMS, Email)",
-                "Social AI Studio content generator & 300 unified credits load with zero monthly fees"
+                "250 non-expiring unified credits load ($2.50 / KSh 250)",
+                "Single master track AI mastering and stem upload storage",
+                "EPK builder web world setup and bio hosting",
+                "Direct fan tipping and QR code stickers for live gigs"
             ],
-            "is_popular": True,
-            "cta": "Get Pro Creator"
+            "is_popular": False,
+            "cta": "Get Starter Floor"
         },
         {
             "role": "creator",
-            "slug": "creator-studio",
-            "name": "Studio Master & Touring",
-            "tier_badge": "Full Independence",
-            "price_usd": 99.0,
+            "slug": "growth-pack",
+            "name": "Growth Pack",
+            "tier_badge": "Creator Essential",
+            "price_usd": 5.00,
             "billing_period": "one-time credit reload",
-            "credits": 1200,
-            "key_metric": "100% Splits · TunePay POS Merch & Tour Ticketing",
+            "credits": 500,
+            "key_metric": "90/10 Net Splits · 500 Credits ($5.00 / KSh 500)",
             "deliverables": [
-                "0% Platform Commission",
-                "TunePay Event Box-Office POS App"
+                "WhatsApp Phone Alerts Enabled",
+                "Sync Brief Submissions"
             ],
             "features": [
+                "500 non-expiring unified credits load ($5.00 / KSh 500)",
+                "WhatsApp phone alerts enabled for placements and payments",
+                "AI mastering (3 tracks) and sync brief submissions",
+                "Intermaven Smart CRM fan lead capture (WhatsApp, SMS, Email)"
+            ],
+            "is_popular": False,
+            "cta": "Get Growth Pack"
+        },
+        {
+            "role": "creator",
+            "slug": "pro-maven",
+            "name": "Pro Maven Load",
+            "tier_badge": "Most Popular",
+            "price_usd": 10.00,
+            "billing_period": "one-time credit reload",
+            "credits": 1000,
+            "key_metric": "95/5 Net Splits · 1,000 Credits ($10.00 / KSh 1,000)",
+            "deliverables": [
+                "Custom Apex Domain SSL Mapping",
+                "Social AI Studio Content Generator"
+            ],
+            "features": [
+                "1,000 non-expiring unified credits load ($10.00 / KSh 1,000)",
+                "Custom apex domain SSL mapping (yourname.com)",
+                "Social AI Studio marketing generator with zero monthly fees",
+                "Unlimited AI mastering and priority sync placement pitching",
+                "Full Split Cascade collaborator ledgers and M-Pesa automated payouts"
+            ],
+            "is_popular": True,
+            "cta": "Get Pro Maven"
+        },
+        {
+            "role": "creator",
+            "slug": "studio-master",
+            "name": "Studio Master Pack",
+            "tier_badge": "Full Independence",
+            "price_usd": 50.00,
+            "billing_period": "one-time credit reload",
+            "credits": 5000,
+            "key_metric": "100% Splits · 5,000 Credits ($50.00 / KSh 5,000)",
+            "deliverables": [
+                "TunePay Event Box-Office POS App",
+                "Lossless Stem Multi-Track Downloads"
+            ],
+            "features": [
+                "5,000 non-expiring unified credits load ($50.00 / KSh 5,000)",
                 "100% royalty take — zero commission on downloads & merchandise",
                 "TunePay portable event POS ticketing & instant QR gate validation",
                 "Priority Sync Brief matching for TV commercials & Hollywood films",
-                "Automated Publishing & Distribution Election contract generation",
-                "Multi-tiered recoupment cascade for investor & producer advances",
-                "1,200 unified credits load for mastering, ads & stem distribution with zero monthly fees"
+                "Automated Publishing & Distribution Election contract generation"
             ],
             "is_popular": False,
-            "cta": "Launch Studio Plan"
+            "cta": "Get Studio Master"
         },
         {
             "role": "creator",
-            "slug": "creator-enterprise",
-            "name": "Label-Ready Enterprise",
-            "tier_badge": "Managed Artist",
-            "price_usd": 299.0,
+            "slug": "label-team-starter",
+            "name": "Label & Teams Starter",
+            "tier_badge": "Label & Teams",
+            "price_usd": 75.00,
             "billing_period": "one-time credit reload",
-            "credits": 4000,
-            "key_metric": "White-Glove Ingestion & Dedicated Sync Rep",
+            "credits": 7500,
+            "key_metric": "Multi-Seat Roster · 7,500 Credits ($75.00 / KSh 7,500)",
             "deliverables": [
-                "Direct Sync Licensing Representation",
-                "Custom Apex Domain & Mother-CMS"
+                "Multi-Artist Roster Management",
+                "White-Glove Ingestion Support"
             ],
             "features": [
-                "Dedicated sync licensing agent pitching directly to agency music supervisors",
-                "White-glove legacy catalog migration from DistroKid/TuneCore",
-                "Custom apex domain SSL mapping (yourname.com)",
-                "Automated PRO cue sheet registration (ASCAP, BMI, SESAC, MCSK)",
-                "Co-branded sponsor banners on artist concert tour passes",
-                "4,000 unified credits load & 24/7 priority executive phone support with zero monthly fees"
+                "7,500 non-expiring unified credits load ($75.00 / KSh 7,500)",
+                "Multi-seat team accounts and multi-artist roster management",
+                "Direct split cascade payouts to managers, producers & labels",
+                "Direct sync licensing representation and PRO cue sheet registration"
             ],
             "is_popular": False,
-            "cta": "Book Artist Consultation"
+            "cta": "Get Label Starter"
         }
     ],
     "label": [
@@ -281,47 +321,92 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
     "dj": [
         {
             "role": "dj",
-            "slug": "dj-resident",
-            "name": "Club Resident",
-            "tier_badge": "Essential Pool",
-            "price_usd": 19.0,
-            "billing_period": "one-time credit reload",
-            "credits": 200,
-            "key_metric": "50 Lossless Downloads · Clean & Dirty Edits",
+            "slug": "dj-free",
+            "name": "DJ Pool Discovery",
+            "tier_badge": "Free Preview",
+            "price_usd": 0.0,
+            "billing_period": "free access",
+            "credits": 50,
+            "key_metric": "Curated Track Search · 50 Free Signup Credits",
             "deliverables": [
-                "Lossless WAV & 320kbps MP3s",
-                "Verified Club Cue Point Metadata"
+                "Curated Pool Search Engine",
+                "Verified Cue Point Metadata"
             ],
             "features": [
                 "Access curated record pools across Afrobeat, Amapiano, Hip Hop, and Dance",
                 "Pre-analyzed tracks with verified BPM, musical key, and Rekordbox cue markers",
-                "50 high-speed track downloads with intro/outro extended edits (non-expiring)",
-                "Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor Pro",
+                "Listen to high-quality audio previews of club edits and extended mixes",
+                "50 free signup credits to test lossless track downloads",
                 "Verified DJ identity badge on TuneStream and community forums"
             ],
             "is_popular": False,
-            "cta": "Join DJ Pool"
+            "cta": "Explore DJ Pool Free"
+        },
+        {
+            "role": "dj",
+            "slug": "dj-starter",
+            "name": "Starter DJ Floor",
+            "tier_badge": "Accessible Floor",
+            "price_usd": 2.50,
+            "billing_period": "one-time credit reload",
+            "credits": 250,
+            "key_metric": "250 Credits ($2.50 / KSh 250) · 25 Lossless Club Edits",
+            "deliverables": [
+                "25 Lossless WAV / 320k Downloads",
+                "Rekordbox Cue Metadata"
+            ],
+            "features": [
+                "250 non-expiring unified credits load ($2.50 / KSh 250)",
+                "25 lossless WAV & 320kbps MP3 club track downloads (intro/outro edits)",
+                "Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor Pro",
+                "BPM and key detection tags written directly into audio ID3 metadata",
+                "Zero monthly subscription bills — credits stay in your wallet forever"
+            ],
+            "is_popular": False,
+            "cta": "Get Starter DJ Floor"
+        },
+        {
+            "role": "dj",
+            "slug": "dj-resident",
+            "name": "Club Resident Pack",
+            "tier_badge": "Resident Essential",
+            "price_usd": 5.00,
+            "billing_period": "one-time credit reload",
+            "credits": 500,
+            "key_metric": "500 Credits ($5.00 / KSh 500) · Weekly Set Preps",
+            "deliverables": [
+                "50+ High-Speed Extended Edits",
+                "WhatsApp Promo Drops"
+            ],
+            "features": [
+                "500 non-expiring unified credits load ($5.00 / KSh 500)",
+                "50+ high-speed extended edits, transition tracks, and clean/dirty versions",
+                "WhatsApp alerts when new exclusive club promo drops arrive in your genres",
+                "Direct feedback loop to record label A&Rs on crowd reaction",
+                "Priority download bandwidth for weekend club set preparation"
+            ],
+            "is_popular": False,
+            "cta": "Get Resident Pack"
         },
         {
             "role": "dj",
             "slug": "dj-touring",
-            "name": "Touring Pro DJ",
+            "name": "Touring Pro DJ Load",
             "tier_badge": "Most Popular",
-            "price_usd": 49.0,
+            "price_usd": 10.00,
             "billing_period": "one-time credit reload",
-            "credits": 600,
-            "key_metric": "Unlimited Downloads · Stems & Exclusive Dubplates",
+            "credits": 1000,
+            "key_metric": "1,000 Credits ($10.00 / KSh 1,000) · Stems & Dubplates",
             "deliverables": [
-                "Unlimited Lossless WAV Downloads",
-                "DMCA-Safe Performance Clearance Hashes"
+                "Exclusive Unreleased Dubplates",
+                "Separated Remix Stems Pack"
             ],
             "features": [
+                "1,000 non-expiring unified credits load ($10.00 / KSh 1,000)",
+                "Exclusive unreleased artist dubplates & early club test pressings",
                 "Lossless WAV masters and separated remix stems download pack",
-                "Exclusive unreleased artist dubplates & early club test pressings before public release",
-                "Digital proof clearance hashes protecting your venue and live streams from DMCA strikes",
-                "Direct feedback loop: rate unreleased tracks to send data straight to record label A&Rs",
-                "600 unified credits load for high-priority dubplate requests (zero monthly fees)",
-                "Priority download queue bandwidth for weekend set preparation"
+                "Digital proof clearance hashes protecting your sets from DMCA strikes",
+                "Live DJ set tipping integration with M-Pesa QR codes for your booth"
             ],
             "is_popular": True,
             "cta": "Go Touring Pro"
@@ -331,26 +416,71 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
             "slug": "dj-headliner",
             "name": "Headline & Festival Curator",
             "tier_badge": "Taste-Maker",
-            "price_usd": 129.0,
+            "price_usd": 50.00,
             "billing_period": "one-time credit reload",
-            "credits": 1800,
-            "key_metric": "Direct Label Drop Inbox & Radio Mix Distribution",
+            "credits": 5000,
+            "key_metric": "5,000 Credits ($50.00 / KSh 5,000) · Radio Mix Syndication",
             "deliverables": [
-                "Curated Resident Channel on TuneStream",
-                "Artist Collaborative Dubplate Rights"
+                "Syndicated Radio Mix Channel",
+                "VIP Festival Press Room Access"
             ],
             "features": [
-                "Personalized promo inbox where top labels send unreleased tracks directly for your sets",
-                "Host verified syndicated mix series & live DJ sessions on TuneStream Web Radio",
+                "5,000 non-expiring unified credits load ($50.00 / KSh 5,000)",
+                "Host verified syndicated mix series & live DJ sessions on TuneStream Radio",
+                "Personalized promo inbox where top labels send unreleased tracks directly",
                 "Monetize live DJ sets with direct listener tipping and listener tip splits",
-                "VIP access to artist tour soundchecks and festival press rooms",
-                "1,800 unified credits load & personal artist liaison support (zero monthly fees)"
+                "VIP access to artist tour soundchecks and festival press rooms"
             ],
             "is_popular": False,
-            "cta": "Apply for Headliner Tier"
+            "cta": "Get Headliner Pack"
+        },
+        {
+            "role": "dj",
+            "slug": "dj-enterprise",
+            "name": "Agency & Record Pool Enterprise",
+            "tier_badge": "Agency & Roster",
+            "price_usd": 75.00,
+            "billing_period": "one-time credit reload",
+            "credits": 7500,
+            "key_metric": "7,500 Credits ($75.00 / KSh 7,500) · Multi-DJ Agency Suite",
+            "deliverables": [
+                "Multi-DJ Roster Management",
+                "White-Label Promo Vault"
+            ],
+            "features": [
+                "7,500 non-expiring unified credits load ($75.00 / KSh 7,500)",
+                "Multi-DJ roster management for booking agencies and DJ crews",
+                "Direct label partnership pool agreements and white-label promo vaults",
+                "Dedicated audio engineer support and priority stem delivery pipeline"
+            ],
+            "is_popular": False,
+            "cta": "Apply for Agency Tier"
         }
     ],
     "media_house": [
+        {
+            "role": "media_house",
+            "slug": "media-starter",
+            "name": "Community Radio & Webcaster Floor",
+            "tier_badge": "Accessible Floor",
+            "price_usd": 2.50,
+            "billing_period": "one-time credit reload",
+            "credits": 250,
+            "key_metric": "250 Credits ($2.50 / KSh 250) · 250 Playlogs Audit",
+            "deliverables": [
+                "Community Station Playlog Ingest",
+                "Basic Metadata Discrepancy Flagging"
+            ],
+            "features": [
+                "250 non-expiring unified credits load ($2.50 / KSh 250)",
+                "Auditing and track recognition for up to 250 broadcast playlog spins",
+                "Automated track recognition matching playlogs to verified ISRC & CAE metadata",
+                "Flag missing publishing shares and unregistered works before reporting",
+                "Zero monthly subscriptions — test station compliance easily"
+            ],
+            "is_popular": False,
+            "cta": "Get Community Station Floor"
+        },
         {
             "role": "media_house",
             "slug": "media-station",
@@ -427,108 +557,152 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
         {
             "role": "consumer",
             "slug": "listener-free",
-            "name": "Listener Free",
+            "name": "Listener Free (Always Free)",
             "tier_badge": "Ad-Supported",
             "price_usd": 0.0,
-            "billing_period": "one-time credit reload",
-            "credits": 0,
-            "key_metric": "High-Fidelity Audio Streaming",
+            "billing_period": "always free",
+            "credits": 150,
+            "key_metric": "High-Fidelity Audio · 150 Welcome Credits",
             "deliverables": [
                 "TuneStream Web Player Access",
                 "Curated Regional & Subculture Feeds"
             ],
             "features": [
-                "Stream thousands of independent music tracks across East Africa and global scenes",
-                "Full-featured 60fps waveform player with live playlist queueing",
-                "Follow favorite artists and receive real-time release notifications",
+                "Always Free forever — supported by Corporate Ad spots between tracks",
+                "Includes 150 Welcome Credits on signup to test ad-free FLAC playback",
+                "Full access to music, podcasts, and personal playlist crates",
                 "1-tap direct tipping to support creators with M-Pesa or card",
-                "Create and share unlimited public and private music playlists"
+                "Automatic fallback: Paid accounts seamlessly transition here at 0 credits"
             ],
             "is_popular": False,
             "cta": "Listen Free"
         },
         {
             "role": "consumer",
-            "slug": "listener-starter",
-            "name": "Listener Fan Starter",
-            "tier_badge": "Starter Floor",
+            "slug": "starter-floor",
+            "name": "Casual Listener Floor",
+            "tier_badge": "Accessible Floor",
             "price_usd": 2.50,
             "billing_period": "one-time credit reload",
             "credits": 250,
-            "key_metric": "250 Credits Load · Direct Artist Tipping",
+            "key_metric": "250 Credits ($2.50 / KSh 250) · 100% Ad-Free",
             "deliverables": [
                 "Universal 250 TM Credits Floor Pack",
                 "Lossless FLAC Stream Access"
             ],
             "features": [
-                "Universal floor pack: 250 TM Credits loaded to your account balance (250 KES / $2.50 USD)",
-                "Tip your favorite artists and vocalists directly with 1 tap",
-                "Unlock exclusive single stems, lossless track downloads, and secret drops",
-                "Full lossless FLAC web streaming across mobile and desktop",
-                "Support independent creators with direct M-Pesa or card reload"
+                "Universal floor pack: 250 TM Credits loaded to your account balance ($2.50 / KSh 250)",
+                "100% ad-free playback with zero audio commercial interruptions",
+                "Tip your favorite artists and podcasters directly with 1 tap",
+                "Smart offline cache on mobile and desktop",
+                "Automatic transition to Always-Free tier if credits reach 0"
             ],
             "is_popular": False,
-            "cta": "Get Starter Pack"
+            "cta": "Get Starter Floor"
         },
         {
             "role": "consumer",
-            "slug": "listener-vip",
-            "name": "TuneStream VIP Audiophile",
-            "tier_badge": "Most Popular",
+            "slug": "growth-pack",
+            "name": "Music & Podcast Fan Pack",
+            "tier_badge": "Fan Favorite",
             "price_usd": 5.00,
             "billing_period": "one-time credit reload",
             "credits": 500,
-            "key_metric": "Ad-Free Lossless Audio · 500 Credits Load",
+            "key_metric": "500 Credits ($5.00 / KSh 500) · Offline Cache",
             "deliverables": [
-                "Zero Interstitial Ads",
-                "Uncompressed FLAC / Studio Playback"
+                "8GB Smart Offline Storage",
+                "WhatsApp Release Alerts"
             ],
             "features": [
-                "100% ad-free playback with zero audio interstitial interruptions",
-                "Studio-quality 24-bit uncompressed FLAC audio streaming",
-                "500 unified credits load to tip artists, unlock singles, or purchase stems",
-                "Offline cache playback support across mobile and desktop browsers",
-                "Dynamic track lyrics, producer liner notes, and synthesizer gear specs",
-                "Support creators with higher royalty payouts per stream"
+                "500 non-expiring unified credits load ($5.00 / KSh 500)",
+                "100% ad-free 24-bit / 96kHz FLAC lossless music & podcasts",
+                "8GB smart offline mobile & desktop caching",
+                "Direct fan tips and WhatsApp release notifications",
+                "Reverts seamlessly to Always-Free tier if credits deplete"
             ],
-            "is_popular": True,
-            "cta": "Get TuneStream VIP"
+            "is_popular": False,
+            "cta": "Get Growth Pack"
         },
         {
             "role": "consumer",
-            "slug": "listener-patron",
-            "name": "Patron of the Arts",
-            "tier_badge": "Culture Builder",
+            "slug": "pro-maven",
+            "name": "TuneStream VIP Audiophile",
+            "tier_badge": "Most Popular",
             "price_usd": 10.00,
             "billing_period": "one-time credit reload",
             "credits": 1000,
-            "key_metric": "1,000 Credits Load · VIP Concert Passes",
+            "key_metric": "1,000 Credits ($10.00 / KSh 1,000) · Bit-Perfect DAC",
             "deliverables": [
-                "Creator Live World Exclusive Drops",
-                "Early Album Stream Access"
+                "Bit-Perfect DAC Output",
+                "Permanent Offline Downloads"
             ],
             "features": [
-                "Exclusive verified Patron badge displayed on creator chats and live drops",
-                "Early listening access to unreleased album cuts 7 days before general public",
-                "1,000 unified credits load for concert tickets, vinyl merch, and digital passes",
-                "Priority booking on artist live world tours with digital QR passes",
-                "Direct patron Q&A channels with favorite producers and vocalists",
-                "Direct contribution to independent creator development funds"
+                "1,000 non-expiring unified credits load ($10.00 / KSh 1,000)",
+                "Bit-perfect DAC output & 10-band audiophile studio EQ",
+                "Download lossless tracks, albums & podcast episodes to keep",
+                "VIP Supporter badge on Artist & Podcaster EPK walls",
+                "Early access to live concert tickets and secret drops"
+            ],
+            "is_popular": True,
+            "cta": "Get VIP Audiophile"
+        },
+        {
+            "role": "consumer",
+            "slug": "studio-master",
+            "name": "Duo & Friends Pack",
+            "tier_badge": "2 Listener Profiles",
+            "price_usd": 50.00,
+            "billing_period": "one-time credit reload",
+            "credits": 5000,
+            "key_metric": "5,000 Credits ($50.00 / KSh 5,000) · 2 Profiles",
+            "deliverables": [
+                "2 Private Listener Profiles",
+                "Shared Duo Mix Playlist"
+            ],
+            "features": [
+                "5,000 Shared Listener Credits (100% Ad-Free for both)",
+                "2 private listener profiles with separate music & podcast libraries",
+                "Auto-generated Shared Duo Mix playlist",
+                "8GB smart offline storage per listener device",
+                "Reverts seamlessly to Always-Free tier when credits reach 0"
             ],
             "is_popular": False,
-            "cta": "Become a Patron"
+            "cta": "Get Duo Pack"
+        },
+        {
+            "role": "consumer",
+            "slug": "label-team-starter",
+            "name": "Family & Household Vault",
+            "tier_badge": "Up to 6 Accounts",
+            "price_usd": 75.00,
+            "billing_period": "one-time credit reload",
+            "credits": 7500,
+            "key_metric": "7,500 Credits ($75.00 / KSh 7,500) · Household Vault",
+            "deliverables": [
+                "Up to 6 Individual Accounts",
+                "Multi-Room Casting & Parental Filter"
+            ],
+            "features": [
+                "7,500 Household Credits for up to 6 accounts (KSh 7,500 / $75.00)",
+                "100% Ad-Free music & podcast streaming for the whole house",
+                "Blended Family Mix crate & parental lyrics filter",
+                "Multi-room Hi-Fi casting (Sonos, AirPlay 2, CarPlay)",
+                "Automatic transition to Always-Free tier if credits hit 0"
+            ],
+            "is_popular": False,
+            "cta": "Get Household Vault"
         }
     ],
     "podcaster": [
         {
             "role": "podcaster",
-            "slug": "podcaster-starter",
+            "slug": "podcaster-free",
             "name": "Starter Cast Pool",
             "tier_badge": "Free Forever",
             "price_usd": 0.0,
-            "billing_period": "forever free starter credits",
+            "billing_period": "free access",
             "credits": 50,
-            "key_metric": "5 Hours Audio Hosting · Fast RSS Feed",
+            "key_metric": "5 Hours Audio Hosting · 50 Free Signup Credits",
             "deliverables": [
                 "Fast RSS 2.0 Global Feed Syndication",
                 "TuneStream Web Player Embed Code"
@@ -546,48 +720,116 @@ DEFAULT_ROLE_TIERS: Dict[str, List[Dict[str, Any]]] = {
         },
         {
             "role": "podcaster",
+            "slug": "podcaster-starter",
+            "name": "Starter Host Floor",
+            "tier_badge": "Accessible Floor",
+            "price_usd": 2.50,
+            "billing_period": "one-time credit reload",
+            "credits": 250,
+            "key_metric": "250 Credits ($2.50 / KSh 250) · Studio Sound Leveling",
+            "deliverables": [
+                "Studio Sound Leveling",
+                "Live Media Kit Link"
+            ],
+            "features": [
+                "250 non-expiring unified credits load ($2.50 / KSh 250)",
+                "Studio-grade sound leveling: crisp, balanced voices on all devices",
+                "Instant voice-to-text transcripts & chapter markers (single episode)",
+                "Live Media Kit link to share verified download counts with sponsors",
+                "Direct listener tipping via M-Pesa or card with 100% creator retention"
+            ],
+            "is_popular": False,
+            "cta": "Get Starter Floor"
+        },
+        {
+            "role": "podcaster",
+            "slug": "podcaster-growth",
+            "name": "Growth Show Host",
+            "tier_badge": "Active Show",
+            "price_usd": 5.00,
+            "billing_period": "one-time credit reload",
+            "credits": 500,
+            "key_metric": "500 Credits ($5.00 / KSh 500) · WhatsApp Alerts & Transcripts",
+            "deliverables": [
+                "WhatsApp Listener Alerts",
+                "Dynamic Ad Insertion (DAI)"
+            ],
+            "features": [
+                "500 non-expiring unified credits load ($5.00 / KSh 500)",
+                "WhatsApp automated listener alerts for newly published episodes",
+                "Multi-episode automated audio cleanup and dynamic voice isolation",
+                "Split Cascade automatic payouts to co-hosts, producers & editors",
+                "Server-side dynamic ad insertion (DAI) monetization enabled"
+            ],
+            "is_popular": False,
+            "cta": "Get Growth Pack"
+        },
+        {
+            "role": "podcaster",
             "slug": "podcaster-studio",
             "name": "Studio Pro Host",
             "tier_badge": "Most Popular",
-            "price_usd": 19.0,
+            "price_usd": 10.00,
             "billing_period": "one-time credit reload",
-            "credits": 250,
-            "key_metric": "25 Hours Studio Sound · Built-In Sponsor Ads",
+            "credits": 1000,
+            "key_metric": "1,000 Credits ($10.00 / KSh 1,000) · Built-In Sponsor Ads",
             "deliverables": [
-                "Server-Side Dynamic Ad Insertion (DAI)",
-                "Cryptographically Certified Show Media Kit"
+                "Corporate Sponsor Ad Flight Bidding",
+                "Custom Branded Player Embed"
             ],
             "features": [
-                "Studio-grade sound leveling: voices sound crisp, loud, and balanced everywhere",
-                "Earn from sponsors: automatically play relevant ads to your listeners",
-                "Live Media Kit: share your verified download stats with brands in one link",
-                "Automatic team payouts: send co-hosts and producers their share via M-Pesa or bank",
-                "Instant voice-to-text transcripts and clickable episode chapter markers",
-                "250 credits reload with zero monthly fees — only pay when you need credits"
+                "1,000 non-expiring unified credits load ($10.00 / KSh 1,000)",
+                "Priority matching with Corporate Brand Sponsors looking for ad spots",
+                "Custom podcast web player embed with your brand links & sponsor banners",
+                "Automated team payouts: co-hosts & editors paid automatically via M-Pesa/bank",
+                "Lossless 24-bit podcast episode archive and uncompressed stems backup",
+                "Full media kit analytics exports for sponsor RFP proposals"
             ],
             "is_popular": True,
             "cta": "Go Studio Pro"
         },
         {
             "role": "podcaster",
-            "slug": "podcaster-network",
-            "name": "Network & Syndicate",
-            "tier_badge": "Multi-Show Suite",
-            "price_usd": 59.0,
+            "slug": "podcaster-scale",
+            "name": "Studio Network Pack",
+            "tier_badge": "Multi-Show Scale",
+            "price_usd": 50.00,
             "billing_period": "one-time credit reload",
-            "credits": 850,
-            "key_metric": "Unlimited Shows · Priority Sponsor Matching",
+            "credits": 5000,
+            "key_metric": "5,000 Credits ($50.00 / KSh 5,000) · Multi-Show Hosting",
             "deliverables": [
-                "Multi-Show Network Management Dashboard",
-                "Corporate Sponsor Ad Flight Bidding Access"
+                "Multi-Show Network Management",
+                "Escrow Guest Agreements"
             ],
             "features": [
-                "Manage multiple podcasts and channels all in one simple account",
-                "Priority access to corporate brand sponsors looking to book ad campaigns",
-                "Branded web player with your own links and sponsor promotional banners",
-                "Easy guest booking calendar and remote recording connections",
-                "Direct listener tipping: fans can tip you via M-Pesa or card with 0% platform take",
-                "850 credits reload and dedicated audio engineering support (no expiry)"
+                "5,000 non-expiring unified credits load ($50.00 / KSh 5,000)",
+                "Manage up to 5 individual podcast shows under a single network dashboard",
+                "Cross-show sponsor campaigns and unified audience demographics",
+                "Escrow contract agreements for guest appearances and celebrity co-hosts",
+                "Direct sponsor ad flight bidding and dynamic preroll/midroll insertion"
+            ],
+            "is_popular": False,
+            "cta": "Get Studio Network"
+        },
+        {
+            "role": "podcaster",
+            "slug": "podcaster-network",
+            "name": "Syndicate & Media Suite",
+            "tier_badge": "Network & Syndicate",
+            "price_usd": 75.00,
+            "billing_period": "one-time credit reload",
+            "credits": 7500,
+            "key_metric": "7,500 Credits ($75.00 / KSh 7,500) · Enterprise Syndicate",
+            "deliverables": [
+                "Enterprise Broadcast Syndication",
+                "Dedicated Audio Engineer Support"
+            ],
+            "features": [
+                "7,500 non-expiring unified credits load ($75.00 / KSh 7,500)",
+                "Unlimited shows and channels with multi-seat producer & host permissions",
+                "Direct API webhooks for enterprise radio & broadcast syndication",
+                "Priority access to corporate brand sponsors and campaign agencies",
+                "Dedicated audio engineer liaison and customized broadcast compliance"
             ],
             "is_popular": False,
             "cta": "Launch Network Suite"
@@ -1023,6 +1265,29 @@ def get_user_role_workspace(role: str, request: Request):
             "intermaven-smart-crm", "intermaven-social-ai"
         ],
         "media_house": [
+        {
+            "role": "media_house",
+            "slug": "media-starter",
+            "name": "Community Radio & Webcaster Floor",
+            "tier_badge": "Accessible Floor",
+            "price_usd": 2.50,
+            "billing_period": "one-time credit reload",
+            "credits": 250,
+            "key_metric": "250 Credits ($2.50 / KSh 250) · 250 Playlogs Audit",
+            "deliverables": [
+                "Community Station Playlog Ingest",
+                "Basic Metadata Discrepancy Flagging"
+            ],
+            "features": [
+                "250 non-expiring unified credits load ($2.50 / KSh 250)",
+                "Auditing and track recognition for up to 250 broadcast playlog spins",
+                "Automated track recognition matching playlogs to verified ISRC & CAE metadata",
+                "Flag missing publishing shares and unregistered works before reporting",
+                "Zero monthly subscriptions — test station compliance easily"
+            ],
+            "is_popular": False,
+            "cta": "Get Community Station Floor"
+        },
             "corporate-ads", "sync-marketplace", "intermaven-smart-crm", 
             "intermaven-social-ai"
         ],

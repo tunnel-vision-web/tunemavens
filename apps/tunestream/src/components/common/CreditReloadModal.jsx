@@ -4,81 +4,13 @@ import {
   RiBankCardFill, RiShieldCheckFill, RiArrowRightLine, RiAlertFill,
   RiRefreshFill, RiFlashlightFill, RiLockFill, RiGlobalFill
 } from 'react-icons/ri';
+import {
+  CREDIT_LOAD_PACKAGES,
+  CREDIT_EXCHANGE_RATE,
+  formatCreditPrice
+} from '../../lib/pricingPlans.js';
 
-export const CREDIT_LOAD_PACKAGES = [
-  {
-    id: 'indie-label-load',
-    name: 'Indie Imprint Load',
-    targetRole: 'label',
-    credits: 1000,
-    priceUsd: 99.0,
-    priceKes: 12870,
-    badge: 'Label Starter',
-    badgeColor: '#a855f7',
-    desc: 'Unlocks 3 collaborator seats, 5 artists, and full Split Cascade engine.',
-    features: ['3 Collaborator Seats', '5 Artists', 'Split Cascade Math', 'Pre-Cleared Sync Hub']
-  },
-  {
-    id: 'scale-label-load',
-    name: 'Scale Operations Load',
-    targetRole: 'label',
-    credits: 3500,
-    priceUsd: 299.0,
-    priceKes: 38870,
-    badge: 'Most Popular',
-    badgeColor: '#0ea5e9',
-    desc: 'Unlocks 10 collaborator seats, 25 artists, and multi-seat A&R/Accounting logins.',
-    features: ['10 Collaborator Seats', '25 Artists', 'Multi-Seat Staff Roles', 'Priority Sync Pitching']
-  },
-  {
-    id: 'enterprise-label-load',
-    name: 'Enterprise Conglomerate Load',
-    targetRole: 'label',
-    credits: 10000,
-    priceUsd: 799.0,
-    priceKes: 103870,
-    badge: 'Unlimited Scale',
-    badgeColor: '#10b981',
-    desc: 'Unlocks unlimited collaborator seats, unlimited signed artists, and enterprise ERP API webhooks.',
-    features: ['Unlimited Team Seats', 'Unlimited Signed Artists', 'Direct Rail Bulk Payouts', 'White-Glove DDEX Ingestion']
-  },
-  {
-    id: 'creator-starter',
-    name: 'Quick Top-Up',
-    targetRole: 'creator',
-    credits: 250,
-    priceUsd: 25.0,
-    priceKes: 3250,
-    badge: 'Creator Essential',
-    badgeColor: '#06b6d4',
-    desc: 'Non-expiring credits for EPK builder customisation, AI mastering, and scene tag pitching.',
-    features: ['EPK Builder Web World', 'AI Mastering (5 tracks)', 'Sync Brief Submissions']
-  },
-  {
-    id: 'pro-creator-load',
-    name: 'Pro Growth Top-Up',
-    targetRole: 'creator',
-    credits: 600,
-    priceUsd: 50.0,
-    priceKes: 6500,
-    badge: 'Pro Artist',
-    badgeColor: '#f59e0b',
-    desc: 'Ample credits for regular release schedules, Social AI marketing, and custom subdomain routing.',
-    features: ['Social AI Studio Generation', 'Custom Subdomain Routing', 'Multi-Track Stem Distribution']
-  },
-  {
-    id: 'studio-master-load',
-    name: 'Studio Producer Pack',
-    targetRole: 'studio',
-    credits: 1500,
-    priceUsd: 120.0,
-    priceKes: 15600,
-    badge: 'Studio Grade',
-    badgeColor: '#ec4899',
-    desc: 'Heavy-duty volume for lossless stems storage, escrow contracts, and DJ pool drop clearances.',
-    features: ['Lossless Multitrack Stems', 'Smart Escrow Contracts', 'DJ Promo Pool Clearance']
-  }
-];
+export { CREDIT_LOAD_PACKAGES, CREDIT_EXCHANGE_RATE, formatCreditPrice };
 
 export default function CreditReloadModal({
   isOpen,
@@ -95,9 +27,9 @@ export default function CreditReloadModal({
       if (found) return found;
     }
     if (sessionUser?.role === 'label') {
-      return CREDIT_LOAD_PACKAGES[1]; // Scale Label
+      return CREDIT_LOAD_PACKAGES.find(p => p.id === 'label-team-starter') || CREDIT_LOAD_PACKAGES[4];
     }
-    return CREDIT_LOAD_PACKAGES[3]; // Quick Top-Up 250
+    return CREDIT_LOAD_PACKAGES[0]; // Starter Floor (250 Credits / KSH 250 / $2.50)
   });
 
   const [paymentMethod, setPaymentMethod] = useState('mpesa'); // 'mpesa' | 'card' | 'bank'
@@ -113,7 +45,7 @@ export default function CreditReloadModal({
 
   // Custom credits input mode
   const [isCustomMode, setIsCustomMode] = useState(false);
-  const [customCredits, setCustomCredits] = useState(500);
+  const [customCredits, setCustomCredits] = useState(250);
 
   // Transaction execution states
   const [processingState, setProcessingState] = useState('idle'); // 'idle' | 'initiating' | 'awaiting_pin' | 'verifying' | 'success' | 'error'
@@ -132,10 +64,10 @@ export default function CreditReloadModal({
 
   const currentCredits = sessionUser?.credits ?? 0;
 
-  // Resolved pricing calculations
-  const activeCredits = isCustomMode ? Math.max(50, parseInt(customCredits) || 50) : selectedPackage.credits;
-  const activeUsd = isCustomMode ? (activeCredits * 0.10) : selectedPackage.priceUsd;
-  const activeKes = isCustomMode ? Math.round(activeCredits * 13) : selectedPackage.priceKes;
+  // Resolved pricing calculations - strict 1:1 single source of truth
+  const activeCredits = isCustomMode ? Math.max(250, parseInt(customCredits) || 250) : selectedPackage.credits;
+  const activeUsd = isCustomMode ? (activeCredits * CREDIT_EXCHANGE_RATE.USD_PER_CREDIT) : selectedPackage.priceUsd;
+  const activeKes = isCustomMode ? Math.round(activeCredits * CREDIT_EXCHANGE_RATE.KES_PER_CREDIT) : selectedPackage.priceKes;
 
   const handleSelectPackage = (pkg) => {
     setIsCustomMode(false);
@@ -302,11 +234,11 @@ export default function CreditReloadModal({
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#090e24',
+          background: '#0a0f1d',
           border: '1px solid #1e293b',
-          borderRadius: '4px',
-          maxWidth: '720px',
+          borderRadius: '3px',
           width: '100%',
+          maxWidth: '780px',
           maxHeight: '92vh',
           overflowY: 'auto',
           boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8)',
@@ -422,7 +354,7 @@ export default function CreditReloadModal({
             <div style={{
               background: '#064e3b',
               border: '1.5px solid #10b981',
-              borderRadius: '4px',
+              borderRadius: '3px',
               padding: '28px',
               textAlign: 'center',
               display: 'flex',
@@ -448,29 +380,30 @@ export default function CreditReloadModal({
                   +{receiptResult.creditsAdded.toLocaleString()} Credits Successfully Loaded!
                 </h3>
                 <p style={{ fontSize: '13.5px', color: '#a7f3d0', margin: '6px 0 0' }}>
-                  Your reload payment of <strong>{receiptResult.amountFormatted}</strong> has been cleared and applied to your account.
+                  Settlement verified on rail <strong>{receiptResult.receiptNumber}</strong> at {receiptResult.timestamp}.
                 </p>
               </div>
 
               <div style={{
                 background: '#022c22',
-                padding: '14px 24px',
-                borderRadius: '3px',
                 border: '1px solid #059669',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: '16px',
+                borderRadius: '3px',
+                padding: '16px 24px',
                 width: '100%',
-                maxWidth: '480px',
+                maxWidth: '420px',
                 textAlign: 'left'
               }}>
-                <div>
-                  <span style={{ fontSize: '10.5px', color: '#6ee7b7', textTransform: 'uppercase', fontWeight: 700 }}>Receipt Code</span>
-                  <div style={{ fontSize: '12.5px', color: '#ffffff', fontWeight: 800, fontFamily: 'monospace' }}>{receiptResult.receiptNumber}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12.5px', color: '#d1fae5' }}>
+                  <span>Payment Amount:</span>
+                  <strong>{receiptResult.amountFormatted}</strong>
                 </div>
-                <div>
-                  <span style={{ fontSize: '10.5px', color: '#6ee7b7', textTransform: 'uppercase', fontWeight: 700 }}>Updated Balance</span>
-                  <div style={{ fontSize: '14px', color: '#00f0ff', fontWeight: 900 }}>{receiptResult.newBalance.toLocaleString()} Credits</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12.5px', color: '#d1fae5' }}>
+                  <span>Credits Credited:</span>
+                  <strong>+{receiptResult.creditsAdded.toLocaleString()} TM Credits</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #065f46', paddingTop: '8px', fontSize: '14px', color: '#ffffff' }}>
+                  <span>New Balance:</span>
+                  <strong style={{ color: '#34d399' }}>{receiptResult.newBalance.toLocaleString()} TM Credits</strong>
                 </div>
               </div>
 
@@ -481,10 +414,10 @@ export default function CreditReloadModal({
                   background: '#10b981',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '12px 28px',
+                  padding: '12px 30px',
                   borderRadius: '3px',
-                  fontWeight: 800,
-                  fontSize: '13.5px',
+                  fontWeight: 900,
+                  fontSize: '13px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -502,7 +435,7 @@ export default function CreditReloadModal({
             <div style={{
               background: '#042f2e',
               border: '1.5px solid #00f0ff',
-              borderRadius: '4px',
+              borderRadius: '3px',
               padding: '24px',
               textAlign: 'center',
               display: 'flex',
@@ -524,7 +457,7 @@ export default function CreditReloadModal({
               <div style={{
                 background: '#0f172a',
                 border: '1px solid #334155',
-                borderRadius: '8px',
+                borderRadius: '3px',
                 padding: '16px',
                 maxWidth: '360px',
                 width: '100%',
@@ -640,36 +573,32 @@ export default function CreditReloadModal({
                                 color: pkg.badgeColor,
                                 background: `${pkg.badgeColor}22`,
                                 padding: '2px 6px',
-                                borderRadius: '2px'
+                                borderRadius: '3px'
                               }}>
                                 {pkg.badge}
                               </span>
-                              {isSelected && <RiCheckLine size={16} style={{ color: '#00f0ff' }} />}
+                              {isSelected && <RiCheckLine size={15} style={{ color: '#00f0ff' }} />}
                             </div>
 
-                            <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', marginBottom: '2px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px' }}>
                               {pkg.name}
-                            </div>
-                            <div style={{ fontSize: '18px', fontWeight: 900, color: '#00f0ff' }}>
+                            </h4>
+
+                            <div style={{ fontSize: '18px', fontWeight: 900, color: '#00f0ff', margin: '4px 0' }}>
                               +{pkg.credits.toLocaleString()} <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>Credits</span>
                             </div>
-                            <div style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 8px', lineHeight: 1.3 }}>
+
+                            <p style={{ fontSize: '11.5px', color: '#94a3b8', margin: '4px 0 10px', lineHeight: 1.4 }}>
                               {pkg.desc}
-                            </div>
+                            </p>
                           </div>
 
-                          <div style={{
-                            borderTop: '1px solid #334155',
-                            paddingTop: '8px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'baseline'
-                          }}>
-                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#f1f5f9' }}>
-                              ${pkg.priceUsd} <span style={{ fontSize: '10px', color: '#64748b' }}>USD</span>
-                            </span>
-                            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
+                          <div style={{ borderTop: '1px solid #1e293b', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                            <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#ffffff' }}>
                               KES {pkg.priceKes.toLocaleString()}
+                            </span>
+                            <span style={{ fontSize: '11px', color: '#64748b' }}>
+                              ${pkg.priceUsd.toFixed(2)} USD
                             </span>
                           </div>
                         </div>
@@ -677,29 +606,30 @@ export default function CreditReloadModal({
                     })}
                   </div>
                 ) : (
-                  /* Custom Credits Input Box */
+                  /* Custom input slider/field */
                   <div style={{
                     background: '#0f172a',
-                    border: '1px solid #00f0ff',
+                    border: '1.5px solid #00f0ff',
                     borderRadius: '3px',
-                    padding: '16px'
+                    padding: '18px'
                   }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px', alignItems: 'center' }}>
                       <div>
-                        <label style={{ fontSize: '11.5px', color: '#94a3b8', display: 'block', marginBottom: '4px', fontWeight: 700 }}>
-                          Desired Number of Credits (Min 50)
+                        <label style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff', display: 'block', marginBottom: '6px' }}>
+                          Enter Desired Credit Amount (Min. 250):
                         </label>
                         <input
                           type="number"
-                          min="50"
+                          min="250"
                           step="50"
                           value={customCredits}
-                          onChange={e => setCustomCredits(Math.max(50, parseInt(e.target.value) || 50))}
+                          onChange={e => setCustomCredits(Math.max(250, parseInt(e.target.value) || 250))}
                           className="form-control"
                           style={{
                             width: '100%',
                             background: '#090e24',
                             border: '1px solid #334155',
+                            borderRadius: '3px',
                             color: '#00f0ff',
                             fontSize: '16px',
                             fontWeight: 800,
@@ -709,10 +639,10 @@ export default function CreditReloadModal({
                       </div>
                       <div>
                         <span style={{ fontSize: '11.5px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
-                          Calculated Rate ($0.10 / credit · KES 13 / credit)
+                          Calculated Rate (1 Credit = KES 1.00 · $0.01 USD)
                         </span>
                         <div style={{ fontSize: '18px', fontWeight: 900, color: '#ffffff' }}>
-                          ${(customCredits * 0.10).toFixed(2)} USD <span style={{ fontSize: '13px', color: '#10b981', marginLeft: '6px' }}>/ KES {(customCredits * 13).toLocaleString()}</span>
+                          ${(customCredits * CREDIT_EXCHANGE_RATE.USD_PER_CREDIT).toFixed(2)} USD <span style={{ fontSize: '13px', color: '#10b981', marginLeft: '6px' }}>/ KES {Math.round(customCredits * CREDIT_EXCHANGE_RATE.KES_PER_CREDIT).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -831,7 +761,7 @@ export default function CreditReloadModal({
                           value={cardNumber}
                           onChange={e => setCardNumber(e.target.value)}
                           className="form-control"
-                          style={{ width: '100%', background: '#090e24', border: '1px solid #334155', color: '#fff', padding: '8px', fontSize: '12.5px' }}
+                          style={{ width: '100%', background: '#090e24', border: '1px solid #334155', color: '#fff', padding: '8px', fontSize: '12.5px', borderRadius: '3px' }}
                         />
                       </div>
                       <div>
@@ -841,7 +771,7 @@ export default function CreditReloadModal({
                           value={cardExpiry}
                           onChange={e => setCardExpiry(e.target.value)}
                           className="form-control"
-                          style={{ width: '100%', background: '#090e24', border: '1px solid #334155', color: '#fff', padding: '8px', fontSize: '12.5px' }}
+                          style={{ width: '100%', background: '#090e24', border: '1px solid #334155', color: '#fff', padding: '8px', fontSize: '12.5px', borderRadius: '3px' }}
                         />
                       </div>
                       <div>
@@ -851,7 +781,7 @@ export default function CreditReloadModal({
                           value={cardCvc}
                           onChange={e => setCardCvc(e.target.value)}
                           className="form-control"
-                          style={{ width: '100%', background: '#090e24', border: '1px solid #334155', color: '#fff', padding: '8px', fontSize: '12.5px' }}
+                          style={{ width: '100%', background: '#090e24', border: '1px solid #334155', color: '#fff', padding: '8px', fontSize: '12.5px', borderRadius: '3px' }}
                         />
                       </div>
                     </div>
@@ -897,7 +827,7 @@ export default function CreditReloadModal({
                   ) : paymentMethod === 'mpesa' ? (
                     <>
                       <RiSmartphoneFill size={18} />
-                      <span>Send M-Pesa STK Push Prompt (KES {activeKes.toLocaleString()} → +{activeCredits.toLocaleString()} Credits)</span>
+                      <span>Send M-Pesa STK Push (KES {activeKes.toLocaleString()} → +{activeCredits.toLocaleString()} Credits)</span>
                     </>
                   ) : (
                     <>

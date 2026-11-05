@@ -32,77 +32,111 @@ import listenLogo from '../../../assets/logos/tunestream-logo.png'
 const FALLBACK_CONSUMER_RATES = [
   {
     slug: 'listener-free',
-    name: 'Listener Free',
+    name: 'Listener Free (Always Free)',
     tier_badge: 'Ad-Supported',
     price_usd: 0.0,
-    billing_period: 'month',
-    credits: 0,
-    key_metric: 'High-Fidelity Audio Streaming',
+    billing_period: 'always free',
+    credits: 150,
+    key_metric: 'High-Fidelity Audio · 150 Welcome Credits',
     features: [
-      'Stream thousands of independent music tracks across East Africa and global scenes',
-      'Full-featured 60fps waveform player with live playlist queueing',
-      'Follow favorite artists and receive real-time release notifications',
+      'Always Free forever — supported by Corporate Ad spots between tracks',
+      'Includes 150 Welcome Credits on signup to test ad-free FLAC playback',
+      'Full access to music, podcasts, and personal playlist crates',
       '1-tap direct tipping to support creators with M-Pesa or card',
-      'Create and share unlimited public and private music playlists'
+      'Automatic fallback: Paid accounts seamlessly transition here at 0 credits'
     ],
     is_popular: false,
     cta: 'Listen Free'
   },
   {
-    slug: 'listener-starter',
-    name: 'Listener Fan Starter',
-    tier_badge: 'Starter Floor',
+    slug: 'starter-floor',
+    name: 'Casual Listener Floor',
+    tier_badge: 'Accessible Floor',
     price_usd: 2.50,
-    billing_period: 'one-time',
+    billing_period: 'one-time credit reload',
     credits: 250,
-    key_metric: '250 Credits · Direct Artist Tipping',
+    key_metric: '250 Credits ($2.50 / KSh 250) · 100% Ad-Free',
     features: [
-      'Universal floor pack: 250 TM Credits loaded to your account balance',
-      'Tip your favorite artists and vocalists directly with 1 tap',
-      'Unlock exclusive single stems, lossless track downloads, and secret drops',
-      'Full lossless FLAC web streaming across mobile and desktop',
-      'Support independent creators with direct M-Pesa or card reload'
+      'Universal floor pack: 250 TM Credits loaded to your account balance ($2.50 / KSh 250)',
+      '100% ad-free playback with zero audio commercial interruptions',
+      'Tip your favorite artists and podcasters directly with 1 tap',
+      'Smart offline cache on mobile and desktop',
+      'Automatic transition to Always-Free tier if credits reach 0'
     ],
     is_popular: false,
-    cta: 'Get Starter Pack'
+    cta: 'Get Starter Floor'
   },
   {
-    slug: 'listener-vip',
+    slug: 'growth-pack',
+    name: 'Music & Podcast Fan Pack',
+    tier_badge: 'Fan Favorite',
+    price_usd: 5.00,
+    billing_period: 'one-time credit reload',
+    credits: 500,
+    key_metric: '500 Credits ($5.00 / KSh 500) · Offline Cache',
+    features: [
+      '500 non-expiring unified credits load ($5.00 / KSh 500)',
+      '100% ad-free 24-bit / 96kHz FLAC lossless music & podcasts',
+      '8GB smart offline mobile & desktop caching',
+      'Direct fan tips and WhatsApp release notifications',
+      'Reverts seamlessly to Always-Free tier if credits deplete'
+    ],
+    is_popular: false,
+    cta: 'Get Growth Pack'
+  },
+  {
+    slug: 'pro-maven',
     name: 'TuneStream VIP Audiophile',
     tier_badge: 'Most Popular',
-    price_usd: 5.00,
-    billing_period: 'month',
-    credits: 500,
-    key_metric: 'Ad-Free Lossless Audio · 500 Credits/mo',
+    price_usd: 10.00,
+    billing_period: 'one-time credit reload',
+    credits: 1000,
+    key_metric: '1,000 Credits ($10.00 / KSh 1,000) · Bit-Perfect DAC',
     features: [
-      '100% ad-free playback with zero audio interstitial interruptions',
-      'Studio-quality 24-bit uncompressed FLAC audio streaming',
-      '500 monthly TM credits to tip artists, unlock singles, or purchase stems',
-      'Offline cache playback support across mobile and desktop browsers',
-      'Dynamic track lyrics, producer liner notes, and synthesizer gear specs',
-      'Support creators with higher royalty payouts per stream'
+      '1,000 non-expiring unified credits load ($10.00 / KSh 1,000)',
+      'Bit-perfect DAC output & 10-band audiophile studio EQ',
+      'Download lossless tracks, albums & podcast episodes to keep',
+      'VIP Supporter badge on Artist & Podcaster EPK walls',
+      'Early access to live concert tickets and secret drops'
     ],
     is_popular: true,
-    cta: 'Get TuneStream VIP'
+    cta: 'Get VIP Audiophile'
   },
   {
-    slug: 'listener-patron',
-    name: 'Patron of the Arts',
-    tier_badge: 'Culture Builder',
-    price_usd: 10.00,
-    billing_period: 'month',
-    credits: 1000,
-    key_metric: '1,000 Credits/mo · VIP Concert Passes',
+    slug: 'studio-master',
+    name: 'Duo & Friends Pack',
+    tier_badge: '2 Listener Profiles',
+    price_usd: 50.00,
+    billing_period: 'one-time credit reload',
+    credits: 5000,
+    key_metric: '5,000 Credits ($50.00 / KSh 5,000) · 2 Profiles',
     features: [
-      'Exclusive verified Patron badge displayed on creator chats and live drops',
-      'Early listening access to unreleased album cuts 7 days before general public',
-      '1,000 monthly TM credits for concert tickets, vinyl merch, and digital passes',
-      'Priority booking on artist live world tours with digital QR passes',
-      'Direct patron Q&A channels with favorite producers and vocalists',
-      'Direct contribution to independent creator development funds'
+      '5,000 Shared Listener Credits (100% Ad-Free for both)',
+      '2 private listener profiles with separate music & podcast libraries',
+      'Auto-generated Shared Duo Mix playlist',
+      '8GB smart offline storage per listener device',
+      'Reverts seamlessly to Always-Free tier when credits reach 0'
     ],
     is_popular: false,
-    cta: 'Become a Patron'
+    cta: 'Get Duo Pack'
+  },
+  {
+    slug: 'label-team-starter',
+    name: 'Family & Household Vault',
+    tier_badge: 'Up to 6 Accounts',
+    price_usd: 75.00,
+    billing_period: 'one-time credit reload',
+    credits: 7500,
+    key_metric: '7,500 Credits ($75.00 / KSh 7,500) · Household Vault',
+    features: [
+      '7,500 Household Credits for up to 6 accounts (KSh 7,500 / $75.00)',
+      '100% Ad-Free music & podcast streaming for the whole house',
+      'Blended Family Mix crate & parental lyrics filter',
+      'Multi-room Hi-Fi casting (Sonos, AirPlay 2, CarPlay)',
+      'Automatic transition to Always-Free tier if credits hit 0'
+    ],
+    is_popular: false,
+    cta: 'Get Household Vault'
   }
 ];
 

@@ -27,64 +27,9 @@ import djDashboardActualEn from '../../../assets/images/dj_dashboard_actual_en.p
 import djDashboardActualSw from '../../../assets/images/dj_dashboard_actual_sw.png'
 import SEO from '../../../components/common/SEO.jsx'
 import tunedjLogo from '../../../assets/logos/tunedj-logo.png'
+import { AUTHORITATIVE_DJ_PACKAGES } from '../../../data/authoritativeRolePricing.js'
 
-const FALLBACK_DJ_RATES = [
-  {
-    slug: 'dj-resident',
-    name: 'Club Resident Load',
-    tier_badge: 'Essential Pool',
-    price_usd: 19.0,
-    billing_period: 'one-time credit reload',
-    credits: 200,
-    key_metric: '50 Lossless Downloads · Clean & Dirty Edits',
-    features: [
-      'Access curated record pools across Afrobeat, Amapiano, Hip Hop, and Dance',
-      'Pre-analyzed tracks with verified BPM, musical key, and Rekordbox cue markers',
-      '50 high-speed track downloads with intro/outro extended edits (non-expiring)',
-      'Compatible with Pioneer Rekordbox, Serato DJ Pro, and Traktor Pro',
-      'Verified DJ identity badge on TuneStream and community forums'
-    ],
-    is_popular: false,
-    cta: 'Join DJ Pool'
-  },
-  {
-    slug: 'dj-touring',
-    name: 'Touring Pro DJ Load',
-    tier_badge: 'Most Popular',
-    price_usd: 49.0,
-    billing_period: 'one-time credit reload',
-    credits: 600,
-    key_metric: 'Unlimited Downloads · Stems & Exclusive Dubplates',
-    features: [
-      'Lossless WAV masters and separated remix stems download pack',
-      'Exclusive unreleased artist dubplates & early club test pressings before public release',
-      'Digital proof clearance hashes protecting your venue and live streams from DMCA strikes',
-      'Direct feedback loop: rate unreleased tracks to send data straight to record label A&Rs',
-      '600 unified credits load for high-priority dubplate requests (zero monthly fees)',
-      'Priority download queue bandwidth for weekend set preparation'
-    ],
-    is_popular: true,
-    cta: 'Go Touring Pro'
-  },
-  {
-    slug: 'dj-headliner',
-    name: 'Headline & Festival Curator Load',
-    tier_badge: 'Taste-Maker',
-    price_usd: 129.0,
-    billing_period: 'one-time credit reload',
-    credits: 1800,
-    key_metric: 'Direct Label Drop Inbox & Radio Mix Distribution',
-    features: [
-      'Personalized promo inbox where top labels send unreleased tracks directly for your sets',
-      'Host verified syndicated mix series & live DJ sessions on TuneStream Web Radio',
-      'Monetize live DJ sets with direct listener tipping and listener tip splits',
-      'VIP access to artist tour soundchecks and festival press rooms',
-      '1,800 unified credits load & personal artist liaison support (zero monthly fees)'
-    ],
-    is_popular: false,
-    cta: 'Apply for Headliner Tier'
-  }
-];
+const FALLBACK_DJ_RATES = AUTHORITATIVE_DJ_PACKAGES;
 
 export default function DjLandingPage({ switcher }) {
   const { formatPrice, language } = useRegion();

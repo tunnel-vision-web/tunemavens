@@ -1140,55 +1140,82 @@ export default function NativeAppLandingView({
           isFree: true
         },
         {
-          id: 'casual-listener',
-          name: 'Casual Listener Pack',
-          badge: 'Ad-Free Top-Up',
-          badgeColor: '#22d3ee',
-          border: '1px solid rgba(34, 211, 238, 0.4)',
-          price: 9.99,
-          priceDisplay: formatPrice ? formatPrice(9.99) : '$9.99',
+          id: 'starter-floor',
+          name: 'Casual Listener Floor',
+          badge: 'Accessible Floor',
+          badgeColor: '#06b6d4',
+          border: '1px solid rgba(6, 182, 212, 0.45)',
+          price: 2.50,
+          priceDisplay: formatPrice ? formatPrice(2.50) : '$2.50',
           period: '/ one-time top-up',
-          subtext: '100% Ad-Free while credits last • Reverts to Free if depleted',
-          desc: '350 Listener Credits. Enjoy 100% ad-free 24-bit lossless music & podcasts, offline caching, and direct artist/podcaster tipping. Transitions back to TuneStream Free when credits reach 0.',
-          credits: 350,
+          subtext: '250 Listener Credits (KSh 250 / $2.50) • Accessible Floor',
+          desc: '250 Listener Credits. Enjoy 100% ad-free 24-bit lossless music & podcasts, offline caching, and direct artist/podcaster tipping. Transitions back to TuneStream Free when credits reach 0.',
+          credits: 250,
           features: [
-            '350 Listener Credits (Zero Corporate Ad interruptions)',
-            'Studio 24-bit / 96kHz FLAC lossless music & podcast audio',
-            '8GB Smart offline mobile & desktop caching',
-            'Tip artists & podcasters directly (100% to creator wallet)',
-            'Graceful fallback to Always-Free Ad-Supported tier at 0 credits'
+            '250 Non-Expiring Listener Credits (KSh 250 / $2.50)',
+            '100% Ad-Free 24-bit / 96kHz FLAC lossless music & podcasts',
+            'Direct artist & podcaster tipping (100% to creator wallet)',
+            'Smart offline cache on mobile and desktop',
+            'Seamless fallback to Always-Free tier if credits reach 0'
           ],
-          cta: 'Top-Up 350 Credits',
+          cta: 'Top-Up 250 Credits',
+          ctaStyle: {
+            background: 'rgba(6, 182, 212, 0.15)',
+            border: '1px solid #06b6d4',
+            color: '#06b6d4'
+          },
+          suggestedPkg: 'starter-floor'
+        },
+        {
+          id: 'growth-pack',
+          name: 'Music & Podcast Fan Pack',
+          badge: 'Fan Favorite',
+          badgeColor: '#22d3ee',
+          border: '1px solid rgba(34, 211, 238, 0.45)',
+          price: 5.00,
+          priceDisplay: formatPrice ? formatPrice(5.00) : '$5.00',
+          period: '/ one-time top-up',
+          subtext: '500 Listener Credits (KSh 500 / $5.00) • 100% Ad-Free',
+          desc: '500 Listener Credits. Ample credits for active daily streaming, offline playlist storage, and tipping multiple creators.',
+          credits: 500,
+          features: [
+            '500 Non-Expiring Listener Credits (KSh 500 / $5.00)',
+            '100% Ad-Free 24-bit / 96kHz FLAC lossless playback',
+            '8GB Smart offline mobile & desktop caching',
+            'Direct fan tips and WhatsApp release notifications',
+            'Reverts seamlessly to Always-Free tier if credits deplete'
+          ],
+          cta: 'Top-Up 500 Credits',
           ctaStyle: {
             background: 'rgba(34, 211, 238, 0.15)',
             border: '1px solid #22d3ee',
             color: '#22d3ee'
           },
-          suggestedPkg: 'casual-listener'
+          suggestedPkg: 'growth-pack'
         },
         {
-          id: 'superfan-audiophile',
+          id: 'pro-maven',
           name: 'Superfan & Audiophile Pack',
           badge: 'Most Popular • Best Value',
           badgeColor: '#00f2fe',
           border: '2px solid #00f2fe',
           boxShadow: '0 0 28px rgba(0, 242, 254, 0.28)',
-          price: 29.99,
-          priceDisplay: formatPrice ? formatPrice(29.99) : '$29.99',
+          price: 10.00,
+          priceDisplay: formatPrice ? formatPrice(10.00) : '$10.00',
           period: '/ one-time top-up',
-          subtext: 'Includes 250 Bonus Credits • 100% Ad-Free Hi-Fi',
-          desc: '1,500 Listener Credits. Built for dedicated music & podcast fans, audiophiles, and concert-goers who want bit-perfect 24-bit sound and zero ad interruptions.',
-          credits: 1500,
+          subtext: '1,000 Listener Credits (KSh 1,000 / $10.00) • Studio Hi-Fi',
+          desc: '1,000 Listener Credits. Built for dedicated music fans and audiophiles who want bit-perfect 24-bit sound, permanent downloads, and VIP fan badges.',
+          credits: 1000,
           popular: true,
           features: [
-            '1,500 Listener Credits (100% Ad-Free playback)',
+            '1,000 Non-Expiring Listener Credits (KSh 1,000 / $10.00)',
             'Bit-perfect DAC output & 10-band audiophile EQ',
             'Download lossless tracks, albums & podcast episodes to keep',
             'VIP Supporter badge on Artist & Podcaster EPK walls',
-            'Early access to live concert tickets & live podcast tapings',
+            'Early access to live concert tickets & secret drops',
             'Automatically reverts to Always-Free tier if credits deplete'
           ],
-          cta: 'Top-Up 1,500 Credits',
+          cta: 'Top-Up 1,000 Credits',
           ctaStyle: {
             background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
             border: 'none',
@@ -1196,18 +1223,18 @@ export default function NativeAppLandingView({
             boxShadow: '0 0 20px rgba(0, 242, 254, 0.45)',
             fontWeight: '900'
           },
-          suggestedPkg: 'superfan-audiophile'
+          suggestedPkg: 'pro-maven'
         },
         {
-          id: 'duo-friends',
+          id: 'studio-master',
           name: 'Duo & Friends Pack',
           badge: '2 Listener Profiles',
-          badgeColor: '#a855f7',
-          border: '1px solid rgba(168, 85, 247, 0.45)',
-          price: 49.99,
-          priceDisplay: formatPrice ? formatPrice(49.99) : '$49.99',
+          badgeColor: '#ec4899',
+          border: '1px solid rgba(236, 72, 153, 0.45)',
+          price: 50.00,
+          priceDisplay: formatPrice ? formatPrice(50.00) : '$50.00',
           period: '/ one-time top-up',
-          subtext: 'Shared Ad-Free credit vault for 2 listeners',
+          subtext: '5,000 Shared Credits (KSh 5,000 / $50.00) • 2 Profiles',
           desc: '5,000 Listener Credits. Share one credit balance across two private listener accounts with blended playlists, ad-free podcasts, and offline storage.',
           credits: 5000,
           features: [
@@ -1219,44 +1246,44 @@ export default function NativeAppLandingView({
           ],
           cta: 'Top-Up 5,000 Credits',
           ctaStyle: {
-            background: 'rgba(168, 85, 247, 0.15)',
-            border: '1px solid #a855f7',
-            color: '#c084fc'
+            background: 'rgba(236, 72, 153, 0.15)',
+            border: '1px solid #ec4899',
+            color: '#f472b6'
           },
-          suggestedPkg: 'duo-friends'
+          suggestedPkg: 'studio-master'
         },
         {
-          id: 'family-household',
+          id: 'label-team-starter',
           name: 'Family & Household Vault',
           badge: 'Up to 6 Listeners',
-          badgeColor: '#f59e0b',
-          border: '1px solid rgba(245, 158, 11, 0.45)',
-          price: 149.99,
-          priceDisplay: formatPrice ? formatPrice(149.99) : '$149.99',
+          badgeColor: '#a855f7',
+          border: '1px solid rgba(168, 85, 247, 0.45)',
+          price: 75.00,
+          priceDisplay: formatPrice ? formatPrice(75.00) : '$75.00',
           period: '/ one-time top-up',
-          subtext: 'Household Ad-Free credit pool for up to 6 members',
-          desc: '25,000 Listener Credits. Power your entire household with up to 6 individual listener accounts, kid-safe filters, and home Hi-Fi casting.',
-          credits: 25000,
+          subtext: '7,500 Shared Credits (KSh 7,500 / $75.00) • Team Tier',
+          desc: '7,500 Listener Credits. Power your entire household with up to 6 individual listener accounts, kid-safe filters, and home Hi-Fi casting.',
+          credits: 7500,
           team: true,
           features: [
-            '25,000 Household Credits for up to 6 accounts',
+            '7,500 Household Credits for up to 6 accounts (KSh 7,500 / $75.00)',
             '100% Ad-Free music & podcast streaming for the whole house',
             'Blended Family Mix crate & parental lyrics filter',
             'Multi-room Hi-Fi casting (Sonos, AirPlay 2, CarPlay)',
             'Automatic transition to Always-Free tier if credits hit 0'
           ],
-          cta: 'Top-Up 25,000 Credits',
+          cta: 'Top-Up 7,500 Credits',
           ctaStyle: {
-            background: 'rgba(245, 158, 11, 0.15)',
-            border: '1px solid #f59e0b',
-            color: '#fbbf24'
+            background: 'rgba(168, 85, 247, 0.15)',
+            border: '1px solid #a855f7',
+            color: '#c084fc'
           },
-          suggestedPkg: 'family-household'
+          suggestedPkg: 'label-team-starter'
         }
       ];
 
       const comparisonMatrix = [
-        { feature: 'Account Cost', starter: '$0 Forever (Always Free)', creator: '$9.99 One-Time Top-Up', pro: '$29.99 One-Time Top-Up', studio: '$49.99+ One-Time Top-Up' },
+        { feature: 'Account Cost', starter: '$0 Forever (Always Free)', creator: '$2.50 Starter Top-Up (KSh 250)', pro: '$10.00 Pro Top-Up (KSh 1,000)', studio: '$50.00+ Studio Top-Up (KSh 5,000+)' },
         { feature: 'Ad Experience', starter: 'Ad-Supported (Corporate Ad Intervals)', creator: '100% Ad-Free (While Credits Active)', pro: '100% Ad-Free (While Credits Active)', studio: '100% Ad-Free (2–6 Listeners)' },
         { feature: 'When Credits Expire / Hit 0', starter: 'Continues Streaming Free (Ad-Supported)', creator: 'Auto-Transitions to Always-Free Tier', pro: 'Auto-Transitions to Always-Free Tier', studio: 'Auto-Transitions to Always-Free Tier' },
         { feature: 'Music & Podcast Quality', starter: 'Standard + 150 Lossless Welcome Credits', creator: 'Lossless 24-Bit / 96kHz FLAC', pro: 'Studio Master 24/96kHz + 10-Band EQ', studio: 'Multi-Room 24/96kHz Hi-Fi' },

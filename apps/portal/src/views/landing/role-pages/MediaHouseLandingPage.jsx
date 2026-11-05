@@ -29,6 +29,24 @@ import tunemediaLogo from '../../../assets/logos/tunemedia-logo.png'
 
 const FALLBACK_MEDIA_RATES = [
   {
+    slug: 'media-starter',
+    name: 'Community Radio & Webcaster Floor',
+    tier_badge: 'Accessible Floor',
+    price_usd: 2.50,
+    billing_period: 'one-time credit reload',
+    credits: 250,
+    key_metric: '250 Credits ($2.50 / KSh 250) · 250 Playlogs Audit',
+    features: [
+      '250 non-expiring unified credits load ($2.50 / KSh 250)',
+      'Auditing and track recognition for up to 250 broadcast playlog spins',
+      'Automated track recognition matching playlogs to verified ISRC & CAE metadata',
+      'Flag missing publishing shares and unregistered works before reporting',
+      'Zero monthly subscriptions — test station compliance easily'
+    ],
+    is_popular: false,
+    cta: 'Get Community Station Floor'
+  },
+  {
     slug: 'media-station',
     name: 'Single Station Load',
     tier_badge: 'Compliance Starter',
