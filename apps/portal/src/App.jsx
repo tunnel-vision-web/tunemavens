@@ -1009,8 +1009,19 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
               <div className="topbar-dropdown-divider" />
 
               <button
+                type="button"
                 className="topbar-menu-item topbar-menu-item-danger"
-                onClick={() => { setAccountOpen(false); onLogout(); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setAccountOpen(false);
+                  if (typeof onLogout === "function") {
+                    onLogout();
+                  } else {
+                    window.location.hash = "/login";
+                    window.location.reload();
+                  }
+                }}
                 data-testid="topbar-menu-logout"
               >
                 <RiLogoutBoxRFill size={14} />
@@ -2334,10 +2345,11 @@ function DashboardView({
                   sessionStorage.removeItem('preferred_dashboard_tab');
                   sessionStorage.removeItem('signup_roles');
                 } catch (_) {}
-                if (typeof onLogout === 'function') {
+                if (typeof onLogout === "function") {
                   onLogout();
                 } else {
-                  window.location.href = '/login';
+                  window.location.hash = "/login";
+                  window.location.reload();
                 }
               }}
               className="dashboard-nav-item"
@@ -2754,8 +2766,18 @@ function DashboardView({
               </div>
             )}
           </div>
-          <button 
-            onClick={onLogout} 
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (typeof onLogout === "function") {
+                onLogout();
+              } else {
+                window.location.hash = "/login";
+                window.location.reload();
+              }
+            }}
             className="dashboard-nav-item" 
             style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px' }}
             onMouseEnter={(e) => {
@@ -2773,7 +2795,7 @@ function DashboardView({
             onMouseLeave={() => setHoveredNavItem(null)}
             title={!collapsed ? "Log Out" : undefined}
           >
-            <RiCloseFill size={14} />
+            <RiLogoutBoxRFill size={14} />
             {!collapsed && "Log Out"}
           </button>
         </div>
@@ -11324,27 +11346,35 @@ function App() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // ignore  -  clear local state regardless so the user is logged out client-side
-    }
+  const handleLogout = () => {
+    // 1. Synchronously wipe all auth tokens and storage entries across ecosystem
     tokenStore.clear();
-    try {
-      localStorage.removeItem('tunemavens_token');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('tunemavens_user');
-      localStorage.removeItem('tunemavens_saved_user');
-      localStorage.removeItem('tunemavens_active_persona');
-      localStorage.removeItem('tunemavens_admin_verified');
-      sessionStorage.removeItem('tunemavens_session');
-      sessionStorage.removeItem('tunestream_active_backend');
-      sessionStorage.removeItem('preferred_dashboard_tab');
-      sessionStorage.removeItem('signup_roles');
-    } catch (_) {}
+    const authKeys = [
+      'tunemavens_token', 'auth_token', 'token', 'tunemavens_user',
+      'tunemavens_saved_user', 'tunemavens_active_persona', 'tunemavens_admin_verified',
+      'tunemavens_session', 'tunestream_active_backend', 'preferred_dashboard_tab',
+      'signup_roles', 'user', 'user_role', 'admin_token', 'active_role',
+      'tunestream_session', 'intermaven_session', 'intermaven_jwt',
+      'tunemavens_distro_persona', 'tunemavens_pending_artist_name'
+    ];
+    authKeys.forEach((key) => {
+      try { localStorage.removeItem(key); } catch (_) {}
+      try { sessionStorage.removeItem(key); } catch (_) {}
+    });
+
+    // 2. Clear state immediately
     setSessionUser(null);
-    window.location.href = '/login';
+
+    // 3. Fire-and-forget backend session revocation non-blockingly
+    try {
+      authApi.logout?.().catch(() => {});
+    } catch (_) {}
+
+    // 4. Force hash navigation to /login and reload cleanly
+    if (typeof window !== 'undefined') {
+      window.location.hash = '/login';
+      window.location.reload();
+    }
   };
 
   // Recognises your Intermaven session when you land on the TuneMavens app.

@@ -2833,6 +2833,14 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Added test suite to `.github/workflows/ci.yml`.
 
 
+### 9.44.47 - Admin Dashboard Dual Logout Button Session Termination & Hash Routing Fix (6 November 2026)
+
+- **Admin Dashboard Logout Architecture Fix (`apps/portal/src/App.jsx`):**
+  - **Resolved Root Cause of Ineffective Logout Buttons:** Previously, `handleLogout` awaited `authApi.logout()` before clearing client-side credentials, which blocked execution indefinitely if backend calls hung. Furthermore, calling `window.location.href = '/login'` in a `HashRouter` environment caused browser URL navigation without the hash (`#`), failing static server routing and triggering silent fallback re-authentications via `demoFallbackUser`.
+  - **Synchronous Ecosystem-Wide Credential Wipe:** Configured immediate synchronous clearing of `tokenStore`, and all associated storage keys (`tunemavens_token`, `auth_token`, `token`, `tunemavens_user`, `tunemavens_saved_user`, `tunemavens_active_persona`, `tunemavens_admin_verified`, `tunemavens_session`, `preferred_dashboard_tab`, `signup_roles`, `user_role`, `admin_token`, `tunestream_session`, `intermaven_session`).
+  - **Non-Blocking Revocation & Explicit Hash Routing:** Made server revocation (`authApi.logout()`) fire-and-forget in the background, set `sessionUser` state to `null`, and navigated directly to `window.location.hash = '/login'` with a clean viewport reload.
+  - **Dual Button UI Hardening:** Hardened both the topbar avatar dropdown logout item (`topbar-menu-logout`) and sidebar bottom logout button (`dashboard-nav-item`) with explicit `type="button"`, event propagation stops, and `RiLogoutBoxRFill` icon consistency.
+
 ### 9.44.46 - Official Apple App Store & Google Play Store Native Packaging (6 November 2026)
 
 - **Native App Store Ecosystem Packaging (`apps/tunestream/`):**
