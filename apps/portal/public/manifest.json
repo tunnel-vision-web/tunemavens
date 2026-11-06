@@ -1,0 +1,26 @@
+{
+  "name": "TuneStream Native Music Player",
+  "short_name": "TuneStream",
+  "description": "High-Fidelity 24-Bit FLAC Music Streaming, 8GB Offline Crate, and 1-Tap Direct Creator Tipping.",
+  "start_url": "/native",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060813",
+  "theme_color": "#10b981",
+  "categories": ["music", "entertainment", "audio"],
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   RiCloseFill, RiSmartphoneFill, RiAppleFill, RiDownloadFill,
   RiCheckFill, RiFileCopyLine, RiExternalLinkLine, RiTerminalBoxFill,
-  RiCompass3Fill, RiQrCodeLine, RiAndroidFill, RiShieldCheckFill,
-  RiDownload2Fill, RiFlashlightFill
+  RiCompass3Fill, RiAndroidFill, RiShieldCheckFill,
+  RiDownload2Fill, RiFlashlightFill, RiShareBoxFill
 } from 'react-icons/ri';
 import tsLogo from '../../assets/tunestream-logo.png';
 
@@ -23,10 +23,12 @@ export default function AppDownloadModal({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
-      if (/android/i.test(ua)) {
-        setDeviceType('android');
-      } else if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
         setDeviceType('ios');
+        setActiveTab('install');
+      } else if (/android/i.test(ua)) {
+        setDeviceType('android');
+        setActiveTab('install');
       } else {
         setDeviceType('desktop');
       }
@@ -50,12 +52,16 @@ export default function AppDownloadModal({
       setActiveTab('apk');
     } else if (defaultPlatform === 'ios') {
       setActiveTab('install');
-    } else {
-      setActiveTab('install');
+    } else if (defaultPlatform === 'simulator') {
+      setActiveTab('simulator');
     }
   }, [defaultPlatform, isOpen]);
 
   if (!isOpen) return null;
+
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const standaloneUrl = isLocal ? 'http://localhost:3001/#/native' : 'https://tunestream.co/#/native';
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(standaloneUrl)}&color=10-185-129&bgcolor=6-8-19`;
 
   const handleCopy = (text) => {
     navigator.clipboard?.writeText(text);
@@ -64,7 +70,7 @@ export default function AppDownloadModal({
   };
 
   const handleOpenStandalone = () => {
-    window.open('/#/native', '_blank');
+    window.location.href = standaloneUrl;
   };
 
   const handleNativeInstall = async () => {
@@ -84,16 +90,10 @@ export default function AppDownloadModal({
       }
       setDeferredPrompt(null);
     } else {
-      // If prompt isn't directly triggered, open standalone /#/native so user can use browser install menu
-      window.location.hash = '/native';
-      onClose();
+      // On iOS or browsers without deferredPrompt, navigate directly to standalone mobile view
+      window.location.href = standaloneUrl;
     }
   };
-
-  // Live URL for QR code scan
-  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://tunestream.co';
-  const installUrl = `${currentOrigin}/#/native`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(installUrl)}&color=10-185-129&bgcolor=6-8-19`;
 
   return (
     <div style={{
@@ -145,7 +145,7 @@ export default function AppDownloadModal({
                 </span>
               </h3>
               <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                {deviceType === 'ios' ? '📱 iOS Device Detected' : deviceType === 'android' ? '🤖 Android Device Detected' : '💻 Install on Phone & Mobile Devices'}
+                {deviceType === 'ios' ? '📱 iPhone / iOS Device Detected' : deviceType === 'android' ? '🤖 Android Device Detected' : '💻 Install on Phone & Mobile Devices'}
               </span>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function AppDownloadModal({
           background: 'rgba(0,0,0,0.25)'
         }}>
           {[
-            { id: 'install', label: 'Install on Phone', icon: RiSmartphoneFill },
+            { id: 'install', label: deviceType === 'ios' ? 'Install on iPhone' : 'Install on Phone', icon: deviceType === 'ios' ? RiAppleFill : RiSmartphoneFill },
             { id: 'apk', label: 'Direct APK', icon: RiAndroidFill },
             { id: 'simulator', label: 'Live Simulator', icon: RiCompass3Fill },
             { id: 'developer', label: 'Capacitor / Stores', icon: RiTerminalBoxFill }
@@ -208,22 +208,49 @@ export default function AppDownloadModal({
 
         {/* Modal Body */}
         <div style={{ padding: '20px', color: '#cbd5e1', fontSize: '12.5px', lineHeight: 1.55 }}>
-          {/* TAB 1: Install on Phone (PWA / WebAPK) */}
+          {/* TAB 1: Install on Phone (PWA / WebAPK / iOS Home Screen) */}
           {activeTab === 'install' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{
-                background: 'rgba(16, 185, 129, 0.08)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-                borderRadius: '3px',
-                padding: '12px'
-              }}>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <RiFlashlightFill color="#10b981" /> 1-Tap Direct Install on Individual Devices
+              
+              {/* iOS SPECIFIC NOTICE */}
+              {deviceType === 'ios' ? (
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(0, 242, 254, 0.08))',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  borderRadius: '3px',
+                  padding: '14px'
+                }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#fff', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <RiAppleFill color="#10b981" size={18} /> How to Install on iPhone (Safari):
+                  </div>
+                  <p style={{ margin: '0 0 10px', fontSize: '11.5px', color: '#94a3b8', lineHeight: 1.5 }}>
+                    Apple iOS does not permit websites to trigger automatic download files. To install TuneStream as an app on your home screen:
+                  </p>
+                  <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#f1f5f9', lineHeight: 1.6 }}>
+                    <li>Tap the green <strong>"Open TuneStream App in Safari"</strong> button below.</li>
+                    <li>In Safari, tap the <strong>Share</strong> button <span style={{ color: '#00f2fe', fontWeight: 800 }}>[↑]</span> at the bottom of your iPhone.</li>
+                    <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
+                    <li>Tap <strong>Add</strong> (top-right).</li>
+                  </ol>
+                  <div style={{ marginTop: '10px', fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
+                    ✔ TuneStream will appear on your iPhone screen with full offline caching &amp; lockscreen playback!
+                  </div>
                 </div>
-                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>
-                  Install TuneStream directly to any listener's phone screen. Runs standalone with no browser URL bar, native lock-screen media notifications, 8GB smart offline crate, and direct 1-tap creator tipping.
-                </p>
-              </div>
+              ) : (
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                  borderRadius: '3px',
+                  padding: '12px'
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <RiFlashlightFill color="#10b981" /> 1-Tap Direct Install on Individual Devices
+                  </div>
+                  <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>
+                    Install TuneStream directly to your phone screen. Runs standalone with no browser URL bar, native lock-screen media notifications, 8GB smart offline crate, and direct 1-tap creator tipping.
+                  </p>
+                </div>
+              )}
 
               {/* If on Desktop: Provide QR Code to beam to Phone */}
               {deviceType === 'desktop' && (
@@ -251,14 +278,14 @@ export default function AppDownloadModal({
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>
-                      Scan with Phone Camera
+                      Scan with iPhone or Android Camera
                     </div>
                     <p style={{ margin: '0 0 10px', fontSize: '11.5px', color: '#94a3b8' }}>
-                      Point your phone's camera at this QR code to open and install TuneStream directly onto your personal iOS or Android device.
+                      Point your phone camera at this QR code to open and install TuneStream directly onto your personal mobile device.
                     </p>
                     <button
                       type="button"
-                      onClick={() => handleCopy(installUrl)}
+                      onClick={() => handleCopy(standaloneUrl)}
                       style={{
                         background: 'rgba(255,255,255,0.08)',
                         border: '1px solid rgba(255,255,255,0.15)',
@@ -279,47 +306,49 @@ export default function AppDownloadModal({
                 </div>
               )}
 
-              {/* Mobile Device Install Instructions */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: deviceType === 'desktop' ? '1fr 1fr' : '1fr',
-                gap: '12px'
-              }}>
-                {/* iOS Card */}
+              {/* Mobile Device Install Instructions if on Desktop */}
+              {deviceType === 'desktop' && (
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '3px',
-                  padding: '12px'
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontWeight: 800, fontSize: '12.5px', marginBottom: '8px' }}>
-                    <RiAppleFill size={16} /> iPhone &amp; iPad (iOS)
+                  {/* iOS Card */}
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '3px',
+                    padding: '12px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontWeight: 800, fontSize: '12.5px', marginBottom: '8px' }}>
+                      <RiAppleFill size={16} /> iPhone &amp; iPad (iOS)
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#94a3b8' }}>
+                      <li>Open in Safari</li>
+                      <li>Tap Share button <span style={{ color: '#00f2fe' }}>[↑]</span></li>
+                      <li>Tap <strong>"Add to Home Screen"</strong></li>
+                      <li>Tap <strong>Add</strong> &bull; app installs to home screen</li>
+                    </ol>
                   </div>
-                  <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#94a3b8' }}>
-                    <li>Open <strong>tunestream.co</strong> in Safari</li>
-                    <li>Tap the <strong>Share</strong> button <span style={{ color: '#00f2fe' }}>[⎋ / ↑]</span></li>
-                    <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
-                    <li>Tap <strong>Add</strong> — app appears on your home screen</li>
-                  </ol>
-                </div>
 
-                {/* Android Card */}
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '3px',
-                  padding: '12px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontWeight: 800, fontSize: '12.5px', marginBottom: '8px' }}>
-                    <RiAndroidFill size={16} color="#10b981" /> Android (Chrome &amp; WebAPK)
+                  {/* Android Card */}
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '3px',
+                    padding: '12px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontWeight: 800, fontSize: '12.5px', marginBottom: '8px' }}>
+                      <RiAndroidFill size={16} color="#10b981" /> Android (Chrome &amp; WebAPK)
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#94a3b8' }}>
+                      <li>Open in Chrome</li>
+                      <li>Tap the <strong>⋮ menu</strong> &rarr; <strong>"Install app"</strong></li>
+                      <li>Android installs a native WebAPK in your App Drawer</li>
+                    </ol>
                   </div>
-                  <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#94a3b8' }}>
-                    <li>Open <strong>tunestream.co</strong> in Chrome</li>
-                    <li>Tap the <strong>⋮ menu</strong> &rarr; <strong>"Install app"</strong></li>
-                    <li>Android installs a native WebAPK in your App Drawer</li>
-                  </ol>
                 </div>
-              </div>
+              )}
 
               {/* Install Action Button */}
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
@@ -342,8 +371,16 @@ export default function AppDownloadModal({
                     gap: '8px'
                   }}
                 >
-                  <RiDownloadFill size={18} />
-                  {installStatus === 'installing' ? 'Installing...' : installStatus === 'installed' ? 'Installed Successfully!' : 'Install TuneStream on This Device'}
+                  {deviceType === 'ios' ? (
+                    <>
+                      <RiShareBoxFill size={18} /> Open TuneStream App in Safari (Then Tap Share [↑])
+                    </>
+                  ) : (
+                    <>
+                      <RiDownloadFill size={18} />
+                      {installStatus === 'installing' ? 'Installing...' : installStatus === 'installed' ? 'Installed Successfully!' : 'Install TuneStream on This Device'}
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -403,8 +440,7 @@ export default function AppDownloadModal({
                 <a
                   href="/downloads/tunestream.apk"
                   download="tunestream.apk"
-                  onClick={(e) => {
-                    // Informative fallback if APK is compiled via CI/CD
+                  onClick={() => {
                     console.log('Downloading TuneStream APK...');
                   }}
                   style={{

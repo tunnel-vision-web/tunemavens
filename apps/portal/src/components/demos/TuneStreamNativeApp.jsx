@@ -124,6 +124,13 @@ export default function TuneStreamNativeApp({
   // DOM Refs
   const audioRef = useRef(null);
   const phoneClock = '09:41';
+  const [showIosPrompt, setShowIosPrompt] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const ua = window.navigator.userAgent || "";
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isStandalone = window.navigator.standalone || window.matchMedia("(display-mode: standalone)").matches;
+    return isIOS && !isStandalone;
+  });
 
   // Synchronize playback across tabs
   useEffect(() => {
@@ -378,6 +385,54 @@ export default function TuneStreamNativeApp({
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleNextTrack}
       />
+
+      {/* iOS Safari Home Screen Installation Tip Banner */}
+      {showIosPrompt && (
+        <div style={{
+          background: "linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(0, 242, 254, 0.2))",
+          border: "1px solid rgba(16, 185, 129, 0.5)",
+          borderRadius: "4px",
+          padding: "12px 16px",
+          margin: "0 auto 16px",
+          maxWidth: "560px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "12px",
+          color: "#fff",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.5)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "24px", flexShrink: 0 }}>📲</span>
+            <div style={{ fontSize: "12px", lineHeight: 1.45 }}>
+              <div style={{ fontWeight: 800, color: "#10b981" }}>Install TuneStream App to iPhone:</div>
+              <div style={{ color: "#cbd5e1" }}>
+                Tap Safari's Share button <span style={{ color: "#00f2fe", fontWeight: 900 }}>[↑]</span> below, then select <strong>"Add to Home Screen"</strong>.
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowIosPrompt(false)}
+            style={{
+              background: "rgba(255,255,255,0.1)",
+              border: "none",
+              color: "#fff",
+              borderRadius: "50%",
+              width: "24px",
+              height: "24px",
+              cursor: "pointer",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "12px"
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Outer Shell Mode Toggle Bar */}
       <div style={{

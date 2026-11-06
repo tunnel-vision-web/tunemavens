@@ -159,6 +159,7 @@ import PublishingTrackerApp from './components/demos/PublishingTrackerApp.jsx'
 import HostingManagerApp from './components/demos/HostingManagerApp.jsx'
 import VcDashboardPanel from './components/vc/VcDashboardPanel.jsx'
 import CommunicationsVaultPanel from './components/communications/CommunicationsVaultPanel.jsx'
+import TuneStreamNativeApp from './components/demos/TuneStreamNativeApp.jsx';
 
 
 // ================= Dashboard Apps View =================
@@ -10748,6 +10749,21 @@ function GlobalAudioPlayer({
 }
 
 // ================= Main App Content Component =================
+
+function TuneStreamNativeWrapper({ sessionUser }) {
+  const navigate = useNavigate();
+  return (
+    <div style={{ minHeight: "100vh", background: "#060813", position: "relative" }}>
+      <TuneStreamNativeApp
+        sessionUser={sessionUser}
+        isOpen={true}
+        onClose={() => navigate("/native-apps/tunestream")}
+        initialMode="expanded"
+      />
+    </div>
+  );
+}
+
 function AppContent({ 
   sessionUser, 
   handleLogin, 
@@ -10824,6 +10840,10 @@ function AppContent({
           <Route path="/tools" element={<ToolsView sessionUser={sessionUser} />} />
           <Route path="/apps" element={<AppsView sessionUser={sessionUser} />} />
           <Route path="/native-apps" element={<NativeAppsView />} />
+          <Route path="/native" element={<TuneStreamNativeWrapper sessionUser={sessionUser} />} />
+          <Route path="/native-app" element={<TuneStreamNativeWrapper sessionUser={sessionUser} />} />
+          <Route path="/mobile" element={<TuneStreamNativeWrapper sessionUser={sessionUser} />} />
+          <Route path="/app" element={<TuneStreamNativeWrapper sessionUser={sessionUser} />} />
           <Route path="/tunestream/about" element={<TuneStreamAboutView />} />
           <Route path="/tunestream/features" element={<TuneStreamFeaturesView />} />
           <Route path="/tunestream/creators" element={<TuneStreamCreatorsView />} />

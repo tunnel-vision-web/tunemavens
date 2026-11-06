@@ -2836,6 +2836,7 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
 ### 9.44.45 - Listener Device Distribution & Direct Download Infrastructure (6 November 2026)
 
 - **Direct Listener Installation & Device Distribution Architecture:**
+  - **iOS Safari Direct Install & Route Parity Fix:** Resolved iOS navigation loop where clicking app install from TuneMavens portal redirected to homepage. Added standalone `/native`, `/native-app`, `/mobile`, `/app` routes to Portal, configured portal `manifest.json` and `sw.js`, and integrated an unmissable iOS Safari floating prompt guiding iPhone users to tap Share [↑] -> "Add to Home Screen".
   - **Progressive Native WebAPK / PWA Service Worker (`apps/tunestream/public/sw.js`):** Implemented dedicated service worker with cache pre-loading (`tunestream-cache-v1`) and offline fallback, qualifying TuneStream for 1-tap browser installation without third-party app store requirements.
   - **Interactive Device Detection & Download Console (`AppDownloadModal.jsx`):**
     - Automated User-Agent detection separating iOS Safari, Android Chromium, and Desktop clients.
