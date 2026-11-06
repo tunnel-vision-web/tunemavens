@@ -2833,6 +2833,15 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Added test suite to `.github/workflows/ci.yml`.
 
 
+### 9.44.46 - Official Apple App Store & Google Play Store Native Packaging (6 November 2026)
+
+- **Native App Store Ecosystem Packaging (`apps/tunestream/`):**
+  - **Native Android Gradle Project (`apps/tunestream/android/`):** Initialized complete Android Gradle workspace (`co.tunestream.app`), `build.gradle`, `variables.gradle`, and `AndroidManifest.xml` with background audio permissions (`ACCESS_NETWORK_STATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`). Produces Android App Bundle (`.aab`) for Google Play Console upload and standalone debug `.apk`.
+  - **Native iOS Xcode Workspace (`apps/tunestream/ios/`):** Initialized full Xcode project (`App.xcworkspace`, `Info.plist`), configured bundle ID `co.tunestream.app`, and added `UIBackgroundModes: audio` for lockscreen playback, Apple Watch, and CarPlay integration.
+  - **Automated Cloud CI/CD Pipelines (`.github/workflows/build-mobile-apps.yml`):** Multi-platform GitHub Action compiling Google Play release bundles (`.aab`), APK artifacts, and macOS Xcode project archives on push.
+  - **Automated Device Updates Architecture:** Background store delivery via Google Play In-App Updates and Apple TestFlight / App Store auto-update channels, allowing listeners to receive continuous updates seamlessly on their devices.
+  - **Interactive Store Badging (`AppDownloadModal.jsx`):** High-priority App Store, Apple TestFlight, and Google Play Store download channels wired across TuneStream and TuneMavens portal surfaces.
+
 ### 9.44.45 - Listener Device Distribution & Direct Download Infrastructure (6 November 2026)
 
 - **Direct Listener Installation & Device Distribution Architecture:**

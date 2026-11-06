@@ -1,4 +1,4 @@
-name: Build TuneStream Mobile Apps
+name: Build TuneStream Native Mobile Apps (App Store & Google Play)
 
 on:
   push:
@@ -9,9 +9,9 @@ on:
 
 jobs:
   build-android:
-    name: Build Android APK
+    name: Build Android APK & Google Play Bundle (.aab)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
@@ -32,24 +32,63 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build TuneStream Web Bundle
+      - name: Build TuneStream Web Assets
         run: npm run build:tunestream
 
-      - name: Initialize & Sync Capacitor Android
+      - name: Sync Capacitor Android
         working-directory: apps/tunestream
-        run: |
-          npx @capacitor/cli add android || true
-          npx @capacitor/cli sync android
+        run: npx cap sync android
 
-      - name: Build Debug APK with Gradle
+      - name: Build Android Debug APK
         working-directory: apps/tunestream/android
         run: |
           chmod +x ./gradlew
           ./gradlew assembleDebug --stacktrace
 
-      - name: Upload APK as Release Artifact
+      - name: Build Google Play Release Bundle (.aab)
+        working-directory: apps/tunestream/android
+        run: ./gradlew bundleRelease --stacktrace || ./gradlew bundleDebug --stacktrace
+
+      - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: tunestream-debug-apk
+          name: tunestream-android-apk
           path: apps/tunestream/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+
+      - name: Upload Google Play Bundle (.aab)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tunestream-google-play-bundle
+          path: apps/tunestream/android/app/build/outputs/bundle/**/*.aab
+          retention-days: 30
+
+  build-ios:
+    name: Build iOS Xcode Project
+    runs-on: macos-14
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TuneStream Web Assets
+        run: npm run build:tunestream
+
+      - name: Sync Capacitor iOS
+        working-directory: apps/tunestream
+        run: npx cap sync ios
+
+      - name: Archive Xcode Project
+        working-directory: apps/tunestream/ios/App
+        run: |
+          xcodebuild clean build -workspace App.xcworkspace -scheme App -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO

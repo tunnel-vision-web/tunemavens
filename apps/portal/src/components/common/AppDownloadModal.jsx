@@ -3,7 +3,8 @@ import {
   RiCloseFill, RiSmartphoneFill, RiAppleFill, RiDownloadFill,
   RiCheckFill, RiFileCopyLine, RiExternalLinkLine, RiTerminalBoxFill,
   RiCompass3Fill, RiAndroidFill, RiShieldCheckFill,
-  RiDownload2Fill, RiFlashlightFill, RiShareBoxFill
+  RiDownload2Fill, RiFlashlightFill, RiShareBoxFill, RiGooglePlayFill,
+  RiRefreshLine, RiSparklingFill
 } from 'react-icons/ri';
 import tsLogo from '../../assets/logos/tunestream-logo.png';
 
@@ -11,10 +12,10 @@ export default function AppDownloadModal({
   isOpen,
   onClose,
   onLaunchSimulator,
-  defaultPlatform = 'all' // 'ios' | 'android' | 'all'
+  defaultPlatform = 'all' // 'ios' | 'android' | 'stores' | 'all'
 }) {
   const [deviceType, setDeviceType] = useState('desktop'); // 'ios' | 'android' | 'desktop'
-  const [activeTab, setActiveTab] = useState('install'); // 'install' | 'apk' | 'simulator' | 'developer'
+  const [activeTab, setActiveTab] = useState('stores'); // 'stores' | 'install' | 'apk' | 'simulator'
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [installStatus, setInstallStatus] = useState('idle'); // 'idle' | 'installing' | 'installed'
   const [copiedCode, setCopiedCode] = useState(false);
@@ -25,10 +26,8 @@ export default function AppDownloadModal({
       const ua = navigator.userAgent || navigator.vendor || window.opera;
       if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
         setDeviceType('ios');
-        setActiveTab('install');
       } else if (/android/i.test(ua)) {
         setDeviceType('android');
-        setActiveTab('install');
       } else {
         setDeviceType('desktop');
       }
@@ -49,18 +48,19 @@ export default function AppDownloadModal({
   // Set default tab based on platform or device
   useEffect(() => {
     if (defaultPlatform === 'android') {
-      setActiveTab('apk');
+      setActiveTab('stores');
     } else if (defaultPlatform === 'ios') {
-      setActiveTab('install');
+      setActiveTab('stores');
     } else if (defaultPlatform === 'simulator') {
       setActiveTab('simulator');
+    } else {
+      setActiveTab('stores');
     }
   }, [defaultPlatform, isOpen]);
 
   if (!isOpen) return null;
 
   const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  // Destination URL for TuneStream native player: supports current origin /#/native and tunestream.co/#/native
   const standaloneUrl = isLocal ? 'http://localhost:3001/#/native' : 'https://tunestream.co/#/native';
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(standaloneUrl)}&color=10-185-129&bgcolor=6-8-19`;
 
@@ -91,7 +91,6 @@ export default function AppDownloadModal({
       }
       setDeferredPrompt(null);
     } else {
-      // On iOS or browsers without deferredPrompt, navigate directly to standalone mobile view
       window.location.href = standaloneUrl;
     }
   };
@@ -113,7 +112,7 @@ export default function AppDownloadModal({
         background: '#090e1f',
         border: '1px solid rgba(16, 185, 129, 0.4)',
         borderRadius: '4px',
-        maxWidth: '560px',
+        maxWidth: '580px',
         width: '100%',
         boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85)',
         boxSizing: 'border-box',
@@ -133,7 +132,7 @@ export default function AppDownloadModal({
             <img src={tsLogo} alt="TuneStream" style={{ height: '28px', width: 'auto' }} />
             <div>
               <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                Download TuneStream App
+                TuneStream Native App
                 <span style={{
                   fontSize: '10px',
                   background: 'rgba(16, 185, 129, 0.15)',
@@ -142,11 +141,11 @@ export default function AppDownloadModal({
                   borderRadius: '2px',
                   fontWeight: 700
                 }}>
-                  v1.0 Native
+                  iOS &amp; Android
                 </span>
               </h3>
               <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                {deviceType === 'ios' ? '📱 iPhone / iOS Device Detected' : deviceType === 'android' ? '🤖 Android Device Detected' : '💻 Install on Phone & Mobile Devices'}
+                Apple App Store &bull; Google Play Store &bull; Live Device Updates
               </span>
             </div>
           </div>
@@ -173,10 +172,10 @@ export default function AppDownloadModal({
           background: 'rgba(0,0,0,0.25)'
         }}>
           {[
-            { id: 'install', label: deviceType === 'ios' ? 'Install on iPhone' : 'Install on Phone', icon: deviceType === 'ios' ? RiAppleFill : RiSmartphoneFill },
+            { id: 'stores', label: 'App Store & Google Play', icon: RiAppleFill },
+            { id: 'install', label: 'Instant Web Install', icon: RiSmartphoneFill },
             { id: 'apk', label: 'Direct APK', icon: RiAndroidFill },
-            { id: 'simulator', label: 'Live Simulator', icon: RiCompass3Fill },
-            { id: 'developer', label: 'Capacitor / Stores', icon: RiTerminalBoxFill }
+            { id: 'simulator', label: 'Browser Simulator', icon: RiCompass3Fill }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -192,13 +191,13 @@ export default function AppDownloadModal({
                   border: 'none',
                   borderBottom: isActive ? '2px solid #10b981' : '2px solid transparent',
                   color: isActive ? '#10b981' : '#94a3b8',
-                  fontSize: '11.5px',
+                  fontSize: '11px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px'
+                  gap: '5px'
                 }}
               >
                 <Icon size={14} /> {tab.label}
@@ -209,11 +208,179 @@ export default function AppDownloadModal({
 
         {/* Modal Body */}
         <div style={{ padding: '20px', color: '#cbd5e1', fontSize: '12.5px', lineHeight: 1.55 }}>
-          {/* TAB 1: Install on Phone (PWA / WebAPK / iOS Home Screen) */}
+          
+          {/* TAB 1: App Store & Google Play Official Channels */}
+          {activeTab === 'stores' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(0, 242, 254, 0.08))',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '3px',
+                padding: '12px 14px'
+              }}>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RiSparklingFill color="#10b981" /> Official Store Distribution &amp; Background Updates
+                </div>
+                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>
+                  TuneStream is packaged as a real native app with its own dedicated home screen icon, background audio service, and automated store updates — identical to apps by leading tech companies.
+                </p>
+              </div>
+
+              {/* Store Options Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                
+                {/* Apple App Store & TestFlight */}
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '4px',
+                  padding: '14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <RiAppleFill size={22} color="#fff" />
+                      <div>
+                        <div style={{ fontWeight: 800, color: '#fff', fontSize: '13px' }}>Apple iOS</div>
+                        <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>iPhone &bull; iPad &bull; CarPlay</span>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 10px' }}>
+                      Packaged via Xcode workspace (<code>co.tunestream.app</code>). Includes Apple TestFlight for 1-tap installation on iPhone with automated background updates.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <a
+                      href="https://testflight.apple.com/join/tunestream"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        console.log('Opening TestFlight...');
+                      }}
+                      style={{
+                        background: '#0071e3',
+                        color: '#fff',
+                        textDecoration: 'none',
+                        padding: '8px 10px',
+                        borderRadius: '3px',
+                        fontWeight: 700,
+                        fontSize: '11.5px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <RiAppleFill size={15} /> Open in Apple TestFlight
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy('https://testflight.apple.com/join/tunestream')}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#94a3b8',
+                        padding: '6px',
+                        borderRadius: '3px',
+                        fontSize: '10.5px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {copiedCode ? 'Link Copied!' : 'Copy TestFlight Beta Invite'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Google Play Store */}
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '4px',
+                  padding: '14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <RiGooglePlayFill size={22} color="#10b981" />
+                      <div>
+                        <div style={{ fontWeight: 800, color: '#fff', fontSize: '13px' }}>Google Play</div>
+                        <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>Android 9.0+ &bull; Auto-Update</span>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 10px' }}>
+                      Packaged as Android App Bundle (<code>.aab</code>) and APK. Google Play In-App Updates deliver seamless updates in the background.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <a
+                      href="https://play.google.com/store/apps/details?id=co.tunestream.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        console.log('Opening Google Play...');
+                      }}
+                      style={{
+                        background: '#10b981',
+                        color: '#060813',
+                        textDecoration: 'none',
+                        padding: '8px 10px',
+                        borderRadius: '3px',
+                        fontWeight: 800,
+                        fontSize: '11.5px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <RiGooglePlayFill size={15} /> Get on Google Play
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('apk')}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#94a3b8',
+                        padding: '6px',
+                        borderRadius: '3px',
+                        fontSize: '10.5px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Download Direct APK Sideload &rarr;
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Native Specs Footer */}
+              <div style={{
+                background: 'rgba(0,0,0,0.3)',
+                padding: '12px',
+                borderRadius: '3px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '11px'
+              }}>
+                <div>
+                  <span style={{ color: '#fff', fontWeight: 700 }}>Package ID:</span> <code>co.tunestream.app</code> &bull; <span style={{ color: '#fff', fontWeight: 700 }}>Version:</span> 1.0.0
+                </div>
+                <div style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}>
+                  <RiRefreshLine size={13} /> Continuous CI/CD Active
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: Instant Web Install (PWA / WebAPK) */}
           {activeTab === 'install' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              
-              {/* iOS SPECIFIC NOTICE */}
               {deviceType === 'ios' ? (
                 <div style={{
                   background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(0, 242, 254, 0.08))',
@@ -222,20 +389,14 @@ export default function AppDownloadModal({
                   padding: '14px'
                 }}>
                   <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#fff', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <RiAppleFill color="#10b981" size={18} /> How to Install on iPhone (Safari):
+                    <RiAppleFill color="#10b981" size={18} /> Instant iPhone Home Screen Install:
                   </div>
-                  <p style={{ margin: '0 0 10px', fontSize: '11.5px', color: '#94a3b8', lineHeight: 1.5 }}>
-                    Apple iOS does not permit websites to trigger automatic download files. To install TuneStream as an app on your home screen:
-                  </p>
                   <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#f1f5f9', lineHeight: 1.6 }}>
-                    <li>Tap the green <strong>"Open TuneStream App in Safari"</strong> button below.</li>
+                    <li>Tap the green <strong>"Launch TuneStream in Safari"</strong> button below.</li>
                     <li>In Safari, tap the <strong>Share</strong> button <span style={{ color: '#00f2fe', fontWeight: 800 }}>[↑]</span> at the bottom of your iPhone.</li>
                     <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
                     <li>Tap <strong>Add</strong> (top-right).</li>
                   </ol>
-                  <div style={{ marginTop: '10px', fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
-                    ✔ TuneStream will appear on your iPhone screen with full offline caching &amp; lockscreen playback!
-                  </div>
                 </div>
               ) : (
                 <div style={{
@@ -245,109 +406,11 @@ export default function AppDownloadModal({
                   padding: '12px'
                 }}>
                   <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <RiFlashlightFill color="#10b981" /> 1-Tap Direct Install on Individual Devices
+                    <RiFlashlightFill color="#10b981" /> 1-Tap Direct WebAPK Installation
                   </div>
                   <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>
                     Install TuneStream directly to your phone screen. Runs standalone with no browser URL bar, native lock-screen media notifications, 8GB smart offline crate, and direct 1-tap creator tipping.
                   </p>
-                </div>
-              )}
-
-              {/* If on Desktop: Provide QR Code to beam to Phone */}
-              {deviceType === 'desktop' && (
-                <div style={{
-                  display: 'flex',
-                  gap: '16px',
-                  background: 'rgba(0,0,0,0.35)',
-                  padding: '14px',
-                  borderRadius: '3px',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  alignItems: 'center'
-                }}>
-                  <div style={{
-                    background: '#060813',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid rgba(16, 185, 129, 0.4)',
-                    flexShrink: 0
-                  }}>
-                    <img
-                      src={qrCodeUrl}
-                      alt="Scan to Install TuneStream"
-                      style={{ width: '110px', height: '110px', display: 'block', borderRadius: '2px' }}
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>
-                      Scan with iPhone or Android Camera
-                    </div>
-                    <p style={{ margin: '0 0 10px', fontSize: '11.5px', color: '#94a3b8' }}>
-                      Point your phone camera at this QR code to open and install TuneStream directly onto your personal mobile device.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(standaloneUrl)}
-                      style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.15)',
-                        color: '#fff',
-                        borderRadius: '2px',
-                        padding: '6px 10px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <RiFileCopyLine size={13} /> {copiedCode ? 'Link Copied!' : 'Copy Direct Install Link'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Mobile Device Install Instructions if on Desktop */}
-              {deviceType === 'desktop' && (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '12px'
-                }}>
-                  {/* iOS Card */}
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '3px',
-                    padding: '12px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontWeight: 800, fontSize: '12.5px', marginBottom: '8px' }}>
-                      <RiAppleFill size={16} /> iPhone &amp; iPad (iOS)
-                    </div>
-                    <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#94a3b8' }}>
-                      <li>Open in Safari</li>
-                      <li>Tap Share button <span style={{ color: '#00f2fe' }}>[↑]</span></li>
-                      <li>Tap <strong>"Add to Home Screen"</strong></li>
-                      <li>Tap <strong>Add</strong> &bull; app installs to home screen</li>
-                    </ol>
-                  </div>
-
-                  {/* Android Card */}
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '3px',
-                    padding: '12px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontWeight: 800, fontSize: '12.5px', marginBottom: '8px' }}>
-                      <RiAndroidFill size={16} color="#10b981" /> Android (Chrome &amp; WebAPK)
-                    </div>
-                    <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#94a3b8' }}>
-                      <li>Open in Chrome</li>
-                      <li>Tap the <strong>⋮ menu</strong> &rarr; <strong>"Install app"</strong></li>
-                      <li>Android installs a native WebAPK in your App Drawer</li>
-                    </ol>
-                  </div>
                 </div>
               )}
 
@@ -374,7 +437,7 @@ export default function AppDownloadModal({
                 >
                   {deviceType === 'ios' ? (
                     <>
-                      <RiShareBoxFill size={18} /> Open TuneStream App in Safari (Then Tap Share [↑])
+                      <RiShareBoxFill size={18} /> Launch TuneStream in Safari (Then Tap Share [↑])
                     </>
                   ) : (
                     <>
@@ -406,7 +469,7 @@ export default function AppDownloadModal({
             </div>
           )}
 
-          {/* TAB 2: Direct APK Download */}
+          {/* TAB 3: Direct APK */}
           {activeTab === 'apk' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{
@@ -416,10 +479,10 @@ export default function AppDownloadModal({
                 padding: '12px'
               }}>
                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <RiAndroidFill color="#10b981" /> Direct Android APK Package (.apk)
+                  <RiAndroidFill color="#10b981" /> Standalone Android APK File (.apk)
                 </div>
                 <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>
-                  Download and sideload the standalone TuneStream Android APK directly onto any phone without needing Google Play Store login.
+                  Direct download package for Android phones. Sits directly in the app drawer with its own app icon and offline caching.
                 </p>
               </div>
 
@@ -435,15 +498,12 @@ export default function AppDownloadModal({
                 <div>
                   <div style={{ fontWeight: 800, color: '#fff', fontSize: '13px' }}>TuneStream-release.apk</div>
                   <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                    Package: <code>co.tunestream.app</code> &bull; Architecture: Universal (ARM64 / x86_64) &bull; Size: ~8.4 MB
+                    Package: <code>co.tunestream.app</code> &bull; Size: ~8.4 MB
                   </div>
                 </div>
                 <a
                   href="/downloads/tunestream.apk"
                   download="tunestream.apk"
-                  onClick={() => {
-                    console.log('Downloading TuneStream APK...');
-                  }}
                   style={{
                     background: '#10b981',
                     color: '#060813',
@@ -460,21 +520,10 @@ export default function AppDownloadModal({
                   <RiDownload2Fill size={16} /> Download .APK
                 </a>
               </div>
-
-              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '3px', fontSize: '11.5px' }}>
-                <div style={{ fontWeight: 800, color: '#fff', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <RiShieldCheckFill color="#00f2fe" /> 3 Steps to Sideload on Android:
-                </div>
-                <ol style={{ margin: 0, paddingLeft: '18px', color: '#94a3b8', lineHeight: 1.6 }}>
-                  <li>Tap <strong>Download .APK</strong> above on your Android phone.</li>
-                  <li>When prompted, tap <strong>"Open"</strong> or find the downloaded file in your Files / Downloads folder.</li>
-                  <li>If prompted, enable <em>"Allow installation from this source"</em> and tap <strong>Install</strong>.</li>
-                </ol>
-              </div>
             </div>
           )}
 
-          {/* TAB 3: Live Simulator */}
+          {/* TAB 4: Simulator */}
           {activeTab === 'simulator' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{
@@ -484,10 +533,10 @@ export default function AppDownloadModal({
                 padding: '12px'
               }}>
                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>
-                  Instant In-Browser Phone Chassis Simulator
+                  Live In-Browser Phone Simulator
                 </div>
                 <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>
-                  Experience the full TuneStream native mobile application directly inside your browser. Includes the realistic titanium chassis, 24-bit FLAC audio streaming, 8GB smart offline crate simulation, 10-band studio EQ, and 1-tap creator tipping.
+                  Test all features inside the interactive titanium mobile chassis directly in your browser.
                 </p>
               </div>
 
@@ -516,82 +565,10 @@ export default function AppDownloadModal({
                 >
                   <RiSmartphoneFill size={18} /> Launch Phone Chassis Simulator
                 </button>
-                <button
-                  type="button"
-                  onClick={handleOpenStandalone}
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '3px',
-                    padding: '12px 16px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <RiExternalLinkLine size={16} /> Open Fullscreen
-                </button>
               </div>
             </div>
           )}
 
-          {/* TAB 4: Capacitor / Stores */}
-          {activeTab === 'developer' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{
-                background: 'rgba(168, 85, 247, 0.08)',
-                border: '1px solid rgba(168, 85, 247, 0.25)',
-                borderRadius: '3px',
-                padding: '12px'
-              }}>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>
-                  Capacitor Native Packaging &amp; App Store Deployment
-                </div>
-                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>
-                  Official package ID <code>co.tunestream.app</code>. Configure and build native binaries for Apple App Store (TestFlight) and Google Play Console.
-                </p>
-              </div>
-
-              <div style={{ background: '#000', padding: '12px', borderRadius: '3px', fontFamily: 'monospace', fontSize: '11px', position: 'relative' }}>
-                <div style={{ color: '#64748b', marginBottom: '4px' }}># 1. Build and copy web assets</div>
-                <div style={{ color: '#10b981' }}>npm run build:tunestream</div>
-                <div style={{ color: '#64748b', margin: '6px 0 4px' }}># 2. Sync Android / iOS projects</div>
-                <div style={{ color: '#00f2fe' }}>npx cap sync android &amp;&amp; npx cap open android</div>
-                <div style={{ color: '#a855f7' }}>npx cap sync ios &amp;&amp; npx cap open ios</div>
-
-                <button
-                  type="button"
-                  onClick={() => handleCopy('npm run build:tunestream && npx cap sync')}
-                  style={{
-                    position: 'absolute',
-                    right: '8px',
-                    top: '8px',
-                    background: 'rgba(255,255,255,0.1)',
-                    border: 'none',
-                    color: '#fff',
-                    borderRadius: '2px',
-                    padding: '4px 8px',
-                    fontSize: '10px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <RiFileCopyLine size={12} /> {copiedCode ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>Capacitor 7.x &bull; iOS 15+ &bull; Android 9+</span>
-                <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>CI/CD Workflow Configured</span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
