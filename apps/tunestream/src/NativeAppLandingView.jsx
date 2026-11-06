@@ -20,6 +20,8 @@ import tpLogo from './assets/tunepay-logo.png'
 import RegionSwitcher from './RegionSwitcher'
 import { useRegion } from './RegionContext'
 import './Landing.css'
+import TuneStreamNativeApp from './components/native/TuneStreamNativeApp.jsx';
+import AppDownloadModal from './components/common/AppDownloadModal.jsx';
 import LiveEventsSection from './components/events/LiveEventsSection.jsx'
 import ToursView from './views/landing/ToursView.jsx';
 import TourCapitalView from './views/landing/TourCapitalView.jsx';
@@ -553,6 +555,8 @@ export default function NativeAppLandingView({
   let pageContent;
 
   const [selectedEpk, setSelectedEpk] = useState(null);
+  const [isNativeAppOpen, setIsNativeAppOpen] = useState(false);
+  const [downloadModalPlatform, setDownloadModalPlatform] = useState(null);
   const [tracks, setTracks] = useState(() => (catalogTracks && catalogTracks.length > 0) ? catalogTracks : AUTHORITATIVE_CATALOG_TRACKS);
   const [artists, setArtists] = useState(AUTHORITATIVE_CATALOG_ARTISTS);
   const [albums, setAlbums] = useState(AUTHORITATIVE_CATALOG_ALBUMS);
@@ -804,7 +808,7 @@ export default function NativeAppLandingView({
         <button
           type="button"
           className={cls}
-          onClick={() => alert(`${storeName} listing for ${data.name} coming soon.`)}
+          onClick={() => setDownloadModalPlatform(action === 'appstore' ? 'ios' : 'android')}
           data-testid={testId}
           style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
         >
@@ -887,11 +891,11 @@ export default function NativeAppLandingView({
                   <div className={`hb hbtns ${slideState}`}>
                     <button
                       type="button"
-                      onClick={() => alert('TuneStream — Download Free on iOS & Android coming soon!')}
+                      onClick={() => setIsNativeAppOpen(true)}
                       className="hbp"
                       style={{ border: 'none', fontFamily: 'inherit', gap: '8px' }}
                     >
-                      <RiDownloadFill size={16} /> <span>Download Free</span>
+                      <RiSmartphoneFill size={16} /> <span>Try Native App</span>
                     </button>
                     <a
                       href="#plans-section"
@@ -3610,7 +3614,7 @@ export default function NativeAppLandingView({
             <button
               type="button"
               className="store-cta landing-cta"
-              onClick={() => alert(`App Store listing for ${data.name} coming in Phase 5+`)}
+              onClick={() => setDownloadModalPlatform('ios')}
               data-testid="landing-close-appstore"
             >
               <div className="store-cta-icon"><RiAppleFill size={22} /></div>
@@ -3622,7 +3626,7 @@ export default function NativeAppLandingView({
             <button
               type="button"
               className="store-cta landing-cta"
-              onClick={() => alert(`Google Play listing for ${data.name} coming in Phase 5+`)}
+              onClick={() => setDownloadModalPlatform('android')}
               data-testid="landing-close-googleplay"
             >
               <div className="store-cta-icon"><RiDownloadFill size={22} /></div>
@@ -3645,6 +3649,33 @@ export default function NativeAppLandingView({
         {pageContent}
       </div>
       {/* HiFiAudioPlayer rendered globally at root */}
+      {isNativeAppOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.85)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          backdropFilter: 'blur(10px)',
+          overflowY: 'auto'
+        }}>
+          <div style={{ maxWidth: '460px', width: '100%', position: 'relative' }}>
+            <TuneStreamNativeApp
+              sessionUser={sessionUser}
+              onClose={() => setIsNativeAppOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+      <AppDownloadModal
+        isOpen={Boolean(downloadModalPlatform)}
+        defaultPlatform={downloadModalPlatform || 'simulator'}
+        onClose={() => setDownloadModalPlatform(null)}
+        onLaunchSimulator={() => setIsNativeAppOpen(true)}
+      />
       <LandingFooter view={view} />
     </div>
   );

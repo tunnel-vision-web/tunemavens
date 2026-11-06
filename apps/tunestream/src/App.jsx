@@ -32,6 +32,7 @@ import './App.css';
 // Import newly copied header assets
 import listenHero from './assets/images/listen_hero.png';
 
+import TuneStreamNativeApp from './components/native/TuneStreamNativeApp.jsx';
 import NativeAppLandingView, { LandingNavbar, LandingFooter } from './NativeAppLandingView';
 import TourCapitalView from './views/landing/TourCapitalView.jsx';
 import ToursView from './views/landing/ToursView.jsx';
@@ -107,6 +108,28 @@ function TourCapitalWrapper({ sessionUser, onLogout }) {
         <TourCapitalView sessionUser={sessionUser} />
       </div>
       <LandingFooter view="tours" />
+    </div>
+  );
+}
+
+function TuneStreamNativeWrapper({ sessionUser, onLogout }) {
+  const navigate = useNavigate();
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', background: '#060813' }}>
+      <LandingNavbar 
+        view="native-app" 
+        setView={(v) => navigate(`/?view=${v}`)} 
+        sessionUser={sessionUser} 
+        onLogout={onLogout} 
+      />
+      <div style={{ flex: 1, padding: '24px 16px 80px' }}>
+        <TuneStreamNativeApp
+          sessionUser={sessionUser}
+          onLogout={onLogout}
+          onClose={() => navigate('/stream')}
+        />
+      </div>
+      <LandingFooter view="native-app" />
     </div>
   );
 }
@@ -432,6 +455,10 @@ function AppContent() {
           <Route path="/sync" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/sync-marketplace" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="sync-marketplace" onLogout={handleLogout} />} />
           <Route path="/apps" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="apps" onLogout={handleLogout} />} />
+          <Route path="/native" element={<TuneStreamNativeWrapper sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/native-app" element={<TuneStreamNativeWrapper sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/mobile" element={<TuneStreamNativeWrapper sessionUser={sessionUser} onLogout={handleLogout} />} />
+          <Route path="/app" element={<TuneStreamNativeWrapper sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/companion" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="companion" onLogout={handleLogout} />} />
           <Route path="/tunecompanion" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="companion" onLogout={handleLogout} />} />
           <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
@@ -558,8 +585,8 @@ function EcosystemAppsPanel({ setActiveTab }) {
       platforms: 'iOS & Android (Capacitor)',
       logo: tsLogo,
       accent: '#00f2fe',
-      actionLabel: 'Manage 8GB Mobile Sync',
-      actionTab: 'companion',
+      actionLabel: 'Launch Mobile Native App',
+      actionTab: 'native-app',
       features: [
         'Lossless 24-bit / 96kHz FLAC audio & low-latency streaming',
         '8GB smart offline crate caching for flights & commutes',
@@ -3103,6 +3130,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
 
     // Apps & Support
     add('Sound & Devices', { id: 'companion', label: 'Mobile & Device Sync', icon: RiSmartphoneFill, color: '#a855f7', badge: '8GB SYNC' });
+    add('Apps & Support', { id: 'native-app', label: 'TuneStream Mobile App', icon: RiSmartphoneFill, color: '#10b981', badge: 'NATIVE' });
     add('Apps & Support', { id: 'apps', label: 'Listener Apps', icon: RiApps2Fill, color: '#00f2fe', badge: 'APPS' });
     add('Apps & Support', { id: 'support', label: 'Support Desk', icon: RiQuestionLine });
     add('Apps & Support', { id: 'settings', label: 'Preferences & Audio', icon: RiSettings3Fill });
@@ -3307,6 +3335,9 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
         );
       case 'apps':
         return <EcosystemAppsPanel setActiveTab={setActiveTab} />;
+      case 'native-app':
+      case 'mobile':
+        return <TuneStreamNativeApp sessionUser={activeUser} onLogout={onLogout} />;
       case 'support':
         return <ConsumerSupportCommunityView sessionUser={activeUser} catalogTracks={catalogTracks} initialSection="tickets" />;
       case 'help':

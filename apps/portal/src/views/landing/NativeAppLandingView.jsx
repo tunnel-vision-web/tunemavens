@@ -18,6 +18,8 @@ import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
 import FaqItem from '../../components/common/FaqItem.jsx'
 import { useRegion } from '../../RegionContext.jsx'
 import AppHelpAiControls from '../../components/common/AppHelpAiControls.jsx'
+import TuneStreamNativeApp from '../../components/demos/TuneStreamNativeApp.jsx'
+import AppDownloadModal from '../../components/common/AppDownloadModal.jsx'
 
 import tunestreamHeaderImg from '../../assets/images/tunestream_header.png'
 import tunestreamHeader2Img from '../../assets/images/tunestream_header_2.png'
@@ -521,6 +523,8 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   };
 
   const [selectedEpk, setSelectedEpk] = useState(null);
+  const [isNativeAppOpen, setIsNativeAppOpen] = useState(false);
+  const [downloadModalPlatform, setDownloadModalPlatform] = useState(null);
   const [tracks, setTracks] = useState(() => (catalogTracks && catalogTracks.length > 0) ? catalogTracks : AUTHORITATIVE_CATALOG_TRACKS);
   const [artists, setArtists] = useState(AUTHORITATIVE_CATALOG_ARTISTS);
   const [albums, setAlbums] = useState(AUTHORITATIVE_CATALOG_ALBUMS);
@@ -810,7 +814,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
         <button
           type="button"
           className={cls}
-          onClick={() => alert(`${storeName} listing for ${data.name} coming soon.`)}
+          onClick={() => setDownloadModalPlatform(action === 'appstore' ? 'ios' : 'android')}
           data-testid={testId}
           style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
         >
@@ -893,11 +897,11 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   <div className={`hb hbtns ${slideState}`}>
                     <button
                       type="button"
-                      onClick={() => alert('TuneStream — Download Free on iOS & Android coming soon!')}
+                      onClick={() => setIsNativeAppOpen(true)}
                       className="hbp"
                       style={{ border: 'none', fontFamily: 'inherit', gap: '8px' }}
                     >
-                      <RiDownloadFill size={16} /> <span>Download Free</span>
+                      <RiSmartphoneFill size={16} /> <span>Try Native App</span>
                     </button>
                     <a
                       href="#plans-section"
@@ -3126,6 +3130,33 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             }}
           />
         )}
+        {isNativeAppOpen && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            backdropFilter: 'blur(10px)',
+            overflowY: 'auto'
+          }}>
+            <div style={{ maxWidth: '460px', width: '100%', position: 'relative' }}>
+              <TuneStreamNativeApp
+                sessionUser={sessionUser}
+                onClose={() => setIsNativeAppOpen(false)}
+              />
+            </div>
+          </div>
+        )}
+        <AppDownloadModal
+          isOpen={Boolean(downloadModalPlatform)}
+          defaultPlatform={downloadModalPlatform || 'simulator'}
+          onClose={() => setDownloadModalPlatform(null)}
+          onLaunchSimulator={() => setIsNativeAppOpen(true)}
+        />
       </div>
     );
   }
@@ -3324,7 +3355,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             <button
               type="button"
               className="store-cta landing-cta"
-              onClick={() => alert(`App Store listing for ${data.name} coming in Phase 5+`)}
+              onClick={() => setDownloadModalPlatform('ios')}
               data-testid="landing-close-appstore"
             >
               <div className="store-cta-icon"><RiAppleFill size={22} /></div>
@@ -3336,7 +3367,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
             <button
               type="button"
               className="store-cta landing-cta"
-              onClick={() => alert(`Google Play listing for ${data.name} coming in Phase 5+`)}
+              onClick={() => setDownloadModalPlatform('android')}
               data-testid="landing-close-googleplay"
             >
               <div className="store-cta-icon"><RiDownloadFill size={22} /></div>

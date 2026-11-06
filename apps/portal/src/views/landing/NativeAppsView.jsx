@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { 
   RiAppleFill, 
@@ -15,15 +15,19 @@ import PageHeader from '../../components/common/PageHeader.jsx'
 import headerAppsImg from '../../assets/images/header_apps.png'
 import headerAppsWesternImg from '../../assets/images/header_apps_western.png'
 import './AppsView.css'
+import TuneStreamNativeApp from '../../components/demos/TuneStreamNativeApp.jsx'
+import AppDownloadModal from '../../components/common/AppDownloadModal.jsx'
 
 export default function NativeAppsView() {
+  const [isNativeAppOpen, setIsNativeAppOpen] = useState(false);
+  const [downloadModalPlatform, setDownloadModalPlatform] = useState(null);
   const apps = INTERMAVEN_NATIVE_APPS;
 
   const StoreButton = ({ kind, label, sublabel }) => (
     <button
       type="button"
       className="store-cta"
-      onClick={() => alert(`${label} listing for the ${kind} build coming soon.`)}
+      onClick={() => setDownloadModalPlatform(kind)}
       data-testid={`store-cta-${kind}`}
     >
       <div className="store-cta-icon">
@@ -99,6 +103,31 @@ export default function NativeAppsView() {
                   Explore Features &amp; Tour <RiArrowRightFill size={14} />
                 </Link>
 
+                {a.name === 'tunestream' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsNativeAppOpen(true)}
+                    style={{
+                      marginTop: '10px',
+                      width: '100%',
+                      padding: '8px 12px',
+                      background: 'rgba(16, 185, 129, 0.15)',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      borderRadius: '3px',
+                      color: '#10b981',
+                      fontSize: '11.5px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <RiSmartphoneFill size={15} /> Launch TuneStream Mobile App
+                  </button>
+                )}
+
                 <div className="native-app-meta">
                   <span className="native-app-meta-pill">
                     <RiSmartphoneFill size={11} /> Capacitor-wrapped · iOS &amp; Android
@@ -131,6 +160,34 @@ export default function NativeAppsView() {
         <p style={{ textAlign: 'center', color: '#475569', fontSize: '11px', marginTop: '40px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
           Phase 5+ rollout · See <Link to="/help" style={{ color: 'var(--cyan)' }}>release roadmap</Link>
         </p>
+
+        {isNativeAppOpen && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            backdropFilter: 'blur(10px)',
+            overflowY: 'auto'
+          }}>
+            <div style={{ maxWidth: '460px', width: '100%', position: 'relative' }}>
+              <TuneStreamNativeApp
+                onClose={() => setIsNativeAppOpen(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        <AppDownloadModal
+          isOpen={Boolean(downloadModalPlatform)}
+          defaultPlatform={downloadModalPlatform || 'simulator'}
+          onClose={() => setDownloadModalPlatform(null)}
+          onLaunchSimulator={() => setIsNativeAppOpen(true)}
+        />
       </div>
     </>
   );

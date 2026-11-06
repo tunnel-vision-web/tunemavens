@@ -1,0 +1,55 @@
+name: Build TuneStream Mobile Apps
+
+on:
+  push:
+    paths:
+      - 'apps/tunestream/**'
+      - '.github/workflows/build-mobile-apps.yml'
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TuneStream Web Bundle
+        run: npm run build:tunestream
+
+      - name: Initialize & Sync Capacitor Android
+        working-directory: apps/tunestream
+        run: |
+          npx @capacitor/cli add android || true
+          npx @capacitor/cli sync android
+
+      - name: Build Debug APK with Gradle
+        working-directory: apps/tunestream/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK as Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tunestream-debug-apk
+          path: apps/tunestream/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

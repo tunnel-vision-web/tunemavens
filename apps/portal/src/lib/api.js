@@ -416,3 +416,9 @@ export function normalizeMediaUrl(url) {
   }
   return trimmed;
 }
+
+export const streamApi = {
+  tipArtist: (payload) => request('/api/stream/tip', { method: 'POST', body: payload }),
+  logEvent: (payload) => request('/api/stream/event', { method: 'POST', body: payload }),
+  getManifest: (identifier) => request(`/api/stream/manifest/${encodeURIComponent(identifier)}`),
+};
