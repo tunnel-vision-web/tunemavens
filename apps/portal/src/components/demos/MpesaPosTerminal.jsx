@@ -56,10 +56,11 @@ export default function MpesaPosTerminal({ goBack }) {
       });
       
       const data = await response.json();
-      if (data.success) {
-        setCheckoutId(data.checkout_request_id);
+      if (data.success || data.ResponseCode === '0' || data.status === 'pending') {
+        const activeChkId = data.checkout_request_id || data.CheckoutRequestID;
+        setCheckoutId(activeChkId);
         setStatus('pending');
-        pollStatus(data.checkout_request_id);
+        pollStatus(activeChkId);
       } else {
         setStatus('failed');
         setErrorMsg(data.message || 'Failed to initiate POS prompt.');

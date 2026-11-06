@@ -52,8 +52,8 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
     sessionUser?.role === 'admin' ||
     sessionUser?.is_admin === true ||
     sessionUser?.original_role === 'admin' ||
-    sessionUser?.admin_sandbox === true ||
-    (typeof window !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true')
+    (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin')) ||
+    (sessionUser?.admin_sandbox === true && (sessionUser?.original_role === 'admin' || sessionUser?.is_admin === true))
   );
 
   // SubTab Navigation: 'portal' | 'network' | 'academy' | 'roster' | 'ledger' | 'matrix'

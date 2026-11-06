@@ -2795,7 +2795,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     icon: RiHeadphoneFill,
     color: '#00f2fe'
   };
-  const isAdminSimulated = (activeUser.is_admin && userRole !== 'admin') || (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true' && userRole !== 'admin');
+  const isAdminSimulated = Boolean(activeUser.is_admin && userRole !== 'admin');
 
   const handleSwitchRole = (targetRole) => {
     try {

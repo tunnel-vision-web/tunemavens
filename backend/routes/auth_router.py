@@ -91,6 +91,11 @@ ROLE_DEMO_PROFILES = {
         "name": "Wanjiku Njeri",
         "brand_name": "TuneStream Hi-Fi Listener",
     },
+    "affiliate": {
+        "email": "affiliate_demo@tunemavens.com",
+        "name": "Zawadi Kiprop",
+        "brand_name": "Kenya Music Influencer & Curator Network",
+    },
     "vc": {
         "email": "vc_demo@tunemavens.com",
         "name": "Kariuki Venture Partners",
@@ -187,6 +192,8 @@ def register(payload: RegisterRequest, response: Response, background_tasks: Bac
     elif payload.role:
         roles_list = [normalize_role(payload.role)]
     
+    # Block public registration from granting admin role
+    roles_list = [r for r in roles_list if r != "admin"]
     if not roles_list:
         roles_list = ["creator"]
 

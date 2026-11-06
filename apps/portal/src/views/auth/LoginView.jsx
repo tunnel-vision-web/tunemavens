@@ -4,7 +4,7 @@ import { RiRefreshFill } from 'react-icons/ri'
 import { authApi, tokenStore } from '../../lib/api.js'
 import { reconcileUserApps } from '../../lib/activatedApps.js'
 
-const KNOWN_ROLES = ['creator', 'label', 'dj', 'media_house', 'supervisor', 'consumer', 'corporate', 'podcaster', 'vc'];
+const KNOWN_ROLES = ['creator', 'label', 'dj', 'media_house', 'supervisor', 'consumer', 'corporate', 'podcaster', 'vc', 'affiliate'];
 function resolvePersonaRole() {
   try {
     let r = new URLSearchParams(window.location.search).get('role') || '';
@@ -21,6 +21,7 @@ function resolvePersonaRole() {
     r = String(r).toLowerCase().replace('-', '_');
     if (r === 'media') r = 'media_house';
     if (r === 'studio' || r === 'exec') r = 'supervisor';
+    if (r === 'affiliates' || r === 'referrer') r = 'affiliate';
     return KNOWN_ROLES.includes(r) ? r : 'creator';
   } catch { return 'creator'; }
 }

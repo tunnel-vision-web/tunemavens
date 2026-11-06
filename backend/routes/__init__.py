@@ -29,6 +29,7 @@ from .vc_router import router as vc_router
 from .events_router import router as events_router
 from .podcasts_router import router as podcasts_router
 from .publishing_router import router as publishing_router
+from .confidentiality_router import router as confidentiality_router
 
 __all__ = [
     "admin_router",
@@ -62,4 +63,5 @@ __all__ = [
     "events_router",
     "podcasts_router",
     "publishing_router",
+    "confidentiality_router",
 ]

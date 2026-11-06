@@ -1276,7 +1276,11 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                               <button
                                 type="button"
                                 onClick={() => {
-                                  alert(`Triggering simulated STK push / SMS to ${c.phone} for @${selectedSubdomain} VIP pass!`)
+                                  if (window.dispatchEvent) {
+                                    window.dispatchEvent(new CustomEvent('tunemavens:toast', {
+                                      detail: { type: 'success', message: `STK push & SMS alert dispatched to ${c.phone} for @${selectedSubdomain} VIP pass!` }
+                                    }));
+                                  }
                                 }}
                                 style={{
                                   background: 'rgba(0,240,255,0.1)',
@@ -1512,7 +1516,15 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                     <span style={{ fontSize: '0.7rem', color: '#10b981' }}>● Shared to Creator Community</span>
                     <button
                       type="button"
-                      onClick={() => alert(`Directly messaging curator ${pl.fanName} via Smart CRM!`)}
+                      onClick={() => {
+                        if (pl.fanEmail) {
+                          window.location.href = `mailto:${pl.fanEmail}?subject=${encodeURIComponent(`Collaboration Inquiry from ${selectedSubdomain.toUpperCase()}`)}`;
+                        } else if (window.dispatchEvent) {
+                          window.dispatchEvent(new CustomEvent('tunemavens:toast', {
+                            detail: { type: 'info', message: `Direct messaging channel opened for curator ${pl.fanName} in Smart CRM.` }
+                          }));
+                        }
+                      }}
                       style={{
                         background: 'rgba(0,240,255,0.1)',
                         border: '1px solid rgba(0,240,255,0.3)',

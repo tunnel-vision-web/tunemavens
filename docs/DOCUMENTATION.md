@@ -2754,3 +2754,36 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - SVG spotlight mask cutouts adhere to the universal `rx="3" ry="3"` standard with a 0.8 opacity blackout on the rest of the dashboard.
   - Floating popovers calculate dynamic positioning (right of sidebar, bottom of topbar, or clamped dock) to never obscure active highlighted elements.
   - Plain, warm, jargon-free explanations ensure creators, supervisors, DJs, and fans can immediately navigate their specialized workspaces with confidence.
+
+
+### Technical Foundation Specification (v1.3) Implementation & Compliance (2026-11-06)
+
+- **Canonical URL Architecture & Legacy Redirects (Spec §2 & §3, F17):**
+  - Standardized the platform's public role landing URLs to the `/for/<role>` scheme:
+    - Hub: `https://tunemavens.com/for`
+    - Canonical Roles: `/for/creator`, `/for/label`, `/for/dj`, `/for/media-house`, `/for/supervisor`, `/for/consumer`, `/for/corporate`, `/for/podcaster`, `/for/vc`.
+  - Implemented 301 Permanent Redirects on both Nginx (`deploy/nginx.conf`) and client-side React Router (`apps/portal/src/App.jsx`) for all legacy endpoints (`/for-creators`, `/for-labels`, `/for-djs`, `/for-mediahouses`, `/for-producers`, `/for-supervisors`, `/for-corporate`).
+  - Synchronized static and dynamic XML sitemaps (`apps/portal/public/sitemap.xml`, `backend/routes/seo_router.py`) to reference only canonical 200 URLs with `lastmod` metadata.
+  - Verified pre-rendering across all 10 marketing routes (9 roles + 1 hub) via `scripts/prerender.js`.
+
+- **Strict Credit-Only Billing Harmonization (Spec §5.1 & §5.2, F16):**
+  - Confirmed and finalized the complete eradication of recurring subscription terminology across all documentation, UI registration screens, and consumer landing views.
+  - Standardized all rate cards on non-expiring pay-as-you-go credit packages anchored to the universal 250 credit ($2.50 / KES 250) entry floor and 1:1 KES exchange rate.
+
+- **Rights Data Model & Validation Engine (`backend/services/rights_service.py`, Spec §6):**
+  - **Integer Basis Points Validation:** Enforces that musical work splits are integers in basis points (1 bp = 0.01%) totaling exactly 10,000 bps (100.00%). Floating-point percentages and fractional roundings are rejected.
+  - **ISRC & ISWC Normalization:** Strips hyphens and verifies strict adherence to ISO 3901 (`^[A-Z]{2}[A-Z0-9]{3}[0-9]{2}[0-9]{5}$`) and ISO 15707 (`^T-[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]$`).
+  - **IPI / CAE Verification:** Enforces digits-only 9-to-11 character standard format.
+  - **Audio Asset Integrity:** Accepts WAV, FLAC, and high-bitrate MP3; calculates SHA-256 cryptographic content hashes; detects and rejects corrupted or silent audio files.
+  - **Duplicate Detection:** Automatic collision detection across matching ISRCs, identical content hashes, or fuzzy title + writer metadata matches.
+  - **Sync-Ready Gate:** Weighted completeness scoring across 8 criteria (Master audio, signed split sheet totaling 10,000 bps, ISRC/unreleased declaration, sample clearance, lyrics, language, explicit rating, and AI consent). Tracks qualify for commercial sync pitching only upon achieving 100% gate completeness.
+  - **Unified Contract Engine:** Single calculator function (`calculate_deal_payout`) powering the deal calculator, agreement generator, and payout ledger across standard 50/50 deals, co-publishing (75/25, 85/15), catalogue acquisition advance recoupment, and the settled 90/10 sync licensing split.
+
+- **Confidentiality, NDA Gate & Row-Level Authorization (`backend/services/nda_service.py`, `backend/services/audit_service.py`, `backend/routes/confidentiality_router.py`, Spec §7):**
+  - **Server-Side NDA Enforcement:** Mandatory digital execution of the mutual Non-Disclosure Agreement prior to viewing confidential deal terms or master stems. Cryptographically anchors signer user ID, legal name, IP address, user agent, document version, and SHA-256 document hash.
+  - **Row-Level Tenant Isolation:** Strictly prevents cross-tenant access, ensuring creators cannot inspect or mutate competing creators' draft agreements, split sheets, or payout earnings.
+  - **Comprehensive Audit Trail:** Immutable event recording (`db.audit_logs`) tracking administrative operations, NDA executions, agreement inspections, stem downloads, and payout modifications.
+
+- **Automated Verification & CI Pipelines:**
+  - Added `backend/tests/test_rights_and_confidentiality.py` covering all 11 core acceptance criteria (100% passing).
+  - Integrated into `.github/workflows/ci.yml` alongside existing payment integrity, landing page registry, SEO rendering, and shared identity suites.

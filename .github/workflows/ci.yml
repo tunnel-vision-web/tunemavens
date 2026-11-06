@@ -48,6 +48,10 @@ jobs:
         run: |
           python backend/tests/test_shared_identity_tunestream.py
 
+      - name: Run rights data model & confidentiality suite (Spec §6 & §7)
+        run: |
+          python backend/tests/test_rights_and_confidentiality.py
+
   frontend-build:
     name: Frontend Monorepo Build & Prerender Check
     runs-on: ubuntu-latest

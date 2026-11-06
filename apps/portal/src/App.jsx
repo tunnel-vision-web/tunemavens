@@ -229,18 +229,22 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
     sessionUser?.role === 'admin' ||
     sessionUser?.is_admin === true ||
     sessionUser?.original_role === 'admin' ||
-    sessionUser?.admin_sandbox === true ||
-    (typeof window !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true')
+    (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin')) ||
+    (sessionUser?.admin_sandbox === true && (sessionUser?.original_role === 'admin' || sessionUser?.is_admin === true))
   );
 
-  // If role is admin, ensure localStorage flag is set
+  // Sync localStorage admin flag only when sessionUser is genuinely verified as admin
   useEffect(() => {
-    if (sessionUser?.role === 'admin') {
+    if (sessionUser?.role === 'admin' || sessionUser?.is_admin === true || (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin'))) {
       try {
         localStorage.setItem('tunemavens_admin_verified', 'true');
       } catch (_) {}
+    } else {
+      try {
+        localStorage.removeItem('tunemavens_admin_verified');
+      } catch (_) {}
     }
-  }, [sessionUser?.role]);
+  }, [sessionUser]);
 
   // Handler for admin to switch to any persona to verify apps and tools
   const handleSwitchRole = async (targetRole) => {
@@ -1260,9 +1264,11 @@ function DashboardView({
   const isAdminUser = Boolean(
     sessionUser?.role === 'admin' ||
     activeUser?.role === 'admin' ||
-    sessionUser?.email?.includes('admin') ||
+    sessionUser?.is_admin === true ||
+    sessionUser?.original_role === 'admin' ||
     sessionUser?.simulated_from === 'admin' ||
-    (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true')
+    (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin')) ||
+    (Array.isArray(activeUser?.roles) && activeUser.roles.includes('admin'))
   );
 
   const [consumerPersonaDropdownOpen, setConsumerPersonaDropdownOpen] = useState(false);
@@ -10820,6 +10826,13 @@ function AppContent({
           <Route path="/explore" element={<Navigate to="/native-apps/tunestream?view=explore" replace />} />
           <Route path="/for" element={<PerfectForPageView />} />
           <Route path="/for/:role" element={<RoleLandingView />} />
+          <Route path="/for-creators" element={<Navigate to="/for/creator" replace />} />
+          <Route path="/for-labels" element={<Navigate to="/for/label" replace />} />
+          <Route path="/for-djs" element={<Navigate to="/for/dj" replace />} />
+          <Route path="/for-mediahouses" element={<Navigate to="/for/media-house" replace />} />
+          <Route path="/for-producers" element={<Navigate to="/for/creator" replace />} />
+          <Route path="/for-supervisors" element={<Navigate to="/for/supervisor" replace />} />
+          <Route path="/for-corporate" element={<Navigate to="/for/corporate" replace />} />
           <Route path="/pricing" element={<PricingView />} />
           <Route path="/publishing" element={<PublishingView sessionUser={sessionUser} />} />
           <Route path="/distribution" element={<DistributionView sessionUser={sessionUser} />} />
@@ -11100,11 +11113,21 @@ function App() {
       const activePersona = localStorage.getItem('tunemavens_active_persona');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (activePersona) {
+        const isActualAdmin = Boolean(
+          parsed?.role === 'admin' ||
+          parsed?.is_admin === true ||
+          parsed?.original_role === 'admin' ||
+          (Array.isArray(parsed?.roles) && parsed.roles.includes('admin'))
+        );
+        if (activePersona && isActualAdmin) {
           parsed.role = activePersona;
           parsed.apps = DEFAULT_ACTIVE_APPS_BY_ROLE[activePersona] || parsed.apps;
           parsed.admin_sandbox = true;
           parsed.simulated_role = activePersona !== 'admin' ? activePersona : null;
+        } else if (!isActualAdmin) {
+          delete parsed.admin_sandbox;
+          delete parsed.simulated_role;
+          parsed.is_admin = false;
         }
         return reconcileUserApps(parsed);
       }
@@ -11227,14 +11250,26 @@ function App() {
   }, [catalogTracks, globalTrack]);
 
   const handleLogin = (user) => {
+    const isActualAdmin = Boolean(
+      user?.role === 'admin' ||
+      user?.is_admin === true ||
+      user?.original_role === 'admin' ||
+      (Array.isArray(user?.roles) && user.roles.includes('admin'))
+    );
     try {
       sessionStorage.removeItem('tunestream_active_backend');
-      if (user?.role === 'admin' || user?.role === 'creator') {
+      if (!isActualAdmin) {
         localStorage.removeItem('tunemavens_active_persona');
+        localStorage.removeItem('tunemavens_admin_verified');
+      } else {
+        localStorage.setItem('tunemavens_admin_verified', 'true');
+        if (user?.role === 'admin') {
+          localStorage.removeItem('tunemavens_active_persona');
+        }
       }
     } catch (_) {}
     const activePersona = localStorage.getItem('tunemavens_active_persona');
-    const userToReconcile = (activePersona && (user.is_admin || user.role === 'admin' || localStorage.getItem('tunemavens_admin_verified') === 'true')) ? {
+    const userToReconcile = (activePersona && isActualAdmin) ? {
       ...user,
       role: activePersona,
       apps: DEFAULT_ACTIVE_APPS_BY_ROLE[activePersona] || user.apps,
@@ -11281,12 +11316,24 @@ function App() {
     if (token) {
       authApi.me(token).then((user) => {
         if (cancelled) return;
+        const isActualAdmin = Boolean(
+          user?.role === 'admin' ||
+          user?.is_admin === true ||
+          user?.original_role === 'admin' ||
+          (Array.isArray(user?.roles) && user.roles.includes('admin'))
+        );
+        if (!isActualAdmin) {
+          try {
+            localStorage.removeItem('tunemavens_active_persona');
+            localStorage.removeItem('tunemavens_admin_verified');
+          } catch (_) {}
+        }
         const activePersona = localStorage.getItem('tunemavens_active_persona');
-        const userToReconcile = activePersona ? {
+        const userToReconcile = (activePersona && isActualAdmin) ? {
           ...user,
           role: activePersona,
           apps: DEFAULT_ACTIVE_APPS_BY_ROLE[activePersona] || user.apps,
-          is_admin: user.is_admin || user.role === 'admin' || localStorage.getItem('tunemavens_admin_verified') === 'true',
+          is_admin: true,
           admin_sandbox: true,
           simulated_role: activePersona !== 'admin' ? activePersona : null
         } : user;

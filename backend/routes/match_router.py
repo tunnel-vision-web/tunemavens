@@ -231,7 +231,7 @@ def simulate_matching(payload: MatchRequest):
 
 
 @router.get("/waterfall")
-def calculate_waterfall_split(sync_fee: float, mode: str = "administrator"):
+def calculate_waterfall_split(sync_fee: float = 1000.0, mode: str = "administrator"):
     """Computes the placement split waterfall.
 
     Supported modes:

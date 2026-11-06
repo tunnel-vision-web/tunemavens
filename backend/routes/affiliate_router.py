@@ -607,8 +607,37 @@ def apply_for_affiliate(app_data: AffiliateApplicationRequest, response: Respons
         ).to_mongo())
         user_id = str(res_u.inserted_id)
         setup_token = create_setup_token(user_id)
-    elif not user_row.get("password_hash"):
-        setup_token = create_setup_token(str(user_row["_id"]))
+    else:
+        # Existing user joined the affiliate scheme: update active role to affiliate,
+        # preserve their previous roles in roles list, and ensure affiliate apps are active.
+        existing_roles = user_row.get("roles") or []
+        if isinstance(existing_roles, list):
+            if "affiliate" not in existing_roles:
+                existing_roles.append("affiliate")
+        else:
+            existing_roles = [str(existing_roles), "affiliate"]
+        
+        prev_role = user_row.get("role")
+        if prev_role and prev_role not in existing_roles:
+            existing_roles.append(prev_role)
+            
+        existing_apps = user_row.get("apps") or []
+        for app_slug in ["affiliates", "split-cascade", "tunemavens-library"]:
+            if app_slug not in existing_apps:
+                existing_apps.append(app_slug)
+                
+        update_fields = {
+            "role": "affiliate",
+            "roles": existing_roles,
+            "apps": existing_apps,
+            "updated_at": datetime.now(timezone.utc)
+        }
+        if not user_row.get("name") and app_data.name:
+            update_fields["name"] = app_data.name.strip()
+        db.users.update_one({"_id": user_row["_id"]}, {"$set": update_fields})
+        
+        if not user_row.get("password_hash"):
+            setup_token = create_setup_token(str(user_row["_id"]))
     email_status = send_affiliate_welcome(clean_email, app_data.name.strip(), final_ref, referral_url, setup_token)
 
     # Set affiliate cookie on response for instant self-attribution testing (90 days)

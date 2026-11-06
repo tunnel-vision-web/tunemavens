@@ -22,7 +22,7 @@ from routes import (
     djpool_router, storage_router, epk_router, catalog_router,
     corporate_ads_router, role_tiers_router, support_router, blog_router,
     affiliate_router, tours_router, vc_router, events_router, podcasts_router,
-    publishing_router
+    publishing_router, confidentiality_router
 )
 from routes.communications_router import router as communications_router
 from routes.admin_router import seed_domain_mappings_if_empty
@@ -123,6 +123,7 @@ app.include_router(events_router)
 app.include_router(podcasts_router)
 app.include_router(publishing_router)
 app.include_router(communications_router)
+app.include_router(confidentiality_router)
 
 
 @app.exception_handler(StarletteHTTPException)

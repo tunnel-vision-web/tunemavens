@@ -29,4 +29,5 @@ export const CANONICAL_ROLES = [
   { key: 'consumer', label: 'Listeners', sub: 'TuneStream Fan Tipping', href: '/for/consumer', color: '#10b981' },
   { key: 'corporate', label: 'Corporate Brands', sub: 'Audio Sponsorships', href: '/for/corporate', color: '#ef4444' },
   { key: 'vc', label: 'Venture Capitalists', sub: 'Tour & Career Financing', href: '/for/vc', color: '#10b981' },
+  { key: 'affiliate', label: 'Affiliates', sub: 'Partners & Referrals', href: '/affiliates', color: '#22d3ee' },
 ];

@@ -90,6 +90,7 @@ export const ROLE_LOGOS = {
   exec: labelLogo,
   'booking-agent': bookingLogo,
   manager: mediaHouseLogo,
+  affiliate: tunepayLogo,
 };
 
 export const PERFECT_FOR_ROLES = [
@@ -102,6 +103,7 @@ export const PERFECT_FOR_ROLES = [
   { key: 'consumer', label: 'tunestream', sub: 'Everyday Listeners', href: '/for/consumer', accent: 'var(--gr)' },
   { key: 'corporate', label: 'Corporate', sub: 'Tunecorp Sponsorships & Ads', href: '/for/corporate', accent: '#ef4444' },
   { key: 'vc', label: 'Venture Capitalists', sub: 'Tune Capital Tour Financing', href: '/for/vc', accent: '#10b981' },
+  { key: 'affiliate', label: 'Affiliates', sub: 'Partners & Referrals', href: '/affiliates', accent: '#22d3ee' },
 ];
 
 const LANDING_ROUTE_PREFIXES = [

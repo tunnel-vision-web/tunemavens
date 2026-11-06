@@ -1,5 +1,5 @@
 import React from 'react'
-import { useParams, useLocation, Link } from 'react-router-dom'
+import { useParams, useLocation, Link, Navigate } from 'react-router-dom'
 
 import CreatorLandingPage from './role-pages/CreatorLandingPage.jsx'
 import LabelLandingPage from './role-pages/LabelLandingPage.jsx'
@@ -117,6 +117,7 @@ export default function RoleLandingView() {
   if (['media_house', 'media', 'broadcaster'].includes(normalized)) canonicalKey = 'media-house';
   if (['brand', 'brands'].includes(normalized)) canonicalKey = 'corporate';
   if (['vc', 'investor', 'venture', 'syndicate'].includes(normalized)) canonicalKey = 'vc';
+  if (['affiliate', 'affiliates', 'partner', 'ambassador'].includes(normalized)) return <Navigate to={`/affiliates${location.search || ''}`} replace />;
 
   const switcher = (
     <PersonaSwitcherToolbar

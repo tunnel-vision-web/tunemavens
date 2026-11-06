@@ -20,6 +20,7 @@ export default function RegisterView({ onLogin }) {
     media: 'Media House',
     podcaster: 'Podcaster',
     vc: 'Venture Capital & Tour Financier',
+    affiliate: 'Affiliate Partner',
   };
 
   const safeParseArray = (str, fallback = []) => {
@@ -142,6 +143,7 @@ export default function RegisterView({ onLogin }) {
       if (path.includes('/native-apps/tunestream') || path.includes('/native-apps/tunemavens')) return ['consumer'];
       if (path.includes('/native-apps/creator-companion')) return ['creator'];
       if (path.includes('/native-apps/tunepay')) return ['label'];
+      if (path.includes('/affiliates') || path.includes('/for/affiliate')) return ['affiliate'];
       return [];
     };
 
@@ -827,7 +829,8 @@ export default function RegisterView({ onLogin }) {
                       { id: 'corporate', emoji: '📈', title: 'Corporate', desc: 'Audio ads, sponsorships & partnerships' },
                       { id: 'media', emoji: '📺', title: 'Media House', desc: 'Broadcast licensing & compliance' },
                       { id: 'podcaster', emoji: '🎙️', title: 'Podcaster', desc: 'Publish shows, find sponsors & grow listeners' },
-                      { id: 'vc', emoji: '💼', title: 'Venture Capital & Tour Financier', desc: 'Back artists, tours & catalogues' }
+                      { id: 'vc', emoji: '💼', title: 'Venture Capital & Tour Financier', desc: 'Back artists, tours & catalogues' },
+                      { id: 'affiliate', emoji: '🤝', title: 'Affiliate Partner', desc: 'Referral tracking, matrix commissions & payouts' }
                     ].map(opt => {
                       const isChecked = roles.includes(opt.id);
                       return (

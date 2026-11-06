@@ -86,7 +86,7 @@ def run_tests():
     data = res.json()
     assert data["status"] == "pending", f"Expected 'pending', got {data['status']}"
     assert data["credits"] == 250, f"Expected 250 credits from package, got {data['credits']}"
-    assert data["amount"] == 25.0, f"Expected 25.0 amount from package, got {data['amount']}"
+    assert data["amount"] == 2.5, f"Expected 2.5 amount from package, got {data['amount']}"
 
     # Confirm user credits did NOT increase
     user_doc = db.users.find_one({"_id": ObjectId(user_id)})
@@ -111,7 +111,7 @@ def run_tests():
     stk_data = res.json()
     assert stk_data["status"] == "pending"
     assert stk_data["credits_expected"] == 250
-    assert stk_data["amount_kes"] == 3250
+    assert stk_data["amount_kes"] == 250
     checkout_id = stk_data["CheckoutRequestID"]
 
     # Verify user balance remains 100
@@ -134,7 +134,7 @@ def run_tests():
                 "ResultDesc": "The service request is processed successfully.",
                 "CallbackMetadata": {
                     "Item": [
-                        {"Name": "Amount", "Value": 3250},
+                        {"Name": "Amount", "Value": 250},
                         {"Name": "MpesaReceiptNumber", "Value": mpesa_receipt},
                         {"Name": "TransactionDate", "Value": 20261027145000},
                         {"Name": "PhoneNumber", "Value": 254712345678}
@@ -180,7 +180,7 @@ def run_tests():
         "user_id": user_id,
         "package_id": "creator-starter",
         "credits": 250,
-        "amount": 3250,
+        "amount": 250,
         "checkout_request_id": fake_checkout,
         "status": "pending",
         "created_at": datetime.now(timezone.utc)
@@ -193,7 +193,7 @@ def run_tests():
                 "ResultCode": 0,
                 "CallbackMetadata": {
                     "Item": [
-                        {"Name": "Amount", "Value": 3250},
+                        {"Name": "Amount", "Value": 250},
                         {"Name": "MpesaReceiptNumber", "Value": mpesa_receipt}  # Already used!
                     ]
                 }

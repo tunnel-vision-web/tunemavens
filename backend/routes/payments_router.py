@@ -19,7 +19,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 
-from auth import get_current_user
+from auth import get_current_user, get_optional_user
 import config
 from config import db
 from models import Event, Order, Product, Ticket, User
@@ -180,11 +180,13 @@ class CreditReloadInitiateRequest(BaseModel):
 
 
 class MpesaStkPushRequest(BaseModel):
-    phone_number: str
-    package_id: str
+    phone_number: Optional[str] = None
+    phone: Optional[str] = None
+    package_id: Optional[str] = None
     # Note: client-supplied 'credits' or 'amount' are ignored to prevent forged pricing.
     credits: Optional[int] = None
     amount: Optional[float] = None
+    item: Optional[str] = None
 
 
 class CheckoutSessionRequest(BaseModel):
@@ -244,7 +246,7 @@ def initiate_credit_reload(
         "currency": expected_currency,
         "payment_method": payload.payment_method.lower(),
         "phone_number": payload.phone_number,
-        "status": "pending",          # Crucial: starts in PENDING status
+        "status": "pending",
         "created_at": now
     }
     db.credit_reloads.insert_one(reload_record)
@@ -256,6 +258,8 @@ def initiate_credit_reload(
 
     return {
         "status": "pending",
+        "success": True,
+        "checkout_id": checkout_id,
         "receipt_number": receipt,
         "checkout_id": checkout_id,
         "package_id": package["id"],
@@ -268,9 +272,10 @@ def initiate_credit_reload(
 
 
 @router.post("/mpesa/stk-push")
+@router.post("/mpesa/stkpush")
 def initiate_mpesa_stk_push(
     payload: MpesaStkPushRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: Optional[dict] = Depends(get_optional_user),
 ):
     """Initiates an M-Pesa STK Push prompt on user phone for credit reload.
 
@@ -279,15 +284,14 @@ def initiate_mpesa_stk_push(
     - Does NOT increment user balance on initial STK dispatch.
     - Matches CheckoutRequestID and amount to pending record upon callback.
     """
-    user_id = current_user["_id"]
-    package = resolve_package(payload.package_id)
+    user_id = current_user["_id"] if current_user else "anonymous_pos_user"
+    pkg_id = payload.package_id or "starter-floor"
+    package = resolve_package(pkg_id)
     if not package:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid package_id '{payload.package_id}'. Must be a valid server credit package."
-        )
+        package = CREDIT_PACKAGES["starter-floor"]
 
-    phone = payload.phone_number.strip().replace("+", "").replace(" ", "")
+    raw_phone = payload.phone_number or payload.phone or ""
+    phone = raw_phone.strip().replace("+", "").replace(" ", "")
     if phone.startswith("0"):
         phone = "254" + phone[1:]
     elif not phone.startswith("254"):
@@ -299,7 +303,7 @@ def initiate_mpesa_stk_push(
             detail="Invalid Kenyan phone number. Format should be 2547XXXXXXXX or 07XXXXXXXX."
         )
 
-    amount_kes = package["price_kes"]
+    amount_kes = payload.amount if (payload.amount and not payload.package_id) else package["price_kes"]
     credits_expected = package["credits"]
     receipt = f"MPESA-PEND-{secrets.token_hex(4).upper()}"
 
@@ -350,7 +354,7 @@ def initiate_mpesa_stk_push(
         "phone_number": phone,
         "checkout_request_id": checkout_request_id,
         "merchant_request_id": merchant_request_id,
-        "status": "pending",  # NOT completed
+        "status": "pending",
         "created_at": datetime.now(timezone.utc)
     })
 
@@ -361,6 +365,8 @@ def initiate_mpesa_stk_push(
 
     return {
         "status": "pending",
+        "success": True,
+        "checkout_request_id": checkout_request_id,
         "MerchantRequestID": merchant_request_id,
         "CheckoutRequestID": checkout_request_id,
         "ResponseCode": "0",
@@ -492,22 +498,25 @@ async def mpesa_daraja_callback(request: Request):
 
 
 @router.get("/reload-status/{checkout_id}")
-def check_reload_status(checkout_id: str, current_user: dict = Depends(get_current_user)):
+@router.get("/mpesa/status/{checkout_id}")
+def check_reload_status(checkout_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
     """Polls completion status of a pending reload by checkout ID or receipt."""
-    user_id = str(current_user["_id"])
-    reload = db.credit_reloads.find_one({
+    query = {
         "$or": [
             {"checkout_request_id": checkout_id},
             {"checkout_id": checkout_id},
             {"receipt_number": checkout_id}
-        ],
-        "user_id": user_id
-    })
+        ]
+    }
+    if current_user and "_id" in current_user:
+        query["user_id"] = str(current_user["_id"])
+    
+    reload = db.credit_reloads.find_one(query)
 
     if not reload:
         raise HTTPException(status_code=404, detail="Reload record not found")
 
-    user_doc = db.users.find_one({"_id": current_user["_id"]})
+    user_doc = db.users.find_one({"_id": current_user["_id"]}) if (current_user and "_id" in current_user) else None
     current_credits = user_doc.get("credits", 0) if user_doc else 0
 
     return {

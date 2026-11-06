@@ -342,12 +342,12 @@ function AppContent() {
     role: userRole,
     credits: userCredits,
     phone: '254712345678',
-    is_admin: userRole === 'admin' || (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true'),
+    is_admin: userRole === 'admin' || (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin')),
     tier: 'pro'
   };
 
   const currentRoleObj = PERSONA_ROLES.find(r => r.id === userRole) || PERSONA_ROLES[0];
-  const isAdminSimulated = (sessionUser.is_admin && userRole !== 'admin') || (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true' && userRole !== 'admin');
+  const isAdminSimulated = Boolean(sessionUser.is_admin && userRole !== 'admin');
 
   const handleSwitchRole = (targetRole) => {
     try {

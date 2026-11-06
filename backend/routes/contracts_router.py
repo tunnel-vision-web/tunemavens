@@ -80,6 +80,8 @@ def _to_update(contract: Contract) -> dict:
 
 def _load_owned(user_id: str, contract_id: str) -> Contract:
     # owner_id is stored as a string (PyObjectId serialises to str).
+    if not ObjectId.is_valid(contract_id):
+        raise HTTPException(status_code=404, detail="Contract not found")
     doc = db.contracts.find_one({"_id": ObjectId(contract_id), "owner_id": user_id})
     if not doc:
         raise HTTPException(status_code=404, detail="Contract not found")
@@ -88,6 +90,8 @@ def _load_owned(user_id: str, contract_id: str) -> Contract:
 
 def _load_readable(user: dict, contract_id: str) -> Contract:
     """Owner OR an invitee (by user_id or matching email) can read."""
+    if not ObjectId.is_valid(contract_id):
+        raise HTTPException(status_code=404, detail="Contract not found")
     email = user.get("email", "")
     uid = str(user["_id"])
     doc = db.contracts.find_one({
