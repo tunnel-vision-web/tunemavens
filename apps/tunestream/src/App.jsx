@@ -3359,7 +3359,10 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand-wrapper">
           <Link to="/" className="sidebar-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none' }}>
-            <img src={tsLogo} alt="TuneStream" className="sidebar-logo-img" />
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+              <img src={tsLogo} alt="TuneStream" className="sidebar-logo-img" />
+              <span style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+            </div>
             {!collapsed && (
               <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase', marginTop: '2px' }}>
                 a tunemavens utility

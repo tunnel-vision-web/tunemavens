@@ -47,12 +47,15 @@ export default function Footer() {
             {/* Brand Column with TuneStream logo and tagline */}
             <div className="footer-brand">
               <div className="footer-logo">
-                <img 
-                  src={ROLE_LOGOS['consumer']} 
-                  alt="TuneStream Footer Logo" 
-                  className="footer-logo-image" 
-                  style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} 
-                />
+                <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                  <img 
+                    src={ROLE_LOGOS['consumer']} 
+                    alt="TuneStream Footer Logo" 
+                    className="footer-logo-image" 
+                    style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} 
+                  />
+                  <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+                </div>
               </div>
               <div className="footer-desc">
                 Next-generation music streaming built on the shared Intermaven network.
@@ -130,12 +133,15 @@ export default function Footer() {
             {/* Brand Column with second instance logo and tagline */}
             <div className="footer-brand">
               <div className="footer-logo">
-                <img 
-                  src="/tunemavens-logo-white.png" 
-                  alt="TuneMavens Footer Logo" 
-                  className="footer-logo-image" 
-                  style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} 
-                />
+                <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                  <img 
+                    src="/tunemavens-logo-white.png" 
+                    alt="TuneMavens Footer Logo" 
+                    className="footer-logo-image" 
+                    style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} 
+                  />
+                  <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+                </div>
               </div>
               <div className="footer-desc">
                 Next-generation tools built on the shared Intermaven network.

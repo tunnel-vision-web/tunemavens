@@ -775,12 +775,15 @@ function AppContent() {
           <div className="dashboard-sidebar-scroll">
             <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center', justifyContent: 'center', padding: '16px 0' }}>
               <Link to="/" className="nav-logo-link">
-                <img 
-                  src={smLogo} 
-                  alt="SyncMavens Logo" 
-                  className="nav-logo-image" 
-                  style={{ height: collapsed ? '20px' : '32px', width: 'auto', display: 'block' }} 
-                />
+                <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                  <img 
+                    src={smLogo} 
+                    alt="SyncMavens Logo" 
+                    className="nav-logo-image" 
+                    style={{ height: collapsed ? '20px' : '32px', width: 'auto', display: 'block' }} 
+                  />
+                  <span style={{ fontSize: collapsed ? '7px' : '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+                </div>
               </Link>
             </div>
 

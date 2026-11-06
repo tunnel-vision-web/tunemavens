@@ -2591,18 +2591,30 @@ function DashboardView({
             <Link to={activeUser?.role === 'consumer' ? "/native-apps/tunestream" : "/"} title={activeUser?.role === 'consumer' ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site"} data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
               {collapsed ? (
                 activeUser?.role === 'consumer' ? (
-                  <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Icon" style={{ height: '28px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/favicon.png'; }} />
+                  <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                    <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Icon" style={{ height: '28px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/favicon.png'; }} />
+                    <span style={{ fontSize: '7px', fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-2px', alignSelf: 'flex-end' }}>beta</span>
+                  </div>
                 ) : (
-                  <img src="/favicon.png" alt="TuneMavens Icon" style={{ height: '32px', width: 'auto', display: 'block' }} />
+                  <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                    <img src="/favicon.png" alt="TuneMavens Icon" style={{ height: '32px', width: 'auto', display: 'block' }} />
+                    <span style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-2px', alignSelf: 'flex-end' }}>beta</span>
+                  </div>
                 )
               ) : (
                 activeUser?.role === 'consumer' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-                    <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: '32px', width: 'auto', display: 'block', margin: '0 auto' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
+                    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                      <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: '32px', width: 'auto', display: 'block', margin: '0 auto' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
+                      <span style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+                    </div>
                     <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase' }}>a tunemavens utility</span>
                   </div>
                 ) : (
-                  <img src="/tunemavens-logo-white.png" alt="TuneMavens Logo" style={{ height: '36px', width: 'auto', display: 'block', margin: '0 auto' }} />
+                  <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                    <img src="/tunemavens-logo-white.png" alt="TuneMavens Logo" style={{ height: '36px', width: 'auto', display: 'block', margin: '0 auto' }} />
+                    <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+                  </div>
                 )
               )}
             </Link>
@@ -10898,12 +10910,15 @@ function AppContent({
                 {/* Brand Column with TuneStream logo and tagline */}
                 <div className="footer-brand">
                   <div className="footer-logo">
-                    <img 
-                      src={ROLE_LOGOS['consumer']} 
-                      alt="TuneStream Footer Logo" 
-                      className="footer-logo-image" 
-                      style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} 
-                    />
+                    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                      <img 
+                        src={ROLE_LOGOS['consumer']} 
+                        alt="TuneStream Footer Logo" 
+                        className="footer-logo-image" 
+                        style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} 
+                      />
+                      <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+                    </div>
                   </div>
                   <div className="footer-desc">
                     Next-generation music streaming built on the shared Intermaven network.
@@ -10983,12 +10998,15 @@ function AppContent({
                 {/* Brand Column with second instance logo and tagline */}
                 <div className="footer-brand">
                   <div className="footer-logo">
-                    <img 
-                      src="/tunemavens-logo-white.png" 
-                      alt="TuneMavens Footer Logo" 
-                      className="footer-logo-image" 
-                      style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} 
-                    />
+                    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                      <img 
+                        src="/tunemavens-logo-white.png" 
+                        alt="TuneMavens Footer Logo" 
+                        className="footer-logo-image" 
+                        style={{ height: '38px', width: 'auto', display: 'block', margin: '0 auto' }} 
+                      />
+                      <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+                    </div>
                   </div>
                   <div className="footer-desc">
                     Next-generation tools built on the shared Intermaven network.

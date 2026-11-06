@@ -457,12 +457,15 @@ export default function Navbar({ sessionUser }) {
       <div className="nav-inner-container">
         {activeRoleLogo ? (
           <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', padding: '6px 0' }}>
-            <img 
-              src={activeRoleLogo.logo} 
-              alt={`${activeRoleLogo.roleKey} Logo`} 
-              className="logo-image-role logo-image"
-              style={{ display: 'block' }}
-            />
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+              <img 
+                src={activeRoleLogo.logo} 
+                alt={`${activeRoleLogo.roleKey} Logo`} 
+                className="logo-image-role logo-image"
+                style={{ display: 'block' }}
+              />
+              <span style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+            </div>
             <a
               href="/"
               onClick={handleBackToTuneMavens}
@@ -474,11 +477,14 @@ export default function Navbar({ sessionUser }) {
           </div>
         ) : (
           <Link to="/" className="nav-logo-container" onClick={() => setMobileOpen(false)}>
-            <img 
-              src={scrolled ? "/tunemavens-logo-teal.png" : "/tunemavens-logo-white.png"} 
-              alt="TuneMavens Logo" 
-              className="logo-image" 
-            />
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+              <img 
+                src={scrolled ? "/tunemavens-logo-teal.png" : "/tunemavens-logo-white.png"} 
+                alt="TuneMavens Logo" 
+                className="logo-image" 
+              />
+              <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+            </div>
           </Link>
         )}
 

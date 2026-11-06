@@ -641,7 +641,10 @@ export default function RegisterView({ onLogin }) {
       </button>
       
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <img src="/favicon.png" alt="TuneMavens Icon" style={{ width: '42px', height: '42px', display: 'block' }} />
+        <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+          <img src="/favicon.png" alt="TuneMavens Icon" style={{ width: '42px', height: '42px', display: 'block' }} />
+          <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '2px', alignSelf: 'flex-end' }}>beta</span>
+        </div>
       </div>
 
       <div className="auth-header" style={{ marginBottom: '16px' }}>

@@ -1202,6 +1202,48 @@ export default function PodcasterLandingPage({ switcher }) {
             </p>
           </div>
 
+          {/* Public Beta Creator Pricing Notice Badge */}
+          <div
+            className="beta-pricing-notice-badge"
+            data-testid="beta-pricing-notice-badge"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%)',
+              border: '1px solid rgba(0, 240, 255, 0.4)',
+              borderLeft: '5px solid #00f0ff',
+              borderRadius: '3px',
+              padding: '18px 22px',
+              marginBottom: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              maxWidth: '1240px',
+              margin: '0 auto 32px auto',
+              boxShadow: '0 8px 32px rgba(0, 240, 255, 0.08)'
+            }}
+          >
+            <div style={{
+              background: '#00f0ff',
+              color: '#0b0f19',
+              fontWeight: 900,
+              fontSize: '11px',
+              letterSpacing: '1.2px',
+              padding: '6px 12px',
+              borderRadius: '3px',
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>
+              Public Beta Notice
+            </div>
+            <div style={{ flex: 1, fontSize: '13px', lineHeight: 1.5, color: '#f1f5f9' }}>
+              <strong style={{ color: '#00f0ff' }}>Podcaster &amp; Creator Pricing Suspended: </strong>
+              During the public beta period, all creator audio hosting pricing is suspended with 100% complimentary platform access.
+              <span style={{ display: 'block', marginTop: '4px', color: '#94a3b8', fontSize: '12px' }}>
+                The only active paying personas are: <strong style={{ color: '#fff' }}>Consumers / Listeners</strong>, <strong style={{ color: '#fff' }}>Corporates</strong>, <strong style={{ color: '#fff' }}>Media Houses</strong>, <strong style={{ color: '#fff' }}>Music Supervisors</strong> (when licensing), and <strong style={{ color: '#fff' }}>VCs</strong>.
+              </span>
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
             {tierPackages.map((tier) => (
               <div

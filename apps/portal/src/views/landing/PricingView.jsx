@@ -180,14 +180,68 @@ export default function PricingView() {
     <>
       <PageHeader title="Credits & Top-Ups" bgImage={headerPricingImg} bgImageWestern={headerPricingWesternImg} breadcrumb="Credits & Pricing" />
       <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
+        {/* Public Beta Creator Pricing Notice Badge */}
+        <div
+          className="beta-pricing-notice-badge"
+          data-testid="beta-pricing-notice-badge"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%)',
+            border: '1px solid rgba(0, 240, 255, 0.4)',
+            borderLeft: '5px solid #00f0ff',
+            borderRadius: '3px',
+            padding: '20px 24px',
+            marginBottom: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '18px',
+            maxWidth: '1300px',
+            margin: '0 auto 36px auto',
+            boxShadow: '0 8px 32px rgba(0, 240, 255, 0.08)'
+          }}
+        >
+          <div style={{
+            background: '#00f0ff',
+            color: '#0b0f19',
+            fontWeight: 900,
+            fontSize: '11px',
+            letterSpacing: '1.2px',
+            padding: '6px 12px',
+            borderRadius: '3px',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }}>
+            Public Beta Notice
+          </div>
+          <div style={{ flex: 1, fontSize: '13.5px', lineHeight: 1.55, color: '#f1f5f9' }}>
+            <strong style={{ color: '#00f0ff', fontWeight: 800 }}>
+              All Creator Pricing &amp; Credit Reloading Suspended:
+            </strong>{' '}
+            During the public beta period, all independent creator, artist, and producer pricing (loading credits) is temporarily suspended with 100% complimentary platform access.
+            <div style={{ marginTop: '6px', color: '#94a3b8', fontSize: '12.5px' }}>
+              The only active commercial personas paying during beta are:{' '}
+              <span style={{ color: '#fff', fontWeight: 700 }}>Consumers / Listeners</span> (TuneStream tipping),{' '}
+              <span style={{ color: '#fff', fontWeight: 700 }}>Corporates</span> (audio advertising &amp; tour sponsorships),{' '}
+              <span style={{ color: '#fff', fontWeight: 700 }}>Media</span> (media house ingestion &amp; broadcast tracking),{' '}
+              <span style={{ color: '#fff', fontWeight: 700 }}>Music Supervisors</span> (sync licensing &amp; briefs), and{' '}
+              <span style={{ color: '#fff', fontWeight: 700 }}>VCs &amp; Investors</span> (investing in projects &amp; creators).
+            </div>
+          </div>
+        </div>
+
         <p className="section-desc" style={{ textAlign: 'center', marginBottom: '40px', maxWidth: '700px', margin: '0 auto 40px' }}>
           Top up your balance with non-expiring TM Credits starting as low as KSh 250 ($2.50). No recurring monthly subscriptions — pay only for what you use across the entire TuneMavens and Intermaven ecosystem.
         </p>
         <div className="pricing-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', maxWidth: '1300px' }}>
           {PLANS.map((plan) => (
-            <div key={plan.name} className={`pricing-card glass-panel ${plan.popular ? 'premium' : ''}`} style={{ borderRadius: '3px' }}>
+            <div key={plan.name} className={`pricing-card glass-panel ${plan.popular ? 'premium' : ''}`} style={{ borderRadius: '3px', position: 'relative' }}>
               {plan.popular && <span className="pricing-badge" style={{ borderRadius: '3px' }}>Most Popular</span>}
               {plan.team && <span className="pricing-badge" style={{ background: 'var(--purple)', borderRadius: '3px' }}><RiTeamFill size={12} style={{ marginRight: '4px' }} />Teams</span>}
+              {!plan.team && plan.price > 0 && (
+                <span className="pricing-badge" style={{ background: 'rgba(0, 240, 255, 0.15)', border: '1px solid #00f0ff', color: '#00f0ff', borderRadius: '3px', top: plan.popular ? '38px' : '10px' }}>
+                  Beta: Suspended (Free Access)
+                </span>
+              )}
               <h3 className="plan-name">{plan.name}</h3>
               <div className="plan-price">
                 {plan.price === 0 ? formatPrice(0) : `${currencyInfo?.symbol || '$'}${convertPrice(plan.price).toFixed(2)}`}

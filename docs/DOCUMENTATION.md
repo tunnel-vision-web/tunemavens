@@ -2787,3 +2787,46 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
 - **Automated Verification & CI Pipelines:**
   - Added `backend/tests/test_rights_and_confidentiality.py` covering all 11 core acceptance criteria (100% passing).
   - Integrated into `.github/workflows/ci.yml` alongside existing payment integrity, landing page registry, SEO rendering, and shared identity suites.
+
+
+### Public Beta Launch: Logo Branding, Creator Pricing Suspension & Persona Scoping (2026-11-06)
+
+- **Beta Logo Branding & Typography Standard:**
+  - Added the uppercase `beta` label directly below every logo across all platform touchpoints:
+    - **Positioning:** Rendered in an `inline-flex` column with `alignItems: 'flex-end'` immediately to the right-hand side beneath the logo.
+    - **Typography:** Set to ~40% smaller font size than the logo text/mark (e.g. `9px - 10px` on standard headers, `11px` on primary banners, `8px` on compact badges), `fontWeight: 800`, `letterSpacing: '1px - 1.2px'`, text transformed to uppercase in `#00f0ff` (cyan).
+    - **Touchpoints Updated:**
+      - `apps/portal`: Navigation bar (`Navbar.jsx`), footer (`Footer.jsx`), dashboard collapsed & expanded sidebar headers (`App.jsx`), authentication modals (`LoginView.jsx`, `RegisterView.jsx`), and SSR pre-render script (`scripts/prerender.js`).
+      - `apps/tunestream`: Top navigation (`Navbar.jsx`), footer (`Footer.jsx`), and sidebar brand mark (`App.jsx`).
+      - `apps/syncmavens`: Top navigation bar (`Navbar.jsx`), footer (`Footer.jsx`), and sidebar header (`App.jsx`).
+      - Pre-rendered static HTML (`apps/portal/public/**/*.html` via `node scripts/prerender.js`).
+
+- **Creator Pricing & Credit Reloading Suspension:**
+  - **Full Complimentary Creator Access:** All creator pricing (credit reloads) for independent artists, creators, producers, DJs, and podcasters is suspended for the duration of the Public Beta. Creators receive 100% complimentary platform access without requiring payment cards or mobile money top-ups.
+  - **Public Beta Notice Badges:**
+    - Inserted prominent public beta notice badges with cyan left borders across all commercial pricing entry points:
+      - Main pricing view (`apps/portal/src/views/landing/PricingView.jsx`).
+      - Creator landing page pricing section (`apps/portal/src/views/landing/role-pages/CreatorLandingPage.jsx`).
+      - DJ record pool rates section (`apps/portal/src/views/landing/role-pages/DjLandingPage.jsx`).
+      - Podcaster audio hosting plans section (`apps/portal/src/views/landing/role-pages/PodcasterLandingPage.jsx`).
+      - Credit reload modal (`CreditReloadModal.jsx` across `apps/portal`, `apps/tunestream`, and `apps/syncmavens`).
+      - Static pre-rendered pricing HTML (`apps/portal/public/pricing/index.html` and role HTML pages).
+  - **Complimentary Credit Allocation Endpoint:**
+    - Implemented `POST /api/payments/beta/complimentary-credits` in `backend/routes/payments_router.py`.
+    - Authenticated creators can claim complimentary credits (default +500 credits) with a single click.
+    - Grants are recorded in TuneLedger double-entry accounting with `entry_type="PROMO_GRANT"`, provider `"system"`, and idempotency tracking, preserving strict 0-discrepancy ledger reconciliation.
+    - Updated `GET /api/payments/credit-packages` to include `beta_notice` metadata.
+
+- **Active Commercial Paying Personas During Beta:**
+  - Standardized throughout all pricing badges, notices, and documentation that the **only 5 personas** paying for services during the beta are:
+    1. **Consumers / Listeners:** Fan tipping on TuneStream and concert ticket purchases.
+    2. **Corporates:** Audio ad placements (15s/30s unskippable spots) and tour sponsorships.
+    3. **Media (Media Houses / Broadcasters):** Large-scale catalog ingestion and airplay broadcast tracking.
+    4. **Music Supervisors:** Sync licensing clearance and brief placement commissions.
+    5. **VCs & Investors:** Capital deployments and financing for creators, tours, and projects.
+
+- **Test Verification:**
+  - Created `backend/tests/test_beta_pricing.py` validating the credit packages metadata, complimentary credit grants, and TuneLedger double-entry reconciliation (2/2 passing).
+  - Verified all 16 payment integrity tests in `backend/tests/test_payment_integrity.py` pass with zero discrepancy.
+  - Verified all 11 rights data model and confidentiality tests in `backend/tests/test_rights_and_confidentiality.py` pass.
+  - Added test suite to `.github/workflows/ci.yml`.

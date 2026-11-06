@@ -253,7 +253,10 @@ function generateHtml(route, baseHtmlTemplate) {
   const serverRenderedBody = `
     <div id="ssr-container" style="max-width: 1200px; margin: 0 auto; padding: 48px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #f1f5f9; background: #0b0f19;">
       <header style="margin-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-weight: 800; font-size: 20px; letter-spacing: -0.5px; color: #00f0ff;">TuneMavens</div>
+        <div style="font-weight: 800; font-size: 20px; letter-spacing: -0.5px; color: #00f0ff; display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1;">
+          <span>TuneMavens</span>
+          <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #00f0ff; margin-top: 2px; align-self: flex-end;">beta</span>
+        </div>
         <nav style="display: flex; gap: 20px; font-size: 14px;">
           <a href="/" style="color: #cbd5e1; text-decoration: none;">Home</a>
           <a href="/pricing" style="color: #cbd5e1; text-decoration: none;">Pricing</a>
@@ -280,6 +283,20 @@ function generateHtml(route, baseHtmlTemplate) {
       </nav>
 
       <main>
+        ${(route.slug === 'pricing' || route.slug === 'for-creators' || route.slug === 'for/creator' || route.slug === 'for/dj' || route.slug === 'for/podcaster') ? `
+        <div data-testid="beta-pricing-notice-badge" style="background: linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-left: 5px solid #00f0ff; border-radius: 4px; padding: 18px 22px; margin-bottom: 32px; display: flex; align-items: center; gap: 16px;">
+          <div style="background: #00f0ff; color: #0b0f19; font-weight: 900; font-size: 11px; letter-spacing: 1.2px; padding: 6px 12px; border-radius: 3px; text-transform: uppercase; white-space: nowrap;">
+            Public Beta Notice
+          </div>
+          <div style="flex: 1; font-size: 13.5px; line-height: 1.55; color: #f1f5f9;">
+            <strong style="color: #00f0ff;">All Creator Pricing &amp; Credit Reloading Suspended:</strong>
+            During the public beta period, all independent creator, artist, and producer credit loading is temporarily suspended with 100% complimentary platform access.
+            <div style="margin-top: 6px; color: #94a3b8; font-size: 12.5px;">
+              The only active commercial personas paying during beta are: <strong style="color: #fff;">Consumers / Listeners</strong> (tipping), <strong style="color: #fff;">Corporates</strong> (audio ads &amp; sponsorships), <strong style="color: #fff;">Media Houses</strong> (ingestion &amp; broadcast tracking), <strong style="color: #fff;">Music Supervisors</strong> (when licensing), and <strong style="color: #fff;">VCs &amp; Investors</strong> (investing in projects &amp; creators).
+            </div>
+          </div>
+        </div>
+        ` : ''}
         <section style="margin: 40px 0 60px 0;">
           <h1 style="font-size: 38px; line-height: 1.2; font-weight: 800; margin-bottom: 16px; color: #ffffff;">
             ${route.h1}

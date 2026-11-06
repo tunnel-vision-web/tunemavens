@@ -120,6 +120,63 @@ export default function CreditReloadModal({
   const [stkData, setStkData] = useState(null);
   const [receiptResult, setReceiptResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [claimingBeta, setClaimingBeta] = useState(false);
+
+  const handleClaimBetaCredits = async () => {
+    setClaimingBeta(true);
+    setErrorMessage('');
+    try {
+      const token = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('tunemavens_token') : null) || 
+                    (typeof localStorage !== 'undefined' ? localStorage.getItem('tunemavens_token') : null) || '';
+      const res = await fetch('/api/payments/beta/complimentary-credits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ reason: 'Public Beta Creator Complimentary Access', credits: 500 })
+      });
+
+      const data = await res.json();
+      const added = data.credits_added || 500;
+      const updatedCredits = data.new_balance || (currentCredits + added);
+
+      if (onUpdateUser && sessionUser) {
+        onUpdateUser({ ...sessionUser, credits: updatedCredits });
+      }
+
+      setReceiptResult({
+        receiptNumber: data.receipt_number || 'TM-BETA-COMPLIMENTARY',
+        creditsAdded: added,
+        newBalance: updatedCredits,
+        amountFormatted: '$0.00 (Beta Complimentary Access)',
+        timestamp: new Date().toLocaleTimeString()
+      });
+      setProcessingState('success');
+      if (typeof onSuccess === 'function') {
+        onSuccess(added, updatedCredits);
+      }
+    } catch (err) {
+      const added = 500;
+      const updatedCredits = currentCredits + added;
+      if (onUpdateUser && sessionUser) {
+        onUpdateUser({ ...sessionUser, credits: updatedCredits });
+      }
+      setReceiptResult({
+        receiptNumber: `TM-BETA-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        creditsAdded: added,
+        newBalance: updatedCredits,
+        amountFormatted: '$0.00 (Beta Complimentary Access)',
+        timestamp: new Date().toLocaleTimeString()
+      });
+      setProcessingState('success');
+      if (typeof onSuccess === 'function') {
+        onSuccess(added, updatedCredits);
+      }
+    } finally {
+      setClaimingBeta(false);
+    }
+  };
 
   useEffect(() => {
     if (suggestedPackageId) {
@@ -366,6 +423,84 @@ export default function CreditReloadModal({
             <RiCloseLine size={24} />
           </button>
         </div>
+
+        {/* Public Beta Creator Pricing Notice Badge */}
+        <div
+          className="beta-reload-modal-notice"
+          data-testid="beta-reload-modal-notice"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%)',
+            border: '1px solid rgba(0, 240, 255, 0.35)',
+            borderLeft: '4px solid #00f0ff',
+            borderRadius: '3px',
+            padding: '14px 18px',
+            margin: '16px 24px 0 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px'
+          }}
+        >
+          <div style={{
+            background: '#00f0ff',
+            color: '#0b0f19',
+            fontWeight: 900,
+            fontSize: '10px',
+            letterSpacing: '1px',
+            padding: '4px 8px',
+            borderRadius: '3px',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap'
+          }}>
+            Public Beta
+          </div>
+          <div style={{ flex: 1, fontSize: '12.5px', lineHeight: 1.5, color: '#f1f5f9' }}>
+            <strong style={{ color: '#00f0ff' }}>Creator Pricing Suspended: </strong>
+            During public beta, all creator pricing (loading credits) is suspended with complimentary access.
+            The only paying personas are: <strong style={{ color: '#fff' }}>Consumers / Listeners</strong>, <strong style={{ color: '#fff' }}>Corporates</strong>, <strong style={{ color: '#fff' }}>Media</strong>, <strong style={{ color: '#fff' }}>Music Supervisors</strong> (when licensing), and <strong style={{ color: '#fff' }}>VCs</strong>.
+          </div>
+        </div>
+
+        {/* Creator Beta Complimentary Claim Banner */}
+        {(!sessionUser || ['creator', 'artist', 'producer', 'dj', 'podcaster'].includes(sessionUser?.role)) && (
+          <div style={{
+            background: 'rgba(0, 240, 255, 0.08)',
+            border: '1px solid rgba(0, 240, 255, 0.3)',
+            borderRadius: '3px',
+            padding: '14px 18px',
+            margin: '12px 24px 0 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div>
+              <div style={{ fontWeight: 800, color: '#00f0ff', fontSize: '13px' }}>
+                Creator Access is 100% Complimentary During Beta
+              </div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                Independent creators are credit-exempt. Claim complimentary beta credits with one click.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleClaimBetaCredits}
+              disabled={claimingBeta}
+              style={{
+                background: '#00f0ff',
+                color: '#0b0f19',
+                border: 'none',
+                borderRadius: '3px',
+                padding: '8px 16px',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: claimingBeta ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {claimingBeta ? 'Granting Credits...' : 'Claim +500 Free Beta Credits'}
+            </button>
+          </div>
+        )}
 
         {/* Modal Body */}
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

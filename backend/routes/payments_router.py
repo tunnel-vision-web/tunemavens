@@ -196,13 +196,94 @@ class CheckoutSessionRequest(BaseModel):
     shipping_address: Optional[str] = None
 
 
+class BetaComplimentaryCreditsRequest(BaseModel):
+    reason: Optional[str] = "Public Beta Creator Access"
+    credits: Optional[int] = 500
+
+
 @router.get("/credit-packages")
 def get_credit_packages():
     """Returns official credit reload packages. Zero monthly subscriptions."""
     return {
         "packages": list(CREDIT_PACKAGES.values()),
         "billing_model": "unified_credits",
-        "no_monthly_charges": True
+        "no_monthly_charges": True,
+        "beta_notice": {
+            "creator_pricing_suspended": True,
+            "complimentary_creator_access": True,
+            "paying_personas": [
+                "consumers/listeners",
+                "corporates",
+                "media",
+                "music supervisors",
+                "vcs"
+            ],
+            "message": "During the public beta period, all creator pricing (loading credits) is suspended with 100% complimentary access for independent creators, artists, and producers. The only paying personas are consumers/listeners, corporates, media, music supervisors (when licensing), and VCs (investing in projects & creators)."
+        }
+    }
+
+
+@router.post("/beta/complimentary-credits")
+def claim_beta_complimentary_credits(
+    payload: BetaComplimentaryCreditsRequest = BetaComplimentaryCreditsRequest(),
+    current_user: dict = Depends(get_current_user),
+):
+    """Grants complimentary credits to creators during the Public Beta period.
+
+    During public beta, all creator pricing (credit reloads) is suspended.
+    Creators receive complimentary credits recorded in TuneLedger as PROMO_GRANT.
+    """
+    user_id = current_user["_id"]
+    grant_amount = min(max(payload.credits or 500, 100), 2000)
+    receipt = f"TM-BETA-{secrets.token_hex(6).upper()}"
+    idempotency = f"BETA-GRANT-{str(user_id)}-{datetime.now(timezone.utc).strftime('%Y%m%d')}"
+
+    ledger_result = ledger_service.record_transaction(
+        user_id=user_id,
+        amount=grant_amount,
+        entry_type="PROMO_GRANT",
+        provider="system",
+        provider_ref=receipt,
+        idempotency_key=idempotency,
+        description=f"Public Beta Complimentary Creator Credits ({receipt})",
+        metadata={
+            "beta_period": True,
+            "creator_pricing_suspended": True,
+            "reason": payload.reason or "Public Beta Creator Access",
+            "paying_personas": [
+                "consumers/listeners",
+                "corporates",
+                "media",
+                "music supervisors",
+                "vcs"
+            ]
+        }
+    )
+
+    new_balance = ledger_result.get("balance_after", current_user.get("credits", 0) + grant_amount)
+
+    logger.info(
+        f"[Beta Pricing] Granted {grant_amount} complimentary credits to user {user_id}. "
+        f"Receipt: {receipt}. New Balance: {new_balance}."
+    )
+
+    return {
+        "success": True,
+        "status": "granted",
+        "credits_added": grant_amount,
+        "new_balance": new_balance,
+        "receipt_number": receipt,
+        "message": "Complimentary beta credits successfully granted! Creator pricing is suspended during the Public Beta period.",
+        "beta_notice": {
+            "creator_pricing_suspended": True,
+            "paying_personas": [
+                "consumers/listeners",
+                "corporates",
+                "media",
+                "music supervisors",
+                "vcs"
+            ]
+        }
     }
 
 
