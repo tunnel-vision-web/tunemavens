@@ -101,6 +101,28 @@ export function CreatorEpkView(props = {}) {
 
   // Navigation & Sticky Header State
   const [activeTab, setActiveTab] = useState('home')
+  const [mediaFilter, setMediaFilter] = useState('all')
+  const [selectedTheme, setSelectedTheme] = useState(EPK_THEMES[0])
+  const [epkData, setEpkData] = useState(() => {
+    if (passedEpk && typeof passedEpk === 'object') {
+      const passedSlug = (passedEpk.subdomain || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+      if (!username || passedSlug === artistSlug) {
+        return passedEpk
+      }
+    }
+    try {
+      const local = localStorage.getItem(`epk_public_${artistSlug}`) || localStorage.getItem(`epk_${artistSlug}`)
+      if (local) return JSON.parse(local)
+      if (!username) {
+        const lastSaved = localStorage.getItem('last_saved_epk_data')
+        if (lastSaved) return JSON.parse(lastSaved)
+      }
+      return null
+    } catch {
+      return null
+    }
+  })
+
   // Persona-Adaptive EPK Intelligence (Artist, Podcaster, DJ, Producer, Label)
   const [previewPersona, setPreviewPersona] = useState(() => {
     try {
@@ -125,28 +147,6 @@ export function CreatorEpkView(props = {}) {
   ).toLowerCase();
 
   const personaNavLinks = getPersonaNavLinks(creatorType);
-
-  const [mediaFilter, setMediaFilter] = useState('all')
-  const [selectedTheme, setSelectedTheme] = useState(EPK_THEMES[0])
-  const [epkData, setEpkData] = useState(() => {
-    if (passedEpk && typeof passedEpk === 'object') {
-      const passedSlug = (passedEpk.subdomain || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-      if (!username || passedSlug === artistSlug) {
-        return passedEpk
-      }
-    }
-    try {
-      const local = localStorage.getItem(`epk_public_${artistSlug}`) || localStorage.getItem(`epk_${artistSlug}`)
-      if (local) return JSON.parse(local)
-      if (!username) {
-        const lastSaved = localStorage.getItem('last_saved_epk_data')
-        if (lastSaved) return JSON.parse(lastSaved)
-      }
-      return null
-    } catch {
-      return null
-    }
-  })
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTrack, setActiveTrack] = useState({ id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', duration: '3:45', priceCredits: 50 })
   const [scrolled, setScrolled] = useState(false)
