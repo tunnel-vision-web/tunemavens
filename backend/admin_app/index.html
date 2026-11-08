@@ -41,7 +41,7 @@
     .admin-navbar {
       background: var(--bg-panel);
       border-bottom: 1px solid var(--border-color);
-      padding: 12px 24px;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -61,9 +61,9 @@
       background: rgba(0, 240, 255, 0.1);
       border: 1px solid var(--cyan);
       color: var(--cyan);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
-      padding: 4px 8px;
+      padding: 3px 8px;
       border-radius: var(--radius);
       letter-spacing: 0.5px;
     }
@@ -219,9 +219,9 @@
       background: var(--bg-card);
       color: var(--text-main);
       border: 1px solid var(--border-color);
-      padding: 7px 14px;
+      padding: 6px 12px;
       border-radius: var(--radius);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -253,6 +253,15 @@
     .btn-danger:hover {
       background: var(--rose);
       color: #ffffff;
+    }
+    .btn-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--emerald);
+    }
+    .btn-emerald:hover {
+      background: var(--emerald);
+      color: #060813;
     }
     .btn:disabled {
       opacity: 0.45;
@@ -333,7 +342,7 @@
       flex-wrap: wrap;
     }
     .section-title {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: #ffffff;
       display: flex;
@@ -576,6 +585,107 @@
     }
     .check-granted { color: var(--emerald); font-weight: 800; font-size: 14px; }
     .check-restricted { color: #334155; font-size: 14px; }
+
+    /* Ask AI Overlay Drawer */
+    .ai-drawer {
+      position: fixed;
+      top: 56px;
+      right: 0;
+      bottom: 0;
+      width: 420px;
+      background: #090e1a;
+      border-left: 1px solid var(--border-color);
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+      transform: translateX(100%);
+      transition: transform 0.25s ease-out;
+    }
+    .ai-drawer.open {
+      transform: translateX(0);
+    }
+    .ai-drawer-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-panel);
+    }
+    .ai-chat-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ai-chat-bubble {
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .bubble-assistant {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--cyan);
+      color: #f1f5f9;
+      align-self: flex-start;
+      width: 100%;
+    }
+    .bubble-user {
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      color: #ffffff;
+      align-self: flex-end;
+      max-width: 85%;
+    }
+    .ai-input-area {
+      padding: 14px;
+      border-top: 1px solid var(--border-color);
+      background: var(--bg-panel);
+      display: flex;
+      gap: 8px;
+    }
+    .ai-quick-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .ai-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--cyan);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+    .ai-chip:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--cyan);
+    }
+
+    /* Articles / Help Modal */
+    .article-item-card {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .article-item-card:hover {
+      border-color: var(--cyan);
+      background: #141f33;
+    }
+    .article-item-card.recommended {
+      border-left: 3px solid var(--emerald);
+    }
   </style>
 </head>
 <body>
@@ -590,15 +700,21 @@
       <span class="engine-badge">FastAPI :8001 Backend</span>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button class="btn btn-emerald" onclick="openArticlesModal()">
+        <span>📖 Read Help</span>
+      </button>
+      <button class="btn" style="border-color: var(--cyan); color: var(--cyan);" onclick="toggleAiDrawer()">
+        <span>🤖 Ask AI</span>
+      </button>
       <button class="btn" onclick="openRbacMatrixModal()">
         <span>RBAC Matrix</span>
       </button>
       <a href="http://localhost:3000/#/community" target="_blank" class="btn">
-        <span>Public Wall of Fame ↗</span>
+        <span>Public Wall ↗</span>
       </a>
       <a href="http://localhost:3000" target="_blank" class="btn btn-primary">
-        <span>Portal Dashboard (:3000) ↗</span>
+        <span>Portal (:3000) ↗</span>
       </a>
     </div>
   </nav>
@@ -637,18 +753,29 @@
           <span>🏆</span> Wall of Fame & Icons
         </li>
         <li class="sidebar-nav-item" onclick="switchTab('persona-rbac')" id="nav-persona-rbac">
-          <span>🛡️</span> Persona RBAC & Users
+          <span>🛡️</span> Persona & Users List
         </li>
         <li class="sidebar-nav-item" onclick="switchTab('domain-routing')" id="nav-domain-routing">
           <span>🌐</span> Domain & Subdomains
         </li>
         <li class="sidebar-nav-item" onclick="switchTab('crm-queue')" id="nav-crm-queue">
-          <span>📬</span> Smart CRM Inbound
+          <span>📬</span> CRM Pipeline & Leads
         </li>
         <li class="sidebar-nav-item" onclick="switchTab('system-telemetry')" id="nav-system-telemetry">
           <span>⚡</span> System Telemetry & Health
         </li>
       </ul>
+
+      <!-- Recommended Reading for Active Persona -->
+      <div style="padding: 16px 20px; border-top: 1px solid var(--border-color);">
+        <div class="sidebar-section-title" style="padding: 0 0 8px 0; color: var(--emerald);">Persona Knowledge</div>
+        <div id="sidebarRecommendedBadge" style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+          Recommended readings tailored for your active persona role.
+        </div>
+        <button class="btn btn-emerald" style="width: 100%; justify-content: center;" onclick="openArticlesModal()">
+          Browse Recommended Guides
+        </button>
+      </div>
 
       <!-- Real-time Service Status Widget in Sidebar -->
       <div class="sidebar-services-box">
@@ -720,9 +847,12 @@
           <div class="section-title">
             Wall of Fame Inductees & Curated Personalities
           </div>
-          <button class="btn btn-primary" id="btnInductNew" onclick="openInductModal()">
-            + Induct New Icon
-          </button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn" onclick="loadWallOfFame()">↻ Refresh Grid</button>
+            <button class="btn btn-primary" id="btnInductNew" onclick="openInductModal()">
+              + Induct New Icon
+            </button>
+          </div>
         </div>
 
         <div class="filter-bar">
@@ -760,18 +890,68 @@
         </div>
       </section>
 
-      <!-- TAB 2: PERSONA RBAC & USERS -->
+      <!-- TAB 2: PERSONA & USERS LIST (COMPLETELY EDITABLE BY ADMIN) -->
       <section id="view-persona-rbac" style="display: none;">
         <div class="section-header">
           <div class="section-title">
-            Persona Role-Based Access Control (RBAC) Engine
+            Platform Users & Persona Directory
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn" onclick="loadUsers()">↻ Refresh Users</button>
+            <button class="btn btn-primary" onclick="openCreateUserModal()">+ Provision New User</button>
           </div>
         </div>
-        <p style="color: var(--text-muted); margin-bottom: 20px;">
-          Each persona on TuneMavens is strictly constrained to the requisite permissions within their specific functional domains.
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+          As Platform Administrator, you have complete authority to provision, modify, elevated roles, credit allocations, and subscription tiers for every account.
         </p>
 
+        <div class="filter-bar">
+          <input type="text" id="userSearch" class="search-input" placeholder="Search users by name, username, email..." oninput="handleUserSearch(this.value)">
+          <div class="filter-pills">
+            <select id="userRoleFilter" class="form-select" style="padding: 4px 8px; font-size: 12px;" onchange="loadUsers(this.value)">
+              <option value="all">All Persona Roles</option>
+              <option value="admin">Administrator</option>
+              <option value="creator">Creator</option>
+              <option value="label">Record Label</option>
+              <option value="supervisor">Music Supervisor</option>
+              <option value="dj">DJ / Curator</option>
+              <option value="vc">Tour VC / Investor</option>
+              <option value="podcaster">Podcaster</option>
+              <option value="media_house">Media House</option>
+              <option value="corporate">Corporate Brand</option>
+              <option value="affiliate">Affiliate Partner</option>
+              <option value="consumer">Consumer</option>
+            </select>
+          </div>
+        </div>
+
         <div class="table-container" style="margin-bottom: 32px;">
+          <table>
+            <thead>
+              <tr>
+                <th>User Account</th>
+                <th>Email</th>
+                <th>Persona Role</th>
+                <th>Tier</th>
+                <th>Credits</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading registered users...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">
+            Persona Capabilities & RBAC Matrix
+          </div>
+        </div>
+        <div class="table-container">
           <table class="rbac-matrix">
             <thead>
               <tr>
@@ -789,30 +969,6 @@
             </thead>
             <tbody id="matrixTableBody">
               <!-- Rendered by JS -->
-            </tbody>
-          </table>
-        </div>
-
-        <div class="section-header">
-          <div class="section-title">
-            Registered Platform Accounts
-          </div>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>User Account</th>
-                <th>Email</th>
-                <th>Current Role</th>
-                <th>Subscription Tier</th>
-                <th>Role Assignment</th>
-              </tr>
-            </thead>
-            <tbody id="usersTableBody">
-              <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading registered users...</td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -849,17 +1005,21 @@
         </div>
       </section>
 
-      <!-- TAB 4: SMART CRM QUEUE -->
+      <!-- TAB 4: CRM PIPELINE & LEADS -->
       <section id="view-crm-queue" style="display: none;">
         <div class="section-header">
           <div class="section-title">
-            Smart CRM Inbound Candidates & Communication Logs
+            Smart CRM Candidate Pipeline & Dispatch Logs
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn" onclick="loadCrmLeads()">↻ Refresh CRM</button>
+            <button class="btn btn-primary" onclick="openCreateLeadModal()">+ Add CRM Lead</button>
           </div>
         </div>
         <p style="color: var(--text-muted); margin-bottom: 20px;">
           Tracks verified nomination inquiries, invitation tokens, and dispatches via Email & WhatsApp protocols.
         </p>
-        <div class="table-container">
+        <div class="table-container" style="margin-bottom: 28px;">
           <table>
             <thead>
               <tr>
@@ -868,12 +1028,36 @@
                 <th>Inquiry Type</th>
                 <th>Status</th>
                 <th>Interests / Tags</th>
-                <th>Registered At</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="crmTableBody">
               <tr>
                 <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading CRM pipeline...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">
+            Recent Multi-Channel Dispatches (Email & WhatsApp)
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Recipient</th>
+                <th>Type</th>
+                <th>Channels</th>
+                <th>Status</th>
+                <th>Dispatched At</th>
+              </tr>
+            </thead>
+            <tbody id="commLogsBody">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading communication logs...</td>
               </tr>
             </tbody>
           </table>
@@ -898,13 +1082,165 @@
     </main>
   </div>
 
+  <!-- ASK AI ASSISTANT DRAWER -->
+  <div class="ai-drawer" id="aiDrawer">
+    <div class="ai-drawer-header">
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #ffffff;">
+        <span style="color: var(--cyan); font-size: 18px;">🤖</span>
+        <span>TuneSupport Operations AI</span>
+      </div>
+      <button class="btn" onclick="toggleAiDrawer()" style="padding: 2px 6px;">✕</button>
+    </div>
+    <div class="ai-chat-body" id="aiChatBody">
+      <div class="ai-chat-bubble bubble-assistant">
+        Hello! I am TuneSupport Operations AI. I am loaded with the full context for <strong>Administrator</strong> and the entire platform catalog. How can I assist you with Wall of Fame inductions, user roles, CRM leads, or split cascades?
+        <div class="ai-quick-chips">
+          <span class="ai-chip" onclick="askAiPrompt('How do I induct an icon to Wall of Fame?')">Induct an Icon</span>
+          <span class="ai-chip" onclick="askAiPrompt('Explain Persona RBAC permissions')">RBAC Permissions</span>
+          <span class="ai-chip" onclick="askAiPrompt('How does the Smart CRM WhatsApp protocol work?')">WhatsApp CRM</span>
+          <span class="ai-chip" onclick="askAiPrompt('Explain Master vs Composition splits')">Dual Splits</span>
+        </div>
+      </div>
+    </div>
+    <div class="ai-input-area">
+      <input type="text" id="aiInputPrompt" class="form-input" style="flex: 1;" placeholder="Ask AI about admin operations, CRM, splits, RBAC..." onkeydown="if(event.key==='Enter') submitAiQuestion()">
+      <button class="btn btn-primary" onclick="submitAiQuestion()">Ask</button>
+    </div>
+  </div>
+
+  <!-- READ HELP & ARTICLES MODAL -->
+  <div class="modal-backdrop" id="articlesModal" style="display: none;">
+    <div class="modal-box" style="max-width: 840px;">
+      <div class="modal-header">
+        <div class="modal-title">TuneMavens Authoritative Knowledge Base & Guides</div>
+        <button class="btn" onclick="closeArticlesModal()" style="padding: 4px 8px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 13px; color: var(--emerald); font-weight: 600;">
+            ⭐ Recommended Reading for active persona: <strong id="modalPersonaLabel">Administrator</strong>
+          </span>
+          <span style="font-size: 11px; color: var(--text-dim);">Strict industry legal & operational standards</span>
+        </div>
+
+        <input type="text" id="articleSearchInput" class="form-input" placeholder="Search full knowledge base articles..." oninput="filterArticles(this.value)">
+
+        <div id="articlesListContainer" style="margin-top: 14px; max-height: 480px; overflow-y: auto;">
+          <!-- Loaded via JS -->
+        </div>
+
+        <!-- Single Article Reader View -->
+        <div id="singleArticleViewer" style="display: none; background: #070c17; border: 1px solid var(--border-color); padding: 20px; border-radius: var(--radius);">
+          <button class="btn" style="margin-bottom: 12px;" onclick="backToArticlesList()">← Back to Articles</button>
+          <h2 id="viewerArticleTitle" style="color: #ffffff; font-size: 1.4rem; margin-bottom: 8px;"></h2>
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <span id="viewerArticleCategory" class="badge" style="background: rgba(0, 240, 255, 0.15); color: var(--cyan);"></span>
+            <span id="viewerArticleReadTime" style="font-size: 12px; color: var(--text-dim);"></span>
+          </div>
+          <div id="viewerArticleContent" style="color: #cbd5e1; line-height: 1.7; font-size: 13px; white-space: pre-wrap;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" onclick="closeArticlesModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT / CREATE USER MODAL -->
+  <div class="modal-backdrop" id="userEditModal" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="userModalTitle">Edit User Account</div>
+        <button class="btn" onclick="closeUserModal()" style="padding: 4px 8px;">✕</button>
+      </div>
+      <form id="userEditForm" onsubmit="handleUserSaveSubmit(event)">
+        <input type="hidden" id="editUserId">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" id="editUserName" class="form-input" required placeholder="e.g. Masterkraft Studio">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <input type="text" id="editUserUsername" class="form-input" placeholder="masterkraft">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" id="editUserEmail" class="form-input" required placeholder="user@tunemavens.com">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Persona Role *</label>
+              <select id="editUserRole" class="form-select">
+                <option value="creator">Creator / Artist</option>
+                <option value="label">Record Label</option>
+                <option value="supervisor">Music Supervisor</option>
+                <option value="dj">DJ / Curator</option>
+                <option value="vc">Tour VC / Investor</option>
+                <option value="podcaster">Podcaster / Host</option>
+                <option value="media_house">Media House</option>
+                <option value="corporate">Corporate Brand</option>
+                <option value="affiliate">Affiliate Partner</option>
+                <option value="consumer">Consumer / Fan</option>
+                <option value="admin">Platform Administrator</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subscription Tier</label>
+              <select id="editUserTier" class="form-select">
+                <option value="Free Starter">Indie Starter (Free Forever)</option>
+                <option value="Pro Creator">Pro Creator ($19/mo)</option>
+                <option value="Label Enterprise">Label Enterprise ($99/mo)</option>
+                <option value="Supervisor Escrow">Supervisor Studio Suite</option>
+                <option value="Tour Syndicate">Tour VC Syndicate</option>
+                <option value="Curator VIP">Curator VIP</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Credits Balance</label>
+              <input type="number" id="editUserCredits" class="form-input" value="50">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Account Status</label>
+              <select id="editUserStatus" class="form-select">
+                <option value="active">Active</option>
+                <option value="suspended">Suspended</option>
+                <option value="pending">Pending Verification</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="display: flex; gap: 16px; margin-top: 6px;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #ffffff;">
+              <input type="checkbox" id="editUserIsAdmin">
+              <span>Platform Administrator Privileges</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #ffffff;">
+              <input type="checkbox" id="editUserIsVerified" checked>
+              <span>Verified Creator Badge</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeUserModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveUser">Save User Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- INDUCT NEW ICON MODAL -->
   <div class="modal-backdrop" id="inductModal" style="display: none;">
     <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title">
-          Induct Industry Icon to Wall of Fame
-        </div>
+        <div class="modal-title">Induct Industry Icon to Wall of Fame</div>
         <button class="btn" onclick="closeInductModal()" style="padding: 4px 8px;">✕</button>
       </div>
       <form id="inductForm" onsubmit="handleInductSubmit(event)">
@@ -1013,8 +1349,9 @@
   <script>
     // System State
     let currentPersona = 'admin';
-    let permissions = {};
     let allProfiles = [];
+    let allUsers = [];
+    let allArticles = [];
     let roleFilter = 'all';
     let searchQuery = '';
 
@@ -1121,6 +1458,7 @@
       document.getElementById('activeRoleName').innerText = cfg.name;
       document.getElementById('activeRoleDesc').innerText = cfg.desc;
       document.getElementById('rolePermissionCount').innerText = `${cfg.perms.length} Permissions Active`;
+      document.getElementById('modalPersonaLabel').innerText = cfg.name;
 
       // Update UI button permission gates
       const inductBtn = document.getElementById('btnInductNew');
@@ -1129,9 +1467,10 @@
         inductBtn.title = hasPermission('wall_of_fame_manage') ? 'Induct icon' : 'Requires Administrator permission';
       }
 
-      // Re-render table buttons with updated state
       renderProfilesTable();
-      showToast(`Switched active persona to ${cfg.name}. Permissions updated.`, 'info');
+      renderUsersTable();
+      loadArticles();
+      showToast(`Switched active persona to ${cfg.name}. Permissions & recommended readings updated.`, 'info');
     }
 
     function switchTab(tabId) {
@@ -1146,21 +1485,23 @@
         }
       });
 
-      if (tabId === 'persona-rbac') loadUsersAndMatrix();
+      if (tabId === 'wall-of-fame') loadWallOfFame();
+      if (tabId === 'persona-rbac') { loadUsers(); loadMatrix(); }
       if (tabId === 'domain-routing') loadDomainMappings();
       if (tabId === 'crm-queue') loadCrmLeads();
       if (tabId === 'system-telemetry') loadTelemetry();
     }
 
-    // Load Wall of Fame Inductees
+    // ===================================================================
+    // TAB 1: Wall of Fame & Curated Personalities
+    // ===================================================================
     async function loadWallOfFame() {
       try {
-        const res = await fetch('/api/community/admin/wall-of-fame');
-        if (!res.ok) throw new Error('Failed to fetch Wall of Fame');
+        const res = await fetch('/api/admin/console/wall-of-fame');
+        if (!res.ok) throw new Error('Failed to load Wall of Fame');
         const data = await res.json();
         allProfiles = data.profiles || [];
 
-        // Update statistics
         const stats = data.stats || {};
         document.getElementById('statTotal').innerText = stats.total || allProfiles.length;
         document.getElementById('statClaimed').innerText = stats.claimed || 0;
@@ -1289,7 +1630,7 @@
         return;
       }
       try {
-        const res = await fetch(`/api/community/admin/wall-of-fame/${id}`, {
+        const res = await fetch(`/api/admin/console/wall-of-fame/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ visible: nextVal })
@@ -1308,7 +1649,7 @@
         return;
       }
       try {
-        const res = await fetch(`/api/community/admin/wall-of-fame/${id}/invite`, {
+        const res = await fetch(`/api/admin/console/wall-of-fame/${id}/invite`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, phone })
@@ -1336,7 +1677,7 @@
       }
       if (!confirm(`Are you sure you want to remove ${name} from the Wall of Fame?`)) return;
       try {
-        const res = await fetch(`/api/community/admin/wall-of-fame/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/admin/console/wall-of-fame/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('Deletion failed');
         showToast(`Removed ${name} from Wall of Fame`, 'success');
         loadWallOfFame();
@@ -1345,7 +1686,6 @@
       }
     }
 
-    // Modal Handlers
     function openInductModal() {
       if (!hasPermission('wall_of_fame_manage')) {
         showToast('Access Restricted: Requires Administrator permission', 'error');
@@ -1382,7 +1722,6 @@
       const bio = document.getElementById('formBio').value.trim();
       const auto_invite = document.getElementById('formAutoInvite').checked;
 
-      // Extract youtube id if needed
       let video_id = null;
       if (media_type === 'video' && youtube_url) {
         const match = youtube_url.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/);
@@ -1398,12 +1737,11 @@
         youtube_video_id: video_id,
         image_url: media_type === 'image' ? image_url : null,
         bio: bio || `Recognized industry leader and ${role.toUpperCase()} inductee on the TuneMavens Wall of Fame.`,
-        pre_claim: false,
         tags: ["wall_of_fame", "icon_inductee", role]
       };
 
       try {
-        const res = await fetch('/api/community/admin/wall-of-fame', {
+        const res = await fetch('/api/admin/console/wall-of-fame', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1422,9 +1760,155 @@
       }
     }
 
-    // Tab 2: Persona RBAC Matrix & User Accounts
-    async function loadUsersAndMatrix() {
-      // Build RBAC Matrix
+    // ===================================================================
+    // TAB 2: Persona & Users List (Completely Editable by Admin)
+    // ===================================================================
+    async function loadUsers(filterRole = null) {
+      try {
+        let url = '/api/admin/console/users';
+        if (filterRole && filterRole !== 'all') url += `?role=${filterRole}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to load users');
+        const data = await res.json();
+        allUsers = data.users || [];
+        renderUsersTable();
+      } catch (err) {
+        console.error('Error loading users:', err);
+      }
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById('usersTableBody');
+      const q = (document.getElementById('userSearch')?.value || '').toLowerCase();
+      const filtered = allUsers.filter(u => {
+        return !q || (u.name && u.name.toLowerCase().includes(q)) ||
+                     (u.username && u.username.toLowerCase().includes(q)) ||
+                     (u.email && u.email.toLowerCase().includes(q));
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">No registered accounts found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(u => {
+        const roleBadgeColor = PERSONAS_CONFIG[u.role]?.badgeColor || '#38bdf8';
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #ffffff;">${u.name || u.username || 'User'}</div>
+              <div style="font-size: 11px; color: var(--text-dim);">@${u.username || '--'}</div>
+            </td>
+            <td>${u.email || '--'}</td>
+            <td>
+              <span class="badge" style="background: ${roleBadgeColor}22; color: ${roleBadgeColor}; border: 1px solid ${roleBadgeColor}55;">
+                ${(u.role || 'creator').toUpperCase()}
+              </span>
+            </td>
+            <td><span style="font-size: 12px; color: var(--text-muted);">${u.subscription_tier || 'Free Starter'}</span></td>
+            <td><strong style="color: var(--cyan);">${u.credits !== undefined ? u.credits : 50}</strong></td>
+            <td>
+              <span class="badge ${u.status === 'suspended' ? 'badge-pending' : 'badge-claimed'}">
+                ${(u.status || 'active').toUpperCase()}
+              </span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-primary" style="padding: 3px 8px; font-size: 11px;" onclick="openEditUserModal('${u._id}')">
+                  Edit Account
+                </button>
+                <button class="btn btn-danger" style="padding: 3px 8px; font-size: 11px;" onclick="deleteUserAccount('${u._id}', '${u.name || u.email}')">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleUserSearch() {
+      renderUsersTable();
+    }
+
+    function openCreateUserModal() {
+      document.getElementById('userEditForm').reset();
+      document.getElementById('editUserId').value = '';
+      document.getElementById('userModalTitle').innerText = 'Provision New Platform User Account';
+      document.getElementById('editUserCredits').value = '50';
+      document.getElementById('userEditModal').style.display = 'flex';
+    }
+
+    function openEditUserModal(userId) {
+      const u = allUsers.find(item => item._id === userId);
+      if (!u) return;
+      document.getElementById('editUserId').value = u._id;
+      document.getElementById('userModalTitle').innerText = `Edit Account: ${u.name || u.email}`;
+      document.getElementById('editUserName').value = u.name || '';
+      document.getElementById('editUserUsername').value = u.username || '';
+      document.getElementById('editUserEmail').value = u.email || '';
+      document.getElementById('editUserRole').value = u.role || 'creator';
+      document.getElementById('editUserTier').value = u.subscription_tier || 'Free Starter';
+      document.getElementById('editUserCredits').value = u.credits !== undefined ? u.credits : 50;
+      document.getElementById('editUserStatus').value = u.status || 'active';
+      document.getElementById('editUserIsAdmin').checked = Boolean(u.is_admin || u.role === 'admin');
+      document.getElementById('editUserIsVerified').checked = Boolean(u.is_verified);
+      document.getElementById('userEditModal').style.display = 'flex';
+    }
+
+    function closeUserModal() {
+      document.getElementById('userEditModal').style.display = 'none';
+    }
+
+    async function handleUserSaveSubmit(e) {
+      e.preventDefault();
+      const userId = document.getElementById('editUserId').value;
+      const isCreate = !userId;
+
+      const payload = {
+        name: document.getElementById('editUserName').value.trim(),
+        username: document.getElementById('editUserUsername').value.trim(),
+        email: document.getElementById('editUserEmail').value.trim(),
+        role: document.getElementById('editUserRole').value,
+        subscription_tier: document.getElementById('editUserTier').value,
+        credits: parseInt(document.getElementById('editUserCredits').value, 10) || 50,
+        status: document.getElementById('editUserStatus').value,
+        is_admin: document.getElementById('editUserIsAdmin').checked,
+        is_verified: document.getElementById('editUserIsVerified').checked
+      };
+
+      try {
+        const url = isCreate ? '/api/admin/console/users' : `/api/admin/console/users/${userId}`;
+        const method = isCreate ? 'POST' : 'PUT';
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to save user');
+
+        showToast(isCreate ? 'User provisioned successfully!' : 'User account updated successfully!', 'success');
+        closeUserModal();
+        loadUsers();
+      } catch (err) {
+        showToast(err.message || 'Error saving user', 'error');
+      }
+    }
+
+    async function deleteUserAccount(userId, name) {
+      if (!confirm(`Are you sure you want to permanently delete user ${name}? This cannot be undone.`)) return;
+      try {
+        const res = await fetch(`/api/admin/console/users/${userId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Deletion failed');
+        showToast(`User ${name} deleted successfully`, 'success');
+        loadUsers();
+      } catch (err) {
+        showToast('Error deleting user', 'error');
+      }
+    }
+
+    function loadMatrix() {
       const matrixCols = [
         { key: 'wall_of_fame', label: 'Wall of Fame' },
         { key: 'epk', label: 'EPK Studio' },
@@ -1464,62 +1948,21 @@
       }).join('');
       tbody.innerHTML = rows;
 
-      // Also populate modal matrix
       const modalTable = document.getElementById('modalMatrixTable');
       if (modalTable) modalTable.innerHTML = document.querySelector('.rbac-matrix').innerHTML;
-
-      // Load Users Directory
-      try {
-        const uRes = await fetch('/api/admin/console/users');
-        if (uRes.ok) {
-          const uData = await uRes.json();
-          const uTbody = document.getElementById('usersTableBody');
-          uTbody.innerHTML = uData.users.map(u => `
-            <tr>
-              <td style="font-weight: 700; color: #ffffff;">${u.username || u.name || 'User'}</td>
-              <td>${u.email || '--'}</td>
-              <td><span class="badge" style="background: rgba(0, 240, 255, 0.15); color: var(--cyan);">${(u.role || 'creator').toUpperCase()}</span></td>
-              <td>${u.subscription_tier || 'Free Starter'}</td>
-              <td>
-                <select class="form-select" style="padding: 2px 6px; font-size: 11px;" ${!hasPermission('rbac_manage') ? 'disabled' : ''} onchange="updateUserRole('${u._id}', this.value)">
-                  ${Object.keys(PERSONAS_CONFIG).map(rk => `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${PERSONAS_CONFIG[rk].name}</option>`).join('')}
-                </select>
-              </td>
-            </tr>
-          `).join('');
-        }
-      } catch (err) {
-        console.error('Failed to load users:', err);
-      }
-    }
-
-    async function updateUserRole(userId, newRole) {
-      if (!hasPermission('rbac_manage')) {
-        showToast('Restricted: Requires Administrator permission', 'error');
-        return;
-      }
-      try {
-        const res = await fetch(`/api/admin/console/users/${userId}/role`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: newRole })
-        });
-        if (!res.ok) throw new Error('Role update failed');
-        showToast('User role updated successfully', 'success');
-      } catch (err) {
-        showToast('Error updating user role', 'error');
-      }
     }
 
     function openRbacMatrixModal() {
       document.getElementById('rbacModal').style.display = 'flex';
-      loadUsersAndMatrix();
+      loadMatrix();
     }
     function closeRbacMatrixModal() {
       document.getElementById('rbacModal').style.display = 'none';
     }
 
-    // Tab 3: Domain Mappings
+    // ===================================================================
+    // TAB 3: Domain Routing
+    // ===================================================================
     async function loadDomainMappings() {
       try {
         const res = await fetch('/api/admin/domain-mappings');
@@ -1562,40 +2005,89 @@
       }
     }
 
-    // Tab 4: CRM Leads
+    // ===================================================================
+    // TAB 4: CRM Pipeline & Multi-Channel Dispatches
+    // ===================================================================
     async function loadCrmLeads() {
       try {
-        const res = await fetch('/api/community/admin/crm-leads');
+        const res = await fetch('/api/admin/console/crm-leads');
         if (!res.ok) throw new Error('Failed to load CRM leads');
         const data = await res.json();
         const leads = data.leads || [];
+        const logs = data.logs || [];
         document.getElementById('statCrm').innerText = leads.length;
 
         const tbody = document.getElementById('crmTableBody');
         if (leads.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No inbound CRM leads registered yet.</td></tr>`;
-          return;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No candidate leads registered yet.</td></tr>`;
+        } else {
+          tbody.innerHTML = leads.map(l => `
+            <tr>
+              <td style="font-weight: 700; color: #ffffff;">${l.name || 'Candidate'}</td>
+              <td>
+                <div>${l.email || '--'}</div>
+                <div style="font-size: 11px; color: var(--text-dim);">${l.phone || ''}</div>
+              </td>
+              <td><span class="badge" style="background: rgba(0, 240, 255, 0.15); color: var(--cyan);">${(l.inquiry_type || 'nomination').toUpperCase()}</span></td>
+              <td><span class="badge badge-claimed">${(l.status || 'active').toUpperCase()}</span></td>
+              <td>${(l.tags || []).map(t => `<span class="badge" style="margin-right: 4px; background: rgba(255,255,255,0.06);">${t}</span>`).join('')}</td>
+              <td>
+                <button class="btn btn-danger" style="padding: 2px 6px; font-size: 11px;" onclick="deleteCrmLead('${l.id}')">Delete</button>
+              </td>
+            </tr>
+          `).join('');
         }
 
-        tbody.innerHTML = leads.map(l => `
-          <tr>
-            <td style="font-weight: 700; color: #ffffff;">${l.name || 'Candidate'}</td>
-            <td>
-              <div>${l.email || '--'}</div>
-              <div style="font-size: 11px; color: var(--text-dim);">${l.phone || ''}</div>
-            </td>
-            <td><span class="badge" style="background: rgba(0, 240, 255, 0.15); color: var(--cyan);">${(l.inquiry_type || 'nomination').toUpperCase()}</span></td>
-            <td><span class="badge badge-claimed">${(l.status || 'active').toUpperCase()}</span></td>
-            <td>${(l.tags || []).map(t => `<span class="badge" style="margin-right: 4px; background: rgba(255,255,255,0.06);">${t}</span>`).join('')}</td>
-            <td style="font-size: 11px; color: var(--text-dim);">${new Date(l.created_at || Date.now()).toLocaleDateString()}</td>
-          </tr>
-        `).join('');
+        const logsBody = document.getElementById('commLogsBody');
+        if (logs.length === 0) {
+          logsBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">No recent dispatches logged.</td></tr>`;
+        } else {
+          logsBody.innerHTML = logs.map(log => `
+            <tr>
+              <td style="font-weight: 700; color: #ffffff;">${log.recipient_name || log.recipient_email || 'Recipient'}</td>
+              <td><span class="badge" style="background: rgba(255,255,255,0.06);">${log.type || 'invite'}</span></td>
+              <td>${(log.channels || []).map(c => `<span class="badge" style="background: rgba(0, 240, 255, 0.15); color: var(--cyan); margin-right: 4px;">${c}</span>`).join('')}</td>
+              <td><span class="badge badge-claimed">${(log.status || 'delivered').toUpperCase()}</span></td>
+              <td style="font-size: 11px; color: var(--text-dim);">${new Date(log.created_at || Date.now()).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        }
+
       } catch (err) {
         console.error('Error loading CRM leads:', err);
       }
     }
 
-    // Tab 5: Telemetry
+    async function deleteCrmLead(leadId) {
+      if (!confirm('Remove this CRM lead record?')) return;
+      try {
+        const res = await fetch(`/api/admin/console/crm-leads/${leadId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Deletion failed');
+        showToast('CRM lead removed', 'success');
+        loadCrmLeads();
+      } catch (err) {
+        showToast('Error removing CRM lead', 'error');
+      }
+    }
+
+    function openCreateLeadModal() {
+      const name = prompt('Candidate Name:');
+      if (!name) return;
+      const email = prompt('Candidate Email:') || '';
+      const phone = prompt('Candidate Phone / WhatsApp:') || '';
+      fetch('/api/admin/console/crm-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone, inquiry_type: 'direct_admin_lead', status: 'lead' })
+      }).then(() => {
+        showToast('Lead added to Smart CRM pipeline', 'success');
+        loadCrmLeads();
+      });
+    }
+
+    // ===================================================================
+    // TAB 5: Telemetry
+    // ===================================================================
     async function loadTelemetry() {
       const grid = document.getElementById('telemetryGrid');
       grid.innerHTML = '<div style="color: var(--text-muted); padding: 20px;">Probing ecosystem services...</div>';
@@ -1616,10 +2108,144 @@
       }
     }
 
+    // ===================================================================
+    // READ HELP & AUTHORITATIVE ARTICLES
+    // ===================================================================
+    async function loadArticles() {
+      try {
+        const res = await fetch(`/api/admin/console/articles?persona=${currentPersona}`);
+        const data = await res.json();
+        allArticles = data.articles || [];
+        renderArticlesList();
+      } catch (err) {
+        console.error('Failed to load articles:', err);
+      }
+    }
+
+    function renderArticlesList(filter = '') {
+      const container = document.getElementById('articlesListContainer');
+      const q = filter.toLowerCase();
+      const filtered = allArticles.filter(a => {
+        return !q || a.title.toLowerCase().includes(q) || a.summary.toLowerCase().includes(q) || a.category.toLowerCase().includes(q);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">No matching articles.</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(a => `
+        <div class="article-item-card ${a.is_recommended ? 'recommended' : ''}" onclick="viewFullArticle('${a.id}')">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span class="badge" style="background: rgba(255,255,255,0.06); font-size: 10px;">${a.category}</span>
+            <span style="font-size: 11px; color: var(--text-dim);">${a.read_time}</span>
+          </div>
+          <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 4px;">
+            ${a.is_recommended ? '⭐ ' : ''}${a.title}
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">${a.summary}</div>
+        </div>
+      `).join('');
+    }
+
+    function filterArticles(val) {
+      renderArticlesList(val);
+    }
+
+    function viewFullArticle(articleId) {
+      const article = allArticles.find(a => a.id === articleId);
+      if (!article) return;
+      document.getElementById('articlesListContainer').style.display = 'none';
+      document.getElementById('articleSearchInput').style.display = 'none';
+      document.getElementById('singleArticleViewer').style.display = 'block';
+
+      document.getElementById('viewerArticleTitle').innerText = article.title;
+      document.getElementById('viewerArticleCategory').innerText = article.category;
+      document.getElementById('viewerArticleReadTime').innerText = article.read_time;
+      document.getElementById('viewerArticleContent').innerText = article.content.trim();
+    }
+
+    function backToArticlesList() {
+      document.getElementById('singleArticleViewer').style.display = 'none';
+      document.getElementById('articlesListContainer').style.display = 'block';
+      document.getElementById('articleSearchInput').style.display = 'block';
+    }
+
+    function openArticlesModal() {
+      loadArticles();
+      backToArticlesList();
+      document.getElementById('articlesModal').style.display = 'flex';
+    }
+    function closeArticlesModal() {
+      document.getElementById('articlesModal').style.display = 'none';
+    }
+
+    // ===================================================================
+    // ASK AI ASSISTANT
+    // ===================================================================
+    function toggleAiDrawer() {
+      const drawer = document.getElementById('aiDrawer');
+      drawer.classList.toggle('open');
+      if (drawer.classList.contains('open')) {
+        document.getElementById('aiInputPrompt').focus();
+      }
+    }
+
+    function askAiPrompt(question) {
+      document.getElementById('aiInputPrompt').value = question;
+      submitAiQuestion();
+    }
+
+    async function submitAiQuestion() {
+      const input = document.getElementById('aiInputPrompt');
+      const prompt = input.value.trim();
+      if (!prompt) return;
+
+      const chatBody = document.getElementById('aiChatBody');
+
+      // Append user bubble
+      const userBubble = document.createElement('div');
+      userBubble.className = 'ai-chat-bubble bubble-user';
+      userBubble.innerText = prompt;
+      chatBody.appendChild(userBubble);
+      input.value = '';
+
+      // Typing placeholder
+      const loadingBubble = document.createElement('div');
+      loadingBubble.className = 'ai-chat-bubble bubble-assistant';
+      loadingBubble.innerText = 'Consulting TuneSupport AI...';
+      chatBody.appendChild(loadingBubble);
+      chatBody.scrollTop = chatBody.scrollHeight;
+
+      try {
+        const res = await fetch('/api/admin/console/ask-ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, persona: currentPersona })
+        });
+        const data = await res.json();
+        
+        // Render assistant bubble with suggested chips
+        loadingBubble.innerHTML = `
+          <div>${data.reply}</div>
+          ${data.suggested_actions && data.suggested_actions.length > 0 ? `
+            <div class="ai-quick-chips">
+              ${data.suggested_actions.map(act => `<span class="ai-chip" onclick="askAiPrompt('${act}')">${act}</span>`).join('')}
+            </div>
+          ` : ''}
+        `;
+        chatBody.scrollTop = chatBody.scrollHeight;
+      } catch (err) {
+        loadingBubble.innerText = 'AI service temporarily unavailable. Please try again.';
+      }
+    }
+
     // Initialize on boot
     document.addEventListener('DOMContentLoaded', () => {
       loadWallOfFame();
       loadCrmLeads();
+      loadUsers();
+      loadArticles();
     });
   </script>
 </body>
