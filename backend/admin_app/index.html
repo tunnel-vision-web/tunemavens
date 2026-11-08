@@ -21,6 +21,7 @@
       --rose: #f43f5e;
       --purple: #a855f7;
       --radius: 3px;
+      --sidebar-width: 260px;
       --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     }
 
@@ -48,6 +49,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      height: 56px;
     }
 
     .brand-section {
@@ -66,7 +68,7 @@
       letter-spacing: 0.5px;
     }
     .brand-title {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #ffffff;
       display: flex;
@@ -83,48 +85,136 @@
       font-weight: 600;
     }
 
-    /* Persona Selector Bar */
-    .persona-bar {
+    /* Master Layout: Sidebar + Main Content */
+    .admin-layout {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      padding: 6px 12px;
-      border-radius: var(--radius);
+      flex: 1;
+      min-height: calc(100vh - 56px);
     }
-    .persona-label {
-      font-size: 12px;
+
+    /* Left Sidebar */
+    .admin-sidebar {
+      width: var(--sidebar-width);
+      background: #080d1a;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-dim);
+      font-weight: 700;
+      padding: 16px 20px 8px 20px;
+    }
+
+    .sidebar-persona-box {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .sidebar-persona-label {
+      font-size: 11px;
+      font-weight: 700;
       color: var(--text-muted);
-      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      margin-bottom: 6px;
     }
-    .persona-select {
+    .sidebar-persona-select {
+      width: 100%;
       background: var(--bg-dark);
       border: 1px solid var(--border-color);
       color: var(--cyan);
       font-weight: 700;
-      font-size: 13px;
-      padding: 4px 8px;
+      font-size: 12px;
+      padding: 6px 10px;
       border-radius: var(--radius);
       outline: none;
       cursor: pointer;
+      margin-bottom: 8px;
     }
-    .persona-pill {
+    .sidebar-persona-pill {
       font-size: 11px;
       font-weight: 700;
       padding: 3px 8px;
       border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: inline-block;
+      width: 100%;
+      text-align: center;
     }
-    .nav-actions {
+
+    /* Sidebar Navigation Links */
+    .sidebar-nav {
+      list-style: none;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sidebar-nav-item {
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 13px;
       display: flex;
       align-items: center;
       gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
     }
+    .sidebar-nav-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+    .sidebar-nav-item.active {
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--cyan);
+      border-color: rgba(0, 240, 255, 0.3);
+      font-weight: 700;
+    }
+
+    /* Sidebar Services Widget */
+    .sidebar-services-box {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      background: rgba(11, 17, 32, 0.5);
+    }
+    .service-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 3px 0;
+      color: var(--text-dim);
+    }
+    .service-online-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 6px var(--emerald);
+    }
+
+    /* Main Container */
+    .main-content {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+      max-width: 1400px;
+    }
+
     .btn {
       background: var(--bg-card);
       color: var(--text-main);
@@ -172,46 +262,6 @@
       background: var(--bg-card) !important;
     }
 
-    /* Subheader Tabs */
-    .tabs-bar {
-      background: #080d1a;
-      border-bottom: 1px solid var(--border-color);
-      padding: 0 24px;
-      display: flex;
-      gap: 2px;
-      overflow-x: auto;
-    }
-    .tab-item {
-      padding: 12px 16px;
-      color: var(--text-muted);
-      font-weight: 600;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-    }
-    .tab-item:hover {
-      color: #ffffff;
-    }
-    .tab-item.active {
-      color: var(--cyan);
-      border-bottom-color: var(--cyan);
-      background: rgba(0, 240, 255, 0.04);
-    }
-
-    /* Main Container */
-    .main-content {
-      padding: 24px;
-      max-width: 1400px;
-      margin: 0 auto;
-      width: 100%;
-      flex: 1;
-    }
-
     /* Notice & RBAC Alert */
     .rbac-alert {
       background: rgba(15, 23, 42, 0.8);
@@ -245,7 +295,7 @@
     /* Stats Grid */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -257,8 +307,8 @@
     }
     .stat-label {
       color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       text-transform: uppercase;
       margin-bottom: 6px;
     }
@@ -354,7 +404,7 @@
       background: #090e1a;
       border-bottom: 1px solid var(--border-color);
       padding: 12px 16px;
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-muted);
@@ -437,9 +487,6 @@
       font-size: 1.15rem;
       font-weight: 700;
       color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
     .modal-body {
       padding: 20px;
@@ -538,283 +585,318 @@
     <div class="brand-section">
       <span class="brand-logo-badge">TM OPERATIONS</span>
       <div class="brand-title">
-        TuneMavens Backend Admin Console
+        TuneMavens Backend Operations & RBAC Admin Console
       </div>
-      <span class="engine-badge">FastAPI :8001 Dedicated Backend</span>
+      <span class="engine-badge">FastAPI :8001 Backend</span>
     </div>
 
-    <!-- Active Persona Switcher -->
-    <div class="persona-bar">
-      <span class="persona-label">Active Persona:</span>
-      <select id="personaSelector" class="persona-select" onchange="switchPersona(this.value)">
-        <option value="admin">Administrator (Full Access)</option>
-        <option value="creator">Creator / Artist</option>
-        <option value="label">Record Label</option>
-        <option value="supervisor">Music Supervisor</option>
-        <option value="dj">DJ / Curator</option>
-        <option value="vc">Tour VC / Investor</option>
-        <option value="podcaster">Podcaster / Host</option>
-        <option value="media_house">Media House</option>
-        <option value="corporate">Corporate Brand</option>
-        <option value="affiliate">Affiliate Partner</option>
-        <option value="consumer">Consumer / Fan</option>
-      </select>
-      <span id="personaPill" class="persona-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
-        Full Administrative Access
-      </span>
-    </div>
-
-    <div class="nav-actions">
+    <div style="display: flex; align-items: center; gap: 10px;">
       <button class="btn" onclick="openRbacMatrixModal()">
         <span>RBAC Matrix</span>
       </button>
       <a href="http://localhost:3000/#/community" target="_blank" class="btn">
-        <span>Public Wall of Fame</span>
+        <span>Public Wall of Fame ↗</span>
       </a>
       <a href="http://localhost:3000" target="_blank" class="btn btn-primary">
-        <span>Portal Client (:3000)</span>
+        <span>Portal Dashboard (:3000) ↗</span>
       </a>
     </div>
   </nav>
 
-  <!-- Subheader Tabs -->
-  <div class="tabs-bar">
-    <div class="tab-item active" onclick="switchTab('wall-of-fame')" id="tab-wall-of-fame">
-      Wall of Fame Management
-    </div>
-    <div class="tab-item" onclick="switchTab('persona-rbac')" id="tab-persona-rbac">
-      Persona RBAC & Users
-    </div>
-    <div class="tab-item" onclick="switchTab('domain-routing')" id="tab-domain-routing">
-      Domain & Subdomains
-    </div>
-    <div class="tab-item" onclick="switchTab('crm-queue')" id="tab-crm-queue">
-      Smart CRM Inbound
-    </div>
-    <div class="tab-item" onclick="switchTab('system-telemetry')" id="tab-system-telemetry">
-      System Telemetry & Health
-    </div>
+  <!-- Master Layout: Sidebar + Main Content -->
+  <div class="admin-layout">
+
+    <!-- Left Sidebar -->
+    <aside class="admin-sidebar">
+      
+      <!-- Persona Context Switcher Box -->
+      <div class="sidebar-persona-box">
+        <div class="sidebar-persona-label">Active Persona:</div>
+        <select id="personaSelector" class="sidebar-persona-select" onchange="switchPersona(this.value)">
+          <option value="admin">Administrator (Full Access)</option>
+          <option value="creator">Creator / Artist</option>
+          <option value="label">Record Label</option>
+          <option value="supervisor">Music Supervisor</option>
+          <option value="dj">DJ / Curator</option>
+          <option value="vc">Tour VC / Investor</option>
+          <option value="podcaster">Podcaster / Host</option>
+          <option value="media_house">Media House</option>
+          <option value="corporate">Corporate Brand</option>
+          <option value="affiliate">Affiliate Partner</option>
+          <option value="consumer">Consumer / Fan</option>
+        </select>
+        <span id="personaPill" class="sidebar-persona-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+          Full Administrative Access
+        </span>
+      </div>
+
+      <!-- Navigation Menu -->
+      <div class="sidebar-section-title">Operational Domains</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item active" onclick="switchTab('wall-of-fame')" id="nav-wall-of-fame">
+          <span>🏆</span> Wall of Fame & Icons
+        </li>
+        <li class="sidebar-nav-item" onclick="switchTab('persona-rbac')" id="nav-persona-rbac">
+          <span>🛡️</span> Persona RBAC & Users
+        </li>
+        <li class="sidebar-nav-item" onclick="switchTab('domain-routing')" id="nav-domain-routing">
+          <span>🌐</span> Domain & Subdomains
+        </li>
+        <li class="sidebar-nav-item" onclick="switchTab('crm-queue')" id="nav-crm-queue">
+          <span>📬</span> Smart CRM Inbound
+        </li>
+        <li class="sidebar-nav-item" onclick="switchTab('system-telemetry')" id="nav-system-telemetry">
+          <span>⚡</span> System Telemetry & Health
+        </li>
+      </ul>
+
+      <!-- Real-time Service Status Widget in Sidebar -->
+      <div class="sidebar-services-box">
+        <div class="sidebar-section-title" style="padding: 0 0 8px 0;">Ecosystem Health</div>
+        <div class="service-row">
+          <span>:8001 FastAPI Operations</span>
+          <span class="service-online-dot" title="Online"></span>
+        </div>
+        <div class="service-row">
+          <span>:3000 Portal Client</span>
+          <span class="service-online-dot" title="Online"></span>
+        </div>
+        <div class="service-row">
+          <span>:3001 TuneStream Player</span>
+          <span class="service-online-dot" title="Online"></span>
+        </div>
+        <div class="service-row">
+          <span>:3002 SyncMavens Engine</span>
+          <span class="service-online-dot" title="Online"></span>
+        </div>
+        <div class="service-row">
+          <span>:5000 Express Gateway</span>
+          <span class="service-online-dot" title="Online"></span>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main View Content Area -->
+    <main class="main-content">
+
+      <!-- Active RBAC Permission Banner -->
+      <div class="rbac-alert" id="rbacAlertBanner">
+        <div class="rbac-alert-text">
+          <strong id="activeRoleName">Administrator</strong>:
+          <span id="activeRoleDesc">Unrestricted platform operations, RBAC configuration, user provisioning, Wall of Fame curation, domain routing, and ecosystem monitoring.</span>
+        </div>
+        <div id="rolePermissionCount" style="font-size: 11px; color: var(--cyan); font-weight: 700;">
+          15/15 Permissions Granted
+        </div>
+      </div>
+
+      <!-- TAB 1: WALL OF FAME MANAGEMENT -->
+      <section id="view-wall-of-fame">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Inducted Icons</div>
+            <div class="stat-value" id="statTotal">--</div>
+            <div class="stat-desc">Curated industry figures</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Claimed Profiles</div>
+            <div class="stat-value" id="statClaimed" style="color: var(--emerald);">--</div>
+            <div class="stat-desc">Active authenticated EPKs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending / Invited</div>
+            <div class="stat-value" id="statPending" style="color: var(--amber);">--</div>
+            <div class="stat-desc">Awaiting induction claim</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Smart CRM Leads</div>
+            <div class="stat-value" id="statCrm" style="color: var(--cyan);">--</div>
+            <div class="stat-desc">Auto-synced candidate leads</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">
+            Wall of Fame Inductees & Curated Personalities
+          </div>
+          <button class="btn btn-primary" id="btnInductNew" onclick="openInductModal()">
+            + Induct New Icon
+          </button>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="wofSearch" class="search-input" placeholder="Search inductee by name, accolades, or tags..." oninput="handleSearch(this.value)">
+          <div class="filter-pills" id="roleFilterPills">
+            <button class="filter-pill active" onclick="setRoleFilter('all')">All Roles</button>
+            <button class="filter-pill" onclick="setRoleFilter('creator')">Creators</button>
+            <button class="filter-pill" onclick="setRoleFilter('producer')">Producers</button>
+            <button class="filter-pill" onclick="setRoleFilter('supervisor')">Supervisors</button>
+            <button class="filter-pill" onclick="setRoleFilter('label')">Labels</button>
+            <button class="filter-pill" onclick="setRoleFilter('dj')">DJs</button>
+            <button class="filter-pill" onclick="setRoleFilter('exec')">Execs</button>
+            <button class="filter-pill" onclick="setRoleFilter('vc')">VCs</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Inductee</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Visibility</th>
+                <th>EPK Portfolio</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="wofTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading inductees...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 2: PERSONA RBAC & USERS -->
+      <section id="view-persona-rbac" style="display: none;">
+        <div class="section-header">
+          <div class="section-title">
+            Persona Role-Based Access Control (RBAC) Engine
+          </div>
+        </div>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">
+          Each persona on TuneMavens is strictly constrained to the requisite permissions within their specific functional domains.
+        </p>
+
+        <div class="table-container" style="margin-bottom: 32px;">
+          <table class="rbac-matrix">
+            <thead>
+              <tr>
+                <th>Persona</th>
+                <th>Wall of Fame</th>
+                <th>EPK Studio</th>
+                <th>Roster & Deals</th>
+                <th>Sync Escrow</th>
+                <th>DJ Pool</th>
+                <th>Tour Vault</th>
+                <th>Domain Routes</th>
+                <th>Smart CRM</th>
+                <th>Telemetry</th>
+              </tr>
+            </thead>
+            <tbody id="matrixTableBody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">
+            Registered Platform Accounts
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>User Account</th>
+                <th>Email</th>
+                <th>Current Role</th>
+                <th>Subscription Tier</th>
+                <th>Role Assignment</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading registered users...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 3: DOMAIN ROUTING -->
+      <section id="view-domain-routing" style="display: none;">
+        <div class="section-header">
+          <div class="section-title">
+            Branded Subdomain & Application Mappings
+          </div>
+        </div>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">
+          Routing architecture per specification Phase 1. Subdomains map dynamically to specific role views and portal surfaces.
+        </p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Application / Portal</th>
+                <th>Category</th>
+                <th>Subdomain Route</th>
+                <th>Target Path</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="domainTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading domain mappings...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: SMART CRM QUEUE -->
+      <section id="view-crm-queue" style="display: none;">
+        <div class="section-header">
+          <div class="section-title">
+            Smart CRM Inbound Candidates & Communication Logs
+          </div>
+        </div>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">
+          Tracks verified nomination inquiries, invitation tokens, and dispatches via Email & WhatsApp protocols.
+        </p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Contact Coordinates</th>
+                <th>Inquiry Type</th>
+                <th>Status</th>
+                <th>Interests / Tags</th>
+                <th>Registered At</th>
+              </tr>
+            </thead>
+            <tbody id="crmTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading CRM pipeline...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 5: SYSTEM TELEMETRY -->
+      <section id="view-system-telemetry" style="display: none;">
+        <div class="section-header">
+          <div class="section-title">
+            Ecosystem Health & Operational Telemetry
+          </div>
+          <button class="btn btn-primary" onclick="loadTelemetry()">
+            Refresh Health Probes
+          </button>
+        </div>
+        <div class="stats-grid" id="telemetryGrid">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+    </main>
   </div>
-
-  <!-- Main View Content -->
-  <main class="main-content">
-
-    <!-- Active RBAC Permission Banner -->
-    <div class="rbac-alert" id="rbacAlertBanner">
-      <div class="rbac-alert-text">
-        <strong id="activeRoleName">Administrator</strong>:
-        <span id="activeRoleDesc">Unrestricted platform operations, RBAC configuration, user provisioning, Wall of Fame curation, domain routing, and ecosystem monitoring.</span>
-      </div>
-      <div id="rolePermissionCount" style="font-size: 11px; color: var(--cyan); font-weight: 700;">
-        15/15 Permissions Granted
-      </div>
-    </div>
-
-    <!-- TAB 1: WALL OF FAME MANAGEMENT -->
-    <section id="view-wall-of-fame">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Inducted Icons</div>
-          <div class="stat-value" id="statTotal">--</div>
-          <div class="stat-desc">Curated industry personalities</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Claimed Profiles</div>
-          <div class="stat-value" id="statClaimed" style="color: var(--emerald);">--</div>
-          <div class="stat-desc">Active authenticated EPKs</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Pending / Invited</div>
-          <div class="stat-value" id="statPending" style="color: var(--amber);">--</div>
-          <div class="stat-desc">Awaiting induction claim</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Smart CRM Leads</div>
-          <div class="stat-value" id="statCrm" style="color: var(--cyan);">--</div>
-          <div class="stat-desc">Auto-synced nomination leads</div>
-        </div>
-      </div>
-
-      <div class="section-header">
-        <div class="section-title">
-          Wall of Fame Inductees & Curated Personalities
-        </div>
-        <button class="btn btn-primary" id="btnInductNew" onclick="openInductModal()">
-          + Induct New Icon
-        </button>
-      </div>
-
-      <div class="filter-bar">
-        <input type="text" id="wofSearch" class="search-input" placeholder="Search inductee by name, accolades, or tags..." oninput="handleSearch(this.value)">
-        <div class="filter-pills" id="roleFilterPills">
-          <button class="filter-pill active" onclick="setRoleFilter('all')">All Roles</button>
-          <button class="filter-pill" onclick="setRoleFilter('creator')">Creators</button>
-          <button class="filter-pill" onclick="setRoleFilter('producer')">Producers</button>
-          <button class="filter-pill" onclick="setRoleFilter('supervisor')">Supervisors</button>
-          <button class="filter-pill" onclick="setRoleFilter('label')">Labels</button>
-          <button class="filter-pill" onclick="setRoleFilter('dj')">DJs</button>
-          <button class="filter-pill" onclick="setRoleFilter('exec')">Execs</button>
-          <button class="filter-pill" onclick="setRoleFilter('vc')">VCs</button>
-        </div>
-      </div>
-
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Inductee</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Visibility</th>
-              <th>EPK Portfolio</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="wofTableBody">
-            <tr>
-              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading inductees...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TAB 2: PERSONA RBAC & USERS -->
-    <section id="view-persona-rbac" style="display: none;">
-      <div class="section-header">
-        <div class="section-title">
-          Persona Role-Based Access Control (RBAC) Engine
-        </div>
-      </div>
-      <p style="color: var(--text-muted); margin-bottom: 20px;">
-        Each persona on TuneMavens is strictly constrained to the requisite permissions within their specific functional domains.
-      </p>
-
-      <div class="table-container" style="margin-bottom: 32px;">
-        <table class="rbac-matrix">
-          <thead>
-            <tr>
-              <th>Persona</th>
-              <th>Wall of Fame</th>
-              <th>EPK Studio</th>
-              <th>Roster & Deals</th>
-              <th>Sync Escrow</th>
-              <th>DJ Pool</th>
-              <th>Tour Vault</th>
-              <th>Domain Routes</th>
-              <th>Smart CRM</th>
-              <th>Telemetry</th>
-            </tr>
-          </thead>
-          <tbody id="matrixTableBody">
-            <!-- Rendered by JS -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="section-header">
-        <div class="section-title">
-          Registered Platform Accounts
-        </div>
-      </div>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>User Account</th>
-              <th>Email</th>
-              <th>Current Role</th>
-              <th>Subscription Tier</th>
-              <th>Role Assignment</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody">
-            <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading registered users...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TAB 3: DOMAIN ROUTING -->
-    <section id="view-domain-routing" style="display: none;">
-      <div class="section-header">
-        <div class="section-title">
-          Branded Subdomain & Application Mappings
-        </div>
-      </div>
-      <p style="color: var(--text-muted); margin-bottom: 20px;">
-        Routing architecture per specification Phase 1. Subdomains map dynamically to specific role views and portal surfaces.
-      </p>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Application / Portal</th>
-              <th>Category</th>
-              <th>Subdomain Route</th>
-              <th>Target Path</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="domainTableBody">
-            <tr>
-              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading domain mappings...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TAB 4: SMART CRM QUEUE -->
-    <section id="view-crm-queue" style="display: none;">
-      <div class="section-header">
-        <div class="section-title">
-          Smart CRM Inbound Candidates & Communication Logs
-        </div>
-      </div>
-      <p style="color: var(--text-muted); margin-bottom: 20px;">
-        Tracks verified nomination inquiries, invitation tokens, and dispatches via Email & WhatsApp protocols.
-      </p>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Candidate</th>
-              <th>Contact Coordinates</th>
-              <th>Inquiry Type</th>
-              <th>Status</th>
-              <th>Interests / Tags</th>
-              <th>Registered At</th>
-            </tr>
-          </thead>
-          <tbody id="crmTableBody">
-            <tr>
-              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading CRM pipeline...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TAB 5: SYSTEM TELEMETRY -->
-    <section id="view-system-telemetry" style="display: none;">
-      <div class="section-header">
-        <div class="section-title">
-          Ecosystem Health & Operational Telemetry
-        </div>
-        <button class="btn btn-primary" onclick="loadTelemetry()">
-          Refresh Health Probes
-        </button>
-      </div>
-      <div class="stats-grid" id="telemetryGrid">
-        <!-- Rendered by JS -->
-      </div>
-    </section>
-
-  </main>
 
   <!-- INDUCT NEW ICON MODAL -->
   <div class="modal-backdrop" id="inductModal" style="display: none;">
@@ -1056,11 +1138,11 @@
       const tabs = ['wall-of-fame', 'persona-rbac', 'domain-routing', 'crm-queue', 'system-telemetry'];
       tabs.forEach(t => {
         const el = document.getElementById(`view-${t}`);
-        const tabEl = document.getElementById(`tab-${t}`);
+        const navEl = document.getElementById(`nav-${t}`);
         if (el) el.style.display = (t === tabId) ? 'block' : 'none';
-        if (tabEl) {
-          if (t === tabId) tabEl.classList.add('active');
-          else tabEl.classList.remove('active');
+        if (navEl) {
+          if (t === tabId) navEl.classList.add('active');
+          else navEl.classList.remove('active');
         }
       });
 

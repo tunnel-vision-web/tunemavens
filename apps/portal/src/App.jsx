@@ -1649,7 +1649,7 @@ function DashboardView({
     const roleAllowed = {
       vc: ['home', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
       investor: ['home', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
-      admin: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
+      admin: ['home', 'backend-admin', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
       corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
@@ -1979,6 +1979,7 @@ function DashboardView({
             embeddedInDashboard={true}
           />
         );
+      case 'backend-admin':
       case 'wall-of-fame-admin':
       case 'wall-of-fame':
         return <BackendAdminBridge />;
@@ -2070,6 +2071,7 @@ function DashboardView({
       'app-marketplace': { id: 'app-marketplace', label: 'App Marketplace', icon: RiApps2Fill, category: 'Apps & Marketplace' },
       'social-ai': { id: 'social-ai', label: 'Social AI Studio', icon: RiCpuFill, category: 'Creator Tools' },
       crm: { id: 'crm', label: 'Smart CRM', icon: RiMessage2Fill, category: 'Creator Tools' },
+      'backend-admin': { id: 'backend-admin', label: 'Backend Admin Console', icon: RiShieldFill, category: 'Admin' },
       'admin-team': { id: 'admin-team', label: 'Site Admin Team & Seats', icon: RiShieldCheckFill, category: 'Admin' },
       cms: { id: 'cms', label: 'CMS Layouts', icon: RiFileTextFill, category: 'Admin' },
       'domain-mappings': { id: 'domain-mappings', label: 'Domain Mappings', icon: RiGlobalFill, category: 'Admin' },
@@ -2082,7 +2084,7 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
+        visibleKeys = ['home', 'backend-admin', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
         break;
       case 'affiliate':
         visibleKeys = ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'support'];
