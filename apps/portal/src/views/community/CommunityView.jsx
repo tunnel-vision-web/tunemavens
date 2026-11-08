@@ -69,6 +69,8 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
   const [commentInputs, setCommentInputs] = useState({});
   const [commentSubmitting, setCommentSubmitting] = useState({});
   const [networkConnections, setNetworkConnections] = useState([]);
+  const [networkSearchQuery, setNetworkSearchQuery] = useState('');
+  const [networkCurrentPage, setNetworkCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   // Interaction tracking states
@@ -516,7 +518,7 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
   // Load 2nd-Degree Network
   const fetchNetwork = async () => {
     try {
-      const res = await fetch('/api/graph/second-degree?limit=12');
+      const res = await fetch('/api/graph/second-degree?limit=50');
       if (res.ok) {
         const data = await res.json();
         setNetworkConnections(data.connections || []);
@@ -695,22 +697,46 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
     setCurrentPage(1);
   };
 
+  // Network filtering & 4 Rows Max pagination calculations (12 cards per page)
+  const filteredNetwork = networkConnections.filter((conn) => {
+    if (!networkSearchQuery) return true;
+    const q = networkSearchQuery.toLowerCase();
+    return (
+      (conn.name && conn.name.toLowerCase().includes(q)) ||
+      (conn.role && conn.role.toLowerCase().includes(q)) ||
+      (conn.bio && conn.bio.toLowerCase().includes(q)) ||
+      (conn.connection_text && conn.connection_text.toLowerCase().includes(q))
+    );
+  });
+
+  const networkTotalPages = Math.ceil(filteredNetwork.length / ITEMS_PER_PAGE) || 1;
+  const safeNetworkPage = Math.min(Math.max(1, networkCurrentPage), networkTotalPages);
+  const networkStartIndex = (safeNetworkPage - 1) * ITEMS_PER_PAGE;
+  const paginatedNetwork = filteredNetwork.slice(networkStartIndex, networkStartIndex + ITEMS_PER_PAGE);
+
+  const handleNetworkPageChange = (newPage) => {
+    if (newPage < 1 || newPage > networkTotalPages) return;
+    setNetworkCurrentPage(newPage);
+    const anchor = document.getElementById('network-anchor');
+    if (anchor) {
+      anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleNetworkSearchChange = (val) => {
+    setNetworkSearchQuery(val);
+    setNetworkCurrentPage(1);
+  };
+
   return (
     <div className="community-view-container">
       <div className="community-content-wrap">
         {/* Hero Header */}
         <div className="community-hero">
           <div className="community-hero-text">
-            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, marginBottom: '14px' }}>
-              <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
-                <img src="/tunemavens-logo-white.png" alt="TuneMavens Logo" style={{ height: '36px', width: 'auto', display: 'block' }} />
-                <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
-              </div>
-            </div>
             <h1>
               <RiTrophyLine style={{ color: '#00f0ff' }} />
               TuneMavens Community &amp; Wall of Fame
-              <span className="community-hero-badge">Phase 5.5</span>
             </h1>
             <p className="community-hero-subtitle">
               The living social substrate and hall of icons for modern music-business pioneers.
@@ -971,7 +997,6 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                   Showing <strong style={{ color: '#ffffff' }}>{startIndex + 1}</strong>–
                   <strong style={{ color: '#ffffff' }}>{Math.min(startIndex + ITEMS_PER_PAGE, filteredProfiles.length)}</strong> of{' '}
                   <strong style={{ color: '#ffffff' }}>{filteredProfiles.length}</strong> Inductees
-                  <span className="community-pagination-badge">4 Rows Max</span>
                 </div>
 
                 <div className="community-pagination-nav">
@@ -1465,41 +1490,108 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
         {/* TAB 3: 2nd-Degree Network Discovery */}
         {activeTab === 'network' && (
           <div>
-            <div style={{ marginBottom: 20 }}>
-              <h3 style={{ margin: '0 0 6px 0', color: '#ffffff' }}>Deal-Makers &amp; Creators 2 Hops Away</h3>
-              <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                High-leverage introductions uncovered through your direct connections' mutual networks.
-              </p>
+            <div className="community-toolbar" style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <h3 style={{ margin: '0 0 6px 0', color: '#ffffff' }}>Deal-Makers &amp; Creators 2 Hops Away</h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                  High-leverage introductions uncovered through your direct connections' mutual networks.
+                </p>
+              </div>
+              <input
+                type="text"
+                placeholder="Search connections, role, bio..."
+                className="community-search-input"
+                value={networkSearchQuery}
+                onChange={(e) => handleNetworkSearchChange(e.target.value)}
+                style={{ minWidth: '280px' }}
+                data-testid="network-search-input"
+              />
             </div>
 
-            <div className="second-degree-grid">
-              {networkConnections.map((conn) => {
-                const isFollowing = followingMap[conn.id];
-                return (
-                  <div className="network-card" key={conn.id}>
-                    <div className="network-card-header">
-                      <img src={conn.avatar_url} alt={conn.name} className="network-avatar" />
-                      <div className="network-info">
-                        <h4>{conn.name}</h4>
-                        <span className="fame-role-tag">{conn.role}</span>
-                        <br />
-                        <span className="network-hops-tag">{conn.connection_text || 'Connected via mutual colleague'}</span>
+            <div id="network-anchor" style={{ position: 'relative', top: '-10px' }} />
+
+            {paginatedNetwork.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 20px', background: '#0d1326', border: '1px solid #1e293b', borderRadius: '3px', color: '#94a3b8' }}>
+                <p style={{ fontSize: '1rem', color: '#cbd5e1', marginBottom: '8px' }}>No network connections found</p>
+                <p style={{ fontSize: '0.85rem', margin: 0 }}>Try clearing your search query or exploring other tabs.</p>
+              </div>
+            ) : (
+              <div className="second-degree-grid">
+                {paginatedNetwork.map((conn) => {
+                  const isFollowing = followingMap[conn.id];
+                  return (
+                    <div className="network-card" key={conn.id}>
+                      <div className="network-card-header">
+                        <img src={conn.avatar_url} alt={conn.name} className="network-avatar" />
+                        <div className="network-info">
+                          <h4>{conn.name}</h4>
+                          <span className="fame-role-tag">{conn.role}</span>
+                          <br />
+                          <span className="network-hops-tag">{conn.connection_text || 'Connected via mutual colleague'}</span>
+                        </div>
                       </div>
+
+                      <p className="network-bio">{conn.bio}</p>
+
+                      <button
+                        className={`fame-follow-btn ${isFollowing ? 'following' : ''}`}
+                        onClick={() => handleToggleFollow(conn.id, conn.name)}
+                        style={{ alignSelf: 'flex-start' }}
+                      >
+                        {isFollowing ? 'Connected' : '+ Connect / Follow'}
+                      </button>
                     </div>
+                  );
+                })}
+              </div>
+            )}
 
-                    <p className="network-bio">{conn.bio}</p>
+            {/* Pagination Controls (Same Rules) */}
+            {networkTotalPages > 1 && (
+              <div className="community-pagination-bar" data-testid="network-pagination-bar">
+                <div className="community-pagination-info">
+                  Showing <strong style={{ color: '#ffffff' }}>{networkStartIndex + 1}</strong>–
+                  <strong style={{ color: '#ffffff' }}>{Math.min(networkStartIndex + ITEMS_PER_PAGE, filteredNetwork.length)}</strong> of{' '}
+                  <strong style={{ color: '#ffffff' }}>{filteredNetwork.length}</strong> Connections
+                </div>
 
+                <div className="community-pagination-nav">
+                  <button
+                    type="button"
+                    className="community-page-btn"
+                    onClick={() => handleNetworkPageChange(safeNetworkPage - 1)}
+                    disabled={safeNetworkPage === 1}
+                    aria-label="Previous Page"
+                    data-testid="network-pagination-prev-btn"
+                  >
+                    <RiArrowLeftSLine /> Prev
+                  </button>
+
+                  {Array.from({ length: networkTotalPages }, (_, i) => i + 1).map((pageNum) => (
                     <button
-                      className={`fame-follow-btn ${isFollowing ? 'following' : ''}`}
-                      onClick={() => handleToggleFollow(conn.id, conn.name)}
-                      style={{ alignSelf: 'flex-start' }}
+                      type="button"
+                      key={pageNum}
+                      className={`community-page-btn ${pageNum === safeNetworkPage ? 'active' : ''}`}
+                      onClick={() => handleNetworkPageChange(pageNum)}
+                      data-testid={`network-pagination-page-${pageNum}`}
                     >
-                      {isFollowing ? 'Connected' : '+ Connect / Follow'}
+                      {pageNum}
                     </button>
-                  </div>
-                );
-              })}
-            </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="community-page-btn"
+                    onClick={() => handleNetworkPageChange(safeNetworkPage + 1)}
+                    disabled={safeNetworkPage === networkTotalPages}
+                    aria-label="Next Page"
+                    data-testid="network-pagination-next-btn"
+                  >
+                    Next <RiArrowRightSLine />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -770,7 +770,7 @@ def toggle_feed_post_like(
 @router.get("/graph/second-degree")
 def get_second_degree_connections(
     role: Optional[str] = Query(None, description="Filter by role e.g. supervisor, label, creator"),
-    limit: int = Query(10, ge=1, le=50),
+    limit: int = Query(50, ge=1, le=100),
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Returns users you are 2 hops from: User -> Intermediate Friend -> Target User."""
@@ -897,6 +897,35 @@ def get_second_degree_connections(
                 continue
             if not any(r["id"] == p["id"] for r in results):
                 results.append(p)
+                if len(results) >= limit:
+                    break
+
+        # Supplement with active ecosystem luminaries for rich paginated discovery
+        if len(results) < limit:
+            existing_ids = {r["id"] for r in results}
+            if my_id:
+                existing_ids.add(my_id)
+            lum_cursor = db.featured_profiles.find()
+            for lum in lum_cursor:
+                lum_id = str(lum["_id"])
+                if lum_id in existing_ids:
+                    continue
+                lum_role = lum.get("role", "creator")
+                if role and lum_role != role:
+                    continue
+                results.append({
+                    "id": lum_id,
+                    "name": lum.get("subject_name") or lum.get("name", "Luminary"),
+                    "email": lum.get("email"),
+                    "role": lum_role,
+                    "bio": lum.get("bio", f"Inducted {lum_role} on the TuneMavens Wall of Fame"),
+                    "avatar_url": lum.get("image_url") or f"https://picsum.photos/seed/{lum_id}/120",
+                    "pro_verified": True,
+                    "hops": 2,
+                    "mutual_connections": [{"id": "mutual", "name": "TuneMavens Network"}],
+                    "connection_text": "Connected via Wall of Fame Network (2 hops)",
+                })
+                existing_ids.add(lum_id)
                 if len(results) >= limit:
                     break
 
