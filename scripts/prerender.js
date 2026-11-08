@@ -139,6 +139,23 @@ const TUNEMAVENS_ROUTES = [
 ];
 
 
+TUNEMAVENS_ROUTES.push({
+  path: '/community',
+  slug: 'community',
+  title: 'Wall of Fame & Living Community — TuneMavens',
+  description: 'Explore inducted music-business luminaries, discover creators and supervisors 2 hops away, and monitor verified ecosystem deals and stream activity.',
+  h1: 'The Living Social Substrate & Hall of Icons',
+  subhead: 'Connecting music-industry legends, supervisors, and rising talent through verifiable social graphs, 2nd-degree discovery, and the official Wall of Fame.',
+  canonical: 'https://tunemavens.com/community',
+  ogImage: 'https://tunemavens.com/headers/discography_retina_header.jpg',
+  features: [
+    'Wall of Fame Curated Inductees with YouTube Masterclass Showcases',
+    'Real-time Ecosystem Activity Fanout with Granular Privacy Center Controls',
+    '2nd-Degree Network Discovery (2 Hops Away via Mutual Friends)',
+    'Consent-Gated Induction Invitations with Permanent Verified Pro Status'
+  ]
+});
+
 function loadRegistryRoutes() {
   const regPath = path.resolve('shared', 'landing_page_registry.json');
   if (!fs.existsSync(regPath)) return [];

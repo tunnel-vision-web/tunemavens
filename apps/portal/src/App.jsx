@@ -103,6 +103,8 @@ import AboutView from './views/landing/AboutView.jsx'
 import HelpView from './views/landing/HelpView.jsx'
 import SupportPageView from './views/community/SupportPageView.jsx'
 import BlogPageView from './views/community/BlogPageView.jsx'
+import CommunityView from './views/community/CommunityView.jsx'
+import WallOfFameClaimView from './views/community/WallOfFameClaimView.jsx'
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx'
 import PublishingView from './views/landing/PublishingView.jsx'
 import DistributionView from './views/landing/DistributionView.jsx'
@@ -10907,7 +10909,12 @@ function AppContent({
           <Route path="/community/blog/:slug" element={<BlogPageView sessionUser={sessionUser} />} />
           <Route path="/blog" element={<Navigate to="/community/blog" replace />} />
           <Route path="/blog/:slug" element={<BlogPageView sessionUser={sessionUser} />} />
-          <Route path="/community" element={<Navigate to="/community/blog" replace />} />
+          <Route path="/community" element={<CommunityView sessionUser={sessionUser} />} />
+          <Route path="/community/wall-of-fame" element={<CommunityView sessionUser={sessionUser} initialTab="wall-of-fame" />} />
+          <Route path="/community/feed" element={<CommunityView sessionUser={sessionUser} initialTab="feed" />} />
+          <Route path="/community/network" element={<CommunityView sessionUser={sessionUser} initialTab="network" />} />
+          <Route path="/wall-of-fame/claim/:token" element={<WallOfFameClaimView sessionUser={sessionUser} />} />
+          <Route path="/community/claim/:token" element={<WallOfFameClaimView sessionUser={sessionUser} />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
 

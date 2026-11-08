@@ -12,7 +12,7 @@ Those land in Phase 7 / Phase 8.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Any, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 from bson import ObjectId
 from pydantic import BaseModel, BeforeValidator, ConfigDict, EmailStr, Field
@@ -573,5 +573,68 @@ class RoleInquiry(BaseDocument):
     notes: Optional[str] = None
     status: str = "pending"  # 'pending' | 'contacted' | 'booked' | 'active'
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ======================================================================
+# Phase 4.5 & 5.5: Social Graph, Activity Feed & Wall of Fame Models
+# ======================================================================
+class UserFollow(BaseDocument):
+    follower_id: str
+    followee_id: str
+    kind: str = "follow"  # 'follow' | 'subscribe'
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class UserLike(BaseDocument):
+    user_id: str
+    target_kind: str  # 'post' | 'profile' | 'song' | 'creator' | 'album' | 'featured_profile'
+    target_id: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ActivityEvent(BaseDocument):
+    user_id: str
+    kind: str  # 'listen' | 'download' | 'tip' | 'follow' | 'like' | 'subscribe' | 'deal' | 'wall_of_fame_featured' | 'contract_signed'
+    target_id: Optional[str] = None
+    target_name: Optional[str] = None
+    actor_name: Optional[str] = None
+    actor_role: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    visibility: str = "public"  # 'public' | 'connections' | 'private'
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class PrivacySettings(BaseModel):
+    listens: str = "public"  # 'public' | 'connections' | 'private'
+    downloads: str = "public"
+    tips: str = "public"
+    deals: str = "public"
+    follows: str = "public"
+    second_degree_visible: bool = True
+    industry_only_profile: bool = False
+
+
+class FeaturedProfile(BaseDocument):
+    subject_name: str
+    role: str = "creator"  # 'creator' | 'producer' | 'supervisor' | 'label' | 'dj' | 'exec'
+    subject_email: Optional[str] = None
+    youtube_channel_handle: Optional[str] = None
+    youtube_video_id: Optional[str] = None
+    youtube_video_title: Optional[str] = None
+    youtube_thumbnail_url: Optional[str] = None
+    youtube_views_formatted: Optional[str] = None
+    bio: str = ""
+    social_links: Dict[str, str] = Field(default_factory=dict)
+    claimed_user_id: Optional[str] = None
+    state: str = "pending"  # 'pending' | 'invited' | 'claimed' | 'declined' | 'expired'
+    claim_token: Optional[str] = None
+    invited_at: Optional[datetime] = None
+    claimed_at: Optional[datetime] = None
+    visible: bool = False  # true only if state == 'claimed'
+    created_by_admin_id: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 

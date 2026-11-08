@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill, RiTicket2Fill, RiFundsBoxFill } from 'react-icons/ri'
+import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill, RiTicket2Fill, RiFundsBoxFill, RiTrophyLine } from 'react-icons/ri'
 import { ROLE_LOGOS, getServiceUrl } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -418,6 +418,15 @@ export default function Navbar({ sessionUser }) {
             <RiArrowDownSFill size={14} />
           </button>
           <ul className={`dropdown-menu ${dropdownOpen ? 'open' : ''}`}>
+            <li>
+              <Link 
+                to="/community" 
+                className={`dropdown-link ${isActive('/community') || currentPath.startsWith('/community/wall-of-fame') ? 'active' : ''}`} 
+                onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}
+              >
+                <RiTrophyLine size={16} /> Wall of Fame &amp; Community
+              </Link>
+            </li>
             <li>
               <Link 
                 to="/community/blog" 

@@ -90,7 +90,7 @@ into a first-class identity layer.
 - One-time password setup links (`/#/set-password?token=...`) and forgot-password recovery.
 - Backend: extend `users` model with `roles: string[]` (multi-role allowed), `pro_verified: bool`, and `email_verified: bool`.
 
-### Phase 4.5 · Social Graph Foundation 🟠 P1
+### Phase 4.5 · Social Graph Foundation ✅ SHIPPED
 Ships alongside Phase 4. The connectivity substrate everything else
 plugs into.
 
@@ -104,7 +104,7 @@ plugs into.
   follows, 2nd-degree visibility). Default: all public.
 - Feed API + home-feed UI
 
-### Phase 5.5 · Community & Wall of Fame 🟠 P1
+### Phase 5.5 · Community & Wall of Fame ✅ SHIPPED
 Ships alongside Phase 5.
 
 **Deliverables**
@@ -208,7 +208,7 @@ marketplace phase — they only depend on Phase 2.5 (roles) being in place.
 | Service | Purpose | Phase | Status |
 |---|---|---|---|
 | Claude Sonnet 4.6 (Emergent) | Recommendation engine | 3 | ✅ Integrated |
-| YouTube Data API v3 | Wall of Fame video fetch | 5.5 | ⏳ Pending (needs Google Cloud API key) |
+| YouTube Data API v3 | Wall of Fame video fetch | 5.5 | ✅ Integrated & Automated (Data API v3 with scraping & oEmbed fallback) |
 | Resend | Email delivery for welcome, verification & CRM invites | 6.5 & 8.7 | ✅ Configured & Live Tested (HTTP 200 delivery verified via `delivered@resend.dev`, dynamic test domain fallback) |
 | ~~Twilio~~ | ~~SMS~~ | — | ❌ Deferred (out of scope for launch) |
 | ~~Instagram/X API~~ | ~~Social DM~~ | — | ❌ Never (copy-to-clipboard replaces API integration) |

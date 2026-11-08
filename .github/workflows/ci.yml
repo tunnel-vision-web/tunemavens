@@ -56,6 +56,10 @@ jobs:
         run: |
           python backend/tests/test_beta_pricing.py
 
+      - name: Run social graph, community & Wall of Fame suite (Phase 4.5 & 5.5)
+        run: |
+          python -m pytest backend/tests/test_social_graph_and_community.py -v
+
   frontend-build:
     name: Frontend Monorepo Build & Prerender Check
     runs-on: ubuntu-latest
