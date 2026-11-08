@@ -45,21 +45,30 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* On-Theme Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg2);
+  background: #060813;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--b2);
+  background: #1e293b;
   border-radius: 3px;
+  border: 1px solid rgba(0, 240, 255, 0.15);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--b3);
+  background: rgba(0, 240, 255, 0.4);
+  border-color: #00f0ff;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b #060813;
 }
 
 button, input, select, textarea {

@@ -30,7 +30,16 @@ import {
   RiArrowRightSLine,
   RiCameraLensLine,
   RiImageLine,
-  RiFullscreenLine
+  RiFullscreenLine,
+  RiMessage2Line,
+  RiSendPlaneFill,
+  RiImageAddLine,
+  RiVideoAddLine,
+  RiExternalLinkLine,
+  RiThumbUpLine,
+  RiThumbUpFill,
+  RiSparklingLine,
+  RiChat1Line
 } from 'react-icons/ri';
 import './CommunityView.css';
 
@@ -51,6 +60,14 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
   // Data states
   const [profiles, setProfiles] = useState([]);
   const [feedItems, setFeedItems] = useState([]);
+  const [socialPosts, setSocialPosts] = useState([]);
+  const [feedFilter, setFeedFilter] = useState('all'); // 'all' | 'luminaries'
+  const [newPostContent, setNewPostContent] = useState('');
+  const [newPostMediaType, setNewPostMediaType] = useState('none'); // 'none' | 'image' | 'video'
+  const [newPostMediaUrl, setNewPostMediaUrl] = useState('');
+  const [newPostSubmitting, setNewPostSubmitting] = useState(false);
+  const [commentInputs, setCommentInputs] = useState({});
+  const [commentSubmitting, setCommentSubmitting] = useState({});
   const [networkConnections, setNetworkConnections] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -99,12 +116,99 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
   const [epkInvitedMap, setEpkInvitedMap] = useState({});
   const [epkNotice, setEpkNotice] = useState('');
 
+  // Quick Tip Modal State
+  const [tipModalOpen, setTipModalOpen] = useState(false);
+  const [tipTarget, setTipTarget] = useState(null);
+  const [tipAmount, setTipAmount] = useState(50);
+  const [tipCustomAmount, setTipCustomAmount] = useState('');
+  const [tipPaymentRail, setTipPaymentRail] = useState('credits'); // 'credits' | 'mpesa' | 'card'
+  const [tipPhone, setTipPhone] = useState('');
+  const [tipNote, setTipNote] = useState('');
+  const [tipSubmitting, setTipSubmitting] = useState(false);
+  const [tipSuccessNotice, setTipSuccessNotice] = useState('');
+
   const handleOpenEpkInviteModal = (profile) => {
     setEpkInviteTarget(profile);
     setEpkInviteNote(
       `In recognition of your induction to the Wall of Fame, we'd love to review your stems, catalog, and sync riders directly on TuneMavens EPK!`
     );
     setEpkInviteModalOpen(true);
+  };
+
+  // Open Quick Tip Modal
+  const handleOpenQuickTipModal = (creator) => {
+    setTipTarget(creator);
+    setTipAmount(50);
+    setTipCustomAmount('');
+    setTipNote('');
+    setTipPhone(sessionUser?.phone || '');
+    setTipModalOpen(true);
+  };
+
+  // Execute Quick Tip
+  const handleExecuteQuickTip = async (e) => {
+    e.preventDefault();
+    if (!tipTarget) return;
+    const finalAmount = tipCustomAmount ? parseInt(tipCustomAmount, 10) : tipAmount;
+    if (!finalAmount || finalAmount <= 0) {
+      alert('Please select or enter a valid tip amount.');
+      return;
+    }
+
+    setTipSubmitting(true);
+    try {
+      // 1. Dispatch activity event so it registers across the real-time social feed
+      await fetch('/api/feed/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'tip',
+          target_id: String(tipTarget.id || tipTarget.subject_name.toLowerCase().replace(/[^a-z0-9]+/g, '-')),
+          target_name: `Direct Fan Tip to ${tipTarget.subject_name}`,
+          visibility: 'public',
+          metadata: {
+            recipient: tipTarget.subject_name,
+            amount_credits: finalAmount,
+            rail: tipPaymentRail,
+            note: tipNote.trim() || undefined,
+          },
+        }),
+      }).catch(() => null);
+
+      // 2. Also attempt stream credit tip if user has a session and creator has an ID
+      if (tipTarget.id && tipPaymentRail === 'credits') {
+        await fetch('/api/stream/tip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            creator_id: String(tipTarget.id),
+            amount_credits: finalAmount,
+            message: tipNote.trim() || undefined,
+          }),
+        }).catch(() => null);
+      }
+
+      // 3. Immediately reflect in local activity feed
+      const newTipEvent = {
+        id: `tip-${Date.now()}`,
+        kind: 'tip',
+        actor_name: sessionUser?.name || sessionUser?.username || 'TuneMavens Member',
+        actor_role: sessionUser?.role || 'supporter',
+        target_name: `Direct Tip of ${finalAmount} Credits ($${(finalAmount / 10).toFixed(2)}) to ${tipTarget.subject_name}`,
+        visibility: 'public',
+        created_at: new Date().toISOString(),
+      };
+      setFeedItems((prev) => [newTipEvent, ...prev]);
+
+      setTipSuccessNotice(`✨ Sent ${finalAmount} Credits ($${(finalAmount / 10).toFixed(2)}) tip directly to ${tipTarget.subject_name}! 95% routed to creator wallet.`);
+      setTipModalOpen(false);
+      setTipTarget(null);
+      setTimeout(() => setTipSuccessNotice(''), 6000);
+    } catch (err) {
+      alert('Error sending tip: ' + err.message);
+    } finally {
+      setTipSubmitting(false);
+    }
   };
 
   const handleDispatchEpkInvite = async (e) => {
@@ -274,16 +378,138 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
     }
   };
 
-  // Load Feed
+  // Load Feed & Facebook-Style Social Posts
   const fetchFeed = async () => {
     try {
-      const res = await fetch('/api/feed?limit=30');
-      if (res.ok) {
-        const data = await res.json();
+      const [resSignals, resPosts] = await Promise.all([
+        fetch('/api/feed?limit=30'),
+        fetch('/api/feed/posts?limit=30')
+      ]);
+      if (resSignals.ok) {
+        const data = await resSignals.json();
         setFeedItems(data.items || []);
       }
+      if (resPosts.ok) {
+        const pData = await resPosts.json();
+        setSocialPosts(pData.posts || []);
+      }
     } catch (err) {
-      console.warn('Failed to fetch Feed:', err);
+      console.warn('Failed to fetch Feed & Social Posts:', err);
+    }
+  };
+
+  // Create Facebook-style Post
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    if (!newPostContent.trim()) return;
+    setNewPostSubmitting(true);
+    try {
+      const authorName = sessionUser?.name || sessionUser?.username || 'TuneMavens Member';
+      const authorRole = sessionUser?.role || 'creator';
+      const isLum = sessionUser?.is_luminary || profiles.some(p => p.subject_name.toLowerCase() === authorName.toLowerCase());
+
+      const res = await fetch('/api/feed/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: newPostContent.trim(),
+          author_name: authorName,
+          author_role: authorRole,
+          author_avatar: sessionUser?.avatar_url || '/favicon.png',
+          is_luminary: isLum,
+          media_type: newPostMediaType === 'none' ? null : newPostMediaType,
+          media_url: newPostMediaUrl.trim() || null,
+          epk_slug: authorName.toLowerCase().replace(/\s+/g, '-'),
+        }),
+      });
+      if (res.ok) {
+        const createdPost = await res.json();
+        setSocialPosts((prev) => [createdPost, ...prev]);
+        setNewPostContent('');
+        setNewPostMediaUrl('');
+        setNewPostMediaType('none');
+      }
+    } catch (err) {
+      alert('Error publishing post: ' + err.message);
+    } finally {
+      setNewPostSubmitting(false);
+    }
+  };
+
+  // Toggle Post Like
+  const handleTogglePostLike = async (postId) => {
+    try {
+      setSocialPosts((prev) =>
+        prev.map((post) => {
+          if (post.id === postId) {
+            const newLiked = !post.is_liked;
+            return {
+              ...post,
+              is_liked: newLiked,
+              likes_count: Math.max(0, (post.likes_count || 0) + (newLiked ? 1 : -1)),
+            };
+          }
+          return post;
+        })
+      );
+
+      const res = await fetch(`/api/feed/posts/${postId}/like`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setSocialPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId
+              ? { ...post, is_liked: data.liked, likes_count: data.likes_count }
+              : post
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Like toggle failed:', err);
+    }
+  };
+
+  // Add Comment to Post
+  const handleAddComment = async (postId) => {
+    const text = (commentInputs[postId] || '').trim();
+    if (!text) return;
+    setCommentSubmitting((prev) => ({ ...prev, [postId]: true }));
+    try {
+      const authorName = sessionUser?.name || sessionUser?.username || 'TuneMavens Member';
+      const authorRole = sessionUser?.role || 'creator';
+      const isLum = sessionUser?.is_luminary || profiles.some(p => p.subject_name.toLowerCase() === authorName.toLowerCase());
+
+      const res = await fetch(`/api/feed/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          author_name: authorName,
+          author_role: authorRole,
+          author_avatar: sessionUser?.avatar_url || '/favicon.png',
+          is_luminary: isLum,
+        }),
+      });
+      if (res.ok) {
+        const newComment = await res.json();
+        setSocialPosts((prev) =>
+          prev.map((post) => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                comments: [...(post.comments || []), newComment],
+                comments_count: (post.comments_count || 0) + 1,
+              };
+            }
+            return post;
+          })
+        );
+        setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
+      }
+    } catch (err) {
+      alert('Error adding comment: ' + err.message);
+    } finally {
+      setCommentSubmitting((prev) => ({ ...prev, [postId]: false }));
     }
   };
 
@@ -475,6 +701,12 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
         {/* Hero Header */}
         <div className="community-hero">
           <div className="community-hero-text">
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, marginBottom: '14px' }}>
+              <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                <img src="/tunemavens-logo-white.png" alt="TuneMavens Logo" style={{ height: '36px', width: 'auto', display: 'block' }} />
+                <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+              </div>
+            </div>
             <h1>
               <RiTrophyLine style={{ color: '#00f0ff' }} />
               TuneMavens Community &amp; Wall of Fame
@@ -515,13 +747,13 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
             className={`community-tab-btn ${activeTab === 'feed' ? 'active' : ''}`}
             onClick={() => setActiveTab('feed')}
           >
-            <RiPulseLine /> Live Activity Feed
+            <RiPulseLine /> Feed
           </button>
           <button
             className={`community-tab-btn ${activeTab === 'network' ? 'active' : ''}`}
             onClick={() => setActiveTab('network')}
           >
-            <RiShareForwardLine /> 2nd-Degree Network Discovery
+            <RiShareForwardLine /> Network
           </button>
         </div>
 
@@ -671,6 +903,14 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                           >
                             <RiFileUserLine /> View EPK
                           </Link>
+                          <button
+                            type="button"
+                            className="fame-epk-btn tip-btn"
+                            onClick={() => handleOpenQuickTipModal(p)}
+                            title={`Send a quick tip to ${p.subject_name}`}
+                          >
+                            <RiMoneyDollarCircleLine /> Tip
+                          </button>
                           {!Boolean(p.has_epk) && (
                             <button
                               className={`fame-epk-btn invite ${epkInvitedMap[p.id] ? 'invited' : ''}`}
@@ -774,67 +1014,451 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
           </div>
         )}
 
-        {/* TAB 2: Live Activity Feed */}
+        {/* TAB 2: Facebook-Style Interactive Feed */}
         {activeTab === 'feed' && (
           <div className="community-feed-layout">
-            <div className="feed-items-list">
-              {feedItems.map((item) => {
-                let iconClass = 'trophy';
-                let IconComponent = RiTrophyLine;
-
-                if (item.kind === 'deal' || item.kind === 'contract_signed') {
-                  iconClass = 'deal';
-                  IconComponent = RiMoneyDollarCircleLine;
-                } else if (item.kind === 'tip') {
-                  iconClass = 'tip';
-                  IconComponent = RiHeartFill;
-                } else if (item.kind === 'listen' || item.kind === 'download') {
-                  iconClass = '';
-                  IconComponent = RiDiscLine;
-                }
-
-                return (
-                  <div className="feed-item-card" key={item.id}>
-                    <div className={`feed-item-icon ${iconClass}`}>
-                      <IconComponent />
+            
+            {/* Left Main Stream */}
+            <div className="fb-feed-main">
+              
+              {/* Facebook Post Composer */}
+              <div className="fb-composer-card">
+                <div className="fb-composer-header">
+                  <img
+                    src={sessionUser?.avatar_url || '/favicon.png'}
+                    alt="User Avatar"
+                    className="fb-composer-avatar"
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      {sessionUser?.name || sessionUser?.username || 'TuneMavens Member'}
                     </div>
-                    <div className="feed-item-content">
-                      <div>
-                        <span className="feed-item-actor">{item.actor_name || 'TuneMavens Member'}</span>
-                        <span className="feed-item-role">[{item.actor_role || 'member'}]</span>
-                      </div>
-                      <div className="feed-item-target">
-                        {item.target_name || `${item.kind.toUpperCase()} activity event`}
-                      </div>
-                      <div className="feed-item-time">
-                        {item.created_at ? new Date(item.created_at).toLocaleString() : 'Just now'} •{' '}
-                        <span style={{ color: item.visibility === 'public' ? '#00f0ff' : '#a78bfa' }}>
-                          {item.visibility || 'public'}
-                        </span>
-                      </div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                      Publishing to Community &amp; Luminary Network
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Feed Sidebar Info */}
-            <div>
-              <div style={{ background: '#0b1120', border: '1px solid #1e293b', padding: '24px', borderRadius: '3px' }}>
-                <h4 style={{ margin: '0 0 10px 0', color: '#ffffff' }}>Ecosystem Feed Protocols</h4>
-                <p style={{ color: '#94a3b8', fontSize: '0.875rem', lineHeight: 1.5, margin: '0 0 16px 0' }}>
-                  The Home Feed fans out activity signals in real-time respecting the granular rules defined in your Privacy Center.
-                </p>
-                <div style={{ borderTop: '1px solid #1e293b', paddingTop: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#38bdf8', fontSize: '0.8rem', marginBottom: 8 }}>
-                    <RiEyeLine /> Public Signals: Stream trends, Sync Deals, Inductions
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a78bfa', fontSize: '0.8rem' }}>
-                    <RiShieldCheckFill /> Connections Only: Tips, contract milestones
                   </div>
                 </div>
+
+                <form onSubmit={handleCreatePost}>
+                  <textarea
+                    className="fb-composer-textarea"
+                    placeholder="What's happening in your studio? Share stem releases, placements, or shout out a luminary..."
+                    rows={3}
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                  />
+
+                  {newPostMediaType !== 'none' && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <input
+                        type="url"
+                        className="fb-composer-media-input"
+                        placeholder={
+                          newPostMediaType === 'image'
+                            ? 'Enter image URL (https://...)'
+                            : 'Enter YouTube or video URL (https://youtube.com/watch?v=...)'
+                        }
+                        value={newPostMediaUrl}
+                        onChange={(e) => setNewPostMediaUrl(e.target.value)}
+                      />
+                    </div>
+                  )}
+
+                  <div className="fb-composer-tools">
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        className={`fb-tool-btn ${newPostMediaType === 'image' ? 'active' : ''}`}
+                        onClick={() => setNewPostMediaType(newPostMediaType === 'image' ? 'none' : 'image')}
+                      >
+                        <RiImageAddLine /> Photo
+                      </button>
+                      <button
+                        type="button"
+                        className={`fb-tool-btn ${newPostMediaType === 'video' ? 'active' : ''}`}
+                        onClick={() => setNewPostMediaType(newPostMediaType === 'video' ? 'none' : 'video')}
+                      >
+                        <RiVideoAddLine /> Video
+                      </button>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={newPostSubmitting || !newPostContent.trim()}
+                      className="community-btn community-btn-primary"
+                      style={{ padding: '8px 20px', fontSize: '0.82rem' }}
+                    >
+                      {newPostSubmitting ? 'Posting...' : 'Post'}
+                    </button>
+                  </div>
+                </form>
               </div>
+
+              {/* Feed Filter Bar */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 0 16px 0', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className={`fb-filter-tab ${feedFilter === 'all' ? 'active' : ''}`}
+                    onClick={() => setFeedFilter('all')}
+                  >
+                    All Posts ({socialPosts.length})
+                  </button>
+                  <button
+                    className={`fb-filter-tab ${feedFilter === 'luminaries' ? 'active' : ''}`}
+                    onClick={() => setFeedFilter('luminaries')}
+                  >
+                    <RiShieldCheckFill style={{ color: '#00f0ff' }} /> Luminaries Only
+                  </button>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                  Real-time Chronological Stream
+                </span>
+              </div>
+
+              {/* Posts Stream */}
+              <div className="fb-posts-list">
+                {socialPosts
+                  .filter((p) => feedFilter === 'all' || p.is_luminary)
+                  .map((post) => {
+                    const isLiked = post.is_liked;
+                    const comments = post.comments || [];
+                    const postCommentInput = commentInputs[post.id] || '';
+                    const isSubmittingComment = commentSubmitting[post.id] || false;
+
+                    return (
+                      <div className="fb-post-card" key={post.id}>
+                        
+                        {/* Header */}
+                        <div className="fb-post-header">
+                          <img
+                            src={post.author_avatar || '/favicon.png'}
+                            alt={post.author_name}
+                            className="fb-post-avatar"
+                          />
+                          <div className="fb-post-author-info">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              <span className="fb-post-author-name">{post.author_name}</span>
+                              {post.is_luminary && (
+                                <span className="luminary-verified-badge" title="Verified TuneMavens Luminary">
+                                  <RiShieldCheckFill /> Luminary
+                                </span>
+                              )}
+                              <span className="fame-role-tag">[{post.author_role || 'Creator'}]</span>
+                            </div>
+                            <div className="fb-post-time">
+                              {post.created_at ? (post.created_at.includes('T') ? new Date(post.created_at).toLocaleDateString() : post.created_at) : 'Recently'}
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {post.epk_slug && (
+                              <Link
+                                to={`/epk/${post.epk_slug}`}
+                                className="community-btn community-btn-secondary"
+                                style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
+                              >
+                                <RiFileUserLine /> View EPK
+                              </Link>
+                            )}
+                            <button
+                              type="button"
+                              className="community-btn community-btn-secondary"
+                              onClick={() =>
+                                handleOpenQuickTipModal({
+                                  subject_name: post.author_name,
+                                  id: post.author_id,
+                                  role: post.author_role,
+                                  image_url: post.author_avatar,
+                                })
+                              }
+                              style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+                              title={`Send a quick tip to ${post.author_name}`}
+                            >
+                              <RiMoneyDollarCircleLine /> Tip
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="fb-post-content">
+                          {post.content}
+                        </div>
+
+                        {/* Media Attachment */}
+                        {post.media_type === 'image' && post.media_url && (
+                          <div className="fb-post-media-wrap">
+                            <img
+                              src={post.media_url}
+                              alt="Post media"
+                              className="fb-post-image"
+                              onClick={() => setImageModalUrl(post.media_url)}
+                              title="Click to view full photo"
+                            />
+                          </div>
+                        )}
+
+                        {post.media_type === 'video' && post.media_url && (
+                          <div className="fb-post-media-wrap">
+                            {post.media_url.includes('youtube') || post.media_url.includes('youtu.be') ? (
+                              <div
+                                className="fb-post-video-preview"
+                                onClick={() => setVideoModalUrl(post.media_url)}
+                                title="Click to play video"
+                              >
+                                <img
+                                  src={
+                                    post.media_url.includes('v=')
+                                      ? `https://img.youtube.com/vi/${post.media_url.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`
+                                      : 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1200&q=80'
+                                  }
+                                  alt="Video thumb"
+                                  className="fb-post-image"
+                                />
+                                <div className="fb-video-play-overlay">
+                                  <RiPlayFill size={28} />
+                                </div>
+                              </div>
+                            ) : (
+                              <video
+                                src={post.media_url}
+                                controls
+                                className="fb-post-image"
+                                style={{ maxHeight: '420px', width: '100%', background: '#000' }}
+                              />
+                            )}
+                          </div>
+                        )}
+
+                        {/* Stats / Counters Bar */}
+                        <div className="fb-post-stats">
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <RiHeartFill style={{ color: post.likes_count > 0 ? '#f43f5e' : '#64748b' }} />
+                            {post.likes_count || 0} {post.likes_count === 1 ? 'like' : 'likes'}
+                          </span>
+                          <span>
+                            {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+                          </span>
+                        </div>
+
+                        {/* Facebook Action Bar */}
+                        <div className="fb-post-actions">
+                          <button
+                            className={`fb-action-btn ${isLiked ? 'liked' : ''}`}
+                            onClick={() => handleTogglePostLike(post.id)}
+                          >
+                            {isLiked ? <RiHeartFill style={{ color: '#f43f5e' }} /> : <RiHeartLine />}
+                            <span>{isLiked ? 'Liked' : 'Like'}</span>
+                          </button>
+                          
+                          <button
+                            className="fb-action-btn"
+                            onClick={() => {
+                              const el = document.getElementById(`comment-input-${post.id}`);
+                              if (el) el.focus();
+                            }}
+                          >
+                            <RiMessage2Line />
+                            <span>Comment</span>
+                          </button>
+
+                          {post.epk_slug && (
+                            <Link
+                              to={`/epk/${post.epk_slug}`}
+                              className="fb-action-btn"
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <RiExternalLinkLine />
+                              <span>EPK</span>
+                            </Link>
+                          )}
+
+                          <button
+                            type="button"
+                            className="fb-action-btn"
+                            onClick={() =>
+                              handleOpenQuickTipModal({
+                                subject_name: post.author_name,
+                                id: post.author_id,
+                                role: post.author_role,
+                                image_url: post.author_avatar,
+                              })
+                            }
+                            style={{ color: '#10b981' }}
+                            title={`Send a quick tip to ${post.author_name}`}
+                          >
+                            <RiMoneyDollarCircleLine />
+                            <span>Tip</span>
+                          </button>
+                        </div>
+
+                        {/* Threaded Comments Section */}
+                        <div className="fb-comments-section">
+                          {comments.length > 0 && (
+                            <div className="fb-comments-list">
+                              {comments.map((comm) => (
+                                <div className="fb-comment-item" key={comm.id}>
+                                  <img
+                                    src={comm.author_avatar || '/favicon.png'}
+                                    alt={comm.author_name}
+                                    className="fb-comment-avatar"
+                                  />
+                                  <div className="fb-comment-bubble">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                                      <span className="fb-comment-author">{comm.author_name}</span>
+                                      {comm.is_luminary && (
+                                        <span className="luminary-verified-badge mini" title="Verified Luminary">
+                                          <RiShieldCheckFill size={10} /> Luminary
+                                        </span>
+                                      )}
+                                      <span className="fame-role-tag" style={{ fontSize: '0.65rem', padding: '1px 5px' }}>
+                                        {comm.author_role || 'member'}
+                                      </span>
+                                    </div>
+                                    <div className="fb-comment-text">{comm.text}</div>
+                                    <div className="fb-comment-time">{comm.created_at || 'Just now'}</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Write Comment Box */}
+                          <div className="fb-comment-input-wrap">
+                            <img
+                              src={sessionUser?.avatar_url || '/favicon.png'}
+                              alt="Current User"
+                              className="fb-comment-avatar"
+                            />
+                            <div style={{ flex: 1, display: 'flex', gap: '8px' }}>
+                              <input
+                                id={`comment-input-${post.id}`}
+                                type="text"
+                                className="fb-comment-input"
+                                placeholder={`Write a comment as ${sessionUser?.name || sessionUser?.username || 'member'}...`}
+                                value={postCommentInput}
+                                onChange={(e) =>
+                                  setCommentInputs((prev) => ({ ...prev, [post.id]: e.target.value }))
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleAddComment(post.id);
+                                  }
+                                }}
+                              />
+                              <button
+                                className="fb-comment-send-btn"
+                                disabled={!postCommentInput.trim() || isSubmittingComment}
+                                onClick={() => handleAddComment(post.id)}
+                                title="Post comment"
+                              >
+                                <RiSendPlaneFill />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    );
+                  })}
+              </div>
+
             </div>
+
+            {/* Right Sidebar: Luminaries & Ecosystem Signals */}
+            <div className="fb-feed-sidebar">
+              
+              {/* Active Inducted Luminaries Widget */}
+              <div style={{ background: '#0b1120', border: '1px solid #1e293b', padding: '20px', borderRadius: '3px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <h4 style={{ margin: 0, color: '#ffffff', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <RiTrophyLine style={{ color: '#00f0ff' }} /> Inducted Luminaries
+                  </h4>
+                  <button
+                    onClick={() => setActiveTab('wall-of-fame')}
+                    style={{ background: 'none', border: 'none', color: '#00f0ff', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    View All ↗
+                  </button>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {profiles.slice(0, 4).map((lum) => (
+                    <div key={lum.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img
+                          src={lum.image_url || lum.youtube_thumbnail_url || '/favicon.png'}
+                          alt={lum.subject_name}
+                          style={{ width: '38px', height: '38px', borderRadius: '3px', objectFit: 'cover', border: '1px solid #334155' }}
+                        />
+                        <div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {lum.subject_name}
+                            <RiShieldCheckFill style={{ color: '#00f0ff', fontSize: '11px' }} />
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                            {lum.role}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <Link
+                          to={lum.epk_slug ? `/epk/${lum.epk_slug}` : `/profile/${lum.id}`}
+                          className="community-btn community-btn-secondary"
+                          style={{ padding: '3px 8px', fontSize: '0.72rem' }}
+                        >
+                          EPK
+                        </Link>
+                        <button
+                          type="button"
+                          className="community-btn community-btn-secondary"
+                          style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }}
+                          onClick={() => handleOpenQuickTipModal(lum)}
+                          title={`Tip ${lum.subject_name}`}
+                        >
+                          Tip
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ecosystem Activity Signals Widget */}
+              <div style={{ background: '#0b1120', border: '1px solid #1e293b', padding: '20px', borderRadius: '3px', marginBottom: '20px' }}>
+                <h4 style={{ margin: '0 0 12px 0', color: '#ffffff', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RiPulseLine style={{ color: '#10b981' }} /> Live Ecosystem Signals
+                </h4>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {feedItems.slice(0, 4).map((item) => (
+                    <div key={item.id} style={{ padding: '8px 10px', background: '#060913', border: '1px solid #1e293b', borderRadius: '3px' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#ffffff', fontWeight: 600 }}>
+                        {item.target_name}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                        <span>by {item.actor_name}</span>
+                        <span style={{ color: '#00f0ff' }}>{item.visibility || 'public'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Feed Protocols Guidelines */}
+              <div style={{ background: '#0b1120', border: '1px solid #1e293b', padding: '18px', borderRadius: '3px' }}>
+                <h5 style={{ margin: '0 0 8px 0', color: '#ffffff', fontSize: '0.85rem' }}>Social Graph Rules</h5>
+                <p style={{ color: '#94a3b8', fontSize: '0.78rem', lineHeight: 1.5, margin: '0 0 10px 0' }}>
+                  Followers and luminaries can converse bidirectionally. All stem links and cue sheets retain cryptographic attribution.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#00f0ff', fontSize: '0.75rem' }}>
+                  <RiShieldCheckFill /> Luminary Verified Badging active
+                </div>
+              </div>
+
+            </div>
+
           </div>
         )}
 
@@ -1163,6 +1787,169 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                   disabled={nomineeSubmitting}
                 >
                   {nomineeSubmitting ? 'Submitting...' : 'Submit Nomination'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* Quick Creator Tipping Modal */}
+      {tipModalOpen && tipTarget && (
+        <div className="community-modal-overlay" onClick={() => setTipModalOpen(false)}>
+          <div className="community-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+            <div className="community-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <RiMoneyDollarCircleLine style={{ color: '#10b981', fontSize: 22 }} />
+                <h3>Quick Creator Tip</h3>
+              </div>
+              <button className="community-modal-close" onClick={() => setTipModalOpen(false)}>
+                <RiCloseLine />
+              </button>
+            </div>
+
+            <form onSubmit={handleExecuteQuickTip}>
+              <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                
+                {/* Recipient Profile Card */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#090d16', border: '1px solid #1e293b', borderRadius: 3, padding: 12 }}>
+                  <img
+                    src={tipTarget.image_url || tipTarget.youtube_thumbnail_url || tipTarget.avatar_url || '/favicon.png'}
+                    alt={tipTarget.subject_name}
+                    style={{ width: 44, height: 44, borderRadius: 3, objectFit: 'cover', border: '1px solid #334155' }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff' }}>
+                      {tipTarget.subject_name}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#38bdf8', textTransform: 'uppercase', fontWeight: 600 }}>
+                      {tipTarget.role || 'Inducted Creator'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amount Selection */}
+                <div>
+                  <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.8rem', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>
+                    Select Tip Amount (Credits / USD)
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 8 }}>
+                    {[
+                      { cred: 10, usd: '$1' },
+                      { cred: 50, usd: '$5' },
+                      { cred: 100, usd: '$10' },
+                      { cred: 250, usd: '$25' },
+                    ].map((item) => (
+                      <button
+                        key={item.cred}
+                        type="button"
+                        className={`tip-preset-btn ${tipAmount === item.cred && !tipCustomAmount ? 'active' : ''}`}
+                        onClick={() => {
+                          setTipAmount(item.cred);
+                          setTipCustomAmount('');
+                        }}
+                      >
+                        <div style={{ fontSize: '13px', fontWeight: 800 }}>{item.cred} TM</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{item.usd}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Or enter custom Credits (e.g. 500 = $50)..."
+                    className="community-search-input"
+                    style={{ width: '100%' }}
+                    value={tipCustomAmount}
+                    onChange={(e) => setTipCustomAmount(e.target.value)}
+                  />
+                </div>
+
+                {/* Settlement Rail */}
+                <div>
+                  <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.8rem', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>
+                    Settlement Rail
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                    <button
+                      type="button"
+                      className={`tip-rail-btn ${tipPaymentRail === 'credits' ? 'active' : ''}`}
+                      onClick={() => setTipPaymentRail('credits')}
+                    >
+                      Credits Balance
+                    </button>
+                    <button
+                      type="button"
+                      className={`tip-rail-btn ${tipPaymentRail === 'mpesa' ? 'active' : ''}`}
+                      onClick={() => setTipPaymentRail('mpesa')}
+                    >
+                      M-Pesa STK Push
+                    </button>
+                    <button
+                      type="button"
+                      className={`tip-rail-btn ${tipPaymentRail === 'card' ? 'active' : ''}`}
+                      onClick={() => setTipPaymentRail('card')}
+                    >
+                      Card / Apple Pay
+                    </button>
+                  </div>
+                </div>
+
+                {tipPaymentRail === 'mpesa' && (
+                  <div>
+                    <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.75rem', fontWeight: 700, marginBottom: 4 }}>
+                      M-Pesa Phone Number (254...)
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="e.g. 254712345678"
+                      className="community-search-input"
+                      style={{ width: '100%' }}
+                      value={tipPhone}
+                      onChange={(e) => setTipPhone(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {/* Optional Message */}
+                <div>
+                  <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Encouraging Note / Studio Shout-out (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    className="community-search-input"
+                    style={{ width: '100%', resize: 'vertical' }}
+                    value={tipNote}
+                    onChange={(e) => setTipNote(e.target.value)}
+                    placeholder="Keep making history! Loved your polyrhythmic stem pack..."
+                  />
+                </div>
+
+                {/* Compensation Protocol Notice */}
+                <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 3, padding: 10, fontSize: '11px', color: '#cbd5e1', lineHeight: 1.5 }}>
+                  <span style={{ color: '#10b981', fontWeight: 800 }}>• Compensation Guarantee:</span> 95% net proceeds are deposited directly into the creator's wallet. Zero distributor cuts or monthly fan subscription traps.
+                </div>
+
+              </div>
+
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #1e293b', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <button
+                  type="button"
+                  className="community-btn community-btn-secondary"
+                  onClick={() => setTipModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="community-btn community-btn-primary"
+                  style={{ background: '#10b981', borderColor: '#10b981', color: '#060813' }}
+                  disabled={tipSubmitting}
+                >
+                  {tipSubmitting ? 'Processing Tip...' : `Confirm & Send Tip ($${((tipCustomAmount ? parseInt(tipCustomAmount, 10) : tipAmount) / 10).toFixed(2)})`}
                 </button>
               </div>
             </form>

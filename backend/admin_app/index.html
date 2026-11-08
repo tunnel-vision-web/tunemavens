@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TuneMavens — Operations & RBAC Admin Console</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="icon" type="image/png" href="/uploads/favicon.png?v=tm2">
+  <link rel="shortcut icon" href="/uploads/favicon.ico?v=tm2">
   <style>
     :root {
       --bg-dark: #060813;
@@ -23,6 +24,29 @@
       --radius: 3px;
       --sidebar-width: 260px;
       --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    
+    /* On-Theme Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: var(--radius);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 240, 255, 0.4);
+      border-color: var(--cyan);
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #1e293b var(--bg-dark);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -693,6 +717,10 @@
   <!-- Top Navbar -->
   <nav class="admin-navbar">
     <div class="brand-section">
+      <div style="display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1; margin-right: 8px;">
+        <img src="/uploads/tunemavens-logo-white.png" onerror="this.src='/tunemavens-logo-white.png'" alt="TuneMavens Logo" style="height: 32px; width: auto; display: block;" />
+        <span style="font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #00f0ff; margin-top: -2px; align-self: flex-end;">admin</span>
+      </div>
       <span class="brand-logo-badge">TM OPERATIONS</span>
       <div class="brand-title">
         TuneMavens Backend Operations & RBAC Admin Console
@@ -724,6 +752,12 @@
 
     <!-- Left Sidebar -->
     <aside class="admin-sidebar">
+      <div style="padding: 16px 20px 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; background: rgba(11, 17, 32, 0.6);">
+        <div style="display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1;">
+          <img src="/uploads/tunemavens-logo-white.png" onerror="this.src='/tunemavens-logo-white.png'" alt="TuneMavens Logo" style="height: 30px; width: auto; display: block;" />
+          <span style="font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #00f0ff; margin-top: -2px; align-self: flex-end;">ops suite</span>
+        </div>
+      </div>
       
       <!-- Persona Context Switcher Box -->
       <div class="sidebar-persona-box">

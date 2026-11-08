@@ -23,6 +23,11 @@ export default function BackendAdminBridge() {
         boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
         textAlign: 'center'
       }}>
+        <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1, margin: '0 auto 20px auto' }}>
+          <img src="/tunemavens-logo-white.png" alt="TuneMavens Logo" style={{ height: '36px', width: 'auto', display: 'block' }} />
+          <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>admin</span>
+        </div>
+
         <div style={{
           width: '56px',
           height: '56px',

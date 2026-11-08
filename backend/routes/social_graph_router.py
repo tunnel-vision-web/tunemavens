@@ -4,7 +4,8 @@ Implements follows, subscribes, likes, privacy toggles, activity feed fanout,
 and 2nd-degree network discovery ("2 hops away via mutual connection").
 """
 import logging
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 from bson import ObjectId
 
@@ -46,6 +47,25 @@ class LikeResponse(BaseModel):
     target_kind: str
     target_id: str
     likes_count: int
+
+
+class CreateFeedPostPayload(BaseModel):
+    content: str
+    media_type: Optional[str] = None  # "image" | "video" | "audio"
+    media_url: Optional[str] = None
+    author_name: Optional[str] = None
+    author_role: Optional[str] = None
+    author_avatar: Optional[str] = None
+    is_luminary: Optional[bool] = False
+    epk_slug: Optional[str] = None
+
+
+class CreateCommentPayload(BaseModel):
+    text: str
+    author_name: Optional[str] = None
+    author_role: Optional[str] = None
+    author_avatar: Optional[str] = None
+    is_luminary: Optional[bool] = False
 
 
 class PrivacySettingsPayload(BaseModel):
@@ -476,19 +496,272 @@ def get_home_feed(
 @router.post("/feed/activity", response_model=dict)
 def record_feed_activity(
     payload: ActivityEventPayload,
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Record an activity event directly (e.g. from player or deal execution)."""
-    my_id = str(current_user["_id"])
+    my_id = str(current_user["_id"]) if current_user else f"guest_{uuid.uuid4().hex[:6]}"
+    actor_name = (current_user and (current_user.get("name") or current_user.get("username"))) or "TuneMavens Supporter"
+    actor_role = (current_user and current_user.get("role")) or "fan"
+    meta = payload.metadata or {}
+    meta["actor_name"] = actor_name
+    meta["actor_role"] = actor_role
+
     log_activity_event(
         user_id=my_id,
         kind=payload.kind,
         target_id=payload.target_id,
         target_name=payload.target_name,
-        metadata=payload.metadata,
+        metadata=meta,
         explicit_visibility=payload.visibility,
     )
     return {"status": "recorded", "kind": payload.kind}
+
+
+# ======================================================================
+# Facebook-Style Interactive Feed & Comments Engine
+# ======================================================================
+SEED_FEED_POSTS = [
+    {
+        "author_name": "Sarz",
+        "author_role": "Producer & Hitmaker",
+        "author_avatar": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "is_luminary": True,
+        "epk_slug": "sarz",
+        "content": "Just uploaded fresh unreleased polyrhythmic stem sessions to my TuneMavens EPK. Producers, check out the swing on Track 2 and drop your thoughts below! 👇🔥",
+        "media_type": "video",
+        "media_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "likes_count": 42,
+        "liked_by": [],
+        "comments": [
+            {
+                "id": "c1",
+                "author_name": "Mutoriah",
+                "author_role": "Producer & Composer",
+                "author_avatar": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                "is_luminary": True,
+                "text": "Those 808 transient layers are pristine bro. The mid-range spacing is unreal!",
+                "created_at": "3 hours ago"
+            },
+            {
+                "id": "c2",
+                "author_name": "Masterkraft",
+                "author_role": "Legendary Producer",
+                "author_avatar": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                "is_luminary": True,
+                "text": "Classic groove. We definitely need a live studio lock-in next week in Lagos.",
+                "created_at": "1 hour ago"
+            }
+        ]
+    },
+    {
+        "author_name": "Tems",
+        "author_role": "Grammy-Winning Artist",
+        "author_avatar": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80",
+        "is_luminary": True,
+        "epk_slug": "tems",
+        "content": "Deeply honored by the official induction to the TuneMavens Wall of Fame! Celebrating independent publishing rights, transparent splits, and ownership for all African creators.",
+        "media_type": "image",
+        "media_url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80",
+        "likes_count": 89,
+        "liked_by": [],
+        "comments": [
+            {
+                "id": "c3",
+                "author_name": "Bien",
+                "author_role": "Artist & Sauti Sol",
+                "author_avatar": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                "is_luminary": True,
+                "text": "Well deserved Queen! Raising the bar for the entire diaspora.",
+                "created_at": "4 hours ago"
+            },
+            {
+                "id": "c4",
+                "author_name": "SyncMavens Desk",
+                "author_role": "Music Supervisor",
+                "author_avatar": "/favicon.png",
+                "is_luminary": False,
+                "text": "Your catalog cue sheets are pre-cleared and locked in escrow across 3 upcoming studio briefs!",
+                "created_at": "2 hours ago"
+            }
+        ]
+    },
+    {
+        "author_name": "Mutoriah",
+        "author_role": "Composer & Producer",
+        "author_avatar": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "is_luminary": True,
+        "epk_slug": "mutoriah",
+        "content": "Live studio breakdown of the Mugithi-Electronic fusion technique. All stems are now pre-cleared for supervisor sync placement on SyncMavens. Hit play on my EPK to audition the stems!",
+        "media_type": "image",
+        "media_url": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1200&q=80",
+        "likes_count": 27,
+        "liked_by": [],
+        "comments": [
+            {
+                "id": "c5",
+                "author_name": "DJ Kace",
+                "author_role": "DJ / Curator",
+                "author_avatar": "/favicon.png",
+                "is_luminary": False,
+                "text": "Dropping the extended club edit this Friday at the residency!",
+                "created_at": "1 hour ago"
+            }
+        ]
+    }
+]
+
+
+def seed_feed_posts_if_empty():
+    if db.feed_posts.count_documents({}) > 0:
+        return
+    now = datetime.now(timezone.utc)
+    for p in SEED_FEED_POSTS:
+        doc = p.copy()
+        doc["created_at"] = now
+        doc["updated_at"] = now
+        db.feed_posts.insert_one(doc)
+
+
+@router.get("/feed/posts")
+@router.get("/social-graph/feed/posts")
+def list_feed_posts(
+    limit: int = Query(30, ge=1, le=100),
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Retrieve social posts with comments and like states."""
+    seed_feed_posts_if_empty()
+    my_id = str(current_user["_id"]) if current_user else None
+
+    cursor = db.feed_posts.find().sort("created_at", -1).limit(limit)
+    posts = []
+    for doc in cursor:
+        doc["id"] = str(doc["_id"])
+        doc.pop("_id", None)
+        if isinstance(doc.get("created_at"), datetime):
+            doc["created_at"] = doc["created_at"].isoformat()
+        liked_by = doc.get("liked_by", [])
+        doc["is_liked"] = bool(my_id and my_id in liked_by)
+        doc["likes_count"] = doc.get("likes_count", len(liked_by))
+        doc["comments_count"] = len(doc.get("comments", []))
+        posts.append(doc)
+
+    return {"posts": posts, "total": len(posts)}
+
+
+@router.post("/feed/posts")
+@router.post("/social-graph/feed/posts")
+def create_feed_post(
+    payload: CreateFeedPostPayload,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Publish a new post to the community feed."""
+    now = datetime.now(timezone.utc)
+    my_id = str(current_user["_id"]) if current_user else f"guest_{uuid.uuid4().hex[:6]}"
+    user_name = payload.author_name or (current_user and (current_user.get("name") or current_user.get("username"))) or "TuneMavens Member"
+    user_role = payload.author_role or (current_user and current_user.get("role")) or "creator"
+
+    is_lum = payload.is_luminary or bool(db.featured_profiles.find_one({"subject_name": {"$regex": f"^{user_name}$", "$options": "i"}}))
+
+    doc = {
+        "author_id": my_id,
+        "author_name": user_name,
+        "author_role": user_role,
+        "author_avatar": payload.author_avatar or "/favicon.png",
+        "is_luminary": is_lum,
+        "epk_slug": payload.epk_slug or user_name.lower().replace(" ", "-"),
+        "content": payload.content.strip(),
+        "media_type": payload.media_type,
+        "media_url": payload.media_url,
+        "likes_count": 0,
+        "liked_by": [],
+        "comments": [],
+        "created_at": now,
+        "updated_at": now
+    }
+
+    res = db.feed_posts.insert_one(doc)
+    doc["id"] = str(res.inserted_id)
+    doc.pop("_id", None)
+    doc["created_at"] = doc["created_at"].isoformat()
+    doc["is_liked"] = False
+    doc["comments_count"] = 0
+    return doc
+
+
+@router.post("/feed/posts/{post_id}/comments")
+@router.post("/social-graph/feed/posts/{post_id}/comments")
+def add_feed_post_comment(
+    post_id: str,
+    payload: CreateCommentPayload,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Add a comment to a feed post."""
+    try:
+        oid = ObjectId(post_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid post ID")
+
+    post = db.feed_posts.find_one({"_id": oid})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    my_id = str(current_user["_id"]) if current_user else f"guest_{uuid.uuid4().hex[:6]}"
+    user_name = payload.author_name or (current_user and (current_user.get("name") or current_user.get("username"))) or "TuneMavens Member"
+    user_role = payload.author_role or (current_user and current_user.get("role")) or "member"
+    is_lum = payload.is_luminary or bool(db.featured_profiles.find_one({"subject_name": {"$regex": f"^{user_name}$", "$options": "i"}}))
+
+    comment_obj = {
+        "id": uuid.uuid4().hex[:8],
+        "author_id": my_id,
+        "author_name": user_name,
+        "author_role": user_role,
+        "author_avatar": payload.author_avatar or "/favicon.png",
+        "is_luminary": is_lum,
+        "text": payload.text.strip(),
+        "created_at": "Just now"
+    }
+
+    db.feed_posts.update_one(
+        {"_id": oid},
+        {"$push": {"comments": comment_obj}, "$set": {"updated_at": datetime.now(timezone.utc)}}
+    )
+
+    return {**comment_obj, "status": "added", "comment": comment_obj}
+
+
+@router.post("/feed/posts/{post_id}/like")
+@router.post("/social-graph/feed/posts/{post_id}/like")
+def toggle_feed_post_like(
+    post_id: str,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Toggle like state on a feed post."""
+    try:
+        oid = ObjectId(post_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid post ID")
+
+    post = db.feed_posts.find_one({"_id": oid})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    my_id = str(current_user["_id"]) if current_user else "anonymous_liker"
+    liked_by = post.get("liked_by", [])
+
+    if my_id in liked_by:
+        liked_by.remove(my_id)
+        is_liked = False
+    else:
+        liked_by.append(my_id)
+        is_liked = True
+
+    new_count = max(0, len(liked_by) if my_id != "anonymous_liker" else (post.get("likes_count", 0) + (1 if is_liked else -1)))
+    db.feed_posts.update_one(
+        {"_id": oid},
+        {"$set": {"liked_by": liked_by, "likes_count": new_count}}
+    )
+
+    return {"liked": is_liked, "likes_count": new_count, "post_id": post_id}
 
 
 # ======================================================================
