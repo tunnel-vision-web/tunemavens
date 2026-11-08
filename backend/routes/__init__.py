@@ -32,9 +32,11 @@ from .publishing_router import router as publishing_router
 from .confidentiality_router import router as confidentiality_router
 from .social_graph_router import router as social_graph_router
 from .community_router import router as community_router
+from .backend_admin_router import router as backend_admin_router
 
 __all__ = [
     "admin_router",
+    "backend_admin_router",
     "auth_router",
     "contracts_router",
     "dashboard_router",

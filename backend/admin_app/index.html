@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TuneMavens — Operations & RBAC Admin Console</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    :root {
+      --bg-dark: #060813;
+      --bg-panel: #0b1120;
+      --bg-card: #0f172a;
+      --border-color: #1e293b;
+      --border-focus: #00f0ff;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --cyan: #00f0ff;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #a855f7;
+      --radius: 3px;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navbar */
+    .admin-navbar {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo-badge {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: var(--radius);
+      letter-spacing: 0.5px;
+    }
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .engine-badge {
+      font-size: 11px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 6px;
+      border-radius: var(--radius);
+      font-weight: 600;
+    }
+
+    /* Persona Selector Bar */
+    .persona-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: var(--radius);
+    }
+    .persona-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .persona-select {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: var(--cyan);
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: var(--radius);
+      outline: none;
+      cursor: pointer;
+    }
+    .persona-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      border-color: var(--cyan);
+      color: #ffffff;
+    }
+    .btn-primary {
+      background: var(--cyan);
+      color: #060813;
+      border-color: var(--cyan);
+      font-weight: 700;
+    }
+    .btn-primary:hover {
+      background: #38bdf8;
+      border-color: #38bdf8;
+      color: #060813;
+    }
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: var(--rose);
+    }
+    .btn-danger:hover {
+      background: var(--rose);
+      color: #ffffff;
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: var(--border-color) !important;
+      color: var(--text-muted) !important;
+      background: var(--bg-card) !important;
+    }
+
+    /* Subheader Tabs */
+    .tabs-bar {
+      background: #080d1a;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 24px;
+      display: flex;
+      gap: 2px;
+      overflow-x: auto;
+    }
+    .tab-item {
+      padding: 12px 16px;
+      color: var(--text-muted);
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .tab-item:hover {
+      color: #ffffff;
+    }
+    .tab-item.active {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.04);
+    }
+
+    /* Main Container */
+    .main-content {
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Notice & RBAC Alert */
+    .rbac-alert {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--cyan);
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .rbac-alert-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+      font-size: 13px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: var(--radius);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+    }
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .stat-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Filter & Search Bar */
+    .filter-bar {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .search-input {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      outline: none;
+      flex: 1;
+      min-width: 200px;
+    }
+    .search-input:focus {
+      border-color: var(--cyan);
+    }
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .filter-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .filter-pill:hover, .filter-pill.active {
+      color: #ffffff;
+      border-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.1);
+    }
+
+    /* Data Table */
+    .table-container {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #090e1a;
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #141f33;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    /* Media Thumb */
+    .media-thumb-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .media-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius);
+      object-fit: cover;
+      border: 1px solid var(--border-color);
+      background: #000;
+      margin: 4px;
+    }
+    .media-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .media-name {
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .media-role {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Status Badges */
+    .badge-claimed { background: rgba(16, 185, 129, 0.15); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-invited { background: rgba(0, 240, 255, 0.15); color: var(--cyan); border: 1px solid rgba(0, 240, 255, 0.3); }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+    .modal-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #090e1a;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .form-input, .form-select, .form-textarea {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: #ffffff;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--cyan);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      font-size: 13px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+      min-width: 280px;
+      animation: slideIn 0.2s ease-out;
+    }
+    .toast-success { border-left: 4px solid var(--emerald); }
+    .toast-error { border-left: 4px solid var(--rose); }
+    .toast-info { border-left: 4px solid var(--cyan); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* RBAC Matrix Table */
+    .rbac-matrix th, .rbac-matrix td {
+      font-size: 12px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .rbac-matrix th:first-child, .rbac-matrix td:first-child {
+      text-align: left;
+      font-weight: 700;
+    }
+    .check-granted { color: var(--emerald); font-weight: 800; font-size: 14px; }
+    .check-restricted { color: #334155; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="admin-navbar">
+    <div class="brand-section">
+      <span class="brand-logo-badge">TM OPERATIONS</span>
+      <div class="brand-title">
+        TuneMavens Backend Admin Console
+      </div>
+      <span class="engine-badge">FastAPI :8001 Dedicated Backend</span>
+    </div>
+
+    <!-- Active Persona Switcher -->
+    <div class="persona-bar">
+      <span class="persona-label">Active Persona:</span>
+      <select id="personaSelector" class="persona-select" onchange="switchPersona(this.value)">
+        <option value="admin">Administrator (Full Access)</option>
+        <option value="creator">Creator / Artist</option>
+        <option value="label">Record Label</option>
+        <option value="supervisor">Music Supervisor</option>
+        <option value="dj">DJ / Curator</option>
+        <option value="vc">Tour VC / Investor</option>
+        <option value="podcaster">Podcaster / Host</option>
+        <option value="media_house">Media House</option>
+        <option value="corporate">Corporate Brand</option>
+        <option value="affiliate">Affiliate Partner</option>
+        <option value="consumer">Consumer / Fan</option>
+      </select>
+      <span id="personaPill" class="persona-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+        Full Administrative Access
+      </span>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn" onclick="openRbacMatrixModal()">
+        <span>RBAC Matrix</span>
+      </button>
+      <a href="http://localhost:3000/#/community" target="_blank" class="btn">
+        <span>Public Wall of Fame</span>
+      </a>
+      <a href="http://localhost:3000" target="_blank" class="btn btn-primary">
+        <span>Portal Client (:3000)</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Subheader Tabs -->
+  <div class="tabs-bar">
+    <div class="tab-item active" onclick="switchTab('wall-of-fame')" id="tab-wall-of-fame">
+      Wall of Fame Management
+    </div>
+    <div class="tab-item" onclick="switchTab('persona-rbac')" id="tab-persona-rbac">
+      Persona RBAC & Users
+    </div>
+    <div class="tab-item" onclick="switchTab('domain-routing')" id="tab-domain-routing">
+      Domain & Subdomains
+    </div>
+    <div class="tab-item" onclick="switchTab('crm-queue')" id="tab-crm-queue">
+      Smart CRM Inbound
+    </div>
+    <div class="tab-item" onclick="switchTab('system-telemetry')" id="tab-system-telemetry">
+      System Telemetry & Health
+    </div>
+  </div>
+
+  <!-- Main View Content -->
+  <main class="main-content">
+
+    <!-- Active RBAC Permission Banner -->
+    <div class="rbac-alert" id="rbacAlertBanner">
+      <div class="rbac-alert-text">
+        <strong id="activeRoleName">Administrator</strong>:
+        <span id="activeRoleDesc">Unrestricted platform operations, RBAC configuration, user provisioning, Wall of Fame curation, domain routing, and ecosystem monitoring.</span>
+      </div>
+      <div id="rolePermissionCount" style="font-size: 11px; color: var(--cyan); font-weight: 700;">
+        15/15 Permissions Granted
+      </div>
+    </div>
+
+    <!-- TAB 1: WALL OF FAME MANAGEMENT -->
+    <section id="view-wall-of-fame">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Inducted Icons</div>
+          <div class="stat-value" id="statTotal">--</div>
+          <div class="stat-desc">Curated industry personalities</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Claimed Profiles</div>
+          <div class="stat-value" id="statClaimed" style="color: var(--emerald);">--</div>
+          <div class="stat-desc">Active authenticated EPKs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending / Invited</div>
+          <div class="stat-value" id="statPending" style="color: var(--amber);">--</div>
+          <div class="stat-desc">Awaiting induction claim</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Smart CRM Leads</div>
+          <div class="stat-value" id="statCrm" style="color: var(--cyan);">--</div>
+          <div class="stat-desc">Auto-synced nomination leads</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">
+          Wall of Fame Inductees & Curated Personalities
+        </div>
+        <button class="btn btn-primary" id="btnInductNew" onclick="openInductModal()">
+          + Induct New Icon
+        </button>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="wofSearch" class="search-input" placeholder="Search inductee by name, accolades, or tags..." oninput="handleSearch(this.value)">
+        <div class="filter-pills" id="roleFilterPills">
+          <button class="filter-pill active" onclick="setRoleFilter('all')">All Roles</button>
+          <button class="filter-pill" onclick="setRoleFilter('creator')">Creators</button>
+          <button class="filter-pill" onclick="setRoleFilter('producer')">Producers</button>
+          <button class="filter-pill" onclick="setRoleFilter('supervisor')">Supervisors</button>
+          <button class="filter-pill" onclick="setRoleFilter('label')">Labels</button>
+          <button class="filter-pill" onclick="setRoleFilter('dj')">DJs</button>
+          <button class="filter-pill" onclick="setRoleFilter('exec')">Execs</button>
+          <button class="filter-pill" onclick="setRoleFilter('vc')">VCs</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Inductee</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Visibility</th>
+              <th>EPK Portfolio</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="wofTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading inductees...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: PERSONA RBAC & USERS -->
+    <section id="view-persona-rbac" style="display: none;">
+      <div class="section-header">
+        <div class="section-title">
+          Persona Role-Based Access Control (RBAC) Engine
+        </div>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">
+        Each persona on TuneMavens is strictly constrained to the requisite permissions within their specific functional domains.
+      </p>
+
+      <div class="table-container" style="margin-bottom: 32px;">
+        <table class="rbac-matrix">
+          <thead>
+            <tr>
+              <th>Persona</th>
+              <th>Wall of Fame</th>
+              <th>EPK Studio</th>
+              <th>Roster & Deals</th>
+              <th>Sync Escrow</th>
+              <th>DJ Pool</th>
+              <th>Tour Vault</th>
+              <th>Domain Routes</th>
+              <th>Smart CRM</th>
+              <th>Telemetry</th>
+            </tr>
+          </thead>
+          <tbody id="matrixTableBody">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">
+          Registered Platform Accounts
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>User Account</th>
+              <th>Email</th>
+              <th>Current Role</th>
+              <th>Subscription Tier</th>
+              <th>Role Assignment</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading registered users...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: DOMAIN ROUTING -->
+    <section id="view-domain-routing" style="display: none;">
+      <div class="section-header">
+        <div class="section-title">
+          Branded Subdomain & Application Mappings
+        </div>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">
+        Routing architecture per specification Phase 1. Subdomains map dynamically to specific role views and portal surfaces.
+      </p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Application / Portal</th>
+              <th>Category</th>
+              <th>Subdomain Route</th>
+              <th>Target Path</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="domainTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading domain mappings...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: SMART CRM QUEUE -->
+    <section id="view-crm-queue" style="display: none;">
+      <div class="section-header">
+        <div class="section-title">
+          Smart CRM Inbound Candidates & Communication Logs
+        </div>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">
+        Tracks verified nomination inquiries, invitation tokens, and dispatches via Email & WhatsApp protocols.
+      </p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Contact Coordinates</th>
+              <th>Inquiry Type</th>
+              <th>Status</th>
+              <th>Interests / Tags</th>
+              <th>Registered At</th>
+            </tr>
+          </thead>
+          <tbody id="crmTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading CRM pipeline...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 5: SYSTEM TELEMETRY -->
+    <section id="view-system-telemetry" style="display: none;">
+      <div class="section-header">
+        <div class="section-title">
+          Ecosystem Health & Operational Telemetry
+        </div>
+        <button class="btn btn-primary" onclick="loadTelemetry()">
+          Refresh Health Probes
+        </button>
+      </div>
+      <div class="stats-grid" id="telemetryGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- INDUCT NEW ICON MODAL -->
+  <div class="modal-backdrop" id="inductModal" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          Induct Industry Icon to Wall of Fame
+        </div>
+        <button class="btn" onclick="closeInductModal()" style="padding: 4px 8px;">✕</button>
+      </div>
+      <form id="inductForm" onsubmit="handleInductSubmit(event)">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Subject Name *</label>
+              <input type="text" id="formSubjectName" class="form-input" required placeholder="e.g. Masterkraft">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Persona Role *</label>
+              <select id="formRole" class="form-select">
+                <option value="creator">Creator / Artist</option>
+                <option value="producer">Music Producer</option>
+                <option value="supervisor">Music Supervisor</option>
+                <option value="label">Record Label Executive</option>
+                <option value="dj">DJ / Curator</option>
+                <option value="exec">Industry Executive</option>
+                <option value="vc">Tour VC / Investor</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Subject Email (Smart CRM Protocol)</label>
+              <input type="email" id="formEmail" class="form-input" placeholder="artist@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone / WhatsApp Number</label>
+              <input type="tel" id="formPhone" class="form-input" placeholder="+254 700 000 000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Media Presentation Format *</label>
+            <div style="display: flex; gap: 12px; margin-top: 4px;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #ffffff;">
+                <input type="radio" name="mediaType" value="video" checked onchange="toggleMediaInput('video')">
+                YouTube Masterclass / Interview Video
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #ffffff;">
+                <input type="radio" name="mediaType" value="image" onchange="toggleMediaInput('image')">
+                Official Retina Portrait / Cover Image
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="groupYoutubeUrl">
+            <label class="form-label">YouTube Video URL or ID</label>
+            <input type="text" id="formYoutubeUrl" class="form-input" placeholder="https://www.youtube.com/watch?v=...">
+            <span style="font-size: 11px; color: var(--text-dim);">Auto-fetches high-resolution thumbnail and official play metrics.</span>
+          </div>
+
+          <div class="form-group" id="groupImageUrl" style="display: none;">
+            <label class="form-label">Official Image URL</label>
+            <input type="text" id="formImageUrl" class="form-input" placeholder="https://... or /uploads/...">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Bio & Key Accolades</label>
+            <textarea id="formBio" class="form-textarea" rows="3" placeholder="Pioneering producer credited on over 40 charting hits across Africa and diaspora markets..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #ffffff;">
+              <input type="checkbox" id="formAutoInvite" checked>
+              <span>Auto-dispatch official induction invite via Smart CRM Email & WhatsApp protocol</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeInductModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitInduct">Complete Induction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RBAC MATRIX MODAL -->
+  <div class="modal-backdrop" id="rbacModal" style="display: none;">
+    <div class="modal-box" style="max-width: 900px;">
+      <div class="modal-header">
+        <div class="modal-title">TuneMavens Persona Permission Architecture</div>
+        <button class="btn" onclick="closeRbacMatrixModal()" style="padding: 4px 8px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); font-size: 13px;">
+          The system guarantees security isolation by binding user roles directly to scoped function permissions.
+        </p>
+        <div class="table-container">
+          <table class="rbac-matrix" id="modalMatrixTable">
+            <!-- Rendered by JS -->
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" onclick="closeRbacMatrixModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // System State
+    let currentPersona = 'admin';
+    let permissions = {};
+    let allProfiles = [];
+    let roleFilter = 'all';
+    let searchQuery = '';
+
+    // Persona Capabilities Definitions
+    const PERSONAS_CONFIG = {
+      admin: {
+        name: "Platform Administrator",
+        desc: "Unrestricted platform operations, RBAC configuration, user role provisioning, Wall of Fame curation, domain routing, and ecosystem monitoring.",
+        badgeColor: "#38bdf8",
+        perms: ["wall_of_fame_manage", "wall_of_fame_invite", "wall_of_fame_delete", "rbac_manage", "users_manage", "domain_mappings_manage", "crm_leads_manage", "system_telemetry"]
+      },
+      creator: {
+        name: "Creator / Artist",
+        desc: "Artist EPK portfolio, stem & master distribution, split cascade ledgers, direct fan tips, and induction claim verification.",
+        badgeColor: "#22d3ee",
+        perms: ["epk_manage", "splits_manage", "wall_of_fame_view", "wall_of_fame_claim", "catalog_upload"]
+      },
+      label: {
+        name: "Record Label",
+        desc: "Roster management, multi-artist catalog administration, sync pitching rights, and talent induction nominations.",
+        badgeColor: "#a855f7",
+        perms: ["roster_manage", "catalog_splits", "wall_of_fame_view", "wall_of_fame_nominate"]
+      },
+      supervisor: {
+        name: "Music Supervisor",
+        desc: "Sync briefs broadcast, cue sheet review, pre-cleared sync licensing escrow, and luminary catalog search.",
+        badgeColor: "#ec4899",
+        perms: ["sync_briefs_manage", "licensing_escrow", "wall_of_fame_view"]
+      },
+      dj: {
+        name: "DJ / Curator",
+        desc: "24-bit lossless club crate downloads, airplay playlist submission, club residency verification, and curator nominations.",
+        badgeColor: "#f59e0b",
+        perms: ["djpool_download", "curator_sets", "wall_of_fame_view", "wall_of_fame_nominate"]
+      },
+      vc: {
+        name: "Tour VC / Investor",
+        desc: "Tour Vault deal room, syndicate co-investment, risk assessment models, and unlimited credit-exempt telemetry.",
+        badgeColor: "#00f2fe",
+        perms: ["tour_vault", "deal_syndication", "credit_exempt_telemetry", "wall_of_fame_view"]
+      },
+      podcaster: {
+        name: "Podcaster / Host",
+        desc: "Original podcast show distribution, episode transcript chapters, host-read ad flight monetization, and podcaster EPK.",
+        badgeColor: "#ec4899",
+        perms: ["podcast_episodes_manage", "ad_sponsorship_manage", "epk_manage", "wall_of_fame_view"]
+      },
+      media_house: {
+        name: "Media House",
+        desc: "Linear and OTT broadcast clearance, programmatic audio ad flight scheduling, and media routing.",
+        badgeColor: "#10b981",
+        perms: ["broadcast_clearance", "ad_flights_schedule", "wall_of_fame_view"]
+      },
+      corporate: {
+        name: "Corporate Brand",
+        desc: "Brand kit compliance, high-impact cultural sponsorship booking, and custom brand integration escrow.",
+        badgeColor: "#f97316",
+        perms: ["corporate_campaigns", "brand_kit_manage", "wall_of_fame_view"]
+      },
+      affiliate: {
+        name: "Affiliate Partner",
+        desc: "Affiliate tracking link generation, 3-tier commission matrix tracking, and real-time payout ledger.",
+        badgeColor: "#22d3ee",
+        perms: ["referral_links_manage", "commission_matrix_view", "wall_of_fame_view"]
+      },
+      consumer: {
+        name: "Consumer / Fan",
+        desc: "Hi-Fi 24-bit FLAC streaming player, 8GB offline crate, 1-tap direct artist tipping, and following ecosystem icons.",
+        badgeColor: "#6366f1",
+        perms: ["stream_player", "direct_tips_send", "wall_of_fame_view"]
+      }
+    };
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerText = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 200);
+      }, 4000);
+    }
+
+    function hasPermission(permKey) {
+      if (currentPersona === 'admin') return true;
+      const cfg = PERSONAS_CONFIG[currentPersona];
+      return cfg && cfg.perms.includes(permKey);
+    }
+
+    function switchPersona(newPersona) {
+      currentPersona = newPersona;
+      const cfg = PERSONAS_CONFIG[newPersona] || PERSONAS_CONFIG.admin;
+      
+      document.getElementById('personaSelector').value = newPersona;
+      const pill = document.getElementById('personaPill');
+      pill.style.background = `${cfg.badgeColor}22`;
+      pill.style.color = cfg.badgeColor;
+      pill.style.border = `1px solid ${cfg.badgeColor}55`;
+      pill.innerText = currentPersona === 'admin' ? 'Full Operations Access' : `${cfg.name} (Scoped)`;
+
+      document.getElementById('activeRoleName').innerText = cfg.name;
+      document.getElementById('activeRoleDesc').innerText = cfg.desc;
+      document.getElementById('rolePermissionCount').innerText = `${cfg.perms.length} Permissions Active`;
+
+      // Update UI button permission gates
+      const inductBtn = document.getElementById('btnInductNew');
+      if (inductBtn) {
+        inductBtn.disabled = !hasPermission('wall_of_fame_manage');
+        inductBtn.title = hasPermission('wall_of_fame_manage') ? 'Induct icon' : 'Requires Administrator permission';
+      }
+
+      // Re-render table buttons with updated state
+      renderProfilesTable();
+      showToast(`Switched active persona to ${cfg.name}. Permissions updated.`, 'info');
+    }
+
+    function switchTab(tabId) {
+      const tabs = ['wall-of-fame', 'persona-rbac', 'domain-routing', 'crm-queue', 'system-telemetry'];
+      tabs.forEach(t => {
+        const el = document.getElementById(`view-${t}`);
+        const tabEl = document.getElementById(`tab-${t}`);
+        if (el) el.style.display = (t === tabId) ? 'block' : 'none';
+        if (tabEl) {
+          if (t === tabId) tabEl.classList.add('active');
+          else tabEl.classList.remove('active');
+        }
+      });
+
+      if (tabId === 'persona-rbac') loadUsersAndMatrix();
+      if (tabId === 'domain-routing') loadDomainMappings();
+      if (tabId === 'crm-queue') loadCrmLeads();
+      if (tabId === 'system-telemetry') loadTelemetry();
+    }
+
+    // Load Wall of Fame Inductees
+    async function loadWallOfFame() {
+      try {
+        const res = await fetch('/api/community/admin/wall-of-fame');
+        if (!res.ok) throw new Error('Failed to fetch Wall of Fame');
+        const data = await res.json();
+        allProfiles = data.profiles || [];
+
+        // Update statistics
+        const stats = data.stats || {};
+        document.getElementById('statTotal').innerText = stats.total || allProfiles.length;
+        document.getElementById('statClaimed').innerText = stats.claimed || 0;
+        document.getElementById('statPending').innerText = (stats.pending || 0) + (stats.invited || 0);
+
+        renderProfilesTable();
+      } catch (err) {
+        console.error('Error fetching Wall of Fame:', err);
+        showToast('Error loading Wall of Fame inductees', 'error');
+      }
+    }
+
+    function renderProfilesTable() {
+      const tbody = document.getElementById('wofTableBody');
+      const filtered = allProfiles.filter(p => {
+        const matchesRole = (roleFilter === 'all') || (p.role === roleFilter);
+        const q = searchQuery.toLowerCase();
+        const matchesSearch = !q || (p.subject_name && p.subject_name.toLowerCase().includes(q)) ||
+                              (p.bio && p.bio.toLowerCase().includes(q)) ||
+                              (Array.isArray(p.tags) && p.tags.some(t => t.toLowerCase().includes(q)));
+        return matchesRole && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No inductees match your criteria.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(p => {
+        const thumb = p.media_type === 'image' 
+          ? (p.image_url || '/favicon.png')
+          : (p.youtube_thumbnail_url || `https://img.youtube.com/vi/${p.youtube_video_id || 'dQw4w9WgXcQ'}/hqdefault.jpg`);
+        
+        const stateBadge = p.state === 'claimed'
+          ? `<span class="badge badge-claimed">Inducted / Claimed</span>`
+          : p.state === 'invited'
+          ? `<span class="badge badge-invited">Invited</span>`
+          : `<span class="badge badge-pending">Nominated</span>`;
+
+        const canManage = hasPermission('wall_of_fame_manage');
+        const canInvite = hasPermission('wall_of_fame_invite');
+        const canDelete = hasPermission('wall_of_fame_delete');
+
+        return `
+          <tr>
+            <td>
+              <div class="media-thumb-cell">
+                <img src="${thumb}" alt="${p.subject_name}" class="media-thumb" onerror="this.src='/favicon.png'">
+                <div class="media-meta">
+                  <span class="media-name">${p.subject_name}</span>
+                  <span class="media-role">${p.bio ? p.bio.substring(0, 50) + '...' : 'Featured Icon'}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge" style="background: rgba(255,255,255,0.06); color: #ffffff; border: 1px solid var(--border-color);">${(p.role || 'creator').toUpperCase()}</span>
+            </td>
+            <td>${stateBadge}</td>
+            <td>
+              <button 
+                class="btn" 
+                style="padding: 3px 8px; font-size: 11px;" 
+                ${!canManage ? 'disabled' : ''} 
+                onclick="toggleVisibility('${p.id}', ${!p.visible})"
+              >
+                ${p.visible ? '🟢 Public' : '⚪ Hidden'}
+              </button>
+            </td>
+            <td>
+              <a href="http://localhost:3000/#/epk/${p.id}" target="_blank" class="btn" style="padding: 3px 8px; font-size: 11px;">
+                View EPK ↗
+              </a>
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <button 
+                  class="btn btn-primary" 
+                  style="padding: 3px 8px; font-size: 11px;" 
+                  ${!canInvite ? 'disabled' : ''} 
+                  onclick="sendInvite('${p.id}', '${p.subject_name}', '${p.subject_email || ''}', '${p.phone || ''}')"
+                >
+                  Send Invite
+                </button>
+                <button 
+                  class="btn" 
+                  style="padding: 3px 8px; font-size: 11px;" 
+                  onclick="copyClaimLink('${p.id}', '${p.invite_token || ''}')"
+                >
+                  Copy Link
+                </button>
+                <button 
+                  class="btn btn-danger" 
+                  style="padding: 3px 8px; font-size: 11px;" 
+                  ${!canDelete ? 'disabled' : ''} 
+                  onclick="deleteProfile('${p.id}', '${p.subject_name}')"
+                >
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      renderProfilesTable();
+    }
+
+    function setRoleFilter(role) {
+      roleFilter = role;
+      document.querySelectorAll('#roleFilterPills .filter-pill').forEach(btn => {
+        if (btn.innerText.toLowerCase().includes(role) || (role === 'all' && btn.innerText.includes('All'))) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      renderProfilesTable();
+    }
+
+    async function toggleVisibility(id, nextVal) {
+      if (!hasPermission('wall_of_fame_manage')) {
+        showToast('Restricted: Requires Administrator permission', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/community/admin/wall-of-fame/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visible: nextVal })
+        });
+        if (!res.ok) throw new Error('Update failed');
+        showToast(`Visibility updated to ${nextVal ? 'Public' : 'Hidden'}`, 'success');
+        loadWallOfFame();
+      } catch (err) {
+        showToast('Failed to update visibility', 'error');
+      }
+    }
+
+    async function sendInvite(id, name, email, phone) {
+      if (!hasPermission('wall_of_fame_invite')) {
+        showToast('Restricted: Requires Administrator permission', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/community/admin/wall-of-fame/${id}/invite`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, phone })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Invite dispatch failed');
+        showToast(`Official invitation dispatched to ${name} via Email & WhatsApp protocol`, 'success');
+        loadWallOfFame();
+      } catch (err) {
+        showToast(err.message || 'Error dispatching invite', 'error');
+      }
+    }
+
+    function copyClaimLink(id, token) {
+      const url = `http://localhost:3000/#/community/claim/${id}${token ? '?token=' + token : ''}`;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Induction Claim link copied to clipboard!', 'success');
+      });
+    }
+
+    async function deleteProfile(id, name) {
+      if (!hasPermission('wall_of_fame_delete')) {
+        showToast('Restricted: Requires Administrator permission', 'error');
+        return;
+      }
+      if (!confirm(`Are you sure you want to remove ${name} from the Wall of Fame?`)) return;
+      try {
+        const res = await fetch(`/api/community/admin/wall-of-fame/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Deletion failed');
+        showToast(`Removed ${name} from Wall of Fame`, 'success');
+        loadWallOfFame();
+      } catch (err) {
+        showToast('Failed to delete profile', 'error');
+      }
+    }
+
+    // Modal Handlers
+    function openInductModal() {
+      if (!hasPermission('wall_of_fame_manage')) {
+        showToast('Access Restricted: Requires Administrator permission', 'error');
+        return;
+      }
+      document.getElementById('inductModal').style.display = 'flex';
+    }
+
+    function closeInductModal() {
+      document.getElementById('inductModal').style.display = 'none';
+      document.getElementById('inductForm').reset();
+      toggleMediaInput('video');
+    }
+
+    function toggleMediaInput(type) {
+      if (type === 'video') {
+        document.getElementById('groupYoutubeUrl').style.display = 'block';
+        document.getElementById('groupImageUrl').style.display = 'none';
+      } else {
+        document.getElementById('groupYoutubeUrl').style.display = 'none';
+        document.getElementById('groupImageUrl').style.display = 'block';
+      }
+    }
+
+    async function handleInductSubmit(e) {
+      e.preventDefault();
+      const subject_name = document.getElementById('formSubjectName').value.trim();
+      const role = document.getElementById('formRole').value;
+      const subject_email = document.getElementById('formEmail').value.trim();
+      const phone = document.getElementById('formPhone').value.trim();
+      const media_type = document.querySelector('input[name="mediaType"]:checked').value;
+      const youtube_url = document.getElementById('formYoutubeUrl').value.trim();
+      const image_url = document.getElementById('formImageUrl').value.trim();
+      const bio = document.getElementById('formBio').value.trim();
+      const auto_invite = document.getElementById('formAutoInvite').checked;
+
+      // Extract youtube id if needed
+      let video_id = null;
+      if (media_type === 'video' && youtube_url) {
+        const match = youtube_url.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/);
+        video_id = (match && match[1].length === 11) ? match[1] : youtube_url;
+      }
+
+      const payload = {
+        subject_name,
+        role,
+        subject_email,
+        phone,
+        media_type,
+        youtube_video_id: video_id,
+        image_url: media_type === 'image' ? image_url : null,
+        bio: bio || `Recognized industry leader and ${role.toUpperCase()} inductee on the TuneMavens Wall of Fame.`,
+        pre_claim: false,
+        tags: ["wall_of_fame", "icon_inductee", role]
+      };
+
+      try {
+        const res = await fetch('/api/community/admin/wall-of-fame', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const doc = await res.json();
+        if (!res.ok) throw new Error(doc.detail || 'Failed to create inductee');
+
+        showToast(`Inducted ${subject_name} to Wall of Fame!`, 'success');
+        if (auto_invite && (subject_email || phone)) {
+          await sendInvite(doc.id, subject_name, subject_email, phone);
+        }
+        closeInductModal();
+        loadWallOfFame();
+      } catch (err) {
+        showToast(err.message || 'Error completing induction', 'error');
+      }
+    }
+
+    // Tab 2: Persona RBAC Matrix & User Accounts
+    async function loadUsersAndMatrix() {
+      // Build RBAC Matrix
+      const matrixCols = [
+        { key: 'wall_of_fame', label: 'Wall of Fame' },
+        { key: 'epk', label: 'EPK Studio' },
+        { key: 'roster', label: 'Roster & Deals' },
+        { key: 'sync', label: 'Sync Escrow' },
+        { key: 'dj', label: 'DJ Pool' },
+        { key: 'tour', label: 'Tour Vault' },
+        { key: 'domain', label: 'Domain Routes' },
+        { key: 'crm', label: 'Smart CRM' },
+        { key: 'telemetry', label: 'Telemetry' },
+      ];
+
+      const tbody = document.getElementById('matrixTableBody');
+      const rows = Object.entries(PERSONAS_CONFIG).map(([roleKey, conf]) => {
+        const cells = matrixCols.map(col => {
+          let granted = false;
+          if (roleKey === 'admin') granted = true;
+          else if (col.key === 'wall_of_fame' && conf.perms.some(p => p.includes('wall_of_fame'))) granted = true;
+          else if (col.key === 'epk' && conf.perms.some(p => p.includes('epk'))) granted = true;
+          else if (col.key === 'roster' && conf.perms.some(p => p.includes('roster'))) granted = true;
+          else if (col.key === 'sync' && conf.perms.some(p => p.includes('sync') || p.includes('escrow'))) granted = true;
+          else if (col.key === 'dj' && conf.perms.some(p => p.includes('djpool'))) granted = true;
+          else if (col.key === 'tour' && conf.perms.some(p => p.includes('tour'))) granted = true;
+          else if (col.key === 'domain' && conf.perms.some(p => p.includes('domain'))) granted = true;
+          else if (col.key === 'crm' && conf.perms.some(p => p.includes('crm'))) granted = true;
+          else if (col.key === 'telemetry' && conf.perms.some(p => p.includes('telemetry'))) granted = true;
+
+          return `<td>${granted ? '<span class="check-granted">✓ Granted</span>' : '<span class="check-restricted">✕</span>'}</td>`;
+        }).join('');
+
+        return `
+          <tr>
+            <td style="color: ${conf.badgeColor}; font-weight: 700;">${conf.name}</td>
+            ${cells}
+          </tr>
+        `;
+      }).join('');
+      tbody.innerHTML = rows;
+
+      // Also populate modal matrix
+      const modalTable = document.getElementById('modalMatrixTable');
+      if (modalTable) modalTable.innerHTML = document.querySelector('.rbac-matrix').innerHTML;
+
+      // Load Users Directory
+      try {
+        const uRes = await fetch('/api/admin/console/users');
+        if (uRes.ok) {
+          const uData = await uRes.json();
+          const uTbody = document.getElementById('usersTableBody');
+          uTbody.innerHTML = uData.users.map(u => `
+            <tr>
+              <td style="font-weight: 700; color: #ffffff;">${u.username || u.name || 'User'}</td>
+              <td>${u.email || '--'}</td>
+              <td><span class="badge" style="background: rgba(0, 240, 255, 0.15); color: var(--cyan);">${(u.role || 'creator').toUpperCase()}</span></td>
+              <td>${u.subscription_tier || 'Free Starter'}</td>
+              <td>
+                <select class="form-select" style="padding: 2px 6px; font-size: 11px;" ${!hasPermission('rbac_manage') ? 'disabled' : ''} onchange="updateUserRole('${u._id}', this.value)">
+                  ${Object.keys(PERSONAS_CONFIG).map(rk => `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${PERSONAS_CONFIG[rk].name}</option>`).join('')}
+                </select>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load users:', err);
+      }
+    }
+
+    async function updateUserRole(userId, newRole) {
+      if (!hasPermission('rbac_manage')) {
+        showToast('Restricted: Requires Administrator permission', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/admin/console/users/${userId}/role`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: newRole })
+        });
+        if (!res.ok) throw new Error('Role update failed');
+        showToast('User role updated successfully', 'success');
+      } catch (err) {
+        showToast('Error updating user role', 'error');
+      }
+    }
+
+    function openRbacMatrixModal() {
+      document.getElementById('rbacModal').style.display = 'flex';
+      loadUsersAndMatrix();
+    }
+    function closeRbacMatrixModal() {
+      document.getElementById('rbacModal').style.display = 'none';
+    }
+
+    // Tab 3: Domain Mappings
+    async function loadDomainMappings() {
+      try {
+        const res = await fetch('/api/admin/domain-mappings');
+        if (!res.ok) throw new Error('Failed to load domain mappings');
+        const list = await res.json();
+        const tbody = document.getElementById('domainTableBody');
+        tbody.innerHTML = list.map(m => `
+          <tr>
+            <td style="font-weight: 700; color: #ffffff;">${m.label}</td>
+            <td><span class="badge" style="background: rgba(255,255,255,0.06);">${m.category}</span></td>
+            <td><code style="color: var(--cyan);">${m.subdomain}.tunemavens.com</code></td>
+            <td><code style="color: var(--text-muted);">${m.path}</code></td>
+            <td>${m.enabled ? '🟢 Active' : '⚪ Disabled'}</td>
+            <td>
+              <button class="btn" style="padding: 3px 8px; font-size: 11px;" ${!hasPermission('domain_mappings_manage') ? 'disabled' : ''} onclick="promptSubdomainUpdate('${m.id || m._id}', '${m.subdomain}')">
+                Edit Subdomain
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading domain mappings:', err);
+      }
+    }
+
+    async function promptSubdomainUpdate(id, current) {
+      const next = prompt('Enter new subdomain prefix:', current);
+      if (!next || next === current) return;
+      try {
+        const res = await fetch(`/api/admin/domain-mappings/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subdomain: next.trim().toLowerCase() })
+        });
+        if (!res.ok) throw new Error('Update failed');
+        showToast(`Subdomain updated to ${next}.tunemavens.com`, 'success');
+        loadDomainMappings();
+      } catch (err) {
+        showToast('Error updating subdomain', 'error');
+      }
+    }
+
+    // Tab 4: CRM Leads
+    async function loadCrmLeads() {
+      try {
+        const res = await fetch('/api/community/admin/crm-leads');
+        if (!res.ok) throw new Error('Failed to load CRM leads');
+        const data = await res.json();
+        const leads = data.leads || [];
+        document.getElementById('statCrm').innerText = leads.length;
+
+        const tbody = document.getElementById('crmTableBody');
+        if (leads.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No inbound CRM leads registered yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = leads.map(l => `
+          <tr>
+            <td style="font-weight: 700; color: #ffffff;">${l.name || 'Candidate'}</td>
+            <td>
+              <div>${l.email || '--'}</div>
+              <div style="font-size: 11px; color: var(--text-dim);">${l.phone || ''}</div>
+            </td>
+            <td><span class="badge" style="background: rgba(0, 240, 255, 0.15); color: var(--cyan);">${(l.inquiry_type || 'nomination').toUpperCase()}</span></td>
+            <td><span class="badge badge-claimed">${(l.status || 'active').toUpperCase()}</span></td>
+            <td>${(l.tags || []).map(t => `<span class="badge" style="margin-right: 4px; background: rgba(255,255,255,0.06);">${t}</span>`).join('')}</td>
+            <td style="font-size: 11px; color: var(--text-dim);">${new Date(l.created_at || Date.now()).toLocaleDateString()}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading CRM leads:', err);
+      }
+    }
+
+    // Tab 5: Telemetry
+    async function loadTelemetry() {
+      const grid = document.getElementById('telemetryGrid');
+      grid.innerHTML = '<div style="color: var(--text-muted); padding: 20px;">Probing ecosystem services...</div>';
+      try {
+        const res = await fetch('/api/admin/console/telemetry');
+        const data = await res.json();
+        grid.innerHTML = Object.entries(data.services).map(([port, svc]) => `
+          <div class="stat-card">
+            <div class="stat-label">Port ${port} — ${svc.name}</div>
+            <div class="stat-value" style="color: ${svc.status === 'online' ? 'var(--emerald)' : 'var(--rose)'};">
+              ${svc.status === 'online' ? 'ONLINE' : 'DEGRADED'}
+            </div>
+            <div class="stat-desc">${svc.protocol} · PID ${svc.pid || 'Active'} · ${svc.health}</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        grid.innerHTML = '<div style="color: var(--rose); padding: 20px;">Failed to probe ecosystem telemetry.</div>';
+      }
+    }
+
+    // Initialize on boot
+    document.addEventListener('DOMContentLoaded', () => {
+      loadWallOfFame();
+      loadCrmLeads();
+    });
+  </script>
+</body>
+</html>
