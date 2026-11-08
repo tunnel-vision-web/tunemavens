@@ -16,7 +16,9 @@ import {
   RiEyeLine,
   RiAddLine,
   RiMoneyDollarCircleLine,
-  RiDiscLine
+  RiDiscLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine
 } from 'react-icons/ri';
 import './CommunityView.css';
 
@@ -27,6 +29,12 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedRole, setSelectedRole] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 4 rows max: 3 cards per row = 12 items per page
+  const ITEMS_PER_ROW = 3;
+  const MAX_ROWS = 4;
+  const ITEMS_PER_PAGE = ITEMS_PER_ROW * MAX_ROWS;
 
   // Data states
   const [profiles, setProfiles] = useState([]);
@@ -260,6 +268,31 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
     return matchesRole && matchesSearch;
   });
 
+  // 4 Rows Max pagination calculations (12 cards per page)
+  const totalPages = Math.ceil(filteredProfiles.length / ITEMS_PER_PAGE) || 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProfiles = filteredProfiles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setCurrentPage(newPage);
+    const anchor = document.getElementById('wall-of-fame-anchor');
+    if (anchor) {
+      anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleRoleSelect = (roleKey) => {
+    setSelectedRole(roleKey);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="community-view-container">
       <div className="community-content-wrap">
@@ -326,7 +359,7 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                   <button
                     key={roleKey}
                     className={`community-pill ${selectedRole === roleKey ? 'active' : ''}`}
-                    onClick={() => setSelectedRole(roleKey)}
+                    onClick={() => handleRoleSelect(roleKey)}
                   >
                     {roleKey === 'all'
                       ? 'All Luminaries'
@@ -341,13 +374,15 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                 placeholder="Search luminaries, bio, skills..."
                 className="community-search-input"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
               />
             </div>
 
-            {/* Grid */}
+            <div id="wall-of-fame-anchor" style={{ position: 'relative', top: '-10px' }} />
+
+            {/* Grid (4 Rows Max Standard) */}
             <div className="wall-of-fame-grid">
-              {filteredProfiles.map((p) => {
+              {paginatedProfiles.map((p) => {
                 const isLiked = likedProfiles[p.id];
                 const isFollowing = followingMap[p.id];
                 const videoId = p.youtube_video_id || 'dQw4w9WgXcQ';
@@ -437,6 +472,54 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                 );
               })}
             </div>
+
+            {/* Pagination Controls (4 Rows Max Standard) */}
+            {totalPages > 1 && (
+              <div className="community-pagination-bar" data-testid="community-pagination-bar">
+                <div className="community-pagination-info">
+                  Showing <strong style={{ color: '#ffffff' }}>{startIndex + 1}</strong>–
+                  <strong style={{ color: '#ffffff' }}>{Math.min(startIndex + ITEMS_PER_PAGE, filteredProfiles.length)}</strong> of{' '}
+                  <strong style={{ color: '#ffffff' }}>{filteredProfiles.length}</strong> Inductees
+                  <span className="community-pagination-badge">4 Rows Max</span>
+                </div>
+
+                <div className="community-pagination-nav">
+                  <button
+                    type="button"
+                    className="community-page-btn"
+                    onClick={() => handlePageChange(safeCurrentPage - 1)}
+                    disabled={safeCurrentPage === 1}
+                    aria-label="Previous Page"
+                    data-testid="pagination-prev-btn"
+                  >
+                    <RiArrowLeftSLine /> Prev
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <button
+                      type="button"
+                      key={pageNum}
+                      className={`community-page-btn ${pageNum === safeCurrentPage ? 'active' : ''}`}
+                      onClick={() => handlePageChange(pageNum)}
+                      data-testid={`pagination-page-${pageNum}`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="community-page-btn"
+                    onClick={() => handlePageChange(safeCurrentPage + 1)}
+                    disabled={safeCurrentPage === totalPages}
+                    aria-label="Next Page"
+                    data-testid="pagination-next-btn"
+                  >
+                    Next <RiArrowRightSLine />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
