@@ -31,6 +31,8 @@ class CreateFeaturedProfileRequest(BaseModel):
     role: str = "creator"  # 'creator' | 'producer' | 'supervisor' | 'label' | 'dj' | 'exec' | 'vc'
     subject_email: Optional[EmailStr] = None
     phone: Optional[str] = None
+    media_type: str = "video"  # 'video' | 'image'
+    image_url: Optional[str] = None
     youtube_channel_handle: Optional[str] = None
     youtube_video_id: Optional[str] = None
     bio: str
@@ -64,6 +66,8 @@ class UpdateFeaturedProfileRequest(BaseModel):
     role: Optional[str] = None
     subject_email: Optional[EmailStr] = None
     phone: Optional[str] = None
+    media_type: Optional[str] = None
+    image_url: Optional[str] = None
     bio: Optional[str] = None
     social_links: Optional[Dict[str, str]] = None
     tags: Optional[List[str]] = None
@@ -155,10 +159,12 @@ SEED_WALL_OF_FAME = [
         "subject_name": "Black Coffee",
         "role": "dj",
         "subject_email": "mgmt@soulistic.co.za",
+        "media_type": "image",
+        "image_url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80",
         "youtube_channel_handle": "@RealBlackCoffee",
         "youtube_video_id": "v=bc_showcase_1",
         "youtube_video_title": "Deep Afro-House Masterclass: The Architecture of Resonance",
-        "youtube_thumbnail_url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=400&q=80",
+        "youtube_thumbnail_url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80",
         "youtube_views_formatted": "5.2M views",
         "bio": "Grammy-winning pioneer of contemporary African deep house. Headline resident across Ibiza, Brooklyn Mirage, and global festival circuits.",
         "social_links": {"instagram": "realblackcoffee", "twitter": "RealBlackCoffee", "spotify": "https://open.spotify.com/artist/blackcoffee"},
@@ -189,10 +195,12 @@ SEED_WALL_OF_FAME = [
         "subject_name": "Tems",
         "role": "creator",
         "subject_email": "tems@leadingvibe.com",
+        "media_type": "image",
+        "image_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
         "youtube_channel_handle": "@TemsBaby",
         "youtube_video_id": "v=tems_live_acoustic",
         "youtube_video_title": "Vocal Dynamics & Sonic Autonomy — Live Session",
-        "youtube_thumbnail_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+        "youtube_thumbnail_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
         "youtube_views_formatted": "14.5M views",
         "bio": "Oscar-nominated and Grammy-winning songwriter and sonic auteur. Master of self-produced melodic hooks and global sync placement power.",
         "social_links": {"instagram": "temsbaby", "twitter": "temsbaby", "spotify": "https://open.spotify.com/artist/tems"},
@@ -253,10 +261,12 @@ SEED_WALL_OF_FAME = [
         "subject_name": "Audrey Chon",
         "role": "supervisor",
         "subject_email": "audrey@apexsync.com",
+        "media_type": "image",
+        "image_url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
         "youtube_channel_handle": "@AudreyChonSync",
         "youtube_video_id": "v=sync_master_briefs",
         "youtube_video_title": "Licensing World Percussion for Global Triple-A Gaming",
-        "youtube_thumbnail_url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
+        "youtube_thumbnail_url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
         "youtube_views_formatted": "380K views",
         "bio": "Lead sync music coordinator for cinematic game scores and interactive experiences. Avid commissioner of pre-cleared indigenous rhythms.",
         "social_links": {"linkedin": "audreychon", "website": "https://syncmavens.com"},
@@ -313,10 +323,12 @@ SEED_WALL_OF_FAME = [
         "subject_name": "Blitz Bazawule",
         "role": "creator",
         "subject_email": "blitz@thecolorpurple.com",
+        "media_type": "image",
+        "image_url": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80",
         "youtube_channel_handle": "@BlitzAmbassador",
         "youtube_video_id": "v=blitz_creative_odyssey",
         "youtube_video_title": "Directing Sound: From Hip-Hop MC to Hollywood Director",
-        "youtube_thumbnail_url": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=400&q=80",
+        "youtube_thumbnail_url": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80",
         "youtube_views_formatted": "1.4M views",
         "bio": "Ghanaian polymath, filmmaker, composer, and author. Director of The Color Purple and Black Is King. Pioneer of modern African magic realism.",
         "social_links": {"instagram": "blitzambassador", "twitter": "BlitzAmbassador"},
@@ -328,7 +340,7 @@ SEED_WALL_OF_FAME = [
 
 
 def seed_wall_of_fame_if_empty():
-    """Seed initial Wall of Fame luminaries if empty or below standard roster and ensure EPK sync."""
+    """Seed initial Wall of Fame luminaries if empty or below standard roster and ensure EPK and media_type sync."""
     now = datetime.now(timezone.utc)
     for item in SEED_WALL_OF_FAME:
         existing = db.featured_profiles.find_one({"subject_name": item["subject_name"]})
@@ -337,15 +349,22 @@ def seed_wall_of_fame_if_empty():
             doc["created_at"] = now
             doc["updated_at"] = now
             db.featured_profiles.insert_one(doc)
-        elif item.get("has_epk") and not existing.get("has_epk"):
-            db.featured_profiles.update_one(
-                {"_id": existing["_id"]},
-                {"$set": {
-                    "has_epk": item.get("has_epk", False),
-                    "epk_slug": item.get("epk_slug"),
-                    "social_links": item.get("social_links", existing.get("social_links", {}))
-                }}
-            )
+        else:
+            set_fields = {}
+            if "media_type" in item:
+                set_fields["media_type"] = item["media_type"]
+            if "image_url" in item:
+                set_fields["image_url"] = item["image_url"]
+            if item.get("has_epk") and not existing.get("has_epk"):
+                set_fields["has_epk"] = item.get("has_epk", False)
+                set_fields["epk_slug"] = item.get("epk_slug")
+            if "social_links" in item and not existing.get("social_links"):
+                set_fields["social_links"] = item["social_links"]
+            if set_fields:
+                db.featured_profiles.update_one(
+                    {"_id": existing["_id"]},
+                    {"$set": set_fields}
+                )
 
 
 # ======================================================================
@@ -597,6 +616,8 @@ def create_admin_wall_of_fame(
         role=payload.role,
         subject_email=payload.subject_email,
         phone=payload.phone,
+        media_type=payload.media_type or "video",
+        image_url=payload.image_url,
         youtube_channel_handle=payload.youtube_channel_handle,
         youtube_video_id=video_id,
         youtube_video_title=video_title,

@@ -27,7 +27,10 @@ import {
   RiMoneyDollarCircleLine,
   RiDiscLine,
   RiArrowLeftSLine,
-  RiArrowRightSLine
+  RiArrowRightSLine,
+  RiCameraLensLine,
+  RiImageLine,
+  RiFullscreenLine
 } from 'react-icons/ri';
 import './CommunityView.css';
 
@@ -57,6 +60,7 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
 
   // Modals
   const [videoModalUrl, setVideoModalUrl] = useState(null);
+  const [imageModalUrl, setImageModalUrl] = useState(null);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [nominateModalOpen, setNominateModalOpen] = useState(false);
 
@@ -77,6 +81,8 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
     subject_name: '',
     role: 'producer',
     subject_email: '',
+    media_type: 'video',
+    image_url: '',
     youtube_channel_handle: '',
     youtube_video_id: '',
     bio: '',
@@ -412,6 +418,8 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
             subject_name: '',
             role: 'producer',
             subject_email: '',
+            media_type: 'video',
+            image_url: '',
             youtube_channel_handle: '',
             youtube_video_id: '',
             bio: '',
@@ -574,17 +582,24 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
               {paginatedProfiles.map((p) => {
                 const isLiked = likedProfiles[p.id];
                 const isFollowing = followingMap[p.id];
+                const isImageMedia = p.media_type === 'image';
                 const videoId = p.youtube_video_id || 'dQw4w9WgXcQ';
                 const cleanVid = videoId.replace('v=', '').trim();
+                const mediaThumb = isImageMedia
+                  ? (p.image_url || p.youtube_thumbnail_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80')
+                  : (p.youtube_thumbnail_url || `https://img.youtube.com/vi/${cleanVid}/hqdefault.jpg`);
 
                 return (
                   <div className="fame-card" key={p.id} data-testid={`fame-card-${p.id}`}>
-                    <div className="fame-card-media">
+                    <div
+                      className={`fame-card-media ${isImageMedia ? 'is-image' : ''}`}
+                      onClick={() => {
+                        if (isImageMedia) setImageModalUrl(mediaThumb);
+                      }}
+                      title={isImageMedia ? `Click to view ${p.subject_name}'s full portrait` : undefined}
+                    >
                       <img
-                        src={
-                          p.youtube_thumbnail_url ||
-                          `https://img.youtube.com/vi/${cleanVid}/hqdefault.jpg`
-                        }
+                        src={mediaThumb}
                         alt={p.subject_name}
                         className="fame-card-img"
                         onError={(e) => {
@@ -592,19 +607,43 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                             'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80';
                         }}
                       />
-                      <button
-                        className="fame-card-play-btn"
-                        onClick={() =>
-                          setVideoModalUrl(`https://www.youtube.com/embed/${cleanVid}?autoplay=1`)
-                        }
-                        title="Watch masterclass video"
-                      >
-                        <RiPlayFill />
-                      </button>
-                      <div className="fame-card-views-badge">
-                        <RiYoutubeFill style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                        {p.youtube_views_formatted || 'Verified Showcase'}
-                      </div>
+                      {isImageMedia ? (
+                        <>
+                          <button
+                            type="button"
+                            className="fame-card-expand-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setImageModalUrl(mediaThumb);
+                            }}
+                            title="Expand portrait"
+                          >
+                            <RiFullscreenLine />
+                          </button>
+                          <div className="fame-card-image-badge">
+                            <RiCameraLensLine style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            Official Portrait
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="fame-card-play-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVideoModalUrl(`https://www.youtube.com/embed/${cleanVid}?autoplay=1`);
+                            }}
+                            title="Watch masterclass video"
+                          >
+                            <RiPlayFill />
+                          </button>
+                          <div className="fame-card-views-badge">
+                            <RiYoutubeFill style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            {p.youtube_views_formatted || 'Verified Showcase'}
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     <div className="fame-card-body">
@@ -640,7 +679,7 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                           >
                             <RiFileUserLine /> View EPK
                           </Link>
-                          {!p.has_epk && (
+                          {!Boolean(p.has_epk) && (
                             <button
                               className={`fame-epk-btn invite ${epkInvitedMap[p.id] ? 'invited' : ''}`}
                               onClick={() => handleOpenEpkInviteModal(p)}
@@ -872,6 +911,20 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
         </div>
       )}
 
+      {/* Image Modal Lightbox */}
+      {imageModalUrl && (
+        <div className="community-modal-overlay" onClick={() => setImageModalUrl(null)}>
+          <div className="fame-image-lightbox-card" onClick={(e) => e.stopPropagation()}>
+            <img src={imageModalUrl} alt="Featured portrait" className="fame-image-lightbox-img" />
+            <div style={{ padding: '12px 18px', display: 'flex', justifyContent: 'flex-end', background: '#0b1120' }}>
+              <button className="community-btn community-btn-secondary" onClick={() => setImageModalUrl(null)}>
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Privacy Center Modal */}
       {privacyModalOpen && (
         <div className="community-modal-overlay" onClick={() => setPrivacyModalOpen(false)}>
@@ -1009,20 +1062,65 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
               </div>
 
               <div style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: 4 }}>
-                  YouTube Channel Handle or Video ID
+                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: 6 }}>
+                  Featured Media Type
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. @rickrubin or dQw4w9WgXcQ"
-                  className="community-search-input"
-                  style={{ width: '100%' }}
-                  value={nomineeForm.youtube_channel_handle}
-                  onChange={(e) =>
-                    setNomineeForm({ ...nomineeForm, youtube_channel_handle: e.target.value })
-                  }
-                />
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#e2e8f0', fontSize: '0.85rem', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="nominee_media_type"
+                      value="video"
+                      checked={nomineeForm.media_type !== 'image'}
+                      onChange={() => setNomineeForm({ ...nomineeForm, media_type: 'video' })}
+                    />
+                    Featured Video (YouTube)
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#e2e8f0', fontSize: '0.85rem', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="nominee_media_type"
+                      value="image"
+                      checked={nomineeForm.media_type === 'image'}
+                      onChange={() => setNomineeForm({ ...nomineeForm, media_type: 'image' })}
+                    />
+                    Featured Portrait Image
+                  </label>
+                </div>
               </div>
+
+              {nomineeForm.media_type === 'image' ? (
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: 4 }}>
+                    Portrait / Photography Image URL *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://images.unsplash.com/... or hosted portrait URL"
+                    className="community-search-input"
+                    style={{ width: '100%' }}
+                    value={nomineeForm.image_url || ''}
+                    onChange={(e) => setNomineeForm({ ...nomineeForm, image_url: e.target.value })}
+                  />
+                </div>
+              ) : (
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: 4 }}>
+                    YouTube Channel Handle or Video ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. @rickrubin or dQw4w9WgXcQ"
+                    className="community-search-input"
+                    style={{ width: '100%' }}
+                    value={nomineeForm.youtube_channel_handle}
+                    onChange={(e) =>
+                      setNomineeForm({ ...nomineeForm, youtube_channel_handle: e.target.value })
+                    }
+                  />
+                </div>
+              )}
 
               <div style={{ marginBottom: 12 }}>
                 <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: 4 }}>

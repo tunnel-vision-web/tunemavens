@@ -625,6 +625,8 @@ class FeaturedProfile(BaseDocument):
     youtube_thumbnail_url: Optional[str] = None
     youtube_views_formatted: Optional[str] = None
     bio: str = ""
+    media_type: str = "video"  # 'video' | 'image'
+    image_url: Optional[str] = None
     social_links: Dict[str, str] = Field(default_factory=dict)
     claimed_user_id: Optional[str] = None
     has_epk: bool = False

@@ -55,6 +55,8 @@ export default function WallOfFameAdminView({ sessionUser }) {
     role: 'creator',
     subject_email: '',
     phone: '',
+    media_type: 'video',
+    image_url: '',
     youtube_url: '',
     bio: '',
     tags: '',
@@ -146,6 +148,8 @@ export default function WallOfFameAdminView({ sessionUser }) {
           role: form.role,
           subject_email: form.subject_email.trim() || null,
           phone: form.phone.trim() || null,
+          media_type: form.media_type || 'video',
+          image_url: form.media_type === 'image' ? (form.image_url.trim() || null) : null,
           youtube_channel_handle: form.youtube_url.startsWith('@') ? form.youtube_url : null,
           youtube_video_id: (!form.youtube_url.startsWith('@') && form.youtube_url) ? form.youtube_url : null,
           bio: form.bio.trim() || `Recognized industry leader and ${form.role.toUpperCase()} inductee on the TuneMavens Wall of Fame.`,
@@ -371,6 +375,8 @@ export default function WallOfFameAdminView({ sessionUser }) {
                     role: 'creator',
                     subject_email: '',
                     phone: '',
+                    media_type: 'video',
+                    image_url: '',
                     youtube_url: '',
                     bio: '',
                     tags: '',
@@ -962,40 +968,84 @@ export default function WallOfFameAdminView({ sessionUser }) {
                       </div>
                     </div>
 
-                    {/* YouTube Video / Channel */}
+                    {/* Media Type Selection */}
                     <div className="wof-form-group">
-                      <label>YouTube Channel Handle or Showcase Video URL</label>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <input
-                          type="text"
-                          className="wof-form-input"
-                          placeholder="https://youtube.com/watch?v=... or @ChannelHandle"
-                          value={form.youtube_url}
-                          onChange={(e) => setForm({ ...form, youtube_url: e.target.value })}
-                          style={{ flex: 1 }}
-                        />
-                        <button
-                          type="button"
-                          className="wof-btn wof-btn-secondary"
-                          onClick={handleFetchYtMetadata}
-                          disabled={ytFetching}
-                        >
-                          {ytFetching ? <RiRefreshLine className="spin" /> : 'Fetch Preview'}
-                        </button>
+                      <label>Featured Media Format</label>
+                      <div style={{ display: 'flex', gap: '24px', marginTop: '4px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '13px', cursor: 'pointer' }}>
+                          <input
+                            type="radio"
+                            name="admin_media_type"
+                            value="video"
+                            checked={form.media_type !== 'image'}
+                            onChange={() => setForm({ ...form, media_type: 'video' })}
+                          />
+                          Featured Video (YouTube Masterclass)
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '13px', cursor: 'pointer' }}>
+                          <input
+                            type="radio"
+                            name="admin_media_type"
+                            value="image"
+                            checked={form.media_type === 'image'}
+                            onChange={() => setForm({ ...form, media_type: 'image' })}
+                          />
+                          Featured Portrait Image (High-Res Photography)
+                        </label>
                       </div>
-
-                      {ytPreview && (
-                        <div className="wof-yt-preview-box">
-                          {ytPreview.thumbnail_url && (
-                            <img src={ytPreview.thumbnail_url} alt="preview" className="wof-yt-preview-thumb" />
-                          )}
-                          <div className="wof-yt-preview-info">
-                            <span className="wof-yt-preview-title">{ytPreview.title}</span>
-                            <span className="wof-yt-preview-views">{ytPreview.views_formatted}</span>
-                          </div>
-                        </div>
-                      )}
                     </div>
+
+                    {form.media_type === 'image' ? (
+                      <div className="wof-form-group">
+                        <label>Featured Portrait Image URL *</label>
+                        <input
+                          type="url"
+                          className="wof-form-input"
+                          placeholder="https://images.unsplash.com/... or hosted portrait URL"
+                          value={form.image_url}
+                          onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                        />
+                        {form.image_url && (
+                          <div style={{ marginTop: '8px', borderRadius: '3px', overflow: 'hidden', maxHeight: '160px', border: '1px solid #1e293b' }}>
+                            <img src={form.image_url} alt="Portrait preview" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="wof-form-group">
+                        <label>YouTube Channel Handle or Showcase Video URL</label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input
+                            type="text"
+                            className="wof-form-input"
+                            placeholder="https://youtube.com/watch?v=... or @ChannelHandle"
+                            value={form.youtube_url}
+                            onChange={(e) => setForm({ ...form, youtube_url: e.target.value })}
+                            style={{ flex: 1 }}
+                          />
+                          <button
+                            type="button"
+                            className="wof-btn wof-btn-secondary"
+                            onClick={handleFetchYtMetadata}
+                            disabled={ytFetching}
+                          >
+                            {ytFetching ? <RiRefreshLine className="spin" /> : 'Fetch Preview'}
+                          </button>
+                        </div>
+
+                        {ytPreview && (
+                          <div className="wof-yt-preview-box">
+                            {ytPreview.thumbnail_url && (
+                              <img src={ytPreview.thumbnail_url} alt="preview" className="wof-yt-preview-thumb" />
+                            )}
+                            <div className="wof-yt-preview-info">
+                              <span className="wof-yt-preview-title">{ytPreview.title}</span>
+                              <span className="wof-yt-preview-views">{ytPreview.views_formatted}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Bio & Accolades */}
                     <div className="wof-form-group">

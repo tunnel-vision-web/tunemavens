@@ -677,15 +677,15 @@ export function CreatorEpkView(props = {}) {
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
 
   const defaultTracks = [
-    { id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', streams: '3.4M', duration: '3:45', release: 'Single 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/cyberwave_master/600/600' },
-    { id: 2, title: 'Sunset over Rift Valley', isrc: 'KE-TM1-26-00043', streams: '1.8M', duration: '4:12', release: 'Album 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/riftvalley_master/600/600' },
-    { id: 3, title: 'Afro-Synth Cascade', isrc: 'KE-TM1-26-00044', streams: '940K', duration: '3:18', release: 'Single 2025', priceCredits: 40, coverArt: 'https://picsum.photos/seed/afrosynth_master/600/600' },
-    { id: 4, title: 'Midnight Mara Starlight', isrc: 'KE-TM1-26-00045', streams: '2.1M', duration: '5:02', release: 'EP 2025', priceCredits: 60, coverArt: 'https://picsum.photos/seed/marastarlight_master/600/600' },
-    { id: 5, title: 'Solar Flare Groove (Original)', isrc: 'KE-TM1-26-00046', streams: '1.4M', duration: '3:58', release: 'Single 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/solarflare_master/600/600' },
-    { id: 6, title: 'Neon Equator (Live Dub)', isrc: 'KE-TM1-26-00047', streams: '820K', duration: '4:30', release: 'Live 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/neonequator_master/600/600' },
-    { id: 7, title: 'Kilimanjaro Heights', isrc: 'KE-TM1-26-00048', streams: '2.7M', duration: '4:15', release: 'Single 2026', priceCredits: 55, coverArt: 'https://picsum.photos/seed/kilimanjaromaster/600/600' },
-    { id: 8, title: 'Savannah Sunset (Radio Cut)', isrc: 'KE-TM1-26-00049', streams: '1.1M', duration: '3:22', release: 'Single 2025', priceCredits: 40, coverArt: 'https://picsum.photos/seed/savannahsunset/600/600' },
-    { id: 9, title: 'Serengeti Sunrise (Ambient Mix)', isrc: 'KE-TM1-26-00050', streams: '650K', duration: '5:10', release: 'VIP 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/serengetisunrise/600/600' }
+    { id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', audioUrl: '/uploads/audio/enenda.wav', streams: '3.4M', duration: '3:45', release: 'Single 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/cyberwave_master/600/600' },
+    { id: 2, title: 'Sunset over Rift Valley', isrc: 'KE-TM1-26-00043', audioUrl: '/uploads/audio/running.wav', streams: '1.8M', duration: '4:12', release: 'Album 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/riftvalley_master/600/600' },
+    { id: 3, title: 'Afro-Synth Cascade', isrc: 'KE-TM1-26-00044', audioUrl: '/uploads/audio/pray_tell.wav', streams: '940K', duration: '3:18', release: 'Single 2025', priceCredits: 40, coverArt: 'https://picsum.photos/seed/afrosynth_master/600/600' },
+    { id: 4, title: 'Midnight Mara Starlight', isrc: 'KE-TM1-26-00045', audioUrl: '/uploads/audio/i_ll_come_back_home.wav', streams: '2.1M', duration: '5:02', release: 'EP 2025', priceCredits: 60, coverArt: 'https://picsum.photos/seed/marastarlight_master/600/600' },
+    { id: 5, title: 'Solar Flare Groove (Original)', isrc: 'KE-TM1-26-00046', audioUrl: '/uploads/audio/enenda.wav', streams: '1.4M', duration: '3:58', release: 'Single 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/solarflare_master/600/600' },
+    { id: 6, title: 'Neon Equator (Live Dub)', isrc: 'KE-TM1-26-00047', audioUrl: '/uploads/audio/running.wav', streams: '820K', duration: '4:30', release: 'Live 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/neonequator_master/600/600' },
+    { id: 7, title: 'Kilimanjaro Heights', isrc: 'KE-TM1-26-00048', audioUrl: '/uploads/audio/pray_tell.wav', streams: '2.7M', duration: '4:15', release: 'Single 2026', priceCredits: 55, coverArt: 'https://picsum.photos/seed/kilimanjaromaster/600/600' },
+    { id: 8, title: 'Savannah Sunset (Radio Cut)', isrc: 'KE-TM1-26-00049', audioUrl: '/uploads/audio/enenda.wav', streams: '1.1M', duration: '3:22', release: 'Single 2025', priceCredits: 40, coverArt: 'https://picsum.photos/seed/savannahsunset/600/600' },
+    { id: 9, title: 'Serengeti Sunrise (Ambient Mix)', isrc: 'KE-TM1-26-00050', audioUrl: '/uploads/audio/running.wav', streams: '650K', duration: '5:10', release: 'VIP 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/serengetisunrise/600/600' }
   ]
   const rawTracks = (epkData?.tracks && Array.isArray(epkData.tracks) && epkData.tracks.length > 0) ? epkData.tracks : defaultTracks
   const tracks = rawTracks.map((t, idx) => ({
@@ -738,15 +738,27 @@ export function CreatorEpkView(props = {}) {
     return tracks
   }, [selectedPlaylistId, tracks, fanPlaylists])
 
-  // Active track resolved from current playlist selection
-  const currentTrack = currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || tracks[0] || activeTrack
+  // Active track resolved from activeTrack preference first, then playlist
+  const currentTrack = activeTrack || currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || tracks[0]
 
-  // Keep activeTrack in sync with currentTrack
-  useEffect(() => {
-    if (currentTrack) {
-      setActiveTrack(currentTrack)
+  // Track selection helper to ensure immediate state and audio synchronization
+  const handleSelectAndPlayTrack = (track) => {
+    setActiveTrack(track)
+    const idx = currentPlaylistTracks.findIndex(pt => pt.id === track.id)
+    if (idx !== -1) setPlaylistIndex(idx)
+    if (activeTrack?.id === track.id) {
+      setIsPlaying(p => !p)
+    } else {
+      setIsPlaying(true)
     }
-  }, [playlistIndex, selectedPlaylistId])
+  }
+
+  // Ensure activeTrack points to first track upon load
+  useEffect(() => {
+    if (tracks && tracks.length > 0 && (!activeTrack || !activeTrack.audioUrl)) {
+      setActiveTrack(tracks[0])
+    }
+  }, [tracks])
 
   // Track Advancement Helper (Sequenced vs Shuffle vs Repeat Loop)
   const handleTrackAdvance = () => {
@@ -2011,34 +2023,25 @@ Direct Management Contact: mgmt@intermaven.io`
     }
   }, [albumAudioPlaying])
 
-  // Sync epkAudioRef with isPlaying
-  useEffect(() => {
-    const audio = epkAudioRef.current
-    if (!audio) return
-    if (isPlaying) {
-      if (currentTrack && (!audio.src || audio.src === '')) {
-        audio.src = currentTrack.audioUrl || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
-        audio.load()
-      }
-      audio.play().catch(e => console.warn('EPK audio play error:', e))
-    } else {
-      audio.pause()
-    }
-  }, [isPlaying])
-
-  // Sync epkAudioRef source when currentTrack changes
+  // Robust sync of epkAudioRef source and play/pause state
   useEffect(() => {
     const audio = epkAudioRef.current
     if (!audio || !currentTrack) return
-    const src = currentTrack.audioUrl || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
-    if (audio.src !== src) {
-      audio.src = src
+
+    const rawSrc = currentTrack.audioUrl || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
+    const resolvedUrl = new URL(rawSrc, window.location.origin).href
+
+    if (audio.src !== resolvedUrl) {
+      audio.src = rawSrc
       audio.load()
-      if (isPlaying) {
-        audio.play().catch(e => console.warn('EPK track play error:', e))
-      }
     }
-  }, [currentTrack])
+
+    if (isPlaying) {
+      audio.play().catch(e => console.warn('EPK audio playback blocked/delayed:', e))
+    } else {
+      audio.pause()
+    }
+  }, [currentTrack, isPlaying])
 
   // (fanPlaylists and fanPurchasedLibrary declared above)
   const [playlistModalOpen, setPlaylistModalOpen] = useState(false)
@@ -2485,54 +2488,7 @@ Direct Management Contact: mgmt@intermaven.io`
       flexDirection: 'column',
       position: 'relative'
     }}>
-      {/* Persona Switcher Preview Banner */}
-      <div style={{
-        background: '#040711',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        padding: '8px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '8px',
-        fontSize: '11px',
-        zIndex: 1000
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.6px' }}>
-            EPK Persona:
-          </span>
-          <span style={{ color: effectiveAccent, fontWeight: 900, textTransform: 'uppercase', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '3px' }}>
-            {creatorType}
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ color: '#64748b' }}>Switch View:</span>
-          {['artist', 'podcaster', 'dj', 'producer', 'label'].map(p => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => {
-                setPreviewPersona(p);
-                setActiveTab('home');
-              }}
-              style={{
-                padding: '3px 8px',
-                borderRadius: '3px',
-                border: (previewPersona || creatorType) === p ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.1)',
-                background: (previewPersona || creatorType) === p ? effectiveAccent : 'rgba(255,255,255,0.04)',
-                color: (previewPersona || creatorType) === p ? '#060813' : '#cbd5e1',
-                fontSize: '10px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                textTransform: 'capitalize'
-              }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       {/* TuneStream Audio Engines */}
       <audio
@@ -3592,7 +3548,7 @@ Direct Management Contact: mgmt@intermaven.io`
                               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 60%)', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '10px' }}>
                                 <button
                                   type="button"
-                                  onClick={() => { setActiveTrack(t); setIsPlaying(isCurrent ? !isPlaying : true); }}
+                                  onClick={() => handleSelectAndPlayTrack(t)}
                                   title={isCurrent && isPlaying ? "Pause" : "Play"}
                                   style={{ width: '40px', height: '40px', borderRadius: '3px', background: effectiveAccent, border: 'none', color: '#000', fontSize: '1.3rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}
                                 >
@@ -3613,7 +3569,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             </div>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
-                            <button onClick={() => { setActiveTrack(t); setIsPlaying(isCurrent ? !isPlaying : true); }} style={{ background: isCurrent && isPlaying ? effectiveAccent : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)'), color: isCurrent && isPlaying ? '#000' : (isLight ? '#0f172a' : '#fff'), border: `1px solid ${effectiveAccent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.82rem' }}>
+                            <button onClick={() => handleSelectAndPlayTrack(t)} style={{ background: isCurrent && isPlaying ? effectiveAccent : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)'), color: isCurrent && isPlaying ? '#000' : (isLight ? '#0f172a' : '#fff'), border: `1px solid ${effectiveAccent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.82rem' }}>
                               {isCurrent && isPlaying ? <><RiPauseFill /> Playing Master</> : <><RiPlayFill /> Stream on TuneStream</>}
                             </button>
                             <button onClick={() => handlePurchaseTrackWithCredits(t)} style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.82rem' }}>
@@ -3753,7 +3709,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 60%)', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '12px' }}>
                               <button
                                 type="button"
-                                onClick={() => { setActiveTrack(t); setIsPlaying(isCurrent ? !isPlaying : true); }}
+                                onClick={() => handleSelectAndPlayTrack(t)}
                                 title={isCurrent && isPlaying ? "Pause" : "Play"}
                                 style={{ width: '42px', height: '42px', borderRadius: '3px', background: effectiveAccent, border: 'none', color: '#000', fontSize: '1.35rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.6)' }}
                               >
@@ -3774,7 +3730,7 @@ Direct Management Contact: mgmt@intermaven.io`
                           </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
-                          <button onClick={() => { setActiveTrack(t); setIsPlaying(isCurrent ? !isPlaying : true); }} style={{ background: isCurrent && isPlaying ? effectiveAccent : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)'), color: isCurrent && isPlaying ? '#000' : (isLight ? '#0f172a' : '#fff'), border: `1px solid ${effectiveAccent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                          <button onClick={() => handleSelectAndPlayTrack(t)} style={{ background: isCurrent && isPlaying ? effectiveAccent : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)'), color: isCurrent && isPlaying ? '#000' : (isLight ? '#0f172a' : '#fff'), border: `1px solid ${effectiveAccent}44`, padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
                             {isCurrent && isPlaying ? <><RiPauseFill /> Playing Master</> : <><RiPlayFill /> Stream on TuneStream</>}
                           </button>
                           <button onClick={() => handlePurchaseTrackWithCredits(t)} style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>
