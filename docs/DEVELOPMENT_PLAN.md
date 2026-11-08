@@ -108,15 +108,14 @@ plugs into.
 Ships alongside Phase 5.
 
 **Deliverables**
-- `/community` route with a curated grid of featured figures
-- Each tile: profile thumbnail, short bio, social links, **auto-fetched
-  featured YouTube video** (thumbnail via YouTube oEmbed, video pulled
-  via YouTube Data API v3 `search.list` sorted by viewCount)
-- Admin composer: enter subject's name + channel handle → system fetches
-  metadata → admin approves → invite sent
-- **Unclaimed = hidden.** Tile becomes public only after the subject
-  clicks the invite, completes the interests modal, and creates a free
-  account
+- `/community` route with a curated grid of featured figures and strict 4-rows max pagination (12 items/page).
+- Each tile: profile thumbnail, short bio, social links, **auto-fetched featured YouTube video** (thumbnail via YouTube oEmbed, video pulled via YouTube Data API v3 `search.list` sorted by viewCount).
+- Dedicated Admin Management Console at `/admin/wall-of-fame` & `/community/admin`:
+  - Luminary nomination & invite composer with real-time YouTube preview.
+  - Multi-protocol induction dispatching across **Communication Protocols** (Resend branded HTML emails & WhatsApp) and automatic bidirectional synchronization with **Intermaven Smart CRM** (`db.crm_leads`).
+  - Active invite management (1-click claim URL copy, re-send invite, revoke invitation token).
+  - Live visibility switches (`visible: true/false`), YouTube metric refresh, and catalog pruning.
+- **Unclaimed = hidden.** Tile becomes public only after the subject clicks the invite, completes the interests modal, and creates a free account.
 - `featured_profiles` collection with state machine:
   `pending → invited → claimed | declined | expired`
 

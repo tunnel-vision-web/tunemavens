@@ -105,6 +105,7 @@ import SupportPageView from './views/community/SupportPageView.jsx'
 import BlogPageView from './views/community/BlogPageView.jsx'
 import CommunityView from './views/community/CommunityView.jsx'
 import WallOfFameClaimView from './views/community/WallOfFameClaimView.jsx'
+import WallOfFameAdminView from './views/admin/WallOfFameAdminView.jsx'
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx'
 import PublishingView from './views/landing/PublishingView.jsx'
 import DistributionView from './views/landing/DistributionView.jsx'
@@ -1978,6 +1979,9 @@ function DashboardView({
             embeddedInDashboard={true}
           />
         );
+      case 'wall-of-fame-admin':
+      case 'wall-of-fame':
+        return <WallOfFameAdminView sessionUser={sessionUser} />;
       default:
         return <div>Tab not found</div>;
     }
@@ -10915,6 +10919,8 @@ function AppContent({
           <Route path="/community/network" element={<CommunityView sessionUser={sessionUser} initialTab="network" />} />
           <Route path="/wall-of-fame/claim/:token" element={<WallOfFameClaimView sessionUser={sessionUser} />} />
           <Route path="/community/claim/:token" element={<WallOfFameClaimView sessionUser={sessionUser} />} />
+          <Route path="/admin/wall-of-fame" element={<WallOfFameAdminView sessionUser={sessionUser} />} />
+          <Route path="/community/admin" element={<WallOfFameAdminView sessionUser={sessionUser} />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
 

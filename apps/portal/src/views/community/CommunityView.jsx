@@ -317,6 +317,14 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
             >
               <RiShieldLine /> Privacy Center
             </button>
+            <Link
+              to="/admin/wall-of-fame"
+              className="community-btn community-btn-secondary"
+              data-testid="admin-console-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+            >
+              <RiShieldLine /> Admin Console
+            </Link>
             <button
               className="community-btn community-btn-primary"
               onClick={() => setNominateModalOpen(true)}

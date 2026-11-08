@@ -618,6 +618,7 @@ class FeaturedProfile(BaseDocument):
     subject_name: str
     role: str = "creator"  # 'creator' | 'producer' | 'supervisor' | 'label' | 'dj' | 'exec'
     subject_email: Optional[str] = None
+    phone: Optional[str] = None
     youtube_channel_handle: Optional[str] = None
     youtube_video_id: Optional[str] = None
     youtube_video_title: Optional[str] = None

@@ -30,6 +30,7 @@ class CreateFeaturedProfileRequest(BaseModel):
     subject_name: str
     role: str = "creator"  # 'creator' | 'producer' | 'supervisor' | 'label' | 'dj' | 'exec' | 'vc'
     subject_email: Optional[EmailStr] = None
+    phone: Optional[str] = None
     youtube_channel_handle: Optional[str] = None
     youtube_video_id: Optional[str] = None
     bio: str
@@ -40,6 +41,24 @@ class CreateFeaturedProfileRequest(BaseModel):
 
 class InviteRequest(BaseModel):
     subject_email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    custom_note: Optional[str] = None
+    send_email_invite: bool = True
+    send_whatsapp_invite: bool = True
+    sync_crm: bool = True
+
+
+class UpdateFeaturedProfileRequest(BaseModel):
+    subject_name: Optional[str] = None
+    role: Optional[str] = None
+    subject_email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    social_links: Optional[Dict[str, str]] = None
+    tags: Optional[List[str]] = None
+    visible: Optional[bool] = None
+    youtube_channel_handle: Optional[str] = None
+    youtube_video_id: Optional[str] = None
 
 
 class ClaimProfileRequest(BaseModel):
@@ -430,6 +449,34 @@ def execute_claim_profile(
 
     db.featured_profiles.update_one({"_id": profile["_id"]}, {"$set": update_data})
 
+    # Sync Smart CRM lead status to inducted
+    try:
+        db.crm_leads.update_one(
+            {"$or": [{"claim_token": token}, {"email": profile.get("subject_email")}]},
+            {"$set": {
+                "status": "inducted",
+                "claimed_user_id": str(user_id),
+                "claimed_at": now,
+                "updated_at": now,
+            }}
+        )
+    except Exception as crm_err:
+        logger.warning(f"Error updating CRM lead on claim: {crm_err}")
+
+    # Deliver onboarding welcome to User Personal Inbox
+    try:
+        db.user_inbox.insert_one({
+            "user_id": str(user_id),
+            "campaign_id": "wall_of_fame_induction",
+            "campaign_name": "TuneMavens Official Induction",
+            "subject": f"Welcome to the Wall of Fame & Creator Community, {profile.get('subject_name')}!",
+            "body": f"Congratulations! Your profile is now live on the TuneMavens Wall of Fame. Your verified badge, collaborative feeds, and direct ecosystem opportunities are now active.",
+            "read": False,
+            "created_at": now,
+        })
+    except Exception as inbox_err:
+        logger.warning(f"Error inserting user inbox welcome: {inbox_err}")
+
     # Log milestone activity event into social graph
     event = ActivityEvent(
         user_id=str(user_id),
@@ -515,6 +562,7 @@ def create_admin_wall_of_fame(
         subject_name=payload.subject_name,
         role=payload.role,
         subject_email=payload.subject_email,
+        phone=payload.phone,
         youtube_channel_handle=payload.youtube_channel_handle,
         youtube_video_id=video_id,
         youtube_video_title=video_title,
@@ -535,6 +583,32 @@ def create_admin_wall_of_fame(
     doc["id"] = str(res.inserted_id)
     doc.pop("_id", None)
 
+    # Automatically register into Smart CRM as a new Wall of Fame candidate lead
+    if payload.subject_email or payload.phone:
+        try:
+            lead_doc = {
+                "name": payload.subject_name.strip(),
+                "email": (payload.subject_email or "").strip().lower(),
+                "phone": payload.phone,
+                "inquiry_type": "wall_of_fame_induction",
+                "message": f"Candidate nominated for TuneMavens Wall of Fame ({payload.role.upper()}).",
+                "role": payload.role,
+                "status": "nominated" if not payload.pre_claim else "inducted",
+                "source": "wall_of_fame_curator",
+                "tags": ["wall_of_fame", "icon_nominee", payload.role],
+                "interests": ["wall_of_fame", "community_member", payload.role],
+                "featured_profile_id": doc["id"],
+                "created_at": now,
+                "updated_at": now,
+            }
+            db.crm_leads.update_one(
+                {"email": lead_doc["email"]} if lead_doc["email"] else {"featured_profile_id": doc["id"]},
+                {"$set": lead_doc},
+                upsert=True
+            )
+        except Exception as crm_err:
+            logger.warning(f"Error registering lead in Smart CRM: {crm_err}")
+
     return doc
 
 
@@ -544,7 +618,10 @@ def send_admin_wall_of_fame_invite(
     payload: InviteRequest = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Generates claim token and dispatches invitation email."""
+    """Dispatches official Wall of Fame induction invitation across Communication Protocols & Smart CRM."""
+    from account_setup import send_email, _email_wrapper
+    from services.whatsapp_service import send_whatsapp
+
     try:
         profile = db.featured_profiles.find_one({"_id": ObjectId(profile_id)})
     except Exception:
@@ -554,32 +631,151 @@ def send_admin_wall_of_fame_invite(
         raise HTTPException(status_code=404, detail="Profile not found")
 
     recipient_email = (payload.subject_email if payload and payload.subject_email else profile.get("subject_email"))
+    recipient_phone = (payload.phone if payload and payload.phone else profile.get("phone"))
+    custom_note = (payload.custom_note if payload and payload.custom_note else "")
+    send_email_flag = payload.send_email_invite if payload else True
+    send_whatsapp_flag = payload.send_whatsapp_invite if payload else True
+    sync_crm_flag = payload.sync_crm if payload else True
+
     claim_token = secrets.token_urlsafe(24)
     now = datetime.now(timezone.utc)
 
-    db.featured_profiles.update_one(
-        {"_id": profile["_id"]},
-        {
-            "$set": {
-                "claim_token": claim_token,
-                "state": "invited",
-                "invited_at": now,
-                "subject_email": recipient_email,
-                "updated_at": now,
-            }
-        }
-    )
+    # Update featured profile record
+    update_fields = {
+        "claim_token": claim_token,
+        "state": "invited",
+        "invited_at": now,
+        "updated_at": now,
+    }
+    if recipient_email:
+        update_fields["subject_email"] = recipient_email
+    if recipient_phone:
+        update_fields["phone"] = recipient_phone
+
+    db.featured_profiles.update_one({"_id": profile["_id"]}, {"$set": update_fields})
 
     claim_url = f"https://tunemavens.com/#/wall-of-fame/claim/{claim_token}"
+    role_display = profile.get("role", "creator").upper()
+    subject_name = profile.get("subject_name", "Featured Personality")
 
-    # Log into communications vault
+    email_status = "skipped"
+    comm_id = None
+
+    # 1. Dispatch via Ecosystem Communication Protocols (Email / Resend + Communications Vault)
+    if recipient_email and send_email_flag:
+        email_subject = f"🏆 Official TuneMavens Wall of Fame Induction: {subject_name}"
+        note_markup = f"""
+        <div style="background: rgba(134, 59, 255, 0.08); border-left: 3px solid #863bff; padding: 12px 16px; margin: 16px 0; border-radius: 2px;">
+            <p style="margin: 0; font-size: 13px; color: #e2e8f0; font-style: italic;">"{custom_note}"</p>
+            <span style="display:block; margin-top: 6px; font-size: 11px; color: #94a3b8; font-weight: 600;">— TuneMavens Curatorial Committee</span>
+        </div>
+        """ if custom_note else ""
+
+        inner_html = f"""
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; padding: 4px 12px; background: rgba(134, 59, 255, 0.15); border: 1px solid rgba(134, 59, 255, 0.4); color: #c084fc; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 3px; margin-bottom: 12px;">Official TuneMavens Induction</div>
+            <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.02em;">You Have Been Inducted to the Wall of Fame</h1>
+            <p style="color: #94a3b8; font-size: 14px; margin: 0;">Celebrating elite craft, leadership, and cultural impact across music.</p>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 3px; padding: 22px; margin-bottom: 24px;">
+            <p style="color: #f8fafc; font-size: 15px; margin: 0 0 12px 0;">Dear <strong>{subject_name}</strong>,</p>
+            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0 0 14px 0;">
+                The TuneMavens editorial and curatorial board has officially recognized your distinction in the role of <strong>{role_display}</strong>. A premier profile has been reserved in your honor on the official <strong>Wall of Fame</strong>.
+            </p>
+            {note_markup}
+            <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin: 0;">
+                Claiming your induction verifies your presence across our 5-app ecosystem, provides your direct verified badge, and connects you to our high-level sync licensing and publishing networks.
+            </p>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{claim_url}" style="display: inline-block; background: #863bff; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 14px 32px; border-radius: 3px; box-shadow: 0 4px 16px rgba(134, 59, 255, 0.35);">Accept Induction &amp; Claim Profile &rarr;</a>
+        </div>
+        <div style="text-align: center; color: #64748b; font-size: 11px; line-height: 1.5;">
+            Direct claim verification URL:<br/>
+            <a href="{claim_url}" style="color: #863bff; text-decoration: underline; word-break: break-all;">{claim_url}</a>
+        </div>
+        """
+        full_html = _email_wrapper(inner_html, f"🏆 Official Induction: {subject_name}", profile.get("role", "creator"))
+        email_status = send_email(
+            to=recipient_email,
+            subject=email_subject,
+            html=full_html,
+            text=f"Congratulations {subject_name}! You have been nominated to the TuneMavens Wall of Fame. Claim your induction here: {claim_url}",
+            event_type="wall_of_fame_invitation",
+            role=profile.get("role", "creator"),
+            recipient_name=subject_name,
+            metadata={"profile_id": str(profile["_id"]), "claim_token": claim_token, "custom_note": custom_note}
+        )
+
+    # 2. Dispatch via WhatsApp Protocol
+    whatsapp_status = "skipped"
+    if recipient_phone and send_whatsapp_flag:
+        try:
+            wa_body = (
+                f"🏆 *TuneMavens Wall of Fame Official Induction*\n\n"
+                f"Congratulations *{subject_name}*!\n\n"
+                f"The TuneMavens curatorial board has officially nominated you for induction as a recognized *{role_display}*.\n\n"
+                f"{custom_note + '\n\n' if custom_note else ''}"
+                f"Accept your induction & claim your verified creator credentials here:\n"
+                f"{claim_url}"
+            )
+            send_whatsapp(
+                to=recipient_phone,
+                message=wa_body,
+                recipient_name=subject_name,
+                role=profile.get("role", "creator"),
+                event_type="wall_of_fame_invitation",
+                metadata={"profile_id": str(profile["_id"]), "claim_token": claim_token}
+            )
+            whatsapp_status = "dispatched"
+        except Exception as wa_err:
+            logger.warning(f"Error sending WhatsApp invitation: {wa_err}")
+            whatsapp_status = f"failed: {wa_err}"
+
+    # 3. Synchronize with Intermaven Smart CRM
+    crm_lead_id = None
+    if sync_crm_flag:
+        try:
+            lead_record = {
+                "name": subject_name,
+                "email": (recipient_email or "").strip().lower(),
+                "phone": recipient_phone,
+                "inquiry_type": "wall_of_fame_induction",
+                "message": custom_note or f"Wall of Fame invite dispatched to {subject_name} ({role_display})",
+                "role": profile.get("role", "creator"),
+                "status": "invited",
+                "source": "wall_of_fame_invitation",
+                "tags": ["wall_of_fame", "icon_nominee", profile.get("role", "creator"), "invited"],
+                "interests": ["wall_of_fame", "community_induction", profile.get("role", "creator")],
+                "preferred_comm_method": "email" if recipient_email else "whatsapp",
+                "claim_token": claim_token,
+                "claim_url": claim_url,
+                "featured_profile_id": str(profile["_id"]),
+                "last_outreach_at": now,
+                "updated_at": now,
+            }
+            lead_query = {"email": lead_record["email"]} if lead_record["email"] else {"featured_profile_id": str(profile["_id"])}
+            crm_res = db.crm_leads.update_one(lead_query, {"$set": lead_record, "$setOnInsert": {"created_at": now}}, upsert=True)
+            if crm_res.upserted_id:
+                crm_lead_id = str(crm_res.upserted_id)
+            else:
+                existing_crm = db.crm_leads.find_one(lead_query)
+                if existing_crm:
+                    crm_lead_id = str(existing_crm["_id"])
+        except Exception as crm_err:
+            logger.warning(f"Error syncing Wall of Fame lead into Smart CRM: {crm_err}")
+
+    # 4. Audit Log in Communications Vault
     db.communications.insert_one({
         "type": "wall_of_fame_invitation",
         "recipient_email": recipient_email,
-        "subject_name": profile.get("subject_name"),
+        "recipient_phone": recipient_phone,
+        "subject_name": subject_name,
         "claim_url": claim_url,
         "claim_token": claim_token,
-        "status": "delivered",
+        "status": email_status if email_status != "skipped" else "delivered",
+        "channel": "email+whatsapp" if (recipient_email and recipient_phone) else ("whatsapp" if recipient_phone else "email"),
+        "crm_lead_id": crm_lead_id,
         "created_at": now,
     })
 
@@ -589,8 +785,123 @@ def send_admin_wall_of_fame_invite(
         "claim_token": claim_token,
         "claim_url": claim_url,
         "recipient_email": recipient_email,
-        "message": f"Invitation dispatched for {profile.get('subject_name')}."
+        "recipient_phone": recipient_phone,
+        "email_delivery": email_status,
+        "whatsapp_delivery": whatsapp_status,
+        "crm_lead_id": crm_lead_id,
+        "message": f"Invitation protocol executed for {subject_name} across Smart CRM and Communications Vault."
     }
+
+
+@router.patch("/admin/wall-of-fame/{profile_id}")
+def update_admin_wall_of_fame_profile(
+    profile_id: str,
+    payload: UpdateFeaturedProfileRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Updates profile properties, role, tags, bio, or toggles visibility."""
+    try:
+        profile = db.featured_profiles.find_one({"_id": ObjectId(profile_id)})
+    except Exception:
+        profile = db.featured_profiles.find_one({"_id": profile_id})
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    updates = {"updated_at": datetime.now(timezone.utc)}
+    for field, val in payload.model_dump(exclude_unset=True).items():
+        if val is not None:
+            updates[field] = val
+
+    db.featured_profiles.update_one({"_id": profile["_id"]}, {"$set": updates})
+
+    # Sync to CRM if name/email changed
+    if payload.subject_name or payload.subject_email or payload.phone:
+        crm_updates = {}
+        if payload.subject_name:
+            crm_updates["name"] = payload.subject_name
+        if payload.subject_email:
+            crm_updates["email"] = payload.subject_email.strip().lower()
+        if payload.phone:
+            crm_updates["phone"] = payload.phone
+        db.crm_leads.update_many({"featured_profile_id": str(profile["_id"])}, {"$set": crm_updates})
+
+    refreshed = db.featured_profiles.find_one({"_id": profile["_id"]})
+    refreshed["id"] = str(refreshed["_id"])
+    refreshed.pop("_id", None)
+    return refreshed
+
+
+@router.delete("/admin/wall-of-fame/{profile_id}")
+def delete_admin_wall_of_fame_profile(
+    profile_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Removes a Wall of Fame profile and related metadata."""
+    try:
+        profile = db.featured_profiles.find_one({"_id": ObjectId(profile_id)})
+    except Exception:
+        profile = db.featured_profiles.find_one({"_id": profile_id})
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    db.featured_profiles.delete_one({"_id": profile["_id"]})
+    db.likes.delete_many({"target_kind": "featured_profile", "target_id": str(profile["_id"])})
+
+    return {
+        "status": "deleted",
+        "profile_id": str(profile["_id"]),
+        "subject_name": profile.get("subject_name"),
+        "message": f"Profile for {profile.get('subject_name')} successfully removed."
+    }
+
+
+@router.post("/admin/wall-of-fame/{profile_id}/revoke-invite")
+def revoke_admin_wall_of_fame_invite(
+    profile_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Revokes an outstanding invitation token and returns profile to pending state."""
+    try:
+        profile = db.featured_profiles.find_one({"_id": ObjectId(profile_id)})
+    except Exception:
+        profile = db.featured_profiles.find_one({"_id": profile_id})
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    db.featured_profiles.update_one(
+        {"_id": profile["_id"]},
+        {"$set": {"claim_token": None, "state": "pending", "updated_at": datetime.now(timezone.utc)}}
+    )
+    db.crm_leads.update_many(
+        {"featured_profile_id": str(profile["_id"])},
+        {"$set": {"status": "revoked", "claim_token": None, "updated_at": datetime.now(timezone.utc)}}
+    )
+
+    return {
+        "status": "revoked",
+        "profile_id": str(profile["_id"]),
+        "subject_name": profile.get("subject_name"),
+        "message": f"Invitation token revoked for {profile.get('subject_name')}."
+    }
+
+
+@router.get("/admin/wall-of-fame/crm-leads")
+def get_admin_wall_of_fame_crm_leads(current_user: dict = Depends(get_current_user)):
+    """Returns all Smart CRM leads associated with the Wall of Fame."""
+    cursor = db.crm_leads.find(
+        {"$or": [{"inquiry_type": "wall_of_fame_induction"}, {"tags": "wall_of_fame"}]}
+    ).sort("created_at", -1)
+
+    leads = []
+    for doc in cursor:
+        doc["id"] = str(doc["_id"])
+        doc.pop("_id", None)
+        leads.append(doc)
+
+    return {"leads": leads, "count": len(leads)}
 
 
 @router.post("/admin/wall-of-fame/{profile_id}/refresh-youtube")

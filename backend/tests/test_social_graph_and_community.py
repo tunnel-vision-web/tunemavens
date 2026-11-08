@@ -263,3 +263,115 @@ def test_wall_of_fame_lifecycle_and_claim_flow():
     # 7. Nominee is NOW visible on public Wall of Fame!
     pub_res_final = client.get("/api/community/wall-of-fame")
     assert any(p["subject_name"] == nominee_name for p in pub_res_final.json()["profiles"])
+
+
+def test_admin_wall_of_fame_crm_and_communication_protocols():
+    """Test full admin suite: multi-protocol dispatch, Smart CRM sync, revoke, patch, and delete."""
+    admin_id, admin_cookies = seed_test_user("admin_curator@tunemavens.com", "Curator Staff", role="admin")
+    nominee = "Fela Tribute Auteur"
+    nominee_email = "fela_tribute@kalakuta.org"
+    nominee_phone = "+2348012345678"
+
+    # Clean up prior test data
+    db.featured_profiles.delete_many({"subject_email": nominee_email})
+    db.crm_leads.delete_many({"email": nominee_email})
+
+    # 1. Nominate figure via admin composer
+    create_res = client.post(
+        "/api/admin/wall-of-fame",
+        cookies=admin_cookies,
+        json={
+            "subject_name": nominee,
+            "role": "creator",
+            "subject_email": nominee_email,
+            "phone": nominee_phone,
+            "bio": "Pioneer of modern Afrobeat orchestration and pan-African sonic autonomy.",
+            "tags": ["Afrobeat", "Orchestration", "Cultural Leader"],
+            "pre_claim": False,
+        }
+    )
+    assert create_res.status_code == 200, create_res.text
+    profile_data = create_res.json()
+    profile_id = profile_data["id"]
+    assert profile_data["state"] == "pending"
+
+    # Verify initial lead was registered in Smart CRM
+    lead = db.crm_leads.find_one({"email": nominee_email})
+    assert lead is not None
+    assert lead["status"] == "nominated"
+    assert "wall_of_fame" in lead["tags"]
+
+    # 2. Dispatch official induction invitation across Communication Protocols & Smart CRM
+    invite_res = client.post(
+        f"/api/admin/wall-of-fame/{profile_id}/invite",
+        cookies=admin_cookies,
+        json={
+            "subject_email": nominee_email,
+            "phone": nominee_phone,
+            "custom_note": "Honoring your seminal contribution to continental music export.",
+            "send_email_invite": True,
+            "send_whatsapp_invite": True,
+            "sync_crm": True,
+        }
+    )
+    assert invite_res.status_code == 200, invite_res.text
+    invite_data = invite_res.json()
+    assert invite_data["status"] == "invited"
+    assert "claim_token" in invite_data
+    assert "claim_url" in invite_data
+    assert invite_data["recipient_email"] == nominee_email
+    assert invite_data["crm_lead_id"] is not None
+
+    # Verify Communications Vault contains induction event
+    comm = db.communications.find_one({"claim_token": invite_data["claim_token"]})
+    assert comm is not None
+    assert comm["type"] == "wall_of_fame_invitation"
+    assert comm["recipient_email"] == nominee_email
+
+    # Verify Smart CRM lead was promoted to 'invited'
+    updated_lead = db.crm_leads.find_one({"email": nominee_email})
+    assert updated_lead is not None
+    assert updated_lead["status"] == "invited"
+    assert updated_lead["claim_token"] == invite_data["claim_token"]
+
+    # 3. Test CRM leads endpoint
+    crm_res = client.get("/api/admin/wall-of-fame/crm-leads", cookies=admin_cookies)
+    assert crm_res.status_code == 200
+    crm_leads = crm_res.json()["leads"]
+    assert any(l.get("email") == nominee_email for l in crm_leads)
+
+    # 4. Patch profile details and visibility
+    patch_res = client.patch(
+        f"/api/admin/wall-of-fame/{profile_id}",
+        cookies=admin_cookies,
+        json={
+            "bio": "Updated biography highlighting 2026 global tour milestone.",
+            "visible": True,
+        }
+    )
+    assert patch_res.status_code == 200
+    assert patch_res.json()["visible"] is True
+    assert "Updated biography" in patch_res.json()["bio"]
+
+    # 5. Revoke invitation
+    revoke_res = client.post(
+        f"/api/admin/wall-of-fame/{profile_id}/revoke-invite",
+        cookies=admin_cookies
+    )
+    assert revoke_res.status_code == 200
+    assert revoke_res.json()["status"] == "revoked"
+
+    # Verify profile state reverted to pending
+    from bson import ObjectId
+    refreshed_prof = db.featured_profiles.find_one({"_id": ObjectId(profile_id)})
+    assert refreshed_prof["state"] == "pending"
+    assert refreshed_prof["claim_token"] is None
+
+    # 6. Delete profile
+    del_res = client.delete(
+        f"/api/admin/wall-of-fame/{profile_id}",
+        cookies=admin_cookies
+    )
+    assert del_res.status_code == 200
+    assert del_res.json()["status"] == "deleted"
+    assert db.featured_profiles.find_one({"_id": ObjectId(profile_id)}) is None
