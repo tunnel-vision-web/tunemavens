@@ -642,15 +642,16 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                           </Link>
                           {!p.has_epk && (
                             <button
-                              className={`fame-epk-mini-invite-btn ${epkInvitedMap[p.id] ? 'invited' : ''}`}
+                              className={`fame-epk-btn invite ${epkInvitedMap[p.id] ? 'invited' : ''}`}
                               onClick={() => handleOpenEpkInviteModal(p)}
                               title={
                                 epkInvitedMap[p.id]
                                   ? 'EPK activation invite dispatched'
-                                  : 'Invite luminary to customize and activate their EPK'
+                                  : 'Invite luminary to activate their official TuneMavens EPK'
                               }
                             >
                               {epkInvitedMap[p.id] ? <RiCheckLine /> : <RiSparklingFill />}
+                              <span>{epkInvitedMap[p.id] ? 'Invited' : 'Invite to EPK'}</span>
                             </button>
                           )}
                         </div>

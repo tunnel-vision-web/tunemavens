@@ -162,7 +162,8 @@ SEED_WALL_OF_FAME = [
         "youtube_views_formatted": "5.2M views",
         "bio": "Grammy-winning pioneer of contemporary African deep house. Headline resident across Ibiza, Brooklyn Mirage, and global festival circuits.",
         "social_links": {"instagram": "realblackcoffee", "twitter": "RealBlackCoffee", "spotify": "https://open.spotify.com/artist/blackcoffee"},
-        "has_epk": False,
+        "has_epk": True,
+        "epk_slug": "black-coffee",
         "state": "claimed",
         "visible": True,
         "tags": ["Afro-House", "Grammy Winner", "DJ Pool", "Soulistic"],
@@ -178,7 +179,8 @@ SEED_WALL_OF_FAME = [
         "youtube_views_formatted": "7.8M views",
         "bio": "Founder & CEO of Mavin Records. Architect of modern West African pop commercialization and premier global talent incubator.",
         "social_links": {"twitter": "donjazzy", "instagram": "donjazzy", "website": "https://mavinrecords.com"},
-        "has_epk": False,
+        "has_epk": True,
+        "epk_slug": "don-jazzy",
         "state": "claimed",
         "visible": True,
         "tags": ["Record Label", "Mavin", "Talent Incubator", "A&R"],
@@ -240,7 +242,9 @@ SEED_WALL_OF_FAME = [
         "youtube_thumbnail_url": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=400&q=80",
         "youtube_views_formatted": "8.7M views",
         "bio": "Iconic East African polyphonic afro-pop group, songwriters, and tour trailblazers. Pioneered sovereign East African live performance touring models.",
-        "social_links": {"youtube": "SautiSol", "instagram": "sautisol"},
+        "social_links": {"youtube": "SautiSol", "instagram": "sautisol", "spotify": "https://open.spotify.com/artist/4DA7Zz1H0Q1b9vBvL0mP4T"},
+        "has_epk": True,
+        "epk_slug": "sauti-sol",
         "state": "claimed",
         "visible": True,
         "tags": ["Afro-Pop", "Live Touring", "Harmony", "East Africa"],
@@ -324,26 +328,24 @@ SEED_WALL_OF_FAME = [
 
 
 def seed_wall_of_fame_if_empty():
-    """Seed initial Wall of Fame luminaries if empty or below standard roster."""
-    if db.featured_profiles.count_documents({}) < len(SEED_WALL_OF_FAME):
-        logger.info("Seeding / updating Wall of Fame inductee roster...")
-        now = datetime.now(timezone.utc)
-        for item in SEED_WALL_OF_FAME:
-            existing = db.featured_profiles.find_one({"subject_name": item["subject_name"]})
-            if not existing:
-                doc = item.copy()
-                doc["created_at"] = now
-                doc["updated_at"] = now
-                db.featured_profiles.insert_one(doc)
-            else:
-                db.featured_profiles.update_one(
-                    {"_id": existing["_id"]},
-                    {"$set": {
-                        "has_epk": item.get("has_epk", False),
-                        "epk_slug": item.get("epk_slug"),
-                        "social_links": item.get("social_links", existing.get("social_links", {}))
-                    }}
-                )
+    """Seed initial Wall of Fame luminaries if empty or below standard roster and ensure EPK sync."""
+    now = datetime.now(timezone.utc)
+    for item in SEED_WALL_OF_FAME:
+        existing = db.featured_profiles.find_one({"subject_name": item["subject_name"]})
+        if not existing:
+            doc = item.copy()
+            doc["created_at"] = now
+            doc["updated_at"] = now
+            db.featured_profiles.insert_one(doc)
+        elif item.get("has_epk") and not existing.get("has_epk"):
+            db.featured_profiles.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {
+                    "has_epk": item.get("has_epk", False),
+                    "epk_slug": item.get("epk_slug"),
+                    "social_links": item.get("social_links", existing.get("social_links", {}))
+                }}
+            )
 
 
 # ======================================================================
