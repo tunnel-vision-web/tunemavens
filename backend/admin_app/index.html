@@ -795,6 +795,9 @@
         <li class="sidebar-nav-item" onclick="switchTab('crm-queue')" id="nav-crm-queue">
           <span>📬</span> CRM Pipeline & Leads
         </li>
+        <li class="sidebar-nav-item" onclick="switchTab('crm-growth')" id="nav-crm-growth">
+          <span>🚀</span> CRM &amp; Growth Engine
+        </li>
         <li class="sidebar-nav-item" onclick="switchTab('system-telemetry')" id="nav-system-telemetry">
           <span>⚡</span> System Telemetry & Health
         </li>
@@ -1098,6 +1101,124 @@
         </div>
       </section>
 
+      <!-- TAB: CRM & GROWTH ENGINE -->
+      <section id="view-crm-growth" style="display: none;">
+        <div class="section-header">
+          <div>
+            <div class="section-title">🚀 CRM &amp; Multi-Channel Growth Engine</div>
+            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+              Outbound growth campaigns across Email (Resend), In-App Dispatches, and Copy-Tracked Social DMs
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn" onclick="loadCrmGrowth()">↻ Refresh</button>
+            <button class="btn btn-primary" onclick="openCreateCampaignModal()">+ Create Campaign</button>
+          </div>
+        </div>
+
+        <!-- Growth Key Performance Metrics -->
+        <div class="stats-grid" style="margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="stat-label">Active Campaigns</div>
+            <div class="stat-value" id="statGrowthCampaigns" style="color: var(--cyan);">0</div>
+            <div class="stat-desc">Multi-channel growth playbooks</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Reach</div>
+            <div class="stat-value" id="statGrowthReach" style="color: var(--emerald);">0</div>
+            <div class="stat-desc">Target audience members reached</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Email Dispatches</div>
+            <div class="stat-value" id="statGrowthEmails" style="color: #a855f7;">0</div>
+            <div class="stat-desc">Resend-backed transmissions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">In-App Dispatches</div>
+            <div class="stat-value" id="statGrowthInApp" style="color: #f59e0b;">0</div>
+            <div class="stat-desc">Targeted in-app notifications</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Social DMs Sent</div>
+            <div class="stat-value" id="statGrowthSocial" style="color: #ec4899;">0</div>
+            <div class="stat-desc">Personalized outreach copy-tracker</div>
+          </div>
+        </div>
+
+        <!-- Audience Segments Cohort Bar -->
+        <div style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">
+              Audience Cohort Segments (Live DB Counts)
+            </span>
+            <span style="font-size: 11px; color: var(--text-muted);">
+              Click any segment to draft targeted campaign
+            </span>
+          </div>
+          <div id="growthSegmentsBar" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <span style="color: var(--text-muted); font-size: 12px;">Loading segments...</span>
+          </div>
+        </div>
+
+        <!-- Campaigns Table -->
+        <div class="section-header" style="margin-top: 24px;">
+          <div class="section-title" style="font-size: 1.1rem;">
+            Dispatched &amp; Scheduled Growth Campaigns
+          </div>
+        </div>
+        <div class="table-container" style="margin-bottom: 28px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Campaign Title &amp; Subject</th>
+                <th>Target Segment</th>
+                <th>Channels</th>
+                <th>Reach &amp; Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="growthCampaignsTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 28px;">Loading campaigns...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Social DM Outbox & Buffer -->
+        <div class="section-header">
+          <div>
+            <div class="section-title" style="font-size: 1.1rem;">
+              📱 Social DM Outbox &amp; Copy-Tracker
+            </div>
+            <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">
+              Personalized Instagram &amp; X direct outreach scripts. Click "Copy Script" to paste in DM, then click "Mark as Sent".
+            </div>
+          </div>
+          <button class="btn" onclick="loadCrmGrowth()">↻ Refresh DM Outbox</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Recipient</th>
+                <th>Platform / Handle</th>
+                <th>Target Segment</th>
+                <th>Personalized Script</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="growthSendsTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading social DM tracker...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- TAB 5: SYSTEM TELEMETRY -->
       <section id="view-system-telemetry" style="display: none;">
         <div class="section-header">
@@ -1377,6 +1498,101 @@
     </div>
   </div>
 
+  <!-- Modal: Create Multi-Channel Campaign -->
+  <div class="modal-backdrop" id="modalCreateCampaign" style="display: none;">
+    <div class="modal-box" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title">🚀 Create Multi-Channel Growth Campaign</div>
+        <button class="btn" style="padding: 4px 8px;" onclick="closeCreateCampaignModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Quick Presets -->
+        <div style="background: rgba(34, 211, 238, 0.05); border: 1px solid rgba(34, 211, 238, 0.2); border-radius: var(--radius); padding: 12px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--cyan); text-transform: uppercase; margin-bottom: 6px;">
+            Quick Presets / Templates:
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="applyCampaignPreset('creator_welcome')">Creator Welcome &amp; EPK</button>
+            <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="applyCampaignPreset('dj_pool_launch')">DJ Pool 24-Bit Promotion</button>
+            <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="applyCampaignPreset('sync_brief')">Sync Marketplace Brief</button>
+            <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="applyCampaignPreset('tour_vault')">Tour Capital Vault Invitation</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Campaign Title *</label>
+          <input type="text" id="campTitle" placeholder="e.g. Q4 Creator EPK Onboarding Blitz" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Target Audience Segment *</label>
+            <select id="campSegment">
+              <option value="all_creators">All Creators (Active &amp; Onboarded)</option>
+              <option value="unclaimed_icons">Unclaimed Wall of Fame Luminary Icons</option>
+              <option value="active_djs">Active DJs &amp; Curators</option>
+              <option value="podcasters">Active Podcasters &amp; Show Hosts</option>
+              <option value="labels">Record Labels &amp; A&amp;R</option>
+              <option value="supervisors">Music Supervisors &amp; Sync Buyers</option>
+              <option value="tour_vcs">Tour Capital Investors &amp; VCs</option>
+              <option value="affiliates">Affiliate Partners</option>
+              <option value="corporate_brands">Corporate Sponsors &amp; Brands</option>
+              <option value="consumers_high_tips">Hi-Fi Fans &amp; Top Tippers</option>
+              <option value="dormant_users">Dormant Accounts (>30 Days)</option>
+              <option value="all_users">Global Ecosystem (All Accounts)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Channels to Dispatch *</label>
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+              <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                <input type="checkbox" id="campChanEmail" checked /> Email (Resend)
+              </label>
+              <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                <input type="checkbox" id="campChanInApp" checked /> In-App Inbox
+              </label>
+              <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                <input type="checkbox" id="campChanSocial" checked /> Social DM Copy
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Subject Line * (Dynamic: {{name}}, {{role}})</label>
+          <input type="text" id="campSubject" placeholder="Welcome {{name}} - Your TuneMavens Creator EPK is Live" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>CTA Button Label</label>
+            <input type="text" id="campCtaLabel" placeholder="e.g. Open Your EPK Studio" />
+          </div>
+          <div class="form-group">
+            <label>CTA Target URL / Route</label>
+            <input type="text" id="campCtaUrl" placeholder="e.g. /#/epk or /#/sync" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Campaign Message Body * (Markdown &amp; placeholders: {{name}}, {{role}}, {{cta_url}}, {{credits}})</label>
+          <textarea id="campBody" rows="5" style="font-family: inherit; font-size: 13px; background: rgba(0,0,0,0.4); color: #fff; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 8px 10px;" placeholder="Hey {{name}},&#10;&#10;We're excited to invite you to collaborate on TuneMavens..."></textarea>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-color); cursor: pointer;">
+            <input type="checkbox" id="campDispatchNow" checked />
+            <strong>Dispatch Immediately</strong> (Sends emails, creates in-app inbox items, and generates social DM buffer)
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" onclick="closeCreateCampaignModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitCreateCampaign()">Launch Campaign 🚀</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -1395,7 +1611,7 @@
         name: "Platform Administrator",
         desc: "Unrestricted platform operations, RBAC configuration, user role provisioning, Wall of Fame curation, domain routing, and ecosystem monitoring.",
         badgeColor: "#38bdf8",
-        perms: ["wall_of_fame_manage", "wall_of_fame_invite", "wall_of_fame_delete", "rbac_manage", "users_manage", "domain_mappings_manage", "crm_leads_manage", "system_telemetry"]
+        perms: ["wall_of_fame_manage", "wall_of_fame_invite", "wall_of_fame_delete", "rbac_manage", "users_manage", "domain_mappings_manage", "crm_leads_manage", "crm_growth_manage", "system_telemetry"]
       },
       creator: {
         name: "Creator / Artist",
@@ -1508,7 +1724,7 @@
     }
 
     function switchTab(tabId) {
-      const tabs = ['wall-of-fame', 'persona-rbac', 'domain-routing', 'crm-queue', 'system-telemetry'];
+      const tabs = ['wall-of-fame', 'persona-rbac', 'domain-routing', 'crm-queue', 'crm-growth', 'system-telemetry'];
       tabs.forEach(t => {
         const el = document.getElementById(`view-${t}`);
         const navEl = document.getElementById(`nav-${t}`);
@@ -1523,6 +1739,7 @@
       if (tabId === 'persona-rbac') { loadUsers(); loadMatrix(); }
       if (tabId === 'domain-routing') loadDomainMappings();
       if (tabId === 'crm-queue') loadCrmLeads();
+      if (tabId === 'crm-growth') loadCrmGrowth();
       if (tabId === 'system-telemetry') loadTelemetry();
     }
 
@@ -2274,10 +2491,385 @@
       }
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // ===================================================================
+    // TAB: CRM & Growth Campaigns Engine
+    // ===================================================================
+    let crmSegmentsData = [];
+    let crmCampaignsData = [];
+    let crmSendsData = [];
+
+    const CAMPAIGN_PRESETS = {
+      creator_welcome: {
+        title: "Creator Welcome & EPK Activation",
+        segment: "all_creators",
+        subject: "Welcome to TuneMavens {{name}} - Your Creator EPK is ready",
+        cta_label: "Open Creator EPK",
+        cta_url: "/#/epk",
+        body: "Hey {{name}},\n\nWelcome to TuneMavens! Your creator profile is now ready to showcase your authoritative catalog, stems, and tour availability.\n\nTake advantage of zero-fee streaming, instant M-Pesa & card fan tips, and automated split ledgers.\n\nClick below to configure your public EPK now."
+      },
+      dj_pool_launch: {
+        title: "DJ Pool 24-Bit VIP Early Access",
+        segment: "active_djs",
+        subject: "Exclusive DJ Pool Drop: 24-Bit Masters for {{name}}",
+        cta_label: "Access DJ Pool",
+        cta_url: "/#/djpool",
+        body: "Hi {{name}},\n\nAs an authoritative DJ and curator on TuneMavens, you have priority access to fresh club promos normalized to studio perfection in 24-bit WAV & FLAC.\n\nExplore this week's charts, audition stems, and build your setlists."
+      },
+      sync_brief: {
+        title: "New Sync Licensing Opportunity",
+        segment: "all_creators",
+        subject: "New Sync Brief: High-Impact Placement Opportunity",
+        cta_label: "View Sync Briefs",
+        cta_url: "/#/sync",
+        body: "Hey {{name}},\n\nA new commercial sync brief has just been posted on the TuneMavens Sync Marketplace matching your catalog's genre tags.\n\nReview the brief details, clearance terms, and submit your pre-cleared master tracks directly to music supervisors."
+      },
+      tour_vault: {
+        title: "Tour Capital Vault Co-Investment Syndicate",
+        segment: "tour_vcs",
+        subject: "New Tour Capital Co-Investment Opportunity",
+        cta_label: "Review Tour Vault",
+        cta_url: "/#/tours-vault",
+        body: "Hello {{name}},\n\nA new tour capital financing round is now open for review in the Tour Capital Vault. Review real-time box office projections, risk ratings, and smart escrow disbursement schedules."
+      }
+    };
+
+    async function loadCrmGrowth() {
+      try {
+        const [segRes, campRes, sendRes] = await Promise.all([
+          fetch('/api/crm/segments').then(r => r.json()).catch(() => ({ segments: [] })),
+          fetch('/api/crm/campaigns').then(r => r.json()).catch(() => ({ campaigns: [], stats: {} })),
+          fetch('/api/crm/sends').then(r => r.json()).catch(() => ({ sends: [], stats: {} }))
+        ]);
+
+        crmSegmentsData = segRes.segments || [];
+        crmCampaignsData = campRes.campaigns || [];
+        crmSendsData = sendRes.sends || [];
+
+        // Update stats
+        const campStats = campRes.stats || {};
+        const sendStats = sendRes.stats || {};
+        const statCampaigns = document.getElementById('statGrowthCampaigns');
+        const statReach = document.getElementById('statGrowthReach');
+        const statEmails = document.getElementById('statGrowthEmails');
+        const statInApp = document.getElementById('statGrowthInApp');
+        const statSocial = document.getElementById('statGrowthSocial');
+
+        if (statCampaigns) statCampaigns.innerText = campStats.total_campaigns || crmCampaignsData.length;
+        if (statReach) statReach.innerText = campStats.total_reach || 0;
+        if (statEmails) statEmails.innerText = campStats.total_email_dispatched || sendStats.sent_email || 0;
+        if (statInApp) statInApp.innerText = campStats.total_in_app_dispatched || sendStats.sent_in_app || 0;
+        if (statSocial) statSocial.innerText = `${sendStats.sent_social_dm || 0} / ${campStats.total_social_dm_dispatched || 0}`;
+
+        renderGrowthSegments();
+        renderGrowthCampaigns();
+        renderGrowthSends();
+      } catch (err) {
+        console.error('Error loading CRM growth data:', err);
+        showToast('Error refreshing CRM growth engine', 'error');
+      }
+    }
+
+    function renderGrowthSegments() {
+      const container = document.getElementById('growthSegmentsBar');
+      if (!container) return;
+
+      if (!crmSegmentsData || crmSegmentsData.length === 0) {
+        container.innerHTML = '<span style="color: var(--text-muted); font-size: 12px;">No audience segments registered.</span>';
+        return;
+      }
+
+      container.innerHTML = crmSegmentsData.map(seg => `
+        <button type="button" class="btn" style="padding: 6px 12px; font-size: 11px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);" onclick="openCreateCampaignModal('${seg.key}')">
+          <span style="font-weight: 600; color: #fff;">${escapeHtml(seg.label)}</span>
+          <span style="background: rgba(34, 211, 238, 0.2); color: #22d3ee; padding: 2px 6px; border-radius: 10px; font-weight: 700; font-size: 10px;">${seg.count}</span>
+        </button>
+      `).join('');
+    }
+
+    function renderGrowthCampaigns() {
+      const tbody = document.getElementById('growthCampaignsTableBody');
+      if (!tbody) return;
+
+      if (!crmCampaignsData || crmCampaignsData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No campaigns drafted yet. Click "+ Create Campaign" to launch your first growth push.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = crmCampaignsData.map(c => {
+        const channels = c.channels || [];
+        const channelBadges = channels.map(ch => {
+          if (ch === 'email') return `<span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; margin-right: 4px;">✉ Email</span>`;
+          if (ch === 'in_app') return `<span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; margin-right: 4px;">📬 In-App</span>`;
+          if (ch === 'social_dm') return `<span style="background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700;">📱 Social DM</span>`;
+          return `<span style="font-size: 10px;">${ch}</span>`;
+        }).join('');
+
+        const status = c.status || 'draft';
+        let statusBadge = `<span style="background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Draft</span>`;
+        if (status === 'dispatched') {
+          statusBadge = `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Dispatched</span>`;
+        } else if (status === 'active') {
+          statusBadge = `<span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Active</span>`;
+        }
+
+        const createdAtStr = c.created_at ? new Date(c.created_at).toLocaleDateString() : 'Recent';
+        const reach = c.recipient_count || (c.stats && c.stats.sent) || 0;
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #fff; font-size: 13px;">${escapeHtml(c.title || 'Untitled Campaign')}</div>
+              <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">${escapeHtml(c.subject || '')}</div>
+            </td>
+            <td>
+              <span style="font-family: monospace; font-size: 11px; color: var(--cyan); background: rgba(34, 211, 238, 0.08); padding: 3px 6px; border-radius: 3px;">
+                ${escapeHtml(c.segment || 'all_users')}
+              </span>
+            </td>
+            <td>${channelBadges}</td>
+            <td>
+              <div style="font-weight: 700; color: #fff; font-size: 13px;">${reach} recipients</div>
+              <div style="margin-top: 4px;">${statusBadge}</div>
+            </td>
+            <td style="color: var(--text-muted); font-size: 12px;">${createdAtStr}</td>
+            <td>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button class="btn btn-primary" style="padding: 4px 10px; font-size: 11px;" onclick="dispatchCampaign('${c.id}')" title="Dispatch to all recipients in segment">
+                  🚀 Dispatch
+                </button>
+                <button class="btn" style="padding: 4px 8px; font-size: 11px; color: #f87171;" onclick="deleteCampaign('${c.id}')" title="Delete campaign">
+                  ✕
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderGrowthSends() {
+      const tbody = document.getElementById('growthSendsTableBody');
+      if (!tbody) return;
+
+      if (!crmSendsData || crmSendsData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No Social DM sends tracked yet. Dispatched campaigns with the Social DM channel will buffer here.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = crmSendsData.map(s => {
+        const isSent = s.status === 'sent';
+        const statusBadge = isSent 
+          ? `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase;">Sent</span>`
+          : `<span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 3px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase;">Pending Copy-Send</span>`;
+
+        const scriptSnippet = s.body_preview || s.script || '';
+        const escapedScript = encodeURIComponent(scriptSnippet);
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #fff; font-size: 12px;">${escapeHtml(s.recipient_name || 'Creator')}</div>
+              <div style="color: var(--text-muted); font-size: 11px;">${escapeHtml(s.recipient_email || '')}</div>
+            </td>
+            <td>
+              <span style="font-family: monospace; font-size: 11px; color: #f472b6;">
+                ${escapeHtml(s.social_platform || 'Instagram')}: ${escapeHtml(s.social_handle || '@user')}
+              </span>
+            </td>
+            <td style="font-size: 11px; color: var(--text-muted);">${escapeHtml(s.segment || '')}</td>
+            <td style="max-width: 280px;">
+              <div style="font-size: 11px; color: #cbd5e1; max-height: 48px; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;">
+                ${escapeHtml(scriptSnippet)}
+              </div>
+            </td>
+            <td>${statusBadge}</td>
+            <td>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button class="btn" style="padding: 3px 8px; font-size: 11px;" onclick="copySocialScript(decodeURIComponent('${escapedScript}'), this)">
+                  📋 Copy Script
+                </button>
+                ${!isSent ? `
+                  <button class="btn btn-emerald" style="padding: 3px 8px; font-size: 11px;" onclick="markSocialSent('${s.id}')">
+                    ✓ Mark Sent
+                  </button>
+                ` : `
+                  <span style="font-size: 11px; color: #34d399;">✓ Done</span>
+                `}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openCreateCampaignModal(preselectedSegment) {
+      const modal = document.getElementById('modalCreateCampaign');
+      if (!modal) return;
+
+      if (preselectedSegment) {
+        const segSelect = document.getElementById('campSegment');
+        if (segSelect) segSelect.value = preselectedSegment;
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closeCreateCampaignModal() {
+      const modal = document.getElementById('modalCreateCampaign');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function applyCampaignPreset(presetKey) {
+      const preset = CAMPAIGN_PRESETS[presetKey];
+      if (!preset) return;
+
+      document.getElementById('campTitle').value = preset.title;
+      document.getElementById('campSegment').value = preset.segment;
+      document.getElementById('campSubject').value = preset.subject;
+      document.getElementById('campCtaLabel').value = preset.cta_label;
+      document.getElementById('campCtaUrl').value = preset.cta_url;
+      document.getElementById('campBody').value = preset.body;
+      showToast(`Applied preset: ${preset.title}`, 'info');
+    }
+
+    async function submitCreateCampaign() {
+      const title = document.getElementById('campTitle').value.trim();
+      const segment = document.getElementById('campSegment').value;
+      const subject = document.getElementById('campSubject').value.trim();
+      const cta_label = document.getElementById('campCtaLabel').value.trim();
+      const cta_url = document.getElementById('campCtaUrl').value.trim();
+      const body = document.getElementById('campBody').value.trim();
+      const dispatch_now = document.getElementById('campDispatchNow').checked;
+
+      const channels = [];
+      if (document.getElementById('campChanEmail').checked) channels.push('email');
+      if (document.getElementById('campChanInApp').checked) channels.push('in_app');
+      if (document.getElementById('campChanSocial').checked) channels.push('social_dm');
+
+      if (!title || !subject || !body) {
+        showToast('Please provide Title, Subject, and Message Body', 'error');
+        return;
+      }
+
+      if (channels.length === 0) {
+        showToast('Please select at least one channel to dispatch', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/crm/campaigns', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            segment,
+            subject,
+            body,
+            channels,
+            cta_label: cta_label || undefined,
+            cta_url: cta_url || undefined,
+            dispatch_now
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Failed to create campaign');
+        }
+
+        const data = await res.json();
+        showToast(dispatch_now ? `🚀 Campaign dispatched to ${data.recipient_count || 'all'} recipients!` : 'Campaign drafted successfully!', 'info');
+        closeCreateCampaignModal();
+        loadCrmGrowth();
+      } catch (err) {
+        console.error('Error creating campaign:', err);
+        showToast(err.message || 'Error creating campaign', 'error');
+      }
+    }
+
+    async function dispatchCampaign(campaignId) {
+      try {
+        showToast('Dispatching multi-channel campaign...', 'info');
+        const res = await fetch(`/api/crm/campaigns/${campaignId}/dispatch`, {
+          method: 'POST'
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Dispatch failed');
+        }
+
+        const data = await res.json();
+        showToast(`Dispatched to ${data.recipient_count || 0} recipients across ${data.channels ? data.channels.join(', ') : 'channels'}!`, 'info');
+        loadCrmGrowth();
+      } catch (err) {
+        console.error('Error dispatching campaign:', err);
+        showToast(err.message || 'Error dispatching campaign', 'error');
+      }
+    }
+
+    async function deleteCampaign(campaignId) {
+      if (!confirm('Are you sure you want to delete this campaign?')) return;
+
+      try {
+        const res = await fetch(`/api/crm/campaigns/${campaignId}`, {
+          method: 'DELETE'
+        });
+
+        if (!res.ok) throw new Error('Failed to delete campaign');
+        showToast('Campaign deleted', 'info');
+        loadCrmGrowth();
+      } catch (err) {
+        console.error('Error deleting campaign:', err);
+        showToast(err.message || 'Error deleting campaign', 'error');
+      }
+    }
+
+    function copySocialScript(text, btnElement) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btnElement.innerText;
+        btnElement.innerText = '✓ Copied!';
+        btnElement.style.color = '#34d399';
+        setTimeout(() => {
+          btnElement.innerText = originalText;
+          btnElement.style.color = '';
+        }, 2000);
+      }).catch(err => {
+        console.warn('Clipboard copy failed:', err);
+        showToast('Could not copy to clipboard automatically', 'error');
+      });
+    }
+
+    async function markSocialSent(sendId) {
+      try {
+        const res = await fetch(`/api/crm/sends/${sendId}/mark-social-sent`, {
+          method: 'POST'
+        });
+
+        if (!res.ok) throw new Error('Failed to mark send as completed');
+        showToast('Marked as Sent via Social DM', 'info');
+        loadCrmGrowth();
+      } catch (err) {
+        console.error('Error marking send:', err);
+        showToast(err.message || 'Error updating send status', 'error');
+      }
+    }
+
     // Initialize on boot
     document.addEventListener('DOMContentLoaded', () => {
       loadWallOfFame();
       loadCrmLeads();
+      loadCrmGrowth();
       loadUsers();
       loadArticles();
     });

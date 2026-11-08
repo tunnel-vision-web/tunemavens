@@ -420,11 +420,18 @@ class Order(BaseDocument):
 
 
 class CrmCampaign(BaseDocument):
-    name: str
+    name: Optional[str] = None
+    title: Optional[str] = None
     subject: str
     body: str
-    target_roles: List[str]
-    status: str = "draft"  # 'draft' | 'dispatched'
+    target_roles: List[str] = Field(default_factory=list)
+    segment: Optional[str] = "all"
+    channels: List[str] = Field(default_factory=lambda: ["email", "in_app"])
+    cta_label: Optional[str] = "View Details"
+    cta_url: Optional[str] = "/"
+    recipient_count: int = 0
+    stats: Optional[dict] = Field(default_factory=lambda: {"sent": 0, "delivered": 0, "opened": 0, "clicked": 0, "replied": 0})
+    status: str = "draft"  # 'draft' | 'dispatched' | 'active'
     dispatched_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

@@ -105,6 +105,7 @@ import SupportPageView from './views/community/SupportPageView.jsx'
 import BlogPageView from './views/community/BlogPageView.jsx'
 import CommunityView from './views/community/CommunityView.jsx'
 import WallOfFameClaimView from './views/community/WallOfFameClaimView.jsx'
+import InboxView from './views/community/InboxView.jsx'
 import BackendAdminBridge from './views/admin/BackendAdminBridge.jsx'
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx'
 import PublishingView from './views/landing/PublishingView.jsx'
@@ -804,10 +805,17 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                   </li>
                 ))}
               </ul>
-              <div className="topbar-dropdown-footer">
+              <div className="topbar-dropdown-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)' }}>
                 <span style={{ fontSize: '11px', color: '#64748b' }}>
-                  Live notifications coming soon.
+                  TuneMavens Inbox
                 </span>
+                <Link
+                  to="/inbox"
+                  onClick={() => setNotifOpen(false)}
+                  style={{ fontSize: '11px', color: '#22d3ee', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                >
+                  Open Full Inbox &rarr;
+                </Link>
               </div>
             </div>
           )}
@@ -1970,6 +1978,8 @@ function DashboardView({
             currentUser={sessionUser}
           />
         );
+      case 'inbox':
+        return <InboxView sessionUser={sessionUser} />;
       case 'support':
         return (
           <SupportTicketsPanel 
@@ -2079,46 +2089,47 @@ function DashboardView({
       'corporate-ads': { id: 'corporate-ads', label: 'Corporate Ads & Rates', icon: RiMegaphoneFill, category: role === 'admin' ? 'Admin' : 'Brand Sponsorships' },
       affiliates: { id: 'affiliates', label: 'Affiliate Programme', icon: RiUserSharedFill, category: role === 'admin' ? 'Admin' : (role === 'affiliate' ? 'Affiliate Partner' : 'Creator Tools') },
       communications: { id: 'communications', label: 'Communications Vault', icon: RiMailSendLine, category: role === 'admin' ? 'Admin' : 'Creator Tools' },
+      inbox: { id: 'inbox', label: 'In-App Inbox', icon: RiMailFill, category: 'Community' },
     };
 
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'backend-admin', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
+        visibleKeys = ['home', 'backend-admin', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
         break;
       case 'affiliate':
-        visibleKeys = ['home', 'affiliates', 'splits', 'library', 'tips', 'profile', 'support'];
+        visibleKeys = ['home', 'affiliates', 'inbox', 'splits', 'library', 'tips', 'profile', 'support'];
         break;
       case 'vc':
       case 'investor':
-        visibleKeys = ['home', 'vc-discover', 'tours-vault', 'vc-portfolio', 'vc-sponsorship', 'splits', 'crm', 'escrow', 'profile', 'support'];
+        visibleKeys = ['home', 'vc-discover', 'tours-vault', 'vc-portfolio', 'vc-sponsorship', 'inbox', 'splits', 'crm', 'escrow', 'profile', 'support'];
         break;
       case 'corporate':
-        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'support'];
         break;
       case 'media_house':
       case 'media':
-        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
         break;
       case 'dj':
-        visibleKeys = ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'djpool', 'library', 'tips', 'inbox', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'studio':
       case 'supervisor':
-        visibleKeys = ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'affiliates'];
+        visibleKeys = ['home', 'sync', 'escrow', 'inbox', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'affiliates'];
         break;
       case 'podcaster':
-        visibleKeys = ['home', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcasts', 'splits', 'corporate-ads', 'social-ai', 'crm', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
+        visibleKeys = ['home', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcasts', 'splits', 'corporate-ads', 'social-ai', 'crm', 'inbox', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
         break;
       case 'consumer':
-        visibleKeys = ['home', 'podcasts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
+        visibleKeys = ['home', 'podcasts', 'library', 'tips', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'podcaster-studio', 'podcasts', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'communications', 'support'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'podcaster-studio', 'podcasts', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'communications', 'support'];
         break;
     }
 
@@ -10919,6 +10930,8 @@ function AppContent({
           <Route path="/community/wall-of-fame" element={<CommunityView sessionUser={sessionUser} initialTab="wall-of-fame" />} />
           <Route path="/community/feed" element={<CommunityView sessionUser={sessionUser} initialTab="feed" />} />
           <Route path="/community/network" element={<CommunityView sessionUser={sessionUser} initialTab="network" />} />
+          <Route path="/community/inbox" element={<InboxView sessionUser={sessionUser} />} />
+          <Route path="/inbox" element={<InboxView sessionUser={sessionUser} />} />
           <Route path="/wall-of-fame/claim/:token" element={<WallOfFameClaimView sessionUser={sessionUser} />} />
           <Route path="/community/claim/:token" element={<WallOfFameClaimView sessionUser={sessionUser} />} />
           <Route path="/admin" element={<BackendAdminBridge />} />

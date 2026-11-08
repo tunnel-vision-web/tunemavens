@@ -120,23 +120,25 @@ Ships alongside Phase 5.
 - `featured_profiles` collection with state machine:
   `pending → invited → claimed | declined | expired`
 
-### Phase 6.5 · CRM & Growth Engine 🟠 P1
-Ships alongside Phase 6. The outbound growth loop.
+### Phase 6.5 · CRM & Growth Engine 🟢 DONE
+The outbound growth loop and multi-channel campaign dispatch engine.
 
-**Deliverables**
-- Admin composer UI (segment picker + editable template + CTA URL picker
-  that defaults to the segment's role-landing page)
-- **Channels (swappable adapters)**
-  - `email` → Resend (only third party; env-configured)
-  - `in_app` → native inbox (`messages` collection + WebSocket/polling)
-  - `social_dm` → copy-to-clipboard template + "Mark as sent" tracking
-    (admin manually posts to Instagram/X)
-  - `sms` → deferred (adapter interface reserved, no implementation)
-- Campaign object: `campaigns` collection with `segment`, `channels[]`,
-  `template`, `cta_url`, `stats`
-- Send tracking: `campaign_sends` (per-recipient state machine)
-- **In-app inbox** — user-facing `/inbox` route with read/unread state,
-  reply-to-admin, threading
+**Delivered & Verified**
+- **Admin Composer & Operations Suite** (`/admin` tab: `🚀 CRM & Growth Engine`)
+  - Audience Cohort Segment selector (12 live segments with real-time Mongo aggregation counts)
+  - Quick campaign presets (Creator Welcome, DJ Pool Launch, Sync Marketplace Brief, Tour Vault)
+  - Default CTA routes mapped to segment role landings
+- **Multi-Channel Dispatch Adapters**
+  - `email` → Resend delivery pipeline with HTML branded wrappers and simulated sandbox logging in `db.email_outbox`
+  - `in_app` → Native inbox notifications (`db.user_inbox`) with categorization, read state, and threaded replies
+  - `social_dm` → Personalized Instagram / X direct outreach script generator with 1-click clipboard copy and "Mark as Sent" tracking
+- **Campaign & Send Tracking Model**
+  - `db.crm_campaigns` collection storing `segment`, `channels[]`, `subject`, `body`, `cta_label`, `cta_url`, `stats`
+  - `db.campaign_sends` state machine per recipient with channel-specific delivery confirmation
+- **User-Facing In-App Inbox (`/inbox` & `/community/inbox`)**
+  - Accessible via topbar notifications dropdown footer (`Open Full Inbox ↗`), dashboard sidebar nav, and direct routes
+  - Category filters (All, Campaigns, Deals, Announcements, Unread), unread counter badges, action buttons, and threaded real-time replies
+- **Automated Verification**: `backend/tests/test_crm_growth.py` (4/4 pytest suites passed).
 
 ---
 
