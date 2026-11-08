@@ -109,15 +109,13 @@ def stream_catalog_track(
     target_track = None
 
     target_track = get_track_or_release(clean_id)
-    if not target_track:
-        raise HTTPException(status_code=404, detail="Track not found")
-
-    client_country = "KE"
-    if request:
-        client_country = request.headers.get("cf-ipcountry") or request.headers.get("x-country") or "KE"
-    allowed, err_code, status_code = validate_playback_rights(target_track, client_country, current_user)
-    if not allowed:
-        raise HTTPException(status_code=status_code, detail={"error": err_code, "message": f"Playback prohibited: {err_code}"})
+    if target_track:
+        client_country = "KE"
+        if request:
+            client_country = request.headers.get("cf-ipcountry") or request.headers.get("x-country") or "KE"
+        allowed, err_code, status_code = validate_playback_rights(target_track, client_country, current_user)
+        if not allowed:
+            raise HTTPException(status_code=status_code, detail={"error": err_code, "message": f"Playback prohibited: {err_code}"})
 
     # If track has an audio URL, attempt to stream it
     audio_url = target_track.get("audioUrl") or target_track.get("fileUrl") if target_track else None

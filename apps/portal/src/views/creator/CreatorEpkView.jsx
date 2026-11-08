@@ -148,7 +148,8 @@ export function CreatorEpkView(props = {}) {
 
   const personaNavLinks = getPersonaNavLinks(creatorType);
   const [isPlaying, setIsPlaying] = useState(false)
-  const [activeTrack, setActiveTrack] = useState({ id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', duration: '3:45', priceCredits: 50 })
+  const [activeTrack, setActiveTrack] = useState({ id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', audioUrl: '/uploads/audio/enenda.wav', duration: '3:45', priceCredits: 50 })
+  const [openNavDropdown, setOpenNavDropdown] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -676,6 +677,17 @@ export function CreatorEpkView(props = {}) {
   const [galleryModalOpen, setGalleryModalOpen] = useState(false)
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
 
+  const SAMPLE_TRACK_AUDIOS = [
+    '/uploads/audio/enenda.wav',
+    '/uploads/audio/running.wav',
+    '/uploads/audio/pray_tell.wav',
+    '/uploads/audio/hii_game_si_bano.wav',
+    '/uploads/audio/haiya.wav',
+    '/uploads/audio/i_ll_come_back_home.wav',
+    '/uploads/audio/machete_wail_song.wav',
+    '/uploads/audio/misery_s_not_a_friend_of_me.wav'
+  ]
+
   const defaultTracks = [
     { id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', audioUrl: '/uploads/audio/enenda.wav', streams: '3.4M', duration: '3:45', release: 'Single 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/cyberwave_master/600/600' },
     { id: 2, title: 'Sunset over Rift Valley', isrc: 'KE-TM1-26-00043', audioUrl: '/uploads/audio/running.wav', streams: '1.8M', duration: '4:12', release: 'Album 2026', priceCredits: 50, coverArt: 'https://picsum.photos/seed/riftvalley_master/600/600' },
@@ -691,6 +703,7 @@ export function CreatorEpkView(props = {}) {
   const tracks = rawTracks.map((t, idx) => ({
     ...t,
     id: t.id || idx + 1,
+    audioUrl: t.audioUrl || t.fileUrl || SAMPLE_TRACK_AUDIOS[idx % SAMPLE_TRACK_AUDIOS.length],
     coverArt: t.coverArt || t.cover || `https://picsum.photos/seed/${encodeURIComponent(t.title || 'single')}/600/600`
   }))
 
@@ -741,15 +754,76 @@ export function CreatorEpkView(props = {}) {
   // Active track resolved from activeTrack preference first, then playlist
   const currentTrack = activeTrack || currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || tracks[0]
 
+  // Direct TunePlayer Controls for immediate responsive audio playback
+  const handleTogglePlayPause = () => {
+    const audio = epkAudioRef.current
+    if (!audio) {
+      setIsPlaying(p => !p)
+      return
+    }
+
+    if (isPlaying) {
+      audio.pause()
+      setIsPlaying(false)
+    } else {
+      const track = currentTrack || tracks[0]
+      const rawSrc = track?.audioUrl || track?.fileUrl || '/uploads/audio/enenda.wav'
+      const resolvedUrl = new URL(rawSrc, window.location.origin).href
+      if (audio.src !== resolvedUrl) {
+        audio.src = rawSrc
+      }
+      audio.volume = isPlayerMuted ? 0 : playerVolume
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((err) => {
+            console.warn('TuneStream direct play error:', err)
+            setIsPlaying(true)
+          })
+      }
+    }
+  }
+
   // Track selection helper to ensure immediate state and audio synchronization
   const handleSelectAndPlayTrack = (track) => {
     setActiveTrack(track)
     const idx = currentPlaylistTracks.findIndex(pt => pt.id === track.id)
     if (idx !== -1) setPlaylistIndex(idx)
-    if (activeTrack?.id === track.id) {
-      setIsPlaying(p => !p)
+
+    const audio = epkAudioRef.current
+    if (audio) {
+      if (activeTrack?.id === track.id && isPlaying) {
+        audio.pause()
+        setIsPlaying(false)
+        return
+      }
+      const rawSrc = track.audioUrl || track.fileUrl || '/uploads/audio/enenda.wav'
+      const resolvedUrl = new URL(rawSrc, window.location.origin).href
+      if (audio.src !== resolvedUrl) {
+        audio.src = rawSrc
+      }
+      audio.currentTime = 0
+      audio.volume = isPlayerMuted ? 0 : playerVolume
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((err) => {
+            console.warn('TuneStream track select play error:', err)
+            setIsPlaying(true)
+          })
+      }
     } else {
       setIsPlaying(true)
+    }
+  }
+
+  const handleSeek = (newTimeSec) => {
+    setPlaybackProgress(newTimeSec)
+    const audio = epkAudioRef.current
+    if (audio && !isNaN(audio.duration) && audio.duration > 0) {
+      audio.currentTime = Math.min(newTimeSec, audio.duration)
     }
   }
 
@@ -762,41 +836,75 @@ export function CreatorEpkView(props = {}) {
 
   // Track Advancement Helper (Sequenced vs Shuffle vs Repeat Loop)
   const handleTrackAdvance = () => {
+    let nextIdx = playlistIndex
     if (repeatMode === 'track') {
+      const audio = epkAudioRef.current
+      if (audio) {
+        audio.currentTime = 0
+        audio.play().catch(e => console.warn(e))
+      }
       setPlaybackProgress(0)
       return
     }
     if (shuffleMode && currentPlaylistTracks.length > 1) {
-      let nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length)
+      nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length)
       if (nextIdx === playlistIndex) nextIdx = (nextIdx + 1) % currentPlaylistTracks.length
-      setPlaylistIndex(nextIdx)
+    } else if (playlistIndex < currentPlaylistTracks.length - 1) {
+      nextIdx = playlistIndex + 1
+    } else if (repeatMode === 'playlist') {
+      nextIdx = 0
+    } else {
+      const audio = epkAudioRef.current
+      if (audio) audio.pause()
+      setIsPlaying(false)
       setPlaybackProgress(0)
       return
     }
-    if (playlistIndex < currentPlaylistTracks.length - 1) {
-      setPlaylistIndex(curr => curr + 1)
-      setPlaybackProgress(0)
-    } else if (repeatMode === 'playlist') {
-      setPlaylistIndex(0)
-      setPlaybackProgress(0)
-    } else {
-      setIsPlaying(false)
-      setPlaybackProgress(0)
+
+    setPlaylistIndex(nextIdx)
+    const nextTrack = currentPlaylistTracks[nextIdx]
+    if (nextTrack) {
+      setActiveTrack(nextTrack)
+      const audio = epkAudioRef.current
+      if (audio) {
+        const rawSrc = nextTrack.audioUrl || nextTrack.fileUrl || '/uploads/audio/enenda.wav'
+        audio.src = rawSrc
+        audio.currentTime = 0
+        if (isPlaying) {
+          audio.play().catch(e => console.warn(e))
+        }
+      }
     }
+    setPlaybackProgress(0)
   }
 
   const handleTrackPrevious = () => {
     if (playbackProgress > 4) {
+      const audio = epkAudioRef.current
+      if (audio) audio.currentTime = 0
       setPlaybackProgress(0)
       return
     }
+    let nextIdx = playlistIndex
     if (shuffleMode && currentPlaylistTracks.length > 1) {
-      const nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length)
-      setPlaylistIndex(nextIdx)
-      setPlaybackProgress(0)
-      return
+      nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length)
+    } else {
+      nextIdx = (playlistIndex === 0 ? currentPlaylistTracks.length - 1 : playlistIndex - 1)
     }
-    setPlaylistIndex(curr => (curr === 0 ? currentPlaylistTracks.length - 1 : curr - 1))
+    setPlaylistIndex(nextIdx)
+    const nextTrack = currentPlaylistTracks[nextIdx]
+    if (nextTrack) {
+      setActiveTrack(nextTrack)
+      const audio = epkAudioRef.current
+      if (audio) {
+        const rawSrc = nextTrack.audioUrl || nextTrack.fileUrl || '/uploads/audio/enenda.wav'
+        audio.src = rawSrc
+        audio.currentTime = 0
+        if (isPlaying) {
+          audio.play().catch(e => console.warn(e))
+        }
+      }
+    }
     setPlaybackProgress(0)
   }
 
@@ -2023,22 +2131,30 @@ Direct Management Contact: mgmt@intermaven.io`
     }
   }, [albumAudioPlaying])
 
+  // Sync epkAudioRef volume and mute
+  useEffect(() => {
+    const audio = epkAudioRef.current
+    if (audio) {
+      audio.volume = isPlayerMuted ? 0 : playerVolume
+      audio.muted = isPlayerMuted
+    }
+  }, [playerVolume, isPlayerMuted])
+
   // Robust sync of epkAudioRef source and play/pause state
   useEffect(() => {
     const audio = epkAudioRef.current
     if (!audio || !currentTrack) return
 
-    const rawSrc = currentTrack.audioUrl || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
+    const rawSrc = currentTrack.audioUrl || currentTrack.fileUrl || '/uploads/audio/enenda.wav'
     const resolvedUrl = new URL(rawSrc, window.location.origin).href
 
     if (audio.src !== resolvedUrl) {
       audio.src = rawSrc
-      audio.load()
     }
 
-    if (isPlaying) {
+    if (isPlaying && audio.paused) {
       audio.play().catch(e => console.warn('EPK audio playback blocked/delayed:', e))
-    } else {
+    } else if (!isPlaying && !audio.paused) {
       audio.pause()
     }
   }, [currentTrack, isPlaying])
@@ -2494,12 +2610,16 @@ Direct Management Contact: mgmt@intermaven.io`
       <audio
         ref={epkAudioRef}
         id="epk-live-audio"
+        preload="auto"
         onTimeUpdate={() => {
           if (epkAudioRef.current) {
             setPlaybackProgress(Math.floor(epkAudioRef.current.currentTime))
           }
         }}
         onEnded={handleTrackAdvance}
+        onError={(e) => {
+          console.warn('TuneStream audio engine notice:', e)
+        }}
         style={{ display: 'none' }}
       />
       <audio
@@ -2736,203 +2856,498 @@ Direct Management Contact: mgmt@intermaven.io`
             )}
           </div>
 
-          {/* Desktop Top Menu */}
-          <nav className="desktop-nav">
-            {epkData?.menuItems && Array.isArray(epkData.menuItems) && epkData.menuItems.length > 0 ? (
-              epkData.menuItems.map(item => {
-                const targetTab = mapTabKey(item.label)
-                const isMedia = item.label?.toLowerCase() === 'media' || targetTab === 'media'
+          {/* Desktop Top Menu (Organized into Clean Dropdown Sections) */}
+          <nav className="desktop-nav" ref={dropdownRef}>
+            {/* 1. Home */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('home');
+                setOpenNavDropdown(null);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              style={{
+                background: activeTab === 'home' ? effectiveAccent : 'transparent',
+                color: activeTab === 'home' ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                border: 'none',
+                padding: '7px 14px',
+                borderRadius: '3px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.88rem'
+              }}
+            >
+              <RiHomeFill /> Home
+            </button>
 
-                if (isMedia) {
-                  return (
-                    <div key={item.id || 'media-nav'} style={{ position: 'relative' }} ref={dropdownRef} onMouseDown={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)}
-                        style={{
-                          background: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? effectiveAccent : 'transparent',
-                          color: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
-                          border: 'none',
-                          padding: '7px 14px',
-                          borderRadius: '3px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.88rem'
-                        }}
-                      >
-                        <RiVideoFill /> Media <RiArrowDownSLine />
-                      </button>
-                      {mediaDropdownOpen && (
-                        <div
-                          onMouseDown={(e) => e.stopPropagation()}
-                          style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            marginTop: '6px',
-                            background: isLight ? '#fff' : '#0a0d18',
-                            border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
-                            borderRadius: '3px',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                            minWidth: '190px',
-                            zIndex: 1100,
-                            overflow: 'hidden'
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('media');
-                              setMediaFilter('all');
-                              setMediaPage(1);
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                          >
-                            <RiVideoFill /> All Media
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('discography');
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                          >
-                            <RiDiscFill /> Discography & Albums
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('media');
-                              setMediaFilter('gallery');
-                              setMediaPage(1);
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                          >
-                            <RiImageFill /> Photo Gallery
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('media');
-                              setMediaFilter('videos');
-                              setMediaPage(1);
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                          >
-                            <RiVideoFill /> 4K Videos
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('pricing');
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: effectiveAccent, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}
-                          >
-                            <RiCoinsFill /> Fan Top Up Pricing
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                }
-
-                const isSelected = activeTab === targetTab || (targetTab === 'home' && activeTab === 'home')
-                return (
-                  <button 
-                    key={item.id || item.label} 
+            {/* 2. Music Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'music' ? null : 'music')}
+                style={{
+                  background: (activeTab === 'discography' || activeTab === 'beat-store' || activeTab === 'episodes' || activeTab === 'dj-sets' || activeTab === 'promopool' || openNavDropdown === 'music') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'discography' || activeTab === 'beat-store' || activeTab === 'episodes' || activeTab === 'dj-sets' || activeTab === 'promopool' || openNavDropdown === 'music') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+              >
+                <RiDiscFill /> Music <RiArrowDownSLine style={{ transform: openNavDropdown === 'music' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+              {openNavDropdown === 'music' && (
+                <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '6px',
+                    background: isLight ? '#fff' : '#0a0d18',
+                    border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '3px',
+                    boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                    minWidth: '220px',
+                    zIndex: 1100,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <button
+                    type="button"
                     onClick={() => {
-                      setActiveTab(targetTab)
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
-                    }} 
-                    style={{ background: isSelected ? effectiveAccent : 'transparent', color: isSelected ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+                      setActiveTab('discography');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'discography' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    {item.label}
+                    <RiDiscFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Discography &amp; Albums</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Catalog releases &amp; streaming</div>
+                    </div>
                   </button>
-                )
-              })
-            ) : (
-              <>
-                {personaNavLinks.map(link => {
-                  const isSelected = activeTab === link.id || (link.id === 'home' && activeTab === 'home');
-                  const IconComp = link.icon;
-                  return (
+
+                  {creatorType === 'producer' && (
                     <button
-                      key={link.id}
+                      type="button"
                       onClick={() => {
-                        setActiveTab(link.id);
+                        setActiveTab('beat-store');
+                        setOpenNavDropdown(null);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      style={{
-                        background: isSelected ? effectiveAccent : 'transparent',
-                        color: isSelected ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
-                        border: 'none',
-                        padding: '7px 14px',
-                        borderRadius: '3px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '0.88rem'
-                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'beat-store' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                     >
-                      {IconComp && <IconComp />} {link.label}
+                      <RiMusic2Fill style={{ color: effectiveAccent }} />
+                      <div>
+                        <div style={{ fontWeight: 700 }}>Beat Store &amp; Stems</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Exclusive licenses &amp; stems</div>
+                      </div>
                     </button>
-                  );
-                })}
-                <div style={{ position: 'relative' }} ref={dropdownRef} onMouseDown={(e) => e.stopPropagation()}>
-                  <button type="button" onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)} style={{ background: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? effectiveAccent : 'transparent', color: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                    <RiVideoFill /> Media <RiArrowDownSLine />
-                  </button>
-                  {mediaDropdownOpen && (
-                    <div onMouseDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: isLight ? '#fff' : '#0a0d18', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '190px', zIndex: 1100, overflow: 'hidden' }}>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('all'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                        <RiVideoFill /> All Media
+                  )}
+
+                  {creatorType === 'podcaster' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('episodes');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'episodes' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiMicFill style={{ color: effectiveAccent }} />
+                      <div>
+                        <div style={{ fontWeight: 700 }}>Episodes &amp; Transcripts</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>All podcast seasons</div>
+                      </div>
+                    </button>
+                  )}
+
+                  {creatorType === 'dj' && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('dj-sets');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'dj-sets' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiDiscFill style={{ color: effectiveAccent }} />
+                        <div>
+                          <div style={{ fontWeight: 700 }}>Live Sets &amp; Mixes</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Club &amp; festival recordings</div>
+                        </div>
                       </button>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('discography'); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                        <RiDiscFill /> Discography & Albums
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('promopool');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'promopool' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiDownloadFill style={{ color: effectiveAccent }} />
+                        <div>
+                          <div style={{ fontWeight: 700 }}>Promo Pool &amp; Mixtapes</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>DJ promos &amp; downloads</div>
+                        </div>
                       </button>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                        <RiImageFill /> Photo Gallery
-                      </button>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('videos'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                        <RiVideoFill /> 4K Videos
-                      </button>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('pricing'); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: effectiveAccent, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
-                        <RiCoinsFill /> Fan Top Up Pricing
-                      </button>
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('tuneplayer-featured-singles');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      else {
+                        setActiveTab('home');
+                        setTimeout(() => {
+                          const e2 = document.getElementById('tuneplayer-featured-singles');
+                          if (e2) e2.scrollIntoView({ behavior: 'smooth' });
+                        }, 200);
+                      }
+                      setOpenNavDropdown(null);
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiPlayFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Featured Singles</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>TuneStream Hi-Fi player</div>
                     </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 3. Shows & Tour Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'tour' ? null : 'tour')}
+                style={{
+                  background: (activeTab === 'shows' || activeTab === 'tech-rider' || openNavDropdown === 'tour') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'shows' || activeTab === 'tech-rider' || openNavDropdown === 'tour') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+              >
+                <RiCalendarEventFill /> Shows <RiArrowDownSLine style={{ transform: openNavDropdown === 'tour' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+              {openNavDropdown === 'tour' && (
+                <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '6px',
+                    background: isLight ? '#fff' : '#0a0d18',
+                    border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '3px',
+                    boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                    minWidth: '220px',
+                    zIndex: 1100,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('shows');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'shows' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiCalendarEventFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Tour Dates &amp; Live Shows</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Upcoming concerts &amp; ticketing</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTechRiderModalOpen(true);
+                      setOpenNavDropdown(null);
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiEqualizerFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Technical Rider &amp; Specs</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>FOH, IEM &amp; stage specifications</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Media & Press Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'media' ? null : 'media')}
+                style={{
+                  background: (activeTab === 'media' || activeTab === 'press' || activeTab === 'bio' || openNavDropdown === 'media') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'media' || activeTab === 'press' || activeTab === 'bio' || openNavDropdown === 'media') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+              >
+                <RiVideoFill /> Media <RiArrowDownSLine style={{ transform: openNavDropdown === 'media' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+              {openNavDropdown === 'media' && (
+                <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '6px',
+                    background: isLight ? '#fff' : '#0a0d18',
+                    border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '3px',
+                    boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                    minWidth: '220px',
+                    zIndex: 1100,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('media');
+                      setMediaFilter('videos');
+                      setMediaPage(1);
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: (activeTab === 'media' && mediaFilter === 'videos') ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiVideoFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>4K Videos &amp; Visuals</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Music videos &amp; performances</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('media');
+                      setMediaFilter('gallery');
+                      setMediaPage(1);
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: (activeTab === 'media' && mediaFilter === 'gallery') ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiImageFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Photo Gallery</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>High-res press photography</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('press');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'press' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiFileTextFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Press Kit &amp; Reviews</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Official media kit &amp; reviews</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('bio');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'bio' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiUserFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Biography &amp; Story</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Heritage &amp; background</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 5. Store & VIP Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'store' ? null : 'store')}
+                style={{
+                  background: (activeTab === 'store' || activeTab === 'pricing' || activeTab === 'ad-rates' || activeTab === 'roster' || openNavDropdown === 'store') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'store' || activeTab === 'pricing' || activeTab === 'ad-rates' || activeTab === 'roster' || openNavDropdown === 'store') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+              >
+                <RiShoppingBagFill /> Store <RiArrowDownSLine style={{ transform: openNavDropdown === 'store' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+              {openNavDropdown === 'store' && (
+                <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '6px',
+                    background: isLight ? '#fff' : '#0a0d18',
+                    border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '3px',
+                    boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                    minWidth: '220px',
+                    zIndex: 1100,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('store');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'store' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiShoppingBagFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Official Merch Store</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Vinyl, apparel &amp; physical merch</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('pricing');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'pricing' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiCoinsFill style={{ color: effectiveAccent }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Fan Credits &amp; Top-Up</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Intermaven VIP balances</div>
+                    </div>
+                  </button>
+
+                  {creatorType === 'podcaster' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('ad-rates');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'ad-rates' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiCoinsFill style={{ color: effectiveAccent }} />
+                      <div>
+                        <div style={{ fontWeight: 700 }}>Ad Rates &amp; Media Kit</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Podcast sponsor flight packages</div>
+                      </div>
+                    </button>
+                  )}
+
+                  {creatorType === 'label' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('roster');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'roster' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiUserAddFill style={{ color: effectiveAccent }} />
+                      <div>
+                        <div style={{ fontWeight: 700 }}>Artist Roster</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Signed talent &amp; catalog</div>
+                      </div>
+                    </button>
                   )}
                 </div>
-                <button onClick={() => { setActiveTab('store'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'store' ? effectiveAccent : 'transparent', color: activeTab === 'store' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiShoppingBagFill /> Store
-                </button>
-                <button onClick={() => { setActiveTab('press'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'press' ? effectiveAccent : 'transparent', color: activeTab === 'press' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiFileTextFill /> Press Kit
-                </button>
-                <button onClick={() => { setActiveTab('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'contact' ? effectiveAccent : 'transparent', color: activeTab === 'contact' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiMailFill /> Contact
-                </button>
-              </>
-            )}
+              )}
+            </div>
+
+            {/* 6. Booking & Contact */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('contact');
+                setOpenNavDropdown(null);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              style={{
+                background: activeTab === 'contact' ? effectiveAccent : 'transparent',
+                color: activeTab === 'contact' ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                border: 'none',
+                padding: '7px 14px',
+                borderRadius: '3px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.88rem'
+              }}
+            >
+              <RiMailFill /> Contact
+            </button>
           </nav>
 
           {/* Right Action Controls: Localization Switcher, Cart, Fan Portal / VIP Modal, Hamburger */}
@@ -3264,7 +3679,8 @@ Direct Management Contact: mgmt@intermaven.io`
 
                       {/* Play / Pause */}
                       <button
-                        onClick={() => setIsPlaying(!isPlaying)}
+                        type="button"
+                        onClick={handleTogglePlayPause}
                         title={isPlaying ? "Pause" : "Play"}
                         style={{
                           width: '38px',
@@ -3342,7 +3758,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         onClick={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect()
                           const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-                          setPlaybackProgress(Math.floor(pct * 225))
+                          handleSeek(Math.floor(pct * 225))
                         }}
                         style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.12)', borderRadius: '3px', position: 'relative', cursor: 'pointer' }}
                       >
@@ -3514,7 +3930,7 @@ Direct Management Contact: mgmt@intermaven.io`
               {/* Main Content Column on the Right */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
                 {/* TuneStream Catalog */}
-                <div>
+                <div id="tuneplayer-featured-singles">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
                       <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: effectiveAccent, margin: 0, fontFamily: effectiveFont }}>
@@ -9126,7 +9542,7 @@ Direct Management Contact: mgmt@intermaven.io`
               </div>
               <button
                 type="button"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={handleTogglePlayPause}
                 style={{
                   width: '32px',
                   height: '32px',
@@ -9271,7 +9687,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     min="0"
                     max="225"
                     value={playbackProgress}
-                    onChange={(e) => setPlaybackProgress(Number(e.target.value))}
+                    onChange={(e) => handleSeek(Number(e.target.value))}
                     style={{ flex: 1, accentColor: effectiveAccent, cursor: 'pointer', height: '4px' }}
                   />
                   <span style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', fontFamily: 'monospace', minWidth: '32px', textAlign: 'right' }}>
@@ -9335,7 +9751,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   {/* Play / Pause */}
                   <button
                     type="button"
-                    onClick={() => setIsPlaying(!isPlaying)}
+                    onClick={handleTogglePlayPause}
                     title={isPlaying ? "Pause" : "Play"}
                     style={{
                       width: '40px',
