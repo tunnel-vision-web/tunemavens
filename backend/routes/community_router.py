@@ -36,6 +36,8 @@ class CreateFeaturedProfileRequest(BaseModel):
     bio: str
     social_links: Dict[str, str] = Field(default_factory=dict)
     tags: List[str] = Field(default_factory=list)
+    has_epk: bool = False
+    epk_slug: Optional[str] = None
     pre_claim: bool = False  # If true (for seed figures), immediately sets state to claimed and visible
 
 
@@ -48,6 +50,15 @@ class InviteRequest(BaseModel):
     sync_crm: bool = True
 
 
+class InviteEpkRequest(BaseModel):
+    subject_email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    custom_note: Optional[str] = None
+    send_email: bool = True
+    send_inbox: bool = True
+    send_whatsapp: bool = True
+
+
 class UpdateFeaturedProfileRequest(BaseModel):
     subject_name: Optional[str] = None
     role: Optional[str] = None
@@ -57,6 +68,8 @@ class UpdateFeaturedProfileRequest(BaseModel):
     social_links: Optional[Dict[str, str]] = None
     tags: Optional[List[str]] = None
     visible: Optional[bool] = None
+    has_epk: Optional[bool] = None
+    epk_slug: Optional[str] = None
     youtube_channel_handle: Optional[str] = None
     youtube_video_id: Optional[str] = None
 
@@ -82,7 +95,8 @@ SEED_WALL_OF_FAME = [
         "youtube_thumbnail_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80",
         "youtube_views_formatted": "3.4M views",
         "bio": "Legendary producer, Def Jam co-founder, and author. Inducted for redefining modern minimalism across hip-hop, metal, and acoustic realms.",
-        "social_links": {"website": "https://tetragrammaton.com", "instagram": "rickrubin"},
+        "social_links": {"website": "https://tetragrammaton.com", "instagram": "rickrubin", "youtube": "@TetragrammatonWithRickRubin"},
+        "has_epk": False,
         "state": "claimed",
         "visible": True,
         "tags": ["Production", "Legend", "Def Jam", "Creative Act"],
@@ -97,7 +111,9 @@ SEED_WALL_OF_FAME = [
         "youtube_thumbnail_url": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=400&q=80",
         "youtube_views_formatted": "1.8M views",
         "bio": "Pioneer of contemporary Nigerian Afrobeats and Amapiano fusions. Architect behind global anthems with Wizkid, Drake, and Burna Boy.",
-        "social_links": {"twitter": "only1sarz", "instagram": "only1sarz"},
+        "social_links": {"twitter": "only1sarz", "instagram": "only1sarz", "spotify": "https://open.spotify.com/artist/sarz"},
+        "has_epk": True,
+        "epk_slug": "sarz",
         "state": "claimed",
         "visible": True,
         "tags": ["Afrobeats", "Amapiano", "Masterclass", "1789"],
@@ -113,6 +129,7 @@ SEED_WALL_OF_FAME = [
         "youtube_views_formatted": "420K views",
         "bio": "Lead Music Supervisor for international award-winning cinema and streaming series. Fierce advocate for direct, transparent 90/10 sync licensing splits.",
         "social_links": {"linkedin": "sarah-jenkins-sync", "website": "https://syncmavens.com"},
+        "has_epk": False,
         "state": "claimed",
         "visible": True,
         "tags": ["Sync Licensing", "Music Supervisor", "Film & TV", "A24"],
@@ -127,7 +144,9 @@ SEED_WALL_OF_FAME = [
         "youtube_thumbnail_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
         "youtube_views_formatted": "910K views",
         "bio": "Kenyan multi-instrumentalist, electronic visionary, and sound designer melding Benga heritage with modular synthesis.",
-        "social_links": {"youtube": "MutoriahOfficial", "instagram": "mutoriah_music"},
+        "social_links": {"youtube": "@MutoriahOfficial", "instagram": "mutoriah_music", "spotify": "https://open.spotify.com/artist/mutoriah"},
+        "has_epk": True,
+        "epk_slug": "mutoriah",
         "state": "claimed",
         "visible": True,
         "tags": ["Kenyan Sound", "Electronic", "Benga", "Modular"],
@@ -142,7 +161,8 @@ SEED_WALL_OF_FAME = [
         "youtube_thumbnail_url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=400&q=80",
         "youtube_views_formatted": "5.2M views",
         "bio": "Grammy-winning pioneer of contemporary African deep house. Headline resident across Ibiza, Brooklyn Mirage, and global festival circuits.",
-        "social_links": {"instagram": "realblackcoffee", "twitter": "RealBlackCoffee"},
+        "social_links": {"instagram": "realblackcoffee", "twitter": "RealBlackCoffee", "spotify": "https://open.spotify.com/artist/blackcoffee"},
+        "has_epk": False,
         "state": "claimed",
         "visible": True,
         "tags": ["Afro-House", "Grammy Winner", "DJ Pool", "Soulistic"],
@@ -157,7 +177,8 @@ SEED_WALL_OF_FAME = [
         "youtube_thumbnail_url": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=400&q=80",
         "youtube_views_formatted": "7.8M views",
         "bio": "Founder & CEO of Mavin Records. Architect of modern West African pop commercialization and premier global talent incubator.",
-        "social_links": {"twitter": "donjazzy", "instagram": "donjazzy"},
+        "social_links": {"twitter": "donjazzy", "instagram": "donjazzy", "website": "https://mavinrecords.com"},
+        "has_epk": False,
         "state": "claimed",
         "visible": True,
         "tags": ["Record Label", "Mavin", "Talent Incubator", "A&R"],
@@ -172,7 +193,9 @@ SEED_WALL_OF_FAME = [
         "youtube_thumbnail_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
         "youtube_views_formatted": "14.5M views",
         "bio": "Oscar-nominated and Grammy-winning songwriter and sonic auteur. Master of self-produced melodic hooks and global sync placement power.",
-        "social_links": {"instagram": "temsbaby", "twitter": "temsbaby"},
+        "social_links": {"instagram": "temsbaby", "twitter": "temsbaby", "spotify": "https://open.spotify.com/artist/tems"},
+        "has_epk": True,
+        "epk_slug": "tems",
         "state": "claimed",
         "visible": True,
         "tags": ["Vocalist", "Songwriter", "Grammy", "Self-Produced"],
@@ -312,6 +335,15 @@ def seed_wall_of_fame_if_empty():
                 doc["created_at"] = now
                 doc["updated_at"] = now
                 db.featured_profiles.insert_one(doc)
+            else:
+                db.featured_profiles.update_one(
+                    {"_id": existing["_id"]},
+                    {"$set": {
+                        "has_epk": item.get("has_epk", False),
+                        "epk_slug": item.get("epk_slug"),
+                        "social_links": item.get("social_links", existing.get("social_links", {}))
+                    }}
+                )
 
 
 # ======================================================================
@@ -939,3 +971,176 @@ def refresh_admin_youtube_stats(
     refreshed["id"] = str(refreshed["_id"])
     refreshed.pop("_id", None)
     return refreshed
+
+
+@router.post("/community/wall-of-fame/{profile_id}/invite-epk")
+def invite_luminary_to_activate_epk(
+    profile_id: str,
+    payload: Optional[InviteEpkRequest] = None,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Dispatches an official invitation nudging an inducted luminary to activate their TuneMavens EPK."""
+    from account_setup import send_email, _email_wrapper
+    from services.whatsapp_service import send_whatsapp
+
+    try:
+        profile = db.featured_profiles.find_one({"_id": ObjectId(profile_id)})
+    except Exception:
+        profile = db.featured_profiles.find_one({"_id": profile_id})
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    subject_name = profile.get("subject_name", "Featured Personality")
+    role_display = profile.get("role", "creator").upper()
+    recipient_email = (payload.subject_email if payload and payload.subject_email else profile.get("subject_email"))
+    recipient_phone = (payload.phone if payload and payload.phone else profile.get("phone"))
+    custom_note = (payload.custom_note if payload and payload.custom_note else "")
+    send_email_flag = payload.send_email if payload else True
+    send_inbox_flag = payload.send_inbox if payload else True
+    send_whatsapp_flag = payload.send_whatsapp if payload else True
+
+    now = datetime.now(timezone.utc)
+    epk_slug = profile.get("epk_slug") or profile.get("subject_name", "artist").lower().replace(" ", "")
+    epk_builder_url = "https://tunemavens.com/#/epk"
+
+    email_status = "skipped"
+    inbox_status = "skipped"
+    whatsapp_status = "skipped"
+
+    # 1. User Personal Inbox Notification
+    user_id = profile.get("claimed_user_id")
+    if not user_id and recipient_email:
+        user_match = db.users.find_one({"email": recipient_email})
+        if user_match:
+            user_id = str(user_match["_id"])
+
+    if user_id and send_inbox_flag:
+        try:
+            inbox_note = custom_note or f"Your Wall of Fame spotlight is active! Activate your interactive EPK to showcase your discography, stems, and sync riders directly to music supervisors."
+            db.user_inbox.insert_one({
+                "user_id": str(user_id),
+                "campaign_id": "epk_activation_invite",
+                "campaign_name": "Wall of Fame EPK Activation",
+                "subject": f"✨ Activate Your Official TuneMavens EPK Web World",
+                "body": f"Dear {subject_name},\n\n{inbox_note}\n\nLaunch EPK Studio: {epk_builder_url}",
+                "cta_url": "/epk",
+                "read": False,
+                "created_at": now,
+            })
+            inbox_status = "delivered"
+        except Exception as inbox_err:
+            logger.warning(f"Error inserting EPK activation user inbox note: {inbox_err}")
+
+    # 2. Outbound Branded Email Protocol
+    if recipient_email and send_email_flag:
+        email_subject = f"✨ Activate Your Official TuneMavens EPK: {subject_name}"
+        note_markup = f"""
+        <div style="background: rgba(34, 211, 238, 0.08); border-left: 3px solid #22d3ee; padding: 12px 16px; margin: 16px 0; border-radius: 2px;">
+            <p style="margin: 0; font-size: 13px; color: #e2e8f0; font-style: italic;">"{custom_note}"</p>
+            <span style="display:block; margin-top: 6px; font-size: 11px; color: #94a3b8; font-weight: 600;">— TuneMavens Curation &amp; Sync Network</span>
+        </div>
+        """ if custom_note else ""
+
+        inner_html = f"""
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; padding: 4px 12px; background: rgba(34, 211, 238, 0.15); border: 1px solid rgba(34, 211, 238, 0.4); color: #38bdf8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 3px; margin-bottom: 12px;">Electronic Press Kit Activation</div>
+            <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.02em;">Activate Your Official EPK Web World</h1>
+            <p style="color: #94a3b8; font-size: 14px; margin: 0;">Your Wall of Fame induction is live. Elevate your presence with a verified 24-bit EPK.</p>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 3px; padding: 22px; margin-bottom: 24px;">
+            <p style="color: #f8fafc; font-size: 15px; margin: 0 0 12px 0;">Dear <strong>{subject_name}</strong>,</p>
+            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0 0 14px 0;">
+                Now that you have accepted your Wall of Fame induction as a distinguished <strong>{role_display}</strong>, music supervisors, labels, and collaborators across the network can discover your work.
+            </p>
+            {note_markup}
+            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0 0 14px 0;">
+                Activating your interactive EPK grants you:
+            </p>
+            <ul style="color: #94a3b8; font-size: 13px; line-height: 1.6; padding-left: 20px; margin: 0 0 16px 0;">
+                <li>Verified master catalog with high-fidelity streaming &amp; stems packages</li>
+                <li>Pre-cleared 90/10 sync licensing rates and split metadata</li>
+                <li>Live performance tech riders, press clippings, and tour booking calendar</li>
+                <li>Custom vanity domain (e.g. <code>tunemavens.com/#/epk/{epk_slug}</code>)</li>
+            </ul>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{epk_builder_url}" style="display: inline-block; background: #22d3ee; color: #090d16; text-decoration: none; font-weight: 800; font-size: 14px; padding: 14px 32px; border-radius: 3px; box-shadow: 0 4px 16px rgba(34, 211, 238, 0.35);">Activate My EPK Now &rarr;</a>
+        </div>
+        """
+        full_html = _email_wrapper(inner_html, f"✨ Activate Your EPK: {subject_name}", profile.get("role", "creator"))
+        email_status = send_email(
+            to=recipient_email,
+            subject=email_subject,
+            html=full_html,
+            text=f"Activate your official TuneMavens EPK for {subject_name} here: {epk_builder_url}",
+            event_type="epk_activation_invite",
+            role=profile.get("role", "creator"),
+            recipient_name=subject_name,
+            metadata={"profile_id": str(profile["_id"]), "epk_slug": epk_slug}
+        )
+
+    # 3. WhatsApp Protocol
+    if recipient_phone and send_whatsapp_flag:
+        try:
+            wa_body = (
+                f"✨ *TuneMavens Official EPK Activation*\n\n"
+                f"Hi *{subject_name}*!\n\n"
+                f"Your Wall of Fame induction is live on TuneMavens.\n\n"
+                f"You can now activate your official Electronic Press Kit (EPK) to showcase your master recordings, stems, and sync rights to music supervisors globally:\n"
+                f"{epk_builder_url}"
+            )
+            send_whatsapp(
+                to=recipient_phone,
+                message=wa_body,
+                recipient_name=subject_name,
+                role=profile.get("role", "creator"),
+                event_type="epk_activation_invite",
+                metadata={"profile_id": str(profile["_id"]), "epk_slug": epk_slug}
+            )
+            whatsapp_status = "dispatched"
+        except Exception as wa_err:
+            logger.warning(f"Error sending WhatsApp EPK invite: {wa_err}")
+
+    # 4. Smart CRM Synchronization
+    try:
+        db.crm_leads.update_many(
+            {"$or": [{"featured_profile_id": str(profile["_id"])}, {"email": recipient_email}]},
+            {
+                "$addToSet": {"tags": "epk_invite_dispatched"},
+                "$set": {"last_epk_outreach_at": now, "updated_at": now}
+            }
+        )
+    except Exception as crm_err:
+        logger.warning(f"Error updating CRM for EPK invite: {crm_err}")
+
+    # 5. Profile Update & Communications Audit
+    db.featured_profiles.update_one(
+        {"_id": profile["_id"]},
+        {
+            "$set": {"epk_invite_sent_at": now},
+            "$inc": {"epk_invite_count": 1}
+        }
+    )
+
+    db.communications.insert_one({
+        "type": "epk_activation_invite",
+        "recipient_email": recipient_email,
+        "recipient_phone": recipient_phone,
+        "subject_name": subject_name,
+        "epk_slug": epk_slug,
+        "status": email_status if email_status != "skipped" else "delivered",
+        "channel": "email+whatsapp" if (recipient_email and recipient_phone) else ("whatsapp" if recipient_phone else "email"),
+        "created_at": now,
+    })
+
+    return {
+        "status": "success",
+        "profile_id": str(profile["_id"]),
+        "subject_name": subject_name,
+        "epk_slug": epk_slug,
+        "email_delivery": email_status,
+        "inbox_delivery": inbox_status,
+        "whatsapp_delivery": whatsapp_status,
+        "message": f"EPK activation invitation dispatched to {subject_name} across Communication Protocols & Smart CRM."
+    }

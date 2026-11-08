@@ -7,7 +7,9 @@ import {
   RiErrorWarningFill,
   RiArrowRightLine,
   RiPlayFill,
-  RiUserSharedFill
+  RiUserSharedFill,
+  RiSparklingFill,
+  RiFileUserLine
 } from 'react-icons/ri';
 import './CommunityView.css';
 
@@ -90,9 +92,6 @@ export default function WallOfFameClaimView({ sessionUser }) {
       }
 
       setClaimSuccess(true);
-      setTimeout(() => {
-        navigate('/community');
-      }, 2000);
     } catch (err) {
       alert('Error claiming profile: ' + err.message);
     } finally {
@@ -176,12 +175,49 @@ export default function WallOfFameClaimView({ sessionUser }) {
         </div>
 
         {claimSuccess ? (
-          <div style={{ textAlign: 'center', padding: '30px 0' }}>
-            <RiCheckDoubleFill size={56} style={{ color: '#10b981', marginBottom: 16 }} />
-            <h2 style={{ color: '#ffffff', margin: '0 0 10px 0' }}>Induction Confirmed!</h2>
-            <p style={{ color: '#94a3b8' }}>
-              Your profile is now live on the TuneMavens Wall of Fame. Redirecting you to the community hub...
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <RiCheckDoubleFill size={56} style={{ color: '#10b981', marginBottom: 12 }} />
+            <h2 style={{ color: '#ffffff', margin: '0 0 8px 0', fontSize: '24px', fontWeight: 800 }}>
+              Induction Confirmed &amp; Profile Verified!
+            </h2>
+            <p style={{ color: '#94a3b8', fontSize: '14px', maxWidth: '480px', margin: '0 auto 24px auto', lineHeight: 1.5 }}>
+              Congratulations! Your official profile is now live on the TuneMavens Wall of Fame with permanent Pro status.
             </p>
+
+            {/* Next Step: EPK Activation Banner */}
+            <div
+              style={{
+                background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.08) 0%, rgba(134, 59, 255, 0.08) 100%)',
+                border: '1px solid rgba(34, 211, 238, 0.3)',
+                borderRadius: 3,
+                padding: '20px',
+                marginBottom: '24px',
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#38bdf8', fontWeight: 800, fontSize: '14px', marginBottom: 6 }}>
+                <RiSparklingFill /> Next Step: Activate Your 24-Bit EPK Web World
+              </div>
+              <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: 1.5, margin: '0 0 18px 0' }}>
+                Showcase your master discography, stems packages, pre-cleared 90/10 sync licensing rates, and performance tech rider to top music supervisors and labels.
+              </p>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <Link
+                  to="/epk"
+                  className="community-btn community-btn-primary"
+                  style={{ textDecoration: 'none', padding: '10px 18px', fontSize: '13px', background: '#22d3ee', color: '#090d16', border: 'none', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <RiSparklingFill /> Activate My EPK Now
+                </Link>
+                <Link
+                  to="/community"
+                  className="community-btn community-btn-secondary"
+                  style={{ textDecoration: 'none', padding: '10px 18px', fontSize: '13px' }}
+                >
+                  View Wall of Fame
+                </Link>
+              </div>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleExecuteClaim}>

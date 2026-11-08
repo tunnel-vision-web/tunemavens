@@ -12,6 +12,15 @@ import {
   RiUserFollowLine,
   RiCloseLine,
   RiYoutubeFill,
+  RiYoutubeLine,
+  RiInstagramLine,
+  RiTwitterXLine,
+  RiSpotifyLine,
+  RiLinkedinBoxLine,
+  RiGlobalLine,
+  RiFileUserLine,
+  RiSparklingFill,
+  RiMailSendLine,
   RiCheckLine,
   RiEyeLine,
   RiAddLine,
@@ -75,6 +84,165 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
   });
   const [nomineeSubmitting, setNomineeSubmitting] = useState(false);
   const [nomineeSuccess, setNomineeSuccess] = useState('');
+
+  // EPK Activation Invite Modal State
+  const [epkInviteModalOpen, setEpkInviteModalOpen] = useState(false);
+  const [epkInviteTarget, setEpkInviteTarget] = useState(null);
+  const [epkInviteNote, setEpkInviteNote] = useState('');
+  const [epkInviteSubmitting, setEpkInviteSubmitting] = useState(false);
+  const [epkInvitedMap, setEpkInvitedMap] = useState({});
+  const [epkNotice, setEpkNotice] = useState('');
+
+  const handleOpenEpkInviteModal = (profile) => {
+    setEpkInviteTarget(profile);
+    setEpkInviteNote(
+      `In recognition of your induction to the Wall of Fame, we'd love to review your stems, catalog, and sync riders directly on TuneMavens EPK!`
+    );
+    setEpkInviteModalOpen(true);
+  };
+
+  const handleDispatchEpkInvite = async (e) => {
+    e.preventDefault();
+    if (!epkInviteTarget) return;
+
+    try {
+      setEpkInviteSubmitting(true);
+      const res = await fetch(`/api/community/wall-of-fame/${epkInviteTarget.id}/invite-epk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject_email: epkInviteTarget.subject_email || null,
+          phone: epkInviteTarget.phone || null,
+          custom_note: epkInviteNote.trim() || null,
+          send_email: true,
+          send_inbox: true,
+          send_whatsapp: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail || 'Failed to dispatch EPK activation invite');
+      }
+
+      setEpkInvitedMap((prev) => ({ ...prev, [epkInviteTarget.id]: true }));
+      setEpkNotice(`✨ EPK activation invitation dispatched to ${epkInviteTarget.subject_name}!`);
+      setEpkInviteModalOpen(false);
+      setEpkInviteTarget(null);
+      setTimeout(() => setEpkNotice(''), 5000);
+    } catch (err) {
+      alert(err.message || 'Error sending EPK invite');
+    } finally {
+      setEpkInviteSubmitting(false);
+    }
+  };
+
+  const renderSocialIcons = (p) => {
+    const s = p.social_links || {};
+    const icons = [];
+
+    if (s.instagram) {
+      const handle = s.instagram.replace('@', '');
+      icons.push(
+        <a
+          key="ig"
+          href={`https://instagram.com/${handle}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fame-social-icon ig"
+          title={`Instagram: @${handle}`}
+        >
+          <RiInstagramLine />
+        </a>
+      );
+    }
+
+    if (s.twitter || s.x) {
+      const handle = (s.twitter || s.x).replace('@', '');
+      icons.push(
+        <a
+          key="x"
+          href={`https://x.com/${handle}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fame-social-icon x"
+          title={`X / Twitter: @${handle}`}
+        >
+          <RiTwitterXLine />
+        </a>
+      );
+    }
+
+    if (p.youtube_channel_handle || s.youtube) {
+      const raw = p.youtube_channel_handle || s.youtube;
+      const handle = raw.startsWith('@') ? raw : `@${raw}`;
+      icons.push(
+        <a
+          key="yt"
+          href={`https://youtube.com/${handle}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fame-social-icon yt"
+          title={`YouTube: ${handle}`}
+        >
+          <RiYoutubeLine />
+        </a>
+      );
+    }
+
+    if (s.spotify) {
+      const url = s.spotify.startsWith('http')
+        ? s.spotify
+        : `https://open.spotify.com/search/${encodeURIComponent(p.subject_name)}`;
+      icons.push(
+        <a
+          key="sp"
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fame-social-icon sp"
+          title="Spotify Artist Profile"
+        >
+          <RiSpotifyLine />
+        </a>
+      );
+    }
+
+    if (s.linkedin) {
+      const url = s.linkedin.startsWith('http')
+        ? s.linkedin
+        : `https://linkedin.com/in/${s.linkedin}`;
+      icons.push(
+        <a
+          key="li"
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fame-social-icon li"
+          title="LinkedIn Professional Profile"
+        >
+          <RiLinkedinBoxLine />
+        </a>
+      );
+    }
+
+    if (s.website) {
+      icons.push(
+        <a
+          key="web"
+          href={s.website.startsWith('http') ? s.website : `https://${s.website}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fame-social-icon web"
+          title="Official Website"
+        >
+          <RiGlobalLine />
+        </a>
+      );
+    }
+
+    return icons;
+  };
 
   // Determine active tab based on query or props
   useEffect(() => {
@@ -388,6 +556,19 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
 
             <div id="wall-of-fame-anchor" style={{ position: 'relative', top: '-10px' }} />
 
+            {epkNotice && (
+              <div className="fame-notice-banner">
+                <span>{epkNotice}</span>
+                <button
+                  className="community-modal-close"
+                  onClick={() => setEpkNotice('')}
+                  style={{ color: '#38bdf8' }}
+                >
+                  <RiCloseLine />
+                </button>
+              </div>
+            )}
+
             {/* Grid (4 Rows Max Standard) */}
             <div className="wall-of-fame-grid">
               {paginatedProfiles.map((p) => {
@@ -448,6 +629,46 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                           ))}
                         </div>
                       )}
+
+                      {/* Social Media Handles & EPK Integration */}
+                      <div className="fame-card-links-row">
+                        <div className="fame-card-social-icons">
+                          {renderSocialIcons(p)}
+                        </div>
+
+                        <div className="fame-card-epk-action">
+                          {p.has_epk ? (
+                            <Link
+                              to={`/epk/${p.epk_slug || p.subject_name.toLowerCase().replace(/[^a-z0-9]+/g, '')}`}
+                              className="fame-epk-btn active"
+                              title={`View ${p.subject_name}'s official TuneMavens EPK Web World`}
+                            >
+                              <RiFileUserLine /> EPK Web World
+                            </Link>
+                          ) : (sessionUser?.email && p.subject_email && sessionUser.email.toLowerCase() === p.subject_email.toLowerCase()) ? (
+                            <Link
+                              to="/epk"
+                              className="fame-epk-btn activate"
+                              title="Activate your official TuneMavens Electronic Press Kit"
+                            >
+                              <RiSparklingFill /> Activate My EPK
+                            </Link>
+                          ) : (
+                            <button
+                              className={`fame-epk-btn ${epkInvitedMap[p.id] ? 'invited' : 'invite'}`}
+                              onClick={() => handleOpenEpkInviteModal(p)}
+                              title={
+                                epkInvitedMap[p.id]
+                                  ? 'EPK activation invite dispatched'
+                                  : 'Invite luminary to activate their official TuneMavens EPK'
+                              }
+                            >
+                              {epkInvitedMap[p.id] ? <RiCheckLine /> : <RiSparklingFill />}
+                              <span>{epkInvitedMap[p.id] ? 'EPK Invited' : 'Invite to EPK'}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
 
                       <div className="fame-card-footer">
                         <div className="fame-card-actions">
@@ -861,6 +1082,84 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                   disabled={nomineeSubmitting}
                 >
                   {nomineeSubmitting ? 'Submitting...' : 'Submit Nomination'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Invite to Activate EPK Modal (§9.11.6) */}
+      {epkInviteModalOpen && epkInviteTarget && (
+        <div className="community-modal-overlay" onClick={() => setEpkInviteModalOpen(false)}>
+          <div className="community-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
+            <div className="community-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <RiSparklingFill style={{ color: '#00f0ff', fontSize: 20 }} />
+                <h3>Invite Luminary to Activate EPK</h3>
+              </div>
+              <button className="community-modal-close" onClick={() => setEpkInviteModalOpen(false)}>
+                <RiCloseLine />
+              </button>
+            </div>
+
+            <form onSubmit={handleDispatchEpkInvite}>
+              <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ background: '#090d16', border: '1px solid #1e293b', borderRadius: 3, padding: 14 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff' }}>
+                    {epkInviteTarget.subject_name}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#38bdf8', marginTop: 2, textTransform: 'uppercase', fontWeight: 600 }}>
+                    {epkInviteTarget.role} &bull; Inducted Luminary
+                  </div>
+                  {epkInviteTarget.subject_email && (
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: 4 }}>
+                      Dispatch To: {epkInviteTarget.subject_email}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Personalized Curatorial Message
+                  </label>
+                  <textarea
+                    rows={3}
+                    className="community-search-input"
+                    style={{ width: '100%', resize: 'vertical' }}
+                    value={epkInviteNote}
+                    onChange={(e) => setEpkInviteNote(e.target.value)}
+                    placeholder="Add an encouraging note to motivate them to spin up their EPK..."
+                  />
+                </div>
+
+                <div style={{ background: 'rgba(34, 211, 238, 0.05)', border: '1px solid rgba(34, 211, 238, 0.2)', borderRadius: 3, padding: 12 }}>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#38bdf8', textTransform: 'uppercase', marginBottom: 6 }}>
+                    Ecosystem Protocols Executed
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: '12px', color: '#94a3b8', lineHeight: 1.5 }}>
+                    <li>Branded induction email dispatched via Resend</li>
+                    <li>Priority notification posted in inductee's User Inbox</li>
+                    <li>Candidate lead synchronized in Intermaven Smart CRM</li>
+                    {epkInviteTarget.phone && <li>Outbound WhatsApp notification with 1-tap activation link</li>}
+                  </ul>
+                </div>
+              </div>
+
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #1e293b', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <button
+                  type="button"
+                  className="community-btn community-btn-secondary"
+                  onClick={() => setEpkInviteModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="community-btn community-btn-primary"
+                  disabled={epkInviteSubmitting}
+                >
+                  {epkInviteSubmitting ? 'Dispatching...' : 'Dispatch EPK Invitation'}
                 </button>
               </div>
             </form>

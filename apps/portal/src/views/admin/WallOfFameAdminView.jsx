@@ -16,7 +16,9 @@ import {
   RiSearchLine,
   RiShieldCheckLine,
   RiExternalLinkLine,
-  RiArrowRightLine
+  RiArrowRightLine,
+  RiSparklingFill,
+  RiFileUserLine
 } from 'react-icons/ri';
 import './WallOfFameAdminView.css';
 
@@ -271,6 +273,30 @@ export default function WallOfFameAdminView({ sessionUser }) {
       const res = await fetch(`/api/admin/wall-of-fame/${profile.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete profile');
       showAlert('success', `Profile for ${profile.subject_name} removed.`);
+      fetchAdminData();
+      fetchCrmLeads();
+    } catch (e) {
+      showAlert('error', e.message);
+    }
+  };
+
+  // Invite to activate EPK
+  const handleInviteEpk = async (profile) => {
+    try {
+      const res = await fetch(`/api/community/wall-of-fame/${profile.id}/invite-epk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject_email: profile.subject_email || null,
+          phone: profile.phone || null,
+          send_email: true,
+          send_inbox: true,
+          send_whatsapp: true,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to dispatch EPK activation invite');
+      const data = await res.json();
+      showAlert('success', `✨ EPK activation invitation dispatched to ${profile.subject_name}!`);
       fetchAdminData();
       fetchCrmLeads();
     } catch (e) {
@@ -672,6 +698,28 @@ export default function WallOfFameAdminView({ sessionUser }) {
                           {p.state === 'pending' && <RiUserAddLine />}
                           {p.state?.toUpperCase() || 'PENDING'}
                         </span>
+                        {p.has_epk ? (
+                          <div style={{ marginTop: '4px' }}>
+                            <Link
+                              to={`/epk/${p.epk_slug || p.subject_name.toLowerCase().replace(/[^a-z0-9]+/g, '')}`}
+                              target="_blank"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: '#22d3ee', textDecoration: 'none', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 6px', borderRadius: 3 }}
+                            >
+                              <RiFileUserLine /> EPK Live &rarr;
+                            </Link>
+                          </div>
+                        ) : p.state === 'claimed' ? (
+                          <div style={{ marginTop: '4px' }}>
+                            <button
+                              className="wof-btn wof-btn-outline wof-btn-sm"
+                              onClick={() => handleInviteEpk(p)}
+                              title="Invite luminary to activate their official TuneMavens EPK Web World"
+                              style={{ color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)' }}
+                            >
+                              <RiSparklingFill /> Invite to EPK
+                            </button>
+                          </div>
+                        ) : null}
                         {p.claim_token && p.state === 'invited' && (
                           <div style={{ marginTop: '4px' }}>
                             <button
@@ -710,7 +758,29 @@ export default function WallOfFameAdminView({ sessionUser }) {
                             </button>
                           )}
 
-                          {p.claim_token && p.state === 'invited' && (
+                          {p.has_epk ? (
+                          <div style={{ marginTop: '4px' }}>
+                            <Link
+                              to={`/epk/${p.epk_slug || p.subject_name.toLowerCase().replace(/[^a-z0-9]+/g, '')}`}
+                              target="_blank"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: '#22d3ee', textDecoration: 'none', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 6px', borderRadius: 3 }}
+                            >
+                              <RiFileUserLine /> EPK Live &rarr;
+                            </Link>
+                          </div>
+                        ) : p.state === 'claimed' ? (
+                          <div style={{ marginTop: '4px' }}>
+                            <button
+                              className="wof-btn wof-btn-outline wof-btn-sm"
+                              onClick={() => handleInviteEpk(p)}
+                              title="Invite luminary to activate their official TuneMavens EPK Web World"
+                              style={{ color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)' }}
+                            >
+                              <RiSparklingFill /> Invite to EPK
+                            </button>
+                          </div>
+                        ) : null}
+                        {p.claim_token && p.state === 'invited' && (
                             <button
                               className="wof-btn wof-btn-outline wof-btn-sm"
                               onClick={() => handleRevokeInvite(p)}

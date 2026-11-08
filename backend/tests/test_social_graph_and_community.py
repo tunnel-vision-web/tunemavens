@@ -375,3 +375,65 @@ def test_admin_wall_of_fame_crm_and_communication_protocols():
     assert del_res.status_code == 200
     assert del_res.json()["status"] == "deleted"
     assert db.featured_profiles.find_one({"_id": ObjectId(profile_id)}) is None
+
+
+def test_invite_luminary_to_activate_epk():
+    """Verify inviting an inducted figure to activate their TuneMavens EPK."""
+    curator_id, curator_cookies = seed_test_user("curator_fan@tunemavens.com", "Curator Fan")
+    inductee_email = "inductee_star@tunemavens.com"
+    inductee_id, inductee_cookies = seed_test_user(inductee_email, "Inductee Star")
+
+    # Clean up
+    db.featured_profiles.delete_many({"subject_email": inductee_email})
+
+    # Create and claim an inductee
+    profile_doc = {
+        "subject_name": "Inductee Star",
+        "role": "creator",
+        "subject_email": inductee_email,
+        "phone": "+254712345678",
+        "bio": "Grammy-winning global star.",
+        "social_links": {"instagram": "inducteestar", "twitter": "inducteestar"},
+        "state": "claimed",
+        "visible": True,
+        "has_epk": False,
+        "epk_slug": "inducteestar",
+        "claimed_user_id": inductee_id,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+    res = db.featured_profiles.insert_one(profile_doc)
+    profile_id = str(res.inserted_id)
+
+    # Dispatch EPK activation invitation
+    invite_res = client.post(
+        f"/api/community/wall-of-fame/{profile_id}/invite-epk",
+        cookies=curator_cookies,
+        json={
+            "subject_email": inductee_email,
+            "custom_note": "We would love to license your stem packages on SyncMavens!",
+            "send_email": True,
+            "send_inbox": True,
+            "send_whatsapp": True,
+        }
+    )
+    assert invite_res.status_code == 200, invite_res.text
+    data = invite_res.json()
+    assert data["status"] == "success"
+    assert data["epk_slug"] == "inducteestar"
+
+    # Verify user inbox notification
+    inbox = db.user_inbox.find_one({"user_id": inductee_id, "campaign_id": "epk_activation_invite"})
+    assert inbox is not None
+    assert "EPK" in inbox["subject"]
+    assert inbox["cta_url"] == "/epk"
+
+    # Verify profile was marked with epk_invite_sent_at and epk_invite_count
+    from bson import ObjectId
+    refreshed = db.featured_profiles.find_one({"_id": ObjectId(profile_id)})
+    assert refreshed.get("epk_invite_sent_at") is not None
+    assert refreshed.get("epk_invite_count") >= 1
+
+    # Verify Communications Vault contains the event
+    comm = db.communications.find_one({"type": "epk_activation_invite", "recipient_email": inductee_email})
+    assert comm is not None

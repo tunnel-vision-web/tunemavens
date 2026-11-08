@@ -627,6 +627,10 @@ class FeaturedProfile(BaseDocument):
     bio: str = ""
     social_links: Dict[str, str] = Field(default_factory=dict)
     claimed_user_id: Optional[str] = None
+    has_epk: bool = False
+    epk_slug: Optional[str] = None
+    epk_invite_sent_at: Optional[datetime] = None
+    epk_invite_count: int = 0
     state: str = "pending"  # 'pending' | 'invited' | 'claimed' | 'declined' | 'expired'
     claim_token: Optional[str] = None
     invited_at: Optional[datetime] = None

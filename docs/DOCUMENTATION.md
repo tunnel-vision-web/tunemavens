@@ -2945,3 +2945,19 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Comprehensive audit logging in Communications Vault (`db.communications`).
 - **Management Capabilities**:
   - 1-click claim token copy, invite re-dispatch, token revocation, YouTube Data API v3 live metric re-sync, and visibility toggling.
+
+### 9.44.50 Wall of Fame Social Media Icons & EPK Activation Workflow
+
+- **Social Media Icons Bar**:
+  - Each Wall of Fame card renders micro-icons for connected platforms: Instagram, X / Twitter, YouTube, Spotify, LinkedIn, and Website with distinct brand hover tokens and external links.
+- **EPK Web World Integration**:
+  - Direct deep link to `/epk/:slug` for figures with active Electronic Press Kits.
+  - Interactive **"Invite to Activate EPK"** modal enabling admins and community members to dispatch an invitation nudge to any inducted figure.
+- **Post-Induction Claim Prompt**:
+  - On completing the Wall of Fame induction claim (`WallOfFameClaimView.jsx`), inductees are presented with an immediate celebratory card prompting them to activate their 24-Bit EPK Web World (`/epk`).
+- **Endpoint**:
+  - `POST /api/community/wall-of-fame/{profile_id}/invite-epk`:
+    - Delivers priority notification to inductee's User Inbox (`db.user_inbox`).
+    - Dispatches branded HTML email via Resend (`event_type: "epk_activation_invite"`).
+    - Dispatches WhatsApp notification (if phone available).
+    - Logs outreach and tags in Intermaven Smart CRM (`db.crm_leads`) and Communications Vault (`db.communications`).

@@ -109,7 +109,8 @@ Ships alongside Phase 5.
 
 **Deliverables**
 - `/community` route with a curated grid of featured figures and strict 4-rows max pagination (12 items/page).
-- Each tile: profile thumbnail, short bio, social links, **auto-fetched featured YouTube video** (thumbnail via YouTube oEmbed, video pulled via YouTube Data API v3 `search.list` sorted by viewCount).
+- Each tile: profile thumbnail, short bio, social links, **auto-fetched featured YouTube video** (thumbnail via YouTube oEmbed, video pulled via YouTube Data API v3 `search.list` sorted by viewCount), **interactive social media handle icons** (Instagram, X/Twitter, YouTube, Spotify, LinkedIn, Website), and direct **EPK Web World platform link** (`/epk/:slug`).
+- **EPK Activation Workflow**: Inductees who have claimed their profile can be invited to activate their interactive Electronic Press Kit (EPK) via Communication Protocols (Resend Email, User Inbox, WhatsApp) and Intermaven Smart CRM (`POST /api/community/wall-of-fame/{profile_id}/invite-epk`). Post-induction claim page immediately prompts the inductee to launch their EPK.
 - Dedicated Admin Management Console at `/admin/wall-of-fame` & `/community/admin`:
   - Luminary nomination & invite composer with real-time YouTube preview.
   - Multi-protocol induction dispatching across **Communication Protocols** (Resend branded HTML emails & WhatsApp) and automatic bidirectional synchronization with **Intermaven Smart CRM** (`db.crm_leads`).
