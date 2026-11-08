@@ -630,43 +630,33 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                         </div>
                       )}
 
-                      {/* Social Media Handles & EPK Integration */}
+                      {/* EPK & Social Media Handles Row */}
                       <div className="fame-card-links-row">
-                        <div className="fame-card-social-icons">
-                          {renderSocialIcons(p)}
-                        </div>
-
                         <div className="fame-card-epk-action">
-                          {p.has_epk ? (
-                            <Link
-                              to={`/epk/${p.epk_slug || p.subject_name.toLowerCase().replace(/[^a-z0-9]+/g, '')}`}
-                              className="fame-epk-btn active"
-                              title={`View ${p.subject_name}'s official TuneMavens EPK Web World`}
-                            >
-                              <RiFileUserLine /> EPK Web World
-                            </Link>
-                          ) : (sessionUser?.email && p.subject_email && sessionUser.email.toLowerCase() === p.subject_email.toLowerCase()) ? (
-                            <Link
-                              to="/epk"
-                              className="fame-epk-btn activate"
-                              title="Activate your official TuneMavens Electronic Press Kit"
-                            >
-                              <RiSparklingFill /> Activate My EPK
-                            </Link>
-                          ) : (
+                          <Link
+                            to={`/epk/${p.epk_slug || p.subject_name.toLowerCase().replace(/[^a-z0-9]+/g, '')}`}
+                            className="fame-epk-btn view-epk"
+                            title={`View ${p.subject_name}'s official TuneMavens EPK`}
+                          >
+                            <RiFileUserLine /> View EPK
+                          </Link>
+                          {!p.has_epk && (
                             <button
-                              className={`fame-epk-btn ${epkInvitedMap[p.id] ? 'invited' : 'invite'}`}
+                              className={`fame-epk-mini-invite-btn ${epkInvitedMap[p.id] ? 'invited' : ''}`}
                               onClick={() => handleOpenEpkInviteModal(p)}
                               title={
                                 epkInvitedMap[p.id]
                                   ? 'EPK activation invite dispatched'
-                                  : 'Invite luminary to activate their official TuneMavens EPK'
+                                  : 'Invite luminary to customize and activate their EPK'
                               }
                             >
                               {epkInvitedMap[p.id] ? <RiCheckLine /> : <RiSparklingFill />}
-                              <span>{epkInvitedMap[p.id] ? 'EPK Invited' : 'Invite to EPK'}</span>
                             </button>
                           )}
+                        </div>
+
+                        <div className="fame-card-social-icons">
+                          {renderSocialIcons(p)}
                         </div>
                       </div>
 

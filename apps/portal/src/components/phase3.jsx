@@ -436,6 +436,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
     revenue_focus_other: initial?.revenue_focus_other || '',
     team_size_other: initial?.team_size_other || '',
     freeform_notes: initial?.freeform_notes || '',
+    create_free_epk: initial?.create_free_epk !== undefined ? initial.create_free_epk : true,
   }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -449,7 +450,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
 
   if (!open) return null;
 
-  const totalSteps = WIZARD_QUESTIONS.length + 1;
+  const totalSteps = WIZARD_QUESTIONS.length + 2;
   const isLast = step === totalSteps - 1;
   const current = step < WIZARD_QUESTIONS.length ? WIZARD_QUESTIONS[step] : null;
   const otherKey = current ? `${current.key}_other` : null;
@@ -483,6 +484,10 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
     setError('');
     try {
       const saved = await usersApi.saveOnboarding(answers);
+      if (answers.create_free_epk !== false) {
+        sessionStorage.setItem('preferred_dashboard_tab', 'epk-builder');
+        localStorage.setItem('tunemavens_created_free_epk', 'true');
+      }
       if (onSaved) onSaved(saved || answers);
       onClose();
     } catch (e) {
@@ -572,6 +577,84 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
           </>
         )}
 
+        {step === WIZARD_QUESTIONS.length + 1 && (
+          <div data-testid="wizard-epk-step">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '18px' }}>⚡</span>
+              <p style={{ fontSize: '15px', color: '#e2e8f0', margin: 0, fontWeight: 700 }}>
+                Create Your Free EPK Web World (Optional)
+              </p>
+            </div>
+            <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px', lineHeight: 1.5 }}>
+              Showcase your music, bio, and sync catalog with an interactive 24-bit audio EPK Web World built for music supervisors, label A&amp;Rs, booking agents, and fans.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              <button
+                type="button"
+                onClick={() => setAnswers((a) => ({ ...a, create_free_epk: true }))}
+                style={{
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  background: answers.create_free_epk !== false ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.03)',
+                  border: answers.create_free_epk !== false ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '3px',
+                  color: answers.create_free_epk !== false ? '#f1f5f9' : '#cbd5e1',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}
+              >
+                <span
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    border: `1px solid ${answers.create_free_epk !== false ? 'var(--cyan)' : 'rgba(255,255,255,0.3)'}`,
+                    background: answers.create_free_epk !== false ? 'var(--cyan)' : 'transparent'
+                  }}
+                />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '13px' }}>✨ Yes, activate my free EPK Web World (Recommended)</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>Pre-configures your public EPK at tunemavens.com/#/epk/:username</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAnswers((a) => ({ ...a, create_free_epk: false }))}
+                style={{
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  background: answers.create_free_epk === false ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.03)',
+                  border: answers.create_free_epk === false ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '3px',
+                  color: answers.create_free_epk === false ? '#f1f5f9' : '#cbd5e1',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}
+              >
+                <span
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    border: `1px solid ${answers.create_free_epk === false ? 'var(--cyan)' : 'rgba(255,255,255,0.3)'}`,
+                    background: answers.create_free_epk === false ? 'var(--cyan)' : 'transparent'
+                  }}
+                />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '13px' }}>Skip for now</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>I will set up my EPK later from the dashboard tools</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
         {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '12px' }} data-testid="wizard-error">{error}</p>}
 
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -582,7 +665,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
           {isLast ? (
             <button type="button" onClick={save} disabled={saving} data-testid="wizard-submit"
               style={{ padding: '10px 20px', background: 'var(--cyan)', color: '#000', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: saving ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
-              {saving ? 'Saving\u2026' : 'Get my picks'} <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
+              {saving ? 'Saving\u2026' : (answers.create_free_epk !== false ? 'Activate Free EPK & Finish' : 'Finish & Get Picks')} <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
             </button>
           ) : (
             <button type="button" onClick={() => setStep((s) => s + 1)} disabled={!canProceed} data-testid="wizard-next"

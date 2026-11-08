@@ -106,6 +106,8 @@ export default function RegisterView({ onLogin }) {
   const [payoutBankName, setPayoutBankName] = useState(() => sessionStorage.getItem('signup_payout_bank_name') || '');
   const [payoutAccountNum, setPayoutAccountNum] = useState(() => sessionStorage.getItem('signup_payout_account_num') || '');
   const [payoutRoutingNum, setPayoutRoutingNum] = useState(() => sessionStorage.getItem('signup_payout_routing_num') || '');
+  const [createEpkOptIn, setCreateEpkOptIn] = useState(() => sessionStorage.getItem('signup_epk_opt_in') !== 'false');
+  useEffect(() => { sessionStorage.setItem('signup_epk_opt_in', createEpkOptIn.toString()); }, [createEpkOptIn]);
 
   // Attribution capture per Spec §3
   useEffect(() => {
@@ -253,6 +255,7 @@ export default function RegisterView({ onLogin }) {
       }
     }
     list.push('Security');
+    list.push('Free EPK');
     return list;
   };
 
@@ -267,6 +270,13 @@ export default function RegisterView({ onLogin }) {
     }
 
     const currentStepName = steps[step];
+
+    if (currentStepName === 'Security') {
+      if (!name || !email || !password) {
+        alert('Please fill out name, email, and password on the Security credentials step.');
+        return;
+      }
+    }
 
     if (currentStepName === 'Payout Setup') {
       if (payoutMethod === 'direct_deposit' && (!payoutBankName || !payoutAccountNum)) {
@@ -604,6 +614,13 @@ export default function RegisterView({ onLogin }) {
         }
       }
 
+      if (createEpkOptIn) {
+        sessionStorage.setItem('preferred_dashboard_tab', 'epk-builder');
+        localStorage.setItem('tunemavens_created_free_epk', 'true');
+        const epkSlug = name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '') : 'creator';
+        localStorage.setItem('last_saved_epk_subdomain', epkSlug);
+      }
+
       onLogin(reconcileUserApps(user));
       alert(access_token && regRes ? `Welcome, ${name}! We sent a confirmation email to ${email}. Please check your inbox.` : `Welcome, ${name}!`);
       clearSignupMemory();
@@ -611,6 +628,8 @@ export default function RegisterView({ onLogin }) {
       if (targetTab) {
         sessionStorage.setItem('preferred_dashboard_tab', targetTab);
         navigate(`/dashboard?tab=${targetTab}${toolId ? `&tool=${toolId}` : ''}`);
+      } else if (createEpkOptIn) {
+        navigate('/dashboard?tab=epk-builder');
       } else {
         navigate('/dashboard');
       }
@@ -1433,6 +1452,52 @@ export default function RegisterView({ onLogin }) {
             </div>
           )}
 
+          {currentStepName === 'Free EPK' && (
+            <div style={{ animation: 'fadeIn 0.3s ease', textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '18px' }}>⚡</span>
+                <h4 style={{ margin: 0, fontSize: '15px', color: '#f1f5f9', fontWeight: 800 }}>Create Your Free EPK (Optional)</h4>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--mu)', lineHeight: 1.5, marginBottom: '14px' }}>
+                As the final step of your onboarding, activate your free 24-bit Electronic Press Kit Web World. Pitch music supervisors, booking agents, and venues with lossless streaming, synced stems, and your direct bio.
+              </p>
+
+              <div
+                style={{
+                  background: createEpkOptIn ? 'rgba(34, 211, 238, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                  border: createEpkOptIn ? '1px solid var(--cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '3px',
+                  padding: '12px 14px',
+                  marginBottom: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                onClick={() => setCreateEpkOptIn(!createEpkOptIn)}
+              >
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={createEpkOptIn}
+                    onChange={(e) => setCreateEpkOptIn(e.target.checked)}
+                    style={{ marginTop: '3px', accentColor: 'var(--cyan)' }}
+                  />
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#f1f5f9' }}>
+                      Activate my free EPK Web World now (Recommended)
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                      Public Link: <span style={{ color: 'var(--cyan)' }}>tunemavens.com/#/epk/{name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '') : 'your-handle'}</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>
+                You can customize or publish your EPK anytime from the EPK Builder in your dashboard.
+              </p>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             {step > 0 && (
               <button 
@@ -1448,7 +1513,7 @@ export default function RegisterView({ onLogin }) {
               className="btn-primary" 
               style={{ flex: 2, padding: '10px', fontSize: '13px', fontWeight: '700', borderRadius: '4px', cursor: 'pointer' }}
             >
-              {step === steps.length - 1 ? 'Complete Register' 
+              {step === steps.length - 1 ? (createEpkOptIn ? 'Activate Free EPK & Complete' : 'Complete Register') 
                 : (currentStepName === 'Discography Ingest' ? 'Skip Catalogue Ingest' 
                 : (currentStepName === 'Roster Ingest' ? 'Skip Roster Ingest' : 'Next Step'))}
             </button>

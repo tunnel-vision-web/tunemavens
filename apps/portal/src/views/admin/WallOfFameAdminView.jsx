@@ -705,7 +705,7 @@ export default function WallOfFameAdminView({ sessionUser }) {
                               target="_blank"
                               style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: '#22d3ee', textDecoration: 'none', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 6px', borderRadius: 3 }}
                             >
-                              <RiFileUserLine /> EPK Live &rarr;
+                              <RiFileUserLine /> View EPK &rarr;
                             </Link>
                           </div>
                         ) : p.state === 'claimed' ? (
@@ -765,7 +765,7 @@ export default function WallOfFameAdminView({ sessionUser }) {
                               target="_blank"
                               style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '11px', color: '#22d3ee', textDecoration: 'none', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 6px', borderRadius: 3 }}
                             >
-                              <RiFileUserLine /> EPK Live &rarr;
+                              <RiFileUserLine /> View EPK &rarr;
                             </Link>
                           </div>
                         ) : p.state === 'claimed' ? (
