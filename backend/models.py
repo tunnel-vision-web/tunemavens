@@ -702,3 +702,75 @@ class FeaturedProfile(BaseDocument):
 
 
 
+
+
+# --- Phase 10: Media House Routing & Broadcast Syndication Models ---
+
+class BroadcastChannel(BaseDocument):
+    name: str
+    call_sign: str
+    media_type: str = "fm_radio"  # 'fm_radio' | 'linear_tv' | 'satellite_radio' | 'digital_stream'
+    frequency: Optional[str] = "98.4 MHz"
+    stream_url: Optional[str] = "https://stream.tunemavens.com/pulse984.aac"
+    region: str = "KE"  # 'KE' | 'NG' | 'ZA' | 'US' | 'GLOBAL'
+    pro_affiliation: str = "MCSK"  # 'MCSK' | 'ASCAP' | 'BMI' | 'SAMRO'
+    pro_license_id: Optional[str] = "MCSK-BCAST-2026-984"
+    active_listeners: int = 145000
+    is_on_air: bool = True
+    current_track_title: Optional[str] = "Afrobeats Elevation"
+    current_artist: Optional[str] = "Burna Boy ft. Wizkid"
+    current_isrc: Optional[str] = "QM4TX2600101"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class BroadcastQueueItem(BaseDocument):
+    channel_id: str
+    title: str
+    artist: str
+    isrc: str
+    duration_seconds: int = 210
+    rotation_tier: str = "heavy"  # 'heavy' | 'medium' | 'light' | 'ad_spot' | 'station_id'
+    daypart: str = "morning_drive"  # 'morning_drive' | 'midday' | 'afternoon_rush' | 'evening_prime' | 'overnight'
+    stem_preference: str = "master"  # 'master' | 'clean_radio_edit' | 'instrumental' | 'acapella'
+    ad_flight_id: Optional[str] = None
+    scheduled_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    status: str = "queued"  # 'queued' | 'playing' | 'played' | 'skipped'
+    order_index: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class BroadcastLog(BaseDocument):
+    channel_id: str
+    channel_name: str
+    title: str
+    artist: str
+    isrc: str
+    iswc: Optional[str] = None
+    writers: List[str] = Field(default_factory=list)
+    publishers: List[str] = Field(default_factory=list)
+    pro_affiliation: str = "MCSK"
+    rotation_tier: str = "heavy"
+    daypart: str = "morning_drive"
+    played_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    duration_played: int = 210
+    verified: bool = True
+    airplay_certificate: str = ""
+    tamper_seal: str = ""
+    estimated_royalty: float = 12.50
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CueSheetExport(BaseDocument):
+    channel_id: str
+    channel_name: str
+    pro_target: str = "MCSK"  # 'MCSK' | 'ASCAP' | 'BMI' | 'SAMRO'
+    period: str = "2026-11"
+    total_spins: int = 0
+    total_duration_minutes: int = 0
+    tracks_count: int = 0
+    compliance_score: float = 99.8
+    export_format: str = "DDEX-BCAST-CUE"
+    file_payload: Optional[str] = None
+    status: str = "certified"  # 'certified' | 'submitted'
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

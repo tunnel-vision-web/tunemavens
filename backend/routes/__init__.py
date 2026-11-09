@@ -33,6 +33,7 @@ from .confidentiality_router import router as confidentiality_router
 from .social_graph_router import router as social_graph_router
 from .community_router import router as community_router
 from .backend_admin_router import router as backend_admin_router
+from .media_house_router import router as media_house_router
 
 __all__ = [
     "admin_router",
@@ -70,4 +71,5 @@ __all__ = [
     "confidentiality_router",
     "social_graph_router",
     "community_router",
+    "media_house_router",
 ]

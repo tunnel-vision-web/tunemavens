@@ -497,3 +497,23 @@ export const corporateAdsApi = {
   trackTelemetry: (payload) => request('/api/corporate/telemetry', { method: 'POST', body: payload }),
   getTelemetryOverview: () => request('/api/corporate/telemetry/overview'),
 };
+
+
+// --- Media House Routing & Broadcast Syndication (Phase 10) ---
+export const mediaHouseApi = {
+  getChannels: () => request('/api/media-house/channels'),
+  getChannel: (id) => request(`/api/media-house/channels/${encodeURIComponent(id)}`),
+  createChannel: (payload) => request('/api/media-house/channels', { method: 'POST', body: payload }),
+  getQueue: (channelId) => request(`/api/media-house/queue${channelId ? `?channel_id=${encodeURIComponent(channelId)}` : ''}`),
+  enqueueTrack: (payload) => request('/api/media-house/queue', { method: 'POST', body: payload }),
+  dequeueTrack: (id) => request(`/api/media-house/queue/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  triggerPlayout: (payload) => request('/api/media-house/trigger-playout', { method: 'POST', body: payload }),
+  getLogs: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request(`/api/media-house/logs${q ? `?${q}` : ''}`);
+  },
+  generateCueSheet: (payload) => request('/api/media-house/cue-sheets/generate', { method: 'POST', body: payload }),
+  getCueSheets: (channelId) => request(`/api/media-house/cue-sheets${channelId ? `?channel_id=${encodeURIComponent(channelId)}` : ''}`),
+  getStats: () => request('/api/media-house/stats'),
+  getStemsCatalog: () => request('/api/media-house/stems-catalog'),
+};

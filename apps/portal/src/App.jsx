@@ -129,6 +129,8 @@ import EpkWizard from './components/EpkWizard.jsx'
 import DashboardCmsStudio from './components/DashboardCmsStudio.jsx'
 import SmartCrmStudioPanel from './components/SmartCrmStudioPanel.jsx'
 import CorporateAdsPanel from './components/CorporateAdsPanel.jsx'
+import MediaHousePanel from './components/MediaHousePanel.jsx'
+import { RiBroadcastFill } from 'react-icons/ri'
 import PodcastStreamingHub, { AUTHORITATIVE_PODCAST_SHOWS, PodcasterEpkModal } from './components/podcasts/PodcastStreamingHub.jsx'
 import PodcasterStudioWorkspace from './components/podcasts/PodcasterStudioWorkspace.jsx'
 import VcDiscoverCreatorsApp from './components/vc/VcDiscoverCreatorsApp.jsx'
@@ -1984,6 +1986,10 @@ function DashboardView({
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       case 'corporate-ads':
         return <CorporateAdsPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
+      case 'media-house':
+      case 'broadcast':
+      case 'syndication':
+        return <MediaHousePanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
       case 'affiliates':
         return <AffiliateAdminPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
       case 'communications':
@@ -2077,6 +2083,14 @@ function DashboardView({
       'vc-sponsorship': { id: 'vc-sponsorship', label: 'Career Sponsorship', icon: RiSparklingFill, category: 'VC Investment Suite' },
       'tours-vault': { id: 'tours-vault', label: 'Tour Capital Vault', icon: RiCompass3Fill, category: 'VC Investment Suite' },
       'catalogue-acquisitions': { id: 'catalogue-acquisitions', label: 'Catalogue Acquisitions', icon: RiCoinsFill, category: 'Label Administration' },
+      'media-house': {
+        id: 'media-house',
+        label: 'Broadcast Operations',
+        icon: RiBroadcastFill,
+        title: 'Media House Playout & Syndication',
+        desc: 'Television & radio rotation playout routing, commercial ad traffic, and automated PRO cue sheets',
+        category: 'Media & Broadcast'
+      },
       'label-team': { id: 'label-team', label: 'Roster & Team Seats', icon: RiTeamFill, category: 'Label Administration' },
       escrow: { id: 'escrow', label: 'MyContracts', icon: RiFileTextFill, category: 'Royalty Ledgers' },
       profile: { id: 'profile', label: 'Profile Settings', icon: RiSettings3Fill, category: 'Account' },
@@ -2112,7 +2126,7 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'backend-admin', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team', 'catalogue-acquisitions'];
+        visibleKeys = ['home', 'backend-admin', 'admin-team', 'media-house', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team', 'catalogue-acquisitions'];
         break;
       case 'affiliate':
         visibleKeys = ['home', 'affiliates', 'inbox', 'splits', 'library', 'tips', 'profile', 'support'];
@@ -2126,7 +2140,7 @@ function DashboardView({
         break;
       case 'media_house':
       case 'media':
-        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'media-house', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'label':
         visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'catalogue-acquisitions', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
