@@ -44,6 +44,7 @@ export default function SyncMarketplacePanel({ sessionUser }) {
   // Data Collections
   const [catalogTracks, setCatalogTracks] = useState(SYNC_CATALOG_TRACKS);
   const [activeBriefs, setActiveBriefs] = useState(SYNC_ACTIVE_BRIEFS);
+  const [myPitches, setMyPitches] = useState([]);
   const [projectBins, setProjectBins] = useState([
     {
       id: 'bin_default',
@@ -76,6 +77,56 @@ export default function SyncMarketplacePanel({ sessionUser }) {
   const [playbackProgress, setPlaybackProgress] = useState({}); // { trackId: { currentTime, duration, percent } }
   const [expandedDetailsId, setExpandedDetailsId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Load live sync data from backend
+  useEffect(() => {
+    let isMounted = true;
+    const loadSyncData = async () => {
+      try {
+        const { syncApi } = await import('./lib/api.js');
+        const [briefsData, catalogData, pitchesData] = await Promise.all([
+          syncApi.listBriefs(),
+          syncApi.listCatalog(),
+          syncApi.listPitches({ all: Boolean(sessionUser?.role === 'supervisor' || sessionUser?.role === 'admin') })
+        ]);
+        if (isMounted) {
+          if (Array.isArray(briefsData) && briefsData.length > 0) {
+            setActiveBriefs(briefsData.map(b => ({
+              ...b,
+              id: b.id || b._id || b.brief_id,
+              budget_fee: b.budget || b.budget_fee,
+              required_genres: b.required_genres || b.genres || [],
+              required_moods: b.required_moods || b.moods || []
+            })));
+          }
+          if (Array.isArray(catalogData) && catalogData.length > 0) {
+            setCatalogTracks(catalogData.map(c => ({
+              ...c,
+              id: c.id || c._id || c.track_id
+            })));
+          }
+          if (Array.isArray(pitchesData)) {
+            setMyPitches(pitchesData);
+          }
+        }
+      } catch (err) {
+        console.warn('Sync live data fallback:', err);
+      }
+    };
+    loadSyncData();
+    return () => { isMounted = false; };
+  }, [sessionUser]);
+
+  const handleUpdatePitchStatus = async (pitchId, newStatus) => {
+    try {
+      const { syncApi } = await import('./lib/api.js');
+      const res = await syncApi.updatePitchStatus(pitchId, newStatus);
+      setMyPitches(prev => prev.map(p => (p.pitch_id === pitchId || p.id === pitchId) ? { ...p, status: newStatus, ...(res.pitch || {}) } : p));
+      showToast(`Pitch ${newStatus === 'APPROVED' ? 'Approved & Escrow Locked' : 'Updated to ' + newStatus}`);
+    } catch {
+      showToast('Could not update pitch status. Please retry.');
+    }
+  };
 
   // Show temporary toast notification
   const showToast = (msg) => {
@@ -318,10 +369,23 @@ export default function SyncMarketplacePanel({ sessionUser }) {
             className={`sync-nav-tab-btn ${activeTab === 'briefs' ? 'active' : ''}`}
             onClick={() => setActiveTab('briefs')}
           >
-            <RiFireFill style={{ color: '#eab308' }} /> Active Briefs & Pitches
+            <RiFireFill style={{ color: '#eab308' }} /> Active Briefs
             <span className="sync-nav-badge" style={{ background: 'rgba(234, 179, 8, 0.2)', color: '#eab308' }}>
               {activeBriefs.length}
             </span>
+          </button>
+
+          <button
+            type="button"
+            className={`sync-nav-tab-btn ${activeTab === 'pitches' ? 'active' : ''}`}
+            onClick={() => setActiveTab('pitches')}
+          >
+            <RiCheckboxCircleFill style={{ color: '#38bdf8' }} /> Pitches & Escrow
+            {myPitches.length > 0 && (
+              <span className="sync-nav-badge" style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8' }}>
+                {myPitches.length}
+              </span>
+            )}
           </button>
 
           <button
@@ -939,6 +1003,327 @@ export default function SyncMarketplacePanel({ sessionUser }) {
       )}
 
       {/* ========================================================
+          TAB 2.5: PITCHES & ESCROW CONTRACTS (CREATOR / SUPERVISOR)
+          ======================================================== */}
+      {activeTab === 'pitches' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{
+            background: '#090e1f',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '6px',
+            padding: '24px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '18px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--cyan)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  PLACEMENT TELEMETRY & ESCROW LEDGER
+                </span>
+                <h2 style={{ fontSize: '20px', color: '#fff', fontWeight: '800', margin: '4px 0 0' }}>
+                  {sessionUser?.role === 'supervisor' || sessionUser?.role === 'admin' ? 'Received Cues & Pitch Moderation' : 'My Active Sync Pitches'}
+                </h2>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('briefs')}
+                  className="sync-primary-btn"
+                  style={{ fontSize: '12px', padding: '8px 16px' }}
+                >
+                  <RiFireFill /> Pitch To More Briefs
+                </button>
+              </div>
+            </div>
+
+            {myPitches.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
+                <RiCheckboxCircleFill size={44} style={{ opacity: 0.2, marginBottom: '12px' }} />
+                <h4 style={{ color: '#cbd5e1', fontSize: '16px', margin: '0 0 6px' }}>No Sync Pitches Logged Yet</h4>
+                <p style={{ fontSize: '13px', margin: '0 0 20px' }}>Select an active brief from the briefs catalog and pitch pre-cleared tracks to music supervisors.</p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('briefs')}
+                  className="sync-secondary-btn"
+                  style={{ margin: '0 auto', fontSize: '12px' }}
+                >
+                  Browse Active Briefs
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {myPitches.map(p => {
+                  const isApproved = p.status === 'APPROVED';
+                  const isDeclined = p.status === 'DECLINED';
+                  const isShortlisted = p.status === 'SHORTLISTED';
+                  const isSuper = sessionUser?.role === 'supervisor' || sessionUser?.role === 'admin';
+                  return (
+                    <div
+                      key={p.pitch_id || p.id}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '6px',
+                        padding: '18px 22px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '16px',
+                        flexWrap: 'wrap'
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>{p.track_title}</span>
+                          <span style={{ fontSize: '13px', color: '#94a3b8' }}>by <strong style={{ color: '#cbd5e1' }}>{p.artist}</strong></span>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '99px',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            background: 'rgba(34, 211, 238, 0.15)',
+                            color: '#22d3ee',
+                            border: '1px solid rgba(34, 211, 238, 0.3)'
+                          }}>
+                            ⚡ {p.match_score || 88}% AI Match
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                          <span>Brief: <strong style={{ color: '#fff' }}>{p.brief_title}</strong></span>
+                          <span>Client: <strong style={{ color: '#94a3b8' }}>{p.client}</strong></span>
+                          <span>Pitch ID: <code style={{ color: '#38bdf8' }}>{p.pitch_id || p.id}</code></span>
+                          {p.creator_payout && (
+                            <span>Estimated Creator Payout: <strong style={{ color: '#10b981' }}>${Number(p.creator_payout).toLocaleString()}</strong></span>
+                          )}
+                        </div>
+
+                        {p.license_certificate && (
+                          <div style={{ fontSize: '11px', color: '#86efac', fontFamily: 'monospace', marginTop: '4px' }}>
+                            ✓ LICENSE ESCROW: <strong>{p.license_certificate}</strong> (100% Pre-Cleared One-Stop)
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{
+                          padding: '5px 12px',
+                          borderRadius: '99px',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          background: isApproved ? 'rgba(16, 185, 129, 0.15)' : isDeclined ? 'rgba(239, 68, 68, 0.15)' : isShortlisted ? 'rgba(56, 189, 248, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+                          color: isApproved ? '#10b981' : isDeclined ? '#f87171' : isShortlisted ? '#38bdf8' : '#eab308',
+                          border: `1px solid ${isApproved ? 'rgba(16, 185, 129, 0.3)' : isDeclined ? 'rgba(239, 68, 68, 0.3)' : isShortlisted ? 'rgba(56, 189, 248, 0.3)' : 'rgba(234, 179, 8, 0.3)'}`
+                        }}>
+                          {p.status || 'UNDER_REVIEW'}
+                        </span>
+
+                        {isSuper && p.status !== 'APPROVED' && (
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdatePitchStatus(p.pitch_id || p.id, 'APPROVED')}
+                              style={{
+                                background: 'rgba(16, 185, 129, 0.2)',
+                                border: '1px solid rgba(16, 185, 129, 0.4)',
+                                color: '#10b981',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Approve & Lock Escrow
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdatePitchStatus(p.pitch_id || p.id, 'DECLINED')}
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                color: '#f87171',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+{/* ========================================================
+          TAB 2.5: PITCHES & ESCROW CONTRACTS (CREATOR / SUPERVISOR)
+          ======================================================== */}
+      {activeTab === 'pitches' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{
+            background: '#090e1f',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '6px',
+            padding: '24px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '18px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--cyan)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  PLACEMENT TELEMETRY & ESCROW LEDGER
+                </span>
+                <h2 style={{ fontSize: '20px', color: '#fff', fontWeight: '800', margin: '4px 0 0' }}>
+                  {sessionUser?.role === 'supervisor' || sessionUser?.role === 'admin' ? 'Received Cues & Pitch Moderation' : 'My Active Sync Pitches'}
+                </h2>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('briefs')}
+                  className="sync-primary-btn"
+                  style={{ fontSize: '12px', padding: '8px 16px' }}
+                >
+                  <RiFireFill /> Pitch To More Briefs
+                </button>
+              </div>
+            </div>
+
+            {myPitches.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
+                <RiCheckboxCircleFill size={44} style={{ opacity: 0.2, marginBottom: '12px' }} />
+                <h4 style={{ color: '#cbd5e1', fontSize: '16px', margin: '0 0 6px' }}>No Sync Pitches Logged Yet</h4>
+                <p style={{ fontSize: '13px', margin: '0 0 20px' }}>Select an active brief from the briefs catalog and pitch pre-cleared tracks to music supervisors.</p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('briefs')}
+                  className="sync-secondary-btn"
+                  style={{ margin: '0 auto', fontSize: '12px' }}
+                >
+                  Browse Active Briefs
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {myPitches.map(p => {
+                  const isApproved = p.status === 'APPROVED';
+                  const isDeclined = p.status === 'DECLINED';
+                  const isShortlisted = p.status === 'SHORTLISTED';
+                  const isSuper = sessionUser?.role === 'supervisor' || sessionUser?.role === 'admin';
+                  return (
+                    <div
+                      key={p.pitch_id || p.id}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '6px',
+                        padding: '18px 22px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '16px',
+                        flexWrap: 'wrap'
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>{p.track_title}</span>
+                          <span style={{ fontSize: '13px', color: '#94a3b8' }}>by <strong style={{ color: '#cbd5e1' }}>{p.artist}</strong></span>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '99px',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            background: 'rgba(34, 211, 238, 0.15)',
+                            color: '#22d3ee',
+                            border: '1px solid rgba(34, 211, 238, 0.3)'
+                          }}>
+                            ⚡ {p.match_score || 88}% AI Match
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                          <span>Brief: <strong style={{ color: '#fff' }}>{p.brief_title}</strong></span>
+                          <span>Client: <strong style={{ color: '#94a3b8' }}>{p.client}</strong></span>
+                          <span>Pitch ID: <code style={{ color: '#38bdf8' }}>{p.pitch_id || p.id}</code></span>
+                          {p.creator_payout && (
+                            <span>Estimated Creator Payout: <strong style={{ color: '#10b981' }}>${Number(p.creator_payout).toLocaleString()}</strong></span>
+                          )}
+                        </div>
+
+                        {p.license_certificate && (
+                          <div style={{ fontSize: '11px', color: '#86efac', fontFamily: 'monospace', marginTop: '4px' }}>
+                            ✓ LICENSE ESCROW: <strong>{p.license_certificate}</strong> (100% Pre-Cleared One-Stop)
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{
+                          padding: '5px 12px',
+                          borderRadius: '99px',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          background: isApproved ? 'rgba(16, 185, 129, 0.15)' : isDeclined ? 'rgba(239, 68, 68, 0.15)' : isShortlisted ? 'rgba(56, 189, 248, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+                          color: isApproved ? '#10b981' : isDeclined ? '#f87171' : isShortlisted ? '#38bdf8' : '#eab308',
+                          border: `1px solid ${isApproved ? 'rgba(16, 185, 129, 0.3)' : isDeclined ? 'rgba(239, 68, 68, 0.3)' : isShortlisted ? 'rgba(56, 189, 248, 0.3)' : 'rgba(234, 179, 8, 0.3)'}`
+                        }}>
+                          {p.status || 'UNDER_REVIEW'}
+                        </span>
+
+                        {isSuper && p.status !== 'APPROVED' && (
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdatePitchStatus(p.pitch_id || p.id, 'APPROVED')}
+                              style={{
+                                background: 'rgba(16, 185, 129, 0.2)',
+                                border: '1px solid rgba(16, 185, 129, 0.4)',
+                                color: '#10b981',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Approve & Lock Escrow
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdatePitchStatus(p.pitch_id || p.id, 'DECLINED')}
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                color: '#f87171',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
           TAB 3: 90/10 SPLIT & WATERFALL TRANSPARENCY
           ======================================================== */}
       {activeTab === 'waterfall' && (
@@ -1038,6 +1423,7 @@ export default function SyncMarketplacePanel({ sessionUser }) {
         catalogTracks={catalogTracks}
         sessionUser={sessionUser}
         onPitchSubmitted={(pitch) => {
+          setMyPitches(prev => [pitch, ...prev]);
           showToast(`Pitch submitted for "${pitchingBrief?.title}"! 0 credits deducted.`);
           // Increment pitch counter
           setActiveBriefs(prev => prev.map(b => b.id === pitchingBrief?.id ? { ...b, pitches_count: (b.pitches_count || 0) + 1 } : b));

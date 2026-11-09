@@ -306,3 +306,25 @@ export const affiliatesApi = {
   }
 };
 
+// --- Sync Marketplace & Brief Matching (Phase 6) ---
+export const syncApi = {
+  listBriefs: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/match/briefs${qs ? `?${qs}` : ''}`);
+  },
+  createBrief: (payload) => request('/api/match/briefs', { method: 'POST', body: payload }),
+  listPitches: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/match/pitches${qs ? `?${qs}` : ''}`);
+  },
+  submitPitch: (payload) => request('/api/match/pitch', { method: 'POST', body: payload }),
+  updatePitchStatus: (pitchId, statusVal, note = '') =>
+    request(`/api/match/pitches/${pitchId}/status`, { method: 'POST', body: { status: statusVal, note } }),
+  simulateMatch: (briefId, metadata) =>
+    request('/api/match/simulate', { method: 'POST', body: { brief_id: briefId, track_metadata: metadata } }),
+  getWaterfall: (syncFee, mode = 'administrator') =>
+    request(`/api/match/waterfall?sync_fee=${syncFee}&mode=${mode}`),
+  listCatalog: () => request('/api/match/catalog'),
+  addCatalogTrack: (payload) => request('/api/match/catalog', { method: 'POST', body: payload }),
+};
+

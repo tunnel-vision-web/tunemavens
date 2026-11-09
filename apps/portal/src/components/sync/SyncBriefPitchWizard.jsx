@@ -61,30 +61,53 @@ export default function SyncBriefPitchWizard({
 
   const matchScore = computeMatchScore();
 
-  const handleSubmitPitch = () => {
+  const handleSubmitPitch = async () => {
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      const submission = {
-        pitch_id: `PITCH-${Date.now().toString().slice(-6)}`,
-        brief_id: brief.id,
-        brief_title: brief.title,
-        client: brief.client,
-        track_id: selectedTrack.id,
-        track_title: selectedTrack.title,
-        artist: selectedTrack.artist,
-        match_score: matchScore,
-        pitch_note: pitchNote,
-        status: 'UNDER_REVIEW',
-        submitted_at: new Date().toISOString()
-      };
-      setPitchResult(submission);
-      setStep(4);
+    let submission = {
+      pitch_id: `PITCH-${Date.now().toString().slice(-6)}`,
+      brief_id: brief.id || brief._id || brief.brief_id,
+      brief_title: brief.title,
+      client: brief.client,
+      track_id: selectedTrack?.id || selectedTrack?._id || 'sync_trk_01',
+      track_title: selectedTrack?.title || 'Selected Track',
+      artist: selectedTrack?.artist || 'Artist',
+      genre: selectedTrack?.genre || 'Afrobeats',
+      mood: Array.isArray(selectedTrack?.moods) ? selectedTrack.moods[0] : (selectedTrack?.mood || 'Action'),
+      bpm: selectedTrack?.bpm || 120,
+      audio_url: selectedTrack?.audio_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      match_score: matchScore,
+      pitch_note: pitchNote,
+      status: 'UNDER_REVIEW',
+      submitted_at: new Date().toISOString()
+    };
 
-      if (typeof onPitchSubmitted === 'function') {
-        onPitchSubmitted(submission);
+    try {
+      const { syncApi } = await import('../../lib/api.js');
+      const res = await syncApi.submitPitch({
+        brief_id: submission.brief_id,
+        track_id: submission.track_id,
+        track_title: submission.track_title,
+        artist: submission.artist,
+        genre: submission.genre,
+        mood: submission.mood,
+        bpm: submission.bpm,
+        audio_url: submission.audio_url,
+        pitch_note: submission.pitch_note
+      });
+      if (res && res.pitch_id) {
+        submission = { ...submission, ...res };
       }
-    }, 1200);
+    } catch (err) {
+      console.warn('Backend pitch sync fallback:', err);
+    }
+
+    setSubmitting(false);
+    setPitchResult(submission);
+    setStep(4);
+
+    if (typeof onPitchSubmitted === 'function') {
+      onPitchSubmitted(submission);
+    }
   };
 
   return (

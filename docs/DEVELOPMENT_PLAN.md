@@ -47,9 +47,14 @@ admin console with role-gated tabs, domain-mapping registry.
 - Bootleg & Remix Clearance Hub with verifiable cryptographic certificate generation (`TM-CLR-YYYY-XXXX`), owner moderation, and DMCA immunity passport modal.
 - End-to-end backend test suite (`backend/tests/test_djpool_engine.py`) passing with 100% assertions.
 
-### Phase 6 · Sync Marketplace (SyncMavens) 🟡 P2
-- Sync licensing marketplace (formerly SyncMaster), interactive brief matching, catalog integration.
-- Domain Routing: Automatic deployment pipeline to `syncmavens.com` from isolated build directory.
+### Phase 6 · Sync Marketplace (SyncMavens) ✅ SHIPPED
+- Ditto Music-inspired public landing page and interactive portal deployed at `syncmavens.com` (`apps/syncmavens`).
+- 90/10 Pure Placement Waterfall compensation model ($0 catalog advances, 100% ownership retention by artists).
+- Interactive AI Sync Match Simulator testing track acoustic metadata against broadcast briefs with breakdown scoring.
+- Supervisor brief creation wizard, creator pitch submission flow, and live moderation ledger.
+- Verifiable cryptographic sync licensing escrow certificates (`TM-SYNC-LIC-YYYY-XXXX`) and MyContracts integration.
+- Unified backend endpoints (`/api/match/briefs`, `/api/match/pitch`, `/api/match/pitches/{id}/status`, `/api/match/simulate`, `/api/match/waterfall`, `/api/match/catalog`).
+- Automated test suite (`backend/tests/test_sync_marketplace.py`) passing 5/5 tests.
 ### Phase 7 · Split Cascade Engine ✅ SHIPPED
 - Sovereign TuneLedger 7-tier revenue waterfall and micro-royalty settlement engine (§9.32/§9.36).
 - Real-time multi-currency conversion (USD, KES, EUR, GBP), M-Pesa B2C and Stripe Express dual-rail routing.

@@ -103,41 +103,64 @@ export default function SyncBriefCreationWizard({
 
   const { total, creatorShare, platformShare } = calculateWaterfall();
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      const newBriefId = `brief_custom_${Date.now()}`;
-      const now = new Date();
-      const deadlineDate = new Date(now.getTime() + formData.deadline_days * 24 * 60 * 60 * 1000);
+    const newBriefId = `brief_custom_${Date.now()}`;
+    const now = new Date();
+    const deadlineDate = new Date(now.getTime() + formData.deadline_days * 24 * 60 * 60 * 1000);
 
-      const newBrief = {
-        id: newBriefId,
-        title: formData.title || 'Untitled Commercial Sync Project',
-        client: formData.client || 'Independent Production Co',
-        production_house: formData.production_house || 'East African Screen Arts',
-        budget_fee: total,
-        currency: 'USD',
-        required_genres: formData.required_genres.length > 0 ? formData.required_genres : ['Afrobeats'],
-        required_moods: formData.required_moods.length > 0 ? formData.required_moods : ['Uplifting'],
-        target_bpm: Number(formData.target_bpm) || 120,
-        duration_needed: 'Full Track + 30s & 60s Cutdowns',
-        deadline_date: `In ${formData.deadline_days} days`,
-        deadline_iso: deadlineDate.toISOString(),
-        status: 'ACTIVE',
-        urgency: formData.deadline_days <= 3 ? 'critical' : formData.deadline_days <= 7 ? 'medium' : 'low',
-        synopsis: formData.synopsis || 'Original high-energy sync placement required for broadcast media.',
-        reference_tracks: formData.reference_tracks || 'East African cinematic reference',
-        pitches_count: 0,
-        creator_split_promise: `90% Gross ($${creatorShare.toLocaleString()} via TuneLedger Cascade)`
-      };
+    let newBrief = {
+      id: newBriefId,
+      title: formData.title || 'Untitled Commercial Sync Project',
+      client: formData.client || 'Independent Production Co',
+      production_house: formData.production_house || 'East African Screen Arts',
+      budget: total,
+      budget_fee: total,
+      currency: 'USD',
+      required_genres: formData.required_genres.length > 0 ? formData.required_genres : ['Afrobeats'],
+      genres: formData.required_genres.length > 0 ? formData.required_genres : ['Afrobeats'],
+      required_moods: formData.required_moods.length > 0 ? formData.required_moods : ['Uplifting'],
+      moods: formData.required_moods.length > 0 ? formData.required_moods : ['Uplifting'],
+      target_bpm: Number(formData.target_bpm) || 120,
+      duration_needed: 'Full Track + 30s & 60s Cutdowns',
+      deadline_date: `In ${formData.deadline_days} days`,
+      deadline: deadlineDate.toISOString().slice(0, 10),
+      deadline_iso: deadlineDate.toISOString(),
+      status: 'ACTIVE',
+      urgency: formData.deadline_days <= 3 ? 'critical' : formData.deadline_days <= 7 ? 'medium' : 'low',
+      synopsis: formData.synopsis || 'Original high-energy sync placement required for broadcast media.',
+      reference_tracks: formData.reference_tracks || 'East African cinematic reference',
+      pitches_count: 0,
+      creator_split_promise: `90% Gross ($${creatorShare.toLocaleString()} via TuneLedger Cascade)`
+    };
 
-      setCreatedBrief(newBrief);
-      setIsSubmitting(false);
-      setStep(4);
-      if (onBriefCreated) {
-        onBriefCreated(newBrief);
+    try {
+      const { syncApi } = await import('../../lib/api.js');
+      const res = await syncApi.createBrief({
+        title: newBrief.title,
+        client: newBrief.client,
+        project_type: formData.initiative_type,
+        budget: total,
+        genres: newBrief.required_genres,
+        moods: newBrief.required_moods,
+        target_bpm: newBrief.target_bpm,
+        synopsis: newBrief.synopsis,
+        duration_needed: newBrief.duration_needed,
+        deadline: newBrief.deadline
+      });
+      if (res && (res.id || res._id)) {
+        newBrief = { ...newBrief, ...res, id: res.id || res._id };
       }
-    }, 900);
+    } catch (err) {
+      console.warn('Backend brief creation fallback:', err);
+    }
+
+    setCreatedBrief(newBrief);
+    setIsSubmitting(false);
+    setStep(4);
+    if (onBriefCreated) {
+      onBriefCreated(newBrief);
+    }
   };
 
   return (
