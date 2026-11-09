@@ -40,6 +40,8 @@ DEFAULT_MAPPINGS = [
     {"key": "tools-index", "label": "AI Tools Suite", "category": "ai-tool", "path": "/tools", "subdomain": "tools"},
     # Streaming
     {"key": "consumer-stream", "label": "Web Player (Consumer Stream)", "category": "ai-tool", "path": "/stream", "subdomain": "stream"},
+    {"key": "tunestream-co", "label": "TuneStream Web Application (tunestream.co)", "category": "domain-routing", "path": "/stream", "subdomain": "tunestream.co"},
+    {"key": "tunestream-subdomain", "label": "TuneStream Hub (tunestream.tunemavens.com)", "category": "domain-routing", "path": "/stream", "subdomain": "tunestream"},
 ]
 
 

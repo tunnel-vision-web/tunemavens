@@ -448,8 +448,24 @@ export function normalizeMediaUrl(url) {
   return trimmed;
 }
 
+// --- Streaming, Consumer Audio & Tipping Engine (Phase 2) ---
 export const streamApi = {
   tipArtist: (payload) => request('/api/stream/tip', { method: 'POST', body: payload }),
+  tipCreator: (payload) => request('/api/stream/tip', { method: 'POST', body: payload }),
+  getTipsHistory: () => request('/api/stream/tips/history'),
   logEvent: (payload) => request('/api/stream/event', { method: 'POST', body: payload }),
   getManifest: (identifier) => request(`/api/stream/manifest/${encodeURIComponent(identifier)}`),
+  getLibrary: () => request('/api/stream/library'),
+  getLiked: () => request('/api/stream/library/liked'),
+  toggleLike: (trackId, trackData) => request('/api/stream/library/liked', { method: 'POST', body: { track_id: trackId, track_data: trackData } }),
+  removeLiked: (trackId) => request(`/api/stream/library/liked/${encodeURIComponent(trackId)}`, { method: 'DELETE' }),
+  getCrates: () => request('/api/stream/library/crates'),
+  createCrate: (payload) => request('/api/stream/library/crates', { method: 'POST', body: payload }),
+  deleteCrate: (crateId) => request(`/api/stream/library/crates/${encodeURIComponent(crateId)}`, { method: 'DELETE' }),
+  addTrackToCrate: (crateId, trackId, trackData) => request(`/api/stream/library/crates/${encodeURIComponent(crateId)}/tracks`, { method: 'POST', body: { track_id: trackId, track_data: trackData } }),
+  removeTrackFromCrate: (crateId, trackId) => request(`/api/stream/library/crates/${encodeURIComponent(crateId)}/tracks/${encodeURIComponent(trackId)}`, { method: 'DELETE' }),
+  getHistory: () => request('/api/stream/library/history'),
+  recordHistory: (payload) => request('/api/stream/library/history', { method: 'POST', body: payload }),
+  getOfflineCache: () => request('/api/stream/offline-cache'),
+  getOfflineManifest: (identifier) => request(`/api/stream/offline-cache/${encodeURIComponent(identifier)}`),
 };

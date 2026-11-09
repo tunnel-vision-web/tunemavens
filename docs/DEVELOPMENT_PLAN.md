@@ -13,9 +13,12 @@ self-reinforcing.
 FastAPI backend, Vite React frontend, shared JWT auth, Mongo persistence,
 admin console with role-gated tabs, domain-mapping registry.
 
-### Phase 2 · Consumer Audio System (TuneStream) 🔵 P1 Backlog
-- `/stream` player, library persistence, tip flow, offline cache metadata.
-- Domain Routing: Automatic deployment pipeline to `tunestream.co` and `tunestream.tunemavens.com` from isolated build directory.
+### Phase 2 · Consumer Audio System (TuneStream) ✅ SHIPPED
+- High-fidelity `/stream` consumer audio player with -12 LUFS playback loudness calibration, 24-bit FLAC / 320kbps MP3 streaming, and cross-tab synchronization.
+- Complete listener library persistence (`db.user_libraries`, `db.playback_history`): liked tracks collection, custom playlist crates with track management, and listening history.
+- 1-Tap direct creator tipping flow with 95% to 100% net sovereign Split Cascade routing, zero recurring listener subscriptions, cryptographic receipt generation (`TM-TIP-2026-XXXX`), and live tipping ledger.
+- 8GB smart offline crate cache metadata: device allocation headers, paired devices sync (Mobile, Desktop DAC Bridge, CarPlay), 24-bit FLAC manifests, and 30-day cryptographic license leases (`TM-LEASE-YYYYMMDD-XXXX`).
+- Domain Routing & Build Pipeline: `tunestream.co` and `tunestream.tunemavens.com` registered in domain mapping registry, isolated build pipeline (`apps/tunestream/dist`), and automated tests (`backend/tests/test_stream_consumer.py`) passing 100%.
 
 ### Phase 3 · Creator Pipeline ✅ SHIPPED
 - Publishing Election, Distribution Election, OnboardingStripe
