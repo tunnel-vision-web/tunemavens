@@ -99,7 +99,17 @@ admin console with role-gated tabs, domain-mapping registry.
   - Established Ad Rate Cards (Pulse, Amplified, Culture Lead, Titan) with multi-currency pricing and instant credit booking.
 - Cryptographically Verified Flight Delivery Certificates (`TM-AD-FLIGHT-YYYY-XXXX`) with audited impressions, completions, CTR, and SHA-256 tamper-evident verification seals.
 - Automated Integration Test Suite (`backend/tests/test_ad_injection_platform.py`) passing 8/8 tests (30/30 platform total).
-### Phase 10 · Media House Routing 🟡 P2
+### Phase 10 · Media House Routing · ✅ SHIPPED
+- **Deliverables**:
+  - Broadcast Operations Command Suite (`apps/portal/src/components/MediaHousePanel.jsx`) with multi-station switching (FM Radio, Linear TV, Digital Satellite).
+  - Playout rotation queue with Dayparting governance (Morning Drive, Midday Mix, Afternoon Rush, Evening Prime, Overnight Chill) and rotation tiering (`heavy`, `medium`, `light`, `ad_spot`).
+  - Seamless Commercial Ad Insertion linking to Phase 9 Ad Flights.
+  - Live On-Air transmission console with stem selector (`Clean Radio Edit`, `Master`, `Instrumental`, `Acapella`) and playout advancement.
+  - Automated Statutory PRO Cue Sheet Generator: 1-click generation and certification formatted for ASCAP, BMI, MCSK, and SAMRO.
+  - Cryptographically verifiable airplay certificates (`TM-BCAST-YYYY-XXXX`) and SHA-256 tamper-evident digital seals.
+  - Pre-cleared broadcast stem catalog for rapid cueing.
+  - Full Universal "Get Help" and "Ask AI" buttons embedded directly in the panel header, linked to the `media-house-routing-and-broadcast-syndication` documentation guide.
+  - Automated Integration Test Suite (`backend/tests/test_media_house_routing.py`) passing 8/8 tests (38/38 platform total).
 
 ---
 
