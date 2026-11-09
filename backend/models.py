@@ -461,6 +461,11 @@ class DjPoolTrack(BaseDocument):
     audio_url: str
     allowed_regions: List[str] = Field(default_factory=list)
     downloads_count: int = 0
+    version_type: Optional[str] = "Extended Mix"
+    energy_level: Optional[int] = 7
+    duration_seconds: Optional[int] = 240
+    stems_available: Optional[bool] = False
+    lossless_format: Optional[str] = "24-bit WAV"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -474,11 +479,16 @@ class DjFeedback(BaseDocument):
 
 
 class DjClearanceRequest(BaseDocument):
+    dj_id: Optional[str] = None
     track_id: str
     title: str
     dj_name: str
     venue: str
+    event_date: Optional[str] = None
+    remix_type: Optional[str] = "bootleg_remix"
+    certificate_id: Optional[str] = None
     status: str = "pending"
+    approved_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

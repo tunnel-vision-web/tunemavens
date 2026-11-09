@@ -38,7 +38,15 @@ admin console with role-gated tabs, domain-mapping registry.
 - Sub-brand Landing Pages: Customized dark-theme background colors, custom navigation menus, subdomain mapping alerts, Tidal-inspired sections for TuneStream, and admin configurator panel for promoted acts. ✅ SHIPPED
 - Distribution Path C negotiation wizard, catalogue acquisition ledger.
 
-### Phase 5 · DJ Pool Engine 🟡 P2
+### Phase 5 · DJ Pool Engine ✅ SHIPPED
+- Modularized DJ Pool component extracted to `apps/portal/src/components/dj/DJPoolPanel.jsx`.
+- Camelot Wheel Harmonic Mixing filter (1A–12B) with automatic harmonic match detection (±1 energy step, relative keys).
+- BPM range preset filters (Afro/HipHop, Amapiano, House, Techno) and live audition player preview with waveform progress.
+- DJ Crate & Setlist Builder with harmonic transition flow analysis, 1-click Rekordbox M3U8, ASCAP/BMI/SAMRO cue sheet CSV, and batch ZIP export (`JSZip`).
+- Dancefloor review gating modal (ratings, crowd response chips, set reviews) unlocking lossless 24-bit WAV downloads.
+- Bootleg & Remix Clearance Hub with verifiable cryptographic certificate generation (`TM-CLR-YYYY-XXXX`), owner moderation, and DMCA immunity passport modal.
+- End-to-end backend test suite (`backend/tests/test_djpool_engine.py`) passing with 100% assertions.
+
 ### Phase 6 · Sync Marketplace (SyncMavens) 🟡 P2
 - Sync licensing marketplace (formerly SyncMaster), interactive brief matching, catalog integration.
 - Domain Routing: Automatic deployment pipeline to `syncmavens.com` from isolated build directory.

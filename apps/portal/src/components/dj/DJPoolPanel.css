@@ -1,0 +1,577 @@
+/* =========================================================================
+   DJ Pool Engine & Dancefloor Clearance Hub (Phase 5)
+   ========================================================================= */
+
+.djpool-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Hero Metrics Strip --- */
+.djpool-metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.djpool-metric-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.djpool-metric-card:hover {
+  border-color: rgba(34, 211, 238, 0.3);
+  transform: translateY(-2px);
+}
+
+.djpool-metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(34, 211, 238, 0.12);
+  color: var(--cyan, #22d3ee);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.djpool-metric-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.djpool-metric-label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+/* --- Tab Buttons --- */
+.djpool-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.djpool-tabs-left {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.djpool-tab-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.djpool-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+.djpool-tab-btn.active {
+  background: var(--cyan, #22d3ee);
+  color: #060813;
+  border-color: transparent;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.25);
+}
+
+.djpool-badge-pill {
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+}
+
+/* --- Filter & Camelot Harmonizer Bar --- */
+.djpool-filter-panel {
+  background: rgba(12, 17, 34, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  backdrop-filter: blur(12px);
+}
+
+.djpool-search-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.djpool-search-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+
+.djpool-search-input-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 16px;
+}
+
+.djpool-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 13px;
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.djpool-search-input:focus {
+  border-color: var(--cyan, #22d3ee);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15);
+}
+
+.djpool-filter-chip {
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.djpool-filter-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.djpool-filter-chip.active {
+  background: rgba(34, 211, 238, 0.18);
+  border-color: var(--cyan, #22d3ee);
+  color: var(--cyan, #22d3ee);
+  font-weight: 700;
+}
+
+/* --- Camelot Harmonic Wheel Bar --- */
+.djpool-camelot-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.djpool-camelot-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.djpool-camelot-pill {
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  transition: all 0.15s;
+}
+
+.djpool-camelot-pill:hover {
+  border-color: rgba(34, 211, 238, 0.4);
+}
+
+.djpool-camelot-pill.selected {
+  background: #f59e0b;
+  color: #000;
+  border-color: #f59e0b;
+  font-weight: 800;
+}
+
+.djpool-camelot-pill.harmonic-match {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  color: #86efac;
+}
+
+/* --- Track Cards Grid / List --- */
+.djpool-track-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.2s ease;
+}
+
+.djpool-track-card:hover {
+  border-color: rgba(34, 211, 238, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.djpool-play-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.15);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  color: var(--cyan, #22d3ee);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.djpool-play-btn:hover {
+  background: var(--cyan, #22d3ee);
+  color: #060813;
+  transform: scale(1.06);
+}
+
+.djpool-play-btn.playing {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #060813;
+  animation: pulsePlay 1.5s infinite;
+}
+
+@keyframes pulsePlay {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.djpool-track-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.djpool-track-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.djpool-track-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+
+.djpool-track-artist {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.djpool-tag {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.djpool-tag-genre {
+  background: rgba(34, 211, 238, 0.12);
+  color: var(--cyan, #22d3ee);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+}
+
+.djpool-tag-bpm {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.djpool-tag-key {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.djpool-tag-version {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+}
+
+.djpool-tag-stems {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+.djpool-tag-reviewed {
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.djpool-waveform-fake {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+  margin-top: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.djpool-waveform-progress {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan, #22d3ee), #22c55e);
+  border-radius: 99px;
+  transition: width 0.1s linear;
+}
+
+.djpool-track-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.djpool-btn-download {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.djpool-btn-download.unlocked {
+  background: var(--cyan, #22d3ee);
+  color: #060813;
+}
+
+.djpool-btn-download.unlocked:hover {
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+}
+
+.djpool-btn-download.locked {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.djpool-btn-download.locked:hover {
+  background: rgba(245, 158, 11, 0.25);
+}
+
+.djpool-btn-crate {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.djpool-btn-crate:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.djpool-btn-crate.in-crate {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+/* --- Crate Drawer & Setlist Manager --- */
+.djpool-crate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.djpool-crate-summary {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.djpool-setlist-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.djpool-flow-item {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.djpool-flow-idx {
+  font-size: 13px;
+  font-weight: 800;
+  color: #64748b;
+  text-align: center;
+}
+
+.djpool-transition-chip {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.djpool-transition-good {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.djpool-transition-energy {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.djpool-transition-clash {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+/* --- Digital Clearance Certificate Modal --- */
+.djpool-cert-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.djpool-cert-paper {
+  background: radial-gradient(circle at top right, #1e293b, #090d16);
+  border: 2px solid rgba(34, 211, 238, 0.4);
+  border-radius: 16px;
+  padding: 36px;
+  max-width: 620px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 0 50px rgba(34, 211, 238, 0.2);
+}
+
+.djpool-cert-watermark {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  opacity: 0.06;
+  font-size: 160px;
+  pointer-events: none;
+}
+
+.djpool-cert-seal {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-bottom: 16px;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+}
+
+@media (max-width: 768px) {
+  .djpool-track-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .djpool-track-actions {
+    justify-content: flex-start;
+  }
+}

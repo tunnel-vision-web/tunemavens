@@ -207,7 +207,16 @@ export const cmsApi = {
 
 // --- DJ Pool MVP & Clearance Hub ---
 export const djPoolApi = {
-  listTracks: () => request('/api/djpool/tracks'),
+  listTracks: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.genre) qs.append('genre', params.genre);
+    if (params.bpm_min) qs.append('bpm_min', params.bpm_min);
+    if (params.bpm_max) qs.append('bpm_max', params.bpm_max);
+    if (params.key) qs.append('key', params.key);
+    if (params.q) qs.append('q', params.q);
+    const queryStr = qs.toString();
+    return request(`/api/djpool/tracks${queryStr ? `?${queryStr}` : ''}`);
+  },
   addTrack: (payload) => request('/api/djpool/tracks', { method: 'POST', body: payload }),
   submitFeedback: (payload) => request('/api/djpool/feedback', { method: 'POST', body: payload }),
   downloadTrack: (id) => request(`/api/djpool/download/${id}`, { method: 'POST' }),
