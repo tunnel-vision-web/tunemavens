@@ -2962,3 +2962,27 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Dispatches branded HTML email via Resend (`event_type: "epk_activation_invite"`).
     - Dispatches WhatsApp notification (if phone available).
     - Logs outreach and tags in Intermaven Smart CRM (`db.crm_leads`) and Communications Vault (`db.communications`).
+
+### 9.44.50 Ecosystem Help Knowledge Base & Universal "Get Help" / "Ask AI" Integration
+
+- **Knowledge Base Expansion (49 Articles)**:
+  - Standardized and synchronized across `apps/portal/src/data/helpArticles.js`, `apps/tunestream/src/data/helpArticles.js`, and `apps/syncmavens/src/data/helpArticles.js`.
+  - Comprehensive coverage of all 10 platform phases, specifically including:
+    - Ad Injection & Brand Flights (`ad-injection-and-conversion-telemetry`)
+    - Distribution Path C & Catalogue Buyouts (`distribution-path-c-and-catalogue-acquisitions`)
+    - DJ Pool Engine & Dancefloor Clearance (`dj-pool-engine-and-dancefloor-clearance`)
+    - TuneStream Offline Crates & Lossless Audio (`tunestream-offline-crates-and-tipping`)
+    - MyContracts Legal Vault & Escrow (`mycontracts-legal-vault-and-escrow`)
+    - Wall of Fame & Milestones (`community-wall-of-fame-and-epk-induction`)
+    - Smart CRM & Inbound Lead Engine (`crm-growth-engine-and-inbox`)
+    - Localization & Multi-Currency Engine (`ecosystem-localization-and-multi-currency`)
+    - Media House & Broadcast Syndication (`media-house-routing-and-broadcast-syndication`)
+
+- **Universal "Get Help" and "Ask AI" Topbar Controls**:
+  - Implemented standalone `GetHelpAskAiButtons` and restored `.app-help-ai-controls` button stack in `AppHelpAiControls.jsx` and `AppHelpAiControls.css`.
+  - Mounted directly in topbars across:
+    - TuneMavens Portal (`apps/portal/src/App.jsx`)
+    - TuneStream Audio Hub (`apps/tunestream/src/App.jsx`)
+    - SyncMavens Hub (`apps/syncmavens/src/App.jsx`)
+  - Integrated with `userLifecycleMemory.js` for tab-specific fallback mappings and contextual quick-suggestion prompts.
+  - Decoupled event listeners (`tunemavens:open-help`, `tunemavens:open-ai`) for modal activation from any subcomponent.

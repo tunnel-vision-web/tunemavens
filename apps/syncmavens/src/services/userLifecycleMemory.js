@@ -299,7 +299,76 @@ export const APP_DOC_MAPPINGS = {
     fallbackArticleId: 'tuneledger-escrow-dispute-locks',
     label: 'Community & Support Claims Desk',
     appTitle: 'TuneMavens Community'
+  },  // Phase 9: Ad Injection & Telemetry
+  'corporate-ads': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Ad Flight Engine & Telemetry Guide',
+    appTitle: 'Corporate Ads & Injection Engine'
   },
+  'ads': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Ad Flight Engine & Telemetry Guide',
+    appTitle: 'Corporate Advertising Console'
+  },
+  // Phase 4: Path C & Catalogue Acquisitions
+  'catalogue-acquisitions': {
+    articleId: 'distribution-path-c-and-catalogue-acquisitions',
+    fallbackArticleId: 'music-metadata-isrc-iswc-ipi-upc',
+    label: 'Path C & Catalogue Acquisition Guide',
+    appTitle: 'Catalogue Acquisitions & Buyouts'
+  },
+  // Phase 5: DJ Pool Engine
+  'dj-pool': {
+    articleId: 'dj-pool-engine-and-dancefloor-clearance',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'DJ Pool & Dancefloor Clearance Guide',
+    appTitle: 'DJ Pool Engine'
+  },
+  // Phase 8: MyContracts Vault
+  'mycontracts': {
+    articleId: 'mycontracts-legal-vault-and-escrow',
+    fallbackArticleId: 'studio-split-sheets-guide',
+    label: 'MyContracts Legal Vault & Escrow Guide',
+    appTitle: 'MyContracts Vault'
+  },
+  // Phase 5.5: Wall of Fame & EPK Induction
+  'wall-of-fame': {
+    articleId: 'community-wall-of-fame-and-epk-induction',
+    fallbackArticleId: 'epk-studio-and-custom-domains',
+    label: 'Wall of Fame & EPK Induction Guide',
+    appTitle: 'Wall of Fame & Milestones'
+  },
+  // Phase 6.5: Smart CRM & Inbox
+  'inbox': {
+    articleId: 'crm-growth-engine-and-inbox',
+    fallbackArticleId: 'epk-studio-and-custom-domains',
+    label: 'Smart CRM & Communications Inbox Guide',
+    appTitle: 'Smart CRM & Inbox'
+  },
+  // Phase 8.5: Localization & Multi-Currency
+  'localization': {
+    articleId: 'ecosystem-localization-and-multi-currency',
+    fallbackArticleId: 'universal-credits-system-guide',
+    label: 'Localization & Multi-Currency Guide',
+    appTitle: 'Localization & Global Markets'
+  },
+  // Phase 10: Media House
+  'media-house': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House Syndicate'
+  },
+  // Phase 2: Offline Crates & Lossless Audio
+  'offline-crates': {
+    articleId: 'tunestream-offline-crates-and-tipping',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'Offline Crates & Lossless Caching Guide',
+    appTitle: 'Offline Crates Vault'
+  },
+
   'help': {
     articleId: 'how-support-ticketing-works',
     fallbackArticleId: 'master-vs-composition-copyright',

@@ -272,3 +272,29 @@ marketplace phase — they only depend on Phase 2.5 (roles) being in place.
    - Affiliate commission awards on referree conversions.
    - Contract invitations, proposals, and cryptographic execution receipts.
 3. **Audit Vault & Telemetry Hub:** Unified `communications` database collection with full message history, HTML rendered sandboxes, Resend API status codes, 1-click re-send capabilities, and compliance archiving.
+
+---
+
+## Universal In-App Knowledge Base & Contextual AI Copilot (Help & AI System)
+
+### 1. Comprehensive Knowledge Base Articles (49 Ecosystem Guides)
+A unified, multi-category documentation library synchronized across all 3 client web apps (`apps/portal`, `apps/tunestream`, and `apps/syncmavens`):
+*   **Ad Injection & Brand Flights (Phase 9):** `ad-injection-and-conversion-telemetry` covering pre-roll, mid-roll, and post-roll audio insertion, pacing algorithms, and quartile analytics (`start`, `first_quartile`, `midpoint`, `third_quartile`, `complete`).
+*   **Distribution Path C & Catalogue Buyouts (Phase 4):** `distribution-path-c-and-catalogue-acquisitions` detailing the 100% master & publishing acquisition waterfall, 3x–5x ARR multiples, and catalog escrow clearance.
+*   **DJ Pool Engine & Dancefloor Clearance (Phase 5):** `dj-pool-engine-and-dancefloor-clearance` documenting BPM/Key transition detection, cue point tagging, promotional dancefloor clearance licenses, and pool credit access.
+*   **TuneStream Offline Crates & Lossless Audio (Phase 2):** `tunestream-offline-crates-and-tipping` covering IndexedDB 8GB crate caching, 24-bit/96kHz offline playback, and direct fan tipping waterfalls.
+*   **MyContracts Legal Vault & Escrow (Phase 8):** `mycontracts-legal-vault-and-escrow` documenting cryptographic SHA-256 agreement verification, automated milestone escrow disbursements, and dispute resolution locks.
+*   **Wall of Fame & Milestones (Phase 5.5):** `community-wall-of-fame-and-epk-induction` detailing induction eligibility, verified stream milestones, and public EPK showcase integrations.
+*   **Smart CRM & Inbound Lead Engine (Phase 6.5):** `crm-growth-engine-and-inbox` covering VIP buyer scoring, multi-channel lead tracking, and automated outreach sequencing.
+*   **Localization & Multi-Currency Engine (Phase 8.5):** `ecosystem-localization-and-multi-currency` detailing dynamic FX rate caching across 10 global currencies, regional M-Pesa & SEPA routing, and language localization (English & Swahili).
+*   **Media House & Broadcast Syndication (Phase 10):** `media-house-routing-and-broadcast-syndication` documenting linear TV and terrestrial FM cue clearance, satellite stems, and PRO compliance reporting.
+
+### 2. Universal "Get Help" and "Ask AI" Topbar Action Buttons
+*   **Synchronized Navigation Across All 3 Apps:**
+    *   `apps/portal` (Main TuneMavens Portal, Port 3000): Action buttons embedded directly in `.dashboard-topbar-actions` and workspace headers.
+    *   `apps/tunestream` (TuneStream HiFi Audio, Port 3001): Action buttons embedded directly in `.topbar-right` alongside 24-bit DAC and credit top-up controls.
+    *   `apps/syncmavens` (SyncMavens Licensing Hub, Port 3002): Action buttons embedded in `.dashboard-topbar-actions` alongside search and persona switcher.
+*   **Seamless In-App Experience:**
+    *   **"Get Help" Button:** Opens the non-disruptive `InAppDocModal` reader directly within the user's active viewport without navigating away or discarding work. Includes contextual search, category navigation, helpfulness feedback, and shareable deep links.
+    *   **"Ask AI" Button:** Opens the Ayo AI Copilot assistant with continuous User Lifecycle Memory (`userLifecycleMemory.js`), suggested prompt chips dynamically tailored to the user's current workspace tab, and active action pills linking directly to relevant tools.
+    *   **Decoupled Event Architecture:** Powered by `tunemavens:open-help` and `tunemavens:open-ai` custom DOM events, allowing any component, footer link, or contextual tip across the entire suite to trigger immediate guidance.

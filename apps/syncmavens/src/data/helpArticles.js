@@ -1261,7 +1261,353 @@ export const FREQUENT_FAQS = [
   {
     q: 'Do I need to spend Universal Credits to monitor my telemetry in TuneCompanion?',
     a: 'No. Accessing the TuneCompanion dashboard, toggling mobile/desktop views, auditing split sheets, reviewing sync briefs, checking listener telemetry, and initiating standard cashouts costs zero credits forever. Platform credits are only consumed when you run deep MasterLab AI mastering passes or submit priority pitches to commercial television sync briefs.'
+  },
+
+{
+    id: 'ad-injection-and-conversion-telemetry',
+    category: 'services',
+    title: 'TuneStream Dynamic Audio Ad Injection: 15s/30s Flights, Quartile Auditing & Cryptographic Delivery Certificates',
+    readingTime: '7 min read',
+    excerpt: 'How TuneStream injects programmatic audio ads for free-tier listeners. IAB quartile milestone tracking (25%, 50%, 75%, 100%), CPM rate cards, interactive brand vouchers, and verifiable SHA-256 flight delivery certificates.',
+    tags: ['Ad Injection', 'Audio Flights', 'CPM Rate Card', 'Conversion Telemetry', 'IAB Audio', 'Recommended Reading'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['corporate', 'admin', 'creator', 'consumer', 'media_house'],
+    toolLink: { label: 'Open Ad Injection Console', path: '/corporate-ads' },
+    sections: [
+      {
+        heading: 'Programmatic Audio Ad Insertion Architecture',
+        content: `TuneStream employs a non-disruptive, intelligent ad injection platform designed to sustain 100% free streaming for listeners while delivering high-impact audio reach for corporate brand partners:
+* **Audio Interstitial Slots**: Unskippable 15-second (Pulse tier) or 30-second (Amplified tier) high-fidelity audio spots played seamlessly between queued tracks.
+* **Smart Frequency Governance**: Platform policy dynamically enforces track playback intervals (defaulting to every 3 songs) and strict frequency caps (maximum 4 ads per hour per listener) to prevent listener fatigue.
+* **Lossless Broadcast Audio Quality**: All audio ads are streamed at broadcast fidelity (-12 LUFS loudness calibrated) via synthetic harmonic audio or studio-mastered brand assets.
+* **Companion Vinyl & Banner Cards**: When an ad plays, the listener's screen displays an interactive companion card featuring the brand's verified logo, headline, one-click voucher code copy, and direct sponsor link.`
+      },
+      {
+        heading: 'Free-Tier Gating vs. Ad-Free Credit Listening',
+        content: `TuneMavens operates on the sovereign **100% Unified Credits Model** with zero recurring monthly subscription fees:
+* **Always-Free Listeners**: Listeners with a 0-credit balance enjoy unlimited full-length streaming supported by targeted audio ad intervals.
+* **Ad-Free VIP Exemption**: Listeners who hold active Unified Credits or VIP subscriber badges automatically stream 100% ad-free across all crates and stations.
+* **Instant Ad-Removal**: Every ad banner includes a 1-tap "Remove Ads — Top Up Credits" shortcut, allowing listeners to switch to ad-free listening at any time.`
+      },
+      {
+        heading: 'Multi-Milestone Telemetry & IAB Quartile Auditing',
+        content: `Unlike traditional radio broadcast estimations, TuneMavens logs verified listener interactions in real time to MongoDB \`ad_impressions\`:
+1. **Impression Start (0%)**: Logged the millisecond the audio spot begins decoding.
+2. **First Quartile (25%)**: Recorded when 25% of the flight duration has played continuously.
+3. **Midpoint (50%)**: Verified midway completion benchmark.
+4. **Third Quartile (75%)**: High-intent listener retention milestone.
+5. **Full Audio Completion (100%)**: Increments the campaign's verified completions counter and updates audited completion rate percentages.
+6. **Listener Click & Voucher Copy**: Captures outbound clicks to brand landing pages, computing click-through rate (CTR) atomically.`
+      },
+      {
+        heading: 'Verifiable Cryptographic Flight Delivery Certificates',
+        content: `Brand media planners and advertising agencies receive an immutable proof-of-performance certificate upon flight execution:
+* **Certificate Identifier**: Unique identifier formatted as \`TM-AD-FLIGHT-YYYY-XXXX\`.
+* **Audited Metric Roster**: Verifies total delivered listens, completion rates, unique listener reach, and audited CTR.
+* **SHA-256 Tamper-Proof Audit Seal**: A cryptographic hash computed over the certificate ID, brand name, delivered listens, completions, and clicks guarantees delivery numbers cannot be manipulated.
+* **Agency Compliance**: Formatted for IAB Audio Suite v2.1 compliance and statutory royalty audits.`
+      }
+    ]
+  },
+
+  {
+    id: 'distribution-path-c-and-catalogue-acquisitions',
+    category: 'business',
+    title: 'Record Label Console: Path C Catalogue Deals, Advance Recoupment & Encumbrance Passports',
+    readingTime: '8 min read',
+    excerpt: 'Comprehensive guide to Record Label Path C catalogue distribution, interactive AI negotiation sliders, advance payment accounting, recoupment ledgers, and cryptographic acquisition passports.',
+    tags: ['Record Label', 'Distribution Path C', 'Catalogue Acquisition', 'Recoupment Ledger', 'Passports'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['label', 'admin', 'creator', 'vc'],
+    toolLink: { label: 'Open Catalogue Acquisitions', path: '/catalogue-acquisitions' },
+    sections: [
+      {
+        heading: 'The Three Distribution Pathways (Paths A, B & C)',
+        content: `TuneMavens provides three distinct distribution tracks for rights-holders:
+* **Path A (Direct DIY Creator)**: 100% ownership retention, flat credit pricing, and zero upfront advances.
+* **Path B (TuneMavens Premium Distribution)**: 85/15 revenue share with global DDEX DSP delivery and playlist editorial pitching.
+* **Path C (Label-Negotiated Catalogue Deals)**: Bespoke custom revenue splits (50/50 to 90/10), advance capital deployment, marketing commitments, and multi-year term agreements negotiated via our AI Deal Assistant.`
+      },
+      {
+        heading: 'Interactive Path C AI Deal Wizard',
+        content: `The Path C negotiation wizard allows labels and artists to align on contract terms interactively:
+1. **Scope Definition**: Label name, roster size, territory exclusivity (Worldwide, Africa, Diaspora, Single Territory), term years (1 to 10), and advance amount.
+2. **Dynamic Split Slider**: Drag between 50/50 and 90/10 to find balanced revenue alignment.
+3. **AI Counter-Offer Engine**: Analyzes catalog track count, past streaming velocity, and recoupment risk to propose balanced terms in real time.
+4. **Execution & Seal**: Generates locked agreements sealed with \`TM-DIST-PATHC-2026-VERIFIED\` tamper-evident receipts.`
+      },
+      {
+        heading: 'Catalogue Advances & Recoupment Accounting',
+        content: `When a record label advances upfront capital to sign a catalogue, our automated ledger manages financial recovery:
+* **Advance Balance Tracking**: The initial advance is recorded as an encumbered balance against the catalogue's earnings.
+* **Recoupment Rate Deduction**: A contractual percentage (e.g., 50% to 100%) of incoming streaming and licensing royalties is automatically redirected to satisfy the outstanding advance.
+* **Unencumbered Clearance**: The moment the remaining balance reaches $0, the catalogue is instantly marked **Recouped / Fully Cleared**, and 100% of artist shares flow directly into creator payout balances.
+* **Cryptographic Acquisition Passports**: Every acquisition is issued a verifiable passport (\`TM-ACQ-YYYY-XXXX\`) certifying legal encumbrance and recoupment velocity.`
+      }
+    ]
+  },
+
+  {
+    id: 'dj-pool-engine-and-dancefloor-clearance',
+    category: 'services',
+    title: 'DJ Pool Engine: Camelot Harmonic Mixing, Setlist Crate Exports & Bootleg DMCA Clearance',
+    readingTime: '6 min read',
+    excerpt: 'Everything DJs need to know about TuneMavens DJ Pool. Camelot Wheel 1A-12B harmonic transitions, Rekordbox M3U8 exports, dancefloor review gating, and cryptographic bootleg clearance certificates.',
+    tags: ['DJ Pool', 'Camelot Wheel', 'Harmonic Mixing', 'Rekordbox', 'DMCA Clearance', 'Setlists'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['dj', 'creator', 'admin'],
+    toolLink: { label: 'Open DJ Pool Hub', path: '/dj-pool' },
+    sections: [
+      {
+        heading: 'Harmonic Mixing with the Camelot Wheel (1A–12B)',
+        content: `The TuneMavens DJ Pool integrates automated musical key and energy detection using the industry-standard Camelot Wheel:
+* **Harmonic Match Rules**: Filter tracks by relative keys (A = Minor, B = Major) and energy shifts:
+  * **Same Key (Energy Lock)**: Mix 8A with 8A for smooth, seamless transitions.
+  * **Relative Major/Minor**: Shift from 8A (A Minor) to 8B (C Major) for emotional uplift.
+  * **Energy Boost (+1 Step)**: Move from 8A to 9A (E Minor) to raise dancefloor energy.
+  * **Energy Drop (-1 Step)**: Move from 8A to 7A (D Minor) to settle the room.
+* **BPM Presets**: Quick filters for Afro/HipHop (95-105 BPM), Amapiano (112-116 BPM), House (120-126 BPM), and Techno (128-135 BPM).`
+      },
+      {
+        heading: 'Crate Building & Multi-Format Setlist Exports',
+        content: `Build and export professional performance setlists in seconds:
+* **Transition Flow Analysis**: Evaluates harmonic stability across your cue sequence.
+* **Rekordbox M3U8 Export**: 1-click export compatible with Pioneer Rekordbox, Serato DJ Pro, Traktor, and Denon Engine Prime.
+* **ASCAP, BMI & SAMRO Cue Sheets**: Automatically generates regulatory broadcast performance cue sheet CSVs for club and festival set audits.
+* **Batch ZIP Audio Downloads**: Package high-bitrate tracks into an uncompressed archive for offline performance USB sticks.`
+      },
+      {
+        heading: 'Dancefloor Review Gating & Bootleg DMCA Clearance Hub',
+        content: `To ensure high-quality curation, the pool pairs community feedback with legal protection:
+* **Dancefloor Review Gating**: DJs submit crowd reaction ratings and set feedback to unlock lossless 24-bit WAV masters.
+* **Bootleg & Remix Clearance Hub**: Independent remixers and mashup producers can request official clearance from original copyright holders.
+* **Cryptographic Clearance Passports**: Cleared remixes receive a verified certificate (\`TM-CLR-YYYY-XXXX\`) granting DMCA safe harbor immunity on public DJ mixes.`
+      }
+    ]
+  },
+
+  {
+    id: 'tunestream-offline-crates-and-tipping',
+    category: 'services',
+    title: 'TuneStream Listener Guide: 1-Tap Sovereign Creator Tipping & 8GB Offline Crate Caching',
+    readingTime: '5 min read',
+    excerpt: 'How to use TuneStream as an audiophile listener. Sovereign 95%-100% direct artist tipping, Split Cascade routing, 8GB smart offline crate caching, and device synchronization.',
+    tags: ['TuneStream', 'Direct Tipping', 'Offline Caching', 'Lossless Audio', 'Library'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['consumer', 'creator', 'dj'],
+    toolLink: { label: 'Open TuneStream Web Player', path: '/stream' },
+    sections: [
+      {
+        heading: 'Audiophile Playback Calibration (-12 LUFS & 24-Bit FLAC)',
+        content: `TuneStream is engineered for sonic purity without artificial dynamic compression:
+* **Loudness Standards**: Calibrated to -12 LUFS integrated loudness with -0.5 dBFS true peak ceiling, preserving acoustic punch and headroom.
+* **Dual-Format Delivery**: High-fidelity 24-bit FLAC for lossless audiophile DACs and 320kbps MP3 for bandwidth-conscious mobile devices.
+* **Cross-Tab Synchronization**: Intelligent media controller prevents conflicting audio streams across multiple open browser tabs.`
+      },
+      {
+        heading: '1-Tap Direct Creator Tipping Flow',
+        content: `Support your favorite musicians directly with zero middleman overhead:
+* **Sovereign Split Cascade**: 95% to 100% of your tip flows straight to the recording artist and split collaborators via M-Pesa STK or Stripe.
+* **No Recurring Monthly Fees**: Tip when inspired without being locked into expensive monthly music subscriptions.
+* **Cryptographic Receipts**: Every tip generates a verifiable digital receipt (\`TM-TIP-2026-XXXX\`) logged to the public artist tipping ledger.`
+      },
+      {
+        heading: '8GB Smart Offline Crate Cache & Device Sync',
+        content: `Keep your curated crates playing even when traveling off-grid:
+* **8GB Local Allocation**: Cache entire albums and custom crates directly into browser IndexedDB storage.
+* **Cryptographic 30-Day Leases**: Cached tracks are granted an immutable offline license token (\`TM-LEASE-YYYYMMDD-XXXX\`) refreshed automatically on connection.
+* **Multi-Device Bridge**: Pair Mobile devices, Desktop DAC Bridges, and CarPlay seamlessly.`
+      }
+    ]
+  },
+
+  {
+    id: 'mycontracts-legal-vault-and-escrow',
+    category: 'business',
+    title: 'MyContracts Legal Vault: 6 Canonical Music Contracts, In-App E-Signatures & Escrow Release Rails',
+    readingTime: '7 min read',
+    excerpt: 'Comprehensive guide to MyContracts legal automation. The 6 canonical contract templates, in-app electronic signatures with SHA-256 seals, milestone smart escrow, and dispute locks.',
+    tags: ['MyContracts', 'Legal Vault', 'E-Signatures', 'Smart Escrow', 'Contract Templates'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['creator', 'label', 'supervisor', 'corporate', 'vc'],
+    toolLink: { label: 'Open MyContracts Vault', path: '/contracts' },
+    sections: [
+      {
+        heading: 'The 6 Canonical Music Business Contract Templates',
+        content: `MyContracts provides standardized, legally vetted templates tailored to music industry workflows:
+1. **Publishing Administration Agreement**: Worldwide mechanical, sync, and print collection with 100% writer ownership retention.
+2. **Co-Publishing Agreement**: 50/50 publishing revenue splits with advance recoupment and term management.
+3. **Catalogue Acquisition Deal**: Master buyout and acquisition agreements with clear encumbrance ledgers.
+4. **Distribution Agreement (Flat / Rev-Share)**: Path B and Path C digital streaming distribution contracts.
+5. **Sync Placement Licensing License**: Film, television, commercial, and gaming master/sync clearance buyouts.
+6. **Live Performance & Gig Escrow Agreement**: Venue booking guarantees, door splits, hospitality riders, and milestone escrow security.`
+      },
+      {
+        heading: 'In-App E-Signatures & Cryptographic SHA-256 Seals',
+        content: `Sign binding legal agreements directly within your browser or mobile phone:
+* **Dual Execution Modes**: Choose between elegant cursive script generation or direct touchscreen/mouse signature canvas.
+* **Statutory Consent**: Enforces statutory E-SIGN and UETA consent with IP address, timestamp, and device fingerprint logging.
+* **Tamper-Evident SHA-256 Seals**: Every signed agreement generates a cryptographic hash (\`SIG-SHA256\`). Modifying a single character of the contract invalidates the digital seal immediately.`
+      },
+      {
+        heading: 'Milestone Smart Escrow & Direct Payout Release',
+        content: `Protect fees and advance payments with automated milestone escrow:
+* **Escrow Funding**: Hiring parties deposit funds into secure platform escrow before work begins.
+* **Milestone Releases**: Funds release automatically upon verified deliverable approval (e.g. final master WAV delivery, gig completion).
+* **Direct Wallet Crediting**: Escrow payouts credit directly to creator \`payoutBalance\`, ready for instant cashout via M-Pesa B2C or Stripe Express.
+* **Printable PDF Export**: 1-click printable legal contract export formatted for court and accounting records.`
+      }
+    ]
+  },
+
+  {
+    id: 'community-wall-of-fame-and-epk-induction',
+    category: 'services',
+    title: 'Community & Wall of Fame: Luminary Nominations, YouTube Showcases & EPK Activation',
+    readingTime: '6 min read',
+    excerpt: 'How the TuneMavens Wall of Fame operates. Curated luminary nominations, automated YouTube highlights via Data API v3, EPK onboarding activation, and CRM synchronization.',
+    tags: ['Community', 'Wall of Fame', 'EPK Activation', 'YouTube API', 'Luminaries'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['creator', 'admin', 'consumer', 'label'],
+    toolLink: { label: 'Explore Community', path: '/community' },
+    sections: [
+      {
+        heading: 'Curated Luminary Grid & Clean Pagination',
+        content: `The Community Wall of Fame (/community) showcases outstanding figures shaping contemporary African and global diaspora music culture:
+* **Curated Layout**: Strict 4-rows max pagination (12 figures per page) maintaining clean hierarchy on desktop and mobile.
+* **Rich Luminary Cards**: Each tile displays an avatar portrait, bio summary, social media micro-icons (Instagram, X, Spotify, YouTube), and direct link to their official EPK (\`/epk/:slug\`).
+* **Auto-Fetched YouTube Highlights**: Real-time integration with the YouTube Data API v3 fetches the subject's latest or most popular performance video with fallback to responsive oEmbed previews.`
+      },
+      {
+        heading: 'EPK Onboarding Prompt & Activation Funnel',
+        content: `The Wall of Fame is an interactive growth funnel, not a static encyclopedia:
+* **EPK Creation Prompt**: Inducted creators and registering figures are invited to activate a free Electronic Press Kit during onboarding.
+* **Consent-Gated Visibility**: Luminary tiles remain unlisted until the subject accepts their invitation, reviews their bio, and activates their free account.
+* **Direct Communication Invites**: Admin operators can dispatch invitation tokens via Resend HTML emails or WhatsApp with 1-click claim URLs.`
+      },
+      {
+        heading: 'Bidirectional Intermaven Smart CRM Integration',
+        content: `Every Wall of Fame interaction synchronizes with our central growth engine:
+* **CRM Lead Ingestion**: Luminary nominations and invited claims sync automatically to \`db.crm_leads\`.
+* **Profile State Machine**: Tracks status across \`pending → invited → claimed | declined | expired\`.
+* **Claim Telemetry**: Provides real-time notification to ecosystem curators the instant an artist claims their verified badge.`
+      }
+    ]
+  },
+
+  {
+    id: 'crm-growth-engine-and-inbox',
+    category: 'services',
+    title: 'Intermaven Smart CRM: Multi-Channel Outreach, Audience Segmentation & In-App Messaging',
+    readingTime: '7 min read',
+    excerpt: 'Guide to the Intermaven CRM and in-app communications suite. Audience cohort targeting, Resend email delivery, native in-app notifications, and threaded messaging.',
+    tags: ['Smart CRM', 'Email Delivery', 'In-App Inbox', 'Audience Segments', 'Campaigns'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['admin', 'corporate', 'label', 'creator'],
+    toolLink: { label: 'Open In-App Inbox', path: '/inbox' },
+    sections: [
+      {
+        heading: 'Audience Cohort Segmentation (12 Live Personas)',
+        content: `The CRM composer lets administrators and brand managers target exact ecosystem segments:
+* **Persona Cohorts**: Filter across Creators, Record Labels, DJs, Podcasters, Media Houses, Music Supervisors, Corporate Brands, VCs, and Affiliates.
+* **Activity-Based Filters**: Segment users by credit balance, catalog release volume, active sync pitches, or onboarding completion state.
+* **Real-Time Aggregation**: Live MongoDB counts display exact target audience reach before dispatching.`
+      },
+      {
+        heading: 'Multi-Channel Dispatch Adapters',
+        content: `Campaigns can be delivered through three distinct communication channels:
+1. **Branded Email (Resend)**: High-deliverability transactional and marketing emails wrapped in custom HTML templates, logged to MongoDB \`email_outbox\`.
+2. **Native In-App Inbox (\`db.user_inbox\`)**: Real-time alerts visible inside the user dashboard with unread notification badges.
+3. **Personalized Social DM Generator**: Generates customized outreach copy for Instagram and X with 1-click clipboard copy and dispatch tracking.`
+      },
+      {
+        heading: 'User-Facing In-App Inbox (/inbox)',
+        content: `Users manage communications in a dedicated in-app message center:
+* **Category Filters**: Filter across All, Campaigns, Deals & Contracts, Announcements, and Unread items.
+* **Threaded Real-Time Replies**: Reply directly to campaign inquiries, contract proposals, or support messages.
+* **Action Routing**: Every message features deep action buttons routing users straight to relevant dashboard tools.`
+      }
+    ]
+  },
+
+  {
+    id: 'ecosystem-localization-and-multi-currency',
+    category: 'services',
+    title: 'Ecosystem Localization: Bidirectional English ↔ Kiswahili & Multi-Currency Conversion (KES, USD, EUR, GBP)',
+    readingTime: '5 min read',
+    excerpt: 'How TuneMavens delivers native localized experiences. Synergy DOM localization engine, English and Kiswahili switching, and real-time conversion across 8 global currencies.',
+    tags: ['Localization', 'Kiswahili', 'Multi-Currency', 'Kenyan Shilling', 'Synergy Engine'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['all', 'creator', 'consumer', 'affiliate'],
+    toolLink: { label: 'Switch Currency & Language', path: '/pricing' },
+    sections: [
+      {
+        heading: 'Synergy Client-Side DOM Localization Engine (v=47)',
+        content: `TuneMavens delivers zero-latency localized rendering across all interfaces:
+* **Bidirectional EN ↔ SW Toggle**: Instant switching between English and Kiswahili without reloading the page.
+* **Ecosystem-Wide Coverage**: Seamless localization covers landing pages, 5-slide hero carousels, navigation menus, collapsed-sidebar tooltips, dashboard tools, and all help documentation articles.
+* **Region Switcher Modal**: Accessible from the topbar navigation on every page, allowing listeners and creators to customize market and currency preferences.`
+      },
+      {
+        heading: 'Kenya Default Market & 8 Global Currencies',
+        content: `Tailored financial localization for African creators and the international diaspora:
+* **Kenya Launch Market**: Defaults to Kenya (\`KE\`) and Kenyan Shilling (\`KES\` / \`KSh\`) with seamless M-Pesa STK pricing.
+* **8 Global Currencies Supported**: Dynamic currency conversion supporting KES, TZS, UGX, NGN, ZAR, USD, GBP, and EUR.
+* **Live Exchange Waterfall**: Automatically converts package prices, credit reloads, and royalty settlements using real-time baseline rates.`
+      }
+    ]
+  },
+
+  {
+    id: 'media-house-routing-and-broadcast-syndication',
+    category: 'business',
+    title: 'Media House Routing: Broadcast Airplay Scheduling, Station Feeds & PRO Compliance Exports',
+    readingTime: '7 min read',
+    excerpt: 'Comprehensive operational guide for radio stations, TV networks, and digital broadcast syndicators. Dayparting rotation schedulers, digital cue sheet exports, and statutory PRO compliance reports.',
+    tags: ['Media House', 'Broadcast Airplay', 'Rotation Scheduler', 'PRO Compliance', 'Cue Sheets'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['media_house', 'admin', 'supervisor', 'creator'],
+    toolLink: { label: 'Open Media House Hub', path: '/for/media-house' },
+    sections: [
+      {
+        heading: 'Dedicated Media House Subdomain (media.tunemavens.com)',
+        content: `Media houses and broadcasting networks access a tailored enterprise hub:
+* **Subdomain Routing**: Dedicated domain routing renders broadcaster-specific controls, programming queues, and airplay analytics.
+* **High-Volume Catalog Ingestion**: Search and license uncompressed 24-bit broadcast masters across tens of thousands of verified indie releases.
+* **Syndication Content Feeds**: Direct digital feeds providing real-time acoustic stems, instrumental beds, and clean radio edits for on-air rotation.`
+      },
+      {
+        heading: 'Programmatic Airplay & Rotation Scheduler',
+        content: `Automate and manage broadcast programming grids with dayparting rotation tiers:
+* **Heavy Rotation (Power Recurrents)**: High-frequency airplay slots for chart-topping singles (every 2 to 3 hours).
+* **Medium Rotation**: Active recurrents and rising regional talents (every 4 to 6 hours).
+* **Light Rotation**: Specialized genre shows, ambient late-night slots, and experimental discovery.
+* **Dayparting Segments**: Morning Drive, Midday Mix, Afternoon Rush, Evening Prime, and Overnight Chill.`
+      },
+      {
+        heading: 'Statutory PRO Compliance & Airplay Certificates',
+        content: `Streamline statutory royalty reporting to Performance Rights Organizations:
+* **Automated Log Exports**: Export standardized broadcast cue sheets and play logs formatted specifically for ASCAP, BMI, MCSK, and SAMRO regulatory filing.
+* **Verifiable Airplay Certificates**: Broadcast spins generate cryptographically signed proof-of-airplay certificates (\`TM-BROADCAST-YYYY-XXXX\`) certifying verified transmission for artist royalites.`
+      }
+    ]
   }
 ];
-
-

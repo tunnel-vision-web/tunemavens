@@ -238,7 +238,25 @@ export default function AppHelpAiControls({
       case 'sync-placement':
         return ['How to pitch to music supervisors', 'What deliverables do supervisors need?', 'How do cue sheets generate royalties?'];
       case 'corporate-ads':
-        return ['Explain corporate ad rate packages', 'What is the Amplified Tier CPM?', 'How does brand telemetry tracking work?'];
+      case 'ads':
+        return ['Explain corporate ad rate packages', 'What is the Amplified Tier CPM?', 'How does brand telemetry tracking work?', 'How does ad injection routing work?'];
+      case 'catalogue-acquisitions':
+        return ['How does Path C 100% buyout work?', 'What is the 3x to 5x ARR multiple calculation?', 'How does catalog escrow clearance work?'];
+      case 'dj-pool':
+        return ['Explain BPM/Key dancefloor indexing', 'How does 30-day dancefloor clearance work?', 'What is the 1 credit per download pool tier?'];
+      case 'mycontracts':
+        return ['How does automated counterparty escrow work?', 'Explain irrevocable split sheet lock-in', 'How are breach remedies enforced?'];
+      case 'wall-of-fame':
+        return ['What are the criteria for Wall of Fame induction?', 'How do EPK showcase links work?', 'How does viral momentum tracking work?'];
+      case 'inbox':
+      case 'crm':
+        return ['How do VIP buyer lead scoring and tags work?', 'How does automated outreach sequencing work?', 'Can I filter leads by sync readiness?'];
+      case 'media-house':
+        return ['How does broadcast syndication routing work?', 'Explain linear TV & FM cue clearance', 'What are satellite radio stem bundles?'];
+      case 'localization':
+        return ['Which local fiat currencies are supported?', 'Explain real-time M-Pesa & SEPA conversion', 'How does geo-targeted royalty settlement work?'];
+      case 'offline-crates':
+        return ['How does 8GB offline crate caching work?', 'Does offline play log DDEX telemetry?', 'How does offline direct tipping work?'];
       case 'catalog':
         return ['How do ISRC and ISWC work together?', 'Prevent black box royalty losses', 'One-Stop licensing advantages'];
       case 'epk':
@@ -254,7 +272,31 @@ export default function AppHelpAiControls({
 
   return (
     <>
-      {/* Top Right Corner Buttons removed as requested */}
+            {/* Action Button Container */}
+      <div className={`app-help-ai-controls ${floating ? 'floating' : ''}`} data-testid="app-help-ai-controls">
+        <button
+          type="button"
+          onClick={handleOpenDocModal}
+          className="app-help-ai-btn btn-view-docs"
+          title={`Get Help: View documentation for ${relevantDoc.appTitle}`}
+          data-testid="btn-get-help"
+        >
+          <RiBookOpenLine className="doc-icon" />
+          <span>Get Help</span>
+        </button>
+
+        <button
+          type="button"
+          className="app-help-ai-btn btn-ask-ai"
+          onClick={() => setAiOverlayOpen(true)}
+          title="Ask AI: Consult Ayo AI Copilot (Lifecycle Memory Active)"
+          data-testid="btn-ask-ai"
+        >
+          <RiSparklingLine className="ai-sparkle-icon" />
+          <span>Ask AI</span>
+          <span className="ai-memory-badge" title="AI Lifecycle Memory Synced" />
+        </button>
+      </div>
 
       {/* ========================================================================= */}
       {/* 1. IN-APP CONTEXTUAL DOC READER MODAL OVERLAY                              */}
@@ -507,5 +549,36 @@ export default function AppHelpAiControls({
         document.body
       )}
     </>
+  );
+}
+
+
+// Reusable Standalone Button Pair for Topbars & Navigation Bars
+export function GetHelpAskAiButtons({ className = '', style = {}, compact = false }) {
+  return (
+    <div className={`topbar-help-ai-group ${className}`} style={style} data-testid="topbar-help-ai-group">
+      <button
+        type="button"
+        className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''}`}
+        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-help'))}
+        title="Get Help: Open contextual in-app documentation & guides"
+        data-testid="topbar-btn-get-help"
+      >
+        <RiBookOpenLine className="topbar-help-icon" size={14} />
+        <span>Get Help</span>
+      </button>
+
+      <button
+        type="button"
+        className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''}`}
+        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-ai'))}
+        title="Ask AI: Consult Ayo AI Copilot (Lifecycle Memory Active)"
+        data-testid="topbar-btn-ask-ai"
+      >
+        <RiSparklingLine className="topbar-ai-icon" size={14} />
+        <span>Ask AI</span>
+        <span className="ai-memory-badge" title="AI Lifecycle Memory Synced" />
+      </button>
+    </div>
   );
 }

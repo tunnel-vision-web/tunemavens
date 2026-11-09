@@ -138,7 +138,7 @@ import CatalogueWizard from './components/CatalogueWizard.jsx'
 import ArtistRosterSelector from './components/ArtistRosterSelector.jsx'
 import GenreManagerModal from './components/GenreManagerModal.jsx'
 import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from './lib/genres.js'
-import AppHelpAiControls from './components/common/AppHelpAiControls.jsx'
+import AppHelpAiControls, { GetHelpAskAiButtons } from './components/common/AppHelpAiControls.jsx'
 import { getRelevantDocLink } from './services/userLifecycleMemory.js'
 import {
   OnboardingStripe, OnboardingWizardModal, RecommendationHero,
@@ -723,6 +723,9 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           <RiCompass3Fill size={15} style={{ color: '#38bdf8' }} />
           <span>Take Tour</span>
         </button>
+
+        {/* Universal Get Help & Ask AI Action Buttons */}
+        <GetHelpAskAiButtons />
 
         {/* Region, Currency & Language Switcher in Dashboard */}
         <div className="dashboard-topbar-item">

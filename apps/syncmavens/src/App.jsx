@@ -27,7 +27,7 @@ import headerPricingWestern from './assets/images/header_pricing_western.png';
 import interstellarHeader from './assets/images/interstellar_header.png';
 import SyncMarketplacePanel from './SyncMarketplacePanel.jsx';
 import CreditReloadModal from './components/common/CreditReloadModal.jsx';
-import AppHelpAiControls from './components/common/AppHelpAiControls.jsx';
+import AppHelpAiControls, { GetHelpAskAiButtons } from './components/common/AppHelpAiControls.jsx';
 import {
   AffiliatePayoutSettingsModal,
   AffiliateReferralLinkModal,
@@ -1201,6 +1201,9 @@ function AppContent() {
               >
                 <span>Back to Site</span>
               </Link>
+
+              {/* Universal Get Help & Ask AI Action Buttons */}
+              <GetHelpAskAiButtons />
 
               <div className="dashboard-topbar-item">
                 <RegionSwitcher />

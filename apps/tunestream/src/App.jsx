@@ -42,7 +42,7 @@ import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx';
 import CreditReloadModal from './components/common/CreditReloadModal.jsx';
 import LiveEventsSection from './components/events/LiveEventsSection.jsx';
 import { RiTicket2Fill } from 'react-icons/ri';
-import AppHelpAiControls from './components/common/AppHelpAiControls.jsx';
+import AppHelpAiControls, { GetHelpAskAiButtons } from './components/common/AppHelpAiControls.jsx';
 import {
   AffiliatePayoutSettingsModal,
   AffiliateReferralLinkModal,
@@ -3882,6 +3882,9 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
               <span>Web Player</span>
             </Link>
 
+            {/* Universal Get Help & Ask AI Action Buttons */}
+            <GetHelpAskAiButtons />
+
             {/* Notification Dropdown */}
             <div className="topbar-popover-container" ref={notifRef}>
               <button 
@@ -4099,6 +4102,10 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       <AffiliateDirectTalentModal
         isOpen={isDirectTalentModalOpen}
         onClose={() => setIsDirectTalentModalOpen(false)}
+        sessionUser={activeUser}
+      />
+      <AppHelpAiControls
+        activeTab={activeTab}
         sessionUser={activeUser}
       />
     </div>
