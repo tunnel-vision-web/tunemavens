@@ -542,13 +542,41 @@ class CorporateAdCampaign(BaseDocument):
     target_genres: List[str] = Field(default_factory=list)
     status: str = "in_review"  # 'draft' | 'in_review' | 'active' | 'paused' | 'completed'
     impressions_delivered: int = 0
+    quartile_25_count: int = 0
+    quartile_50_count: int = 0
+    quartile_75_count: int = 0
     completions_delivered: int = 0
     clicks_delivered: int = 0
     ctr: float = 0.0
     leads_generated: int = 0
+    flight_certificate_id: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class AdImpressionLog(BaseDocument):
+    campaign_id: str
+    brand_name: Optional[str] = None
+    event_type: str  # 'impression' | 'quartile_25' | 'quartile_50' | 'quartile_75' | 'completion' | 'click' | 'skip'
+    listener_id: Optional[str] = "guest_listener"
+    track_context: Optional[str] = None
+    client_platform: Optional[str] = "tunestream_web"
+    geo_country: Optional[str] = "KE"
+    spot_duration_seconds: int = 15
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class AdInjectionConfig(BaseDocument):
+    enabled: bool = True
+    interval_tracks: int = 3
+    min_seconds_between_ads: int = 300
+    max_ads_per_hour: int = 4
+    unskippable_duration_sec: int = 15
+    allow_vip_opt_out: bool = True
+    free_tier_only: bool = True
+    cpm_base_usd: float = 14.99
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class CorporateAdInquiry(BaseDocument):

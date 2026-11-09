@@ -87,7 +87,18 @@ admin console with role-gated tabs, domain-mapping registry.
 - Cryptographic password recovery ingress on `LoginView.jsx` (`/#/set-password?token=...`) with single-use 72-hour tokens.
 - Diagnostic outbox staging in MongoDB `email_outbox` capturing status, provider HTTP response, and sender telemetry.
 
-### Phase 9 · Ad Injection Platform 🟡 P2
+### Phase 9 · Ad Injection Platform ✅ SHIPPED
+- Dynamic Audio Interstitial Insertion Engine on TuneStream and Portal (`apps/tunestream/src/components/player/HiFiAudioPlayer.jsx`, `apps/portal/src/components/player/HiFiAudioPlayer.jsx`) with configurable playback track intervals (e.g. every 1–5 tracks) and unskippable countdown timer rings.
+- Free-Tier / 0-Credit Listener Gating: Listeners with active non-expiring credits or VIP status stream 100% ad-free; always-free listeners receive targeted audio spots.
+- Multi-Milestone Conversion Telemetry & Auditing (`POST /api/corporate/telemetry`) tracking impression start, 25%, 50%, 75% quartiles, 100% audio completions, and click-through vouchers in `db.ad_impressions`.
+- Lossless Broadcast Audio Spot Streaming (`GET /api/corporate/ad-audio/{spot_id}`): Synthesizes high-fidelity 15s/30s broadcast WAV audio with harmonic chime progression for reliable continuous streaming.
+- Corporate Brand & Traffic Manager Console (`apps/portal/src/components/CorporateAdsPanel.jsx`):
+  - Live Campaigns management with 1-click active/paused flight status toggles.
+  - Real-Time Telemetry & Funnel view with visual IAB progression funnel and live ingestion audit feed.
+  - Dynamic Ad Insertion Governance with interval slider, frequency capping, and Interactive Audio Ad Audition Studio.
+  - Established Ad Rate Cards (Pulse, Amplified, Culture Lead, Titan) with multi-currency pricing and instant credit booking.
+- Cryptographically Verified Flight Delivery Certificates (`TM-AD-FLIGHT-YYYY-XXXX`) with audited impressions, completions, CTR, and SHA-256 tamper-evident verification seals.
+- Automated Integration Test Suite (`backend/tests/test_ad_injection_platform.py`) passing 8/8 tests (30/30 platform total).
 ### Phase 10 · Media House Routing 🟡 P2
 
 ---

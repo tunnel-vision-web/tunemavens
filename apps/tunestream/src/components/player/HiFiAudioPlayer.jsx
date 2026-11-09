@@ -86,7 +86,9 @@ export default function HiFiAudioPlayer({
   const PREVIEW_LIMIT = 999999;
 
   const triggerCorporateAdSpot = () => {
-    fetch('/api/corporate/next-audio-ad')
+    if (activeCorporateAd) return;
+    const genreParam = currentTrack?.genre ? `?genre=${encodeURIComponent(currentTrack.genre)}` : '';
+    fetch(`/api/corporate/next-audio-ad${genreParam}`)
       .then(r => r.ok ? r.json() : null)
       .then(ad => {
         const spot = ad || {
@@ -100,6 +102,18 @@ export default function HiFiAudioPlayer({
         };
         setActiveCorporateAd(spot);
         setAdCountdown(spot.spot_duration_seconds || 15);
+        fetch('/api/corporate/telemetry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaign_id: spot.id,
+            event_type: 'impression',
+            listener_id: effectiveUser?.id || 'guest_listener',
+            client_platform: 'tunestream_player',
+            track_context: currentTrack?.title || 'Unknown',
+            spot_duration_seconds: spot.spot_duration_seconds || 15
+          })
+        }).catch(() => {});
       })
       .catch(() => {
         setActiveCorporateAd({
@@ -118,6 +132,18 @@ export default function HiFiAudioPlayer({
   useEffect(() => {
     if (!activeCorporateAd || adCountdown <= 0) {
       if (activeCorporateAd && adCountdown <= 0) {
+        fetch('/api/corporate/telemetry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaign_id: activeCorporateAd.id,
+            event_type: 'completion',
+            listener_id: effectiveUser?.id || 'guest_listener',
+            client_platform: 'tunestream_player',
+            track_context: currentTrack?.title || 'Unknown',
+            spot_duration_seconds: activeCorporateAd.spot_duration_seconds || 15
+          })
+        }).catch(() => {});
         setActiveCorporateAd(null);
       }
       return;
@@ -967,6 +993,17 @@ export default function HiFiAudioPlayer({
                       href={activeCorporateAd.destination_url || 'https://safaricom.co.ke'}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={() => {
+                        fetch('/api/corporate/telemetry', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            campaign_id: activeCorporateAd.id,
+                            event_type: 'click',
+                            listener_id: effectiveUser?.id || 'guest_listener'
+                          })
+                        }).catch(() => {});
+                      }}
                       style={{ fontSize: '0.68rem', color: '#00f2fe', fontWeight: 800, textDecoration: 'underline' }}
                     >
                       Visit Sponsor &rarr;
@@ -974,7 +1011,7 @@ export default function HiFiAudioPlayer({
                     <button
                       type="button"
                       onClick={() => {
-                        setActiveCorporateAd(null);
+setActiveCorporateAd(null);
                         if (typeof window !== 'undefined') {
                           window.dispatchEvent(new CustomEvent('tunestreamOpenReload'));
                           window.dispatchEvent(new CustomEvent('tunemavens-prompt-credit-reload', {

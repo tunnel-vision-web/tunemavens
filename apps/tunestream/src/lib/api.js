@@ -373,3 +373,28 @@ export function normalizeMediaUrl(url) {
   }
   return trimmed;
 }
+
+// --- Corporate Brand Advertising & Ad Injection Platform (Phase 9) ---
+export const corporateAdsApi = {
+  getRates: () => request('/api/corporate/ad-rates'),
+  getInquiries: () => request('/api/corporate/inquiries'),
+  createInquiry: (payload) => request('/api/corporate/inquiries', { method: 'POST', body: payload }),
+  getCampaigns: () => request('/api/corporate/campaigns'),
+  getCampaign: (id) => request(`/api/corporate/campaigns/${encodeURIComponent(id)}`),
+  createCampaign: (payload) => request('/api/corporate/campaigns', { method: 'POST', body: payload }),
+  updateCampaignStatus: (id, status) => request(`/api/corporate/campaigns/${encodeURIComponent(id)}/status`, { method: 'POST', body: { status } }),
+  getCampaignCertificate: (id) => request(`/api/corporate/campaigns/${encodeURIComponent(id)}/certificate`),
+  getStats: () => request('/api/corporate/stats'),
+  getNextAudioAd: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request(`/api/corporate/next-audio-ad${q ? `?${q}` : ''}`);
+  },
+  getActiveFlights: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request(`/api/corporate/active-flights${q ? `?${q}` : ''}`);
+  },
+  getInjectionConfig: () => request('/api/corporate/injection-config'),
+  updateInjectionConfig: (payload) => request('/api/corporate/injection-config', { method: 'POST', body: payload }),
+  trackTelemetry: (payload) => request('/api/corporate/telemetry', { method: 'POST', body: payload }),
+  getTelemetryOverview: () => request('/api/corporate/telemetry/overview'),
+};
