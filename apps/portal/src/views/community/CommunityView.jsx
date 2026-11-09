@@ -735,8 +735,8 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
         <div className="community-hero">
           <div className="community-hero-text">
             <h1>
-              <RiTrophyLine style={{ color: '#00f0ff' }} />
-              TuneMavens Community &amp; Wall of Fame
+              <RiTrophyLine style={{ color: '#00f0ff', flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap' }}>TuneMavens Community &amp; Wall of Fame</span>
             </h1>
             <p className="community-hero-subtitle">
               The living social substrate and hall of icons for modern music-business pioneers.
@@ -773,13 +773,13 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
             className={`community-tab-btn ${activeTab === 'feed' ? 'active' : ''}`}
             onClick={() => setActiveTab('feed')}
           >
-            <RiPulseLine /> Feed
+            <RiPulseLine /> feed
           </button>
           <button
             className={`community-tab-btn ${activeTab === 'network' ? 'active' : ''}`}
             onClick={() => setActiveTab('network')}
           >
-            <RiShareForwardLine /> Network
+            <RiShareForwardLine /> network
           </button>
         </div>
 
@@ -1492,20 +1492,59 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
           <div>
             <div className="community-toolbar" style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
               <div>
-                <h3 style={{ margin: '0 0 6px 0', color: '#ffffff' }}>Deal-Makers &amp; Creators 2 Hops Away</h3>
+                <h3 style={{ margin: '0 0 6px 0', color: '#ffffff' }}>network</h3>
                 <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
                   High-leverage introductions uncovered through your direct connections' mutual networks.
                 </p>
               </div>
-              <input
-                type="text"
-                placeholder="Search connections, role, bio..."
-                className="community-search-input"
-                value={networkSearchQuery}
-                onChange={(e) => handleNetworkSearchChange(e.target.value)}
-                style={{ minWidth: '280px' }}
-                data-testid="network-search-input"
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="Search connections, role, bio..."
+                  className="community-search-input"
+                  value={networkSearchQuery}
+                  onChange={(e) => handleNetworkSearchChange(e.target.value)}
+                  style={{ minWidth: '260px' }}
+                  data-testid="network-search-input"
+                />
+                {networkTotalPages > 1 && (
+                  <div className="community-pagination-nav" style={{ margin: 0 }} data-testid="network-top-pagination">
+                    <button
+                      type="button"
+                      className="community-page-btn"
+                      onClick={() => handleNetworkPageChange(safeNetworkPage - 1)}
+                      disabled={safeNetworkPage === 1}
+                      aria-label="Previous Page"
+                      data-testid="network-top-prev-btn"
+                    >
+                      <RiArrowLeftSLine /> Prev
+                    </button>
+
+                    {Array.from({ length: networkTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        type="button"
+                        key={pageNum}
+                        className={`community-page-btn ${pageNum === safeNetworkPage ? 'active' : ''}`}
+                        onClick={() => handleNetworkPageChange(pageNum)}
+                        data-testid={`network-top-page-${pageNum}`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+
+                    <button
+                      type="button"
+                      className="community-page-btn"
+                      onClick={() => handleNetworkPageChange(safeNetworkPage + 1)}
+                      disabled={safeNetworkPage === networkTotalPages}
+                      aria-label="Next Page"
+                      data-testid="network-top-next-btn"
+                    >
+                      Next <RiArrowRightSLine />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div id="network-anchor" style={{ position: 'relative', top: '-10px' }} />

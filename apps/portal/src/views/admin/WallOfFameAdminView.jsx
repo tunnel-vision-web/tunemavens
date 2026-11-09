@@ -353,7 +353,7 @@ export default function WallOfFameAdminView({ sessionUser }) {
           <div className="wof-admin-header-main">
             <div>
               <div className="wof-admin-title-badge">
-                <RiShieldCheckLine /> Administrative Curation Suite &bull; Phase 5.5
+                <RiShieldCheckLine /> Administrative Curation Suite
               </div>
               <h1>Wall of Fame Admin Console</h1>
               <p className="wof-admin-subtitle">
