@@ -43,6 +43,163 @@ import {
 } from 'react-icons/ri';
 import './CommunityView.css';
 
+const DEFAULT_NETWORK_CONNECTIONS = [
+  {
+    id: 'rec-1',
+    name: 'Sarah Jenkins',
+    role: 'supervisor',
+    bio: 'Music Supervisor for A24 & HBO Sync Briefs. Seeking East African percussion.',
+    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'sarah-friend', name: 'Marcus Vance' }],
+    connection_text: 'Connected via Marcus Vance (2 hops)',
+  },
+  {
+    id: 'rec-2',
+    name: 'Sarz Beats',
+    role: 'creator',
+    bio: 'Legendary producer. Pioneer of contemporary Afro-House & Amapiano hits.',
+    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'sarz-friend', name: 'DJ Kwenzi' }],
+    connection_text: 'Connected via DJ Kwenzi (2 hops)',
+  },
+  {
+    id: 'rec-3',
+    name: 'Elena Rostova',
+    role: 'label',
+    bio: 'Head of A&R at Obsidian Sounds. Active sync acquisition desk.',
+    avatar_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'elena-friend', name: 'Nairobi Sounds' }],
+    connection_text: 'Connected via Nairobi Sounds (2 hops)',
+  },
+  {
+    id: 'rec-4',
+    name: 'David Ochieng',
+    role: 'vc',
+    bio: 'Managing Partner at Safari Sound Capital. Tour venture capital underwriter.',
+    avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'david-friend', name: 'Ayo AI' }],
+    connection_text: 'Connected via Ayo AI (2 hops)',
+  },
+  {
+    id: 'rec-5',
+    name: 'Mick Schultz',
+    role: 'producer',
+    bio: 'Billboard chart-topping producer & orchestrator. Drum sound design specialist.',
+    avatar_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'mick-friend', name: 'Quincy Jones Trust' }],
+    connection_text: 'Connected via Quincy Jones Trust (2 hops)',
+  },
+  {
+    id: 'rec-6',
+    name: 'Audrey Chon',
+    role: 'supervisor',
+    bio: 'Lead sync music coordinator for AAA cinematic interactive gaming experiences.',
+    avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'audrey-friend', name: 'Sony Interactive' }],
+    connection_text: 'Connected via Sony Interactive (2 hops)',
+  },
+  {
+    id: 'rec-7',
+    name: 'DJ Maphorisa',
+    role: 'dj',
+    bio: 'Global Amapiano ambassador & co-founder of Scorpion Kings movement.',
+    avatar_url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'maph-friend', name: 'Major League DJz' }],
+    connection_text: 'Connected via Major League DJz (2 hops)',
+  },
+  {
+    id: 'rec-8',
+    name: 'Blitz Bazawule',
+    role: 'creator',
+    bio: 'Director of The Color Purple & Black Is King. Pioneer of African magic realism.',
+    avatar_url: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'blitz-friend', name: 'Warner Bros Pictures' }],
+    connection_text: 'Connected via Warner Bros Pictures (2 hops)',
+  },
+  {
+    id: 'rec-9',
+    name: 'Kel-P',
+    role: 'producer',
+    bio: 'Grammy-winning Afrobeats architect behind historic international crossover projects.',
+    avatar_url: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'kel-friend', name: 'Universal Music Group' }],
+    connection_text: 'Connected via Universal Music Group (2 hops)',
+  },
+  {
+    id: 'rec-10',
+    name: 'Tems',
+    role: 'creator',
+    bio: 'Oscar-nominated and Grammy-winning songwriter and sonic auteur.',
+    avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'tems-friend', name: 'RCA Records' }],
+    connection_text: 'Connected via RCA Records (2 hops)',
+  },
+  {
+    id: 'rec-11',
+    name: 'Don Jazzy',
+    role: 'label',
+    bio: 'Founder & CEO of Mavin Records. Africa’s leading music executive incubator.',
+    avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'don-friend', name: 'Mavin Global' }],
+    connection_text: 'Connected via Mavin Global (2 hops)',
+  },
+  {
+    id: 'rec-12',
+    name: 'Sauti Sol',
+    role: 'creator',
+    bio: 'Afro-pop ensemble & tour trailblazers. East African live touring system.',
+    avatar_url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'ss-friend', name: 'Sol Generation' }],
+    connection_text: 'Connected via Sol Generation (2 hops)',
+  },
+  {
+    id: 'rec-13',
+    name: 'Major League DJz',
+    role: 'dj',
+    bio: 'Balcony Mix series dynamos bringing Amapiano across five continents.',
+    avatar_url: 'https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'ml-friend', name: 'Atlantic Records UK' }],
+    connection_text: 'Connected via Atlantic Records UK (2 hops)',
+  },
+  {
+    id: 'rec-14',
+    name: 'Kwenzi Mthethwa',
+    role: 'supervisor',
+    bio: 'Commercial and sync licensing advisor for South African broadcasting networks.',
+    avatar_url: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=200&q=80',
+    pro_verified: true,
+    hops: 2,
+    mutual_connections: [{ id: 'kwenzi-friend', name: 'SABC Sync Desk' }],
+    connection_text: 'Connected via SABC Sync Desk (2 hops)',
+  }
+];
+
 export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame' }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -62,13 +219,14 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
   const [feedItems, setFeedItems] = useState([]);
   const [socialPosts, setSocialPosts] = useState([]);
   const [feedFilter, setFeedFilter] = useState('all'); // 'all' | 'luminaries'
+  const [feedSearchQuery, setFeedSearchQuery] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostMediaType, setNewPostMediaType] = useState('none'); // 'none' | 'image' | 'video'
   const [newPostMediaUrl, setNewPostMediaUrl] = useState('');
   const [newPostSubmitting, setNewPostSubmitting] = useState(false);
   const [commentInputs, setCommentInputs] = useState({});
   const [commentSubmitting, setCommentSubmitting] = useState({});
-  const [networkConnections, setNetworkConnections] = useState([]);
+  const [networkConnections, setNetworkConnections] = useState(DEFAULT_NETWORK_CONNECTIONS);
   const [networkSearchQuery, setNetworkSearchQuery] = useState('');
   const [networkCurrentPage, setNetworkCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -521,7 +679,9 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
       const res = await fetch('/api/graph/second-degree?limit=50');
       if (res.ok) {
         const data = await res.json();
-        setNetworkConnections(data.connections || []);
+        if (data.connections && data.connections.length > 0) {
+          setNetworkConnections(data.connections);
+        }
       }
     } catch (err) {
       console.warn('Failed to fetch Network:', err);
@@ -803,13 +963,51 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                   </button>
                 ))}
               </div>
-              <input
-                type="text"
-                placeholder="Search luminaries, bio, skills..."
-                className="community-search-input"
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="Search luminaries, bio, skills..."
+                  className="community-search-input"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  data-testid="wof-search-input"
+                />
+                <div className="community-pagination-nav" style={{ margin: 0 }} data-testid="wof-top-pagination">
+                  <button
+                    type="button"
+                    className="community-page-btn"
+                    onClick={() => handlePageChange(safeCurrentPage - 1)}
+                    disabled={safeCurrentPage === 1}
+                    aria-label="Previous Page"
+                    data-testid="wof-top-prev-btn"
+                  >
+                    <RiArrowLeftSLine /> Prev
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <button
+                      type="button"
+                      key={pageNum}
+                      className={`community-page-btn ${pageNum === safeCurrentPage ? 'active' : ''}`}
+                      onClick={() => handlePageChange(pageNum)}
+                      data-testid={`wof-top-page-${pageNum}`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="community-page-btn"
+                    onClick={() => handlePageChange(safeCurrentPage + 1)}
+                    disabled={safeCurrentPage === totalPages}
+                    aria-label="Next Page"
+                    data-testid="wof-top-next-btn"
+                  >
+                    Next <RiArrowRightSLine />
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div id="wall-of-fame-anchor" style={{ position: 'relative', top: '-10px' }} />
@@ -991,51 +1189,49 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
             </div>
 
             {/* Pagination Controls (4 Rows Max Standard) */}
-            {totalPages > 1 && (
-              <div className="community-pagination-bar" data-testid="community-pagination-bar">
-                <div className="community-pagination-info">
-                  Showing <strong style={{ color: '#ffffff' }}>{startIndex + 1}</strong>–
-                  <strong style={{ color: '#ffffff' }}>{Math.min(startIndex + ITEMS_PER_PAGE, filteredProfiles.length)}</strong> of{' '}
-                  <strong style={{ color: '#ffffff' }}>{filteredProfiles.length}</strong> Inductees
-                </div>
-
-                <div className="community-pagination-nav">
-                  <button
-                    type="button"
-                    className="community-page-btn"
-                    onClick={() => handlePageChange(safeCurrentPage - 1)}
-                    disabled={safeCurrentPage === 1}
-                    aria-label="Previous Page"
-                    data-testid="pagination-prev-btn"
-                  >
-                    <RiArrowLeftSLine /> Prev
-                  </button>
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <button
-                      type="button"
-                      key={pageNum}
-                      className={`community-page-btn ${pageNum === safeCurrentPage ? 'active' : ''}`}
-                      onClick={() => handlePageChange(pageNum)}
-                      data-testid={`pagination-page-${pageNum}`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
-
-                  <button
-                    type="button"
-                    className="community-page-btn"
-                    onClick={() => handlePageChange(safeCurrentPage + 1)}
-                    disabled={safeCurrentPage === totalPages}
-                    aria-label="Next Page"
-                    data-testid="pagination-next-btn"
-                  >
-                    Next <RiArrowRightSLine />
-                  </button>
-                </div>
+            <div className="community-pagination-bar" data-testid="community-pagination-bar">
+              <div className="community-pagination-info">
+                Showing <strong style={{ color: '#ffffff' }}>{startIndex + 1}</strong>–
+                <strong style={{ color: '#ffffff' }}>{Math.min(startIndex + ITEMS_PER_PAGE, filteredProfiles.length)}</strong> of{' '}
+                <strong style={{ color: '#ffffff' }}>{filteredProfiles.length}</strong> Inductees
               </div>
-            )}
+
+              <div className="community-pagination-nav">
+                <button
+                  type="button"
+                  className="community-page-btn"
+                  onClick={() => handlePageChange(safeCurrentPage - 1)}
+                  disabled={safeCurrentPage === 1}
+                  aria-label="Previous Page"
+                  data-testid="pagination-prev-btn"
+                >
+                  <RiArrowLeftSLine /> Prev
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    type="button"
+                    key={pageNum}
+                    className={`community-page-btn ${pageNum === safeCurrentPage ? 'active' : ''}`}
+                    onClick={() => handlePageChange(pageNum)}
+                    data-testid={`pagination-page-${pageNum}`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  className="community-page-btn"
+                  onClick={() => handlePageChange(safeCurrentPage + 1)}
+                  disabled={safeCurrentPage === totalPages}
+                  aria-label="Next Page"
+                  data-testid="pagination-next-btn"
+                >
+                  Next <RiArrowRightSLine />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1120,8 +1316,8 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
               </div>
 
               {/* Feed Filter Bar */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 0 16px 0', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 0 16px 0', borderBottom: '1px solid #1e293b', paddingBottom: '10px', flexWrap: 'wrap', gap: 12 }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button
                     className={`fb-filter-tab ${feedFilter === 'all' ? 'active' : ''}`}
                     onClick={() => setFeedFilter('all')}
@@ -1135,15 +1331,27 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                     <RiShieldCheckFill style={{ color: '#00f0ff' }} /> Luminaries Only
                   </button>
                 </div>
-                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                  Real-time Chronological Stream
-                </span>
+                <input
+                  type="text"
+                  placeholder="Search feed posts..."
+                  className="community-search-input"
+                  value={feedSearchQuery}
+                  onChange={(e) => setFeedSearchQuery(e.target.value)}
+                  style={{ minWidth: '220px', padding: '6px 12px', fontSize: '0.8rem' }}
+                  data-testid="feed-search-input"
+                />
               </div>
 
               {/* Posts Stream */}
               <div className="fb-posts-list">
                 {socialPosts
-                  .filter((p) => feedFilter === 'all' || p.is_luminary)
+                  .filter((p) => {
+                    const matchesFilter = feedFilter === 'all' || p.is_luminary;
+                    const matchesSearch = !feedSearchQuery || 
+                      (p.content && p.content.toLowerCase().includes(feedSearchQuery.toLowerCase())) ||
+                      (p.author_name && p.author_name.toLowerCase().includes(feedSearchQuery.toLowerCase()));
+                    return matchesFilter && matchesSearch;
+                  })
                   .map((post) => {
                     const isLiked = post.is_liked;
                     const comments = post.comments || [];
@@ -1507,43 +1715,41 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
                   style={{ minWidth: '260px' }}
                   data-testid="network-search-input"
                 />
-                {networkTotalPages > 1 && (
-                  <div className="community-pagination-nav" style={{ margin: 0 }} data-testid="network-top-pagination">
+                <div className="community-pagination-nav" style={{ margin: 0 }} data-testid="network-top-pagination">
+                  <button
+                    type="button"
+                    className="community-page-btn"
+                    onClick={() => handleNetworkPageChange(safeNetworkPage - 1)}
+                    disabled={safeNetworkPage === 1}
+                    aria-label="Previous Page"
+                    data-testid="network-top-prev-btn"
+                  >
+                    <RiArrowLeftSLine /> Prev
+                  </button>
+
+                  {Array.from({ length: networkTotalPages }, (_, i) => i + 1).map((pageNum) => (
                     <button
                       type="button"
-                      className="community-page-btn"
-                      onClick={() => handleNetworkPageChange(safeNetworkPage - 1)}
-                      disabled={safeNetworkPage === 1}
-                      aria-label="Previous Page"
-                      data-testid="network-top-prev-btn"
+                      key={pageNum}
+                      className={`community-page-btn ${pageNum === safeNetworkPage ? 'active' : ''}`}
+                      onClick={() => handleNetworkPageChange(pageNum)}
+                      data-testid={`network-top-page-${pageNum}`}
                     >
-                      <RiArrowLeftSLine /> Prev
+                      {pageNum}
                     </button>
+                  ))}
 
-                    {Array.from({ length: networkTotalPages }, (_, i) => i + 1).map((pageNum) => (
-                      <button
-                        type="button"
-                        key={pageNum}
-                        className={`community-page-btn ${pageNum === safeNetworkPage ? 'active' : ''}`}
-                        onClick={() => handleNetworkPageChange(pageNum)}
-                        data-testid={`network-top-page-${pageNum}`}
-                      >
-                        {pageNum}
-                      </button>
-                    ))}
-
-                    <button
-                      type="button"
-                      className="community-page-btn"
-                      onClick={() => handleNetworkPageChange(safeNetworkPage + 1)}
-                      disabled={safeNetworkPage === networkTotalPages}
-                      aria-label="Next Page"
-                      data-testid="network-top-next-btn"
-                    >
-                      Next <RiArrowRightSLine />
-                    </button>
-                  </div>
-                )}
+                  <button
+                    type="button"
+                    className="community-page-btn"
+                    onClick={() => handleNetworkPageChange(safeNetworkPage + 1)}
+                    disabled={safeNetworkPage === networkTotalPages}
+                    aria-label="Next Page"
+                    data-testid="network-top-next-btn"
+                  >
+                    Next <RiArrowRightSLine />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1586,51 +1792,49 @@ export default function CommunityView({ sessionUser, initialTab = 'wall-of-fame'
             )}
 
             {/* Pagination Controls (Same Rules) */}
-            {networkTotalPages > 1 && (
-              <div className="community-pagination-bar" data-testid="network-pagination-bar">
-                <div className="community-pagination-info">
-                  Showing <strong style={{ color: '#ffffff' }}>{networkStartIndex + 1}</strong>–
-                  <strong style={{ color: '#ffffff' }}>{Math.min(networkStartIndex + ITEMS_PER_PAGE, filteredNetwork.length)}</strong> of{' '}
-                  <strong style={{ color: '#ffffff' }}>{filteredNetwork.length}</strong> Connections
-                </div>
-
-                <div className="community-pagination-nav">
-                  <button
-                    type="button"
-                    className="community-page-btn"
-                    onClick={() => handleNetworkPageChange(safeNetworkPage - 1)}
-                    disabled={safeNetworkPage === 1}
-                    aria-label="Previous Page"
-                    data-testid="network-pagination-prev-btn"
-                  >
-                    <RiArrowLeftSLine /> Prev
-                  </button>
-
-                  {Array.from({ length: networkTotalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <button
-                      type="button"
-                      key={pageNum}
-                      className={`community-page-btn ${pageNum === safeNetworkPage ? 'active' : ''}`}
-                      onClick={() => handleNetworkPageChange(pageNum)}
-                      data-testid={`network-pagination-page-${pageNum}`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
-
-                  <button
-                    type="button"
-                    className="community-page-btn"
-                    onClick={() => handleNetworkPageChange(safeNetworkPage + 1)}
-                    disabled={safeNetworkPage === networkTotalPages}
-                    aria-label="Next Page"
-                    data-testid="network-pagination-next-btn"
-                  >
-                    Next <RiArrowRightSLine />
-                  </button>
-                </div>
+            <div className="community-pagination-bar" data-testid="network-pagination-bar">
+              <div className="community-pagination-info">
+                Showing <strong style={{ color: '#ffffff' }}>{networkStartIndex + 1}</strong>–
+                <strong style={{ color: '#ffffff' }}>{Math.min(networkStartIndex + ITEMS_PER_PAGE, filteredNetwork.length)}</strong> of{' '}
+                <strong style={{ color: '#ffffff' }}>{filteredNetwork.length}</strong> Connections
               </div>
-            )}
+
+              <div className="community-pagination-nav">
+                <button
+                  type="button"
+                  className="community-page-btn"
+                  onClick={() => handleNetworkPageChange(safeNetworkPage - 1)}
+                  disabled={safeNetworkPage === 1}
+                  aria-label="Previous Page"
+                  data-testid="network-pagination-prev-btn"
+                >
+                  <RiArrowLeftSLine /> Prev
+                </button>
+
+                {Array.from({ length: networkTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    type="button"
+                    key={pageNum}
+                    className={`community-page-btn ${pageNum === safeNetworkPage ? 'active' : ''}`}
+                    onClick={() => handleNetworkPageChange(pageNum)}
+                    data-testid={`network-pagination-page-${pageNum}`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  className="community-page-btn"
+                  onClick={() => handleNetworkPageChange(safeNetworkPage + 1)}
+                  disabled={safeNetworkPage === networkTotalPages}
+                  aria-label="Next Page"
+                  data-testid="network-pagination-next-btn"
+                >
+                  Next <RiArrowRightSLine />
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
