@@ -33,13 +33,14 @@ admin console with role-gated tabs, domain-mapping registry.
 - Raise the Emergent LLM key budget or swap to `gpt-5.4-mini` so the LLM
   layer actually serves traffic (currently rules layer answers 100%).
 
-### Phase 4 · Record Label Console 🔵 P1
+### Phase 4 · Record Label Console ✅ SHIPPED
 - Roster CSV upload & Multi-file drag and drop audio file ingestion. ✅ SHIPPED
 - Manual single-track catalogue uploader UI with validation checks. ✅ SHIPPED
 - Catalogue list display showing splits, ISRCs, artist, and action shortcuts linking directly to Splits cascade, Sync licensing, and Domain hosting. ✅ SHIPPED
 - Dashboard-wide utility panels search filtering and pagination navigation controls. ✅ SHIPPED
 - Sub-brand Landing Pages: Customized dark-theme background colors, custom navigation menus, subdomain mapping alerts, Tidal-inspired sections for TuneStream, and admin configurator panel for promoted acts. ✅ SHIPPED
-- Distribution Path C negotiation wizard, catalogue acquisition ledger.
+- Distribution Path C AI Catalogue Negotiation Wizard with multi-tier scope, split sliders, AI counter-offers, and locked agreement verification (`TM-DIST-PATHC-2026-VERIFIED`). ✅ SHIPPED
+- Catalogue Acquisition & Recoupment Ledger (`/catalogue-acquisitions`) tracking advances, recoupments, unencumbered status, and cryptographic passports (`TM-ACQ-YYYY-XXXX`). ✅ SHIPPED
 
 ### Phase 5 · DJ Pool Engine ✅ SHIPPED
 - Modularized DJ Pool component extracted to `apps/portal/src/components/dj/DJPoolPanel.jsx`.

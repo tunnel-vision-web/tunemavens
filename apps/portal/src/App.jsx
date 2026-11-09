@@ -145,6 +145,7 @@ import {
   PublishingElectionPanel, DistributionElectionPanel, ContractDrawer,
   AppMarketplacePanel, PanelHeader,
 } from './components/phase3.jsx'
+import CatalogueAcquisitionLedger from './components/label/CatalogueAcquisitionLedger.jsx';
 import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx'
 import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx'
 import SplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx'
@@ -1117,6 +1118,11 @@ const NAV_ITEM_DESCRIPTIONS = {
     desc: 'Pitch catalog tracks to TV shows, feature films, video games, and commercial sync briefs',
     category: 'Pools & Sync'
   },
+  'catalogue-acquisitions': {
+    title: 'Catalogue Acquisitions & Advances',
+    desc: 'Record label catalogue purchases, artist advances, recoupment velocity & master rights clearance',
+    category: 'Label Administration'
+  },
   'label-team': {
     title: 'Roster & Team Seats',
     desc: 'Manage signed artist roster, team collaborators, seats capacity, and permission roles',
@@ -1770,6 +1776,12 @@ function DashboardView({
         return <DjPoolPanel sessionUser={sessionUser} />;
       case 'sync':
         return <SyncLicensingPanel sessionUser={sessionUser} tracks={catalogTracks} activeArtist={activeArtist} />;
+      case 'catalogue-acquisitions':
+        return (
+          <div style={{ padding: '24px 32px' }}>
+            <CatalogueAcquisitionLedger sessionUser={activeUser} />
+          </div>
+        );
       case 'label-team':
         return (
           <LabelTeamRosterPanel
@@ -2061,6 +2073,7 @@ function DashboardView({
       'vc-portfolio': { id: 'vc-portfolio', label: 'Portfolio & Yield', icon: RiFundsBoxFill, category: 'VC Investment Suite' },
       'vc-sponsorship': { id: 'vc-sponsorship', label: 'Career Sponsorship', icon: RiSparklingFill, category: 'VC Investment Suite' },
       'tours-vault': { id: 'tours-vault', label: 'Tour Capital Vault', icon: RiCompass3Fill, category: 'VC Investment Suite' },
+      'catalogue-acquisitions': { id: 'catalogue-acquisitions', label: 'Catalogue Acquisitions', icon: RiCoinsFill, category: 'Label Administration' },
       'label-team': { id: 'label-team', label: 'Roster & Team Seats', icon: RiTeamFill, category: 'Label Administration' },
       escrow: { id: 'escrow', label: 'MyContracts', icon: RiFileTextFill, category: 'Royalty Ledgers' },
       profile: { id: 'profile', label: 'Profile Settings', icon: RiSettings3Fill, category: 'Account' },
@@ -2096,7 +2109,7 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'backend-admin', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team'];
+        visibleKeys = ['home', 'backend-admin', 'admin-team', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team', 'catalogue-acquisitions'];
         break;
       case 'affiliate':
         visibleKeys = ['home', 'affiliates', 'inbox', 'splits', 'library', 'tips', 'profile', 'support'];
@@ -2113,7 +2126,7 @@ function DashboardView({
         visibleKeys = ['home', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'catalogue-acquisitions', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
         break;
       case 'dj':
         visibleKeys = ['home', 'djpool', 'library', 'tips', 'inbox', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];

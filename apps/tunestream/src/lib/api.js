@@ -126,11 +126,14 @@ export const dealsApi = {
       return request(`/api/deals/distribution${q}`);
     },
     create: (deal) => request('/api/deals/distribution', { method: 'POST', body: deal }),
+    negotiate: (proposal) => request('/api/deals/distribution/negotiate', { method: 'POST', body: proposal }),
   },
   catalogueAcquisitions: {
     list: () => request('/api/deals/catalogue-acquisitions'),
     create: (entry) =>
       request('/api/deals/catalogue-acquisitions', { method: 'POST', body: entry }),
+    recoup: (id, payload) =>
+      request(`/api/deals/catalogue-acquisitions/${encodeURIComponent(id)}/recoup`, { method: 'POST', body: payload }),
   },
 };
 

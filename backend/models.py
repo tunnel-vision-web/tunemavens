@@ -193,11 +193,17 @@ class PublishingDeal(BaseDocument):
 # §9.7 — distribution_deals
 # ======================================================================
 class DistributionDeal(BaseDocument):
-    creator_id: PyObjectId
+    creator_id: Optional[PyObjectId] = None
     path: str  # 'standard_fee_matched' | 'tunemavens_native' | 'label_negotiated'
     fee_structure: str  # 'flat_fee' | 'rev_share'
     tunemavens_split_pct: Optional[float] = None  # 45 for native default
     creator_split_pct: Optional[float] = None  # 55 for native default
+    label_name: Optional[str] = None
+    roster_size: Optional[int] = None
+    territory: Optional[str] = "Worldwide"
+    term_years: Optional[int] = 3
+    advance_amount: Optional[float] = 0.0
+    dsp_priority: Optional[str] = "Tier-1 Direct DSP Pitching"
     negotiation_history: List[dict] = Field(default_factory=list)
     status: str = "active"  # 'active' | 'superseded' | 'terminated'
     superseded_at: Optional[datetime] = None
@@ -209,12 +215,18 @@ class DistributionDeal(BaseDocument):
 # §9.7 — catalogue_acquisitions (recoupment ledger)
 # ======================================================================
 class CatalogueAcquisition(BaseDocument):
-    creator_id: PyObjectId
+    creator_id: Optional[PyObjectId] = None
     deal_type: str  # 'catalogue_purchase' | 'publishing_advance' | 'distribution_advance' | 'sync_advance'
     original_amount: float
     recouped_to_date: float = 0.0
     remaining_balance: float
     cross_collateralized: bool = False
+    artist_name: Optional[str] = None
+    catalogue_title: Optional[str] = None
+    track_count: Optional[int] = None
+    recoupment_rate_pct: Optional[float] = 50.0
+    status: Optional[str] = "active"  # 'active' | 'recouped' | 'liquidated'
+    passport_id: Optional[str] = None  # 'TM-ACQ-YYYY-XXXX'
     linked_contract_id: Optional[PyObjectId] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -42,6 +42,8 @@ import tunestreamLogo from '../../assets/logos/tunestream-logo.png';
 
 import { distroApi, dealsApi, contractsApi } from '../../lib/api.js';
 import { ContractDrawer } from '../phase3.jsx';
+import PathCNegotiationWizard from '../label/PathCNegotiationWizard.jsx';
+import CatalogueAcquisitionLedger from '../label/CatalogueAcquisitionLedger.jsx';
 import DistributeReleaseModal from '../distribution/DistributeReleaseModal.jsx';
 import DdexSheetModal from '../distribution/DdexSheetModal.jsx';
 import BulkDeliverModal from '../distribution/BulkDeliverModal.jsx';
@@ -970,6 +972,32 @@ export default function DistributionTrackerApp({ goBack, sessionUser, initialTab
 
         <button
           type="button"
+          onClick={() => setActiveSubTab('acquisitions')}
+          style={{
+            background:
+              activeSubTab === 'acquisitions'
+                ? 'rgba(0, 240, 255, 0.15)'
+                : 'transparent',
+            color: activeSubTab === 'acquisitions' ? '#00f2fe' : 'var(--mu)',
+            border: 'none',
+            borderBottom:
+              activeSubTab === 'acquisitions'
+                ? '2px solid #00f2fe'
+                : '2px solid transparent',
+            padding: '10px 18px',
+            fontSize: '13px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <RiCoinsFill size={16} /> Catalogue Acquisitions &amp; Advances
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveSubTab('outlets')}
           style={{
             background:
@@ -1216,27 +1244,57 @@ export default function DistributionTrackerApp({ goBack, sessionUser, initialTab
           {dealError && <div style={{ color: '#ef4444', fontSize: '12.5px', marginBottom: '12px' }}>{dealError}</div>}
           {dealSuccess && <div style={{ color: '#10b981', fontSize: '12.5px', marginBottom: '12px' }}>{dealSuccess}</div>}
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              disabled={dealSubmitting}
-              onClick={handleLockDealPath}
-              className="btn-primary"
-              style={{
-                padding: '10px 24px',
-                fontSize: '13px',
-                fontWeight: 800,
-                background: '#f59e0b',
-                color: '#000',
-                borderRadius: '3px'
-              }}
-            >
-              {dealSubmitting ? 'Locking Terms…' : 'Lock In Distribution Terms & Generate Legal Contract'}
-            </button>
-          </div>
+          {dealPath === 'label_negotiated' ? (
+            <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
+              <PathCNegotiationWizard
+                sessionUser={sessionUser}
+                onComplete={(dealRes) => {
+                  setDealSuccess(`Path C negotiated and locked in! Split: ${dealRes.final_creator_split}% Label / ${dealRes.final_tunemavens_split}% TuneMavens`);
+                  loadDeals();
+                }}
+              />
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={dealSubmitting}
+                onClick={handleLockDealPath}
+                className="btn-primary"
+                style={{
+                  padding: '10px 24px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  background: '#f59e0b',
+                  color: '#000',
+                  borderRadius: '3px'
+                }}
+              >
+                {dealSubmitting ? 'Locking Terms…' : 'Lock In Distribution Terms & Generate Legal Contract'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
+
+      {/* TAB: Catalogue Acquisitions & Recoupment Ledger */}
+      {activeSubTab === 'acquisitions' && (
+        <div className="glass-panel" style={{ padding: '28px', borderRadius: '3px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <span style={{ fontSize: '11px', color: '#00f2fe', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Record Label Capital Management · Section 9.7
+            </span>
+            <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#fff', margin: '4px 0 0' }}>
+              Catalogue Acquisitions, Advances &amp; Split Recoupment Ledger
+            </h3>
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', margin: '4px 0 0' }}>
+              Track capital deployed against signed catalogues, manage cross-collateralized advance recoupments, and verify unencumbered master titles.
+            </p>
+          </div>
+          <CatalogueAcquisitionLedger sessionUser={sessionUser} />
+        </div>
+      )}
 
       {/* TAB 1: Release Ingestion Pipeline */}
       {activeSubTab === 'pipeline' && (
