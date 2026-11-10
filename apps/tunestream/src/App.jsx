@@ -542,8 +542,8 @@ function AppContent() {
         </div>
       )}
 
-      {/* Authoritative TuneMavens Hi-Fi Audio Player */}
-      {globalTrack && (
+      {/* Authoritative TuneMavens Hi-Fi Audio Player (suppressed on /epk to ensure single EPK overlay player) */}
+      {globalTrack && !location.pathname.startsWith('/epk') && (
         <HiFiAudioPlayer
           track={globalTrack}
           tracks={playlistQueue && playlistQueue.length > 0 ? playlistQueue : catalogTracks}

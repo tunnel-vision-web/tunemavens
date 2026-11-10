@@ -2376,23 +2376,17 @@ Direct Management Contact: mgmt@intermaven.io`
     }
   }
 
-  // Handle Play Track on Album Page with 30s Free Preview Protocol
+  // Handle Play Track on Album Page via the TuneStream overlay player
   const handlePlayAlbumTrack = (trk) => {
-    setAlbumAudioCurrentTrack(trk)
-    setAlbumAudioProgress(0)
-    setAlbumAudioPlaying(true)
-    setAlbumAudioUnlocked(false)
-    const audio = albumAudioRef.current
-    if (audio) {
-      const src = trk.audioUrl || trk.fileUrl || `/api/stream/track/${encodeURIComponent(trk.isrc || trk.title || 'preview')}`
-      if (audio.src !== src) {
-        audio.src = src
-        audio.load()
-      }
-      audio.currentTime = 0
-      audio.play().catch(e => console.warn('Album track play error:', e))
-    }
-    showToast(`▶ Streaming: ${trk.title} (30-Sec Free Preview)`)
+    handleSelectAndPlayTrack({
+      ...trk,
+      id: trk.id || `alb-trk-${trk.num || Math.random()}`,
+      title: trk.title,
+      artist: effectiveArtistName,
+      coverArt: epkData?.albums?.[0]?.coverArt || tracks[0]?.coverArt || 'https://picsum.photos/seed/alb_art/400',
+      audioUrl: trk.audioUrl || trk.fileUrl || `/api/stream/track/${encodeURIComponent(trk.isrc || trk.title || 'preview')}`
+    })
+    showToast(`▶ Streaming: ${trk.title}`)
   }
 
   // Toggle Album Master Audio Play / Pause
@@ -2700,26 +2694,6 @@ Direct Management Contact: mgmt@intermaven.io`
         }}
         style={{ display: 'none' }}
       />
-      <audio
-        ref={albumAudioRef}
-        id="album-preview-audio"
-        onTimeUpdate={() => {
-          if (albumAudioRef.current) {
-            const curr = Math.floor(albumAudioRef.current.currentTime)
-            setAlbumAudioProgress(curr)
-            if (!albumAudioUnlocked && curr >= 30) {
-              albumAudioRef.current.pause()
-              setAlbumAudioPlaying(false)
-              showToast('30-Second Preview ended. Unlock full lossless master stream for 1 TM Credit!')
-            }
-          }
-        }}
-        onEnded={() => {
-          setAlbumAudioPlaying(false)
-          setAlbumAudioProgress(0)
-        }}
-        style={{ display: 'none' }}
-      />
 
       {/* Animation & Mobile Responsive Media Styles */}
       <style>{`
@@ -2836,7 +2810,8 @@ Direct Management Contact: mgmt@intermaven.io`
         .desktop-nav {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
+          margin-left: 16px;
         }
 
         .mobile-hamburger-btn {
@@ -2895,7 +2870,7 @@ Direct Management Contact: mgmt@intermaven.io`
           boxSizing: 'border-box'
         }}>
           {/* Creator Brand Logo (25% reduced size, strictly top-left edge aligned to 1280px) */}
-          <div style={{ display: 'flex', alignItems: 'center', zIndex: 1001, cursor: 'pointer' }} onClick={() => setActiveTab('home')}>
+          <div style={{ display: 'flex', alignItems: 'center', zIndex: 1001, cursor: 'pointer', marginRight: 'clamp(36px, 5vw, 64px)', flexShrink: 0 }} onClick={() => setActiveTab('home')}>
             {effectiveLogoUrl ? (
               <img 
                 src={effectiveLogoUrl} 
@@ -3115,14 +3090,10 @@ Direct Management Contact: mgmt@intermaven.io`
                   <button
                     type="button"
                     onClick={() => {
-                      const el = document.getElementById('tuneplayer-featured-singles');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                      else {
-                        setActiveTab('home');
-                        setTimeout(() => {
-                          const e2 = document.getElementById('tuneplayer-featured-singles');
-                          if (e2) e2.scrollIntoView({ behavior: 'smooth' });
-                        }, 200);
+                      setIsPlayerVisible(true);
+                      setIsPlayerMinimized(false);
+                      if (!isPlaying && tracks.length > 0) {
+                        handleSelectAndPlayTrack(activeTrack || tracks[0]);
                       }
                       setOpenNavDropdown(null);
                     }}
@@ -3131,7 +3102,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     <RiPlayFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 700 }}>Featured Audio Player</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>TuneStream Hi-Fi master player</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>TuneStream Hi-Fi master player overlay</div>
                     </div>
                   </button>
                 </div>
@@ -3792,193 +3763,6 @@ Direct Management Contact: mgmt@intermaven.io`
               </div>
             )
           })()}
-            {/* Hero Music Player - Positioned 40px below HERO Titles */}
-            {(() => {
-              const currentTrack = tracks[playlistIndex] || tracks[0] || activeTrack
-              return (
-                <div style={{
-                  background: isLight ? '#ffffff' : selectedTheme.cardBg,
-                  backdropFilter: 'blur(16px)',
-                  border: `1px solid ${effectiveAccent}55`,
-                  borderRadius: '3px',
-                  padding: '16px 20px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                  maxWidth: '560px',
-                  width: '92%',
-                  margin: '40px auto 0',
-                  boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
-                  textAlign: 'left',
-                  position: 'relative',
-                  zIndex: 25
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <img
-                      src={currentTrack.coverArt || 'https://picsum.photos/seed/track_art/400'}
-                      alt={currentTrack.title}
-                      style={{ width: '48px', height: '48px', borderRadius: '3px', objectFit: 'cover', border: `1px solid ${effectiveAccent}44` }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 900, fontSize: '0.98rem', color: isLight ? '#0f172a' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {currentTrack.title}
-                      </div>
-                      <div style={{ fontSize: '0.74rem', color: effectiveAccent, marginTop: '2px', fontWeight: 700, display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <span>ISRC: {currentTrack.isrc}</span>
-                        <span>•</span>
-                        <span>Lossless 24-Bit / 96kHz</span>
-                      </div>
-                    </div>
-
-                    {/* View Track Button */}
-                    <button
-                      onClick={() => setSelectedTrackModal(currentTrack)}
-                      style={{
-                        background: 'rgba(255,255,255,0.06)',
-                        border: `1px solid ${effectiveAccent}66`,
-                        color: isLight ? '#0f172a' : '#fff',
-                        padding: '6px 12px',
-                        borderRadius: '3px',
-                        fontSize: '0.74rem',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                    >
-                      <RiMusic2Fill style={{ color: effectiveAccent }} /> View Track
-                    </button>
-                  </div>
-
-                  {/* Playlist Controls & Scrubber */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {/* Previous Track */}
-                      <button
-                        onClick={() => {
-                          setPlaylistIndex(curr => (curr === 0 ? tracks.length - 1 : curr - 1))
-                          setPlaybackProgress(0)
-                        }}
-                        title="Previous Track"
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '3px',
-                          background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          color: isLight ? '#0f172a' : '#fff',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1rem'
-                        }}
-                      >
-                        <RiSkipBackFill />
-                      </button>
-
-                      {/* Play / Pause */}
-                      <button
-                        type="button"
-                        onClick={handleTogglePlayPause}
-                        title={isPlaying ? "Pause" : "Play"}
-                        style={{
-                          width: '38px',
-                          height: '38px',
-                          borderRadius: '3px',
-                          background: effectiveAccent,
-                          border: 'none',
-                          color: '#000',
-                          fontSize: '1.25rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          boxShadow: `0 2px 10px ${effectiveAccent}55`
-                        }}
-                      >
-                        {isPlaying ? <RiPauseFill /> : <RiPlayFill />}
-                      </button>
-
-                      {/* Stop */}
-                      <button
-                        onClick={() => {
-                          setIsPlaying(false)
-                          setPlaybackProgress(0)
-                        }}
-                        title="Stop"
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '3px',
-                          background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          color: isLight ? '#0f172a' : '#fff',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        <RiStopFill />
-                      </button>
-
-                      {/* Next Track */}
-                      <button
-                        onClick={() => {
-                          setPlaylistIndex(curr => (curr + 1) % tracks.length)
-                          setPlaybackProgress(0)
-                        }}
-                        title="Next Track"
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '3px',
-                          background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          color: isLight ? '#0f172a' : '#fff',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1rem'
-                        }}
-                      >
-                        <RiSkipForwardFill />
-                      </button>
-                    </div>
-
-                    {/* Scrubber Bar */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '0.68rem', color: isLight ? '#64748b' : '#94a3b8', minWidth: '28px', textAlign: 'right' }}>
-                        {Math.floor(playbackProgress / 60)}:{String(playbackProgress % 60).padStart(2, '0')}
-                      </span>
-                      <div
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect()
-                          const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-                          handleSeek(Math.floor(pct * 225))
-                        }}
-                        style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.12)', borderRadius: '3px', position: 'relative', cursor: 'pointer' }}
-                      >
-                        <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${Math.min(100, (playbackProgress / 225) * 100)}%`, background: effectiveAccent, borderRadius: '3px' }} />
-                      </div>
-                      <span style={{ fontSize: '0.68rem', color: isLight ? '#64748b' : '#94a3b8', minWidth: '28px' }}>
-                        {currentTrack.duration || '3:45'}
-                      </span>
-                    </div>
-
-                    {/* Track counter badge */}
-                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: effectiveAccent, padding: '2px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', border: `1px solid ${effectiveAccent}33` }}>
-                      {playlistIndex + 1}/{tracks.length}
-                    </span>
-                  </div>
-                </div>
-              )
-            })()}
         </section>
       )}
 
@@ -6440,75 +6224,29 @@ Direct Management Contact: mgmt@intermaven.io`
                         >
                           <RiShoppingBagFill size={16} /> Buy Full Album ($9.99 / 50 Credits)
                         </button>
-                      </div>
-
-                      {/* Dedicated TuneStream Album Player sitting directly below buttons */}
-                      <div style={{ marginTop: '24px', background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.45)', border: `1px solid ${effectiveAccent}55`, borderRadius: '4px', padding: '18px 24px', position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <button
-                              type="button"
-                              onClick={() => handleToggleAlbumAudio(albumTracks)}
-                              style={{ width: '42px', height: '42px', borderRadius: '50%', background: effectiveAccent, color: '#000', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                            >
-                              {albumAudioPlaying ? <RiPauseFill size={20} /> : <RiPlayFill size={20} />}
-                            </button>
-                            <div>
-                              <div style={{ fontWeight: 900, fontSize: '1rem', color: isLight ? '#0f172a' : '#fff' }}>
-                                TuneStream Master: {albumAudioCurrentTrack?.title || `${alb.title} (Master Preview)`}
-                              </div>
-                              <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
-                                Lossless 24-Bit / 96kHz FLAC • TuneStream Split Protocol
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* 30s Free Preview Banner / Credit Status */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {!albumAudioUnlocked ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.06)', padding: '6px 12px', borderRadius: '3px', border: `1px solid ${effectiveAccent}33` }}>
-                                <span style={{ fontSize: '0.74rem', color: effectiveAccent, fontWeight: 800 }}>
-                                  Free Preview: {albumAudioProgress}s / 30s
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={handleUnlockFullStream}
-                                  style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '4px 10px', borderRadius: '3px', fontWeight: 900, fontSize: '0.72rem', cursor: 'pointer' }}
-                                >
-                                  Unlock Full Stream (1 Credit)
-                                </button>
-                              </div>
-                            ) : (
-                              <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#10b981', padding: '4px 10px', borderRadius: '3px', fontWeight: 800, fontSize: '0.75rem' }}>
-                                ✓ Lossless Master Stream Unlocked
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Progress Waveform Bar */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <span style={{ fontSize: '0.74rem', color: '#94a3b8', minWidth: '32px' }}>
-                            {Math.floor(albumAudioProgress / 60)}:{String(albumAudioProgress % 60).padStart(2, '0')}
-                          </span>
-                          <div 
-                            style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden', cursor: 'pointer' }}
-                            onClick={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect()
-                              const clickX = e.clientX - rect.left
-                              const pct = Math.max(0, Math.min(1, clickX / rect.width))
-                              const maxSec = !albumAudioUnlocked ? 30 : 240
-                              const newSec = Math.floor(pct * maxSec)
-                              setAlbumAudioProgress(newSec)
-                              if (albumAudioRef.current) albumAudioRef.current.currentTime = newSec
-                            }}
-                          >
-                            <div style={{ width: `${(albumAudioProgress / (!albumAudioUnlocked ? 30 : 240)) * 100}%`, height: '100%', background: effectiveAccent, transition: 'width 0.2s linear' }} />
-                          </div>
-                          <span style={{ fontSize: '0.74rem', color: '#94a3b8', minWidth: '32px' }}>
-                            {!albumAudioUnlocked ? '0:30' : '4:00'}
-                          </span>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (albumTracks && albumTracks.length > 0) {
+                              handlePlayAlbumTrack(albumTracks[0])
+                            }
+                          }}
+                          style={{
+                            background: effectiveAccent,
+                            color: '#000',
+                            border: 'none',
+                            padding: '12px 20px',
+                            borderRadius: '3px',
+                            fontWeight: 900,
+                            fontSize: '0.88rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <RiPlayFill size={16} /> Stream Album Preview
+                        </button>
                       </div>
                     </div>
                   </div>
