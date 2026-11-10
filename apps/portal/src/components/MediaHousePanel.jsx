@@ -18,7 +18,23 @@ import {
   RiFolderMusicLine,
   RiVolumeUpLine
 } from 'react-icons/ri';
-import { mediaHouseApi } from '../lib/api.js';
+import * as apiModule from '../lib/api.js';
+
+// Safe fallback ensuring no unhandled SyntaxError if browser has cached api.js
+const mediaHouseApi = apiModule.mediaHouseApi || (typeof window !== 'undefined' && window.mediaHouseApi) || {
+  getChannels: () => Promise.resolve([]),
+  getChannel: (id) => Promise.resolve(null),
+  createChannel: (p) => Promise.resolve({}),
+  getQueue: (id) => Promise.resolve({ queue: [] }),
+  enqueueTrack: (p) => Promise.resolve({}),
+  dequeueTrack: (id) => Promise.resolve({}),
+  triggerPlayout: (p) => Promise.resolve({ verified_log: { airplay_certificate: 'PENDING' } }),
+  getLogs: (p) => Promise.resolve({ logs: [] }),
+  generateCueSheet: (p) => Promise.resolve({ pro_target: 'ASCAP', period: 'Current' }),
+  getCueSheets: (id) => Promise.resolve([]),
+  getStats: () => Promise.resolve({}),
+  getStemsCatalog: () => Promise.resolve([])
+};
 import './MediaHousePanel.css';
 
 export default function MediaHousePanel({ sessionUser }) {

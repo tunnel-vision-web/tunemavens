@@ -399,6 +399,13 @@ export const APP_DOC_MAPPINGS = {
     appTitle: 'Offline Crates Vault'
   },
 
+  'dj-mixes': {
+    articleId: 'tunestream-audiophile-streaming',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'DJ Mix Continuous Audio Track Extraction & 100% Prior Clearance',
+    appTitle: 'DJ Mixes & Sovereign Clearance'
+  },
+
   'help': {
     articleId: 'how-support-ticketing-works',
     fallbackArticleId: 'master-vs-composition-copyright',

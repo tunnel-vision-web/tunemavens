@@ -11,6 +11,7 @@ Those land in Phase 7 / Phase 8.
 """
 from __future__ import annotations
 
+import secrets
 from datetime import datetime, timezone
 from typing import Annotated, Any, Dict, List, Optional
 
@@ -507,6 +508,62 @@ class DjClearanceRequest(BaseDocument):
 # ======================================================================
 # Corporate & Brand Advertising Models
 # ======================================================================
+class DjMixTrackItem(BaseModel):
+    id: str = Field(default_factory=lambda: secrets.token_hex(4))
+    track_id: Optional[str] = None
+    title: str
+    artist: str
+    ip_owner_name: str = "IP Owner"
+    ip_owner_email: str = ""
+    start_time: int = 0
+    end_time: int = 0
+    duration_seconds: int = 0
+    split_percentage: float = 0.0
+    clearance_status: str = "pending"  # pending | requested | signed | self_owned | declined
+    contract_id: Optional[str] = None
+    signed_at: Optional[datetime] = None
+    signature_name: Optional[str] = None
+    signature_hash: Optional[str] = None
+    genre: Optional[str] = None
+    bpm: Optional[int] = None
+    key: Optional[str] = None
+    isrc: Optional[str] = None
+    rights_owner_phone: Optional[str] = None
+    notes: Optional[str] = None
+    last_reminded_at: Optional[datetime] = None
+    reminder_count: int = 0
+
+
+class DjMix(BaseDocument):
+    user_id: str
+    dj_name: str
+    title: str
+    description: Optional[str] = ""
+    genre: str = "Electronic"
+    bpm_avg: Optional[int] = 124
+    duration_seconds: int = 3600
+    audio_url: str
+    artwork_url: Optional[str] = ""
+    is_original_ip_only: bool = False
+    commercial_price: float = 4.99
+    currency: str = "USD"
+    status: str = "draft"  # draft | clearance_pending | all_cleared | published
+    sale_locked: bool = True
+    tracklist: List[DjMixTrackItem] = Field(default_factory=list)
+    dj_split_percentage: float = 40.0
+    track_owners_split_percentage: float = 50.0
+    platform_fee_percentage: float = 10.0
+    self_certification_signature: Optional[str] = None
+    all_cleared_at: Optional[datetime] = None
+    published_at: Optional[datetime] = None
+    plays_count: int = 0
+    sales_count: int = 0
+    total_revenue: float = 0.0
+    communication_log: List[dict] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 class CorporateAdRate(BaseDocument):
     slug: str
     name: str
@@ -650,7 +707,9 @@ class UserLike(BaseDocument):
 
 
 class ActivityEvent(BaseDocument):
-    user_id: str
+    user_id: Optional[str] = None
+    ref: Optional[str] = None
+    meta: Optional[dict] = None
     kind: str  # 'listen' | 'download' | 'tip' | 'follow' | 'like' | 'subscribe' | 'deal' | 'wall_of_fame_featured' | 'contract_signed'
     target_id: Optional[str] = None
     target_name: Optional[str] = None

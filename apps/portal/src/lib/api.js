@@ -228,6 +228,30 @@ export const djPoolApi = {
   approveClearance: (requestId, status) => request(`/api/djpool/clearance/${requestId}/approve`, { method: 'POST', body: { status } }),
 };
 
+// --- DJ Mixes, Track Extraction, Clearance & Split Cascade ---
+export const djMixesApi = {
+  listMixes: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.mine_only) qs.append('mine_only', 'true');
+    if (params.genre) qs.append('genre', params.genre);
+    if (params.q) qs.append('q', params.q);
+    const qStr = qs.toString();
+    return request(`/api/dj/mixes${qStr ? `?${qStr}` : ''}`);
+  },
+  getMix: (id) => request(`/api/dj/mixes/${id}`),
+  createMix: (payload) => request('/api/dj/mixes', { method: 'POST', body: payload }),
+  extractTracks: (payload) => request('/api/dj/mixes/extract-tracks', { method: 'POST', body: payload }),
+  updateTracklist: (id, payload) => request(`/api/dj/mixes/${id}/tracklist`, { method: 'PUT', body: payload }),
+  publishOriginal: (id, payload) => request(`/api/dj/mixes/${id}/publish-original`, { method: 'POST', body: payload }),
+  requestClearance: (id) => request(`/api/dj/mixes/${id}/request-clearance`, { method: 'POST' }),
+  signClearance: (mixId, trackId, payload) => request(`/api/dj/mixes/${mixId}/sign-clearance/${trackId}`, { method: 'POST', body: payload }),
+  purchaseMix: (id, payload = {}) => request(`/api/dj/mixes/${id}/purchase`, { method: 'POST', body: payload }),
+  sendMessage: (id, payload) => request(`/api/dj/mixes/${id}/messages`, { method: 'POST', body: payload }),
+  getCommunication: (id) => request(`/api/dj/mixes/${id}/communication`),
+  resendReminder: (id, trackId) => request(`/api/dj/mixes/${id}/resend-reminder/${trackId}`, { method: 'POST' }),
+  updateTrackContact: (id, trackId, payload) => request(`/api/dj/mixes/${id}/tracks/${trackId}/contact`, { method: 'PUT', body: payload }),
+};
+
 // --- Sync Marketplace & Brief Matching (Phase 6) ---
 export const syncApi = {
   listBriefs: (params = {}) => {
@@ -516,4 +540,47 @@ export const mediaHouseApi = {
   getCueSheets: (channelId) => request(`/api/media-house/cue-sheets${channelId ? `?channel_id=${encodeURIComponent(channelId)}` : ''}`),
   getStats: () => request('/api/media-house/stats'),
   getStemsCatalog: () => request('/api/media-house/stems-catalog'),
+};
+
+// --- Splits & Elections Fallbacks ---
+export const splitsApi = {
+  getSplits: (trackId) => request(`/api/splits${trackId ? `/${encodeURIComponent(trackId)}` : ''}`),
+  saveSplits: (payload) => request('/api/splits', { method: 'POST', body: payload }),
+};
+export const publishingElectionApi = publishingApi;
+export const distributionElectionApi = distroApi;
+
+if (typeof window !== 'undefined') {
+  window.mediaHouseApi = mediaHouseApi;
+  window.djMixesApi = djMixesApi;
+  window.splitsApi = splitsApi;
+}
+
+export default {
+  authApi,
+  tokenStore,
+  usersApi,
+  dashboardApi,
+  dealsApi,
+  adminApi,
+  cmsApi,
+  socialAiApi,
+  crmApi,
+  splitsApi,
+  publishingElectionApi,
+  distributionElectionApi,
+  publishingApi,
+  distroApi,
+  contractsApi,
+  djPoolApi,
+  djMixesApi,
+  syncApi,
+  storageApi,
+  catalogApi,
+  blogApi,
+  affiliatesApi,
+  communicationsApi,
+  streamApi,
+  corporateAdsApi,
+  mediaHouseApi,
 };

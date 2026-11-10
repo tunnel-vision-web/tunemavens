@@ -1,7 +1,7 @@
 // Unified lookup for every slug the App Marketplace can recommend.
 // The recommendation engine returns slugs + rationale; this helper resolves
 // them to the visual fields (icon, accent, name, open target).
-import { RiDatabase2Fill, RiCoinsFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDiscFill } from 'react-icons/ri';
+import { RiDatabase2Fill, RiCoinsFill, RiBookOpenFill, RiGlobalFill, RiRadioFill, RiShieldFill, RiMusicFill, RiSmartphoneFill, RiDiscFill, RiMegaphoneFill } from 'react-icons/ri';
 import { INTERMAVEN_NATIVE_APPS } from './nativeApps.js';
 import { INTERMAVEN_PLATFORM_APPS } from './intermavenPlatformApps.js';
 
@@ -14,6 +14,7 @@ const TUNEMAVENS_APPS = [
   { slug: 'split-cascade', name: 'Split Cascade', icon: RiCoinsFill, accent: '#a78bfa', tab: 'splits' },
   { slug: 'publishing-election', name: 'Publishing Election', icon: RiBookOpenFill, accent: '#22d3ee', tab: 'publishing-election' },
   { slug: 'distribution-election', name: 'Distribution Election', icon: RiGlobalFill, accent: '#a78bfa', tab: 'distribution-election' },
+  { slug: 'dj-mixes', name: 'DJ Mixes & Clearance Hub', icon: RiDiscFill, accent: '#22d3ee', tab: 'dj-mixes' },
   { slug: 'djpool', name: 'DJ Pool MVP', icon: RiRadioFill, accent: '#10b981', tab: 'djpool' },
   { slug: 'sync-marketplace', name: 'Sync Marketplace', icon: RiGlobalFill, accent: '#22d3ee', tab: 'sync' },
   { slug: 'escrow-contracts', name: 'Escrow Contracts', icon: RiShieldFill, accent: '#a78bfa', tab: 'escrow' },
@@ -22,6 +23,7 @@ const TUNEMAVENS_APPS = [
   { slug: 'tunepay-inventory', name: 'POS Inventory', icon: RiDatabase2Fill, accent: '#10b981', tab: 'pos-inventory' },
   { slug: 'tunepay-settlement', name: 'POS Settlement', icon: RiCoinsFill, accent: '#10b981', tab: 'pos-settlement' },
   { slug: 'tunepay-devices', name: 'POS Devices', icon: RiSmartphoneFill, accent: '#10b981', tab: 'pos-devices' },
+  { slug: 'corporate-ads', name: 'Corporate Brand Ads & Rates', icon: RiMegaphoneFill, accent: '#ef4444', tab: 'corporate-ads' },
 ];
 
 const NATIVE_LOOKUP = INTERMAVEN_NATIVE_APPS.map((a) => ({

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { RiGlobalFill, RiArrowDownSFill } from 'react-icons/ri';
 import { useRegion } from './RegionContext';
 
-function RegionSwitcher() {
+function RegionSwitcher({ iconOnly = false }) {
   const {
     country,
     countryName,
@@ -62,21 +62,31 @@ function RegionSwitcher() {
     <div
       id="synergyLocalizationBar"
       data-prerendered="true"
-      className="region-switcher"
+      className={`region-switcher ${iconOnly ? 'region-switcher-icon-only' : ''}`}
       ref={ref}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', position: 'relative' }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: iconOnly ? '6px' : '4px', position: 'relative' }}
     >
       <div
         className="region-trigger"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 10px' }}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: iconOnly ? '6px' : '6px',
+          padding: iconOnly ? '0' : '5px 10px',
+          background: iconOnly ? 'transparent' : undefined,
+          border: iconOnly ? 'none' : undefined
+        }}
       >
         <button
           type="button"
           id="marketSelectorBtn"
+          className={iconOnly ? 'topbar-nav-icon-btn' : ''}
           onClick={() => setOpen((o) => !o)}
           aria-label="Region and currency Selection"
+          title={`Region & Currency (${countryFlag || '🇰🇪'} ${currencyInfo?.symbol || 'KSh'} ${currency})`}
+          data-tooltip={`Region & Currency (${countryFlag || '🇰🇪'} ${currencyInfo?.symbol || 'KSh'} ${currency})`}
           data-testid="region-switcher-trigger"
-          style={{
+          style={iconOnly ? undefined : {
             background: 'transparent',
             border: 'none',
             color: 'inherit',
@@ -88,23 +98,31 @@ function RegionSwitcher() {
             font: 'inherit'
           }}
         >
-          <RiGlobalFill size={14} style={{ color: '#22d3ee' }} />
-          <span id="selectedMarketText" data-no-i18n="true" style={{ fontWeight: 700 }}>
+          <RiGlobalFill size={iconOnly ? 16 : 14} style={{ color: '#22d3ee' }} />
+          <span id="selectedMarketText" className={iconOnly ? 'topbar-item-label' : ''} data-no-i18n="true" style={{ fontWeight: 700 }}>
             {countryFlag || '🇰🇪'} {currencyInfo?.symbol || 'KSh'} {currency}
           </span>
-          <RiArrowDownSFill size={13} className={`region-chevron ${open ? 'open' : ''}`} />
+          {!iconOnly && <RiArrowDownSFill size={13} className={`region-chevron ${open ? 'open' : ''}`} />}
         </button>
 
-        <span data-no-i18n="true" style={{ opacity: 0.3, padding: '0 2px', userSelect: 'none' }}>|</span>
+        {!iconOnly && (
+          <span data-no-i18n="true" style={{ opacity: 0.3, padding: '0 2px', userSelect: 'none' }}>|</span>
+        )}
 
         <button
           type="button"
           id="langSelectorBtn"
+          className={iconOnly ? 'topbar-nav-icon-btn lang-icon-btn' : ''}
           onClick={toggleLanguageQuick}
-          title={`Switch language to ${nextLangObj.native} (${nextLangObj.name})`}
+          title={`Language: ${activeLangObj.native} — Click to switch to ${nextLangObj.native}`}
+          data-tooltip={`Language: ${activeLangObj.native} (Switch to ${nextLangObj.native})`}
           data-testid="lang-quick-toggle"
           data-no-i18n="true"
-          style={{
+          style={iconOnly ? {
+            background: language === 'en' ? 'rgba(34, 211, 238, 0.14)' : 'rgba(16, 185, 129, 0.2)',
+            color: language === 'en' ? '#22d3ee' : (activeLangObj.accent || '#10b981'),
+            border: language === 'en' ? '1px solid rgba(34, 211, 238, 0.35)' : `1px solid ${activeLangObj.accent || '#10b981'}`
+          } : {
             background: language === 'en' ? 'rgba(34, 211, 238, 0.14)' : (activeLangObj.accent || '#10b981'),
             color: language === 'en' ? '#22d3ee' : (activeLangObj.textDark || '#042f2e'),
             border: language === 'en' ? '1px solid rgba(34, 211, 238, 0.35)' : `1px solid ${activeLangObj.accent || '#10b981'}`,
@@ -117,8 +135,11 @@ function RegionSwitcher() {
             lineHeight: 1.3
           }}
         >
-          <span id="selectedLangText">
-            {activeLangObj.flag || '🌐'} {activeLangObj.short || activeLangObj.code.toUpperCase()}
+          <span id="selectedLangText" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: iconOnly ? '15px' : '11px', lineHeight: 1 }}>{activeLangObj.flag || '🌐'}</span>
+            <span className={iconOnly ? 'topbar-item-label' : ''} style={iconOnly ? undefined : { marginLeft: '4px' }}>
+              {activeLangObj.short || activeLangObj.code.toUpperCase()}
+            </span>
           </span>
         </button>
       </div>

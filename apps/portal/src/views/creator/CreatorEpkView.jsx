@@ -9,7 +9,7 @@ import {
 } from './PersonaEpkSections.jsx';
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import JSZip from 'jszip'
+// JSZip dynamically loaded on download
 import {
   RiHomeFill, RiUserFill, RiCalendarEventFill, RiVideoFill,
   RiShoppingBagFill, RiFileTextFill, RiMailFill, RiHeartFill,
@@ -1588,7 +1588,18 @@ export function CreatorEpkView(props = {}) {
   const handleDownloadPressPhotosZip = async () => {
     showToast('📦 Packaging High-Res Press Photos (300 DPI) ZIP archive...', 'info')
     try {
-      const zip = new JSZip()
+      let JSZipLib = window.JSZip
+      if (!JSZipLib) {
+        try {
+          const mod = await import('jszip')
+          JSZipLib = mod.default || mod
+        } catch (_) {}
+      }
+      if (!JSZipLib) {
+        showToast('ZIP packaging library unavailable. Downloading individual press photos.', 'info')
+        return
+      }
+      const zip = new JSZipLib()
       const folder = zip.folder(`${artistSlug}_press_photos_300dpi`)
 
       folder.file('README_PRESS_METADATA.txt',

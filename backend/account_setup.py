@@ -678,6 +678,81 @@ def send_contract_invitation_notification(
     )
 
 
+def send_dj_mix_clearance_invitation(
+    to: str,
+    name: str,
+    mix_title: str,
+    track_title: str,
+    dj_name: str,
+    contract_id: str,
+    split_pct: float,
+    commercial_price: float = 4.99,
+    mix_id: str = "",
+    role: str = "creator"
+) -> str:
+    """Dispatched when a DJ requests commercial mix clearance from an IP owner."""
+    first = (name or "there").split()[0]
+    estimated_payout_per_sale = (split_pct / 100.0) * commercial_price
+
+    inner_html = f"""
+<h2 style="margin:0 0 12px 0;color:#f8fafc;font-size:20px;font-weight:700;">DJ Mix Commercial Clearance Request</h2>
+<p style="margin:0 0 16px 0;color:#cbd5e1;font-size:14px;">Hi {first}, DJ <strong>{dj_name}</strong> has featured your recording in a commercial mix release on TuneMavens and is requesting your clearance approval.</p>
+
+<div style="background:#131c2d;border:1px solid #1e293b;border-radius:3px;padding:18px 20px;margin:20px 0;">
+  <div style="font-size:16px;font-weight:700;color:#f8fafc;margin-bottom:8px;">Mix Title: {mix_title}</div>
+  <div style="font-size:14px;color:#22d3ee;margin-bottom:12px;">Featured Track: <strong>{track_title}</strong></div>
+  
+  <table style="width:100%;border-collapse:collapse;font-size:13px;color:#cbd5e1;margin-top:10px;">
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Commercial Retail Price:</td>
+      <td style="padding:6px 0;font-weight:600;text-align:right;">${commercial_price:.2f} USD</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Proposed Revenue Split:</td>
+      <td style="padding:6px 0;font-weight:600;text-align:right;color:#10b981;">{split_pct:.2f}% of gross (${estimated_payout_per_sale:.2f} / sale)</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Condition Precedent:</td>
+      <td style="padding:6px 0;font-style:italic;text-align:right;color:#f59e0b;">No sales occur until 100% agreement</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Agreement Ref:</td>
+      <td style="padding:6px 0;font-family:monospace;text-align:right;">{contract_id}</td>
+    </tr>
+  </table>
+</div>
+
+<p style="margin:0 0 16px 0;color:#cbd5e1;font-size:14px;">
+  Review the interactive tracklist in context, listen to the transition, and execute the standard digital clearance contract with cryptographic SHA-256 seal.
+</p>
+<div style="margin:20px 0;">
+  {_button(f"{PUBLIC_APP_URL}/#/contracts?id={contract_id}&mix_id={mix_id}", "Review & Sign Clearance Agreement")}
+</div>"""
+
+    html = _email_wrapper(inner_html, "DJ Mix Clearance Request", role)
+    text = (
+        f"DJ Mix Clearance Request from {dj_name}: Clearance requested for '{track_title}' in '{mix_title}'. "
+        f"Proposed split: {split_pct:.2f}% (${estimated_payout_per_sale:.2f}/sale). Review on TuneMavens: Contract {contract_id}."
+    )
+    return send_email(
+        to=to,
+        subject=f"Action Required: DJ Mix Clearance Request for '{track_title}' in '{mix_title}'",
+        html=html,
+        text=text,
+        event_type="dj_mix_clearance_request",
+        role=role,
+        recipient_name=name,
+        metadata={
+            "contract_id": contract_id,
+            "mix_title": mix_title,
+            "track_title": track_title,
+            "dj_name": dj_name,
+            "split_pct": split_pct,
+            "mix_id": mix_id
+        }
+    )
+
+
 # Re-export WhatsApp communication primitives
 from services.whatsapp_service import send_whatsapp, sanitize_phone_number, generate_wa_direct_url
 

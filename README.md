@@ -157,3 +157,13 @@ npm test
 - **100% Credit-Only Billing**: All monthly recurring subscription wording removed in favor of non-expiring one-time credit top-up packages across all documentation, registration, and landing views.
 - **Per-Audience Prerender & Canonical Scheme**: Semantic HTML generated for all 9 canonical roles (`/for/creator`, `/for/label`, `/for/dj`, `/for/media-house`, `/for/supervisor`, `/for/consumer`, `/for/corporate`, `/for/podcaster`, `/for/vc`) and hub (`/for`), with 301 redirects from legacy `/for-*` URLs in FastAPI and nginx.
 - **Verified Audio Streaming Defaults**: TuneStream streaming defaults to 96 kbps AAC data-saver profile for East African mobile data savings, reserving uncompressed FLAC for opt-in Wi-Fi streaming.
+
+### 15. DJ Mixes & Sovereign Clearance Engine, Localized Pricing, AI Need-Based Recommendations & TuneStream DJ Mixes
+- **DJ Mixes & Clearance Hub (`DJMixesManager.jsx` & `backend/routes/dj_mixes_router.py`)**: Drag-and-drop audio and cover artwork upload with automated waveform/cue sheet tracklist extraction, enforcing a **40% DJ / 50% IP Rights Holder / 10% Platform** split waterfall (or **90% Sovereign DJ / 10% Platform** for original productions).
+- **Rights Owner Communications & Prior-Agreement Enforcement**: Integrated Rights Owner Comms Hub allowing DJs to track clearance statuses, update contact details, send 1-click clearance reminders, message rights owners directly, and prevent unauthorized mix sales until all third-party tracks are cleared.
+- **Full Multi-Currency Localization (`KES`, `USD`, `NGN`, `ZAR`, `EUR`, `GBP`)**: Complete pricing localization across mix uploads, catalogue cards, royalty split previews, revenue analytics, and M-Pesa STK Push / TM Credits / Card checkout.
+- **DJ Mixes Grid Pagination**: Bottom pagination controls (`3 / 6 / 9 / 12 per page`, `Prev`/`Next`, numbered page buttons, and live item range indicator).
+- **AI Wizard Need-Based App Recommendations (`phase3.jsx` & `recommendation_engine.py`)**: Parses structured answers and custom freeform notes from the AI Onboarding Wizard to generate tailored app recommendations and custom rationales inside an interactive post-wizard results view.
+- **TuneStream DJ Mixes Category (`apps/tunestream/src/App.jsx` & `NativeAppLandingView.jsx`)**: Dedicated `DJ Mixes & Sets` navigation section, Explore filter pill (`🎧 DJ Mixes`), and public landing filter with full tracklist attribution and Hi-Fi playback.
+- **Icon-Only Dashboard Topbar (`App.jsx` & `App.css`)**: Streamlined top header action controls into hover-tooltip icon buttons while preserving full labels on the Account Type pill, Notification Bell, and Master Admin badge.
+

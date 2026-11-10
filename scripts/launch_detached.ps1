@@ -38,7 +38,7 @@ foreach ($cmd in $commands) {
 }
 
 Write-Host "`nWaiting for listening ports..." -ForegroundColor Cyan
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 8
 
 $activeConns = Get-NetTCPConnection -LocalPort $targetPorts -State Listen -ErrorAction SilentlyContinue
 $activePorts = @($activeConns | ForEach-Object { $_.LocalPort })

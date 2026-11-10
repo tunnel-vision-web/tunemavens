@@ -281,10 +281,106 @@ def catalogue_acquisition_template(context: dict) -> tuple[str, list[dict]]:
     return title, clauses
 
 
+def dj_mix_clearance_template(context: dict) -> tuple[str, list[dict]]:
+    mix_title = context.get("mix_title") or "Curated DJ Mix"
+    dj_name = context.get("dj_name") or "DJ"
+    track_title = context.get("track_title") or "Featured Recording"
+    artist = context.get("artist") or "Featured Artist"
+    ip_owner_name = context.get("ip_owner_name") or "Rights Holder"
+    price = float(context.get("commercial_price") or 4.99)
+    dj_split_pct = float(context.get("dj_split_pct") or 40.0)
+    track_owners_split_pct = float(context.get("track_owners_split_pct") or 50.0)
+    platform_fee_pct = float(context.get("platform_fee_pct") or 10.0)
+    pro_rated_track_split = float(context.get("pro_rated_track_split") or 12.5)
+
+    title = f"DJ Mix Clearance & Revenue Split Agreement — {track_title} in '{mix_title}'"
+    clauses = [
+        {
+            "id": "parties",
+            "title": "Parties & Engagement",
+            "body": (
+                f"This Agreement is entered into between {dj_name} (the \"Curating DJ\"), "
+                f"{ip_owner_name} (the \"IP Owner / Rights Holder\" of the recording '{track_title}' performed by {artist}), "
+                "and TuneMavens (the \"Platform & Escrow Administrator\"). All parties agree to binding electronic execution."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Standard multi-party identification for copyright clearance enforceability.",
+        },
+        {
+            "id": "scope_and_license",
+            "title": "Clearance Scope & License Grant",
+            "body": (
+                f"The IP Owner grants the Curating DJ and TuneMavens a non-exclusive, worldwide digital distribution license "
+                f"to include the master recording and underlying musical composition of '{track_title}' "
+                f"as part of the continuous DJ mix compilation entitled '{mix_title}', for commercial download, digital retail, and on-demand streaming."
+            ),
+            "negotiable": True,
+        },
+        {
+            "id": "prior_consensus_condition",
+            "title": "Condition Precedent — 100% IP Owner Agreement Required",
+            "body": (
+                "Prior to having any commercial sales, paid downloads, or paywalled streaming of the mix, "
+                "ALL IP owners and rights holders whose works are included in the mix tracklist must be in complete agreement "
+                "and have executed their respective clearance agreements on the TuneMavens platform. "
+                "Commercial monetization remains cryptographically locked by the platform until 100% agreement is verified."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Platform rule: No commercial sales occur without 100% prior rights-holder consensus.",
+        },
+        {
+            "id": "revenue_splits",
+            "title": "Revenue Waterfall & Split Cascade",
+            "body": (
+                f"Gross commercial revenue generated from the sale or monetization of '{mix_title}' (retail baseline: ${price:.2f} USD) "
+                f"shall be automatically distributed via the TuneMavens Split Cascade as follows: "
+                f"{dj_split_pct:.1f}% to Curating DJ ({dj_name}); "
+                f"{track_owners_split_pct:.1f}% dedicated to the Track IP Owners Pool (with {pro_rated_track_split:.2f}% of total gross allocated to '{track_title}'); "
+                f"and {platform_fee_pct:.1f}% to TuneMavens for payment gateway processing, statutory cue reporting, and escrow administration."
+            ),
+            "negotiable": True,
+        },
+        {
+            "id": "track_extraction_and_playlist",
+            "title": "Track Extraction & Interactive Playlist Attribution",
+            "body": (
+                f"The track '{track_title}' shall be clearly identified with timestamps in the mix cue tracklist, "
+                "enabling listeners to jump directly to this track in the playlist view. "
+                "Proper metadata credits (artist, title, publishing, ISRC if provided) shall be displayed at all times during playback."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Attribution and cue sheet display integrity are mandatory for royalty tracing.",
+        },
+        {
+            "id": "warranties",
+            "title": "Warranties & Indemnification",
+            "body": (
+                "The IP Owner warrants that they own or represent the necessary rights to grant clearance for the specified track. "
+                "The Curating DJ warrants that no unauthorized third-party audio has been mixed into this release without submission for clearance. "
+                "Both parties agree that electronic signatures executed on TuneMavens carry full legal validity under applicable digital commerce laws."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Standard IP mutual warranty block.",
+        },
+        {
+            "id": "governing_law",
+            "title": "Governing Law & Digital Audit",
+            "body": (
+                "This Agreement is governed by the laws of the jurisdiction of the Platform Administrator. "
+                "All split distributions and signature records are permanently archived with tamper-evident SHA-256 digital seals."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Required for multi-jurisdiction enforceability.",
+        },
+    ]
+    return title, clauses
+
+
 TEMPLATES = {
     "publishing": publishing_template,
     "distribution": distribution_template,
     "catalogue_acquisition": catalogue_acquisition_template,
+    "dj_mix_clearance": dj_mix_clearance_template,
 }
 
 

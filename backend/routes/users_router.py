@@ -40,6 +40,8 @@ ALLOWED_APP_SLUGS = {
     "publishing-election",
     "distribution-election",
     "djpool",
+    "dj-mixes",
+    "corporate-ads",
     "sync-marketplace",
     "escrow-contracts",
     "tunemavens-library",

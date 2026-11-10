@@ -9,6 +9,12 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     allowedHosts: true,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 3000,
+      clientPort: 3000,
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8001',
@@ -44,5 +50,11 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     allowedHosts: true,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 3000,
+      clientPort: 3000,
+    },
   },
 })

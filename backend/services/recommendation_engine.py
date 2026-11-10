@@ -31,7 +31,7 @@ log = logging.getLogger("recs")
 ALL_SLUGS = {
     # TuneMavens dashboard apps
     "catalog-porting", "split-cascade", "publishing-election", "distribution-election",
-    "djpool", "sync-marketplace", "escrow-contracts", "epk-builder",
+    "djpool", "dj-mixes", "corporate-ads", "sync-marketplace", "escrow-contracts", "epk-builder",
     "tunemavens-library", "tunemavens-tips",
     "mpesa-pos-inventory", "mpesa-pos-settlement", "mpesa-pos-devices",
     "tunepay-inventory", "tunepay-settlement", "tunepay-devices",
@@ -51,7 +51,9 @@ CATALOGUE_SUMMARY = {
     "split-cascade": "See every dollar flow through writer/producer/publisher splits.",
     "publishing-election": "Choose standard admin vs full-service co-publishing.",
     "distribution-election": "Choose how music reaches DSPs (fee-matched / native / label).",
-    "djpool": "Distribute promo cuts to vetted DJs and gate by region.",
+    "djpool": "Distribute promo cuts to vetted DJs, download 24-bit stems & club mixes.",
+    "dj-mixes": "Upload continuous DJ mixes, auto-extract tracklists, clear IP rights, and monetize sets (40% DJ / 50% IP).",
+    "corporate-ads": "Configure business audio interstitials, sponsor creator concert tours, and inspect flight analytics.",
     "sync-marketplace": "Pitch tracks for film / TV / ads / games placements.",
     "escrow-contracts": "Hold funds in escrow until milestones clear.",
     "epk-builder": "Construct a stunning Electronic Press Kit (EPK) with your tracks, bio, and social links.",
@@ -120,40 +122,113 @@ def rules_recommend(
             "epk-builder": 2,
         },
         "dj": {
-            "djpool": 5, "tunemavens-library": 4, "intermaven-tunemavens": 3,
-            "tunemavens-tips": 2,
+            "dj-mixes": 6, "djpool": 5, "split-cascade": 4, "tunemavens-library": 4,
+            "epk-builder": 3, "intermaven-tunepay": 3, "intermaven-social-ai": 3,
+            "intermaven-smart-crm": 3, "tunemavens-tips": 2, "intermaven-tunemavens": 3,
         },
         "studio": {"sync-marketplace": 4, "escrow-contracts": 4, "intermaven-contracts": 3},
         "supervisor": {"sync-marketplace": 5, "escrow-contracts": 3, "intermaven-pitch-deck-ai": 2},
         "consumer": {"tunemavens-library": 5, "tunemavens-tips": 3, "intermaven-tunemavens": 4},
+        "corporate": {"corporate-ads": 6, "sync-marketplace": 4, "escrow-contracts": 3},
         "admin": {
             "catalog-porting": 2, "publishing-election": 2, "distribution-election": 2,
-            "split-cascade": 2, "intermaven-smart-crm": 2,
+            "split-cascade": 2, "intermaven-smart-crm": 2, "dj-mixes": 2,
         },
     }
     for slug, boost in role_boost.get(role, {}).items():
         scores[slug] += boost
 
+    custom_rationales: dict[str, str] = {}
+
     if not o:
         # No onboarding yet — role-based ranking is the best we can do.
-        return _finalize(scores, active_set, limit, source="rules", freeform=None)
+        return _finalize(scores, active_set, limit, source="rules", freeform=None, custom_rationales=custom_rationales)
 
     # ---- Primary goal (multi-select — accumulate boosts across every pick) ----
     goal_boost = {
         "release_music": {"distribution-election": 4, "publishing-election": 4, "catalog-porting": 3, "split-cascade": 3, "intermaven-creator-companion": 2},
         "manage_roster": {"intermaven-smart-crm": 5, "catalog-porting": 4, "split-cascade": 3, "intermaven-contracts": 2},
-        "grow_fans": {"intermaven-social-ai": 5, "intermaven-brandkit-ai": 4, "tunemavens-tips": 2, "djpool": 2},
+        "grow_fans": {"intermaven-social-ai": 5, "intermaven-brandkit-ai": 4, "tunemavens-tips": 2, "djpool": 2, "epk-builder": 3},
         "sync_licensing": {"sync-marketplace": 5, "escrow-contracts": 3, "intermaven-pitch-deck-ai": 2, "catalog-porting": 2},
-        "sell_at_shows": {"intermaven-mpesa-pos": 5, "mpesa-pos-inventory": 4, "mpesa-pos-settlement": 3, "intermaven-invoicing-payments": 2, "intermaven-pos-system": 3},
+        "sell_at_shows": {"intermaven-mpesa-pos": 5, "intermaven-tunepay": 5, "mpesa-pos-inventory": 4, "mpesa-pos-settlement": 3, "intermaven-invoicing-payments": 2, "intermaven-pos-system": 3},
+        "dj_mixes_clearance": {"dj-mixes": 6, "split-cascade": 4, "intermaven-contracts": 3, "djpool": 3},
+        "dj_pool_stems": {"djpool": 6, "dj-mixes": 4, "tunemavens-library": 3, "epk-builder": 2},
         "consume": {"tunemavens-library": 5, "tunemavens-tips": 3, "intermaven-tunemavens": 4},
     }
     for goal in (o.primary_goal or []):
         for slug, boost in goal_boost.get(goal, {}).items():
             scores[slug] += boost
+        if goal == "dj_mixes_clearance":
+            custom_rationales["dj-mixes"] = "Matches your goal to curate, clear IP rights, and monetize continuous DJ mixes with 40% DJ / 50% IP splits."
+            custom_rationales["split-cascade"] = "Automates the royalty waterfall between you and every rights holder featured in your DJ mixes."
+        elif goal == "dj_pool_stems":
+            custom_rationales["djpool"] = "Directly unlocks 24-bit WAV club promos, instrumentals, and stems for your DJ sets."
+        elif goal == "sell_at_shows":
+            custom_rationales["intermaven-tunepay"] = "Accept M-Pesa, card, and instant tips at live DJ gigs, club nights, and merch tables."
+        elif goal == "grow_fans":
+            custom_rationales["intermaven-social-ai"] = "Automate mix teasers, gig flyers, and multi-platform scheduling to grow your audience."
+            custom_rationales["epk-builder"] = "Give club promoters, festivals, and booking agents an interactive DJ EPK with your top sets."
+
     if o.primary_goal_other:
-        # A generic explorer signal — nudges the most versatile picks.
         scores["intermaven-smart-crm"] += 1
         scores["intermaven-brandkit-ai"] += 1
+
+    # ---- Free-text & "Other" Need Analysis (Keyword Matching) ----
+    combined_notes = " ".join(
+        filter(
+            None,
+            [
+                o.primary_goal_other,
+                o.release_cadence_other,
+                o.distribution_setup_other,
+                o.revenue_focus_other,
+                o.team_size_other,
+                o.freeform_notes,
+            ],
+        )
+    ).lower()
+
+    if combined_notes:
+        keyword_rules = [
+            (["mix", "set", "tracklist", "clear", "clearance", "copyright", "takedown", "mashup", "blend"], {
+                "dj-mixes": (7, "Recommended for your inputted need: automated tracklist extraction, IP rights clearance, and legal DJ mix monetization."),
+                "split-cascade": (4, "Pairs with DJ Mixes to transparently split proceeds (40% DJ / 50% Rights Holders / 10% Platform)."),
+                "intermaven-contracts": (3, "Generate and track binding clearance agreements with artists and record labels."),
+            }),
+            (["pool", "stem", "acapella", "promo", "club", "crates", "bpm", "dj"], {
+                "djpool": (6, "Matched to your DJ need: access vetted club promos, extended mixes, and 24-bit stems."),
+                "dj-mixes": (5, "Turn your club crates and promo downloads into commercial, rights-cleared mixes."),
+            }),
+            (["gig", "show", "event", "book", "booking", "tour", "festival", "club night", "promoter", "client"], {
+                "intermaven-smart-crm": (5, "Matched to your booking/events need: manage promoters, club bookings, deposits, and gig pipelines."),
+                "epk-builder": (5, "Essential for pitching your DJ profile, tech rider, and signature mixes to promoters and festivals."),
+                "intermaven-invoicing-payments": (4, "Send instant booking invoices and collect deposits via M-Pesa or card."),
+            }),
+            (["pos", "mpesa", "m-pesa", "merch", "ticket", "tip", "cashless", "live pay"], {
+                "intermaven-tunepay": (6, "Matched to your live monetization need: portable POS for live gig tips, tickets, and merch."),
+                "tunemavens-tips": (4, "Track incoming fan micro-tips and direct mix purchases in real time."),
+                "mpesa-pos-inventory": (3, "Manage physical merch and USB/vinyl mix drops at live events."),
+            }),
+            (["social", "instagram", "tiktok", "youtube", "fan", "audience", "market", "promote", "brand"], {
+                "intermaven-social-ai": (5, "Matched to your growth need: AI-powered social scheduling, mix clip captions, and audience insights."),
+                "intermaven-brandkit-ai": (4, "Build a cohesive DJ logo, visual identity, and flyer templates."),
+            }),
+            (["sync", "film", "tv", "ad", "commercial", "movie", "game", "brief"], {
+                "sync-marketplace": (6, "Matched to your sync need: pitch original productions and cleared stems for film, TV, and brand ads."),
+                "escrow-contracts": (4, "Protect sync licensing fees in milestone escrow until master delivery clears."),
+            }),
+            (["release", "distribute", "spotify", "apple", "dsp", "publish", "royalt", "catalog"], {
+                "distribution-election": (5, "Matched to your release need: distribute original tracks and remixes to global DSPs."),
+                "publishing-election": (4, "Collect composition and neighboring rights royalties across PROs."),
+                "catalog-porting": (4, "Import your existing releases and metadata in minutes."),
+            }),
+        ]
+        for keywords, boosts in keyword_rules:
+            if any(kw in combined_notes for kw in keywords):
+                for slug, (pts, reason) in boosts.items():
+                    if slug in scores:
+                        scores[slug] += pts
+                        custom_rationales.setdefault(slug, reason)
 
     # ---- Distribution setup ----
     if o.distribution_setup == "none":
@@ -210,7 +285,7 @@ def rules_recommend(
         if slug in scores:
             scores[slug] -= 2
 
-    return _finalize(scores, active_set, limit, source="rules", freeform=o.freeform_notes if o else None)
+    return _finalize(scores, active_set, limit, source="rules", freeform=o.freeform_notes if o else None, custom_rationales=custom_rationales)
 
 
 def _finalize(
@@ -220,6 +295,7 @@ def _finalize(
     *,
     source: str,
     freeform: str | None,
+    custom_rationales: dict[str, str] | None = None,
 ) -> list[Recommendation]:
     ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
     picks: list[Recommendation] = []
@@ -228,9 +304,10 @@ def _finalize(
             continue
         if score <= 0:
             continue
+        rationale = (custom_rationales or {}).get(slug) or CATALOGUE_SUMMARY.get(slug, "")
         picks.append(Recommendation(
             slug=slug,
-            rationale=CATALOGUE_SUMMARY.get(slug, ""),
+            rationale=rationale,
             priority=len(picks) + 1,
             source=source,
         ))

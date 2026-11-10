@@ -2066,10 +2066,62 @@ export default function NativeAppLandingView({
         }))
       );
 
+      const popularDjMixes = [
+        {
+          id: 'djmix_kilifi_sunrise',
+          title: 'Kilifi New Year Sunrise Ritual (Afro-Tech Set)',
+          artist: 'DJ K-Souldier',
+          genre: 'DJ Mix • Afro-House',
+          bpm: 122,
+          duration: '45:00',
+          streams: '1.5K plays',
+          cover: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
+          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+          year: 2026
+        },
+        {
+          id: 'djmix_jozi_lagos',
+          title: 'Jozi to Lagos Private School Amapiano Vol. 4',
+          artist: 'DJ Zinhle Vibes',
+          genre: 'DJ Mix • Amapiano',
+          bpm: 113,
+          duration: '40:00',
+          streams: '2.1K plays',
+          cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
+          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+          year: 2026
+        },
+        {
+          id: 'djmix_maphoria_techno',
+          title: 'All-Original High-Voltage Techno Experience',
+          artist: 'DJ Maphoria',
+          genre: 'DJ Mix • Electronic',
+          bpm: 130,
+          duration: '30:00',
+          streams: '890 plays',
+          cover: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&auto=format&fit=crop&q=80',
+          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+          year: 2026
+        },
+        {
+          id: 'djmix_accra_highlife',
+          title: 'Accra Highlife & Afrobeats Golden Hour Mix',
+          artist: 'Selector Kofi',
+          genre: 'DJ Mix • Afrobeats',
+          bpm: 106,
+          duration: '35:00',
+          streams: '1.2K plays',
+          cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80',
+          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+          year: 2026
+        }
+      ];
+
       const q = exploreSearch.toLowerCase().trim();
 
       // Collect available unique genres for filter dropdown
       const BASE_GENRES = [
+        'DJ Mixes',
         'Afrobeats',
         'Afro-House',
         'Deep-House',
@@ -2093,7 +2145,8 @@ export default function NativeAppLandingView({
         ...popularSingles.map(s => s.genre),
         ...popularAlbums.map(al => al.genre),
         ...popularPodcasters.map(p => p.genre),
-        ...popularPodcastEpisodes.map(pe => pe.genre)
+        ...popularPodcastEpisodes.map(pe => pe.genre),
+        ...popularDjMixes.map(dm => dm.genre)
       ].filter(Boolean))).sort();
 
       // Build unified collection
@@ -2176,6 +2229,22 @@ export default function NativeAppLandingView({
           year: 2026,
           date: '2026-03-12',
           data: pod
+        })));
+      }
+
+      if (exploreFilter === 'all' || exploreFilter === 'dj-mixes') {
+        combinedItems = combinedItems.concat(popularDjMixes.map(dm => ({
+          kind: 'dj-mix',
+          id: dm.id,
+          title: dm.title,
+          subtitle: `Curated by ${dm.artist} · ${dm.bpm} BPM`,
+          genre: dm.genre,
+          metaLeft: `${dm.duration} · ${dm.streams}`,
+          metaRight: 'Stream Mix ▶',
+          cover: dm.cover,
+          year: 2026,
+          date: '2026-03-14',
+          data: dm
         })));
       }
 
@@ -2423,6 +2492,23 @@ export default function NativeAppLandingView({
             >
               Podcasters &amp; EPKs ({popularPodcasters.length})
             </button>
+            <button
+              type="button"
+              onClick={() => { setExploreFilter('dj-mixes'); setExplorePage(1); }}
+              data-testid="landing-explore-filter-dj-mixes"
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'dj-mixes' ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'dj-mixes' ? '#00f2fe' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'dj-mixes' ? '#060813' : '#fff',
+                fontWeight: '800',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              🎧 DJ Mixes ({popularDjMixes.length})
+            </button>
           </div>
 
           {/* Filtering & Sorting Controls (Genre & Date/Title/Popularity) */}
@@ -2509,12 +2595,12 @@ export default function NativeAppLandingView({
                       left: '8px', 
                       fontSize: '9px', 
                       fontWeight: 'bold', 
-                      background: item.kind === 'creator' ? 'rgba(0,0,0,0.75)' : item.kind === 'podcaster' ? 'rgba(236,72,153,0.9)' : item.kind === 'podcast' ? 'rgba(34,211,238,0.9)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
-                      color: item.kind === 'creator' ? '#00f2fe' : item.kind === 'podcast' ? '#000' : '#fff', 
+                      background: item.kind === 'creator' ? 'rgba(0,0,0,0.75)' : item.kind === 'dj-mix' ? 'rgba(0,242,254,0.9)' : item.kind === 'podcaster' ? 'rgba(236,72,153,0.9)' : item.kind === 'podcast' ? 'rgba(34,211,238,0.9)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
+                      color: item.kind === 'creator' ? '#00f2fe' : (item.kind === 'podcast' || item.kind === 'dj-mix') ? '#000' : '#fff', 
                       padding: '2px 6px', 
                       borderRadius: '3px' 
                     }}>
-                      {item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'podcaster' ? 'PODCASTER EPK' : item.kind === 'podcast' ? 'PODCAST EPISODE' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
+                      {item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'dj-mix' ? 'CLEARED DJ MIX' : item.kind === 'podcaster' ? 'PODCASTER EPK' : item.kind === 'podcast' ? 'PODCAST EPISODE' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
                     </span>
                     {item.kind !== 'creator' && (
                       <button

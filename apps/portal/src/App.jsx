@@ -140,7 +140,34 @@ import CatalogueWizard from './components/CatalogueWizard.jsx'
 import ArtistRosterSelector from './components/ArtistRosterSelector.jsx'
 import GenreManagerModal from './components/GenreManagerModal.jsx'
 import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from './lib/genres.js'
-import AppHelpAiControls, { GetHelpAskAiButtons } from './components/common/AppHelpAiControls.jsx'
+import AppHelpAiControls, * as AppHelpAiControlsModule from './components/common/AppHelpAiControls.jsx'
+
+const GetHelpAskAiButtons = AppHelpAiControlsModule.GetHelpAskAiButtons || AppHelpAiControls?.GetHelpAskAiButtons || function FallbackGetHelpAskAiButtons({ className = '', style = {}, compact = false, iconOnly = false }) {
+  return (
+    <div className={`topbar-help-ai-group ${className}`} style={style} data-testid="topbar-help-ai-group">
+      <button
+        type="button"
+        className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
+        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-help'))}
+        title="Get Help: Open contextual in-app documentation & guides"
+        data-tooltip="Get Help"
+        data-testid="topbar-btn-get-help"
+      >
+        <span className={iconOnly ? 'topbar-item-label' : ''}>Get Help</span>
+      </button>
+      <button
+        type="button"
+        className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
+        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-ai'))}
+        title="Ask AI"
+        data-tooltip="Ask AI (Ayo Copilot)"
+        data-testid="topbar-btn-ask-ai"
+      >
+        <span className={iconOnly ? 'topbar-item-label' : ''}>Ask AI</span>
+      </button>
+    </div>
+  );
+};
 import { getRelevantDocLink } from './services/userLifecycleMemory.js'
 import {
   OnboardingStripe, OnboardingWizardModal, RecommendationHero,
@@ -160,6 +187,7 @@ import {
 } from './components/affiliates/AffiliateActionModals.jsx'
 import SyncMarketplacePanel from './components/sync/SyncMarketplacePanel.jsx'
 import DJPoolPanel from './components/dj/DJPoolPanel.jsx'
+import DJMixesManager from './components/dj/DJMixesManager.jsx'
 import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog.js'
 import MpesaPosTerminal from './components/demos/MpesaPosTerminal.jsx'
 import DistributionTrackerApp from './components/demos/DistributionTrackerApp.jsx'
@@ -410,6 +438,16 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
       ];
     }
     return [
+      {
+        id: 'dj_mixes_intro_notif',
+        title: 'DJ Mix Monetization & Sovereign Clearances',
+        body: 'Continuous set audio track extraction and 100% complete IP owner agreement contracts are active.',
+        actionText: 'Open DJ Mixes',
+        actionType: 'navigate',
+        targetTab: 'dj-mixes',
+        read: false,
+        at: 'Just now'
+      },
       { id: 1, title: 'Welcome to TuneMavens', body: 'You\u2019re signed in across the whole network. Credits: 600.', read: false, at: '2m ago' },
       { id: 2, title: 'Your workspace is ready', body: 'Publishing, distribution and split panels are wired up and waiting.', read: false, at: '12m ago' },
       { id: 3, title: 'Tip: complete your profile', body: 'Add a brand bio so labels can find you in Sync Marketplace.', read: true, at: '1h ago' },
@@ -455,6 +493,39 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           body: 'Senior-Secured Live Tour Advance Structuring & Split Cascade Liquidation Waterfall (Institutional LP Guide).',
           actionText: 'Read Playbook',
           actionType: 'vc-guide',
+          read: false,
+          at: '1h ago'
+        }
+      ]);
+        } else if (sessionUser?.role === 'dj') {
+      setNotifications([
+        {
+          id: 'dj_mixes_notif_1',
+          title: 'DJ Mix Monetization & Clearance Pipeline',
+          body: 'Continuous set ingestion, audio track extraction, and 100% prior agreement contracts are ready.',
+          actionText: 'Open DJ Mixes',
+          actionType: 'navigate',
+          targetTab: 'dj-mixes',
+          read: false,
+          at: 'Just now'
+        },
+        {
+          id: 'dj_mixes_notif_2',
+          title: 'Prior Complete Agreement Enforcement',
+          body: 'Remember: All IP owners must sign before commercial sales unlock. 1-click email requests are available.',
+          actionText: 'Review Clearances',
+          actionType: 'navigate',
+          targetTab: 'dj-mixes',
+          read: false,
+          at: '15m ago'
+        },
+        {
+          id: 'dj_mixes_notif_3',
+          title: '100% Original IP Sovereign Publishing',
+          body: 'Created all the music in your mix? Execute a 1-click warranty to publish and sell right away.',
+          actionText: 'Upload Original Set',
+          actionType: 'navigate',
+          targetTab: 'dj-mixes',
           read: false,
           at: '1h ago'
         }
@@ -563,37 +634,20 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           if (isAdmin) {
             return (
               <div
+                className="topbar-nav-icon-btn"
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '7px',
-                  background: 'rgba(14, 165, 233, 0.1)',
+                  background: 'rgba(14, 165, 233, 0.12)',
                   border: '1px solid rgba(14, 165, 233, 0.35)',
                   color: '#38bdf8',
-                  padding: '5px 12px',
-                  borderRadius: '3px',
-                  fontSize: '12px',
-                  fontWeight: 700,
                   cursor: 'default'
                 }}
-                title="Master Platform Administrator Console: Full unrestricted platformwide access. Administrators are permanently credit-exempt."
+                title="Admin Console · Credit-Exempt"
+                data-tooltip="Admin Console · Credit-Exempt"
                 data-testid="topbar-admin-credit-exempt-badge"
                 data-tour="topbar-credits"
               >
-                <RiShieldCheckFill size={15} style={{ color: '#38bdf8' }} />
-                <span>Admin Console</span>
-                <span style={{
-                  fontSize: '10px',
-                  background: 'rgba(14, 165, 233, 0.25)',
-                  color: '#38bdf8',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
-                  fontWeight: 800,
-                  letterSpacing: '0.4px',
-                  textTransform: 'uppercase'
-                }}>
-                  Credit-Exempt
-                </span>
+                <RiShieldCheckFill size={16} style={{ color: '#38bdf8' }} />
+                <span className="topbar-item-label">Admin Console Credit-Exempt</span>
               </div>
             );
           }
@@ -601,54 +655,38 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           if (isVc) {
             return (
               <div
+                className="topbar-nav-icon-btn"
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '7px',
-                  background: 'rgba(0, 242, 254, 0.08)',
+                  background: 'rgba(0, 242, 254, 0.1)',
                   border: '1px solid rgba(0, 242, 254, 0.35)',
                   color: '#00f2fe',
-                  padding: '5px 12px',
-                  borderRadius: '3px',
-                  fontSize: '12px',
-                  fontWeight: 700,
                   cursor: 'default'
                 }}
-                title="Institutional LP Syndicate Account: VCs & Investors have full platformwide access and are never charged credits."
+                title="Institutional LP · Credit-Exempt"
+                data-tooltip="Institutional LP · Credit-Exempt"
                 data-testid="topbar-vc-credit-exempt-badge"
                 data-tour="topbar-credits"
               >
-                <RiShieldCheckFill size={15} style={{ color: '#00f2fe' }} />
-                <span>Institutional LP</span>
-                <span style={{
-                  fontSize: '10px',
-                  background: 'rgba(0, 242, 254, 0.2)',
-                  color: '#00f2fe',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
-                  fontWeight: 800,
-                  letterSpacing: '0.4px',
-                  textTransform: 'uppercase'
-                }}>
-                  Credit-Exempt
-                </span>
+                <RiShieldCheckFill size={16} style={{ color: '#00f2fe' }} />
+                <span className="topbar-item-label">Institutional LP Credit-Exempt</span>
               </div>
             );
           }
           const isAffiliate = sessionUser?.role === 'affiliate' || activeTab === 'affiliates';
           const creditsCount = sessionUser?.credits ?? 0;
+          const creditTooltip = isAffiliate
+            ? `${creditsCount.toLocaleString()} Credits · Studio Tools`
+            : `${creditsCount.toLocaleString()} Credits · Top Up`;
           return (
             <button
               type="button"
+              className="topbar-nav-icon-btn"
               onClick={() => {
                 if (typeof onOpenCreditReload === 'function') {
                   onOpenCreditReload(isAffiliate ? 'Creator Tools Credit Reload' : 'Top-Up Unified Platform Credits');
                 }
               }}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
                 background: isAffiliate
                   ? 'rgba(34, 211, 238, 0.1)'
                   : (creditsCount < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)'),
@@ -657,84 +695,85 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                   : (creditsCount < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)'),
                 color: isAffiliate
                   ? '#22d3ee'
-                  : (creditsCount < 50 ? '#ef4444' : '#10b981'),
-                padding: '5px 11px',
-                borderRadius: '3px',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                  : (creditsCount < 50 ? '#ef4444' : '#10b981')
               }}
-              title={isAffiliate 
-                ? "Unified Credits: Applies only if you use creator tools (MasterLab AI, Sync briefs, etc.). The Affiliate Dashboard requires 0 credits." 
-                : "Click to reload unified platform credits (Zero monthly charges)"}
+              title={creditTooltip}
+              data-tooltip={creditTooltip}
               data-testid="topbar-unified-credits-btn"
               data-tour="topbar-credits"
             >
-              <RiCoinsFill size={15} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
-              <span>{creditsCount.toLocaleString()} Credits</span>
-              <span style={{
-                fontSize: '10px',
-                background: isAffiliate ? 'rgba(34, 211, 238, 0.25)' : (creditsCount < 50 ? '#ef4444' : '#10b981'),
-                color: isAffiliate ? '#22d3ee' : '#ffffff',
-                padding: '1px 5px',
-                borderRadius: '3px',
-                fontWeight: 800,
-                textTransform: 'uppercase'
-              }}>
-                {isAffiliate ? 'Studio Tools' : 'Top Up'}
+              <RiCoinsFill size={16} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
+              <span className="topbar-item-label">
+                {creditsCount.toLocaleString()} Credits {isAffiliate ? 'Studio Tools' : 'Top Up'}
               </span>
             </button>
           );
         })()}
 
-        {/* Task 3: prominent back-to-public-site button */}
+        {/* Task 3: prominent back-to-public-site button (icon with hover tooltip) */}
         <Link
           to="/"
-          className="topbar-back-to-site"
-          title="Back to public site"
+          className="topbar-back-to-site topbar-nav-icon-btn"
+          title="Back to Site"
+          data-tooltip="Back to Site"
           data-testid="topbar-back-to-site"
         >
-          <RiHomeFill size={14} />
-          <span>Back to Site</span>
+          <RiHomeFill size={16} />
+          <span className="topbar-item-label">Back to Site</span>
         </Link>
 
-        {/* Interactive Persona Dashboard Tour Trigger */}
+        {/* Interactive Persona Dashboard Tour Trigger (icon with hover tooltip) */}
         <button
           type="button"
           onClick={onStartTour}
-          className="topbar-dashboard-tour-btn"
+          className="topbar-dashboard-tour-btn topbar-nav-icon-btn"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
             background: 'rgba(56, 189, 248, 0.12)',
             border: '1px solid rgba(56, 189, 248, 0.35)',
-            color: '#38bdf8',
-            padding: '5px 12px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
+            color: '#38bdf8'
           }}
-          title="Take an interactive guided tour of this dashboard (Restart anytime)"
+          title="Take Tour"
+          data-tooltip="Take Tour"
           data-testid="topbar-dashboard-tour-btn"
           data-tour="topbar-tour-btn"
         >
-          <RiCompass3Fill size={15} style={{ color: '#38bdf8' }} />
-          <span>Take Tour</span>
+          <RiCompass3Fill size={16} style={{ color: '#38bdf8' }} />
+          <span className="topbar-item-label">Take Tour</span>
         </button>
 
-        {/* Universal Get Help & Ask AI Action Buttons */}
-        <GetHelpAskAiButtons />
+        {/* Universal Get Help & Ask AI Action Buttons (icons with hover tooltips) */}
+        <GetHelpAskAiButtons iconOnly />
 
-        {/* Region, Currency & Language Switcher in Dashboard */}
+        {/* Region, Currency & Language Switcher in Dashboard (icons with hover tooltips) */}
         <div className="dashboard-topbar-item">
-          <RegionSwitcher />
+          <RegionSwitcher iconOnly />
         </div>
 
-        {/* Notifications */}
+        {/* DJ Mixes & Clearance quick-launch button (icon with hover tooltip) */}
+        {(sessionUser?.role === 'dj' || sessionUser?.role === 'creator' || sessionUser?.role === 'admin' || sessionUser?.role === 'label' || !sessionUser?.role) && (
+          <button
+            type="button"
+            className="topbar-dj-mixes-trigger topbar-nav-icon-btn"
+            onClick={() => {
+              setDjMixInitialView('catalog');
+              if (typeof setActiveTab === 'function') setActiveTab('dj-mixes');
+            }}
+            title="DJ Mixes & Clearance"
+            data-tooltip="DJ Mixes & Clearance"
+            data-testid="topbar-dj-mixes-notification-btn"
+            style={{
+              background: activeTab === 'dj-mixes' ? 'rgba(34, 211, 238, 0.25)' : 'rgba(34, 211, 238, 0.12)',
+              border: '1px solid rgba(34, 211, 238, 0.4)',
+              color: '#22d3ee',
+              boxShadow: activeTab === 'dj-mixes' ? '0 0 10px rgba(34, 211, 238, 0.3)' : 'none'
+            }}
+          >
+            <RiDiscFill size={16} />
+            <span className="topbar-item-label">DJ Mixes</span>
+          </button>
+        )}
+
+{/* Notifications */}
         <div className="dashboard-topbar-item" ref={notifRef}>
           <button
             className="topbar-icon-btn"
@@ -750,6 +789,20 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
             <div className="topbar-dropdown" data-testid="topbar-notifications-dropdown">
               <div className="topbar-dropdown-header">
                 <strong>Notifications</strong>
+                  {(sessionUser?.role === 'dj' || sessionUser?.role === 'creator' || sessionUser?.role === 'admin' || sessionUser?.role === 'label' || !sessionUser?.role) && (
+                    <button
+                      type="button"
+                      className="topbar-link-btn"
+                      style={{ color: '#22d3ee', fontWeight: 700, fontSize: '11px', textDecoration: 'none' }}
+                      onClick={() => {
+                        setNotifOpen(false);
+                        if (typeof setActiveTab === 'function') setActiveTab('dj-mixes');
+                      }}
+                      data-testid="notif-dropdown-header-dj-mixes-btn"
+                    >
+                      • Open DJ Mixes
+                    </button>
+                  )}
                 {unread > 0 && (
                   <button className="topbar-link-btn" onClick={markAllRead} data-testid="topbar-mark-all-read">
                     Mark all read
@@ -816,6 +869,31 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                 <span style={{ fontSize: '11px', color: '#64748b' }}>
                   TuneMavens Inbox
                 </span>
+                <div>                  {sessionUser?.role === 'dj' && (
+                    <button
+                      type="button"
+                      className="topbar-link-btn"
+                      style={{
+                        color: '#22d3ee',
+                        fontWeight: 700,
+                        fontSize: '11px',
+                        background: 'rgba(34, 211, 238, 0.12)',
+                        border: '1px solid rgba(34, 211, 238, 0.3)',
+                        padding: '3px 8px',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        marginRight: '8px'
+                      }}
+                      onClick={() => {
+                        setNotifOpen(false);
+                        if (typeof setActiveTab === 'function') setActiveTab('dj-mixes');
+                      }}
+                      data-testid="notif-dropdown-footer-dj-mixes-btn"
+                    >
+                      <RiDiscFill size={11} style={{ marginRight: '4px' }} />
+                      DJ Mixes & Clearance
+                    </button>
+                  )}</div>
                 <Link
                   to="/inbox"
                   onClick={() => setNotifOpen(false)}
@@ -1113,6 +1191,11 @@ const NAV_ITEM_DESCRIPTIONS = {
     desc: 'Automated royalty splits ledger, collaborator percentages, and transparent payouts',
     category: 'Royalty Ledgers'
   },
+  'dj-mixes': {
+    title: 'DJ Mixes & Monetization',
+    desc: 'Upload continuous sets, automated audio track extraction, and 100% complete IP clearance contracts',
+    category: 'Pools & Sync'
+  },
   djpool: {
     title: 'DJ Pool Engine',
     desc: 'Lossless promotional record pool, Camelot harmonic matching, DJ crates, and remix drop clearances',
@@ -1376,6 +1459,7 @@ function DashboardView({
     }
     return 'home';
   });
+  const [djMixInitialView, setDjMixInitialView] = useState('catalog');
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1667,20 +1751,20 @@ function DashboardView({
     // Role-based permission guard ensuring users only access authorized apps
     const userRole = activeUser?.role || 'creator';
     const roleAllowed = {
-      vc: ['home', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
-      investor: ['home', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
-      admin: ['home', 'backend-admin', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
-      corporate: ['home', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
-      media_house: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
-      media: ['home', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
-      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'label-team', 'affiliates', 'support'],
-      dj: ['home', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
-      studio: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
-      supervisor: ['home', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
-      podcaster: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
-      consumer: ['home', 'explore', 'podcasts', 'podcaster-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
-      affiliate: ['home', 'affiliates', 'podcasts', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
-      creator: ['home', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'support']
+      vc: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
+      investor: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
+      admin: ['home', 'backend-admin', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
+      corporate: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      media_house: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      media: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'label-team', 'affiliates', 'support'],
+      dj: ['home', 'dj-mixes', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
+      studio: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
+      supervisor: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
+      podcaster: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
+      consumer: ['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
+      affiliate: ['home', 'dj-mixes', 'affiliates', 'podcasts', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
+      creator: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
     if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
@@ -1777,8 +1861,21 @@ function DashboardView({
             onNavigateTab={setActiveTab}
           />
         );
+      case 'dj-mixes':
+        return (
+          <DJMixesManager
+            sessionUser={sessionUser}
+            initialView={djMixInitialView}
+            onOpenCreditReload={handleOpenCreditReload}
+          />
+        );
       case 'djpool':
-        return <DjPoolPanel sessionUser={sessionUser} />;
+        return (
+          <DjPoolPanel
+            sessionUser={sessionUser}
+            onOpenCreditReload={handleOpenCreditReload}
+          />
+        );
       case 'sync':
         return <SyncLicensingPanel sessionUser={sessionUser} tracks={catalogTracks} activeArtist={activeArtist} />;
       case 'catalogue-acquisitions':
@@ -2076,6 +2173,7 @@ function DashboardView({
       catalog: { id: 'catalog', label: 'Catalogue Machine', icon: RiDatabase2Fill, category: 'Catalog & IP' },
       'epk-builder': { id: 'epk-builder', label: 'EPK Builder', icon: RiDiscFill, category: 'Catalog & IP' },
       splits: { id: 'splits', label: 'Split Cascade', icon: RiCoinsFill, category: 'Royalty Ledgers' },
+      'dj-mixes': { id: 'dj-mixes', label: 'DJ Mixes & Clearance', icon: RiDiscFill, category: 'Pools & Sync' },
       djpool: { id: 'djpool', label: 'DJ Pool MVP', icon: RiRadioFill, category: 'Pools & Sync' },
       sync: { id: 'sync', label: 'Sync Marketplace', icon: RiGlobalFill, category: 'Pools & Sync' },
       'vc-discover': { id: 'vc-discover', label: 'Discover Creators & Catalog', icon: RiSearchLine, category: 'VC Investment Suite' },
@@ -2126,10 +2224,10 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'backend-admin', 'admin-team', 'media-house', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team', 'catalogue-acquisitions'];
+        visibleKeys = ['home', 'backend-admin', 'dj-mixes', 'djpool', 'admin-team', 'media-house', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team', 'catalogue-acquisitions'];
         break;
       case 'affiliate':
-        visibleKeys = ['home', 'affiliates', 'inbox', 'splits', 'library', 'tips', 'profile', 'support'];
+        visibleKeys = ['home', 'affiliates', 'dj-mixes', 'inbox', 'splits', 'library', 'tips', 'profile', 'support'];
         break;
       case 'vc':
       case 'investor':
@@ -2143,24 +2241,24 @@ function DashboardView({
         visibleKeys = ['home', 'media-house', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'catalogue-acquisitions', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'catalogue-acquisitions', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
         break;
       case 'dj':
-        visibleKeys = ['home', 'djpool', 'library', 'tips', 'inbox', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'dj-mixes', 'djpool', 'library', 'tips', 'inbox', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
         break;
       case 'studio':
       case 'supervisor':
-        visibleKeys = ['home', 'sync', 'escrow', 'inbox', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'affiliates'];
+        visibleKeys = ['home', 'dj-mixes', 'sync', 'escrow', 'inbox', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support', 'affiliates'];
         break;
       case 'podcaster':
         visibleKeys = ['home', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcasts', 'splits', 'corporate-ads', 'social-ai', 'crm', 'inbox', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
         break;
       case 'consumer':
-        visibleKeys = ['home', 'podcasts', 'library', 'tips', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
+        visibleKeys = ['home', 'dj-mixes', 'podcasts', 'library', 'tips', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
         break;
       case 'creator':
       default:
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'podcaster-studio', 'podcasts', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'communications', 'support'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'podcaster-studio', 'podcasts', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'communications', 'support'];
         break;
     }
 
@@ -2207,6 +2305,7 @@ function DashboardView({
     const listenerCategories = {
       'Discover & Stream': [
         { id: 'home', label: 'For You & Mixes', icon: RiHomeFill, color: '#00f2fe' },
+        { id: 'dj-mixes', label: 'DJ Mixes & Clearances', icon: RiDiscFill, color: '#22d3ee', badge: 'SETS' },
         { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Fill, color: '#00f2fe' },
         { id: 'podcasts', label: 'Podcasts & Shows', icon: RiMicFill, color: '#10b981', badge: 'PODCASTS' },
         { id: 'radio', label: 'Live 24-Bit Radio', icon: RiRadioFill, color: '#a855f7' },
@@ -2231,6 +2330,8 @@ function DashboardView({
 
     const listenerTabTitles = {
       home: 'For You & Personalized Mixes',
+      'dj-mixes': 'DJ Mixes & Sovereign Clearance Sets',
+
       explore: 'Explore & Lossless Stream',
       podcasts: 'Podcasts & Original Shows Hub',
       'podcaster-studio': 'Podcaster Studio, Show Host EPK & Ad Rates',
@@ -2951,6 +3052,9 @@ function DashboardView({
         onClose={() => setWizardOpen(false)}
         initial={wizardAnswers}
         onSaved={(answers) => setWizardAnswers(answers)}
+        sessionUser={activeUser}
+        setActiveTab={setActiveTab}
+        onUpdateUser={onUpdateUser}
       />
 
       {/* Global Affiliate Action Modals */}
@@ -5759,10 +5863,42 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
   return (
     <div>
       <div className="dashboard-panel-header" data-tour="admin-overview-header">
-        <h2 style={{ fontSize: '20px', fontWeight: '800', textTransform: 'capitalize', letterSpacing: '0.5px' }}>Dashboard</h2>
-        <p style={{ fontSize: '13px', color: 'var(--mu)', marginTop: '4px' }}>
-          Welcome back, {sessionUser.name || 'Creator'}! Managing {data.title}.
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', textTransform: 'capitalize', letterSpacing: '0.5px' }}>Dashboard</h2>
+            <p style={{ fontSize: '13px', color: 'var(--mu)', marginTop: '4px' }}>
+              Welcome back, {sessionUser.name || 'Creator'}! Managing {data.title}.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setDjMixInitialView('upload');
+                setActiveTab('dj-mixes');
+              }}
+              className="plan-btn outline"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 700,
+                background: 'rgba(34, 211, 238, 0.12)',
+                border: '1px solid rgba(34, 211, 238, 0.4)',
+                color: '#22d3ee',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              data-testid="dashboard-header-upload-mix-btn"
+            >
+              <RiDiscFill size={15} />
+              <span>Upload Mix &amp; Clearance</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="dashboard-grid-3" data-tour="admin-overview-stats">
@@ -5855,7 +5991,7 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
           <button 
             onClick={() => {
               if (sessionUser?.role === 'affiliate') setActiveTab('affiliates');
-              else if (sessionUser?.role === 'dj') setActiveTab('djpool');
+              else if (sessionUser?.role === 'dj') setActiveTab('dj-mixes');
               else if (sessionUser?.role === 'studio' || sessionUser?.role === 'supervisor') setActiveTab('escrow');
               else if (sessionUser?.role === 'consumer') setActiveTab('profile');
               else setActiveTab('catalog');

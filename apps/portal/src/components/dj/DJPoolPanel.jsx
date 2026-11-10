@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import JSZip from 'jszip';
+// JSZip dynamically loaded on export
 import {
   RiRadioFill,
   RiDiscFill,
@@ -24,6 +24,7 @@ import {
 } from 'react-icons/ri';
 import { djPoolApi } from '../../lib/api';
 import './DJPoolPanel.css';
+import DJMixesManager from './DJMixesManager.jsx';
 
 const GENRE_LIST = ['All', 'House', 'Afrobeats', 'Amapiano', 'Techno', 'Gengetone', 'Dancehall', 'Hip-Hop', 'R&B', 'EDM'];
 const CAMELOT_KEYS = [
@@ -77,8 +78,15 @@ function checkTransition(t1, t2) {
   return { label, type, bpmDelta, isHarmonic };
 }
 
-export default function DJPoolPanel({ sessionUser }) {
-  const [activeTab, setActiveTab] = useState('pool'); // 'pool' | 'crate' | 'clearance' | 'upload'
+export default function DJPoolPanel({ sessionUser, initialTab, onOpenCreditReload }) {
+  const [activeTab, setActiveTab] = useState(initialTab || 'pool');
+  const [mixManagerView, setMixManagerView] = useState('catalog');
+  useEffect(() => {
+    const onOpenMixes = () => setActiveTab('mixes');
+    window.addEventListener('tunemavens:open-dj-mixes', onOpenMixes);
+    return () => window.removeEventListener('tunemavens:open-dj-mixes', onOpenMixes);
+  }, []);
+ // 'pool' | 'crate' | 'clearance' | 'upload'
   const [tracks, setTracks] = useState([]);
   const [clearances, setClearances] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -246,7 +254,7 @@ export default function DJPoolPanel({ sessionUser }) {
     }
     if (progressTimerRef.current) clearInterval(progressTimerRef.current);
 
-    const testUrl = track.audio_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+    const testUrl = track.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
     const audio = new Audio(testUrl);
     audioRef.current = audio;
     audio.play().catch(() => {});
@@ -293,7 +301,7 @@ export default function DJPoolPanel({ sessionUser }) {
     setCrate(prev => prev.filter(t => t.id !== trackId));
   };
 
-  // Batch Crate ZIP Export using JSZip
+  // Batch Crate ZIP Export using dynamic JSZip with fallback
   const handleDownloadCrateZip = async () => {
     if (crate.length === 0) {
       showToast('Add tracks to your crate first before exporting.');
@@ -301,27 +309,36 @@ export default function DJPoolPanel({ sessionUser }) {
     }
     setCrateZipping(true);
     try {
-      const zip = new JSZip();
-      const folderName = `TuneMavens_Crate_${new Date().toISOString().slice(0, 10)}`;
-      const crateFolder = zip.folder(folderName);
+      let JSZipLib = window.JSZip;
+      if (!JSZipLib) {
+        try {
+          const mod = await import('jszip');
+          JSZipLib = mod.default || mod;
+        } catch (_) {}
+      }
 
-      // 1. Rekordbox / Pioneer CDJ Playlist (.m3u8)
-      let m3u8Content = '#EXTM3U\n#EXTENC:UTF-8\n';
-      crate.forEach((t, i) => {
-        m3u8Content += `#EXTINF:${t.duration_seconds || 240},${t.artist} - ${t.title} [Key: ${t.key} | ${t.bpm} BPM]\n`;
-        m3u8Content += `${String(i + 1).padStart(2, '0')}_${t.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.wav\n`;
-      });
-      crateFolder.file('rekordbox_playlist.m3u8', m3u8Content);
+      if (JSZipLib) {
+        const zip = new JSZipLib();
+        const folderName = `TuneMavens_Crate_${new Date().toISOString().slice(0, 10)}`;
+        const crateFolder = zip.folder(folderName);
 
-      // 2. Setlist Cue Sheet (CSV for ASCAP / BMI / SAMRO PRO royalty compliance)
-      let csvContent = 'Track_Number,Title,Artist,BPM,Camelot_Key,Genre,Version,Duration_Sec,Format,Clearance_Status\n';
-      crate.forEach((t, i) => {
-        csvContent += `"${i + 1}","${t.title}","${t.artist}","${t.bpm}","${t.key}","${t.genre}","${t.version_type || 'Extended'}","${t.duration_seconds || 240}","${t.lossless_format || '24-bit WAV'}","TuneMavens Whitelisted"\n`;
-      });
-      crateFolder.file('performance_setlist_cue_sheet.csv', csvContent);
+        // 1. Rekordbox / Pioneer CDJ Playlist (.m3u8)
+        let m3u8Content = '#EXTM3U\n#EXTENC:UTF-8\n';
+        crate.forEach((t, i) => {
+          m3u8Content += `#EXTINF:${t.duration_seconds || 240},${t.artist} - ${t.title} [Key: ${t.key} | ${t.bpm} BPM]\n`;
+          m3u8Content += `${String(i + 1).padStart(2, '0')}_${t.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.wav\n`;
+        });
+        crateFolder.file('rekordbox_playlist.m3u8', m3u8Content);
 
-      // 3. Performance License & Stem Clearance Passport
-      const passportContent = `======================================================================
+        // 2. Setlist Cue Sheet (CSV for ASCAP / BMI / SAMRO PRO royalty compliance)
+        let csvContent = 'Track_Number,Title,Artist,BPM,Camelot_Key,Genre,Version,Duration_Sec,Format,Clearance_Status\n';
+        crate.forEach((t, i) => {
+          csvContent += `"${i + 1}","${t.title}","${t.artist}","${t.bpm}","${t.key}","${t.genre}","${t.version_type || 'Extended'}","${t.duration_seconds || 240}","${t.lossless_format || '24-bit WAV'}","TuneMavens Whitelisted"\n`;
+        });
+        crateFolder.file('performance_setlist_cue_sheet.csv', csvContent);
+
+        // 3. Performance License & Stem Clearance Passport
+        const passportContent = `======================================================================
 TUNEMAVENS SOVEREIGN RECORD POOL - PERFORMANCE PASSPORT
 ======================================================================
 Licensed DJ: ${sessionUser?.display_name || sessionUser?.username || 'Club Resident'}
@@ -341,25 +358,39 @@ ${crate.map((t, idx) => `[${idx + 1}] ${t.title} by ${t.artist} (${t.bpm} BPM, K
 
 Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring(2, 10).toUpperCase()}
 ======================================================================`;
-      crateFolder.file('DJ_PERFORMANCE_CLEARANCE_PASSPORT.txt', passportContent);
+        crateFolder.file('DJ_PERFORMANCE_CLEARANCE_PASSPORT.txt', passportContent);
+        crateFolder.file('README_DJ_INTRO_TAGS.txt', 'All WAV & MP3 drops from TuneMavens are pre-tagged with verified 8-bar beat grids, Camelot keys, and cue markers for Rekordbox, Serato DJ Pro, Engine DJ, and Traktor.');
 
-      // 4. Sample Audio Marker file for DJ mixing cue
-      crateFolder.file('README_DJ_INTRO_TAGS.txt', 'All WAV & MP3 drops from TuneMavens are pre-tagged with verified 8-bar beat grids, Camelot keys, and cue markers for Rekordbox, Serato DJ Pro, Engine DJ, and Traktor.');
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = window.URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${folderName}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
-      // Generate ZIP blob and trigger browser download
-      const content = await zip.generateAsync({ type: 'blob' });
-      const url = window.URL.createObjectURL(content);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${folderName}.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      showToast(`Exported DJ Crate ZIP with ${crate.length} tracks & Rekordbox cue sheets!`);
+        showToast(`Exported DJ Crate ZIP with ${crate.length} tracks & Rekordbox cue sheets!`);
+      } else {
+        // Safe M3U8 fallback if JSZip cannot be loaded in current browser environment
+        let m3u8Content = '#EXTM3U\n#EXTENC:UTF-8\n';
+        crate.forEach((t, i) => {
+          m3u8Content += `#EXTINF:${t.duration_seconds || 240},${t.artist} - ${t.title} [Key: ${t.key} | ${t.bpm} BPM]\n${t.audio_url || ''}\n`;
+        });
+        const blob = new Blob([m3u8Content], { type: 'audio/x-mpegurl' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `TuneMavens_Crate_${Date.now()}.m3u8`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        showToast(`Exported DJ Crate M3U8 playlist with ${crate.length} tracks! ✓`);
+      }
     } catch {
-      showToast('Could not package ZIP crate. Please try again.');
+      showToast('Could not package crate. Please try again.');
     }
     setCrateZipping(false);
   };
@@ -384,7 +415,7 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
       showToast(`Downloaded "${track.title}". Lossless 24-bit master with 8-bar DJ markers. ✓`);
       
       // Auto trigger file save
-      const dummyUrl = result?.audio_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+      const dummyUrl = result?.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
       const a = document.createElement('a');
       a.href = dummyUrl;
       a.download = `${track.artist} - ${track.title} [Key ${track.key} - ${track.bpm}BPM].wav`;
@@ -562,6 +593,40 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+              onClick={() => {
+                setMixManagerView('upload');
+                setActiveTab('mixes');
+              }}
+              className="djpool-tab-btn"
+              style={{
+                background: 'linear-gradient(135deg, #22d3ee 0%, #0284c7 100%)',
+                color: '#060813',
+                fontWeight: 800,
+                border: 'none',
+                boxShadow: '0 2px 10px rgba(34, 211, 238, 0.3)'
+              }}
+              data-testid="djpool-header-upload-mix-btn"
+            >
+              <RiDiscFill size={16} />
+              Upload Mix
+            </button>
+            <button
+              onClick={() => {
+                setMixManagerView('catalog');
+                setActiveTab('mixes');
+              }}
+              className="djpool-tab-btn"
+              style={{
+                background: activeTab === 'mixes' ? 'rgba(34, 211, 238, 0.25)' : 'rgba(34, 211, 238, 0.12)',
+                borderColor: 'rgba(34, 211, 238, 0.4)',
+                color: '#22d3ee'
+              }}
+              data-testid="djpool-header-mixes-btn"
+            >
+              <RiDiscFill size={16} />
+              DJ Mixes & Clearance
+            </button>
             <button
               onClick={() => setActiveTab('crate')}
               className="djpool-tab-btn"
@@ -632,6 +697,17 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
             Promo Pool ({tracks.length})
           </button>
           <button
+            onClick={() => {
+              setMixManagerView('catalog');
+              setActiveTab('mixes');
+            }}
+            className={`djpool-tab-btn ${activeTab === 'mixes' ? 'active' : ''}`}
+            data-testid="tab-dj-mixes"
+          >
+            <RiRadioFill size={15} />
+            DJ Mixes & Clearance
+          </button>
+          <button
             onClick={() => setActiveTab('crate')}
             className={`djpool-tab-btn ${activeTab === 'crate' ? 'active' : ''}`}
           >
@@ -656,7 +732,12 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
         </div>
       </div>
 
-      {/* ──────────────── TAB 1: PROMO POOL ──────────────── */}
+            {/* ──────────────── TAB: DJ MIXES & SOVEREIGN CLEARANCE ──────────────── */}
+      {activeTab === 'mixes' && (
+        <DJMixesManager sessionUser={sessionUser} initialView={mixManagerView} onOpenCreditReload={onOpenCreditReload} />
+      )}
+
+{/* ──────────────── TAB 1: PROMO POOL ──────────────── */}
       {activeTab === 'pool' && (
         <>
           {/* Filters Bar */}
@@ -1318,9 +1399,51 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
               <RiAddLine style={{ color: 'var(--cyan)' }} />
               Register a Promo Drop in the DJ Pool
             </h3>
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '22px' }}>
+            <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '18px' }}>
               Provide DJ-friendly metadata: Camelot harmonic key, BPM, and version edit so club and radio DJs can drop it seamlessly.
             </p>
+
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(2, 132, 199, 0.05) 100%)',
+              border: '1px solid rgba(34, 211, 238, 0.3)',
+              borderRadius: '6px',
+              padding: '14px 18px',
+              marginBottom: '20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '16px'
+            }}>
+              <div>
+                <strong style={{ color: '#22d3ee', fontSize: '13px', display: 'block', marginBottom: '3px' }}>
+                  Uploading a Full DJ Mix or Live Recorded Set?
+                </strong>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  Use automated cue tracklist extraction, streamable playlist slicing, and 100% prior agreement clearances.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMixManagerView('upload');
+                  setActiveTab('mixes');
+                }}
+                className="plan-btn outline"
+                style={{
+                  whiteSpace: 'nowrap',
+                  background: 'rgba(34, 211, 238, 0.15)',
+                  border: '1px solid rgba(34, 211, 238, 0.5)',
+                  color: '#22d3ee',
+                  padding: '7px 14px',
+                  borderRadius: '4px',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                Launch Mix Ingest
+              </button>
+            </div>
 
             <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>

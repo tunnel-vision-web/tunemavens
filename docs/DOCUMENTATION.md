@@ -3013,3 +3013,24 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Full-featured command console for the Media House persona and Administrator console.
   - Integrated with Universal "Get Help" and "Ask AI" buttons, contextually bound to the Phase 10 documentation guide.
   - Verified with 8/8 automated tests in `backend/tests/test_media_house_routing.py` (38/38 total platform suite).
+
+
+### 9.44.52 Phase 11: DJ Mixes & Sovereign Clearance Hub, Localized DJ Pricing, AI Wizard Need-Matching & TuneStream DJ Mixes Category
+
+- **DJ Mixes & Sovereign Clearance Hub (`apps/portal/src/components/dj/DJMixesManager.jsx`, `backend/routes/dj_mixes_router.py`)**:
+  - **Drag-and-Drop Audio & Artwork Upload**: Supports direct local file uploads and drag-and-drop zones for mix audio (`.mp3`, `.wav`, `.flac`, `.m4a`, `.aac`) and cover artwork (`JPG`, `PNG`, `WEBP`) alongside URL inputs.
+  - **Automated Tracklist Extraction & Split Waterfall**: Extracts cue sheets/fingerprints and calculates real-time Split Cascade shares: **40% DJ / 50% Original IP Rights Holders (distributed pro-rata across cleared tracks) / 10% Platform**, or **90% DJ / 10% Platform** for 100% sovereign original productions.
+  - **Prior-Agreement Enforcement & Rights Owner Communications Hub**: Locks commercial sale activation (`Pending Clearance`) until all featured third-party rights owners approve clearance. Includes a built-in **Rights Owner Comms Hub** with direct messaging threads, contact editor, 1-click clearance reminders, and simulated instant sign-off for testing.
+  - **Bottom Grid Pagination**: Full pagination bar (`data-testid="dj-mixes-pagination"`) at the bottom of the DJ Mixes grid with configurable page size (`3`, `6`, `9`, or `12 per page`), item range summary, and page navigation buttons.
+  - **Complete Multi-Currency Localization**: Dynamically localizes all mix prices, quick-select pricing pills, revenue stats, per-track IP holder payouts, and checkout modals across `KES`, `USD`, `NGN`, `ZAR`, `EUR`, and `GBP` via `useLocale()`.
+
+- **AI Onboarding Wizard Need-Based Recommendations (`apps/portal/src/components/phase3.jsx`, `backend/services/recommendation_engine.py`, `apps/portal/src/lib/appCatalog.js`)**:
+  - Added `"dj-mixes"` (`DJ Mixes & Clearance Hub`) and `"corporate-ads"` to `ALLOWED_APP_SLUGS`, `ALL_SLUGS`, `TUNEMAVENS_APPS`, and `AppMarketplacePanel`.
+  - Expanded DJ role weights and added DJ-specific wizard goals (`dj_mixes_clearance`, `dj_pool_stems`) plus keyword need-matching across `primary_goal_other`, `release_cadence_other`, `distribution_setup_other`, `revenue_focus_other`, `team_size_other`, and `freeform_notes`.
+  - Added an interactive in-modal **"Your Recommended Apps & Workflow"** completion view (`data-testid="wizard-recommendations-results"`) that displays tailored app cards, custom rationales matched to the user's inputted need, and 1-click **Activate & Open** actions.
+
+- **TuneStream DJ Mixes Category (`apps/tunestream/src/App.jsx`, `apps/tunestream/src/NativeAppLandingView.jsx`)**:
+  - Added `TuneStreamDjMixesPanel` (`data-testid="tunestream-dj-mixes-panel"`), `DJ Mixes & Sets` sidebar item under `Discover & Stream`, `🎧 DJ Mixes` filter pill in `TuneStreamExplorePanel` and `NativeAppLandingView`, and `/dj-mixes` route with live `/api/dj-mixes` catalog integration and Hi-Fi playback.
+
+- **Icon-Only Dashboard Topbar (`apps/portal/src/App.jsx`, `apps/portal/src/App.css`)**:
+  - Converted top header action buttons (`Reload Credits`, `Currency Selector`, `Restart Guide`, `Get Help`, `Ask AI`) to compact icon buttons with hover tooltips (`data-tooltip`), keeping full text labels on the right-side Account Type pill, Notification Bell, and Master Admin badge.

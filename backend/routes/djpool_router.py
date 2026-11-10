@@ -12,10 +12,17 @@ router = APIRouter(prefix="/api/djpool", tags=["DJ Pool"])
 
 def seed_dj_pool_if_empty():
     """Ensure rich initial record pool cuts are present for DJs and testing."""
+    sample_audio = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    try:
+        db.dj_pool_tracks.update_many(
+            {"audio_url": {"$regex": r"\.mp4($|\?)"}},
+            {"$set": {"audio_url": sample_audio}}
+        )
+    except Exception:
+        pass
+
     if db.dj_pool_tracks.count_documents({}) >= 6:
         return
-
-    sample_audio = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
     seed_tracks = [
         {
             "user_id": "seed_admin",

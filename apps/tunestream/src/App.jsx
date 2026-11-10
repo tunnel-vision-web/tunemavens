@@ -9,7 +9,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import LoginView from './views/auth/LoginView';
 import RegisterView from './views/auth/RegisterView';
-import { RegionProvider } from './RegionContext';
+import { RegionProvider, useRegion } from './RegionContext';
 import RegionSwitcher from './RegionSwitcher';
 import { 
   RiPlayFill, RiPauseFill, RiSkipForwardFill, RiSkipBackFill, 
@@ -22,7 +22,7 @@ import {
   RiFolderMusicLine, RiQuestionLine, RiBriefcaseLine, RiArrowDownSFill,
   RiApps2Fill, RiAppleFill, RiHomeFill, RiBarChartFill, RiGlobalFill, RiArrowLeftFill, RiCloseLine,
   RiLineChartFill, RiFileTextFill,
-  RiHeadphoneFill, RiEqualizerFill, RiSmartphoneFill, RiMicFill, RiFundsBoxFill
+  RiHeadphoneFill, RiEqualizerFill, RiSmartphoneFill, RiMicFill, RiFundsBoxFill, RiDiscFill, RiShieldCheckFill
 } from 'react-icons/ri';
 import tsLogo from './assets/tunestream-logo.png';
 import tcLogo from './assets/tunecompanion-logo.png';
@@ -449,6 +449,7 @@ function AppContent() {
           <Route path="/tour-capital" element={<TourCapitalWrapper sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/vc-capital" element={<Navigate to="/tour-capital" replace />} />
           <Route path="/stream" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="home" onLogout={handleLogout} />} />
+          <Route path="/dj-mixes" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="dj-mixes" onLogout={handleLogout} />} />
           <Route path="/singles" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="singles" onLogout={handleLogout} />} />
           <Route path="/artists" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="artists" onLogout={handleLogout} />} />
           <Route path="/catalog" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="my-catalog" onLogout={handleLogout} />} />
@@ -1119,6 +1120,17 @@ function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredi
 
           <button
             type="button"
+            onClick={() => setActiveTab('dj-mixes')}
+            data-testid="home-quick-dj-mixes"
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(0,242,254,0.06)', border: '1px solid rgba(0,242,254,0.25)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+          >
+            <RiDiscFill size={20} style={{ color: '#00f2fe' }} />
+            <span style={{ fontSize: '13px', fontWeight: '700' }}>DJ Mixes &amp; Sets</span>
+            <span style={{ fontSize: '11px', color: '#00f2fe' }}>Continuous cleared club sets</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('library')}
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
           >
@@ -1641,6 +1653,248 @@ function TuneStreamControlsPanel() {
   );
 }
 
+export const AUTHORITATIVE_DJ_MIXES = [
+  {
+    id: 'djmix_kilifi_sunrise',
+    title: 'Kilifi New Year Sunrise Ritual (Afro-Tech Set)',
+    dj_name: 'DJ K-Souldier',
+    genre: 'Afro-House',
+    bpm_avg: 122,
+    duration_seconds: 2700,
+    duration: '45:00',
+    plays_count: 1540,
+    commercial_price: 5.99,
+    is_original_ip_only: false,
+    sale_locked: false,
+    artwork_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
+    audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    description: 'Hypnotic 45-minute sunrise Afro-Tech journey recorded live on the Indian Ocean coast with full artist and label clearance.',
+    tracklist: [
+      { id: 'k1', title: 'Bahari Breeze (Coastal Dub)', artist: 'Ndufo', start_time: 0, clearance_status: 'signed' },
+      { id: 'k2', title: 'Diani Horizon (Tribal Mix)', artist: 'Zara Chen', start_time: 900, clearance_status: 'signed' },
+      { id: 'k3', title: 'Mombasa Express (VIP Percussion)', artist: 'Marcus Vance', start_time: 1800, clearance_status: 'signed' },
+    ],
+  },
+  {
+    id: 'djmix_jozi_lagos_amapiano',
+    title: 'Jozi to Lagos Private School Amapiano Vol. 4',
+    dj_name: 'DJ Zinhle Vibes',
+    genre: 'Amapiano',
+    bpm_avg: 113,
+    duration_seconds: 2400,
+    duration: '40:00',
+    plays_count: 2120,
+    commercial_price: 4.99,
+    is_original_ip_only: false,
+    sale_locked: false,
+    artwork_url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
+    audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    description: 'Soulful keys, deep log drums, and vocal Amapiano exclusives bridging Johannesburg and Lagos club floors.',
+    tracklist: [
+      { id: 'jz1', title: 'Sandton Rooftop Chords', artist: 'DJ Maphoria', start_time: 0, clearance_status: 'signed' },
+      { id: 'jz2', title: 'Victoria Island Velvet', artist: 'Aisha Okoro', start_time: 1200, clearance_status: 'signed' },
+    ],
+  },
+  {
+    id: 'djmix_maphoria_techno',
+    title: 'All-Original High-Voltage Techno Experience',
+    dj_name: 'DJ Maphoria',
+    genre: 'Electronic',
+    bpm_avg: 130,
+    duration_seconds: 1800,
+    duration: '30:00',
+    plays_count: 890,
+    commercial_price: 7.99,
+    is_original_ip_only: true,
+    sale_locked: false,
+    artwork_url: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&auto=format&fit=crop&q=80',
+    audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    description: '100% self-composed hardware synth modular set performed exclusively with custom analog hardware.',
+    tracklist: [
+      { id: 'og1', title: 'Subterranean Voltage (Original Mix)', artist: 'DJ Maphoria', start_time: 0, clearance_status: 'self_owned' },
+      { id: 'og2', title: 'Kinetic Oscillation (Original Mix)', artist: 'DJ Maphoria', start_time: 600, clearance_status: 'self_owned' },
+      { id: 'og3', title: 'Nairobi Circuit Breakdown (Original Mix)', artist: 'DJ Maphoria', start_time: 1200, clearance_status: 'self_owned' },
+    ],
+  },
+  {
+    id: 'djmix_accra_highlife',
+    title: 'Accra Highlife & Afrobeats Golden Hour Mix',
+    dj_name: 'Selector Kofi',
+    genre: 'Afrobeats',
+    bpm_avg: 106,
+    duration_seconds: 2100,
+    duration: '35:00',
+    plays_count: 1180,
+    commercial_price: 4.49,
+    is_original_ip_only: false,
+    sale_locked: false,
+    artwork_url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80',
+    audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    description: 'Warm brass-driven Highlife classics blended seamlessly into modern West African Afrobeats anthems.',
+    tracklist: [
+      { id: 'ac1', title: 'Labadi Beach Horns', artist: 'Kofi Mensah', start_time: 0, clearance_status: 'signed' },
+      { id: 'ac2', title: 'Osu Night Market Groove', artist: 'Aisha Okoro', start_time: 1050, clearance_status: 'signed' },
+    ],
+  },
+];
+
+function TuneStreamDjMixesPanel({ onPlayTrack }) {
+  const { formatPrice } = useRegion();
+  const [mixes, setMixes] = useState(AUTHORITATIVE_DJ_MIXES);
+  const [genreFilter, setGenreFilter] = useState('All');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/dj-mixes')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const arr = Array.isArray(data) ? data : data?.data;
+        if (Array.isArray(arr) && arr.length > 0) {
+          setMixes(arr);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const genres = ['All', 'Afro-House', 'Afro House', 'Amapiano', 'Afrobeats', 'Electronic', 'Hip-Hop'];
+  const filtered = mixes.filter((m) => {
+    if (genreFilter !== 'All' && !(m.genre || '').toLowerCase().includes(genreFilter.toLowerCase().replace('-', ' '))) {
+      return false;
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      return (
+        (m.title && m.title.toLowerCase().includes(q)) ||
+        (m.dj_name && m.dj_name.toLowerCase().includes(q)) ||
+        (m.genre && m.genre.toLowerCase().includes(q))
+      );
+    }
+    return true;
+  });
+
+  const handlePlayMix = (mix) => {
+    if (!onPlayTrack) return;
+    onPlayTrack({
+      id: mix.id || `mix_${mix.title}`,
+      title: mix.title,
+      artist: mix.dj_name || 'Verified DJ',
+      album: `DJ Mix · ${mix.bpm_avg || 120} BPM`,
+      releaseType: 'DJ Mix',
+      genre: mix.genre || 'Afro-House',
+      duration: mix.duration || `${Math.round((mix.duration_seconds || 2400) / 60)}:00`,
+      cover: mix.artwork_url,
+      coverArt: mix.artwork_url,
+      audioUrl: mix.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    });
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} data-testid="tunestream-dj-mixes-panel">
+      <div style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(34,211,238,0.12) 0%, rgba(9,12,22,0.95) 100%)', border: '1px solid rgba(34,211,238,0.28)', borderRadius: '3px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(34,211,238,0.15)', color: '#22d3ee', padding: '3px 9px', borderRadius: '3px', fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
+          <RiDiscFill size={13} /> Sovereign Rights-Cleared DJ Mixes
+        </div>
+        <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', margin: '0 0 6px' }}>
+          Curated DJ Mixes &amp; Continuous Club Sets
+        </h2>
+        <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0, maxWidth: '760px', lineHeight: 1.55 }}>
+          Stream continuous lossless DJ sets with extracted tracklists and 100% cleared IP splits (40% DJ / 50% Featured Track Rights Holders / 10% Platform).
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', background: '#090c16', padding: '14px 18px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {genres.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setGenreFilter(g)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: genreFilter === g ? '1px solid #22d3ee' : '1px solid rgba(255,255,255,0.1)',
+                background: genreFilter === g ? '#22d3ee' : 'rgba(255,255,255,0.03)',
+                color: genreFilter === g ? '#060813' : '#fff',
+                fontSize: '11.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+        <input
+          type="text"
+          placeholder="Search DJ mixes, DJ name, genre..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ minWidth: '240px', padding: '7px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', color: '#fff', fontSize: '12px' }}
+        />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '16px' }}>
+        {filtered.map((mix) => (
+          <div
+            key={mix.id || mix.title}
+            style={{ background: '#090c16', border: '1px solid rgba(34,211,238,0.22)', borderRadius: '3px', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+          >
+            <div>
+              <div style={{ position: 'relative', height: '170px', overflow: 'hidden', background: '#0e1424' }}>
+                <img
+                  src={mix.artwork_url || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
+                  alt={mix.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+                <span style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(6,8,19,0.85)', color: '#22d3ee', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
+                  {mix.genre} · {mix.bpm_avg || 120} BPM
+                </span>
+                <span style={{ position: 'absolute', top: '10px', right: '10px', background: mix.is_original_ip_only ? 'rgba(168,85,247,0.9)' : 'rgba(16,185,129,0.9)', color: '#fff', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
+                  {mix.is_original_ip_only ? '100% Original IP' : '✓ 100% Rights Cleared'}
+                </span>
+              </div>
+              <div style={{ padding: '16px' }}>
+                <h4 style={{ margin: '0 0 4px', fontSize: '15px', color: '#fff', fontWeight: 800 }}>{mix.title}</h4>
+                <div style={{ fontSize: '12px', color: '#22d3ee', fontWeight: 700, marginBottom: '8px' }}>Curated by {mix.dj_name}</div>
+                <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.45, margin: '0 0 12px' }}>{mix.description}</p>
+                {Array.isArray(mix.tracklist) && mix.tracklist.length > 0 && (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', padding: '8px 10px', marginBottom: '12px' }}>
+                    <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>
+                      Extracted Tracklist ({mix.tracklist.length} Tracks · 40% DJ / 50% IP)
+                    </div>
+                    {mix.tracklist.slice(0, 3).map((t, i) => (
+                      <div key={t.id || i} style={{ fontSize: '11px', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                        <span>{t.artist} — {t.title}</span>
+                        <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ padding: '0 16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>
+                {formatPrice ? formatPrice(mix.commercial_price || 4.99) : `$${mix.commercial_price || 4.99}`}
+                <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{Math.round((mix.commercial_price || 4.99) * 100)} TM Credits</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handlePlayMix(mix)}
+                style={{ padding: '8px 16px', background: '#22d3ee', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <RiPlayFill size={15} /> Stream Mix
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TuneStreamExplorePanel({ 
   tracks = [], 
   artists = [], 
@@ -1661,6 +1915,20 @@ function TuneStreamExplorePanel({
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchChange || setInternalSearchQuery;
   const [selectedArtist, setSelectedArtist] = useState(null);
+  const [djMixesList, setDjMixesList] = useState(AUTHORITATIVE_DJ_MIXES);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/dj-mixes')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const arr = Array.isArray(data) ? data : data?.data;
+        if (Array.isArray(arr) && arr.length > 0) setDjMixesList(arr);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
   const albums = tracks.filter(t => t.releaseType !== 'Single' && !(t.release && t.release.toLowerCase().includes('single')));
@@ -1677,7 +1945,7 @@ function TuneStreamExplorePanel({
   );
 
   const availableGenres = Array.from(new Set([
-    'Afrobeats', 'Amapiano', 'Afro-House', 'Afro-fusion', 'Electronic', 'Hip-Hop',
+    'DJ Mixes', 'Afrobeats', 'Amapiano', 'Afro-House', 'Afro-fusion', 'Electronic', 'Hip-Hop',
     ...tracks.map(t => t.genre).filter(Boolean),
     ...podcastShows.map(s => `Podcast • ${s.category}`).filter(Boolean)
   ]));
@@ -1698,14 +1966,18 @@ function TuneStreamExplorePanel({
   let displayedArtists = [...artists];
   let displayedPodcasts = [...podcastEpisodes];
   let displayedPodcasters = [...podcastShows];
+  let displayedDjMixes = [...djMixesList];
 
-  if (genreFilter !== 'all') {
+  if (genreFilter !== 'all' && genreFilter !== 'DJ Mixes') {
     displayedPodcasts = displayedPodcasts.filter(ep =>
       (ep.genre && ep.genre.toLowerCase().includes(genreFilter.toLowerCase())) ||
       (ep.category && `podcast • ${ep.category}`.toLowerCase().includes(genreFilter.toLowerCase()))
     );
     displayedPodcasters = displayedPodcasters.filter(s =>
       s.category && `podcast • ${s.category}`.toLowerCase().includes(genreFilter.toLowerCase())
+    );
+    displayedDjMixes = displayedDjMixes.filter(m =>
+      m.genre && m.genre.toLowerCase().replace('-', ' ').includes(genreFilter.toLowerCase().replace('-', ' '))
     );
   }
 
@@ -1736,6 +2008,12 @@ function TuneStreamExplorePanel({
       (s.title && s.title.toLowerCase().includes(q)) ||
       (s.category && s.category.toLowerCase().includes(q)) ||
       (s.bio && s.bio.toLowerCase().includes(q))
+    );
+    displayedDjMixes = displayedDjMixes.filter(m =>
+      (m.title && m.title.toLowerCase().includes(q)) ||
+      (m.dj_name && m.dj_name.toLowerCase().includes(q)) ||
+      (m.genre && m.genre.toLowerCase().includes(q)) ||
+      (m.description && m.description.toLowerCase().includes(q))
     );
   }
 
@@ -1901,6 +2179,24 @@ function TuneStreamExplorePanel({
               }}
             >
               Podcasters &amp; EPKs ({podcastShows.length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setFilterMode('dj-mixes'); setSelectedArtist(null); }}
+              data-testid="explore-filter-dj-mixes"
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: filterMode === 'dj-mixes' ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.08)',
+                background: filterMode === 'dj-mixes' ? '#00f2fe' : 'rgba(255,255,255,0.03)',
+                color: filterMode === 'dj-mixes' ? '#060813' : '#fff',
+                fontSize: '12px',
+                fontWeight: '800',
+                cursor: 'pointer'
+              }}
+            >
+              🎧 DJ Mixes ({djMixesList.length})
             </button>
           </div>
 
@@ -2076,6 +2372,71 @@ function TuneStreamExplorePanel({
         </section>
       )}
 
+      {/* Curated DJ Mixes Section (Shown when filterMode is 'dj-mixes', 'all', or genreFilter === 'DJ Mixes') */}
+      {(filterMode === 'dj-mixes' || filterMode === 'all' || genreFilter === 'DJ Mixes') && displayedDjMixes.length > 0 && (
+        <section data-testid="explore-dj-mixes-section">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '16px', margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RiDiscFill style={{ color: '#00f2fe' }} /> Curated DJ Mixes &amp; Sovereign Sets
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'normal' }}>
+                ({displayedDjMixes.length} mixes · 40% DJ / 50% IP Cleared)
+              </span>
+            </h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '16px' }}>
+            {displayedDjMixes.map((mix) => (
+              <div
+                key={mix.id || mix.title}
+                style={{ background: '#090c16', border: '1px solid rgba(0,242,254,0.25)', borderRadius: '3px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <img
+                      src={mix.artwork_url || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
+                      alt={mix.title}
+                      style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.12)' }}
+                    />
+                    <div>
+                      <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#00f2fe', background: 'rgba(0,242,254,0.12)', padding: '2px 6px', borderRadius: '3px' }}>
+                        DJ MIX • {mix.genre} • {mix.bpm_avg || 120} BPM
+                      </span>
+                      <h4 style={{ margin: '4px 0 2px', fontSize: '14.5px', color: '#fff', fontWeight: 800 }}>{mix.title}</h4>
+                      <div style={{ fontSize: '11.5px', color: '#10b981', fontWeight: 700 }}>By {mix.dj_name}</div>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.45, margin: 0 }}>{mix.description}</p>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
+                  <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
+                    {mix.is_original_ip_only ? '✓ 100% Sovereign IP' : `✓ ${mix.tracklist?.length || 3} Tracks Cleared`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onPlayTrack({
+                        id: mix.id || `mix_${mix.title}`,
+                        title: mix.title,
+                        artist: mix.dj_name || 'Verified DJ',
+                        album: `DJ Mix · ${mix.bpm_avg || 120} BPM`,
+                        releaseType: 'DJ Mix',
+                        genre: mix.genre || 'Afro-House',
+                        duration: mix.duration || `${Math.round((mix.duration_seconds || 2400) / 60)}:00`,
+                        cover: mix.artwork_url,
+                        coverArt: mix.artwork_url,
+                        audioUrl: mix.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                      })
+                    }
+                    style={{ padding: '7px 14px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <RiPlayFill size={14} /> Stream Mix
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Main Music Content Area */}
       {filterMode === 'artists' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
@@ -2167,7 +2528,7 @@ function TuneStreamExplorePanel({
           })
         )}
         </div>
-      ) : (filterMode !== 'podcasts' && filterMode !== 'podcasters') ? (
+      ) : (filterMode !== 'podcasts' && filterMode !== 'podcasters' && filterMode !== 'dj-mixes') ? (
         <section className="ts-music-section">
           <div className="section-header" style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontSize: '16px' }}>
@@ -3401,6 +3762,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     }
     add('Discover & Stream', { id: 'home', label: 'For You & Mixes', icon: RiHomeFill });
     add('Discover & Stream', { id: 'explore', label: 'Explore & Stream', icon: RiCompass3Line });
+    add('Discover & Stream', { id: 'dj-mixes', label: 'DJ Mixes & Sets', icon: RiDiscFill, color: '#00f2fe', badge: 'MIXES' });
     add('Discover & Stream', { id: 'podcasts', label: 'Podcasts & Shows', icon: RiMicFill, color: '#10b981', badge: 'PODCASTS' });
     add('Discover & Stream', { id: 'radio', label: 'Live Radio Node', icon: RiRadioLine });
     add('Discover & Stream', { id: 'singles', label: 'Singles Showcase', icon: RiMusicLine });
@@ -3589,6 +3951,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
             onOpenCreditReload={() => setIsCreditReloadOpen(true)}
           />
         );
+      case 'dj-mixes':
+        return <TuneStreamDjMixesPanel onPlayTrack={handleTrackSelect} />;
       case 'vc-discover':
         return <VcDiscoverCreatorsApp sessionUser={activeUser} onNavigateTab={setActiveTab} />;
       case 'podcaster-studio':

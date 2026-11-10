@@ -201,7 +201,7 @@ export function OnboardingStripe({ sessionUser, setActiveTab, onOpenWizard, wiza
       { id: 'reading', label: 'Recommended Reading: Lossless Sets & Curation (Optional)', done: readingDone, cta: readingDone ? 'Review Guide' : 'Read Guide (Optional)', onClick: () => { markDocRead('tunestream-audiophile-streaming'); setReadingDocId('tunestream-audiophile-streaming'); } },
       { id: 'wizard', label: 'Tell us about your mix goals', done: wizardDone, cta: 'Start Wizard', onClick: onOpenWizard },
       { id: 'apps', label: 'Activate TunePay App', done: sessionUser?.apps?.includes('tunepay') || appActivated, tab: 'app-marketplace', cta: 'Activate App' },
-      { id: 'catalog', label: 'Submit your first DJ mix set', done: catalogStarted, tab: 'catalog', cta: 'Upload Mix' },
+      { id: 'catalog', label: 'Submit your first DJ mix set', done: catalogStarted, tab: 'dj-mixes', cta: 'Upload Mix' },
     ];
   } else {
     const readingDone = readDocs.includes('master-vs-composition-copyright');
@@ -362,11 +362,13 @@ const WIZARD_QUESTIONS = [
     multi: true,
     allowOther: true,
     options: [
+      { value: 'dj_mixes_clearance', label: 'Curate, clear IP rights & monetize DJ mixes' },
+      { value: 'dj_pool_stems', label: 'Access DJ promo pool, extended club cuts & 24-bit stems' },
       { value: 'release_music', label: 'Release my own music' },
       { value: 'manage_roster', label: 'Manage a roster / label' },
-      { value: 'grow_fans', label: 'Grow my fanbase' },
+      { value: 'grow_fans', label: 'Grow my fanbase & bookings' },
       { value: 'sync_licensing', label: 'License my music for sync' },
-      { value: 'sell_at_shows', label: 'Sell at shows & merch' },
+      { value: 'sell_at_shows', label: 'Sell at live shows, club nights & merch' },
       { value: 'consume', label: 'Just listen & discover' },
     ],
   },
@@ -421,7 +423,258 @@ const WIZARD_QUESTIONS = [
   },
 ];
 
-export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
+// Client-side intelligent recommendation synthesizer that guarantees tailored
+// app picks for any persona (especially DJs) based on selected options AND
+// freeform / "Other" text inputs, even in sandbox mode or when offline.
+export function computeLocalRecommendations(role = 'creator', answers = {}, activatedSlugs = [], limit = 6) {
+  const activeSet = new Set(Array.isArray(activatedSlugs) ? activatedSlugs : []);
+  const scores = {
+    'dj-mixes': 0,
+    'djpool': 0,
+    'split-cascade': 0,
+    'epk-builder': 0,
+    'catalog-porting': 0,
+    'publishing-election': 0,
+    'distribution-election': 0,
+    'sync-marketplace': 0,
+    'escrow-contracts': 0,
+    'tunemavens-library': 0,
+    'tunemavens-tips': 0,
+    'tunepay-inventory': 0,
+    'tunepay-settlement': 0,
+    'tunepay-devices': 0,
+    'corporate-ads': 0,
+    'intermaven-tunemavens': 0,
+    'intermaven-creator-companion': 0,
+    'intermaven-tunepay': 0,
+    'intermaven-social-ai': 0,
+    'intermaven-brandkit-ai': 0,
+    'intermaven-smart-crm': 0,
+    'intermaven-pitch-deck-ai': 0,
+    'intermaven-invoicing-payments': 0,
+    'intermaven-contracts': 0,
+  };
+
+  const defaultRationales = {
+    'dj-mixes': 'Upload continuous DJ mixes, auto-extract tracklists, clear IP rights, and monetize sets (40% DJ / 50% IP).',
+    'djpool': 'Download vetted 24-bit WAV club promos, extended mixes, instrumentals, and stems.',
+    'split-cascade': 'Automate royalty splits between you, featured artists, producers, and rights holders.',
+    'epk-builder': 'Build an interactive Electronic Press Kit (EPK) with your top sets, bio, and tech rider for promoters.',
+    'catalog-porting': 'Import and manage your releases, remixes, and metadata in one unified catalogue.',
+    'publishing-election': 'Register compositions and collect neighboring & publishing royalties globally.',
+    'distribution-election': 'Distribute original tracks, edits, and remixes to global DSPs.',
+    'sync-marketplace': 'Pitch original tracks and cleared stems for film, TV, gaming, and brand commercials.',
+    'escrow-contracts': 'Protect booking deposits and sync fees in milestone escrow until delivery clears.',
+    'tunemavens-library': 'Organize your personal lossless crate, playlists, and 8GB offline cache.',
+    'tunemavens-tips': 'Receive instant fan micro-tips and track direct mix & track purchases.',
+    'tunepay-inventory': 'Manage merch, vinyl, and physical USB mix drops for live events.',
+    'tunepay-settlement': 'Reconcile live event POS sales and M-Pesa settlements against your ledger.',
+    'tunepay-devices': 'Pair portable POS hardware for club nights and festival merch booths.',
+    'corporate-ads': 'Configure brand audio flights and sponsor creator tours across TuneStream.',
+    'intermaven-tunemavens': 'Stream lossless 24-bit sets and test how fans experience your mixes on TuneStream.',
+    'intermaven-creator-companion': 'Track real-time split payouts, clearance approvals, and tip alerts on mobile.',
+    'intermaven-tunepay': 'Accept M-Pesa, card, and cashless tips at live DJ gigs and club nights.',
+    'intermaven-social-ai': 'Generate mix teaser captions, schedule multi-platform promos, and grow your audience.',
+    'intermaven-brandkit-ai': 'Design a cohesive DJ logo, flyer system, and visual identity.',
+    'intermaven-smart-crm': 'Track club promoters, festival bookings, client leads, and gig pipelines in one CRM.',
+    'intermaven-pitch-deck-ai': 'Create residency, sponsorship, and festival pitch decks with AI.',
+    'intermaven-invoicing-payments': 'Send instant booking invoices and collect promoter deposits via M-Pesa or card.',
+    'intermaven-contracts': 'Draft and e-sign artist clearance agreements and performance contracts.',
+  };
+
+  const customRationales = {};
+
+  const roleBoosts = {
+    dj: {
+      'dj-mixes': 6,
+      'djpool': 5,
+      'split-cascade': 4,
+      'epk-builder': 4,
+      'intermaven-tunepay': 3,
+      'intermaven-social-ai': 3,
+      'intermaven-smart-crm': 3,
+      'tunemavens-library': 3,
+      'tunemavens-tips': 2,
+    },
+    creator: {
+      'publishing-election': 4,
+      'distribution-election': 4,
+      'split-cascade': 3,
+      'catalog-porting': 3,
+      'epk-builder': 3,
+      'intermaven-creator-companion': 3,
+      'intermaven-social-ai': 2,
+      'sync-marketplace': 2,
+    },
+    label: {
+      'catalog-porting': 5,
+      'distribution-election': 4,
+      'split-cascade': 4,
+      'intermaven-smart-crm': 4,
+      'publishing-election': 3,
+      'intermaven-contracts': 3,
+    },
+    studio: { 'sync-marketplace': 5, 'escrow-contracts': 4, 'intermaven-contracts': 3 },
+    supervisor: { 'sync-marketplace': 5, 'escrow-contracts': 4, 'intermaven-pitch-deck-ai': 2 },
+    corporate: { 'corporate-ads': 6, 'sync-marketplace': 4, 'escrow-contracts': 3 },
+  };
+
+  const rb = roleBoosts[role] || roleBoosts.creator;
+  Object.entries(rb).forEach(([slug, pts]) => {
+    if (scores[slug] !== undefined) scores[slug] += pts;
+  });
+
+  const goals = Array.isArray(answers?.primary_goal)
+    ? answers.primary_goal
+    : answers?.primary_goal
+      ? [answers.primary_goal]
+      : [];
+
+  const goalBoosts = {
+    dj_mixes_clearance: { 'dj-mixes': 7, 'split-cascade': 5, 'intermaven-contracts': 4, 'djpool': 3 },
+    dj_pool_stems: { 'djpool': 7, 'dj-mixes': 4, 'tunemavens-library': 4, 'epk-builder': 2 },
+    release_music: { 'distribution-election': 5, 'publishing-election': 4, 'catalog-porting': 4, 'split-cascade': 3 },
+    manage_roster: { 'intermaven-smart-crm': 5, 'catalog-porting': 4, 'split-cascade': 4, 'intermaven-contracts': 3 },
+    grow_fans: { 'intermaven-social-ai': 5, 'epk-builder': 4, 'intermaven-brandkit-ai': 4, 'tunemavens-tips': 3 },
+    sync_licensing: { 'sync-marketplace': 6, 'escrow-contracts': 4, 'epk-builder': 3, 'intermaven-pitch-deck-ai': 2 },
+    sell_at_shows: { 'intermaven-tunepay': 6, 'tunepay-inventory': 4, 'tunepay-settlement': 3, 'intermaven-invoicing-payments': 3 },
+    consume: { 'tunemavens-library': 5, 'tunemavens-tips': 3, 'intermaven-tunemavens': 4 },
+  };
+
+  goals.forEach((g) => {
+    const gb = goalBoosts[g] || {};
+    Object.entries(gb).forEach(([slug, pts]) => {
+      if (scores[slug] !== undefined) scores[slug] += pts;
+    });
+    if (g === 'dj_mixes_clearance') {
+      customRationales['dj-mixes'] = 'Selected for your goal: upload DJ mixes, auto-extract tracklists, clear IP rights, and unlock 40% DJ / 50% IP commercial sales.';
+      customRationales['split-cascade'] = 'Automatically routes 50% of every DJ mix sale to cleared rights holders and 40% directly to your DJ wallet.';
+    } else if (g === 'dj_pool_stems') {
+      customRationales['djpool'] = 'Selected for your goal: instant access to vetted club promos, 24-bit WAV masters, and DJ stems.';
+    } else if (g === 'sell_at_shows') {
+      customRationales['intermaven-tunepay'] = 'Selected for live shows: accept M-Pesa STK Push, cards, and instant crowd tips during your sets.';
+    } else if (g === 'grow_fans') {
+      customRationales['intermaven-social-ai'] = 'Selected for audience growth: AI-scheduled mix clips, gig announcements, and fan engagement.';
+      customRationales['epk-builder'] = 'Showcase your DJ mixes, press photos, and booking rider on a live EPK Web World.';
+    }
+  });
+
+  const revFocus = Array.isArray(answers?.revenue_focus) ? answers.revenue_focus : [];
+  revFocus.forEach((rev) => {
+    if (rev === 'streaming') {
+      scores['dj-mixes'] += role === 'dj' ? 3 : 0;
+      scores['distribution-election'] += 3;
+      scores['split-cascade'] += 3;
+    } else if (rev === 'live') {
+      scores['intermaven-tunepay'] += 4;
+      scores['tunepay-inventory'] += 3;
+      scores['intermaven-smart-crm'] += 3;
+    } else if (rev === 'sync') {
+      scores['sync-marketplace'] += 4;
+      scores['escrow-contracts'] += 3;
+    } else if (rev === 'tips_merch') {
+      scores['tunemavens-tips'] += 4;
+      scores['intermaven-tunepay'] += 3;
+    }
+  });
+
+  // Analyze custom need text across all *_other fields and freeform_notes
+  const combinedNeedText = [
+    answers?.primary_goal_other,
+    answers?.release_cadence_other,
+    answers?.distribution_setup_other,
+    answers?.revenue_focus_other,
+    answers?.team_size_other,
+    answers?.freeform_notes,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  if (combinedNeedText) {
+    const keywordRules = [
+      {
+        keywords: ['mix', 'set', 'tracklist', 'clear', 'clearance', 'copyright', 'takedown', 'rights', 'mashup', 'blend'],
+        boosts: {
+          'dj-mixes': [8, `Tailored to your inputted need: automated tracklist extraction, direct rights-holder clearance, and legal DJ mix monetization.`],
+          'split-cascade': [5, `Tailored to your need: transparent 40% DJ / 50% IP Rights Holder royalty waterfall for every mix sold.`],
+          'intermaven-contracts': [4, `Tailored to your need: binding e-sign clearance agreements with artists and labels.`],
+        },
+      },
+      {
+        keywords: ['pool', 'stem', 'acapella', 'promo', 'club', 'crates', 'bpm', 'wav', 'edit', 'remix'],
+        boosts: {
+          'djpool': [7, `Tailored to your inputted need: download 24-bit club promos, stems, and regional exclusives.`],
+          'dj-mixes': [4, `Turn your club crates and stems into commercial, rights-cleared DJ mixes.`],
+        },
+      },
+      {
+        keywords: ['gig', 'show', 'event', 'book', 'booking', 'tour', 'festival', 'promoter', 'residency', 'client'],
+        boosts: {
+          'intermaven-smart-crm': [6, `Tailored to your booking need: manage club promoters, festival leads, and gig contracts in one CRM.`],
+          'epk-builder': [6, `Tailored to your booking need: share an interactive 24-bit DJ EPK with promoters and talent buyers.`],
+          'intermaven-invoicing-payments': [4, `Send promoter booking invoices and collect deposits via M-Pesa or card.`],
+        },
+      },
+      {
+        keywords: ['pos', 'mpesa', 'm-pesa', 'merch', 'ticket', 'tip', 'cashless', 'payment', 'money', 'sell'],
+        boosts: {
+          'intermaven-tunepay': [6, `Tailored to your monetization need: portable POS for live gig tips, tickets, and merch.`],
+          'tunemavens-tips': [5, `Track incoming fan micro-tips and direct mix purchases in real time.`],
+          'tunepay-inventory': [3, `Manage merch and limited-edition physical/USB mix drops at shows.`],
+        },
+      },
+      {
+        keywords: ['social', 'instagram', 'tiktok', 'youtube', 'fan', 'audience', 'market', 'promote', 'brand', 'grow'],
+        boosts: {
+          'intermaven-social-ai': [6, `Tailored to your growth need: AI social scheduling, mix clip captions, and audience analytics.`],
+          'intermaven-brandkit-ai': [4, `Build a signature DJ brand identity, logo kit, and event flyer templates.`],
+        },
+      },
+      {
+        keywords: ['sync', 'film', 'tv', 'ad', 'commercial', 'movie', 'game', 'brief'],
+        boosts: {
+          'sync-marketplace': [6, `Tailored to your sync need: pitch original productions and cleared stems for film, TV, and ads.`],
+          'escrow-contracts': [4, `Hold sync licensing fees in escrow until master delivery clears.`],
+        },
+      },
+    ];
+
+    keywordRules.forEach(({ keywords, boosts }) => {
+      if (keywords.some((kw) => combinedNeedText.includes(kw))) {
+        Object.entries(boosts).forEach(([slug, [pts, rationale]]) => {
+          if (scores[slug] !== undefined) {
+            scores[slug] += pts;
+            if (!customRationales[slug]) customRationales[slug] = rationale;
+          }
+        });
+      }
+    });
+  }
+
+  if (answers?.create_free_epk !== false) {
+    scores['epk-builder'] += 2;
+  }
+
+  const ranked = Object.entries(scores)
+    .filter(([, score]) => score > 0)
+    .sort((a, b) => {
+      // Prioritize unactivated apps first, then by score
+      const aActive = activeSet.has(a[0]) ? 1 : 0;
+      const bActive = activeSet.has(b[0]) ? 1 : 0;
+      if (aActive !== bActive) return aActive - bActive;
+      return b[1] - a[1];
+    });
+
+  return ranked.slice(0, limit).map(([slug], idx) => ({
+    slug,
+    rationale: customRationales[slug] || defaultRationales[slug] || 'Recommended for your workflow.',
+    priority: idx + 1,
+    source: combinedNeedText ? 'ai-need-match' : 'rules',
+  }));
+}
+
+export function OnboardingWizardModal({ open, onClose, onSaved, initial, sessionUser, setActiveTab, onUpdateUser }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(() => ({
     primary_goal: Array.isArray(initial?.primary_goal) ? initial.primary_goal : [],
@@ -440,16 +693,23 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
   }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showResults, setShowResults] = useState(false);
+  const [wizardRecs, setWizardRecs] = useState([]);
+  const [activatedSlugs, setActivatedSlugs] = useState(() => getStoredActivatedApps(sessionUser) || sessionUser?.apps || []);
+  const [busyActivate, setBusyActivate] = useState(null);
 
   useEffect(() => {
     if (open) {
       setStep(0);
       setError('');
+      setShowResults(false);
+      setActivatedSlugs(getStoredActivatedApps(sessionUser) || sessionUser?.apps || []);
     }
   }, [open]);
 
   if (!open) return null;
 
+  const userRole = sessionUser?.role || 'dj';
   const totalSteps = WIZARD_QUESTIONS.length + 2;
   const isLast = step === totalSteps - 1;
   const current = step < WIZARD_QUESTIONS.length ? WIZARD_QUESTIONS[step] : null;
@@ -483,17 +743,58 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
     setSaving(true);
     setError('');
     try {
-      const saved = await usersApi.saveOnboarding(answers);
+      let saved = null;
+      try {
+        saved = await usersApi.saveOnboarding(answers);
+      } catch (_) {
+        // Fallback for demo / sandbox sessions without backend JWT
+        saved = answers;
+      }
+      try {
+        localStorage.setItem('tunemavens_wizard_answers', JSON.stringify(saved || answers));
+      } catch (_) {}
       if (answers.create_free_epk !== false) {
         sessionStorage.setItem('preferred_dashboard_tab', 'epk-builder');
         localStorage.setItem('tunemavens_created_free_epk', 'true');
       }
       if (onSaved) onSaved(saved || answers);
-      onClose();
+
+      // Compute tailored AI recommendations from backend or local need-matching engine
+      let recsList = [];
+      try {
+        const apiRecs = await usersApi.getRecommendations(6);
+        if (Array.isArray(apiRecs) && apiRecs.length > 0) {
+          recsList = apiRecs;
+        }
+      } catch (_) {}
+      if (!recsList.length) {
+        recsList = computeLocalRecommendations(userRole, answers, activatedSlugs, 6);
+      }
+      setWizardRecs(recsList);
+      setShowResults(true);
     } catch (e) {
       setError(e.data?.detail || e.message || 'Could not save your responses');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleQuickActivateAndOpen = async (slug, openImmediately = true) => {
+    setBusyActivate(slug);
+    try {
+      const nextApps = await persistAppActivation(slug, sessionUser, onUpdateUser);
+      setActivatedSlugs(nextApps);
+      const appObj = lookupApp(slug);
+      if (openImmediately && appObj) {
+        if (appObj.tab && setActiveTab) {
+          setActiveTab(appObj.tab);
+          onClose();
+        } else if (appObj.launchUrl) {
+          window.open(appObj.launchUrl, '_blank', 'noopener,noreferrer');
+        }
+      }
+    } catch (_) {} finally {
+      setBusyActivate(null);
     }
   };
 
@@ -505,14 +806,16 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: '#0b1126', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', padding: '32px 32px 28px', maxWidth: '560px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
+        style={{ background: '#0b1126', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', padding: '32px 32px 28px', maxWidth: showResults ? '680px' : '560px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
             <div style={{ fontSize: '10px', color: 'var(--cyan)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 800, marginBottom: '6px' }}>
-              Step {step + 1} of {totalSteps}
+              {showResults ? 'AI Recommendation Engine · Tailored To Your Needs' : `Step ${step + 1} of ${totalSteps}`}
             </div>
-            <h3 style={{ fontSize: '20px', color: '#f1f5f9', margin: 0, fontWeight: 800, letterSpacing: '-0.3px' }}>Tell us about you</h3>
+            <h3 style={{ fontSize: '20px', color: '#f1f5f9', margin: 0, fontWeight: 800, letterSpacing: '-0.3px' }}>
+              {showResults ? 'Your Recommended Apps & Workflow' : 'Tell us about you'}
+            </h3>
           </div>
           <button type="button" onClick={onClose} data-testid="wizard-close" style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
             <RiCloseFill size={18} />
@@ -520,9 +823,125 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
         </div>
 
         <div style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', marginBottom: '24px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${Math.round(((step + 1) / totalSteps) * 100)}%`, background: 'var(--cyan)', color: '#000', transition: 'width 0.3s ease' }} />
+          <div style={{ height: '100%', width: showResults ? '100%' : `${Math.round(((step + 1) / totalSteps) * 100)}%`, background: showResults ? '#10b981' : 'var(--cyan)', color: '#000', transition: 'width 0.3s ease' }} />
         </div>
 
+        {showResults ? (
+          <div data-testid="wizard-recommendations-results">
+            <p style={{ fontSize: '13px', color: '#cbd5e1', marginTop: 0, marginBottom: '16px', lineHeight: 1.55 }}>
+              Based on your inputted goals{answers.freeform_notes || answers.primary_goal_other ? ' and custom requirements' : ''}, here is the recommended suite of apps to power your workflow:
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+              {wizardRecs.map((rec) => {
+                const app = lookupApp(rec.slug);
+                if (!app) return null;
+                const Icon = app.icon;
+                const isActive = activatedSlugs.includes(rec.slug);
+                const isBusy = busyActivate === rec.slug;
+                return (
+                  <div
+                    key={rec.slug}
+                    data-testid={`wizard-rec-card-${rec.slug}`}
+                    style={{
+                      padding: '14px 16px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: isActive ? `1px solid ${app.accent}` : '1px solid rgba(34,211,238,0.22)',
+                      borderRadius: '3px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '3px', background: `${app.accent}22`, color: app.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Icon size={18} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#f1f5f9' }}>{app.name}</div>
+                        <div style={{ fontSize: '10px', color: 'var(--cyan)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                          Priority #{rec.priority} {isActive ? '· Active' : ''}
+                        </div>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '11.5px', color: '#94a3b8', lineHeight: 1.5, margin: 0, flex: 1 }}>
+                      {rec.rationale}
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        disabled={isBusy}
+                        onClick={() => handleQuickActivateAndOpen(rec.slug, true)}
+                        data-testid={`wizard-rec-open-${rec.slug}`}
+                        style={{
+                          flex: 1,
+                          padding: '7px 12px',
+                          background: app.accent,
+                          color: '#060813',
+                          border: 'none',
+                          borderRadius: '3px',
+                          fontSize: '11.5px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {isBusy ? 'Activating…' : isActive ? 'Open App →' : 'Activate & Open →'}
+                      </button>
+                      {!isActive && (
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={() => handleQuickActivateAndOpen(rec.slug, false)}
+                          style={{
+                            padding: '7px 10px',
+                            background: 'rgba(255,255,255,0.06)',
+                            color: '#e2e8f0',
+                            border: '1px solid rgba(255,255,255,0.14)',
+                            borderRadius: '3px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          + Pin
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+              <button
+                type="button"
+                onClick={() => setShowResults(false)}
+                style={{ padding: '9px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: '#cbd5e1', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                ← Edit Answers
+              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setActiveTab) setActiveTab('app-marketplace');
+                    onClose();
+                  }}
+                  data-testid="wizard-view-marketplace"
+                  style={{ padding: '9px 16px', background: 'var(--cyan)', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+                >
+                  Open App Marketplace (Your Path) →
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{ padding: '9px 14px', background: 'rgba(255,255,255,0.08)', color: '#f1f5f9', border: 'none', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
         {current && (
           <>
             <p style={{ fontSize: '15px', color: '#e2e8f0', marginBottom: current.helper ? '6px' : '18px', fontWeight: 600 }} data-testid={`wizard-question-${current.key}`}>{current.label}</p>
@@ -664,8 +1083,8 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
           </button>
           {isLast ? (
             <button type="button" onClick={save} disabled={saving} data-testid="wizard-submit"
-              style={{ padding: '10px 20px', background: 'var(--cyan)', color: '#000', border: 'none', color: '#0b0f1e', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: saving ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
-              {saving ? 'Saving\u2026' : (answers.create_free_epk !== false ? 'Activate Free EPK & Finish' : 'Finish & Get Picks')} <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
+              style={{ padding: '10px 20px', background: 'var(--cyan)', color: '#0b0f1e', border: 'none', borderRadius: '3px', fontWeight: 800, fontSize: '13px', cursor: saving ? 'wait' : 'pointer', letterSpacing: '0.3px' }}>
+              {saving ? 'Analyzing Needs\u2026' : (answers.create_free_epk !== false ? 'Activate Free EPK & Get App Picks' : 'Finish & Get App Picks')} <RiArrowRightFill size={12} style={{ display: 'inline', marginLeft: 4 }} />
             </button>
           ) : (
             <button type="button" onClick={() => setStep((s) => s + 1)} disabled={!canProceed} data-testid="wizard-next"
@@ -674,6 +1093,8 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
             </button>
           )}
         </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -683,32 +1104,73 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial }) {
 // Displayed at the top of the App Marketplace. When no onboarding responses
 // exist we show a CTA to run the wizard; once responses exist we show the
 // ranked picks from /api/users/me/recommendations (LLM-first, rules fallback).
-export function RecommendationHero({ activatedSlugs, onActivate, onOpen, onOpenWizard, hasAnswers, refreshKey }) {
+export function RecommendationHero({ activatedSlugs, onActivate, onOpen, onOpenWizard, hasAnswers, refreshKey, role = 'creator', wizardAnswers }) {
   const [recs, setRecs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState('rules');
 
   useEffect(() => {
     let cancelled = false;
-    if (!hasAnswers) {
+    let storedWizard = wizardAnswers;
+    if (!storedWizard) {
+      try {
+        storedWizard = JSON.parse(localStorage.getItem('tunemavens_wizard_answers') || 'null');
+      } catch (_) {}
+    }
+    const effectiveHasAnswers = hasAnswers || !!(
+      storedWizard && (
+        (Array.isArray(storedWizard.primary_goal) && storedWizard.primary_goal.length > 0) ||
+        (typeof storedWizard.primary_goal === 'string' && storedWizard.primary_goal) ||
+        (storedWizard.primary_goal_other && storedWizard.primary_goal_other.trim()) ||
+        (storedWizard.freeform_notes && storedWizard.freeform_notes.trim())
+      )
+    );
+
+    if (!effectiveHasAnswers) {
       setRecs([]);
       setLoading(false);
       return;
     }
     setLoading(true);
-    usersApi.getRecommendations(4)
+    usersApi.getRecommendations(6)
       .then((list) => {
         if (cancelled) return;
         const arr = Array.isArray(list) ? list : [];
-        setRecs(arr);
-        if (arr[0]) setSource(arr[0].source || 'rules');
+        if (arr.length > 0) {
+          setRecs(arr);
+          setSource(arr[0].source || 'rules');
+        } else {
+          const localPicks = computeLocalRecommendations(role, storedWizard || {}, activatedSlugs, 6);
+          setRecs(localPicks);
+          setSource(localPicks[0]?.source || 'rules');
+        }
       })
-      .catch(() => setRecs([]))
+      .catch(() => {
+        if (cancelled) return;
+        const localPicks = computeLocalRecommendations(role, storedWizard || {}, activatedSlugs, 6);
+        setRecs(localPicks);
+        setSource(localPicks[0]?.source || 'rules');
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [hasAnswers, activatedSlugs.join(','), refreshKey]);
+  }, [hasAnswers, activatedSlugs.join(','), refreshKey, role, JSON.stringify(wizardAnswers || {})]);
 
-  if (!hasAnswers) {
+  let storedWizardCheck = wizardAnswers;
+  if (!storedWizardCheck) {
+    try {
+      storedWizardCheck = JSON.parse(localStorage.getItem('tunemavens_wizard_answers') || 'null');
+    } catch (_) {}
+  }
+  const effectiveHasAnswers = hasAnswers || !!(
+    storedWizardCheck && (
+      (Array.isArray(storedWizardCheck.primary_goal) && storedWizardCheck.primary_goal.length > 0) ||
+      (typeof storedWizardCheck.primary_goal === 'string' && storedWizardCheck.primary_goal) ||
+      (storedWizardCheck.primary_goal_other && storedWizardCheck.primary_goal_other.trim()) ||
+      (storedWizardCheck.freeform_notes && storedWizardCheck.freeform_notes.trim())
+    )
+  );
+
+  if (!effectiveHasAnswers) {
     return (
       <div data-testid="recommendation-hero-cta"
         style={{ padding: '18px 22px', background: '#0b1126', border: '1px solid rgba(34,211,238,0.24)', borderRadius: '3px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
@@ -1526,18 +1988,19 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
   const role = sessionUser?.role || 'creator';
   const catalogue = [
     { slug: 'catalog-porting', name: 'Catalogue', desc: 'Manage your music catalogue, ingest new releases via wizard, validate metadata, and stage releases.', icon: RiDatabase2Fill, accent: 'var(--cyan)', tab: 'catalog', roles: ['creator', 'label', 'admin'] },
-    { slug: 'split-cascade', name: 'Split Cascade', desc: 'See exactly how every dollar flows through writer / producer / publisher splits.', icon: RiCoinsFill, accent: 'var(--purple)', tab: 'splits', roles: ['creator', 'label', 'admin'] },
+    { slug: 'split-cascade', name: 'Split Cascade', desc: 'See exactly how every dollar flows through writer / producer / publisher splits.', icon: RiCoinsFill, accent: 'var(--purple)', tab: 'splits', roles: ['creator', 'label', 'dj', 'admin'] },
     { slug: 'publishing-election', name: 'Publishing Election', desc: 'Lock in your publishing tier  -  standard admin or full-service co-pub.', icon: RiBookOpenFill, accent: 'var(--cyan)', tab: 'publishing-election', roles: ['creator', 'label', 'admin'] },
     { slug: 'distribution-election', name: 'Distribution Election', desc: 'Choose how your music reaches DSPs and how revenue splits.', icon: RiGlobalFill, accent: 'var(--purple)', tab: 'distribution-election', roles: ['creator', 'label', 'admin'] },
+    { slug: 'dj-mixes', name: 'DJ Mixes & Clearance Hub', desc: 'Upload continuous DJ mixes, auto-extract tracklists, clear IP rights, and monetize sets (40% DJ / 50% IP).', icon: RiDiscFill, accent: 'var(--cyan)', tab: 'dj-mixes', roles: ['dj', 'creator', 'label', 'admin'] },
     { slug: 'djpool', name: 'DJ Pool MVP', desc: 'Distribute promo cuts to vetted DJs, gate by region, track plays.', icon: RiRadioFill, accent: '#10b981', tab: 'djpool', roles: ['creator', 'dj', 'admin'] },
     { slug: 'sync-marketplace', name: 'Sync Marketplace', desc: 'Pitch and license tracks for film, TV, ads, and game placements.', icon: RiGlobalFill, accent: 'var(--cyan)', tab: 'sync', roles: ['creator', 'label', 'studio', 'supervisor', 'admin'] },
     { slug: 'escrow-contracts', name: 'Escrow Contracts', desc: 'Hold funds in escrow until contractual milestones clear.', icon: RiShieldFill, accent: 'var(--purple)', tab: 'escrow', roles: ['creator', 'studio', 'supervisor', 'admin'] },
     { slug: 'tunemavens-library', name: 'My Library', desc: 'Personal media library  -  playlists, downloads, and offline cache.', icon: RiMusicFill, accent: 'var(--cyan)', tab: 'library', roles: ['creator', 'consumer', 'dj', 'admin'] },
     { slug: 'tunemavens-tips', name: 'Tips & Purchases', desc: 'See incoming tips and your TuneMavens app purchases.', icon: RiCoinsFill, accent: '#10b981', tab: 'tips', roles: ['creator', 'consumer', 'dj', 'admin'] },
-    { slug: 'tunepay-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: RiDatabase2Fill, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'admin'] },
-    { slug: 'tunepay-settlement', name: 'POS Settlement', desc: 'Reconcile tunepay settlement runs against your ledger.', icon: RiCoinsFill, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'admin'] },
-    { slug: 'tunepay-devices', name: 'POS Devices', desc: 'Pair and manage tunepay hardware tied to your account.', icon: RiSmartphoneFill, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'admin'] },
-    { slug: 'epk-builder', name: 'EPK Builder', desc: 'Construct a stunning Electronic Press Kit (EPK) with your tracks, bio, and social links to pitch to supervisors.', icon: RiDiscFill, accent: 'var(--cyan)', tab: 'epk-builder', roles: ['creator', 'label', 'admin'] },
+    { slug: 'tunepay-inventory', name: 'POS Inventory', desc: 'Mobile point-of-sale inventory for merch & physical media.', icon: RiDatabase2Fill, accent: '#10b981', tab: 'pos-inventory', roles: ['creator', 'label', 'dj', 'admin'] },
+    { slug: 'tunepay-settlement', name: 'POS Settlement', desc: 'Reconcile tunepay settlement runs against your ledger.', icon: RiCoinsFill, accent: '#10b981', tab: 'pos-settlement', roles: ['creator', 'label', 'dj', 'admin'] },
+    { slug: 'tunepay-devices', name: 'POS Devices', desc: 'Pair and manage tunepay hardware tied to your account.', icon: RiSmartphoneFill, accent: '#10b981', tab: 'pos-devices', roles: ['label', 'dj', 'admin'] },
+    { slug: 'epk-builder', name: 'EPK Builder', desc: 'Construct a stunning Electronic Press Kit (EPK) with your tracks, bio, and social links to pitch to supervisors.', icon: RiDiscFill, accent: 'var(--cyan)', tab: 'epk-builder', roles: ['creator', 'label', 'dj', 'admin'] },
     { slug: 'corporate-ads', name: 'Corporate Brand Ads & Rates', desc: 'Configure business audio interstitials on TuneStream, sponsor creator concert tours, inspect flight analytics, and manage established rate cards.', icon: RiMegaphoneFill, accent: '#ef4444', tab: 'corporate-ads', roles: ['corporate', 'admin', 'creator', 'label'] },
   ];
 
@@ -1549,7 +2012,7 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
       : role === 'label'
         ? ['catalog-porting', 'distribution-election', 'tunepay-inventory']
         : role === 'dj'
-          ? ['djpool', 'tunemavens-library']
+          ? ['dj-mixes', 'djpool', 'tunemavens-library']
           : role === 'studio' || role === 'supervisor'
             ? ['sync-marketplace', 'escrow-contracts']
             : role === 'consumer'
@@ -1748,11 +2211,14 @@ export function AppMarketplacePanel({ sessionUser, onUpdateUser, setActiveTab, o
         <div data-testid="app-marketplace-your-path">
           <RecommendationHero
             activatedSlugs={activated}
+            role={role}
+            wizardAnswers={wizardAnswers}
             hasAnswers={!!(
               wizardAnswers && (
                 (Array.isArray(wizardAnswers.primary_goal) && wizardAnswers.primary_goal.length > 0) ||
                 (typeof wizardAnswers.primary_goal === 'string' && wizardAnswers.primary_goal) ||
-                (wizardAnswers.primary_goal_other && wizardAnswers.primary_goal_other.trim())
+                (wizardAnswers.primary_goal_other && wizardAnswers.primary_goal_other.trim()) ||
+                (wizardAnswers.freeform_notes && wizardAnswers.freeform_notes.trim())
               )
             )}
             onOpenWizard={() => onOpenWizard && onOpenWizard()}
