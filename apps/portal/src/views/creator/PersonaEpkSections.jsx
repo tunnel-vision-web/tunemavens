@@ -959,27 +959,28 @@ export function DjMixesAndSetsSection({
   const [purchasedMixIds, setPurchasedMixIds] = useState([]);
   const [purchaseReceipt, setPurchaseReceipt] = useState(null);
 
-  const hasCustomMixes = Array.isArray(mixes) && mixes.length > 0;
+  const customMixesCount = Array.isArray(mixes) ? mixes.length : 0;
+  const customMixesKey = Array.isArray(mixes) ? mixes.map((m) => m.id || m.title || '').join('|') : '';
 
   useEffect(() => {
-    if (hasCustomMixes) {
+    if (Array.isArray(mixes) && mixes.length > 0) {
       setLiveMixes(mixes);
       return undefined;
     }
     let cancelled = false;
-    fetch('/api/dj-mixes')
-      .then((r) => (r.ok ? r.json() : null))
+    fetch('/api/dj/mixes')
+      .then((r) => (r.ok ? r.json() : fetch('/api/dj-mixes').then((res) => (res.ok ? res.json() : null))))
       .then((data) => {
         if (cancelled) return;
         const arr = Array.isArray(data) ? data : data?.data;
         if (Array.isArray(arr) && arr.length > 0) {
-          const clearedOnly = arr.filter((m) => m.status === 'published_for_sale' || m.is_original_ip_only);
+          const clearedOnly = arr.filter((m) => m.status === 'published_for_sale' || m.status === 'published' || m.is_original_ip_only);
           if (clearedOnly.length > 0) setLiveMixes(clearedOnly);
         }
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [hasCustomMixes, mixes]);
+  }, [customMixesCount, customMixesKey]);
 
   const cleanDjSlug = (djSlug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const cleanDjName = (djName || '').toLowerCase().trim();

@@ -31,6 +31,7 @@ from account_setup import (
 )
 
 router = APIRouter(prefix="/api/dj/mixes", tags=["DJ Mixes"])
+alias_router = APIRouter(prefix="/api/dj-mixes", tags=["DJ Mixes Alias"])
 
 
 # ---------------------------------------------------------------------------
@@ -785,6 +786,7 @@ def create_dj_mix(payload: MixCreateRequest, current_user: dict = Depends(get_cu
 
 
 @router.get("", response_model=List[dict])
+@alias_router.get("", response_model=List[dict])
 def list_dj_mixes(
     mine_only: bool = False,
     genre: Optional[str] = None,

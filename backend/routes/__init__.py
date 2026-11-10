@@ -34,7 +34,7 @@ from .social_graph_router import router as social_graph_router
 from .community_router import router as community_router
 from .backend_admin_router import router as backend_admin_router
 from .media_house_router import router as media_house_router
-from .dj_mixes_router import router as dj_mixes_router
+from .dj_mixes_router import router as dj_mixes_router, alias_router as dj_mixes_alias_router
 
 __all__ = [
     "admin_router",
@@ -74,4 +74,5 @@ __all__ = [
     "community_router",
     "media_house_router",
     "dj_mixes_router",
+    "dj_mixes_alias_router",
 ]
