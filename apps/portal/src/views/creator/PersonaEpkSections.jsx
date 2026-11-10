@@ -591,42 +591,46 @@ export function PersonaAudienceCalloutBanner({
 // ==============================================================================
 // 1. PODCASTER EPK SECTIONS
 // ==============================================================================
+export const DEFAULT_PODCASTER_EPISODES = [
+  {
+    id: 'ep-sample-1',
+    title: 'Episode 48: The African Creator Economy & Split Cascade Royalties',
+    seasonNumber: 3,
+    episodeNumber: 48,
+    duration: '42:18',
+    publishedAt: '2 days ago',
+    streams: '48.2K',
+    audioUrl: '/uploads/audio/enenda.wav',
+    summary: 'Deep-dive conversation on independent music ownership, direct-to-fan tipping, and building a sustainable creator career without major-label debt.',
+    transcript: 'Host: Today we sit down with top independent producers to dissect how automated Split Cascade royalties pay creators 4x more than standard DSP streams...',
+    chapters: [
+      { time: '00:00', title: 'Why Traditional Streaming Payouts Are Broken' },
+      { time: '12:30', title: 'Automated 10,000 Basis Point Split Sheets' },
+      { time: '28:15', title: 'Live Q&A with Independent Beatmakers' }
+    ]
+  },
+  {
+    id: 'ep-sample-2',
+    title: 'Episode 47: Sync Licensing Mastery — Pre-Clearing Cues for Hollywood & Netflix',
+    seasonNumber: 3,
+    episodeNumber: 47,
+    duration: '38:40',
+    publishedAt: '1 week ago',
+    streams: '52.1K',
+    audioUrl: '/uploads/audio/enenda.wav',
+    summary: 'Music supervisors break down the metadata requirements, instrumental stem deliverables, and 24-hour turnaround needed to win film placements.',
+    transcript: 'Host: When a sync brief lands on your desk with a 48-hour deadline, having one-stop pre-cleared master and publishing splits is the single factor that decides...',
+    chapters: [
+      { time: '00:00', title: 'The 48-Hour Sync Pitch Window' },
+      { time: '15:20', title: 'Stem Formatting & Alt Mix Deliverables' }
+    ]
+  }
+];
+
 export function PodcasterEpisodesSection({ episodes = [], onPlayEpisode, accentColor = '#00f2fe' }) {
   const [activeTranscriptId, setActiveTranscriptId] = useState(null);
 
-  const defaultEpisodes = episodes.length > 0 ? episodes : [
-    {
-      id: 'ep-sample-1',
-      title: 'Episode 48: The African Creator Economy & Split Cascade Royalties',
-      seasonNumber: 3,
-      episodeNumber: 48,
-      duration: '42:18',
-      publishedAt: '2 days ago',
-      streams: '48.2K',
-      summary: 'Deep-dive conversation on independent music ownership, direct-to-fan tipping, and building a sustainable creator career without major-label debt.',
-      transcript: 'Host: Today we sit down with top independent producers to dissect how automated Split Cascade royalties pay creators 4x more than standard DSP streams...',
-      chapters: [
-        { time: '00:00', title: 'Why Traditional Streaming Payouts Are Broken' },
-        { time: '12:30', title: 'Automated 10,000 Basis Point Split Sheets' },
-        { time: '28:15', title: 'Live Q&A with Independent Beatmakers' }
-      ]
-    },
-    {
-      id: 'ep-sample-2',
-      title: 'Episode 47: Sync Licensing Mastery — Pre-Clearing Cues for Hollywood & Netflix',
-      seasonNumber: 3,
-      episodeNumber: 47,
-      duration: '38:40',
-      publishedAt: '1 week ago',
-      streams: '52.1K',
-      summary: 'Music supervisors break down the metadata requirements, instrumental stem deliverables, and 24-hour turnaround needed to win film placements.',
-      transcript: 'Host: When a sync brief lands on your desk with a 48-hour deadline, having one-stop pre-cleared master and publishing splits is the single factor that decides...',
-      chapters: [
-        { time: '00:00', title: 'The 48-Hour Sync Pitch Window' },
-        { time: '15:20', title: 'Stem Formatting & Alt Mix Deliverables' }
-      ]
-    }
-  ];
+  const defaultEpisodes = episodes.length > 0 ? episodes : DEFAULT_PODCASTER_EPISODES;
 
   return (
     <div style={{ padding: '20px 0' }}>
@@ -1161,12 +1165,15 @@ export function DjMixesAndSetsSection({
                       onPlayMix &&
                       onPlayMix({
                         id: mix.id || `mix_${mix.title}`,
-                        title: `${mix.title} (${mix.dj_name || djName})`,
-                        isrc: `KE-DJM-26-00${String(mix.id || '1').slice(-3)}`,
-                        audioUrl: mix.audio_url || '/uploads/audio/enenda.wav',
+                        title: mix.title,
+                        artist: mix.dj_name || djName,
+                        dj_name: mix.dj_name || djName,
+                        isrc: mix.isrc || `KE-DJM-26-00${String(mix.id || '1').slice(-3)}`,
+                        audioUrl: mix.audio_url || mix.audioUrl || '/uploads/audio/enenda.wav',
                         duration: mix.duration || '45:00',
-                        coverArt: mix.artwork_url,
-                        priceCredits: credits
+                        coverArt: mix.artwork_url || mix.coverArt,
+                        priceCredits: credits,
+                        badge: '🎧 DJ Mix • Lossless Master'
                       })
                     }
                     style={{
@@ -1969,7 +1976,15 @@ export function ProducerBeatStoreSection({ formatPrice = (v) => `$${v}`, onPlayB
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <button
                 type="button"
-                onClick={() => onPlayBeat && onPlayBeat({ id: b.id, title: b.title, audioUrl: b.audioUrl, isrc: `KE-PRD-26-00${b.id}` })}
+                onClick={() => onPlayBeat && onPlayBeat({
+                  id: b.id,
+                  title: b.title,
+                  bpm: b.bpm,
+                  key: b.key,
+                  audioUrl: b.audioUrl || '/uploads/audio/enenda.wav',
+                  isrc: `KE-PRD-26-00${b.id}`,
+                  badge: `🎹 Producer Beat • ${b.bpm || 120} BPM`
+                })}
                 style={{ width: '40px', height: '40px', borderRadius: '3px', background: accentColor, color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <RiPlayFill size={18} />

@@ -11,7 +11,10 @@ import {
   ProducerBeatStoreSection,
   LabelRosterSection,
   CANONICAL_DJ_RATE_CARD,
-  generateAndDownloadDjRateCard
+  generateAndDownloadDjRateCard,
+  DEFAULT_DJ_EPK_MIXES,
+  DEFAULT_PODCASTER_EPISODES,
+  CANONICAL_PRODUCER_BEATS
 } from './PersonaEpkSections.jsx';
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
@@ -782,75 +785,277 @@ export function CreatorEpkView(props = {}) {
     }
   })
 
+  // Persona-specific Playlists & Track Catalogs
+  const djMixTracks = React.useMemo(() => {
+    const raw = (Array.isArray(epkData?.dj_mixes) && epkData.dj_mixes.length > 0)
+      ? epkData.dj_mixes
+      : (Array.isArray(epkData?.djMixes) && epkData.djMixes.length > 0)
+        ? epkData.djMixes
+        : DEFAULT_DJ_EPK_MIXES;
+    return raw.map((m, idx) => ({
+      id: m.id || `dj-mix-${idx}`,
+      title: m.title || `DJ Set #${idx + 1}`,
+      artist: m.dj_name || m.artist || effectiveArtistName,
+      dj_name: m.dj_name || effectiveArtistName,
+      isrc: m.isrc || `MIX-DJ-${idx + 1}`,
+      duration: m.duration || '60:00',
+      audioUrl: m.audio_url || m.audioUrl || m.fileUrl || m.url || '/uploads/audio/enenda.wav',
+      coverArt: m.artwork_url || m.coverArt || m.cover || 'https://picsum.photos/seed/dj_mix_cover/400',
+      badge: '🎧 DJ Mix • Lossless Master',
+      category: m.genre || 'Electronic / Live Set'
+    }));
+  }, [epkData?.dj_mixes, epkData?.djMixes, effectiveArtistName]);
+
+  const podcasterEpisodeTracks = React.useMemo(() => {
+    const raw = (Array.isArray(epkData?.episodes) && epkData.episodes.length > 0)
+      ? epkData.episodes
+      : DEFAULT_PODCASTER_EPISODES;
+    return raw.map((ep, idx) => ({
+      id: ep.id || `pod-ep-${idx}`,
+      title: ep.title || `Episode #${idx + 1}`,
+      artist: ep.host || effectiveArtistName,
+      host: ep.host || effectiveArtistName,
+      isrc: ep.isrc || `POD-EP-${idx + 1}`,
+      duration: ep.duration || '40:00',
+      audioUrl: ep.audioUrl || ep.audio_url || ep.fileUrl || ep.url || '/uploads/audio/enenda.wav',
+      coverArt: ep.coverArt || ep.artwork_url || ep.cover || 'https://picsum.photos/seed/podcast_cover/400',
+      badge: `🎙️ Episode ${ep.episodeNumber || idx + 1} • Stereo Master`,
+      category: 'Podcast Episode'
+    }));
+  }, [epkData?.episodes, effectiveArtistName]);
+
+  const producerBeatTracks = React.useMemo(() => {
+    const raw = (Array.isArray(epkData?.beats) && epkData.beats.length > 0)
+      ? epkData.beats
+      : CANONICAL_PRODUCER_BEATS;
+    return raw.map((b, idx) => ({
+      id: b.id || `beat-${idx}`,
+      title: b.title || `Beat #${idx + 1}`,
+      artist: b.producer || effectiveArtistName,
+      producer: b.producer || effectiveArtistName,
+      isrc: b.isrc || `BEAT-PR-${idx + 1}`,
+      duration: b.duration || '3:30',
+      bpm: b.bpm || 120,
+      key: b.key || 'C Minor',
+      audioUrl: b.audioUrl || b.audio_url || b.fileUrl || b.url || '/uploads/audio/enenda.wav',
+      coverArt: b.coverArt || b.artwork_url || b.cover || 'https://picsum.photos/seed/producer_beat/400',
+      badge: `🎹 Producer Beat • ${b.bpm || 120} BPM`,
+      category: 'Beat Store'
+    }));
+  }, [epkData?.beats, effectiveArtistName]);
+
+  // Dynamic persona initial playlist assignment
+  useEffect(() => {
+    if (creatorType === 'dj' && selectedPlaylistId === 'all') {
+      setSelectedPlaylistId('mixes');
+    } else if (creatorType === 'podcaster' && selectedPlaylistId === 'all') {
+      setSelectedPlaylistId('episodes');
+    } else if (creatorType === 'producer' && selectedPlaylistId === 'all') {
+      setSelectedPlaylistId('beats');
+    }
+  }, [creatorType]);
+
   // Compute active playlist tracks
   const currentPlaylistTracks = React.useMemo(() => {
+    if (selectedPlaylistId === 'mixes') {
+      return djMixTracks.length > 0 ? djMixTracks : tracks;
+    }
+    if (selectedPlaylistId === 'episodes') {
+      return podcasterEpisodeTracks.length > 0 ? podcasterEpisodeTracks : tracks;
+    }
+    if (selectedPlaylistId === 'beats') {
+      return producerBeatTracks.length > 0 ? producerBeatTracks : tracks;
+    }
     if (selectedPlaylistId === 'vault') {
       return [
-        { id: 901, title: 'Nairobi Cyberwave (VIP MP3 Single)', isrc: 'KE-TM1-26-901', streams: 'VIP Vault', duration: '3:45', release: 'VIP 2026', priceCredits: 40, coverArt: 'https://picsum.photos/seed/cyberwave_master/600/600' },
-        { id: 902, title: 'Sunset over Rift Valley (Acoustic VIP)', isrc: 'KE-TM1-26-902', streams: 'VIP Vault', duration: '4:12', release: 'VIP 2026', priceCredits: 40, coverArt: 'https://picsum.photos/seed/riftvalley_master/600/600' },
-        { id: 903, title: 'Afro-Synth Cascade (Unreleased Club Dub)', isrc: 'KE-TM1-26-903', streams: 'VIP Vault', duration: '3:18', release: 'VIP 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/afrosynth_master/600/600' }
-      ]
+        { id: 901, title: 'Nairobi Cyberwave (VIP MP3 Single)', isrc: 'KE-TM1-26-901', streams: 'VIP Vault', duration: '3:45', release: 'VIP 2026', priceCredits: 40, coverArt: 'https://picsum.photos/seed/cyberwave_master/600/600', audioUrl: '/uploads/audio/enenda.wav', badge: 'VIP Vault' },
+        { id: 902, title: 'Sunset over Rift Valley (Acoustic VIP)', isrc: 'KE-TM1-26-902', streams: 'VIP Vault', duration: '4:12', release: 'VIP 2026', priceCredits: 40, coverArt: 'https://picsum.photos/seed/riftvalley_master/600/600', audioUrl: '/uploads/audio/enenda.wav', badge: 'VIP Vault' },
+        { id: 903, title: 'Afro-Synth Cascade (Unreleased Club Dub)', isrc: 'KE-TM1-26-903', streams: 'VIP Vault', duration: '3:18', release: 'VIP 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/afrosynth_master/600/600', audioUrl: '/uploads/audio/enenda.wav', badge: 'VIP Vault' }
+      ];
     }
     if (selectedPlaylistId === 'top') {
-      return [...tracks].slice(0, 5)
+      return [...tracks].slice(0, 5);
     }
-    const fp = (fanPlaylists || []).find(p => String(p.id) === String(selectedPlaylistId))
+    const fp = (fanPlaylists || []).find(p => String(p.id) === String(selectedPlaylistId));
     if (fp) {
-      const pTracks = tracks.filter(t => (fp.trackIds || []).includes(t.id))
-      return pTracks.length > 0 ? pTracks : tracks
+      const pTracks = tracks.filter(t => (fp.trackIds || []).includes(t.id));
+      return pTracks.length > 0 ? pTracks : tracks;
     }
-    return tracks
-  }, [selectedPlaylistId, tracks, fanPlaylists])
+    if (creatorType === 'dj' && djMixTracks.length > 0) return djMixTracks;
+    if (creatorType === 'podcaster' && podcasterEpisodeTracks.length > 0) return podcasterEpisodeTracks;
+    if (creatorType === 'producer' && producerBeatTracks.length > 0) return producerBeatTracks;
+    return tracks;
+  }, [selectedPlaylistId, tracks, djMixTracks, podcasterEpisodeTracks, producerBeatTracks, fanPlaylists, creatorType]);
 
-  // Active track resolved from current playlist selection
-  const currentTrack = currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || tracks[0] || activeTrack
+  // Active track resolved from activeTrack preference first, then current playlist selection
+  const currentTrack = activeTrack || currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || tracks[0];
 
-  // Keep activeTrack in sync with currentTrack
+  // Dynamic initial sync of activeTrack for current persona
   useEffect(() => {
-    if (currentTrack) {
-      setActiveTrack(currentTrack)
+    if (!activeTrack || activeTrack.title === 'Nairobi Cyberwave (Master)') {
+      if (creatorType === 'dj' && djMixTracks.length > 0) {
+        setActiveTrack(djMixTracks[0]);
+      } else if (creatorType === 'podcaster' && podcasterEpisodeTracks.length > 0) {
+        setActiveTrack(podcasterEpisodeTracks[0]);
+      } else if (creatorType === 'producer' && producerBeatTracks.length > 0) {
+        setActiveTrack(producerBeatTracks[0]);
+      } else if (tracks.length > 0) {
+        setActiveTrack(tracks[0]);
+      }
     }
-  }, [playlistIndex, selectedPlaylistId])
+  }, [creatorType, djMixTracks, podcasterEpisodeTracks, producerBeatTracks, tracks]);
+
+  // Direct TunePlayer Controls for immediate responsive audio playback
+  const handleTogglePlayPause = () => {
+    const audio = epkAudioRef.current;
+    if (!audio) {
+      setIsPlaying(p => !p);
+      return;
+    }
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      const track = currentTrack || tracks[0];
+      const rawSrc = track?.audioUrl || track?.audio_url || track?.fileUrl || track?.url || track?.streamUrl || '/uploads/audio/enenda.wav';
+      const resolvedUrl = new URL(rawSrc, window.location.origin).href;
+      if (audio.src !== resolvedUrl) {
+        audio.src = rawSrc;
+        audio.load();
+      }
+      audio.volume = isPlayerMuted ? 0 : playerVolume;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((err) => {
+            console.warn('TuneStream direct play error, falling back to local master audio:', err);
+            audio.src = '/uploads/audio/enenda.wav';
+            audio.load();
+            audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          });
+      }
+    }
+  };
+
+  // Track selection helper to ensure immediate state and audio synchronization
+  const handleSelectAndPlayTrack = (track) => {
+    if (!track) return;
+    const normalizedTrack = {
+      ...track,
+      id: track.id || `trk-${Date.now()}`,
+      title: track.title || 'Untitled Track',
+      artist: track.artist || track.dj_name || track.host || track.producer || effectiveArtistName,
+      dj_name: track.dj_name || track.artist || effectiveArtistName,
+      audioUrl: track.audioUrl || track.audio_url || track.fileUrl || track.url || track.streamUrl || '/uploads/audio/enenda.wav',
+      coverArt: track.coverArt || track.artwork_url || track.cover || 'https://picsum.photos/seed/epk_play/400',
+      badge: track.badge || (
+        creatorType === 'dj' ? '🎧 DJ Mix • Lossless Master' :
+        creatorType === 'podcaster' ? '🎙️ Podcast Episode • Stereo Master' :
+        creatorType === 'producer' ? `🎹 Producer Beat • ${track.bpm || '120'} BPM` :
+        'Lossless MP3 • 320kbps'
+      )
+    };
+
+    setActiveTrack(normalizedTrack);
+    setIsPlayerVisible(true);
+    setIsPlayerMinimized(false);
+
+    const idx = currentPlaylistTracks.findIndex(pt => String(pt.id) === String(normalizedTrack.id));
+    if (idx !== -1) {
+      setPlaylistIndex(idx);
+    }
+
+    const audio = epkAudioRef.current;
+    if (audio) {
+      if (activeTrack?.id === normalizedTrack.id && isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+        return;
+      }
+
+      const rawSrc = normalizedTrack.audioUrl;
+      const resolvedUrl = new URL(rawSrc, window.location.origin).href;
+      if (audio.src !== resolvedUrl) {
+        audio.src = rawSrc;
+        audio.load();
+      }
+      audio.currentTime = 0;
+      setPlaybackProgress(0);
+      audio.volume = isPlayerMuted ? 0 : playerVolume;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((err) => {
+            console.warn('Playback error on rawSrc, falling back to local master audio:', err);
+            audio.src = '/uploads/audio/enenda.wav';
+            audio.load();
+            audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          });
+      }
+    } else {
+      setIsPlaying(true);
+    }
+  };
+
+  const handleSeek = (newTimeSec) => {
+    setPlaybackProgress(newTimeSec);
+    const audio = epkAudioRef.current;
+    if (audio) {
+      audio.currentTime = newTimeSec;
+    }
+  };
 
   // Track Advancement Helper (Sequenced vs Shuffle vs Repeat Loop)
   const handleTrackAdvance = () => {
     if (repeatMode === 'track') {
-      setPlaybackProgress(0)
-      return
+      setPlaybackProgress(0);
+      if (epkAudioRef.current) {
+        epkAudioRef.current.currentTime = 0;
+        epkAudioRef.current.play().catch(() => {});
+      }
+      return;
     }
     if (shuffleMode && currentPlaylistTracks.length > 1) {
-      let nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length)
-      if (nextIdx === playlistIndex) nextIdx = (nextIdx + 1) % currentPlaylistTracks.length
-      setPlaylistIndex(nextIdx)
-      setPlaybackProgress(0)
-      return
+      let nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length);
+      if (nextIdx === playlistIndex) nextIdx = (nextIdx + 1) % currentPlaylistTracks.length;
+      setPlaylistIndex(nextIdx);
+      handleSelectAndPlayTrack(currentPlaylistTracks[nextIdx]);
+      return;
     }
     if (playlistIndex < currentPlaylistTracks.length - 1) {
-      setPlaylistIndex(curr => curr + 1)
-      setPlaybackProgress(0)
-    } else if (repeatMode === 'playlist') {
-      setPlaylistIndex(0)
-      setPlaybackProgress(0)
+      const nextIdx = playlistIndex + 1;
+      setPlaylistIndex(nextIdx);
+      handleSelectAndPlayTrack(currentPlaylistTracks[nextIdx]);
+    } else if (repeatMode === 'playlist' && currentPlaylistTracks.length > 0) {
+      setPlaylistIndex(0);
+      handleSelectAndPlayTrack(currentPlaylistTracks[0]);
     } else {
-      setIsPlaying(false)
-      setPlaybackProgress(0)
+      setIsPlaying(false);
+      setPlaybackProgress(0);
     }
-  }
+  };
 
   const handleTrackPrevious = () => {
     if (playbackProgress > 4) {
-      setPlaybackProgress(0)
-      return
+      setPlaybackProgress(0);
+      if (epkAudioRef.current) epkAudioRef.current.currentTime = 0;
+      return;
     }
     if (shuffleMode && currentPlaylistTracks.length > 1) {
-      const nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length)
-      setPlaylistIndex(nextIdx)
-      setPlaybackProgress(0)
-      return
+      const nextIdx = Math.floor(Math.random() * currentPlaylistTracks.length);
+      setPlaylistIndex(nextIdx);
+      handleSelectAndPlayTrack(currentPlaylistTracks[nextIdx]);
+      return;
     }
-    setPlaylistIndex(curr => (curr === 0 ? currentPlaylistTracks.length - 1 : curr - 1))
-    setPlaybackProgress(0)
-  }
+    const prevIdx = (playlistIndex === 0 ? currentPlaylistTracks.length - 1 : playlistIndex - 1);
+    if (currentPlaylistTracks[prevIdx]) {
+      setPlaylistIndex(prevIdx);
+      handleSelectAndPlayTrack(currentPlaylistTracks[prevIdx]);
+    }
+  };
 
   // Playback timer & playlist auto-cycle with loop & shuffle modes
   useEffect(() => {
@@ -2082,10 +2287,18 @@ Direct Management Contact: mgmt@intermaven.io`
     if (!audio) return
     if (isPlaying) {
       if (currentTrack && (!audio.src || audio.src === '')) {
-        audio.src = currentTrack.audioUrl || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
+        const rawSrc = currentTrack.audioUrl || currentTrack.audio_url || currentTrack.fileUrl || currentTrack.url || '/uploads/audio/enenda.wav'
+        audio.src = rawSrc
         audio.load()
       }
-      audio.play().catch(e => console.warn('EPK audio play error:', e))
+      audio.play().catch(e => {
+        console.warn('EPK audio play error, trying fallback:', e)
+        if (audio.src && !audio.src.includes('enenda.wav')) {
+          audio.src = '/uploads/audio/enenda.wav'
+          audio.load()
+          audio.play().catch(() => {})
+        }
+      })
     } else {
       audio.pause()
     }
@@ -2095,12 +2308,20 @@ Direct Management Contact: mgmt@intermaven.io`
   useEffect(() => {
     const audio = epkAudioRef.current
     if (!audio || !currentTrack) return
-    const src = currentTrack.audioUrl || currentTrack.fileUrl || `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.title || 'preview')}`
-    if (audio.src !== src) {
-      audio.src = src
+    const rawSrc = currentTrack.audioUrl || currentTrack.audio_url || currentTrack.fileUrl || currentTrack.url || '/uploads/audio/enenda.wav'
+    const resolvedUrl = new URL(rawSrc, window.location.origin).href
+    if (audio.src !== resolvedUrl) {
+      audio.src = rawSrc
       audio.load()
       if (isPlaying) {
-        audio.play().catch(e => console.warn('EPK track play error:', e))
+        audio.play().catch(e => {
+          console.warn('EPK track play error, trying fallback:', e)
+          if (audio.src && !audio.src.includes('enenda.wav')) {
+            audio.src = '/uploads/audio/enenda.wav'
+            audio.load()
+            audio.play().catch(() => {})
+          }
+        })
       }
     }
   }, [currentTrack])
@@ -2549,12 +2770,23 @@ Direct Management Contact: mgmt@intermaven.io`
       <audio
         ref={epkAudioRef}
         id="epk-live-audio"
+        preload="auto"
         onTimeUpdate={() => {
           if (epkAudioRef.current) {
             setPlaybackProgress(Math.floor(epkAudioRef.current.currentTime))
           }
         }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onEnded={handleTrackAdvance}
+        onError={(e) => {
+          console.warn('Audio playback error, attempting fallback to enenda.wav', e)
+          if (epkAudioRef.current && epkAudioRef.current.src && !epkAudioRef.current.src.includes('enenda.wav')) {
+            epkAudioRef.current.src = '/uploads/audio/enenda.wav'
+            epkAudioRef.current.load()
+            epkAudioRef.current.play().catch(err => console.warn('Fallback play failed:', err))
+          }
+        }}
         style={{ display: 'none' }}
       />
 
@@ -3713,10 +3945,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   mixes={epkData?.dj_mixes}
                   formatPrice={formatEpkPrice}
                   accentColor={effectiveAccent}
-                  onPlayMix={(mixTrack) => {
-                    setActiveTrack(mixTrack);
-                    setIsPlaying(true);
-                  }}
+                  onPlayMix={(mixTrack) => handleSelectAndPlayTrack(mixTrack)}
                   onNotify={(msg) => showToast(msg)}
                 />
                 <DjRateCardSection
@@ -3751,10 +3980,7 @@ Direct Management Contact: mgmt@intermaven.io`
               <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
                 <PodcasterEpisodesSection
                   episodes={epkData?.episodes || []}
-                  onPlayEpisode={(ep) => {
-                    setActiveTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/uploads/audio/enenda.wav' });
-                    setIsPlaying(true);
-                  }}
+                  onPlayEpisode={(ep) => handleSelectAndPlayTrack({ ...ep, audioUrl: ep.audioUrl || ep.audio_url || '/uploads/audio/enenda.wav' })}
                   accentColor={effectiveAccent}
                 />
                 <PodcasterAdRatesSection
@@ -3775,10 +4001,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   beats={epkData?.beats}
                   formatPrice={formatEpkPrice}
                   accentColor={effectiveAccent}
-                  onPlayBeat={(beatTrack) => {
-                    setActiveTrack(beatTrack);
-                    setIsPlaying(true);
-                  }}
+                  onPlayBeat={(beatTrack) => handleSelectAndPlayTrack(beatTrack)}
                   onNotify={(msg) => showToast(msg)}
                 />
               </div>
@@ -5132,10 +5355,7 @@ Direct Management Contact: mgmt@intermaven.io`
           <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
             <PodcasterEpisodesSection
               episodes={epkData?.episodes || []}
-              onPlayEpisode={(ep) => {
-                setActiveTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/uploads/audio/enenda.wav' });
-                setIsPlaying(true);
-              }}
+              onPlayEpisode={(ep) => handleSelectAndPlayTrack({ ...ep, audioUrl: ep.audioUrl || ep.audio_url || '/uploads/audio/enenda.wav' })}
               accentColor={effectiveAccent}
             />
           </div>
@@ -5170,10 +5390,7 @@ Direct Management Contact: mgmt@intermaven.io`
               mixes={epkData?.dj_mixes}
               formatPrice={formatEpkPrice}
               accentColor={effectiveAccent}
-              onPlayMix={(mixTrack) => {
-                setActiveTrack(mixTrack);
-                setIsPlaying(true);
-              }}
+              onPlayMix={(mixTrack) => handleSelectAndPlayTrack(mixTrack)}
               onNotify={(msg) => showToast(msg)}
             />
           </div>
@@ -5235,7 +5452,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   formatEpkPrice,
                   epkData?.bookingEmail || 'booking@tunemavens.com'
                 );
-                showToast('ðŸ“¥ Official DJ Booth Tech Rider & Rate Card downloaded!');
+                showToast('Official DJ Booth Tech Rider & Rate Card downloaded!');
               }}
             />
           </div>
@@ -5248,10 +5465,7 @@ Direct Management Contact: mgmt@intermaven.io`
               beats={epkData?.beats}
               formatPrice={formatEpkPrice}
               accentColor={effectiveAccent}
-              onPlayBeat={(beatTrack) => {
-                setActiveTrack(beatTrack);
-                setIsPlaying(true);
-              }}
+              onPlayBeat={(beatTrack) => handleSelectAndPlayTrack(beatTrack)}
               onNotify={(msg) => showToast(msg)}
             />
           </div>
@@ -9573,7 +9787,7 @@ Direct Management Contact: mgmt@intermaven.io`
               </div>
               <button
                 type="button"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={handleTogglePlayPause}
                 style={{
                   width: '32px',
                   height: '32px',
@@ -9622,9 +9836,18 @@ Direct Management Contact: mgmt@intermaven.io`
                 <select
                   value={selectedPlaylistId}
                   onChange={(e) => {
-                    setSelectedPlaylistId(e.target.value)
+                    const newPid = e.target.value
+                    setSelectedPlaylistId(newPid)
                     setPlaylistIndex(0)
                     setPlaybackProgress(0)
+                    let nextList = tracks
+                    if (newPid === 'mixes') nextList = djMixTracks
+                    else if (newPid === 'episodes') nextList = podcasterEpisodeTracks
+                    else if (newPid === 'beats') nextList = producerBeatTracks
+                    else if (newPid === 'top') nextList = tracks.slice(0, 5)
+                    if (nextList.length > 0) {
+                      handleSelectAndPlayTrack(nextList[0])
+                    }
                   }}
                   style={{
                     flex: 1,
@@ -9639,11 +9862,29 @@ Direct Management Contact: mgmt@intermaven.io`
                     cursor: 'pointer'
                   }}
                 >
-                  <option value="all">ðŸŽµ All Singles ({tracks.length} Tracks)</option>
-                  <option value="vault">ðŸ”’ VIP Fan Vault Exclusives (3 Tracks)</option>
-                  <option value="top">ðŸ”¥ Top Singles (5 Tracks)</option>
+                  {creatorType === 'dj' && (
+                    <option value="mixes">🎧 DJ Mixes & Live Sets ({djMixTracks.length} Sets)</option>
+                  )}
+                  {creatorType === 'podcaster' && (
+                    <option value="episodes">🎙️ Podcast Episodes ({podcasterEpisodeTracks.length} Episodes)</option>
+                  )}
+                  {creatorType === 'producer' && (
+                    <option value="beats">🎹 Producer Beat Store ({producerBeatTracks.length} Beats)</option>
+                  )}
+                  <option value="all">🎵 All Singles ({tracks.length} Tracks)</option>
+                  {creatorType !== 'dj' && djMixTracks.length > 0 && (
+                    <option value="mixes">🎧 DJ Mixes & Live Sets ({djMixTracks.length} Sets)</option>
+                  )}
+                  {creatorType !== 'podcaster' && podcasterEpisodeTracks.length > 0 && (
+                    <option value="episodes">🎙️ Podcast Episodes ({podcasterEpisodeTracks.length} Episodes)</option>
+                  )}
+                  {creatorType !== 'producer' && producerBeatTracks.length > 0 && (
+                    <option value="beats">🎹 Producer Beats ({producerBeatTracks.length} Beats)</option>
+                  )}
+                  <option value="vault">🔒 VIP Fan Vault Exclusives (3 Tracks)</option>
+                  <option value="top">🔥 Top Singles (5 Tracks)</option>
                   {fanPlaylists.map(pl => (
-                    <option key={pl.id} value={pl.id}>ðŸ“ {pl.name} ({(pl.trackIds || []).length} Tracks)</option>
+                    <option key={pl.id} value={pl.id}>📁 {pl.name} ({(pl.trackIds || []).length} Tracks)</option>
                   ))}
                 </select>
               </div>
@@ -9674,13 +9915,18 @@ Direct Management Contact: mgmt@intermaven.io`
                     {currentTrack.title}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: effectiveAccent, marginTop: '2px', fontWeight: 700, display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span>{effectiveArtistName}</span>
-                    <span>â€¢</span>
+                    <span>{currentTrack.artist || currentTrack.dj_name || currentTrack.host || currentTrack.producer || effectiveArtistName}</span>
+                    <span>•</span>
                     <span>ISRC: {currentTrack.isrc || 'KE-TM1-26-00042'}</span>
                   </div>
                   <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', padding: '1px 6px', borderRadius: '3px', fontSize: '0.62rem', fontWeight: 800 }}>
-                      Lossless MP3 â€¢ 320kbps
+                      {currentTrack.badge || (
+                        creatorType === 'dj' ? '🎧 DJ Mix • Lossless Master' :
+                        creatorType === 'podcaster' ? '🎙️ Podcast Episode • Stereo Master' :
+                        creatorType === 'producer' ? `🎹 Producer Beat • ${currentTrack.bpm || '120'} BPM` :
+                        'Lossless MP3 • 320kbps'
+                      )}
                     </span>
                     <span style={{ fontSize: '0.68rem', color: isLight ? '#64748b' : '#94a3b8' }}>
                       Track {playlistIndex + 1} of {currentPlaylistTracks.length}
@@ -9718,7 +9964,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     min="0"
                     max="225"
                     value={playbackProgress}
-                    onChange={(e) => setPlaybackProgress(Number(e.target.value))}
+                    onChange={(e) => handleSeek(Number(e.target.value))}
                     style={{ flex: 1, accentColor: effectiveAccent, cursor: 'pointer', height: '4px' }}
                   />
                   <span style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', fontFamily: 'monospace', minWidth: '32px', textAlign: 'right' }}>
@@ -9782,7 +10028,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   {/* Play / Pause */}
                   <button
                     type="button"
-                    onClick={() => setIsPlaying(!isPlaying)}
+                    onClick={handleTogglePlayPause}
                     title={isPlaying ? "Pause" : "Play"}
                     style={{
                       width: '40px',
@@ -9808,6 +10054,10 @@ Direct Management Contact: mgmt@intermaven.io`
                     onClick={() => {
                       setIsPlaying(false)
                       setPlaybackProgress(0)
+                      if (epkAudioRef.current) {
+                        epkAudioRef.current.pause()
+                        epkAudioRef.current.currentTime = 0
+                      }
                     }}
                     title="Stop Track"
                     style={{
