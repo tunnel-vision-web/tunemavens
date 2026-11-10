@@ -333,6 +333,42 @@ def get_public_epk(subdomain: str, response: Response):
 
     if "_id" not in merged:
         merged["_id"] = clean_subdomain
+
+    # Infer and attach persona / creator_type and DJ-specific EPK payload
+    dj_slugs = {"khalid", "khalidwaves", "djksouldier", "dj-k-souldier", "djzinhlevibes", "dj-zinhle-vibes", "djmaphoria", "dj-maphoria", "selectorkofi", "selector-kofi", "djkalonje", "dj-kalonje", "dj_kalonje"}
+    dj_display_names = {
+        "khalid": "Khalid Waves",
+        "khalidwaves": "Khalid Waves",
+        "djksouldier": "DJ K-Souldier",
+        "dj-k-souldier": "DJ K-Souldier",
+        "djzinhlevibes": "DJ Zinhle Vibes",
+        "dj-zinhle-vibes": "DJ Zinhle Vibes",
+        "djmaphoria": "DJ Maphoria",
+        "dj-maphoria": "DJ Maphoria",
+        "selectorkofi": "Selector Kofi",
+        "selector-kofi": "Selector Kofi",
+        "djkalonje": "DJ Kalonje",
+    }
+    if clean_subdomain in dj_slugs or clean_subdomain.startswith("dj") or clean_subdomain.startswith("selector"):
+        merged["creator_type"] = "dj"
+        merged["persona"] = "dj"
+        if clean_subdomain in dj_display_names and (not merged.get("siteName") or merged.get("siteName", "").lower() in ("ndufo", clean_subdomain)):
+            merged["siteName"] = dj_display_names[clean_subdomain]
+            merged["artist_name"] = dj_display_names[clean_subdomain]
+        merged["tagline"] = "Official DJ Electronic Press Kit • Cleared Mixes • Rate Card & Gig Booking"
+    elif clean_subdomain in ("brian-omondi", "brianomondi") or "producer" in clean_subdomain or "rivera" in clean_subdomain:
+        merged["creator_type"] = "producer"
+        merged["persona"] = "producer"
+    elif clean_subdomain in ("nairobicybersound", "intermavenpublishing") or "label" in clean_subdomain or "publishing" in clean_subdomain:
+        merged["creator_type"] = "label"
+        merged["persona"] = "label"
+    elif "pod" in clean_subdomain or "brief" in clean_subdomain or "wanjiru" in clean_subdomain or "otieno" in clean_subdomain:
+        merged["creator_type"] = "podcaster"
+        merged["persona"] = "podcaster"
+    elif not merged.get("creator_type"):
+        merged["creator_type"] = "artist"
+        merged["persona"] = "artist"
+
     return merged
 
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill, RiTicket2Fill, RiFundsBoxFill, RiTrophyLine } from 'react-icons/ri'
+import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill, RiTicket2Fill, RiFundsBoxFill, RiTrophyLine, RiHeadphoneFill, RiDiscFill, RiEqualizerFill, RiRadioFill, RiMusicFill, RiMicFill, RiPlayFill, RiFolderAddFill, RiCoinsFill } from 'react-icons/ri'
 import { ROLE_LOGOS, getServiceUrl } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -121,58 +121,153 @@ export default function Navbar({ sessionUser }) {
     if (currentPath === '/native-apps/tunestream') {
       return (
         <>
-          <li>
-            <Link to="/native-apps/tunestream?view=listen" className="nav-link" onClick={() => setMobileOpen(false)}>
-              Listen
-            </Link>
-          </li>
-          <li>
-            <Link to="/native-apps/tunestream?view=explore" className="nav-link" onClick={() => setMobileOpen(false)}>
-              Explore
-            </Link>
-          </li>
-          <li className="dropdown-container" ref={libraryDropdownRef}>
+          <li
+            className="dropdown-container"
+            ref={servicesDropdownRef}
+            onMouseEnter={() => { setAppsDropdownOpen(false); setLibraryDropdownOpen(false); setDropdownOpen(false); setServicesDropdownOpen(true); }}
+            onMouseLeave={() => setServicesDropdownOpen(false)}
+          >
             <button
-              className="nav-link dropdown-trigger"
+              type="button"
+              className={`nav-link dropdown-trigger ${location.search.includes('view=listen') || location.search.includes('view=explore') || location.search.includes('view=browse-podcasts') ? 'active' : ''}`}
               onClick={() => {
                 setAppsDropdownOpen(false);
                 setAboutDropdownOpen(false);
+                setLibraryDropdownOpen(false);
                 setDropdownOpen(false);
-                setLibraryDropdownOpen(!libraryDropdownOpen);
+                setServicesDropdownOpen(!servicesDropdownOpen);
               }}
             >
-              My Suite
+              Discover &amp; Stream
               <RiArrowDownSFill size={14} />
             </button>
-            <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`}>
+            <ul className={`dropdown-menu ${servicesDropdownOpen ? 'open' : ''}`} style={{ minWidth: '240px' }}>
               <li>
-                <Link to="/native-apps/tunestream?view=playlists" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
-                  Playlists
+                <Link to="/native-apps/tunestream?view=listen" className="dropdown-link" onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiHeadphoneFill size={16} /> Listen Home &amp; Featured
                 </Link>
               </li>
               <li>
-                <Link to="/native-apps/tunestream?view=create-playlist" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
-                  Create Playlist
+                <Link to="/native-apps/tunestream?view=explore&filter=all" className="dropdown-link" onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiDiscFill size={16} /> Explore Full Catalog
                 </Link>
               </li>
               <li>
-                <Link to="/native-apps/tunestream?view=browse-podcasts" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
-                  Browse Podcasts
+                <Link to="/native-apps/tunestream?view=explore&filter=dj-mixes" className="dropdown-link" onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiEqualizerFill size={16} /> Cleared DJ Mixes &amp; DJ EPKs
                 </Link>
               </li>
               <li>
-                <Link to="/native-apps/tunestream?view=tours" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
-                  Tours and Events
+                <Link to="/native-apps/tunestream?view=explore&filter=creators" className="dropdown-link" onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiRadioFill size={16} /> Signed Creators &amp; EPKs
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=explore&filter=singles" className="dropdown-link" onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiMusicFill size={16} /> Singles, Albums &amp; EPs
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=browse-podcasts" className="dropdown-link" onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiMicFill size={16} /> Podcasts &amp; Host EPKs
+                </Link>
+              </li>
+              <li>
+                <Link to="/stream" className="dropdown-link" onClick={() => { setServicesDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiPlayFill size={16} /> Full Hi-Fi Web Player
                 </Link>
               </li>
             </ul>
           </li>
-          <li>
-            <Link to="/native-apps/tunestream?view=apps" className="nav-link" onClick={() => setMobileOpen(false)}>
-              Apps
-            </Link>
+
+          <li
+            className="dropdown-container"
+            ref={libraryDropdownRef}
+            onMouseEnter={() => { setServicesDropdownOpen(false); setAppsDropdownOpen(false); setDropdownOpen(false); setLibraryDropdownOpen(true); }}
+            onMouseLeave={() => setLibraryDropdownOpen(false)}
+          >
+            <button
+              type="button"
+              className={`nav-link dropdown-trigger ${location.search.includes('view=playlists') || location.search.includes('view=create-playlist') || location.search.includes('view=tours') || location.search.includes('view=tour-capital') ? 'active' : ''}`}
+              onClick={() => {
+                setAppsDropdownOpen(false);
+                setAboutDropdownOpen(false);
+                setServicesDropdownOpen(false);
+                setDropdownOpen(false);
+                setLibraryDropdownOpen(!libraryDropdownOpen);
+              }}
+            >
+              My Suite &amp; Live
+              <RiArrowDownSFill size={14} />
+            </button>
+            <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`} style={{ minWidth: '230px' }}>
+              <li>
+                <Link to="/native-apps/tunestream?view=playlists" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiMusicFill size={16} /> My Playlists
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=create-playlist" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiFolderAddFill size={16} /> Create Playlist
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=tours" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiTicket2Fill size={16} /> Tours, Concerts &amp; Events
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=tour-capital" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiCoinsFill size={16} /> Tour Venture Capital Vault
+                </Link>
+              </li>
+            </ul>
           </li>
-          <li className="dropdown-container" ref={dropdownRef}>
+
+          <li
+            className="dropdown-container"
+            ref={appsDropdownRef}
+            onMouseEnter={() => { setServicesDropdownOpen(false); setLibraryDropdownOpen(false); setDropdownOpen(false); setAppsDropdownOpen(true); }}
+            onMouseLeave={() => setAppsDropdownOpen(false)}
+          >
+            <button
+              type="button"
+              className={`nav-link dropdown-trigger ${location.search.includes('view=apps') || location.search.includes('view=plans') || location.search.includes('view=free') ? 'active' : ''}`}
+              onClick={() => {
+                setServicesDropdownOpen(false);
+                setLibraryDropdownOpen(false);
+                setDropdownOpen(false);
+                setAppsDropdownOpen(!appsDropdownOpen);
+              }}
+            >
+              Apps &amp; Plans
+              <RiArrowDownSFill size={14} />
+            </button>
+            <ul className={`dropdown-menu ${appsDropdownOpen ? 'open' : ''}`} style={{ minWidth: '230px' }}>
+              <li>
+                <Link to="/native-apps/tunestream?view=apps" className="dropdown-link" onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiSmartphoneFill size={16} /> TuneStream Device Apps
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=plans" className="dropdown-link" onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiCoinsFill size={16} /> Listener Credit Plans
+                </Link>
+              </li>
+              <li>
+                <Link to="/native-apps/tunestream?view=free" className="dropdown-link" onClick={() => { setAppsDropdownOpen(false); setMobileOpen(false); }}>
+                  <RiHeadphoneFill size={16} /> Always-Free Listener Tier
+                </Link>
+              </li>
+            </ul>
+          </li>
+
+          <li
+            className="dropdown-container"
+            ref={dropdownRef}
+            onMouseEnter={() => { setServicesDropdownOpen(false); setLibraryDropdownOpen(false); setAppsDropdownOpen(false); setDropdownOpen(true); }}
+            onMouseLeave={() => setDropdownOpen(false)}
+          >
             <button
               type="button"
               className={`nav-link dropdown-trigger ${location.search.includes('view=blog') || location.search.includes('view=forum') || location.search.includes('view=help') || location.search.includes('view=docs') || location.search.includes('view=support') || location.search.includes('view=tickets') ? 'active' : ''}`}

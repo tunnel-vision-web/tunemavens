@@ -12,11 +12,13 @@ import { EPK_THEMES } from '../views/creator/CreatorEpkView'
 import CmsAssetsStudio from './CmsAssetsStudio.jsx'
 import MediaAssetPickerModal from './MediaAssetPickerModal.jsx'
 import AiArtPromptModal from './AiArtPromptModal.jsx'
+import PersonaEpkEditor from './PersonaEpkEditor.jsx'
 import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from '../lib/genres.js'
 
 const CMS_TABS = [
   { id: 'overview', label: 'CMS Overview & AI Styles', icon: RiLayoutMasonryFill },
   { id: 'brand',   label: 'Brand & Identity', icon: RiPaletteFill },
+  { id: 'persona', label: 'Persona & Pro Tools', icon: RiPriceTag3Fill },
   { id: 'hero',    label: 'Hero Carousel',   icon: RiLayoutMasonryFill },
   { id: 'banners', label: 'Page Header Banners', icon: RiImageAddFill },
   { id: 'assets',  label: 'Assets',          icon: RiFolderUploadFill },
@@ -1057,6 +1059,10 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
       if (typeof setEpk === 'function') {
         setEpk(payload)
       }
+      try {
+        window.dispatchEvent(new Event('epk_updated'))
+        window.dispatchEvent(new CustomEvent('epk_storage_sync', { detail: payload }))
+      } catch (_) {}
 
       await fetch(`/api/cms/epk/${cleanSub}`, {
         method: 'POST',
@@ -3837,6 +3843,10 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
                     ))}
                   </div>
                 </div>
+              )}
+
+              {activeTab === 'persona' && (
+                <PersonaEpkEditor formData={formData} updateField={updateField} accent={accent} />
               )}
 
               {activeTab === 'press' && (

@@ -10569,7 +10569,7 @@ function AppContent({
           pointerEvents: isAuthModalActive ? 'none' : 'auto'
         }}
       >
-        {!location.pathname.startsWith('/epk') && <Navbar sessionUser={sessionUser} />}
+        {!location.pathname.startsWith('/epk') && !isDashboard && <Navbar sessionUser={sessionUser} />}
 
 
         <Routes location={backgroundLocation}>

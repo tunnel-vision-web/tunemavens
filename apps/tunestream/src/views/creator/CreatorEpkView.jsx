@@ -1,14 +1,20 @@
-import {
+﻿import {
   getPersonaNavLinks,
+  PersonaAudienceCalloutBanner,
   PodcasterEpisodesSection,
   PodcasterAdRatesSection,
   PodcasterDemographicsSection,
+  DjMixesAndSetsSection,
+  DjRateCardSection,
+  DjGigBookingSection,
   DjTechRiderSection,
   ProducerBeatStoreSection,
-  LabelRosterSection
+  LabelRosterSection,
+  CANONICAL_DJ_RATE_CARD,
+  generateAndDownloadDjRateCard
 } from './PersonaEpkSections.jsx';
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import JSZip from 'jszip'
 import {
   RiHomeFill, RiUserFill, RiCalendarEventFill, RiVideoFill,
@@ -24,7 +30,8 @@ import {
   RiStopFill, RiSkipBackFill, RiSkipForwardFill, RiSparklingFill,
   RiMapPin2Fill, RiTimeFill, RiQrCodeFill, RiCoinsFill, RiExchangeDollarLine,
   RiEyeLine, RiEyeOffLine, RiShuffleLine, RiRepeatLine, RiRepeatOneLine,
-  RiDragMove2Fill, RiVolumeUpFill, RiVolumeMuteFill, RiUploadFill
+  RiDragMove2Fill, RiVolumeUpFill, RiVolumeMuteFill, RiUploadFill,
+  RiMicFill, RiEqualizerFill, RiHeadphoneFill, RiPriceTag3Fill
 } from 'react-icons/ri'
 
 import heroSlide1 from '../../assets/creator_hero_banner.jpg'
@@ -73,6 +80,7 @@ export const EPK_THEMES = [
 export function CreatorEpkView(props = {}) {
   const { username } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const passedEpk = props.creatorEpk
   const lastSavedSub = (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || ''
@@ -101,31 +109,6 @@ export function CreatorEpkView(props = {}) {
 
   // Navigation & Sticky Header State
   const [activeTab, setActiveTab] = useState('home')
-  // Persona-Adaptive EPK Intelligence (Artist, Podcaster, DJ, Producer, Label)
-  const [previewPersona, setPreviewPersona] = useState(() => {
-    try {
-      const sp = new URLSearchParams(window.location.search);
-      return sp.get('persona') || sp.get('role') || null;
-    } catch {
-      return null;
-    }
-  });
-
-  const creatorType = (
-    previewPersona ||
-    epkData?.creator_type ||
-    epkData?.persona ||
-    epkData?.role ||
-    (epkData?.isPodcast ? 'podcaster' : null) ||
-    (effectiveUsername?.toLowerCase().startsWith('dj_') || effectiveUsername?.toLowerCase().includes('kalonje') ? 'dj' : null) ||
-    (effectiveUsername?.toLowerCase().includes('pod') || effectiveUsername?.toLowerCase().includes('brief') ? 'podcaster' : null) ||
-    (effectiveUsername?.toLowerCase().includes('producer') || effectiveUsername?.toLowerCase().includes('rivera') ? 'producer' : null) ||
-    (effectiveUsername?.toLowerCase().includes('label') || effectiveUsername?.toLowerCase().includes('records') ? 'label' : null) ||
-    'artist'
-  ).toLowerCase();
-
-  const personaNavLinks = getPersonaNavLinks(creatorType);
-
   const [mediaFilter, setMediaFilter] = useState('all')
   const [selectedTheme, setSelectedTheme] = useState(EPK_THEMES[0])
   const [epkData, setEpkData] = useState(() => {
@@ -147,8 +130,92 @@ export function CreatorEpkView(props = {}) {
       return null
     }
   })
+
+  // Persona-Adaptive EPK Intelligence (Artist, Podcaster, DJ, Producer, Label)
+  const resolveQueryPersona = () => {
+    try {
+      const searchStr = location?.search || window.location.search || (window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : '');
+      const sp = new URLSearchParams(searchStr);
+      return sp.get('persona') || sp.get('role') || sp.get('type') || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [previewPersona, setPreviewPersona] = useState(resolveQueryPersona);
+
+  useEffect(() => {
+    const qp = resolveQueryPersona();
+    if (qp) setPreviewPersona(qp);
+  }, [location?.search, location?.hash, username]);
+
+  const inferPersonaFromSlug = (slugVal) => {
+    const s = (slugVal || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (!s) return null;
+    const djSlugs = ['khalid', 'khalidwaves', 'djksouldier', 'dj-k-souldier', 'djzinhlevibes', 'dj-zinhle-vibes', 'djmaphoria', 'dj-maphoria', 'selectorkofi', 'selector-kofi', 'djkalonje', 'dj-kalonje', 'dj_kalonje'];
+    if (djSlugs.includes(s) || s.startsWith('dj') || s.startsWith('selector') || s.includes('deejay') || s.includes('kalonje')) return 'dj';
+    if (s.includes('pod') || s.includes('brief') || s.includes('wanjiru') || s.includes('otieno') || s.includes('amina') || s.includes('mutua')) return 'podcaster';
+    if (s === 'brian-omondi' || s === 'brianomondi' || s.includes('producer') || s.includes('rivera') || s.includes('beats')) return 'producer';
+    if (s === 'nairobicybersound' || s === 'intermavenpublishing' || s.includes('label') || s.includes('records') || s.includes('publishing')) return 'label';
+    return null;
+  };
+
+  const rawRole = String(epkData?.creator_type || epkData?.persona || epkData?.role || '').toLowerCase();
+  const normalizedDataPersona =
+    rawRole.includes('dj') || rawRole.includes('turntablist') || rawRole.includes('selector') ? 'dj' :
+    rawRole.includes('pod') ? 'podcaster' :
+    rawRole.includes('prod') || rawRole.includes('beat') || rawRole.includes('engineer') ? 'producer' :
+    rawRole.includes('label') || rawRole.includes('publish') || rawRole.includes('executive') ? 'label' :
+    (rawRole === 'artist' ? 'artist' : null);
+
+  const creatorType = (
+    previewPersona ||
+    inferPersonaFromSlug(effectiveUsername) ||
+    inferPersonaFromSlug(artistSlug) ||
+    normalizedDataPersona ||
+    (epkData?.isPodcast ? 'podcaster' : null) ||
+    'artist'
+  ).toLowerCase();
+
+  const [selectedDjBookingTier, setSelectedDjBookingTier] = useState(null);
+  const [epkCurrencyCode, setEpkCurrencyCode] = useState(() => {
+    try {
+      return localStorage.getItem('tm_currency_code') || 'USD';
+    } catch {
+      return 'USD';
+    }
+  });
+
+  useEffect(() => {
+    const syncCur = () => {
+      try {
+        const c = localStorage.getItem('tm_currency_code');
+        if (c) setEpkCurrencyCode(c);
+      } catch (_) {}
+    };
+    window.addEventListener('currency_changed', syncCur);
+    window.addEventListener('region_changed', syncCur);
+    window.addEventListener('storage', syncCur);
+    return () => {
+      window.removeEventListener('currency_changed', syncCur);
+      window.removeEventListener('region_changed', syncCur);
+      window.removeEventListener('storage', syncCur);
+    };
+  }, []);
+
+  const formatEpkPrice = (usdVal) => {
+    const num = Number(usdVal) || 0;
+    const rates = { USD: { r: 1, s: '$' }, KES: { r: 130, s: 'KSh ' }, NGN: { r: 1550, s: 'â‚¦' }, ZAR: { r: 18.5, s: 'R ' }, GHS: { r: 15.2, s: 'GHâ‚µ ' }, UGX: { r: 3750, s: 'USh ' }, TZS: { r: 2600, s: 'TSh ' }, GBP: { r: 0.79, s: 'Â£' }, EUR: { r: 0.92, s: 'â‚¬' } };
+    const cfg = rates[epkCurrencyCode] || rates.USD;
+    const converted = num * cfg.r;
+    if (cfg.r >= 10) return `${cfg.s}${Math.round(converted).toLocaleString()}`;
+    return `${cfg.s}${converted % 1 === 0 ? converted.toLocaleString() : converted.toFixed(2)}`;
+  };
+
+  const personaNavLinks = getPersonaNavLinks(creatorType);
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTrack, setActiveTrack] = useState({ id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', duration: '3:45', priceCredits: 50 })
+  const [openNavDropdown, setOpenNavDropdown] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -344,7 +411,7 @@ export function CreatorEpkView(props = {}) {
   }
   const effectiveLogoUrl = resolveLogo()
   const effectiveArtistName = epkData?.siteName || epkData?.artist_name || artistName
-  const effectiveHeadline = epkData?.tagline || epkData?.headline || 'Official Standalone Creator Web World • Lossless Audio & Intermaven Split Engine'
+  const effectiveHeadline = epkData?.tagline || epkData?.headline || 'Official Standalone Creator Web World â€¢ Lossless Audio & Intermaven Split Engine'
   const effectiveBio = epkData?.bio || 'Independent creator on the TuneMavens & Intermaven network.'
 
   // Dynamic Browser Title for SEO
@@ -388,7 +455,7 @@ export function CreatorEpkView(props = {}) {
   const heroSlides = React.useMemo(() => {
     const baseTitle1 = epkData?.heroTitle1 || effectiveArtistName
     const baseTitle2 = epkData?.heroTitle2 || effectiveHeadline
-    const baseTitle3 = epkData?.heroTitle3 || "High-Quality Digital MP3 Singles • Collector Vinyl & CDs • Direct Fan Ticketing"
+    const baseTitle3 = epkData?.heroTitle3 || "High-Quality Digital MP3 Singles â€¢ Collector Vinyl & CDs â€¢ Direct Fan Ticketing"
 
     // 1. Prioritize structured heroSlides (persisted by Mother-CMS / AI Slide Studio)
     if (Array.isArray(epkData?.heroSlides) && epkData.heroSlides.length > 0) {
@@ -397,7 +464,7 @@ export function CreatorEpkView(props = {}) {
         return validSlides.map((s, idx) => ({
           id: s.id || idx + 1,
           img: s.img || s.url || s.image,
-          title1: s.title1 || (idx === 0 ? baseTitle1 : (idx === 1 ? 'World Tour 2026 Live Showcase' : `${effectiveArtistName} — Lossless Audio`)),
+          title1: s.title1 || (idx === 0 ? baseTitle1 : (idx === 1 ? 'World Tour 2026 Live Showcase' : `${effectiveArtistName} â€” Lossless Audio`)),
           title2: s.title2 || (idx === 0 ? baseTitle2 : (idx === 1 ? 'Headline Dates: Tokyo, London & Nairobi' : 'Lossless Audio & Digital MP3 Singles')),
           title3: s.title3 || (idx === 0 ? baseTitle3 : (idx === 1 ? 'VIP Fan Pass & Direct Ticketing via TuneBooking' : 'Exclusive VIP Vault Access')),
           title: s.title1 || baseTitle1,
@@ -419,7 +486,7 @@ export function CreatorEpkView(props = {}) {
       return validHeroImages.map((imgUrl, idx) => ({
         id: idx + 1,
         img: imgUrl,
-        title1: idx === 0 ? baseTitle1 : (idx === 1 ? 'World Tour 2026 Live Showcase' : `${effectiveArtistName} — Lossless Audio`),
+        title1: idx === 0 ? baseTitle1 : (idx === 1 ? 'World Tour 2026 Live Showcase' : `${effectiveArtistName} â€” Lossless Audio`),
         title2: idx === 0 ? baseTitle2 : (idx === 1 ? 'Headline Dates: Tokyo, London & Nairobi' : 'Lossless Audio & Digital MP3 Singles'),
         title3: idx === 0 ? baseTitle3 : (idx === 1 ? 'VIP Fan Pass & Direct Ticketing via TuneBooking' : 'Exclusive VIP Vault Access'),
         title: baseTitle1,
@@ -433,8 +500,8 @@ export function CreatorEpkView(props = {}) {
     }
     return [
       { id: 1, img: heroSlide1, title1: baseTitle1, title2: baseTitle2, title3: baseTitle3, title: baseTitle1, subtitle: baseTitle2 },
-      { id: 2, img: heroSlide2, title1: 'World Tour 2026 Live Showcase', title2: 'Live at Nairobi Cyberdome, London O2 & Brooklyn Steel', title3: 'Direct Fan Ticketing via TuneBooking • Reserved Seating', title: 'World Tour 2026', subtitle: 'Live at Nairobi Cyberdome, London O2 Academy & Brooklyn Steel' },
-      { id: 3, img: heroSlide3, title1: 'Exclusive Digital MP3s', title2: 'Unreleased High-Quality MP3 Singles Available for Credits', title3: 'High-Quality Digital MP3 Singles • Collector Vinyl & CDs • Direct Fan Passes', title: 'Exclusive Digital MP3s', subtitle: 'Unreleased High-Quality MP3 Singles Available for Intermaven Credits' }
+      { id: 2, img: heroSlide2, title1: 'World Tour 2026 Live Showcase', title2: 'Live at Nairobi Cyberdome, London O2 & Brooklyn Steel', title3: 'Direct Fan Ticketing via TuneBooking â€¢ Reserved Seating', title: 'World Tour 2026', subtitle: 'Live at Nairobi Cyberdome, London O2 Academy & Brooklyn Steel' },
+      { id: 3, img: heroSlide3, title1: 'Exclusive Digital MP3s', title2: 'Unreleased High-Quality MP3 Singles Available for Credits', title3: 'High-Quality Digital MP3 Singles â€¢ Collector Vinyl & CDs â€¢ Direct Fan Passes', title: 'Exclusive Digital MP3s', subtitle: 'Unreleased High-Quality MP3 Singles Available for Intermaven Credits' }
     ]
   }, [epkData?.heroSlides, epkData?.heroImages, epkData?.hero_images, epkData?.heroImageUrl, epkData?.heroImage, epkData?.hero_image_url, epkData?.heroTitle1, epkData?.heroTitle2, epkData?.heroTitle3, effectiveArtistName, effectiveHeadline, artistSlug])
 
@@ -622,7 +689,7 @@ export function CreatorEpkView(props = {}) {
   // Fan Profile Settings State
   const [fanProfileName, setFanProfileName] = useState(fanUser?.name || 'VIP Member')
   const [fanProfileEmail, setFanProfileEmail] = useState(fanUser?.email || 'fan@intermaven.io')
-  const [fanProfilePassword, setFanProfilePassword] = useState('••••••••')
+  const [fanProfilePassword, setFanProfilePassword] = useState('â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢')
   const [fanCurrentPassword, setFanCurrentPassword] = useState('')
   const [fanNewPassword, setFanNewPassword] = useState('')
   const [fanConfirmPassword, setFanConfirmPassword] = useState('')
@@ -639,7 +706,7 @@ export function CreatorEpkView(props = {}) {
     reader.onload = (ev) => {
       const dataUrl = ev.target.result
       setFanProfileAvatar(dataUrl)
-      showToast('📸 Fan profile image uploaded! Remember to click Save Profile.', 'info')
+      showToast('ðŸ“¸ Fan profile image uploaded! Remember to click Save Profile.', 'info')
     }
     reader.readAsDataURL(file)
   }
@@ -965,7 +1032,7 @@ export function CreatorEpkView(props = {}) {
       status: 'On Sale',
       doors: '7:00 PM EAT',
       age: '18+ with Valid Government ID',
-      lineup: `${effectiveArtistName} (Full Modular Live Set) • Support: Aisha Okoro & DJ Kipsang`,
+      lineup: `${effectiveArtistName} (Full Modular Live Set) â€¢ Support: Aisha Okoro & DJ Kipsang`,
       flyerImg: 'https://picsum.photos/seed/flyer1_cyberdome/600/900',
       description: 'The inaugural opening night of the 2026 World Tour. Featuring 360-degree holographic laser visuals and live modular synthesizer improvisation.',
       venueMapUrl: 'https://maps.google.com/?q=Nairobi+Kenya'
@@ -981,7 +1048,7 @@ export function CreatorEpkView(props = {}) {
       status: 'Selling Fast',
       doors: '6:30 PM BST',
       age: '16+ (Under 18s must be accompanied by an adult)',
-      lineup: `${effectiveArtistName} • Special Guest: London Synth Ensemble`,
+      lineup: `${effectiveArtistName} â€¢ Special Guest: London Synth Ensemble`,
       flyerImg: 'https://picsum.photos/seed/flyer2_london/600/900',
       description: 'A transcendent night in London showcasing the full Nairobi Cyberwave album with live orchestral string accompaniment.',
       venueMapUrl: 'https://maps.google.com/?q=O2+Academy+London'
@@ -997,7 +1064,7 @@ export function CreatorEpkView(props = {}) {
       status: 'On Sale',
       doors: '7:00 PM EDT',
       age: '21+ Only',
-      lineup: `${effectiveArtistName} • Direct Support: Brooklyn Modular Collective`,
+      lineup: `${effectiveArtistName} â€¢ Direct Support: Brooklyn Modular Collective`,
       flyerImg: 'https://picsum.photos/seed/flyer3_brooklyn/600/900',
       description: 'An exclusive US East Coast headline appearance featuring 24-bit multitrack stem listening stations in the VIP mezzanine.',
       venueMapUrl: 'https://maps.google.com/?q=Brooklyn+Steel+New+York'
@@ -1013,7 +1080,7 @@ export function CreatorEpkView(props = {}) {
       status: 'Limited VIP',
       doors: '6:00 PM JST',
       age: 'All Ages Welcome',
-      lineup: `${effectiveArtistName} • Tokyo Audio Visual Project`,
+      lineup: `${effectiveArtistName} â€¢ Tokyo Audio Visual Project`,
       flyerImg: 'https://picsum.photos/seed/flyer4_tokyo/600/900',
       description: 'Immersive soundscapes in Shibuya. Features an exclusive Japanese tour vinyl slipmat for all VIP passholders.',
       venueMapUrl: 'https://maps.google.com/?q=Club+Quattro+Tokyo'
@@ -1045,7 +1112,7 @@ export function CreatorEpkView(props = {}) {
       status: 'Selling Fast',
       doors: '7:30 PM CET',
       age: '16+',
-      lineup: `${effectiveArtistName} • Paris Sync Residency Showcase`,
+      lineup: `${effectiveArtistName} â€¢ Paris Sync Residency Showcase`,
       flyerImg: 'https://picsum.photos/seed/flyer6_paris/600/900',
       description: 'The official European tour finale. Featuring live sync licensing demonstrations and guest collaborations.',
       venueMapUrl: 'https://maps.google.com/?q=Bataclan+Paris'
@@ -1163,11 +1230,11 @@ export function CreatorEpkView(props = {}) {
 
   const CANONICAL_EPK_VIDEOS = [
     { id: 300, type: 'video', title: 'Machero', url: 'https://www.youtube.com/watch?v=2y3NvAVU2xE', youtubeUrl: 'https://www.youtube.com/embed/2y3NvAVU2xE', thumbnail: 'https://img.youtube.com/vi/2y3NvAVU2xE/hqdefault.jpg', views: '850K views', category: 'Official Video' },
-    { id: 301, type: 'video', title: `${artistName} — Nairobi Cyberwave (Official 4K Music Video)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340', views: '1.2M views', category: 'Official Video' },
+    { id: 301, type: 'video', title: `${artistName} â€” Nairobi Cyberwave (Official 4K Music Video)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340', views: '1.2M views', category: 'Official Video' },
     { id: 303, type: 'video', title: 'Live at SyncMavens Vault (Full Concert 4K)', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid2/600/340', views: '840K views', category: 'Live Concert' },
     { id: 305, type: 'video', title: 'Inside the Synthesizer Soundscapes', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid3/600/340', views: '320K views', category: 'Behind the Scenes' },
-    { id: 307, type: 'video', title: `${artistName} — Rift Valley Sunset (Acoustic Session 4K)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid4/600/340', views: '620K views', category: 'Studio Session' },
-    { id: 309, type: 'video', title: `${artistName} — Afro-Synth Cascade (Live at O2)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid5/600/340', views: '490K views', category: 'Live Concert' }
+    { id: 307, type: 'video', title: `${artistName} â€” Rift Valley Sunset (Acoustic Session 4K)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid4/600/340', views: '620K views', category: 'Studio Session' },
+    { id: 309, type: 'video', title: `${artistName} â€” Afro-Synth Cascade (Live at O2)`, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://picsum.photos/seed/yt_vid5/600/340', views: '490K views', category: 'Live Concert' }
   ]
 
   // Dynamic Media Items synchronized with Backend CMS Studio & MongoDB
@@ -1201,7 +1268,7 @@ export function CreatorEpkView(props = {}) {
       return {
         id: v.id || (300 + idx),
         type: 'video',
-        title: v.title || `${artistName} — Video #${idx + 1}`,
+        title: v.title || `${artistName} â€” Video #${idx + 1}`,
         url: directUrl,
         youtubeUrl: embed,
         thumbnail: autoThumb,
@@ -1232,7 +1299,7 @@ export function CreatorEpkView(props = {}) {
   const currentVideoItem = videoCarouselItems[safeVideoIndex] || videoCarouselItems[0] || {
     id: 301,
     type: 'video',
-    title: `${artistName} — Official Video`,
+    title: `${artistName} â€” Official Video`,
     youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     thumbnail: 'https://picsum.photos/seed/yt_vid1/600/340',
     views: '1.2M views'
@@ -1244,7 +1311,7 @@ export function CreatorEpkView(props = {}) {
     if (customPhotos.length > 0) {
       return customPhotos.map((url, i) => ({
         id: 700 + i,
-        title: `${effectiveArtistName} — Gallery Snapshot #${i + 1}`,
+        title: `${effectiveArtistName} â€” Gallery Snapshot #${i + 1}`,
         caption: 'Exclusive tour visual & behind-the-scenes recording capture',
         url: url,
         thumbnail: url
@@ -1347,7 +1414,7 @@ export function CreatorEpkView(props = {}) {
       setPendingComment(null)
       setNewCommentText('')
     }
-    showToast(`🎉 Welcome to ${effectiveArtistName}'s Fan Club! 25 bonus credits added.`)
+    showToast(`ðŸŽ‰ Welcome to ${effectiveArtistName}'s Fan Club! 25 bonus credits added.`)
   }
 
   const handleAuthLogin = (emailToLogin) => {
@@ -1385,7 +1452,7 @@ export function CreatorEpkView(props = {}) {
     } catch (_) {}
 
     setAuthModalOpen(false)
-    showToast(`✨ Welcome back, ${user.name}! VIP Fan privileges active.`)
+    showToast(`âœ¨ Welcome back, ${user.name}! VIP Fan privileges active.`)
     setFanPortalOpen(true)
   }
 
@@ -1399,19 +1466,19 @@ export function CreatorEpkView(props = {}) {
     // If new password attempted, validate all 3 fields
     if (fanNewPassword || fanConfirmPassword || fanCurrentPassword) {
       if (!fanCurrentPassword) {
-        showToast('⚠️ Please enter your current password to authorize security changes.', 'error')
+        showToast('âš ï¸ Please enter your current password to authorize security changes.', 'error')
         return
       }
-      if (fanCurrentPassword !== fanProfilePassword && fanProfilePassword !== '••••••••') {
-        showToast('⚠️ Current password confirmation does not match existing password.', 'error')
+      if (fanCurrentPassword !== fanProfilePassword && fanProfilePassword !== 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢') {
+        showToast('âš ï¸ Current password confirmation does not match existing password.', 'error')
         return
       }
       if (fanNewPassword.length < 6) {
-        showToast('⚠️ New password must be at least 6 characters.', 'error')
+        showToast('âš ï¸ New password must be at least 6 characters.', 'error')
         return
       }
       if (fanNewPassword !== fanConfirmPassword) {
-        showToast('⚠️ New password and confirmation do not match.', 'error')
+        showToast('âš ï¸ New password and confirmation do not match.', 'error')
         return
       }
       finalPassword = fanNewPassword
@@ -1440,12 +1507,12 @@ export function CreatorEpkView(props = {}) {
     if (passwordUpdated) {
       const channelLabel = (ticketDeliveryChannel || 'email').toUpperCase()
       const targetDest = ticketDeliveryChannel === 'email' ? fanProfileEmail : (ticketPhone || fanProfileEmail)
-      showToast(`🔒 Password changed! Security confirmation dispatched to ${channelLabel} (${targetDest}).`, 'success')
+      showToast(`ðŸ”’ Password changed! Security confirmation dispatched to ${channelLabel} (${targetDest}).`, 'success')
       setFanCurrentPassword('')
       setFanNewPassword('')
       setFanConfirmPassword('')
     } else {
-      showToast('✅ Profile information updated and synchronized across Intermaven!')
+      showToast('âœ… Profile information updated and synchronized across Intermaven!')
     }
   }
 
@@ -1456,20 +1523,20 @@ export function CreatorEpkView(props = {}) {
     setTimeout(() => {
       setUserCredits(prev => prev + fanTopUpCredits)
       setFanTopUpProcessing(false)
-      showToast(`🎉 Successfully topped up +${fanTopUpCredits} non-expiring TM Credits ($${fanTopUpPrice}) via ${fanTopUpGateway.toUpperCase()}!`)
+      showToast(`ðŸŽ‰ Successfully topped up +${fanTopUpCredits} non-expiring TM Credits ($${fanTopUpPrice}) via ${fanTopUpGateway.toUpperCase()}!`)
       setFanPortalTab('vault')
     }, 600)
   }
 
   // Real ZIP File Generator & Downloader for Official Press Photos
   const handleDownloadPressPhotosZip = async () => {
-    showToast('📦 Packaging High-Res Press Photos (300 DPI) ZIP archive...', 'info')
+    showToast('ðŸ“¦ Packaging High-Res Press Photos (300 DPI) ZIP archive...', 'info')
     try {
       const zip = new JSZip()
       const folder = zip.folder(`${artistSlug}_press_photos_300dpi`)
 
       folder.file('README_PRESS_METADATA.txt',
-`${effectiveArtistName.toUpperCase()} — OFFICIAL HIGH-RES PRESS ASSETS (300 DPI)
+`${effectiveArtistName.toUpperCase()} â€” OFFICIAL HIGH-RES PRESS ASSETS (300 DPI)
 Year: 2026
 Verified TuneMavens Creator World
 Copyright (c) 2026 ${effectiveArtistName} / Intermaven Talent Group
@@ -1515,26 +1582,26 @@ Direct Management Contact: mgmt@intermaven.io`
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(downloadUrl)
-      showToast(`🎉 Downloaded ${artistSlug}_official_press_photos_300dpi.zip!`, 'success')
+      showToast(`ðŸŽ‰ Downloaded ${artistSlug}_official_press_photos_300dpi.zip!`, 'success')
     } catch (err) {
       console.error('Error generating zip:', err)
-      showToast('⚠️ Could not build ZIP archive. Please try again.', 'error')
+      showToast('âš ï¸ Could not build ZIP archive. Please try again.', 'error')
     }
   }
 
   // Real Printable/Downloadable PDF Generator for Technical Rider & Stage Plot
   const handleDownloadTechRiderPdf = () => {
-    showToast('📄 Generating Technical Stage Rider & Patch List PDF...', 'info')
+    showToast('ðŸ“„ Generating Technical Stage Rider & Patch List PDF...', 'info')
     const printWin = window.open('', '_blank', 'width=950,height=1100')
     if (!printWin) {
-      showToast('⚠️ Pop-up blocked! Please allow pop-ups to view/print the Stage Plot PDF.', 'error')
+      showToast('âš ï¸ Pop-up blocked! Please allow pop-ups to view/print the Stage Plot PDF.', 'error')
       return
     }
     const riderHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${effectiveArtistName} — Technical Rider & Stage Plot (2026)</title>
+  <title>${effectiveArtistName} â€” Technical Rider & Stage Plot (2026)</title>
   <style>
     @page { margin: 0; size: auto; }
     * { box-sizing: border-box; }
@@ -1557,16 +1624,16 @@ Direct Management Contact: mgmt@intermaven.io`
   <div class="no-print" style="max-width:820px; margin:0 auto 16px; display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:12px 20px; border-radius:4px;">
     <span style="font-size:13px; color:#fff; font-weight:700;">Technical Stage Rider & Patch List Engine</span>
     <button onclick="window.print()" style="background:${effectiveAccent}; color:#000; border:none; padding:8px 18px; border-radius:3px; font-weight:900; font-size:12px; cursor:pointer;">
-      🖨️ Print or Save as PDF
+      ðŸ–¨ï¸ Print or Save as PDF
     </button>
   </div>
   <div class="page">
     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid ${effectiveAccent}; padding-bottom:14px; margin-bottom:18px;">
       <div>
         <h1>${effectiveArtistName}</h1>
-        <div style="color:${effectiveAccent}; font-weight:700; font-size:14px;">Technical Rider & Stage Plot Specification • Tour 2026</div>
+        <div style="color:${effectiveAccent}; font-weight:700; font-size:14px;">Technical Rider & Stage Plot Specification â€¢ Tour 2026</div>
       </div>
-      <span class="badge">CONFIDENTIAL • PRODUCTION ONLY</span>
+      <span class="badge">CONFIDENTIAL â€¢ PRODUCTION ONLY</span>
     </div>
 
     <div class="sec-title">Front of House (FOH) & Monitoring Specifications</div>
@@ -1592,10 +1659,10 @@ Direct Management Contact: mgmt@intermaven.io`
         <tr><th>CH</th><th>SOURCE</th><th>MIC / DI TYPE</th><th>STAND</th><th>PHANTOM</th></tr>
       </thead>
       <tbody>
-        <tr><td>1-2</td><td>Master Stereo Mix L/R</td><td>Radial J48 Stereo DI</td><td>—</td><td>+48V</td></tr>
-        <tr><td>3-4</td><td>Modular Synth Submix L/R</td><td>Radial ProD2</td><td>—</td><td>Passive</td></tr>
-        <tr><td>5</td><td>Moog Subsequent 37 Bass</td><td>Radial JDI Active</td><td>—</td><td>+48V</td></tr>
-        <tr><td>6-7</td><td>Roland SPD-SX Percussion</td><td>BSS AR-133 DI x2</td><td>—</td><td>+48V</td></tr>
+        <tr><td>1-2</td><td>Master Stereo Mix L/R</td><td>Radial J48 Stereo DI</td><td>â€”</td><td>+48V</td></tr>
+        <tr><td>3-4</td><td>Modular Synth Submix L/R</td><td>Radial ProD2</td><td>â€”</td><td>Passive</td></tr>
+        <tr><td>5</td><td>Moog Subsequent 37 Bass</td><td>Radial JDI Active</td><td>â€”</td><td>+48V</td></tr>
+        <tr><td>6-7</td><td>Roland SPD-SX Percussion</td><td>BSS AR-133 DI x2</td><td>â€”</td><td>+48V</td></tr>
         <tr><td>8</td><td>Lead Talkback Vocal</td><td>Shure Beta 58A (Switched)</td><td>Boom</td><td>Off</td></tr>
         <tr><td>9-10</td><td>Audience Ambient Mics L/R</td><td>Sennheiser e914 x2</td><td>Tall Boom</td><td>+48V</td></tr>
       </tbody>
@@ -1603,8 +1670,8 @@ Direct Management Contact: mgmt@intermaven.io`
 
     <div class="sec-title">Production & Hospitality Contact</div>
     <div style="font-size:12px; color:#cbd5e1; line-height:1.6;">
-      Tour Manager: <strong>Marcus Sterling</strong> • Phone: +44 7911 204918 • Email: production@intermaven.io<br>
-      FOH Audio Lead: <strong>Elena Richter</strong> • Email: audio@intermaven.io
+      Tour Manager: <strong>Marcus Sterling</strong> â€¢ Phone: +44 7911 204918 â€¢ Email: production@intermaven.io<br>
+      FOH Audio Lead: <strong>Elena Richter</strong> â€¢ Email: audio@intermaven.io
     </div>
   </div>
   <script>
@@ -1615,17 +1682,17 @@ Direct Management Contact: mgmt@intermaven.io`
     printWin.document.open()
     printWin.document.write(riderHtml)
     printWin.document.close()
-    showToast('✅ Technical Rider PDF generated! Print or Save as PDF in the opened dialog.')
+    showToast('âœ… Technical Rider PDF generated! Print or Save as PDF in the opened dialog.')
   }
 
   // Official EPK PDF Generator (with Social Media Icons, Clean Page Breaks, and Suppressed Browser Headers/Footers)
   const handleDownloadEpkAssets = (e) => {
     if (e) e.preventDefault()
-    showToast('📄 Generating high-res EPK Press Kit PDF...', 'info')
+    showToast('ðŸ“„ Generating high-res EPK Press Kit PDF...', 'info')
 
     const printWin = window.open('', '_blank', 'width=950,height=1100')
     if (!printWin) {
-      showToast('⚠️ Pop-up blocked! Please allow pop-ups to download the EPK PDF.', 'error')
+      showToast('âš ï¸ Pop-up blocked! Please allow pop-ups to download the EPK PDF.', 'error')
       return
     }
 
@@ -1643,7 +1710,7 @@ Direct Management Contact: mgmt@intermaven.io`
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${effectiveArtistName} — Official Press Kit (EPK)</title>
+  <title>${effectiveArtistName} â€” Official Press Kit (EPK)</title>
   <style>
     @page { size: auto; margin: 0; }
     * { box-sizing: border-box; }
@@ -1685,9 +1752,9 @@ Direct Management Contact: mgmt@intermaven.io`
 </head>
 <body>
   <div class="no-print" style="max-width:820px; margin:0 auto 16px; display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:12px 20px; border-radius:4px;">
-    <span style="font-size:13px; color:#fff; font-weight:700;">TuneMavens PDF Engine • Ready for Print / PDF Export</span>
+    <span style="font-size:13px; color:#fff; font-weight:700;">TuneMavens PDF Engine â€¢ Ready for Print / PDF Export</span>
     <button onclick="window.print()" style="background:${effectiveAccent}; color:#000; border:none; padding:8px 18px; border-radius:3px; font-weight:900; font-size:12px; cursor:pointer;">
-      🖨️ Print or Save as PDF
+      ðŸ–¨ï¸ Print or Save as PDF
     </button>
   </div>
 
@@ -1698,7 +1765,7 @@ Direct Management Contact: mgmt@intermaven.io`
         ${logoImg ? `<img src="${logoImg}" alt="Official Logo" />` : `<h2 style="margin:0; color:${effectiveAccent}; font-size:22px;">${effectiveArtistName}</h2>`}
       </div>
       <div style="text-align:right;">
-        <span class="badge">Official Press Kit • 2026</span>
+        <span class="badge">Official Press Kit â€¢ 2026</span>
         <div style="font-size:10.5px; color:#94a3b8; margin-top:3px;">TuneMavens Verified Creator World</div>
       </div>
     </div>
@@ -1710,7 +1777,7 @@ Direct Management Contact: mgmt@intermaven.io`
         <div class="headline">${effectiveHeadline}</div>
         <div class="quote-box">
           "${epkData?.pressQuote || 'A singular sonic architect redefining modern sync placement and electronic master ownership.'}"
-          <div style="font-size:10.5px; font-weight:800; color:${effectiveAccent}; margin-top:4px;">— ${epkData?.pressOutlet || 'Billboard & SyncMavens Review'}</div>
+          <div style="font-size:10.5px; font-weight:800; color:${effectiveAccent}; margin-top:4px;">â€” ${epkData?.pressOutlet || 'Billboard & SyncMavens Review'}</div>
         </div>
         <div class="stats-row">
           <div class="stat-box"><div class="stat-num">4.2M+</div><div class="stat-label">Global Streams</div></div>
@@ -1724,19 +1791,19 @@ Direct Management Contact: mgmt@intermaven.io`
     <div class="grid-2">
       <div class="grid-box">
         <strong>${igIcon} Instagram</strong>
-        ${epkData?.instagram || ('@' + artistSlug)} • Official Verified Profile
+        ${epkData?.instagram || ('@' + artistSlug)} â€¢ Official Verified Profile
       </div>
       <div class="grid-box">
         <strong>${ytIcon} YouTube</strong>
-        ${epkData?.youtube || ('youtube.com/@' + artistSlug)} • Official Channel & 4K Visuals
+        ${epkData?.youtube || ('youtube.com/@' + artistSlug)} â€¢ Official Channel & 4K Visuals
       </div>
       <div class="grid-box">
         <strong>${spIcon} Spotify</strong>
-        ${epkData?.spotify || ('spotify.com/artist/' + artistSlug)} • Verified Artist Discography
+        ${epkData?.spotify || ('spotify.com/artist/' + artistSlug)} â€¢ Verified Artist Discography
       </div>
       <div class="grid-box">
         <strong>${twIcon} X / Twitter</strong>
-        ${epkData?.twitter || ('@' + artistSlug)} • Tour Announcements & Updates
+        ${epkData?.twitter || ('@' + artistSlug)} â€¢ Tour Announcements & Updates
       </div>
     </div>
 
@@ -1753,7 +1820,7 @@ Direct Management Contact: mgmt@intermaven.io`
         ${logoImg ? `<img src="${logoImg}" alt="Official Logo" />` : `<h2 style="margin:0; color:${effectiveAccent}; font-size:22px;">${effectiveArtistName}</h2>`}
       </div>
       <div style="text-align:right;">
-        <span class="badge">EPK Page 2 • Representation</span>
+        <span class="badge">EPK Page 2 â€¢ Representation</span>
       </div>
     </div>
 
@@ -1819,13 +1886,13 @@ Direct Management Contact: mgmt@intermaven.io`
     printWin.document.open()
     printWin.document.write(pdfHtml)
     printWin.document.close()
-    showToast('✅ Press Kit PDF generated! Print or Save as PDF in the opened dialog.')
+    showToast('âœ… Press Kit PDF generated! Print or Save as PDF in the opened dialog.')
   }
 
   const handleApplyPromo = () => {
     if (promoCodeInput.trim().toUpperCase() === 'VIPFAN20') {
       setAppliedPromoDiscount(0.20)
-      showToast('🎟️ Promo code applied: 20% Fan Discount active!')
+      showToast('ðŸŽŸï¸ Promo code applied: 20% Fan Discount active!')
     } else {
       showToast('Invalid promo code. Use VIPFAN20 for 20% off.', 'error')
     }
@@ -1858,7 +1925,7 @@ Direct Management Contact: mgmt@intermaven.io`
     setCart(prev => [...prev, itemToAdd])
     setSelectedProductModal(null)
     setCartOpen(true)
-    showToast(`🛍️ Added "${product.title}" (${optionDesc}) to cart!`)
+    showToast(`ðŸ›ï¸ Added "${product.title}" (${optionDesc}) to cart!`)
   }
 
   const handleMerchCheckoutSubmit = (e) => {
@@ -1890,9 +1957,9 @@ Direct Management Contact: mgmt@intermaven.io`
     })
     setCart([])
     if (topUpCharged > 0) {
-      showToast(`🎉 Top-Up of $${topUpCharged} authorized & ${requiredCredits} TM Credits deducted! Order ${orderId} confirmed.`, 'success')
+      showToast(`ðŸŽ‰ Top-Up of $${topUpCharged} authorized & ${requiredCredits} TM Credits deducted! Order ${orderId} confirmed.`, 'success')
     } else {
-      showToast(`🎉 Order ${orderId} confirmed! Deducted ${requiredCredits} TM Credits.`, 'success')
+      showToast(`ðŸŽ‰ Order ${orderId} confirmed! Deducted ${requiredCredits} TM Credits.`, 'success')
     }
   }
 
@@ -1954,7 +2021,7 @@ Direct Management Contact: mgmt@intermaven.io`
         remainingCredits: userCredits - track.priceCredits
       })
     } else {
-      showToast('⚠️ Insufficient Intermaven Credits! Please top up your balance.')
+      showToast('âš ï¸ Insufficient Intermaven Credits! Please top up your balance.')
     }
   }
 
@@ -1965,6 +2032,7 @@ Direct Management Contact: mgmt@intermaven.io`
     const handleOutsideClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setMediaDropdownOpen(false)
+        setOpenNavDropdown(null)
       }
     }
     document.addEventListener('mousedown', handleOutsideClick)
@@ -2092,7 +2160,7 @@ Direct Management Contact: mgmt@intermaven.io`
       setQuickTopUpProcessing(false)
       setUserCredits(prev => prev + creditsToAdd)
       setQuickTopUpModalOpen(false)
-      showToast(`🎉 Successfully topped up +${creditsToAdd} TM Credits (${costDisplay})! New Balance: ${userCredits + creditsToAdd} Credits`)
+      showToast(`ðŸŽ‰ Successfully topped up +${creditsToAdd} TM Credits (${costDisplay})! New Balance: ${userCredits + creditsToAdd} Credits`)
     }, 600)
   }
 
@@ -2115,7 +2183,7 @@ Direct Management Contact: mgmt@intermaven.io`
     setNewPlaylistDesc('')
     setPlaylistModalOpen(false)
     setAddTrackToPlaylistModal(null)
-    showToast(`🎵 Playlist "${newPl.name}" created successfully!`)
+    showToast(`ðŸŽµ Playlist "${newPl.name}" created successfully!`)
   }
 
   // Add Track to Playlist Handler
@@ -2169,10 +2237,10 @@ Direct Management Contact: mgmt@intermaven.io`
       const updatedLib = [newLibItem, ...fanPurchasedLibrary]
       setFanPurchasedLibrary(updatedLib)
       localStorage.setItem('tm_fan_library', JSON.stringify(updatedLib))
-      showToast(`🎉 Purchased Full Album: "${alb.title}"! High-res download ready in My Library.`)
+      showToast(`ðŸŽ‰ Purchased Full Album: "${alb.title}"! High-res download ready in My Library.`)
     } else {
       setQuickTopUpModalOpen(true)
-      showToast('⚠️ Insufficient TM Credits to buy album (50 Credits needed). Please top up your balance.')
+      showToast('âš ï¸ Insufficient TM Credits to buy album (50 Credits needed). Please top up your balance.')
     }
   }
 
@@ -2192,7 +2260,7 @@ Direct Management Contact: mgmt@intermaven.io`
       audio.currentTime = 0
       audio.play().catch(e => console.warn('Album track play error:', e))
     }
-    showToast(`▶ Streaming: ${trk.title} (30-Sec Free Preview)`)
+    showToast(`â–¶ Streaming: ${trk.title} (30-Sec Free Preview)`)
   }
 
   // Toggle Album Master Audio Play / Pause
@@ -2230,7 +2298,7 @@ Direct Management Contact: mgmt@intermaven.io`
       showToast('Full 24-Bit Lossless Master stream unlocked! (1 TM Credit consumed)')
     } else {
       setQuickTopUpModalOpen(true)
-      showToast('⚠️ Insufficient credits to unlock stream. Please top up your balance.')
+      showToast('âš ï¸ Insufficient credits to unlock stream. Please top up your balance.')
     }
   }
 
@@ -2282,9 +2350,9 @@ Direct Management Contact: mgmt@intermaven.io`
         datePurchased: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       })
       if (topUpCharged > 0) {
-        showToast(`🎉 Top-Up of $${topUpCharged} completed & ${totalCredits} TM Credits deducted! Pass reserved for ${ev.venue}.`, 'success')
+        showToast(`ðŸŽ‰ Top-Up of $${topUpCharged} completed & ${totalCredits} TM Credits deducted! Pass reserved for ${ev.venue}.`, 'success')
       } else {
-        showToast(`🎟️ Pass reserved for ${ev.venue}! Deducted ${totalCredits} TM Credits.`, 'success')
+        showToast(`ðŸŽŸï¸ Pass reserved for ${ev.venue}! Deducted ${totalCredits} TM Credits.`, 'success')
       }
     }, 500)
   }
@@ -2346,7 +2414,7 @@ Direct Management Contact: mgmt@intermaven.io`
         ]
       })
       if (topUpCharged > 0) {
-        showToast(`🎉 Top-Up of $${topUpCharged} completed & ${priceCredits} TM Credits deducted! Stems Unlocked: ${t.title}.`, 'success')
+        showToast(`ðŸŽ‰ Top-Up of $${topUpCharged} completed & ${priceCredits} TM Credits deducted! Stems Unlocked: ${t.title}.`, 'success')
       } else {
         showToast(`Stems Unlocked: ${t.title}! Deducted ${priceCredits} TM Credits.`, 'success')
       }
@@ -2398,9 +2466,9 @@ Direct Management Contact: mgmt@intermaven.io`
     })
 
     if (topUpCharged > 0) {
-      showToast(`🎉 Top-Up of $${topUpCharged} completed & ${requiredCredits} TM Credits deducted for ${selectedShow?.venue || 'Show'}!`, 'success')
+      showToast(`ðŸŽ‰ Top-Up of $${topUpCharged} completed & ${requiredCredits} TM Credits deducted for ${selectedShow?.venue || 'Show'}!`, 'success')
     } else {
-      showToast(`🎟️ Reserved with ${requiredCredits} TM Credits for ${selectedShow?.venue || 'Show'}!`, 'success')
+      showToast(`ðŸŽŸï¸ Reserved with ${requiredCredits} TM Credits for ${selectedShow?.venue || 'Show'}!`, 'success')
     }
   }
 
@@ -2482,54 +2550,6 @@ Direct Management Contact: mgmt@intermaven.io`
       flexDirection: 'column',
       position: 'relative'
     }}>
-      {/* Persona Switcher Preview Banner */}
-      <div style={{
-        background: '#040711',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        padding: '8px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '8px',
-        fontSize: '11px',
-        zIndex: 1000
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.6px' }}>
-            EPK Persona:
-          </span>
-          <span style={{ color: effectiveAccent, fontWeight: 900, textTransform: 'uppercase', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '3px' }}>
-            {creatorType}
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ color: '#64748b' }}>Switch View:</span>
-          {['artist', 'podcaster', 'dj', 'producer', 'label'].map(p => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => {
-                setPreviewPersona(p);
-                setActiveTab('home');
-              }}
-              style={{
-                padding: '3px 8px',
-                borderRadius: '3px',
-                border: (previewPersona || creatorType) === p ? `1px solid ${effectiveAccent}` : '1px solid rgba(255,255,255,0.1)',
-                background: (previewPersona || creatorType) === p ? effectiveAccent : 'rgba(255,255,255,0.04)',
-                color: (previewPersona || creatorType) === p ? '#060813' : '#cbd5e1',
-                fontSize: '10px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                textTransform: 'capitalize'
-              }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* TuneStream Audio Engines */}
       <audio
@@ -2584,7 +2604,7 @@ Direct Management Contact: mgmt@intermaven.io`
           animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* ── 1. Synergy Sugar Sliding Right-to-Left Cascade Animation ── */
+        /* â”€â”€ 1. Synergy Sugar Sliding Right-to-Left Cascade Animation â”€â”€ */
         @keyframes slideInRightCascade {
           0% { opacity: 0; transform: translateX(65px); }
           100% { opacity: 1; transform: translateX(0); }
@@ -2604,7 +2624,7 @@ Direct Management Contact: mgmt@intermaven.io`
           animation: slideInRightCascade 550ms cubic-bezier(.16,1,.3,1) 440ms both;
         }
 
-        /* ── 2. Sequential Fade In One at a Time, Fade Out One at a Time ── */
+        /* â”€â”€ 2. Sequential Fade In One at a Time, Fade Out One at a Time â”€â”€ */
         @keyframes seqFade1 {
           0% { opacity: 0; transform: translateY(12px); }
           12% { opacity: 1; transform: translateY(0); }
@@ -2777,203 +2797,622 @@ Direct Management Contact: mgmt@intermaven.io`
             )}
           </div>
 
-          {/* Desktop Top Menu */}
-          <nav className="desktop-nav">
-            {epkData?.menuItems && Array.isArray(epkData.menuItems) && epkData.menuItems.length > 0 ? (
-              epkData.menuItems.map(item => {
-                const targetTab = mapTabKey(item.label)
-                const isMedia = item.label?.toLowerCase() === 'media' || targetTab === 'media'
+          {/* Desktop Top Menu (Organized into Clean Dropdown Sections) */}
+          <nav className="desktop-nav" ref={dropdownRef}>
+            {/* 1. Home */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('home');
+                setOpenNavDropdown(null);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              style={{
+                background: activeTab === 'home' ? effectiveAccent : 'transparent',
+                color: activeTab === 'home' ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                border: 'none',
+                padding: '7px 14px',
+                borderRadius: '3px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.88rem'
+              }}
+            >
+              <RiHomeFill /> Home
+            </button>
 
-                if (isMedia) {
-                  return (
-                    <div key={item.id || 'media-nav'} style={{ position: 'relative' }} ref={dropdownRef} onMouseDown={(e) => e.stopPropagation()}>
+            {/* 2. Catalog / Mixes / Music Dropdown */}
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setOpenNavDropdown('music')}
+              onMouseLeave={() => setOpenNavDropdown(prev => prev === 'music' ? null : prev)}
+            >
+              <button
+                type="button"
+                data-testid="epk-nav-catalog-dropdown"
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'music' ? null : 'music')}
+                style={{
+                  background: (activeTab === 'discography' || activeTab === 'beat-store' || activeTab === 'episodes' || activeTab === 'dj-sets' || activeTab === 'promopool' || activeTab === 'roster' || openNavDropdown === 'music') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'discography' || activeTab === 'beat-store' || activeTab === 'episodes' || activeTab === 'dj-sets' || activeTab === 'promopool' || activeTab === 'roster' || openNavDropdown === 'music') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+              >
+                <RiDiscFill />
+                {creatorType === 'dj' ? 'Mixes & Music' : creatorType === 'podcaster' ? 'Episodes & Audio' : creatorType === 'producer' ? 'Beats & Catalog' : (creatorType === 'label' || creatorType === 'publisher') ? 'Roster & Catalog' : 'Music & Catalog'}
+                <RiArrowDownSLine style={{ transform: openNavDropdown === 'music' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+              {openNavDropdown === 'music' && (
+                <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '4px',
+                    background: isLight ? '#fff' : '#0a0d18',
+                    border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '3px',
+                    boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                    minWidth: '250px',
+                    zIndex: 1100,
+                    overflow: 'hidden'
+                  }}
+                >
+                  {creatorType === 'dj' && (
+                    <>
                       <button
                         type="button"
-                        onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)}
-                        style={{
-                          background: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? effectiveAccent : 'transparent',
-                          color: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
-                          border: 'none',
-                          padding: '7px 14px',
-                          borderRadius: '3px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.88rem'
+                        data-testid="dj-epk-nav-mixes"
+                        onClick={() => {
+                          setActiveTab('dj-sets');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'dj-sets' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                       >
-                        <RiVideoFill /> Media <RiArrowDownSLine />
-                      </button>
-                      {mediaDropdownOpen && (
-                        <div
-                          onMouseDown={(e) => e.stopPropagation()}
-                          style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            marginTop: '6px',
-                            background: isLight ? '#fff' : '#0a0d18',
-                            border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
-                            borderRadius: '3px',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                            minWidth: '190px',
-                            zIndex: 1100,
-                            overflow: 'hidden'
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('media');
-                              setMediaFilter('all');
-                              setMediaPage(1);
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                          >
-                            <RiVideoFill /> All Media
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('discography');
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                          >
-                            <RiDiscFill /> Discography & Albums
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('media');
-                              setMediaFilter('gallery');
-                              setMediaPage(1);
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                          >
-                            <RiImageFill /> Photo Gallery
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('media');
-                              setMediaFilter('videos');
-                              setMediaPage(1);
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                          >
-                            <RiVideoFill /> 4K Videos
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => {
-                              setActiveTab('pricing');
-                              setMediaDropdownOpen(false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: effectiveAccent, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}
-                          >
-                            <RiCoinsFill /> Fan Top Up Pricing
-                          </button>
+                        <RiDiscFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 800 }}>Cleared Mixes &amp; Live Sets</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Stream &amp; buy pre-cleared DJ mixes</div>
                         </div>
-                      )}
-                    </div>
-                  )
-                }
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('promopool');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'promopool' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiDownloadFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 700 }}>Promo Pool &amp; Club Edits</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Extended intros &amp; DJ VIP dubs</div>
+                        </div>
+                      </button>
+                    </>
+                  )}
 
-                const isSelected = activeTab === targetTab || (targetTab === 'home' && activeTab === 'home')
-                return (
-                  <button 
-                    key={item.id || item.label} 
-                    onClick={() => {
-                      setActiveTab(targetTab)
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
-                    }} 
-                    style={{ background: isSelected ? effectiveAccent : 'transparent', color: isSelected ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
-                  >
-                    {item.label}
-                  </button>
-                )
-              })
-            ) : (
-              <>
-                {personaNavLinks.map(link => {
-                  const isSelected = activeTab === link.id || (link.id === 'home' && activeTab === 'home');
-                  const IconComp = link.icon;
-                  return (
+                  {creatorType === 'podcaster' && (
                     <button
-                      key={link.id}
+                      type="button"
                       onClick={() => {
-                        setActiveTab(link.id);
+                        setActiveTab('episodes');
+                        setOpenNavDropdown(null);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      style={{
-                        background: isSelected ? effectiveAccent : 'transparent',
-                        color: isSelected ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
-                        border: 'none',
-                        padding: '7px 14px',
-                        borderRadius: '3px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '0.88rem'
-                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'episodes' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                     >
-                      {IconComp && <IconComp />} {link.label}
+                      <RiMicFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 800 }}>Episodes &amp; Transcripts</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>All podcast seasons &amp; chapters</div>
+                      </div>
                     </button>
-                  );
-                })}
-                <div style={{ position: 'relative' }} ref={dropdownRef} onMouseDown={(e) => e.stopPropagation()}>
-                  <button type="button" onClick={() => setMediaDropdownOpen(!mediaDropdownOpen)} style={{ background: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? effectiveAccent : 'transparent', color: (activeTab === 'media' || activeTab === 'discography' || activeTab === 'pricing') ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                    <RiVideoFill /> Media <RiArrowDownSLine />
-                  </button>
-                  {mediaDropdownOpen && (
-                    <div onMouseDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: isLight ? '#fff' : '#0a0d18', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)', borderRadius: '3px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '190px', zIndex: 1100, overflow: 'hidden' }}>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('all'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                        <RiVideoFill /> All Media
-                      </button>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('discography'); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                        <RiDiscFill /> Discography & Albums
-                      </button>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                        <RiImageFill /> Photo Gallery
-                      </button>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('media'); setMediaFilter('videos'); setMediaPage(1); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                        <RiVideoFill /> 4K Videos
-                      </button>
-                      <button type="button" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setActiveTab('pricing'); setMediaDropdownOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: effectiveAccent, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
-                        <RiCoinsFill /> Fan Top Up Pricing
-                      </button>
-                    </div>
                   )}
+
+                  {creatorType === 'producer' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('beat-store');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'beat-store' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiMusic2Fill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 800 }}>Beat Store &amp; Stems</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Instant leases, exclusives &amp; WAV stems</div>
+                      </div>
+                    </button>
+                  )}
+
+                  {(creatorType === 'label' || creatorType === 'publisher') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('roster');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'roster' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiUserAddFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 800 }}>Signed Artist Roster</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Official label &amp; publishing talent</div>
+                      </div>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('discography');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'discography' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiDiscFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{creatorType === 'dj' ? 'Originals, Remixes & Stems' : 'Discography & Albums'}</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Catalog releases &amp; master streaming</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('tuneplayer-featured-singles');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      else {
+                        setActiveTab('home');
+                        setTimeout(() => {
+                          const e2 = document.getElementById('tuneplayer-featured-singles');
+                          if (e2) e2.scrollIntoView({ behavior: 'smooth' });
+                        }, 200);
+                      }
+                      setOpenNavDropdown(null);
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiPlayFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Featured Audio Player</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>TuneStream Hi-Fi master player</div>
+                    </div>
+                  </button>
                 </div>
-                <button onClick={() => { setActiveTab('store'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'store' ? effectiveAccent : 'transparent', color: activeTab === 'store' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiShoppingBagFill /> Store
-                </button>
-                <button onClick={() => { setActiveTab('press'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'press' ? effectiveAccent : 'transparent', color: activeTab === 'press' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiFileTextFill /> Press Kit
-                </button>
-                <button onClick={() => { setActiveTab('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: activeTab === 'contact' ? effectiveAccent : 'transparent', color: activeTab === 'contact' ? '#000' : (isLight ? '#0f172a' : '#ffffff'), border: 'none', padding: '7px 14px', borderRadius: '3px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
-                  <RiMailFill /> Contact
-                </button>
-              </>
-            )}
+              )}
+            </div>
+
+            {/* 3. Booking, Rates & Live Dropdown */}
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setOpenNavDropdown('tour')}
+              onMouseLeave={() => setOpenNavDropdown(prev => prev === 'tour' ? null : prev)}
+            >
+              <button
+                type="button"
+                data-testid="epk-nav-booking-dropdown"
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'tour' ? null : 'tour')}
+                style={{
+                  background: (activeTab === 'shows' || activeTab === 'tech-rider' || activeTab === 'rate-card' || activeTab === 'dj-rate-card' || activeTab === 'dj-booking' || activeTab === 'ad-rates' || openNavDropdown === 'tour') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'shows' || activeTab === 'tech-rider' || activeTab === 'rate-card' || activeTab === 'dj-rate-card' || activeTab === 'dj-booking' || activeTab === 'ad-rates' || openNavDropdown === 'tour') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+              >
+                <RiCalendarEventFill />
+                {creatorType === 'dj' ? 'Booking & Rates' : creatorType === 'podcaster' ? 'Sponsorships & Live' : 'Shows & Booking'}
+                <RiArrowDownSLine style={{ transform: openNavDropdown === 'tour' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+              {openNavDropdown === 'tour' && (
+                <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '4px',
+                    background: isLight ? '#fff' : '#0a0d18',
+                    border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '3px',
+                    boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                    minWidth: '260px',
+                    zIndex: 1100,
+                    overflow: 'hidden'
+                  }}
+                >
+                  {creatorType === 'dj' && (
+                    <>
+                      <button
+                        type="button"
+                        data-testid="dj-epk-nav-rate-card"
+                        onClick={() => {
+                          setActiveTab('rate-card');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'rate-card' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiCoinsFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 800 }}>Official DJ Rate Card</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Club, festival, corporate &amp; private tiers</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        data-testid="dj-epk-nav-booking"
+                        onClick={() => {
+                          setActiveTab('dj-booking');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'dj-booking' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiCalendarEventFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 800 }}>Book DJ for Gig (Escrow)</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Instant hold with 50% TuneLedger deposit</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          generateAndDownloadDjRateCard(effectiveArtistName, epkData?.rate_card || CANONICAL_DJ_RATE_CARD, formatEpkPrice, epkData?.bookingEmail || 'booking@tunemavens.com');
+                          setOpenNavDropdown(null);
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiDownloadFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 700 }}>Download DJ Rate Card</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Printable 2026 rate card one-sheet</div>
+                        </div>
+                      </button>
+                    </>
+                  )}
+
+                  {creatorType === 'podcaster' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('ad-rates');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'ad-rates' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiCoinsFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 800 }}>Ad Rates &amp; Media Kit</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Podcast sponsor flight packages</div>
+                      </div>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('shows');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'shows' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiTicket2Fill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Tour Dates &amp; Live Shows</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Upcoming concerts &amp; direct ticketing</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (creatorType === 'dj') {
+                        setActiveTab('tech-rider');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else {
+                        setTechRiderModalOpen(true);
+                      }
+                      setOpenNavDropdown(null);
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'tech-rider' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiEqualizerFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{creatorType === 'dj' ? 'Booth Specs & Tech Rider' : 'Technical Rider & Stage Specs'}</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>{creatorType === 'dj' ? 'CDJ-3000 / DJM-A9 & monitoring' : 'FOH, IEM & stage specifications'}</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('contact');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'contact' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiMailFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Booking &amp; Management Inquiry</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Direct booking agent &amp; sync desk</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Media & Press Dropdown */}
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setOpenNavDropdown('media')}
+              onMouseLeave={() => setOpenNavDropdown(prev => prev === 'media' ? null : prev)}
+            >
+              <button
+                type="button"
+                data-testid="epk-nav-media-dropdown"
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'media' ? null : 'media')}
+                style={{
+                  background: (activeTab === 'media' || activeTab === 'press' || activeTab === 'bio' || openNavDropdown === 'media') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'media' || activeTab === 'press' || activeTab === 'bio' || openNavDropdown === 'media') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+              >
+                <RiVideoFill /> Media &amp; Press <RiArrowDownSLine style={{ transform: openNavDropdown === 'media' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+              {openNavDropdown === 'media' && (
+                <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '4px',
+                    background: isLight ? '#fff' : '#0a0d18',
+                    border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '3px',
+                    boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                    minWidth: '240px',
+                    zIndex: 1100,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('media');
+                      setMediaFilter('all');
+                      setMediaPage(1);
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: (activeTab === 'media' && mediaFilter === 'all') ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiVideoFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>All Visual Media</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Complete video &amp; photo archive</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('media');
+                      setMediaFilter('videos');
+                      setMediaPage(1);
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: (activeTab === 'media' && mediaFilter === 'videos') ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiYoutubeFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>4K Videos &amp; Visuals</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Music videos &amp; live performances</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('media');
+                      setMediaFilter('gallery');
+                      setMediaPage(1);
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: (activeTab === 'media' && mediaFilter === 'gallery') ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiImageFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Photo Gallery</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>High-res 300 DPI press photography</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('press');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'press' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiFileTextFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Press Kit &amp; Reviews</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Official media kit &amp; PDF export</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('bio');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'bio' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiUserFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Biography &amp; Story</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Heritage, milestones &amp; background</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 5. Store & VIP Dropdown */}
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setOpenNavDropdown('store')}
+              onMouseLeave={() => setOpenNavDropdown(prev => prev === 'store' ? null : prev)}
+            >
+              <button
+                type="button"
+                data-testid="epk-nav-store-dropdown"
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'store' ? null : 'store')}
+                style={{
+                  background: (activeTab === 'store' || activeTab === 'pricing' || activeTab === 'contact' || openNavDropdown === 'store') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'store' || activeTab === 'pricing' || activeTab === 'contact' || openNavDropdown === 'store') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '3px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+              >
+                <RiShoppingBagFill /> Store &amp; More <RiArrowDownSLine style={{ transform: openNavDropdown === 'store' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+              {openNavDropdown === 'store' && (
+                <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '4px',
+                    background: isLight ? '#fff' : '#0a0d18',
+                    border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '3px',
+                    boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                    minWidth: '240px',
+                    zIndex: 1100,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('store');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'store' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiShoppingBagFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Official Merch Store</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Vinyl, apparel &amp; collector bundles</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('pricing');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'pricing' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiCoinsFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Fan Credits &amp; Top-Up</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Non-expiring Intermaven VIP credits</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (fanUser) setFanPortalOpen(true);
+                      else setAuthModalOpen(true);
+                      setOpenNavDropdown(null);
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiShieldCheckFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>VIP Fan Club &amp; Vault</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Exclusive dubs, pre-sales &amp; perks</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('contact');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'contact' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiMailFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Contact &amp; Representation</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Management, booking &amp; press desk</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Right Action Controls: Localization Switcher, Cart, Fan Portal / VIP Modal, Hamburger */}
@@ -3089,16 +3528,16 @@ Direct Management Contact: mgmt@intermaven.io`
                   </button>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', paddingLeft: '12px' }}>
                     <button onClick={() => { setActiveTab('discography'); setMobileMenuOpen(false); }} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
-                      🎵 Discography
+                      ðŸŽµ Discography
                     </button>
                     <button onClick={() => { setActiveTab('media'); setMediaFilter('gallery'); setMediaPage(1); setMobileMenuOpen(false); }} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
-                      📷 Photo Gallery
+                      ðŸ“· Photo Gallery
                     </button>
                     <button onClick={() => { setActiveTab('media'); setMediaFilter('videos'); setMediaPage(1); setMobileMenuOpen(false); }} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
-                      ▶ 4K Videos
+                      â–¶ 4K Videos
                     </button>
                     <button onClick={() => { setActiveTab('pricing'); setMobileMenuOpen(false); }} style={{ background: 'rgba(0,240,255,0.12)', border: `1px solid ${effectiveAccent}66`, color: effectiveAccent, padding: '8px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', textAlign: 'left' }}>
-                      💎 Top Up Credits
+                      ðŸ’Ž Top Up Credits
                     </button>
                   </div>
                 </div>
@@ -3197,7 +3636,7 @@ Direct Management Contact: mgmt@intermaven.io`
             const animClass = (epkData?.heroAnimStyle === 'fade' || epkData?.heroAnimStyle === 'fade-seq') ? 'anim-fade-seq' : 'anim-synergy'
             const title1 = currentSlide?.title1 || epkData?.heroTitle1 || currentSlide?.title || effectiveArtistName
             const title2 = currentSlide?.title2 || epkData?.heroTitle2 || currentSlide?.subtitle || effectiveHeadline
-            const title3 = currentSlide?.title3 || epkData?.heroTitle3 || "High-Quality Digital MP3 Singles • Collector Vinyl & CDs • Direct Fan Passes"
+            const title3 = currentSlide?.title3 || epkData?.heroTitle3 || "High-Quality Digital MP3 Singles â€¢ Collector Vinyl & CDs â€¢ Direct Fan Passes"
             return (
               <div
                 key={currentSlideIndex}
@@ -3249,7 +3688,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       </div>
                       <div style={{ fontSize: '0.74rem', color: effectiveAccent, marginTop: '2px', fontWeight: 700, display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <span>ISRC: {currentTrack.isrc}</span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>Lossless 24-Bit / 96kHz</span>
                       </div>
                     </div>
@@ -3428,6 +3867,15 @@ Direct Management Contact: mgmt@intermaven.io`
             <h1 style={{ fontSize: '2.5rem', margin: '0 auto 6px auto', fontWeight: 900, fontFamily: effectiveFont, color: '#fff', textTransform: 'capitalize', textAlign: 'center' }}>
               {activeTab === 'press' ? 'Electronic Press Kit (EPK)' :
                activeTab === 'discography' ? 'Music & Discography' :
+               activeTab === 'dj-sets' || activeTab === 'promopool' ? 'DJ Mixes & Live Sets (Stream & Purchase)' :
+               activeTab === 'rate-card' ? 'Official DJ Performance Rate Card' :
+               activeTab === 'dj-booking' ? 'Book DJ for Gig & Event Escrow' :
+               activeTab === 'tech-rider' ? 'Booth Technical & Hospitality Rider' :
+               activeTab === 'beat-store' ? 'Producer Beat Store & Multi-Track Stems' :
+               activeTab === 'episodes' ? 'Podcast Episodes & Transcripts' :
+               activeTab === 'ad-rates' ? 'Podcast Sponsorship & Ad Rate Card' :
+               activeTab === 'demographics' ? 'Verified Listener Demographics' :
+               activeTab === 'roster' ? 'Signed Artist Roster & Master Catalog' :
                activeTab === 'contact' ? 'Booking & Inquiries' :
                activeTab === 'shows' ? 'Live Shows & Tour Dates' :
                activeTab === 'store' ? 'Official Store & Merchandise' :
@@ -3448,10 +3896,121 @@ Direct Management Contact: mgmt@intermaven.io`
 
       {/* ================= 3. MAIN BODY CONTENT ================= */}
       <main style={{ flex: 1, padding: '40px 32px', maxWidth: maxContentWidth, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+        {/* Persona-Specific Audience & Capabilities Callout Banner */}
+        <PersonaAudienceCalloutBanner
+          creatorType={creatorType}
+          artistName={effectiveArtistName}
+          accentColor={effectiveAccent}
+          onNavigateTab={(tab) => {
+            setActiveTab(tab);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onDownloadRateCard={() => {
+            generateAndDownloadDjRateCard(
+              effectiveArtistName,
+              epkData?.rate_card || CANONICAL_DJ_RATE_CARD,
+              formatEpkPrice,
+              epkData?.bookingEmail || 'booking@tunemavens.com'
+            );
+            showToast('ðŸ“¥ Official DJ Rate Card & Technical Summary downloaded!');
+          }}
+        />
         
         {/* ================= TAB 1: HOME ================= */}
         {activeTab === 'home' && (
-          effectiveVariant === 'aside-left' ? (
+          <>
+            {/* Persona-Specific Primary Showcase on Home Tab */}
+            {creatorType === 'dj' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
+                <DjMixesAndSetsSection
+                  djName={effectiveArtistName}
+                  djSlug={artistSlug}
+                  mixes={epkData?.dj_mixes}
+                  formatPrice={formatEpkPrice}
+                  accentColor={effectiveAccent}
+                  onPlayMix={(mixTrack) => {
+                    setActiveTrack(mixTrack);
+                    setIsPlaying(true);
+                  }}
+                  onNotify={(msg) => showToast(msg)}
+                />
+                <DjRateCardSection
+                  djName={effectiveArtistName}
+                  rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+                  formatPrice={formatEpkPrice}
+                  accentColor={effectiveAccent}
+                  bookingEmail={epkData?.bookingEmail || 'booking@tunemavens.com'}
+                  onSelectPackageForBooking={(pkg) => {
+                    setSelectedDjBookingTier(pkg);
+                    const el = document.getElementById('dj-epk-home-booking-anchor');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    else {
+                      setActiveTab('dj-booking');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+                />
+                <div id="dj-epk-home-booking-anchor">
+                  <DjGigBookingSection
+                    djName={effectiveArtistName}
+                    djSlug={artistSlug}
+                    rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+                    selectedInitialTier={selectedDjBookingTier}
+                    formatPrice={formatEpkPrice}
+                    accentColor={effectiveAccent}
+                  />
+                </div>
+              </div>
+            )}
+            {creatorType === 'podcaster' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
+                <PodcasterEpisodesSection
+                  episodes={epkData?.episodes || []}
+                  onPlayEpisode={(ep) => {
+                    setActiveTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/uploads/audio/enenda.wav' });
+                    setIsPlaying(true);
+                  }}
+                  accentColor={effectiveAccent}
+                />
+                <PodcasterAdRatesSection
+                  adRates={epkData?.ad_rates}
+                  formatPrice={formatEpkPrice}
+                  accentColor={effectiveAccent}
+                  onBookSlot={() => {
+                    setActiveTab('contact');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+                <PodcasterDemographicsSection demographics={epkData?.demographics} accentColor={effectiveAccent} />
+              </div>
+            )}
+            {creatorType === 'producer' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
+                <ProducerBeatStoreSection
+                  beats={epkData?.beats}
+                  formatPrice={formatEpkPrice}
+                  accentColor={effectiveAccent}
+                  onPlayBeat={(beatTrack) => {
+                    setActiveTrack(beatTrack);
+                    setIsPlaying(true);
+                  }}
+                  onNotify={(msg) => showToast(msg)}
+                />
+              </div>
+            )}
+            {(creatorType === 'label' || creatorType === 'publisher') && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
+                <LabelRosterSection
+                  roster={epkData?.roster}
+                  accentColor={effectiveAccent}
+                  onRequestBlanketLicense={() => {
+                    setActiveTab('contact');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              </div>
+            )}
+          {effectiveVariant === 'aside-left' ? (
             <div className="epk-aside-layout">
               {/* Aside on the Left */}
               <aside className="epk-sticky-aside" style={{ display: 'flex', flexDirection: 'column', gap: '22px', position: 'sticky', top: '90px' }}>
@@ -3464,7 +4023,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     {effectiveBio.slice(0, 190)}{effectiveBio.length > 190 ? '...' : ''}
                   </div>
                   <button onClick={() => setActiveTab('bio')} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}55`, color: effectiveAccent, padding: '7px 12px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', width: '100%', marginBottom: '14px' }}>
-                    Read Full Bio ➔
+                    Read Full Bio âž”
                   </button>
 
                   <div style={{ padding: '12px 14px', background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)', borderRadius: '4px', border: `1px solid ${effectiveAccent}33` }}>
@@ -3515,7 +4074,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                           <div>
                             <div style={{ fontWeight: 800, fontSize: '0.88rem', color: isLight ? '#0f172a' : '#fff' }}>{s.venue}</div>
-                            <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', margin: '2px 0 6px' }}>{s.city} • {s.date}</div>
+                            <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', margin: '2px 0 6px' }}>{s.city} â€¢ {s.date}</div>
                           </div>
                           <button 
                             onClick={() => { setSelectedEventDetail(s); setEventTicketSuccess(null); setActiveTab("event-detail"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
@@ -3562,7 +4121,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         Featured Singles
                       </h2>
                       <div style={{ fontSize: '0.85rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>
-                        Official MP3 Digital Singles & Audio Releases (2 Rows × 3 Columns)
+                        Official MP3 Digital Singles & Audio Releases (2 Rows Ã— 3 Columns)
                       </div>
                     </div>
 
@@ -3631,7 +4190,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         onClick={() => setFeaturedSinglesPage(prev => Math.max(1, prev - 1))}
                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: featuredSinglesPage <= 1 ? '#64748b' : '#fff', padding: '6px 12px', borderRadius: '3px', fontSize: '0.78rem', fontWeight: 800, cursor: featuredSinglesPage <= 1 ? 'not-allowed' : 'pointer' }}
                       >
-                        ← Prev
+                        â† Prev
                       </button>
                       <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 700 }}>
                         Page <strong style={{ color: effectiveAccent }}>{featuredSinglesPage}</strong> of {totalSinglesPages}
@@ -3642,7 +4201,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         onClick={() => setFeaturedSinglesPage(prev => Math.min(totalSinglesPages, prev + 1))}
                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: featuredSinglesPage >= totalSinglesPages ? '#64748b' : '#fff', padding: '6px 12px', borderRadius: '3px', fontSize: '0.78rem', fontWeight: 800, cursor: featuredSinglesPage >= totalSinglesPages ? 'not-allowed' : 'pointer' }}
                       >
-                        Next →
+                        Next â†’
                       </button>
                     </div>
 
@@ -3723,7 +4282,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       Featured Singles
                     </h2>
                     <div style={{ fontSize: '0.85rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>
-                      Official MP3 Digital Singles & Audio Releases (2 Rows × 3 Columns) • Balance: <strong style={{ color: effectiveAccent }}>{userCredits} TM Credits</strong>
+                      Official MP3 Digital Singles & Audio Releases (2 Rows Ã— 3 Columns) â€¢ Balance: <strong style={{ color: effectiveAccent }}>{userCredits} TM Credits</strong>
                     </div>
                   </div>
 
@@ -3792,7 +4351,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       onClick={() => setFeaturedSinglesPage(prev => Math.max(1, prev - 1))}
                       style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: featuredSinglesPage <= 1 ? '#64748b' : '#fff', padding: '6px 14px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 800, cursor: featuredSinglesPage <= 1 ? 'not-allowed' : 'pointer' }}
                     >
-                      ← Prev
+                      â† Prev
                     </button>
                     <span style={{ fontSize: '0.84rem', color: '#94a3b8', fontWeight: 700 }}>
                       Page <strong style={{ color: effectiveAccent }}>{featuredSinglesPage}</strong> of {totalSinglesPages}
@@ -3803,7 +4362,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       onClick={() => setFeaturedSinglesPage(prev => Math.min(totalSinglesPages, prev + 1))}
                       style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: featuredSinglesPage >= totalSinglesPages ? '#64748b' : '#fff', padding: '6px 14px', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 800, cursor: featuredSinglesPage >= totalSinglesPages ? 'not-allowed' : 'pointer' }}
                     >
-                      Next →
+                      Next â†’
                     </button>
                   </div>
 
@@ -3826,7 +4385,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   <div key={s.id} style={{ padding: '16px 0', borderBottom: isLight ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '1.1rem', color: isLight ? '#0f172a' : '#fff' }}>{s.venue}</div>
-                      <div style={{ fontSize: '0.85rem', color: isLight ? '#64748b' : '#94a3b8' }}>{s.city} • {s.date}</div>
+                      <div style={{ fontSize: '0.85rem', color: isLight ? '#64748b' : '#94a3b8' }}>{s.city} â€¢ {s.date}</div>
                     </div>
                     <button onClick={() => { setSelectedEventDetail(s); setEventTicketSuccess(null); setActiveTab("event-detail"); window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{ background: effectiveAccent, border: 'none', color: '#000', padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>
                       Reserve Tickets (From ${s.priceGA})
@@ -3919,7 +4478,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   </div>
 
                   <button onClick={() => setActiveTab('contact')} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>
-                    Request Custom Sync License ➔
+                    Request Custom Sync License âž”
                   </button>
                 </div>
 
@@ -3955,14 +4514,15 @@ Direct Management Contact: mgmt@intermaven.io`
                       Join VIP Fan Vault
                     </button>
                     <button onClick={() => setActiveTab('store')} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '10px 20px', borderRadius: '3px', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer' }}>
-                      Browse Merch Store ➔
+                      Browse Merch Store âž”
                     </button>
                   </div>
                 </div>
               </div>
 
             </div>
-          )
+          )}
+          </>
         )}
 
         {/* ================= TAB 2: BIO ================= */}
@@ -4006,7 +4566,7 @@ Direct Management Contact: mgmt@intermaven.io`
 {epkData?.pressQuote && (
                 <div style={{ marginTop: '28px', padding: '18px 22px', background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)', borderLeft: `4px solid ${effectiveAccent}`, borderRadius: '4px' }}>
                   <p style={{ fontStyle: 'italic', margin: '0 0 6px', fontSize: '1.05rem', color: isLight ? '#1e293b' : '#f1f5f9' }}>"{epkData.pressQuote}"</p>
-                  <strong style={{ color: effectiveAccent, fontSize: '0.88rem' }}>— {epkData.pressOutlet || 'Press Review'}</strong>
+                  <strong style={{ color: effectiveAccent, fontSize: '0.88rem' }}>â€” {epkData.pressOutlet || 'Press Review'}</strong>
                 </div>
               )}
             </div>
@@ -4054,9 +4614,9 @@ Direct Management Contact: mgmt@intermaven.io`
                 <div key={a.id} style={{ background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.4)', border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '4px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <img src={a.cover} alt={a.title} style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '3px', marginBottom: '14px' }} />
-                    <span style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 700, textTransform: 'uppercase' }}>{a.type} • {a.year}</span>
+                    <span style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 700, textTransform: 'uppercase' }}>{a.type} â€¢ {a.year}</span>
                     <h3 style={{ margin: '4px 0 6px', fontSize: '1.2rem', fontWeight: 800, color: isLight ? '#0f172a' : '#fff' }}>{a.title}</h3>
-                    <div style={{ fontSize: '0.8rem', color: isLight ? '#64748b' : '#94a3b8' }}>{a.tracksCount} Tracks • {a.streams} Streams</div>
+                    <div style={{ fontSize: '0.8rem', color: isLight ? '#64748b' : '#94a3b8' }}>{a.tracksCount} Tracks â€¢ {a.streams} Streams</div>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
@@ -4125,7 +4685,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     </div>
                     <div>
                       <div style={{ fontSize: '1.15rem', fontWeight: 900, color: isLight ? '#0f172a' : '#fff' }}>{s.venue}</div>
-                      <div style={{ fontSize: '0.82rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>{s.city} • Doors 7:00 PM • 18+</div>
+                      <div style={{ fontSize: '0.82rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>{s.city} â€¢ Doors 7:00 PM â€¢ 18+</div>
                     </div>
                   </div>
 
@@ -4218,7 +4778,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     <img src={m.thumbnail} alt={m.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)', display: 'flex', alignItems: 'flex-end', padding: '14px' }}>
                       <span style={{ background: 'rgba(0,0,0,0.7)', color: effectiveAccent, padding: '3px 8px', borderRadius: '3px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        {m.type === 'video' ? '▶ 4K Video' : '📷 Photo'}
+                        {m.type === 'video' ? 'â–¶ 4K Video' : 'ðŸ“· Photo'}
                       </span>
                     </div>
                   </div>
@@ -4238,7 +4798,7 @@ Direct Management Contact: mgmt@intermaven.io`
                 onClick={() => setMediaPage(prev => Math.max(1, prev - 1))}
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: mediaPage <= 1 ? '#64748b' : '#fff', padding: '7px 16px', borderRadius: '3px', fontSize: '0.82rem', fontWeight: 800, cursor: mediaPage <= 1 ? 'not-allowed' : 'pointer' }}
               >
-                ← Prev Media
+                â† Prev Media
               </button>
               <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 700 }}>
                 Page <strong style={{ color: effectiveAccent }}>{mediaPage}</strong> of {totalMediaPages} ({filteredMedia.length} items)
@@ -4249,7 +4809,7 @@ Direct Management Contact: mgmt@intermaven.io`
                 onClick={() => setMediaPage(prev => Math.min(totalMediaPages, prev + 1))}
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: mediaPage >= totalMediaPages ? '#64748b' : '#fff', padding: '7px 16px', borderRadius: '3px', fontSize: '0.82rem', fontWeight: 800, cursor: mediaPage >= totalMediaPages ? 'not-allowed' : 'pointer' }}
               >
-                Next Media →
+                Next Media â†’
               </button>
             </div>
           </div>
@@ -4348,7 +4908,7 @@ Direct Management Contact: mgmt@intermaven.io`
                                   }}
                                   title="Previous image"
                                 >
-                                  ‹
+                                  â€¹
                                 </button>
                                 <button
                                   type="button"
@@ -4380,7 +4940,7 @@ Direct Management Contact: mgmt@intermaven.io`
                                   }}
                                   title="Next image"
                                 >
-                                  ›
+                                  â€º
                                 </button>
 
                                 {/* Carousel Dots */}
@@ -4461,7 +5021,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     </span>
                   </div>
                   <h2 style={{ color: isLight ? '#0f172a' : '#fff', margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: effectiveFont }}>
-                    {effectiveArtistName} — Executive Press Kit
+                    {effectiveArtistName} â€” Executive Press Kit
                   </h2>
                 </div>
 
@@ -4492,7 +5052,7 @@ Direct Management Contact: mgmt@intermaven.io`
                 <div style={{ background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)', padding: '16px', borderRadius: '3px', border: `1px solid ${effectiveAccent}33` }}>
                   <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', textTransform: 'uppercase', fontWeight: 800 }}>Total Streams</div>
                   <div style={{ fontSize: '1.6rem', fontWeight: 900, color: effectiveAccent, marginTop: '4px' }}>4.2M+</div>
-                  <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '2px' }}>↑ 28% this quarter</div>
+                  <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '2px' }}>â†‘ 28% this quarter</div>
                 </div>
                 <div style={{ background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)', padding: '16px', borderRadius: '3px', border: `1px solid ${effectiveAccent}33` }}>
                   <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', textTransform: 'uppercase', fontWeight: 800 }}>Monthly Listeners</div>
@@ -4585,9 +5145,10 @@ Direct Management Contact: mgmt@intermaven.io`
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                 {[
-                  { id: 'photos', title: 'Official Press Photos (300 DPI)', desc: 'High-res color & monochrome portraits', format: 'ZIP • 42 MB' },
-                  { id: 'rider', title: 'Stage Plot & Technical Rider', desc: 'Channel list, monitor mixes & backline specs', format: 'PDF • 2.4 MB' },
-                  { id: 'epk', title: 'One-Sheet & Press Coverage', desc: 'Album reviews, bio highlights & stats', format: 'PDF • 1.8 MB' }
+                  { id: 'photos', title: 'Official Press Photos (300 DPI)', desc: 'High-res color & monochrome portraits', format: 'ZIP â€¢ 42 MB' },
+                  { id: 'rider', title: 'Stage Plot & Technical Rider', desc: 'Channel list, monitor mixes & backline specs', format: 'PDF â€¢ 2.4 MB' },
+                  { id: 'epk', title: 'One-Sheet & Press Coverage', desc: 'Album reviews, bio highlights & stats', format: 'PDF â€¢ 1.8 MB' },
+                  ...(creatorType === 'dj' ? [{ id: 'dj-rate-card', title: 'Official DJ Rate Card & Booking Sheet', desc: '5-tier performance fee schedule & CDJ-3000 specs', format: 'HTML/PDF â€¢ 1.2 MB' }] : [])
                 ].map((item, idx) => (
                   <div key={idx} style={{ padding: '16px', background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)', border: `1px solid ${effectiveAccent}33`, borderRadius: '4px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
@@ -4603,8 +5164,16 @@ Direct Management Contact: mgmt@intermaven.io`
                           handleDownloadTechRiderPdf()
                         } else if (item.id === 'photos') {
                           handleDownloadPressPhotosZip()
+                        } else if (item.id === 'dj-rate-card') {
+                          generateAndDownloadDjRateCard(
+                            effectiveArtistName,
+                            epkData?.rate_card || CANONICAL_DJ_RATE_CARD,
+                            formatEpkPrice,
+                            epkData?.bookingEmail || 'booking@tunemavens.com'
+                          )
+                          showToast('ðŸ“¥ Official DJ Rate Card & Technical Summary downloaded!')
                         } else {
-                          showToast('📥 Downloading requested press asset...')
+                          showToast('ðŸ“¥ Downloading requested press asset...')
                         }
                       }}
                       style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '6px 12px', borderRadius: '3px', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer', alignSelf: 'flex-start' }}
@@ -4772,14 +5341,14 @@ Direct Management Contact: mgmt@intermaven.io`
 
         {/* ================= TAB 9: TM CREDITS TOP-UP PACKAGES ================= */}
         
-        {/* ── PERSONA SPECIFIC TABS ── */}
+        {/* â”€â”€ PERSONA SPECIFIC TABS â”€â”€ */}
         {/* Podcaster Tabs */}
         {activeTab === 'episodes' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
             <PodcasterEpisodesSection
               episodes={epkData?.episodes || []}
               onPlayEpisode={(ep) => {
-                setActiveTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/api/stream/track/KE-TM1-26-00042' });
+                setActiveTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/uploads/audio/enenda.wav' });
                 setIsPlaying(true);
               }}
               accentColor={effectiveAccent}
@@ -4788,35 +5357,132 @@ Direct Management Contact: mgmt@intermaven.io`
         )}
 
         {activeTab === 'ad-rates' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
-            <PodcasterAdRatesSection formatPrice={(v) => `$${v}`} accentColor={effectiveAccent} />
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
+            <PodcasterAdRatesSection
+              adRates={epkData?.ad_rates}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              onBookSlot={() => {
+                setActiveTab('contact');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           </div>
         )}
 
         {activeTab === 'demographics' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
             <PodcasterDemographicsSection demographics={epkData?.demographics} accentColor={effectiveAccent} />
           </div>
         )}
 
-        {/* DJ Tabs */}
+        {/* DJ Tabs: Mixes (Stream & Buy), Rate Card (with Download), Book DJ for Gig, Tech Rider */}
+        {(activeTab === 'dj-sets' || activeTab === 'promopool') && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <DjMixesAndSetsSection
+              djName={effectiveArtistName}
+              djSlug={artistSlug}
+              mixes={epkData?.dj_mixes}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              onPlayMix={(mixTrack) => {
+                setActiveTrack(mixTrack);
+                setIsPlaying(true);
+              }}
+              onNotify={(msg) => showToast(msg)}
+            />
+          </div>
+        )}
+
+        {activeTab === 'rate-card' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <DjRateCardSection
+              djName={effectiveArtistName}
+              rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              bookingEmail={epkData?.bookingEmail || 'booking@tunemavens.com'}
+              onSelectPackageForBooking={(pkg) => {
+                setSelectedDjBookingTier(pkg);
+                setActiveTab('dj-booking');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === 'dj-booking' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <DjGigBookingSection
+              djName={effectiveArtistName}
+              djSlug={artistSlug}
+              rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+              selectedInitialTier={selectedDjBookingTier}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+            />
+            <DjRateCardSection
+              djName={effectiveArtistName}
+              rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              bookingEmail={epkData?.bookingEmail || 'booking@tunemavens.com'}
+              onSelectPackageForBooking={(pkg) => {
+                setSelectedDjBookingTier(pkg);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          </div>
+        )}
+
         {activeTab === 'tech-rider' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
-            <DjTechRiderSection accentColor={effectiveAccent} />
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
+            <DjTechRiderSection
+              techRider={epkData?.tech_rider}
+              rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+              bookingEmail={epkData?.bookingEmail || 'booking@tunemavens.com'}
+              djName={effectiveArtistName}
+              accentColor={effectiveAccent}
+              onDownloadRider={() => {
+                generateAndDownloadDjRateCard(
+                  effectiveArtistName,
+                  epkData?.rate_card || CANONICAL_DJ_RATE_CARD,
+                  formatEpkPrice,
+                  epkData?.bookingEmail || 'booking@tunemavens.com'
+                );
+                showToast('ðŸ“¥ Official DJ Booth Tech Rider & Rate Card downloaded!');
+              }}
+            />
           </div>
         )}
 
         {/* Producer Tabs */}
         {activeTab === 'beat-store' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
-            <ProducerBeatStoreSection formatPrice={(v) => `$${v}`} accentColor={effectiveAccent} />
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
+            <ProducerBeatStoreSection
+              beats={epkData?.beats}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              onPlayBeat={(beatTrack) => {
+                setActiveTrack(beatTrack);
+                setIsPlaying(true);
+              }}
+              onNotify={(msg) => showToast(msg)}
+            />
           </div>
         )}
 
         {/* Label Tabs */}
         {activeTab === 'roster' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
-            <LabelRosterSection accentColor={effectiveAccent} />
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
+            <LabelRosterSection
+              roster={epkData?.roster}
+              accentColor={effectiveAccent}
+              onRequestBlanketLicense={() => {
+                setActiveTab('contact');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           </div>
         )}
 
@@ -4830,7 +5496,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       Non-Expiring Credits
                     </span>
                     <span style={{ fontSize: '0.78rem', color: isLight ? '#64748b' : '#94a3b8' }}>
-                      Pay As You Go • No Subscriptions • Instant Fulfillment
+                      Pay As You Go â€¢ No Subscriptions â€¢ Instant Fulfillment
                     </span>
                   </div>
                   <h2 style={{ color: isLight ? '#0f172a' : '#fff', margin: 0, fontSize: '2.2rem', fontWeight: 900, fontFamily: effectiveFont }}>
@@ -5053,21 +5719,21 @@ Direct Management Contact: mgmt@intermaven.io`
                         <RiMapPin2Fill color={effectiveAccent} size={18} />
                         <div>
                           <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase' }}>Venue Location</div>
-                          <div style={{ fontWeight: 800, color: isLight ? '#0f172a' : '#fff', fontSize: '0.92rem' }}>{ev.venue} • {ev.city}</div>
+                          <div style={{ fontWeight: 800, color: isLight ? '#0f172a' : '#fff', fontSize: '0.92rem' }}>{ev.venue} â€¢ {ev.city}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <RiTimeFill color={effectiveAccent} size={18} />
                         <div>
                           <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase' }}>Show Schedule</div>
-                          <div style={{ fontWeight: 800, color: isLight ? '#0f172a' : '#fff', fontSize: '0.92rem' }}>{ev.date} • Doors 7:00 PM • Show 8:30 PM</div>
+                          <div style={{ fontWeight: 800, color: isLight ? '#0f172a' : '#fff', fontSize: '0.92rem' }}>{ev.date} â€¢ Doors 7:00 PM â€¢ Show 8:30 PM</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <RiShieldCheckFill color={effectiveAccent} size={18} />
                         <div>
                           <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase' }}>Admission & Age</div>
-                          <div style={{ fontWeight: 800, color: isLight ? '#0f172a' : '#fff', fontSize: '0.92rem' }}>18+ Valid ID Required • Mobile Digital QR Entry</div>
+                          <div style={{ fontWeight: 800, color: isLight ? '#0f172a' : '#fff', fontSize: '0.92rem' }}>18+ Valid ID Required â€¢ Mobile Digital QR Entry</div>
                         </div>
                       </div>
                     </div>
@@ -5079,13 +5745,13 @@ Direct Management Contact: mgmt@intermaven.io`
                       /* Post Purchase Digital Ticket Pass */
                       <div style={{ background: 'rgba(0,240,255,0.03)', border: `2px solid ${effectiveAccent}`, borderRadius: '4px', padding: '28px', color: '#fff' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                          <span style={{ fontSize: '1.8rem' }}>🎟️</span>
+                          <span style={{ fontSize: '1.8rem' }}>ðŸŽŸï¸</span>
                           <div>
                             <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: effectiveAccent }}>
                               Ticket Order Confirmed!
                             </h3>
                             <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                              Digital Pass ID: {eventTicketSuccess.id} • Order complete
+                              Digital Pass ID: {eventTicketSuccess.id} â€¢ Order complete
                             </div>
                           </div>
                         </div>
@@ -5098,7 +5764,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             <div>
                               <div style={{ fontSize: '0.72rem', color: effectiveAccent, fontWeight: 900, textTransform: 'uppercase' }}>Official Event Pass</div>
                               <h4 style={{ margin: '4px 0', fontSize: '1.3rem', fontWeight: 900, color: '#fff' }}>{eventTicketSuccess.event.venue}</h4>
-                              <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{eventTicketSuccess.event.city} • {eventTicketSuccess.event.date}</div>
+                              <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{eventTicketSuccess.event.city} â€¢ {eventTicketSuccess.event.date}</div>
                             </div>
                             <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '3px', border: `1px solid ${effectiveAccent}33` }}>
                               <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>Pass Tier</div>
@@ -5112,7 +5778,7 @@ Direct Management Contact: mgmt@intermaven.io`
                               <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Attendee: <strong style={{ color: '#fff' }}>{eventTicketSuccess.buyerName}</strong></div>
                               <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>Delivery Channel: <strong style={{ color: effectiveAccent }}>{eventTicketSuccess.deliveryMethod?.toUpperCase() || 'EMAIL'} ({eventTicketSuccess.deliveryTarget || eventTicketSuccess.buyerEmail})</strong></div>
                               <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>Passes: <strong style={{ color: '#fff' }}>{eventTicketSuccess.qty} Ticket(s)</strong></div>
-                              <div style={{ fontSize: '0.75rem', color: effectiveAccent, marginTop: '4px' }}>Protocol: {eventTicketSuccess.gateway.toUpperCase()} • Paid {eventTicketSuccess.gateway === 'credits' ? `${eventTicketSuccess.totalCredits} Credits` : `$${eventTicketSuccess.totalCash}`}</div>
+                              <div style={{ fontSize: '0.75rem', color: effectiveAccent, marginTop: '4px' }}>Protocol: {eventTicketSuccess.gateway.toUpperCase()} â€¢ Paid {eventTicketSuccess.gateway === 'credits' ? `${eventTicketSuccess.totalCredits} Credits` : `$${eventTicketSuccess.totalCash}`}</div>
                             </div>
 
                             {/* Ticket QR Code Display */}
@@ -5147,7 +5813,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         <div>
                           <div style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 900, textTransform: 'uppercase', marginBottom: '4px' }}>Step 1: Select Experience Tier</div>
                           <h3 style={{ margin: '0 0 12px', fontSize: '1.6rem', fontWeight: 900, color: isLight ? '#0f172a' : '#fff' }}>
-                            {ev.venue} • Official Tickets
+                            {ev.venue} â€¢ Official Tickets
                           </h3>
                         </div>
 
@@ -5159,7 +5825,7 @@ Direct Management Contact: mgmt@intermaven.io`
                               label: 'General Admission',
                               price: gaPrice,
                               credits: 25,
-                              perks: 'Floor Entry • Sound System Access',
+                              perks: 'Floor Entry â€¢ Sound System Access',
                               info: 'General Admission: Standard floor entry with high-definition venue acoustics, direct mainstage viewing, and bar access.'
                             },
                             {
@@ -5167,7 +5833,7 @@ Direct Management Contact: mgmt@intermaven.io`
                               label: 'VIP Pass',
                               price: vipPrice,
                               credits: 50,
-                              perks: 'Priority Entry • VIP Balcony • Laminate',
+                              perks: 'Priority Entry â€¢ VIP Balcony â€¢ Laminate',
                               info: 'VIP Pass: Priority expedited lane entry, exclusive mezzanine/balcony viewing lounge, dedicated VIP bar, and collectible tour lanyard.'
                             },
                             {
@@ -5175,7 +5841,7 @@ Direct Management Contact: mgmt@intermaven.io`
                               label: 'VIP Meet & Greet',
                               price: meetPrice,
                               credits: 100,
-                              perks: 'Soundcheck Access • Photo with Artist • Merch Pack',
+                              perks: 'Soundcheck Access â€¢ Photo with Artist â€¢ Merch Pack',
                               info: 'VIP Meet & Greet: Full VIP access plus pre-show soundcheck attendance, private 1-on-1 photo session with artist, and signed commemorative tour poster.'
                             }
                           ].map(tier => (
@@ -5272,10 +5938,10 @@ Direct Management Contact: mgmt@intermaven.io`
                               </label>
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '10px' }}>
                                 {[
-                                  { id: 'email', label: 'Email', icon: '✉️' },
-                                  { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
-                                  { id: 'sms', label: 'SMS', icon: '📱' },
-                                  { id: 'push', label: 'In-App', icon: '🎟️' }
+                                  { id: 'email', label: 'Email', icon: 'âœ‰ï¸' },
+                                  { id: 'whatsapp', label: 'WhatsApp', icon: 'ðŸ’¬' },
+                                  { id: 'sms', label: 'SMS', icon: 'ðŸ“±' },
+                                  { id: 'push', label: 'In-App', icon: 'ðŸŽŸï¸' }
                                 ].map(method => (
                                   <button
                                     key={method.id}
@@ -5323,7 +5989,7 @@ Direct Management Contact: mgmt@intermaven.io`
                               )}
                               {ticketDeliveryChannel === 'push' && (
                                 <div style={{ padding: '10px 14px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', borderRadius: '3px', fontSize: '0.8rem', fontWeight: 700 }}>
-                                  ✓ Digital QR tickets will be deposited immediately into your Fan Portal account passes vault.
+                                  âœ“ Digital QR tickets will be deposited immediately into your Fan Portal account passes vault.
                                 </div>
                               )}
                             </div>
@@ -5355,7 +6021,7 @@ Direct Management Contact: mgmt@intermaven.io`
                                       <strong style={{ color: '#22c55e', fontSize: '1.1rem' }}>{userCredits - totalCredits} TM</strong>
                                     </div>
                                     <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '10px' }}>
-                                      ✓ Direct TM Credits Deduction active. No external card or payment processor required.
+                                      âœ“ Direct TM Credits Deduction active. No external card or payment processor required.
                                     </div>
                                   </div>
                                 </div>
@@ -5366,7 +6032,7 @@ Direct Management Contact: mgmt@intermaven.io`
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                                 <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.4)', padding: '16px', borderRadius: '3px' }}>
                                   <div style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.88rem', marginBottom: '4px' }}>
-                                    ⚠️ Credits Shortfall: {shortfall} TM Needed
+                                    âš ï¸ Credits Shortfall: {shortfall} TM Needed
                                   </div>
                                   <div style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: 1.5 }}>
                                     Your balance is <strong>{userCredits} TM</strong>, but this reservation requires <strong>{totalCredits} TM</strong>.
@@ -5419,7 +6085,7 @@ Direct Management Contact: mgmt@intermaven.io`
                                       </div>
                                       <div>
                                         <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Card Number</label>
-                                        <input type="text" placeholder="4242 •••• •••• 4242" defaultValue="4242 •••• •••• 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '9px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                                        <input type="text" placeholder="4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242" defaultValue="4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '9px', background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: isLight ? '#0f172a' : '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                                       </div>
                                     </div>
                                   )}
@@ -5491,7 +6157,7 @@ Direct Management Contact: mgmt@intermaven.io`
                 <RiArrowLeftSLine size={16} /> Back to Music & Discography
               </button>
               <span style={{ fontSize: '0.78rem', color: effectiveAccent, fontWeight: 800, textTransform: 'uppercase' }}>
-                Master Release Showcase • 24-Bit / 96kHz Lossless
+                Master Release Showcase â€¢ 24-Bit / 96kHz Lossless
               </span>
             </div>
 
@@ -5551,7 +6217,7 @@ Direct Management Contact: mgmt@intermaven.io`
                           {alb.type}
                         </span>
                         <span style={{ fontSize: '0.8rem', color: isLight ? '#64748b' : '#94a3b8' }}>
-                          Released {alb.year} • {alb.tracksCount || 12} Tracks • {alb.streams} Streams
+                          Released {alb.year} â€¢ {alb.tracksCount || 12} Tracks â€¢ {alb.streams} Streams
                         </span>
                       </div>
 
@@ -5569,7 +6235,7 @@ Direct Management Contact: mgmt@intermaven.io`
                           type="button"
                           onClick={() => {
                             setIsPlaying(true)
-                            showToast(`▶ Playing ${alb.title} on TuneStream!`)
+                            showToast(`â–¶ Playing ${alb.title} on TuneStream!`)
                           }}
                           style={{
                             background: effectiveAccent,
@@ -5668,7 +6334,7 @@ Direct Management Contact: mgmt@intermaven.io`
                                 TuneStream Master: {albumAudioCurrentTrack?.title || `${alb.title} (Master Preview)`}
                               </div>
                               <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
-                                Lossless 24-Bit / 96kHz FLAC • TuneStream Split Protocol
+                                Lossless 24-Bit / 96kHz FLAC â€¢ TuneStream Split Protocol
                               </div>
                             </div>
                           </div>
@@ -5690,7 +6356,7 @@ Direct Management Contact: mgmt@intermaven.io`
                               </div>
                             ) : (
                               <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#10b981', padding: '4px 10px', borderRadius: '3px', fontWeight: 800, fontSize: '0.75rem' }}>
-                                ✓ Lossless Master Stream Unlocked
+                                âœ“ Lossless Master Stream Unlocked
                               </div>
                             )}
                           </div>
@@ -5730,7 +6396,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         Album Tracklist & MP3 Singles
                       </h3>
                       <span style={{ fontSize: '0.78rem', color: isLight ? '#64748b' : '#94a3b8' }}>
-                        Click track to preview • Direct MP3 singles purchasing available for all tracks
+                        Click track to preview â€¢ Direct MP3 singles purchasing available for all tracks
                       </span>
                     </div>
 
@@ -5777,7 +6443,7 @@ Direct Management Contact: mgmt@intermaven.io`
                                 <span style={{ color: effectiveAccent, marginRight: '8px' }}>#{trk.num}</span> {trk.title}
                               </div>
                               <div style={{ fontSize: '0.75rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>
-                                {trk.dur} • Key: {trk.key} • {trk.bpm} BPM • ISRC: {trk.isrc} • {trk.streams} streams
+                                {trk.dur} â€¢ Key: {trk.key} â€¢ {trk.bpm} BPM â€¢ ISRC: {trk.isrc} â€¢ {trk.streams} streams
                               </div>
                             </div>
                           </div>
@@ -5929,7 +6595,7 @@ Direct Management Contact: mgmt@intermaven.io`
 
         {/* Powered by Intermaven Badge - ONLY AT VERY BOTTOM */}
         <div style={{ maxWidth: maxContentWidth, margin: '0 auto', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.8rem', color: '#64748b' }}>
-          <div>© 2026 {artistName}. All rights reserved.</div>
+          <div>Â© 2026 {artistName}. All rights reserved.</div>
           <a href="https://intermaven.io" target="_blank" rel="noreferrer" style={{ color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
             powered by <strong style={{ color: selectedTheme.accent }}>intermaven</strong>
           </a>
@@ -5942,7 +6608,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {selectedMedia && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setSelectedMedia(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${selectedTheme.accent}44`, borderRadius: '3px', width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedMedia(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer', zIndex: 10 }}>✕</button>
+            <button onClick={() => setSelectedMedia(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.4rem', cursor: 'pointer', zIndex: 10 }}>âœ•</button>
             <h3 style={{ marginTop: 0, color: selectedTheme.accent, fontFamily: "'Sansation', sans-serif" }}>{selectedMedia.title}</h3>
             
             {/* Embedded YouTube Stream Player or Image */}
@@ -6000,7 +6666,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   <div key={i} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                       <span style={{ fontWeight: 800, fontSize: '0.82rem', color: effectiveAccent }}>{c.author}</span>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>❤️ {c.likes || 0}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>â¤ï¸ {c.likes || 0}</span>
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#e2e8f0' }}>{c.text}</div>
                   </div>
@@ -6015,12 +6681,12 @@ Direct Management Contact: mgmt@intermaven.io`
       {selectedShow && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setSelectedShow(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}44`, borderRadius: '4px', width: '100%', maxWidth: '500px', padding: '28px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedShow(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setSelectedShow(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
             <h3 style={{ marginTop: 0, color: effectiveAccent, fontSize: '1.4rem', fontWeight: 900, fontFamily: effectiveFont }}>
               Reserve Tour Tickets
             </h3>
             <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>{selectedShow.venue}</div>
-            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '18px' }}>{selectedShow.city} • {selectedShow.date}</div>
+            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '18px' }}>{selectedShow.city} â€¢ {selectedShow.date}</div>
 
             {ticketSuccess ? (
               <div style={{ textAlign: 'center', padding: '10px 0' }}>
@@ -6049,7 +6715,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       <div style={{ fontWeight: 900, color: effectiveAccent, fontFamily: 'monospace', fontSize: '1rem' }}>{ticketSuccess.qr}</div>
                       <div style={{ marginTop: '6px', color: '#cbd5e1' }}>
                         <div><strong>Date:</strong> {selectedShow.date}</div>
-                        <div><strong>Qty:</strong> {ticketSuccess.qty} Ticket(s) • ${ticketSuccess.total}</div>
+                        <div><strong>Qty:</strong> {ticketSuccess.qty} Ticket(s) â€¢ ${ticketSuccess.total}</div>
                         <div style={{ fontSize: '0.72rem', color: '#10b981', marginTop: '2px' }}>90% Direct Creator Share: ${ticketSuccess.creatorShare}</div>
                       </div>
                     </div>
@@ -6059,7 +6725,7 @@ Direct Management Contact: mgmt@intermaven.io`
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     type="button"
-                    onClick={() => showToast('📱 Digital pass saved to Apple / Google Wallet!')}
+                    onClick={() => showToast('ðŸ“± Digital pass saved to Apple / Google Wallet!')}
                     style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: `1px solid ${effectiveAccent}55`, color: '#fff', padding: '10px', borderRadius: '3px', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
                   >
                     Save to Wallet
@@ -6130,7 +6796,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             <strong style={{ color: '#22c55e', fontSize: '1.05rem' }}>{userCredits - showTotalCredits} TM</strong>
                           </div>
                           <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '10px' }}>
-                            ✓ Direct TM Credits Deduction active. No external card or payment processor required.
+                            âœ“ Direct TM Credits Deduction active. No external card or payment processor required.
                           </div>
                         </div>
 
@@ -6148,7 +6814,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', padding: '14px' }}>
                         <div style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.86rem', marginBottom: '4px' }}>
-                          ⚠️ Credits Shortfall: {shortfall} TM Needed
+                          âš ï¸ Credits Shortfall: {shortfall} TM Needed
                         </div>
                         <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.45 }}>
                           Your current balance is <strong>{userCredits} TM</strong>, but this reservation requires <strong>{showTotalCredits} TM</strong>.
@@ -6174,7 +6840,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Card Number</label>
-                            <input type="text" placeholder="4242 •••• •••• 4242" defaultValue="4242 •••• •••• 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                            <input type="text" placeholder="4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242" defaultValue="4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                           </div>
                         )}
                       </div>
@@ -6199,7 +6865,7 @@ Direct Management Contact: mgmt@intermaven.io`
               onClick={() => setStemsModalTrack(null)}
               style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}
             >
-              ✕
+              âœ•
             </button>
 
             {stemsPurchased ? (
@@ -6212,14 +6878,14 @@ Direct Management Contact: mgmt@intermaven.io`
                       Stems Unlocked & Ready for Download
                     </h3>
                     <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                      License Token: <strong style={{ color: '#fff' }}>{stemsPurchased.token}</strong> • {stemsPurchased.downloadExpiry}
+                      License Token: <strong style={{ color: '#fff' }}>{stemsPurchased.token}</strong> â€¢ {stemsPurchased.downloadExpiry}
                     </div>
                   </div>
                 </div>
 
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${effectiveAccent}33`, padding: '16px', borderRadius: '3px' }}>
                   <div style={{ fontSize: '0.74rem', color: effectiveAccent, fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>
-                    {stemsPurchased.track.title} • {stemsPurchased.tierLabel}
+                    {stemsPurchased.track.title} â€¢ {stemsPurchased.tierLabel}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '12px' }}>
                     Broadcast Quality 24-Bit / 96kHz Lossless WAV format with full synchronization and remix clearance.
@@ -6234,7 +6900,7 @@ Direct Management Contact: mgmt@intermaven.io`
                           <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{stemFile.size}</span>
                           <button
                             type="button"
-                            onClick={() => showToast(`📥 Downloading ${stemFile.name}...`)}
+                            onClick={() => showToast(`ðŸ“¥ Downloading ${stemFile.name}...`)}
                             style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '4px 10px', borderRadius: '3px', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer' }}
                           >
                             WAV
@@ -6249,14 +6915,14 @@ Direct Management Contact: mgmt@intermaven.io`
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button
                     type="button"
-                    onClick={() => showToast(`📦 Packaging & downloading full multitracks ZIP (480 MB)...`)}
+                    onClick={() => showToast(`ðŸ“¦ Packaging & downloading full multitracks ZIP (480 MB)...`)}
                     style={{ flex: 1, background: effectiveAccent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 900, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
                     <RiDownloadFill size={16} /> Download Full Multitrack ZIP (480 MB)
                   </button>
                   <button
                     type="button"
-                    onClick={() => showToast(`📄 Downloading Master Sync Clearance Certificate (PDF)...`)}
+                    onClick={() => showToast(`ðŸ“„ Downloading Master Sync Clearance Certificate (PDF)...`)}
                     style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: `1px solid ${effectiveAccent}55`, color: '#fff', padding: '12px', borderRadius: '3px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
                     <RiFileTextFill size={16} /> Sync License PDF
@@ -6274,7 +6940,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Commercial Sync Ready</span>
                   </div>
                   <h3 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 900, color: '#fff' }}>
-                    Buy Multitrack Stems • {stemsModalTrack.title}
+                    Buy Multitrack Stems â€¢ {stemsModalTrack.title}
                   </h3>
                   <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '4px' }}>
                     Lossless individual audio stems for music producers, remixers, film scoring, and game developers.
@@ -6348,7 +7014,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             <strong style={{ color: '#22c55e', fontSize: '1.05rem' }}>{userCredits - priceCredits} TM</strong>
                           </div>
                           <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '10px' }}>
-                            ✓ Direct TM Credits Deduction active. No external payment protocol required.
+                            âœ“ Direct TM Credits Deduction active. No external payment protocol required.
                           </div>
                         </div>
 
@@ -6383,7 +7049,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', padding: '14px' }}>
                         <div style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.86rem', marginBottom: '4px' }}>
-                          ⚠️ Credits Shortfall: {shortfall} TM Needed
+                          âš ï¸ Credits Shortfall: {shortfall} TM Needed
                         </div>
                         <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.45 }}>
                           Your current balance is <strong>{userCredits} TM</strong>, but this stems pack requires <strong>{priceCredits} TM</strong>.
@@ -6425,8 +7091,8 @@ Direct Management Contact: mgmt@intermaven.io`
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <input
                               type="text"
-                              placeholder="Card Number: 4242 •••• •••• 4242"
-                              defaultValue="4242 •••• •••• 4242"
+                              placeholder="Card Number: 4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242"
+                              defaultValue="4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242"
                               required
                               style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }}
                             />
@@ -6478,7 +7144,7 @@ Direct Management Contact: mgmt@intermaven.io`
               onClick={() => setQuickTopUpModalOpen(false)}
               style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}
             >
-              ✕
+              âœ•
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
@@ -6488,7 +7154,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   Instant TM Credit Top-Up
                 </h3>
                 <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                  Your Balance: <strong style={{ color: '#fff' }}>{userCredits} Credits</strong> • Non-Expiring
+                  Your Balance: <strong style={{ color: '#fff' }}>{userCredits} Credits</strong> â€¢ Non-Expiring
                 </div>
               </div>
             </div>
@@ -6618,7 +7284,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     />
                     <input
                       type="text"
-                      placeholder="4242 •••• •••• 4242"
+                      placeholder="4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242"
                       value={quickTopUpCardNumber}
                       onChange={e => setQuickTopUpCardNumber(e.target.value)}
                       required
@@ -6677,10 +7343,10 @@ Direct Management Contact: mgmt@intermaven.io`
       {practitionerModalOpen && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setPractitionerModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `2px solid ${effectiveAccent}`, borderRadius: '4px', width: '100%', maxWidth: '520px', padding: '28px', color: '#fff', position: 'relative', boxShadow: `0 20px 60px ${effectiveAccent}33` }}>
-            <button onClick={() => setPractitionerModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setPractitionerModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '1.8rem' }}>🎛️</span>
+              <span style={{ fontSize: '1.8rem' }}>ðŸŽ›ï¸</span>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: effectiveAccent }}>
                   Industry Practitioner Access Required
@@ -6751,7 +7417,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {addTrackToPlaylistModal && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setAddTrackToPlaylistModal(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}66`, borderRadius: '4px', width: '100%', maxWidth: '440px', padding: '24px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setAddTrackToPlaylistModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setAddTrackToPlaylistModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             <h3 style={{ margin: '0 0 6px', fontSize: '1.25rem', fontWeight: 900, color: effectiveAccent }}>
               Add to Fan Playlist
@@ -6791,7 +7457,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {playlistModalOpen && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setPlaylistModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 2550, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}66`, borderRadius: '4px', width: '100%', maxWidth: '420px', padding: '24px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setPlaylistModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setPlaylistModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             <h3 style={{ margin: '0 0 12px', fontSize: '1.25rem', fontWeight: 900, color: effectiveAccent }}>
               Create Fan Playlist
@@ -6835,7 +7501,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {epkPreviewModalOpen && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setEpkPreviewModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `2px solid ${effectiveAccent}`, borderRadius: '4px', width: '100%', maxWidth: '820px', maxHeight: '92vh', overflowY: 'auto', padding: '32px', color: '#fff', position: 'relative', boxShadow: `0 25px 90px ${effectiveAccent}44` }}>
-            <button onClick={() => setEpkPreviewModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setEpkPreviewModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             {/* Seamless 2-Step Process Step Tracker */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -6851,7 +7517,7 @@ Direct Management Contact: mgmt@intermaven.io`
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h3 style={{ margin: '0 0 4px', fontSize: '1.5rem', fontWeight: 900, color: '#fff', fontFamily: effectiveFont }}>
-                  {effectiveArtistName} • Executive Press Kit (EPK)
+                  {effectiveArtistName} â€¢ Executive Press Kit (EPK)
                 </h3>
                 <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
                   Inspect high-resolution layout preview below. Clicking download launches your Windows save dialog.
@@ -6978,7 +7644,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {techRiderModalOpen && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setTechRiderModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `2px solid ${effectiveAccent}`, borderRadius: '4px', width: '100%', maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto', padding: '28px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setTechRiderModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setTechRiderModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             <h3 style={{ margin: '0 0 6px', fontSize: '1.4rem', fontWeight: 900, color: effectiveAccent }}>
               Technical Stage Rider & Input List
@@ -7023,12 +7689,12 @@ Direct Management Contact: mgmt@intermaven.io`
           <div style={{ background: '#0a0d18', borderLeft: `1px solid ${effectiveAccent}44`, width: '100%', maxWidth: '420px', height: '100%', padding: '24px', display: 'flex', flexDirection: 'column', color: '#fff' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, color: effectiveAccent, fontSize: '1.3rem', fontWeight: 900 }}>Your Merch Cart</h3>
-              <button onClick={() => setCartOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.3rem', cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setCartOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.3rem', cursor: 'pointer' }}>âœ•</button>
             </div>
 
             {orderSuccess ? (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🎉</div>
+                <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>ðŸŽ‰</div>
                 <div style={{ color: '#22c55e', fontSize: '1.2rem', fontWeight: 900, marginBottom: '6px' }}>Order Placed Successfully!</div>
                 <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Thank you for supporting {effectiveArtistName}. A confirmation email has been sent.</div>
               </div>
@@ -7088,13 +7754,13 @@ Direct Management Contact: mgmt@intermaven.io`
       {selectedAlbumModal && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setSelectedAlbumModal(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 2150, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}44`, borderRadius: '4px', width: '100%', maxWidth: '540px', maxHeight: '85vh', overflowY: 'auto', padding: '28px', color: '#fff', position: 'relative' }}>
-            <button onClick={() => setSelectedAlbumModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setSelectedAlbumModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
             <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
               <img src={selectedAlbumModal.cover} alt={selectedAlbumModal.title} style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
               <div>
-                <span style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 700, textTransform: 'uppercase' }}>{selectedAlbumModal.type} • {selectedAlbumModal.year}</span>
+                <span style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 700, textTransform: 'uppercase' }}>{selectedAlbumModal.type} â€¢ {selectedAlbumModal.year}</span>
                 <h3 style={{ margin: '4px 0 6px', fontSize: '1.25rem', fontWeight: 800 }}>{selectedAlbumModal.title}</h3>
-                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{selectedAlbumModal.tracksCount} Tracks • ISRC: {selectedAlbumModal.isrc}</div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{selectedAlbumModal.tracksCount} Tracks â€¢ ISRC: {selectedAlbumModal.isrc}</div>
               </div>
             </div>
 
@@ -7144,7 +7810,7 @@ Direct Management Contact: mgmt@intermaven.io`
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '1200px', margin: '0 auto', padding: '10px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <span style={{ background: effectiveAccent, color: '#000', fontWeight: 900, fontSize: '0.78rem', padding: '3px 10px', borderRadius: '3px' }}>
-                📷 Photo {activeGalleryIndex + 1} of {galleryPhotos.length}
+                ðŸ“· Photo {activeGalleryIndex + 1} of {galleryPhotos.length}
               </span>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#fff', fontFamily: effectiveFont }}>
                 {galleryPhotos[activeGalleryIndex]?.title}
@@ -7156,7 +7822,7 @@ Direct Management Contact: mgmt@intermaven.io`
               title="Close Gallery (Esc)"
               style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '36px', height: '36px', borderRadius: '3px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              ✕
+              âœ•
             </button>
           </div>
 
@@ -7264,7 +7930,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {authModalOpen && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setAuthModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}55`, borderRadius: '3px', width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', padding: '28px', color: '#fff', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
-            <button onClick={() => setAuthModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setAuthModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             {/* Creator Logo & Unified Network Header */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px', textAlign: 'center' }}>
@@ -7274,7 +7940,7 @@ Direct Management Contact: mgmt@intermaven.io`
                 <div style={{ fontSize: '1.3rem', fontWeight: 900, color: effectiveAccent, fontFamily: effectiveFont }}>{effectiveArtistName}</div>
               )}
               <div style={{ fontSize: '0.66rem', color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
-                Powered by TuneMavens • Unified Intermaven Network
+                Powered by TuneMavens â€¢ Unified Intermaven Network
               </div>
             </div>
             
@@ -7295,7 +7961,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   cursor: 'pointer'
                 }}
               >
-                ✨ New Fan Sign Up
+                âœ¨ New Fan Sign Up
               </button>
               <button
                 type="button"
@@ -7312,7 +7978,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   cursor: 'pointer'
                 }}
               >
-                🔐 Existing Fan Log In
+                ðŸ” Existing Fan Log In
               </button>
             </div>
 
@@ -7340,7 +8006,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', textAlign: 'left' }}
                     >
                       <div>Maya Chen</div>
-                      <div style={{ fontSize: '0.68rem', color: effectiveAccent }}>VIP Fan • WhatsApp</div>
+                      <div style={{ fontSize: '0.68rem', color: effectiveAccent }}>VIP Fan â€¢ WhatsApp</div>
                     </button>
                     <button
                       type="button"
@@ -7348,7 +8014,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', textAlign: 'left' }}
                     >
                       <div>David Ochieng</div>
-                      <div style={{ fontSize: '0.68rem', color: effectiveAccent }}>Collector • SMS</div>
+                      <div style={{ fontSize: '0.68rem', color: effectiveAccent }}>Collector â€¢ SMS</div>
                     </button>
                   </div>
                 </div>
@@ -7368,7 +8034,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Password / PIN</label>
                   <input
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={authLoginPass}
                     onChange={(e) => setAuthLoginPass(e.target.value)}
                     style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.88rem' }}
@@ -7445,10 +8111,10 @@ Direct Management Contact: mgmt@intermaven.io`
                   <label style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>Preferred Communication Method</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                     {[
-                      { id: 'email', label: 'Email', icon: '✉️' },
-                      { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
-                      { id: 'sms', label: 'SMS', icon: '📱' },
-                      { id: 'push', label: 'Push', icon: '🔔' }
+                      { id: 'email', label: 'Email', icon: 'âœ‰ï¸' },
+                      { id: 'whatsapp', label: 'WhatsApp', icon: 'ðŸ’¬' },
+                      { id: 'sms', label: 'SMS', icon: 'ðŸ“±' },
+                      { id: 'push', label: 'Push', icon: 'ðŸ””' }
                     ].map(method => (
                       <button
                         key={method.id}
@@ -7579,11 +8245,11 @@ Direct Management Contact: mgmt@intermaven.io`
                       <span style={{ color: '#cbd5e1', fontWeight: 600 }}>[{fanProfileEmail || fanUser?.email || 'fan@intermaven.io'}]</span>
                     </span>
                     <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', padding: '2px 8px', borderRadius: '3px', fontSize: '0.72rem', fontWeight: 800 }}>
-                      🌟 VIP Member
+                      ðŸŒŸ VIP Member
                     </span>
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '3px' }}>
-                    CRM ID: {fanUser?.crmId || 'CRM-849201'} • Preferred Alerts: <span style={{ color: effectiveAccent, fontWeight: 700 }}>{(ticketDeliveryChannel || fanUser?.preferredCommMethod || 'EMAIL').toUpperCase()}</span>
+                    CRM ID: {fanUser?.crmId || 'CRM-849201'} â€¢ Preferred Alerts: <span style={{ color: effectiveAccent, fontWeight: 700 }}>{(ticketDeliveryChannel || fanUser?.preferredCommMethod || 'EMAIL').toUpperCase()}</span>
                   </div>
                 </div>
               </div>
@@ -7642,7 +8308,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         transition: 'all 0.15s ease'
                       }}
                     >
-                      ⚙️ Settings
+                      âš™ï¸ Settings
                     </button>
                   </div>
                 </div>
@@ -7652,7 +8318,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   title="Close Fan Portal"
                   style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', width: '36px', height: '36px', borderRadius: '3px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  ✕
+                  âœ•
                 </button>
               </div>
             </div>
@@ -7660,12 +8326,12 @@ Direct Management Contact: mgmt@intermaven.io`
             {/* Portal Navigation Tabs */}
             <div style={{ display: 'flex', gap: '8px', padding: '12px 24px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto' }}>
               {[
-                { id: 'vault', label: 'Exclusive Fan Vault (MP3 & Audio)', icon: '🎵' },
-                { id: 'topup', label: 'Top Up Credits', icon: '💳' },
-                { id: 'tickets', label: 'Discounted Show Tickets', icon: '🎟️' },
-                { id: 'merch', label: 'Special Fan Merch Drops', icon: '👕' },
-                { id: 'voting', label: 'Setlist Voting & Interaction', icon: '🗳️' },
-                { id: 'settings', label: 'Profile & Settings', icon: '⚙️' }
+                { id: 'vault', label: 'Exclusive Fan Vault (MP3 & Audio)', icon: 'ðŸŽµ' },
+                { id: 'topup', label: 'Top Up Credits', icon: 'ðŸ’³' },
+                { id: 'tickets', label: 'Discounted Show Tickets', icon: 'ðŸŽŸï¸' },
+                { id: 'merch', label: 'Special Fan Merch Drops', icon: 'ðŸ‘•' },
+                { id: 'voting', label: 'Setlist Voting & Interaction', icon: 'ðŸ—³ï¸' },
+                { id: 'settings', label: 'Profile & Settings', icon: 'âš™ï¸' }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -7714,7 +8380,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         <div>
                           <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>{item.title}</div>
                           <div style={{ fontSize: '0.78rem', color: effectiveAccent, marginTop: '3px' }}>{item.formatText}</div>
-                          <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>{item.size} • {item.duration}</div>
+                          <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>{item.size} â€¢ {item.duration}</div>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -7722,9 +8388,9 @@ Direct Management Contact: mgmt@intermaven.io`
                             onClick={() => {
                               if (userCredits >= item.credits) {
                                 setUserCredits(prev => prev - item.credits)
-                                showToast(`🎉 Redeemed ${item.title}! Digital MP3 download link active. Remaining Credits: ${userCredits - item.credits}`)
+                                showToast(`ðŸŽ‰ Redeemed ${item.title}! Digital MP3 download link active. Remaining Credits: ${userCredits - item.credits}`)
                               } else {
-                                showToast('⚠️ Insufficient credits. Please top up your balance using the Top Up tab.')
+                                showToast('âš ï¸ Insufficient credits. Please top up your balance using the Top Up tab.')
                               }
                             }} 
                             style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px 16px', borderRadius: '3px', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer' }}
@@ -7909,7 +8575,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         </div>
                         <div>
                           <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Card Number</label>
-                          <input type="text" placeholder="4242 •••• •••• 4242" defaultValue="4242 •••• •••• 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                          <input type="text" placeholder="4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242" defaultValue="4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                           <div>
@@ -7918,7 +8584,7 @@ Direct Management Contact: mgmt@intermaven.io`
                           </div>
                           <div>
                             <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>CVC</label>
-                            <input type="password" placeholder="•••" defaultValue="888" required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                            <input type="password" placeholder="â€¢â€¢â€¢" defaultValue="888" required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                           </div>
                           <div>
                             <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>ZIP</label>
@@ -7984,7 +8650,7 @@ Direct Management Contact: mgmt@intermaven.io`
                       }}
                       style={{ background: '#fff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: '3px', fontWeight: 900, fontSize: '0.82rem', cursor: 'pointer' }}
                     >
-                      {copiedPromo ? '✓ Code Copied!' : 'Copy Code: VIPFAN20'}
+                      {copiedPromo ? 'âœ“ Code Copied!' : 'Copy Code: VIPFAN20'}
                     </button>
                   </div>
 
@@ -8050,7 +8716,7 @@ Direct Management Contact: mgmt@intermaven.io`
                           <button 
                             onClick={() => {
                               addToCart({ ...p, price: `$${fanPrice}`, numPrice: parseFloat(fanPrice) })
-                              showToast(`🛍️ Added ${p.title} to Cart with VIP Member discount!`)
+                              showToast(`ðŸ›ï¸ Added ${p.title} to Cart with VIP Member discount!`)
                             }} 
                             style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer' }}
                           >
@@ -8098,7 +8764,7 @@ Direct Management Contact: mgmt@intermaven.io`
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <span style={{ color: fanVotedSong === option.id ? effectiveAccent : '#94a3b8' }}>
-                              {fanVotedSong === option.id ? '◉' : '○'}
+                              {fanVotedSong === option.id ? 'â—‰' : 'â—‹'}
                             </span>
                             <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#fff' }}>{option.title}</span>
                           </div>
@@ -8118,7 +8784,7 @@ Direct Management Contact: mgmt@intermaven.io`
 
                     {fanQuestionSent ? (
                       <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid #22c55e', color: '#22c55e', padding: '12px', borderRadius: '3px', fontSize: '0.85rem', fontWeight: 800, textAlign: 'center' }}>
-                        ✓ Question received and logged in {effectiveArtistName}'s creator inbox!
+                        âœ“ Question received and logged in {effectiveArtistName}'s creator inbox!
                       </div>
                     ) : (
                       <form onSubmit={(e) => { e.preventDefault(); if (fanQuestionText) setFanQuestionSent(true); }} style={{ display: 'flex', gap: '10px' }}>
@@ -8393,10 +9059,10 @@ Direct Management Contact: mgmt@intermaven.io`
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '16px' }}>
                         {[
-                          { id: 'email', label: 'Email', icon: '✉️' },
-                          { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
-                          { id: 'sms', label: 'SMS Alerts', icon: '📱' },
-                          { id: 'push', label: 'In-App Push', icon: '🔔' }
+                          { id: 'email', label: 'Email', icon: 'âœ‰ï¸' },
+                          { id: 'whatsapp', label: 'WhatsApp', icon: 'ðŸ’¬' },
+                          { id: 'sms', label: 'SMS Alerts', icon: 'ðŸ“±' },
+                          { id: 'push', label: 'In-App Push', icon: 'ðŸ””' }
                         ].map(channel => (
                           <div
                             key={channel.id}
@@ -8439,9 +9105,9 @@ Direct Management Contact: mgmt@intermaven.io`
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {[
                           'Instant Tour Pre-Sale Alerts & VIP Pass Holds',
-                          '🎵 Unreleased Digital MP3 Singles & Lossless Releases',
-                          '👕 Exclusive Fan Club Merchandise Flash Sales',
-                          '🎙️ Creator Behind-The-Scenes & Monthly Livestream Q&A'
+                          'ðŸŽµ Unreleased Digital MP3 Singles & Lossless Releases',
+                          'ðŸ‘• Exclusive Fan Club Merchandise Flash Sales',
+                          'ðŸŽ™ï¸ Creator Behind-The-Scenes & Monthly Livestream Q&A'
                         ].map((sub, idx) => (
                           <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.84rem', color: '#cbd5e1', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '3px' }}>
                             <input type="checkbox" defaultChecked style={{ accentColor: effectiveAccent }} />
@@ -8469,7 +9135,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {selectedTrackModal && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setSelectedTrackModal(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}55`, borderRadius: '3px', width: '100%', maxWidth: '520px', padding: '28px', color: '#fff', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
-            <button onClick={() => setSelectedTrackModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setSelectedTrackModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '20px' }}>
               <img
@@ -8485,7 +9151,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   {selectedTrackModal.title}
                 </h3>
                 <div style={{ fontSize: '0.78rem', color: effectiveAccent, fontWeight: 700 }}>
-                  ISRC: {selectedTrackModal.isrc || 'KE-TM1-26-00042'} • {selectedTrackModal.duration || '3:45'}
+                  ISRC: {selectedTrackModal.isrc || 'KE-TM1-26-00042'} â€¢ {selectedTrackModal.duration || '3:45'}
                 </div>
                 <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '4px' }}>
                   Audio Specification: FLAC / WAV 96kHz / 24-bit Studio Master
@@ -8497,7 +9163,7 @@ Direct Management Contact: mgmt@intermaven.io`
             <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '16px', marginBottom: '20px' }}>
               <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
                 <span>Waveform Analyzer</span>
-                <span style={{ color: effectiveAccent }}>124 BPM • D Minor</span>
+                <span style={{ color: effectiveAccent }}>124 BPM â€¢ D Minor</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '36px' }}>
                 {[30, 45, 75, 90, 60, 40, 85, 95, 70, 50, 65, 80, 100, 85, 60, 40, 75, 90, 80, 55, 65, 90, 75, 60, 45, 70, 85, 60, 40, 30].map((h, i) => (
@@ -8511,7 +9177,7 @@ Direct Management Contact: mgmt@intermaven.io`
               <button
                 onClick={() => {
                   window.open('http://localhost:3001', '_blank')
-                  showToast('🎧 Opening TuneStream Lossless Audio Player (localhost:3001)...')
+                  showToast('ðŸŽ§ Opening TuneStream Lossless Audio Player (localhost:3001)...')
                 }}
                 style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '12px', borderRadius: '3px', fontWeight: 900, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
@@ -8530,8 +9196,8 @@ Direct Management Contact: mgmt@intermaven.io`
                 </button>
                 <button
                   onClick={() => {
-                    showToast('⬇️ Downloading Uncompressed 24-bit WAV Master...')
-                    setTimeout(() => showToast('✅ Master WAV audio file ready in downloads.'), 1200)
+                    showToast('â¬‡ï¸ Downloading Uncompressed 24-bit WAV Master...')
+                    setTimeout(() => showToast('âœ… Master WAV audio file ready in downloads.'), 1200)
                   }}
                   style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px', borderRadius: '3px', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
@@ -8547,7 +9213,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {selectedEventModal && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setSelectedEventModal(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}55`, borderRadius: '3px', width: '100%', maxWidth: '580px', maxHeight: '90vh', overflowY: 'auto', padding: '28px', color: '#fff', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
-            <button onClick={() => setSelectedEventModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setSelectedEventModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             {/* Concert Flyer Thumbnail Banner */}
             <div style={{ position: 'relative', width: '100%', height: '260px', borderRadius: '3px', overflow: 'hidden', marginBottom: '20px', border: `1px solid ${effectiveAccent}44` }}>
@@ -8565,7 +9231,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   {selectedEventModal.venue}
                 </h2>
                 <div style={{ fontSize: '0.85rem', color: effectiveAccent, fontWeight: 700 }}>
-                  {selectedEventModal.city} • {selectedEventModal.date}
+                  {selectedEventModal.city} â€¢ {selectedEventModal.date}
                 </div>
               </div>
             </div>
@@ -8574,7 +9240,7 @@ Direct Management Contact: mgmt@intermaven.io`
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px', fontSize: '0.84rem' }}>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 800 }}>Doors & Showtime</div>
-                <div style={{ color: '#fff', fontWeight: 800, marginTop: '4px' }}>Doors: 7:00 PM • Live: 8:30 PM</div>
+                <div style={{ color: '#fff', fontWeight: 800, marginTop: '4px' }}>Doors: 7:00 PM â€¢ Live: 8:30 PM</div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 800 }}>Age Policy</div>
@@ -8610,7 +9276,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {selectedProductModal && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setSelectedProductModal(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}55`, borderRadius: '3px', width: '100%', maxWidth: '520px', padding: '28px', color: '#fff', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
-            <button onClick={() => setSelectedProductModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setSelectedProductModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             <div style={{ display: 'flex', gap: '18px', marginBottom: '20px' }}>
               <img
@@ -8725,13 +9391,13 @@ Direct Management Contact: mgmt@intermaven.io`
       {merchCheckoutOpen && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setMerchCheckoutOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}55`, borderRadius: '3px', width: '100%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto', padding: '28px', color: '#fff', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
-            <button onClick={() => { setMerchCheckoutOpen(false); setMerchOrderConfirmed(null); }} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => { setMerchCheckoutOpen(false); setMerchOrderConfirmed(null); }} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             {merchOrderConfirmed ? (
               /* ORDER CONFIRMATION SCREEN */
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: effectiveAccent, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', margin: '0 auto 16px' }}>
-                  ✓
+                  âœ“
                 </div>
                 <h3 style={{ margin: '0 0 6px', fontSize: '1.5rem', fontWeight: 900, color: '#fff' }}>
                   Order Confirmed!
@@ -8831,7 +9497,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             <strong style={{ color: '#22c55e', fontSize: '1.05rem' }}>{userCredits - requiredCredits} TM</strong>
                           </div>
                           <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '10px' }}>
-                            ✓ Direct TM Credits Deduction active. No external card or payment processor required.
+                            âœ“ Direct TM Credits Deduction active. No external card or payment processor required.
                           </div>
                         </div>
 
@@ -8849,7 +9515,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', padding: '14px' }}>
                         <div style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.86rem', marginBottom: '4px' }}>
-                          ⚠️ Credits Shortfall: {shortfall} TM Needed
+                          âš ï¸ Credits Shortfall: {shortfall} TM Needed
                         </div>
                         <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.45 }}>
                           Your current balance is <strong>{userCredits} TM</strong>, but this order requires <strong>{requiredCredits} TM</strong>.
@@ -8892,7 +9558,7 @@ Direct Management Contact: mgmt@intermaven.io`
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <input
                               type="text"
-                              placeholder="Card Number: 4242 •••• •••• 4242"
+                              placeholder="Card Number: 4242 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 4242"
                               value={merchCardNumber}
                               onChange={(e) => setMerchCardNumber(e.target.value)}
                               required
@@ -8925,7 +9591,7 @@ Direct Management Contact: mgmt@intermaven.io`
       {pricingModalOpen && (
         <div onClick={(e) => { if (e.target === e.currentTarget) setPricingModalOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#0a0d18', border: `1px solid ${effectiveAccent}55`, borderRadius: '3px', width: '100%', maxWidth: '460px', padding: '28px', color: '#fff', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.9)' }}>
-            <button onClick={() => setPricingModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setPricingModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>âœ•</button>
 
             <span style={{ background: effectiveAccent, color: '#000', fontWeight: 900, fontSize: '0.68rem', padding: '2px 8px', borderRadius: '3px', textTransform: 'uppercase' }}>
               Instant Top-Up
@@ -9046,7 +9712,7 @@ Direct Management Contact: mgmt@intermaven.io`
             display: 'inline-block'
           }} />
           <RiMusic2Fill style={{ color: effectiveAccent, fontSize: '1.1rem' }} />
-          <span>TuneMavens Hi-Fi Player {isPlaying ? '• Playing' : '• Paused'}</span>
+          <span>TuneMavens Hi-Fi Player {isPlaying ? 'â€¢ Playing' : 'â€¢ Paused'}</span>
         </button>
       )}
 
@@ -9233,11 +9899,11 @@ Direct Management Contact: mgmt@intermaven.io`
                     cursor: 'pointer'
                   }}
                 >
-                  <option value="all">🎵 All Singles ({tracks.length} Tracks)</option>
-                  <option value="vault">🔒 VIP Fan Vault Exclusives (3 Tracks)</option>
-                  <option value="top">🔥 Top Singles (5 Tracks)</option>
+                  <option value="all">ðŸŽµ All Singles ({tracks.length} Tracks)</option>
+                  <option value="vault">ðŸ”’ VIP Fan Vault Exclusives (3 Tracks)</option>
+                  <option value="top">ðŸ”¥ Top Singles (5 Tracks)</option>
                   {fanPlaylists.map(pl => (
-                    <option key={pl.id} value={pl.id}>📁 {pl.name} ({(pl.trackIds || []).length} Tracks)</option>
+                    <option key={pl.id} value={pl.id}>ðŸ“ {pl.name} ({(pl.trackIds || []).length} Tracks)</option>
                   ))}
                 </select>
               </div>
@@ -9269,12 +9935,12 @@ Direct Management Contact: mgmt@intermaven.io`
                   </div>
                   <div style={{ fontSize: '0.72rem', color: effectiveAccent, marginTop: '2px', fontWeight: 700, display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <span>{effectiveArtistName}</span>
-                    <span>•</span>
+                    <span>â€¢</span>
                     <span>ISRC: {currentTrack.isrc || 'KE-TM1-26-00042'}</span>
                   </div>
                   <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', padding: '1px 6px', borderRadius: '3px', fontSize: '0.62rem', fontWeight: 800 }}>
-                      Lossless MP3 • 320kbps
+                      Lossless MP3 â€¢ 320kbps
                     </span>
                     <span style={{ fontSize: '0.68rem', color: isLight ? '#64748b' : '#94a3b8' }}>
                       Track {playlistIndex + 1} of {currentPlaylistTracks.length}
@@ -9328,7 +9994,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   type="button"
                   onClick={() => {
                     setShuffleMode(!shuffleMode)
-                    showToast(shuffleMode ? '🔀 Shuffle mode: Sequenced' : '🔀 Shuffle mode: Random', 'info')
+                    showToast(shuffleMode ? 'ðŸ”€ Shuffle mode: Sequenced' : 'ðŸ”€ Shuffle mode: Random', 'info')
                   }}
                   title={shuffleMode ? "Shuffle: Random On (Click to switch to Sequenced)" : "Shuffle: Sequenced (Click to switch to Random)"}
                   style={{
@@ -9450,7 +10116,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   onClick={() => {
                     const nextMode = repeatMode === 'off' ? 'playlist' : repeatMode === 'playlist' ? 'track' : 'off'
                     setRepeatMode(nextMode)
-                    showToast(`🔁 Loop mode: ${nextMode === 'track' ? 'Repeat Track' : nextMode === 'playlist' ? 'Repeat Playlist' : 'Loop Off'}`, 'info')
+                    showToast(`ðŸ” Loop mode: ${nextMode === 'track' ? 'Repeat Track' : nextMode === 'playlist' ? 'Repeat Playlist' : 'Loop Off'}`, 'info')
                   }}
                   title={repeatMode === 'track' ? "Repeat: Single Track (Click to turn off)" : repeatMode === 'playlist' ? "Repeat: Entire Playlist (Click for single track)" : "Repeat: Off (Click for playlist loop)"}
                   style={{
@@ -9508,7 +10174,7 @@ Direct Management Contact: mgmt@intermaven.io`
 
                 <div style={{ fontSize: '0.68rem', color: isLight ? '#64748b' : '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span>Universal TuneStream Engine</span>
-                  <span style={{ color: '#22c55e' }}>●</span>
+                  <span style={{ color: '#22c55e' }}>â—</span>
                 </div>
               </div>
             </div>
@@ -9547,7 +10213,7 @@ class EpkViewErrorBoundary extends React.Component {
           fontFamily: 'Sansation, sans-serif'
         }}>
           <div style={{ background: '#0c101d', border: '1px solid rgba(255,255,255,0.1)', padding: '36px', borderRadius: '8px', maxWidth: '560px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🎵</div>
+            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>ðŸŽµ</div>
             <h2 style={{ color: '#00f0ff', margin: '0 0 10px' }}>Creator Web World Notice</h2>
             <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '18px' }}>
               We encountered a display issue while rendering your live Creator Web World.

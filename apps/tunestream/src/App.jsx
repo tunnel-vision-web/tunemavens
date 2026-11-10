@@ -1738,6 +1738,32 @@ export const AUTHORITATIVE_DJ_MIXES = [
   },
 ];
 
+function resolveDjSlug(djName) {
+  const raw = String(djName || '').toLowerCase().trim();
+  if (raw.includes('khalid')) return 'khalid';
+  if (raw.includes('souldier')) return 'djksouldier';
+  if (raw.includes('zinhle')) return 'djzinhlevibes';
+  if (raw.includes('maphoria')) return 'djmaphoria';
+  if (raw.includes('kofi')) return 'selectorkofi';
+  if (raw.includes('kalonje')) return 'djkalonje';
+  return raw.replace(/[^a-z0-9]/g, '') || 'khalid';
+}
+
+function resolveArtistPersona(artist) {
+  if (!artist) return 'artist';
+  const ct = String(artist.creator_type || artist.persona || '').toLowerCase();
+  if (ct === 'dj' || ct === 'producer' || ct === 'podcaster' || ct === 'label' || ct === 'publisher') {
+    return ct === 'publisher' ? 'label' : ct;
+  }
+  const roleStr = String(artist.role || '').toLowerCase();
+  const nameStr = String(artist.name || artist.subdomain || '').toLowerCase();
+  if (roleStr.includes('dj') || roleStr.includes('turntablist') || roleStr.includes('selector') || nameStr.startsWith('dj') || nameStr.includes('khalid') || nameStr.includes('selector')) return 'dj';
+  if (roleStr.includes('producer') || nameStr.includes('brian')) return 'producer';
+  if (roleStr.includes('label') || roleStr.includes('publisher') || nameStr.includes('cyber') || nameStr.includes('intermaven')) return 'label';
+  if (roleStr.includes('pod')) return 'podcaster';
+  return 'artist';
+}
+
 function TuneStreamDjMixesPanel({ onPlayTrack }) {
   const { formatPrice } = useRegion();
   const [mixes, setMixes] = useState(AUTHORITATIVE_DJ_MIXES);
@@ -1791,6 +1817,14 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
     });
   };
 
+  const featuredDjs = [
+    { name: 'Khalid Waves', slug: 'khalid', genre: 'Deep-House & Sunset Sets', city: 'Mombasa & Zanzibar', rateUsd: 1200 },
+    { name: 'DJ K-Souldier', slug: 'djksouldier', genre: 'Afro-Tech & Amapiano', city: 'Nairobi, Kenya', rateUsd: 1500 },
+    { name: 'DJ Zinhle Vibes', slug: 'djzinhlevibes', genre: 'Afro-House & Festival Mainstage', city: 'Johannesburg & Nairobi', rateUsd: 3500 },
+    { name: 'DJ Maphoria', slug: 'djmaphoria', genre: 'Private School Amapiano', city: 'Pretoria, South Africa', rateUsd: 3500 },
+    { name: 'Selector Kofi', slug: 'selectorkofi', genre: 'Afrobeats & Highlife Sound System', city: 'Accra, Ghana', rateUsd: 1200 },
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} data-testid="tunestream-dj-mixes-panel">
       <div style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(34,211,238,0.12) 0%, rgba(9,12,22,0.95) 100%)', border: '1px solid rgba(34,211,238,0.28)', borderRadius: '3px' }}>
@@ -1798,11 +1832,50 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
           <RiDiscFill size={13} /> Sovereign Rights-Cleared DJ Mixes
         </div>
         <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', margin: '0 0 6px' }}>
-          Curated DJ Mixes &amp; Continuous Club Sets
+          Curated DJ Mixes, Official DJ EPKs &amp; Direct Gig Booking
         </h2>
         <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0, maxWidth: '760px', lineHeight: 1.55 }}>
-          Stream continuous lossless DJ sets with extracted tracklists and 100% cleared IP splits (40% DJ / 50% Featured Track Rights Holders / 10% Platform).
+          Stream or purchase continuous lossless DJ sets with 100% cleared IP splits (40% DJ / 50% Featured Track Rights Holders / 10% Platform), or open any DJ&apos;s Official EPK to view their rate card, download their tech rider, and book them for a gig.
         </p>
+      </div>
+
+      {/* Featured Roster DJs Strip with Direct DJ EPK Links */}
+      <div style={{ background: '#090c16', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '3px', padding: '16px 18px' }} data-testid="featured-djs-epk-strip">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            🎧 Official Roster DJs — Click to Open DJ EPK, Rate Card &amp; Gig Booking
+          </div>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>All DJ EPKs include Mixes Store, Rate Card Download &amp; Escrow Gig Booking</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+          {featuredDjs.map((dj) => (
+            <a
+              key={dj.slug}
+              href={`#/epk/${dj.slug}?persona=dj`}
+              data-testid={`featured-dj-epk-card-${dj.slug}`}
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(34,211,238,0.22)',
+                borderRadius: '3px',
+                padding: '10px 12px',
+                textDecoration: 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: '6px'
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '13.5px', fontWeight: 900, color: '#fff' }}>{dj.name}</div>
+                <div style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 700 }}>{dj.genre}</div>
+                <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>{dj.city} · From {formatPrice ? formatPrice(dj.rateUsd) : `$${dj.rateUsd}`}</div>
+              </div>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: '#060813', background: '#22d3ee', padding: '5px 8px', borderRadius: '3px', textAlign: 'center', marginTop: '4px' }}>
+                🌐 Open DJ EPK &amp; Book →
+              </div>
+            </a>
+          ))}
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', background: '#090c16', padding: '14px 18px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
@@ -1837,59 +1910,80 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '16px' }}>
-        {filtered.map((mix) => (
-          <div
-            key={mix.id || mix.title}
-            style={{ background: '#090c16', border: '1px solid rgba(34,211,238,0.22)', borderRadius: '3px', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
-          >
-            <div>
-              <div style={{ position: 'relative', height: '170px', overflow: 'hidden', background: '#0e1424' }}>
-                <img
-                  src={mix.artwork_url || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
-                  alt={mix.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <span style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(6,8,19,0.85)', color: '#22d3ee', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
-                  {mix.genre} · {mix.bpm_avg || 120} BPM
-                </span>
-                <span style={{ position: 'absolute', top: '10px', right: '10px', background: mix.is_original_ip_only ? 'rgba(168,85,247,0.9)' : 'rgba(16,185,129,0.9)', color: '#fff', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
-                  {mix.is_original_ip_only ? '100% Original IP' : '✓ 100% Rights Cleared'}
-                </span>
-              </div>
-              <div style={{ padding: '16px' }}>
-                <h4 style={{ margin: '0 0 4px', fontSize: '15px', color: '#fff', fontWeight: 800 }}>{mix.title}</h4>
-                <div style={{ fontSize: '12px', color: '#22d3ee', fontWeight: 700, marginBottom: '8px' }}>Curated by {mix.dj_name}</div>
-                <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.45, margin: '0 0 12px' }}>{mix.description}</p>
-                {Array.isArray(mix.tracklist) && mix.tracklist.length > 0 && (
-                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', padding: '8px 10px', marginBottom: '12px' }}>
-                    <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>
-                      Extracted Tracklist ({mix.tracklist.length} Tracks · 40% DJ / 50% IP)
-                    </div>
-                    {mix.tracklist.slice(0, 3).map((t, i) => (
-                      <div key={t.id || i} style={{ fontSize: '11px', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                        <span>{t.artist} — {t.title}</span>
-                        <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
-                      </div>
-                    ))}
+        {filtered.map((mix) => {
+          const djSlug = resolveDjSlug(mix.dj_name);
+          return (
+            <div
+              key={mix.id || mix.title}
+              style={{ background: '#090c16', border: '1px solid rgba(34,211,238,0.22)', borderRadius: '3px', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+            >
+              <div>
+                <div style={{ position: 'relative', height: '170px', overflow: 'hidden', background: '#0e1424' }}>
+                  <img
+                    src={mix.artwork_url || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
+                    alt={mix.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <span style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(6,8,19,0.85)', color: '#22d3ee', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
+                    {mix.genre} · {mix.bpm_avg || 120} BPM
+                  </span>
+                  <span style={{ position: 'absolute', top: '10px', right: '10px', background: mix.is_original_ip_only ? 'rgba(168,85,247,0.9)' : 'rgba(16,185,129,0.9)', color: '#fff', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
+                    {mix.is_original_ip_only ? '100% Original IP' : '✓ 100% Rights Cleared'}
+                  </span>
+                </div>
+                <div style={{ padding: '16px' }}>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '15px', color: '#fff', fontWeight: 800 }}>{mix.title}</h4>
+                  <div style={{ fontSize: '12px', color: '#22d3ee', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <a
+                      href={`#/epk/${djSlug}?persona=dj`}
+                      style={{ color: '#22d3ee', textDecoration: 'underline', fontWeight: 800 }}
+                      title={`Open ${mix.dj_name} Official DJ EPK`}
+                    >
+                      Curated by {mix.dj_name} ↗
+                    </a>
+                    <span style={{ fontSize: '10.5px', color: '#10b981' }}>DJ EPK Ready</span>
                   </div>
-                )}
+                  <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.45, margin: '0 0 12px' }}>{mix.description}</p>
+                  {Array.isArray(mix.tracklist) && mix.tracklist.length > 0 && (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', padding: '8px 10px', marginBottom: '12px' }}>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>
+                        Extracted Tracklist ({mix.tracklist.length} Tracks · 40% DJ / 50% IP)
+                      </div>
+                      {mix.tracklist.slice(0, 3).map((t, i) => (
+                        <div key={t.id || i} style={{ fontSize: '11px', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                          <span>{t.artist} — {t.title}</span>
+                          <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style={{ padding: '0 16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>
+                  {formatPrice ? formatPrice(mix.commercial_price || 4.99) : `$${mix.commercial_price || 4.99}`}
+                  <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{Math.round((mix.commercial_price || 4.99) * 100)} TM Credits</span>
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <a
+                    href={`#/epk/${djSlug}?persona=dj`}
+                    data-testid="dj-mix-epk-link"
+                    style={{ padding: '8px 11px', background: 'rgba(34,211,238,0.12)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.4)', borderRadius: '3px', fontSize: '11.5px', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    🌐 DJ EPK &amp; Book
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handlePlayMix(mix)}
+                    style={{ padding: '8px 14px', background: '#22d3ee', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                  >
+                    <RiPlayFill size={15} /> Stream Mix
+                  </button>
+                </div>
               </div>
             </div>
-            <div style={{ padding: '0 16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>
-                {formatPrice ? formatPrice(mix.commercial_price || 4.99) : `$${mix.commercial_price || 4.99}`}
-                <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{Math.round((mix.commercial_price || 4.99) * 100)} TM Credits</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => handlePlayMix(mix)}
-                style={{ padding: '8px 16px', background: '#22d3ee', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <RiPlayFill size={15} /> Stream Mix
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -2384,55 +2478,72 @@ function TuneStreamExplorePanel({
             </h3>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '16px' }}>
-            {displayedDjMixes.map((mix) => (
-              <div
-                key={mix.id || mix.title}
-                style={{ background: '#090c16', border: '1px solid rgba(0,242,254,0.25)', borderRadius: '3px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                    <img
-                      src={mix.artwork_url || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
-                      alt={mix.title}
-                      style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.12)' }}
-                    />
-                    <div>
-                      <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#00f2fe', background: 'rgba(0,242,254,0.12)', padding: '2px 6px', borderRadius: '3px' }}>
-                        DJ MIX • {mix.genre} • {mix.bpm_avg || 120} BPM
-                      </span>
-                      <h4 style={{ margin: '4px 0 2px', fontSize: '14.5px', color: '#fff', fontWeight: 800 }}>{mix.title}</h4>
-                      <div style={{ fontSize: '11.5px', color: '#10b981', fontWeight: 700 }}>By {mix.dj_name}</div>
+            {displayedDjMixes.map((mix) => {
+              const djSlug = resolveDjSlug(mix.dj_name);
+              return (
+                <div
+                  key={mix.id || mix.title}
+                  style={{ background: '#090c16', border: '1px solid rgba(0,242,254,0.25)', borderRadius: '3px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                      <img
+                        src={mix.artwork_url || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
+                        alt={mix.title}
+                        style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.12)' }}
+                      />
+                      <div>
+                        <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#00f2fe', background: 'rgba(0,242,254,0.12)', padding: '2px 6px', borderRadius: '3px' }}>
+                          DJ MIX • {mix.genre} • {mix.bpm_avg || 120} BPM
+                        </span>
+                        <h4 style={{ margin: '4px 0 2px', fontSize: '14.5px', color: '#fff', fontWeight: 800 }}>{mix.title}</h4>
+                        <a
+                          href={`#/epk/${djSlug}?persona=dj`}
+                          style={{ fontSize: '11.5px', color: '#10b981', fontWeight: 800, textDecoration: 'underline' }}
+                        >
+                          By {mix.dj_name} (DJ EPK ↗)
+                        </a>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.45, margin: 0 }}>{mix.description}</p>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
+                      {mix.is_original_ip_only ? '✓ 100% Sovereign IP' : `✓ ${mix.tracklist?.length || 3} Tracks Cleared`}
+                    </span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <a
+                        href={`#/epk/${djSlug}?persona=dj`}
+                        data-testid="explore-dj-epk-link"
+                        style={{ padding: '7px 10px', background: 'rgba(0,242,254,0.12)', color: '#00f2fe', border: '1px solid rgba(0,242,254,0.4)', borderRadius: '3px', fontSize: '11px', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        🌐 DJ EPK
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onPlayTrack({
+                            id: mix.id || `mix_${mix.title}`,
+                            title: mix.title,
+                            artist: mix.dj_name || 'Verified DJ',
+                            album: `DJ Mix · ${mix.bpm_avg || 120} BPM`,
+                            releaseType: 'DJ Mix',
+                            genre: mix.genre || 'Afro-House',
+                            duration: mix.duration || `${Math.round((mix.duration_seconds || 2400) / 60)}:00`,
+                            cover: mix.artwork_url,
+                            coverArt: mix.artwork_url,
+                            audioUrl: mix.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                          })
+                        }
+                        style={{ padding: '7px 12px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <RiPlayFill size={14} /> Stream Mix
+                      </button>
                     </div>
                   </div>
-                  <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.45, margin: 0 }}>{mix.description}</p>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
-                  <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
-                    {mix.is_original_ip_only ? '✓ 100% Sovereign IP' : `✓ ${mix.tracklist?.length || 3} Tracks Cleared`}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onPlayTrack({
-                        id: mix.id || `mix_${mix.title}`,
-                        title: mix.title,
-                        artist: mix.dj_name || 'Verified DJ',
-                        album: `DJ Mix · ${mix.bpm_avg || 120} BPM`,
-                        releaseType: 'DJ Mix',
-                        genre: mix.genre || 'Afro-House',
-                        duration: mix.duration || `${Math.round((mix.duration_seconds || 2400) / 60)}:00`,
-                        cover: mix.artwork_url,
-                        coverArt: mix.artwork_url,
-                        audioUrl: mix.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-                      })
-                    }
-                    style={{ padding: '7px 14px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                  >
-                    <RiPlayFill size={14} /> Stream Mix
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -2492,11 +2603,11 @@ function TuneStreamExplorePanel({
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
                     <span>Catalogue: {artistTracks.length} tracks</span>
                     <a 
-                      href={`#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
+                      href={`#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}?persona=${resolveArtistPersona(artist)}`}
                       rel="noreferrer"
                       style={{ color: '#00f2fe', textDecoration: 'none', fontWeight: '700' }}
                     >
-                      🌐 Web World &rarr;
+                      🌐 {resolveArtistPersona(artist) === 'dj' ? 'DJ EPK & Rate Card' : resolveArtistPersona(artist) === 'producer' ? 'Producer EPK' : resolveArtistPersona(artist) === 'label' ? 'Label EPK' : 'Web World'} &rarr;
                     </a>
                   </div>
 
@@ -2819,12 +2930,11 @@ function TuneStreamArtistsPanel({ artists = [], tracks = [], currentTrack, onPla
                   <RiPlayFill size={16} /> Listen to Artist
                 </button>
                 <a
-                  href={`#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}`}
-                  
+                  href={`#/epk/${artist.subdomain || artist.name.toLowerCase().replace(/\s+/g, '')}?persona=${resolveArtistPersona(artist)}`}
                   rel="noreferrer"
                   style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', fontSize: '11px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center' }}
                 >
-                  🌐 EPK
+                  🌐 {resolveArtistPersona(artist) === 'dj' ? 'DJ EPK' : resolveArtistPersona(artist) === 'producer' ? 'Producer EPK' : resolveArtistPersona(artist) === 'label' ? 'Label EPK' : 'EPK'}
                 </a>
               </div>
             </div>

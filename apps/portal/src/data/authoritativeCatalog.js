@@ -227,6 +227,118 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     "/heroes/ndufo_hero_slide3_retina.jpg"
 ],
     "headerImageUrl": "/headers/header_intermavenpub_custom.jpg"
+  },
+  {
+    "id": "art_djksouldier",
+    "subdomain": "djksouldier",
+    "name": "DJ K-Souldier",
+    "creator_type": "dj",
+    "role": "Turntablist & Club Resident DJ",
+    "genre": "Afro-Tech & Amapiano",
+    "bio": "Nairobi's premier Afro-Tech and Amapiano turntablist, known for high-voltage peak-hour sets at The Alchemist, Blankets & Wine, and international club circuits.",
+    "avatar": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80",
+    "banner": "/headers/header_khalid_custom.jpg",
+    "location": "Nairobi, Kenya",
+    "listeners": "1.2M listeners",
+    "followers_count": 68400,
+    "subscribers_count": 22100,
+    "socials": {
+      "instagram": "djksouldier_ke",
+      "twitter": "djksouldier",
+      "youtube": "DJKSouldierLive",
+      "soundcloud": "dj-k-souldier"
+    },
+    "is_default": false,
+    "created_at": "2026-09-15T10:00:00.000000",
+    "images": [
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80",
+      "/headers/header_khalid_custom.jpg"
+    ],
+    "headerImageUrl": "/headers/header_khalid_custom.jpg"
+  },
+  {
+    "id": "art_djzinhlevibes",
+    "subdomain": "djzinhlevibes",
+    "name": "DJ Zinhle Vibes",
+    "creator_type": "dj",
+    "role": "Headline Festival & Club DJ",
+    "genre": "Afro-House & Deep Tech",
+    "bio": "Pan-African festival headline DJ and producer blending soulful South African Afro-House with East African percussion and 24-bit live stems.",
+    "avatar": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80",
+    "banner": "/headers/header_khalid_custom.jpg",
+    "location": "Johannesburg & Nairobi",
+    "listeners": "2.4M listeners",
+    "followers_count": 134000,
+    "subscribers_count": 41900,
+    "socials": {
+      "instagram": "djzinhlevibes",
+      "twitter": "djzinhlevibes",
+      "youtube": "DJZinhleVibesOfficial",
+      "soundcloud": "djzinhlevibes"
+    },
+    "is_default": false,
+    "created_at": "2026-09-15T10:00:00.000000",
+    "images": [
+      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80",
+      "/headers/header_khalid_custom.jpg"
+    ],
+    "headerImageUrl": "/headers/header_khalid_custom.jpg"
+  },
+  {
+    "id": "art_djmaphoria",
+    "subdomain": "djmaphoria",
+    "name": "DJ Maphoria",
+    "creator_type": "dj",
+    "role": "Amapiano Pioneer & Festival DJ",
+    "genre": "Amapiano",
+    "bio": "Master of the Private School Piano and Soweto log-drum sound, headlining major African and European festival mainstages with 100% cleared mixes.",
+    "avatar": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80",
+    "banner": "/headers/header_khalid_custom.jpg",
+    "location": "Pretoria, South Africa",
+    "listeners": "2.9M listeners",
+    "followers_count": 158000,
+    "subscribers_count": 53000,
+    "socials": {
+      "instagram": "djmaphoria_sa",
+      "twitter": "djmaphoria",
+      "youtube": "DJMaphoriaSets",
+      "soundcloud": "djmaphoria"
+    },
+    "is_default": false,
+    "created_at": "2026-09-15T10:00:00.000000",
+    "images": [
+      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80",
+      "/headers/header_khalid_custom.jpg"
+    ],
+    "headerImageUrl": "/headers/header_khalid_custom.jpg"
+  },
+  {
+    "id": "art_selectorkofi",
+    "subdomain": "selectorkofi",
+    "name": "Selector Kofi",
+    "creator_type": "dj",
+    "role": "Afrobeats & Highlife Sound System DJ",
+    "genre": "Afrobeats & Alté",
+    "bio": "Accra and Lagos club selector curating authoritative Afrobeats, Highlife, and Alté sound-system mixes with verified creator royalty splits.",
+    "avatar": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80",
+    "banner": "/headers/header_khalid_custom.jpg",
+    "location": "Accra, Ghana",
+    "listeners": "1.1M listeners",
+    "followers_count": 61200,
+    "subscribers_count": 19800,
+    "socials": {
+      "instagram": "selectorkofi_gh",
+      "twitter": "selectorkofi",
+      "youtube": "SelectorKofiLive",
+      "soundcloud": "selectorkofi"
+    },
+    "is_default": false,
+    "created_at": "2026-09-15T10:00:00.000000",
+    "images": [
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80",
+      "/headers/header_khalid_custom.jpg"
+    ],
+    "headerImageUrl": "/headers/header_khalid_custom.jpg"
   }
 ];
 

@@ -563,12 +563,23 @@ export default function NativeAppLandingView({
   const [podcastsList, setPodcastsList] = useState(AUTHORITATIVE_PODCAST_SHOWS);
   const [activePodcasterEpkShow, setActivePodcasterEpkShow] = useState(null);
   const [exploreSearch, setExploreSearch] = useState('');
-  const [exploreFilter, setExploreFilter] = useState('all');
+  const [exploreFilter, setExploreFilter] = useState(() => {
+    const f = searchParams.get('filter');
+    return (f && ['all', 'creators', 'singles', 'albums', 'dj-mixes', 'playlists'].includes(f)) ? f : 'all';
+  });
   const [exploreGenre, setExploreGenre] = useState('all');
   const [exploreSort, setExploreSort] = useState('newest');
   const [activeHiFiTrack, setActiveHiFiTrack] = useState(null);
   const [isHiFiPlaying, setIsHiFiPlaying] = useState(false);
   const creatorSlugParam = searchParams.get('creator');
+  const filterParam = searchParams.get('filter');
+
+  useEffect(() => {
+    if (filterParam && ['all', 'creators', 'singles', 'albums', 'dj-mixes', 'playlists'].includes(filterParam)) {
+      setExploreFilter(filterParam);
+      setExplorePage(1);
+    }
+  }, [filterParam]);
   const [selectedCreatorProfile, setSelectedCreatorProfile] = useState(null);
   const { formatPrice, currencyInfo, regionalMessaging, getRegionalMessaging } = useRegion();
   const [planBillingCycle, setPlanBillingCycle] = useState('monthly');
@@ -1635,11 +1646,18 @@ export default function NativeAppLandingView({
       const popularCreators = artists.map(a => ({
         id: a.id,
         name: a.name,
-        role: a.role || 'Signed Creator',
+        role: a.role || (a.creator_type === 'dj' ? 'Club & Festival DJ' : 'Signed Creator'),
         genre: a.genre || 'Afro-fusion',
-        listeners: a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners',
+        listeners: a.listeners || (a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners'),
         avatar: normalizeMediaUrl(a.avatar) || `https://picsum.photos/seed/${a.id}/400/400`,
-        subdomain: a.subdomain
+        banner: a.banner,
+        bio: a.bio,
+        location: a.location,
+        socials: a.socials,
+        followers_count: a.followers_count,
+        subscribers_count: a.subscribers_count,
+        creator_type: a.creator_type || 'artist',
+        subdomain: a.subdomain || (a.name ? a.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'ndufo')
       }));
 
       const popularSingles = singlesList.map((t, idx) => ({
@@ -1714,20 +1732,47 @@ export default function NativeAppLandingView({
                 renderItem={(artist) => (
                   <div 
                     className="landing-feature-card" 
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
+                    style={{ background: 'rgba(255,255,255,0.02)', border: artist.creator_type === 'dj' ? '1px solid rgba(168,85,247,0.35)' : '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }} 
                     onClick={() => handleArtistClick(artist)}
                   >
-                    <div style={{ width: '90px', height: '90px', borderRadius: '3px', margin: '0 auto 12px', overflow: 'hidden', background: '#0e1424', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ width: '90px', height: '90px', borderRadius: '3px', margin: '0 auto 12px', overflow: 'hidden', background: '#0e1424', border: artist.creator_type === 'dj' ? '1.5px solid #a855f7' : '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
                       <img 
                         src={artist.avatar} 
                         alt={artist.name} 
                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
                         onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${artist.id}/400/400`; }}
                       />
+                      {artist.creator_type === 'dj' && (
+                        <span style={{ position: 'absolute', bottom: '4px', left: '4px', right: '4px', background: 'rgba(124,58,237,0.92)', color: '#fff', fontSize: '8px', fontWeight: 900, padding: '2px 4px', borderRadius: '2px', textTransform: 'uppercase' }}>
+                          🎧 DJ
+                        </span>
+                      )}
                     </div>
                     <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{artist.name}</h3>
-                    <span style={{ fontSize: '11px', color: 'var(--cyan)', display: 'block', marginBottom: '4px' }}>{artist.genre}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{artist.listeners}</span>
+                    <span style={{ fontSize: '11px', color: artist.creator_type === 'dj' ? '#c084fc' : 'var(--cyan)', display: 'block', marginBottom: '4px' }}>{artist.genre}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--mu)', marginBottom: '10px', display: 'block' }}>{artist.listeners}</span>
+                    <button
+                      type="button"
+                      data-testid={`listen-creator-epk-btn-${artist.subdomain}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/epk/${artist.subdomain}?persona=${artist.creator_type || 'artist'}`);
+                      }}
+                      style={{
+                        marginTop: 'auto',
+                        width: '100%',
+                        padding: '6px 10px',
+                        borderRadius: '3px',
+                        border: artist.creator_type === 'dj' ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(0,242,254,0.35)',
+                        background: artist.creator_type === 'dj' ? 'rgba(168,85,247,0.15)' : 'rgba(0,242,254,0.1)',
+                        color: artist.creator_type === 'dj' ? '#c084fc' : '#00f2fe',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {artist.creator_type === 'dj' ? '🌐 DJ EPK & Book' : '🌐 Open EPK'}
+                    </button>
                   </div>
                 )}
               />
@@ -1976,9 +2021,12 @@ export default function NativeAppLandingView({
     };
     const renderExplore = () => {
       if (selectedCreatorProfile) {
+        const resolvedSub = selectedCreatorProfile.subdomain || (selectedCreatorProfile.name ? selectedCreatorProfile.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'ndufo');
+        const resolvedPersona = selectedCreatorProfile.creator_type || (resolvedSub.includes('dj') || resolvedSub.includes('khalid') || resolvedSub.includes('selector') ? 'dj' : 'artist');
         return (
           <CreatorProfileView
             creator={selectedCreatorProfile}
+            subdomain={resolvedSub}
             tracks={tracks}
             onBack={() => {
               setSelectedCreatorProfile(null);
@@ -1987,7 +2035,7 @@ export default function NativeAppLandingView({
               navigate(`?${sp.toString()}`, { replace: true });
             }}
             onPlayTrack={handlePlaySong}
-            onNavigateToEpk={(sub) => navigate(`/epk/${sub}`)}
+            onNavigateToEpk={(sub, persona) => navigate(`/epk/${sub || resolvedSub}?persona=${persona || resolvedPersona}`)}
             sessionUser={sessionUser}
           />
         );
@@ -2306,25 +2354,30 @@ export default function NativeAppLandingView({
           targetCreator = item.data;
         } else {
           const artistName = item.data?.artist || item.title || '';
+          const cleanSlug = artistName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const isDj = item.kind === 'dj-mix' || cleanSlug.startsWith('dj') || cleanSlug.startsWith('selector') || cleanSlug.includes('khalid');
           targetCreator = popularCreators.find(c => 
             c.name.toLowerCase() === artistName.toLowerCase() ||
-            c.subdomain.toLowerCase() === artistName.toLowerCase().replace(/[^a-z0-9]/g, '')
+            (c.subdomain && c.subdomain.toLowerCase() === cleanSlug) ||
+            (isDj && cleanSlug.includes('khalid') && c.subdomain === 'khalid')
           );
           if (!targetCreator) {
             targetCreator = {
-              id: `art_${artistName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+              id: `${isDj ? 'dj' : 'art'}_${cleanSlug}`,
               name: artistName,
-              creator_type: item.kind === 'album' ? 'artist' : 'artist',
-              role: 'Signed Recording Artist',
-              genre: item.genre || 'Afro-fusion',
-              bio: `${artistName} is an active creator in the TuneMavens ecosystem, producing high-fidelity lossless masters with automated split contracts and international sync clearance.`,
+              creator_type: isDj ? 'dj' : 'artist',
+              role: isDj ? 'Resident Club & Festival DJ' : 'Signed Recording Artist',
+              genre: item.genre || (isDj ? 'Afro-Tech / Amapiano' : 'Afro-fusion'),
+              bio: isDj
+                ? `${artistName} is a verified TuneMavens club & festival DJ curating 100% split-cleared master sets with instant M-Pesa & TM Credit downloads, official rate cards, and direct gig booking.`
+                : `${artistName} is an active creator in the TuneMavens ecosystem, producing high-fidelity lossless masters with automated split contracts and international sync clearance.`,
               avatar: item.cover,
               banner: item.cover,
               location: 'Nairobi, Kenya',
               listeners: '1.2M listeners',
               followers_count: 85000,
               subscribers_count: 22000,
-              subdomain: artistName.toLowerCase().replace(/[^a-z0-9]/g, '')
+              subdomain: cleanSlug.includes('khalid') ? 'khalid' : cleanSlug
             };
           }
         }
@@ -2627,11 +2680,43 @@ export default function NativeAppLandingView({
                   </div>
                   <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: '700', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</h3>
                   <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subtitle}</p>
-                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                    <span style={{ color: 'var(--mu)', fontFamily: item.kind === 'single' ? 'monospace' : 'inherit' }}>{item.metaLeft}</span>
-                    <span style={{ color: (item.kind === 'podcaster' || item.kind === 'podcast') ? '#ec4899' : item.kind === 'creator' ? 'var(--cyan)' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold' }}>
-                      {(item.kind === 'podcaster' || item.kind === 'podcast') ? 'Open Podcaster EPK →' : 'View Creator Profile →'}
-                    </span>
+                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)', gap: '6px' }}>
+                    <span style={{ color: 'var(--mu)', fontFamily: item.kind === 'single' ? 'monospace' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.metaLeft}</span>
+                    {(item.kind === 'dj-mix' || item.kind === 'creator') ? (
+                      <button
+                        type="button"
+                        data-testid={`explore-open-epk-btn-${item.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.kind === 'dj-mix') {
+                            const rawDj = (item.data?.artist || 'khalid').toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const djSlug = rawDj.includes('khalid') ? 'khalid' : rawDj;
+                            navigate(`/epk/${djSlug}?persona=dj`);
+                          } else {
+                            const sub = item.data?.subdomain || (item.title || 'ndufo').toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const persona = item.data?.creator_type || (sub.includes('dj') || sub.includes('khalid') || sub.includes('selector') ? 'dj' : 'artist');
+                            navigate(`/epk/${sub}?persona=${persona}`);
+                          }
+                        }}
+                        style={{
+                          background: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? 'rgba(168,85,247,0.18)' : 'rgba(0,242,254,0.12)',
+                          border: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(0,242,254,0.35)',
+                          color: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '#c084fc' : 'var(--cyan)',
+                          padding: '3px 8px',
+                          borderRadius: '3px',
+                          fontSize: '10.5px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {(item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '🌐 Open DJ EPK →' : '🌐 Open EPK →'}
+                      </button>
+                    ) : (
+                      <span style={{ color: (item.kind === 'podcaster' || item.kind === 'podcast') ? '#ec4899' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                        {(item.kind === 'podcaster' || item.kind === 'podcast') ? 'Open Podcaster EPK →' : 'View Creator Profile →'}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -3769,11 +3854,9 @@ export default function NativeAppLandingView({
 
 export function LandingNavbar({ view, setView, sessionUser, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
-  const [supportDropdownOpen, setSupportDropdownOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null); // 'discover' | 'suite' | 'apps' | 'support' | null
   const [scrolled, setScrolled] = useState(false);
-  const libraryDropdownRef = useRef(null);
-  const supportDropdownRef = useRef(null);
+  const navMenuRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -3784,23 +3867,24 @@ export function LandingNavbar({ view, setView, sessionUser, onLogout }) {
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (libraryDropdownRef.current && !libraryDropdownRef.current.contains(e.target)) {
-        setLibraryDropdownOpen(false);
-      }
-      if (supportDropdownRef.current && !supportDropdownRef.current.contains(e.target)) {
-        setSupportDropdownOpen(false);
+      if (navMenuRef.current && !navMenuRef.current.contains(e.target)) {
+        setOpenMenu(null);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
+  const toggleDropdown = (key) => {
+    setOpenMenu(prev => (prev === key ? null : key));
+  };
+
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-      <div className="nav-inner-container">
+      <div className="nav-inner-container" ref={navMenuRef}>
         {/* Brand Logo & Utility Tagline */}
         <div className="nav-logo-container-role" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', padding: '6px 0' }}>
-          <Link to="/" onClick={() => { setView('listen'); setMobileOpen(false); }} className="nav-logo-link">
+          <Link to="/" onClick={() => { setView('listen'); setOpenMenu(null); setMobileOpen(false); }} className="nav-logo-link">
             <img
               src={tsLogo}
               alt="TuneStream Logo"
@@ -3820,79 +3904,162 @@ export function LandingNavbar({ view, setView, sessionUser, onLogout }) {
           {mobileOpen ? <RiCloseFill size={24} /> : <RiMenuFill size={24} />}
         </button>
 
-        {/* Nav Links */}
+        {/* Grouped Dropdown Nav Links */}
         <ul className={`nav-links ${mobileOpen ? 'mobile-open' : ''}`}>
-          <li>
-            <Link to="?view=listen" className={`nav-link ${view === 'listen' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
-              Listen
-            </Link>
-          </li>
-          <li>
-            <Link to="?view=explore" className={`nav-link ${view === 'explore' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
-              Explore
-            </Link>
-          </li>
-          <li className="dropdown-container" ref={libraryDropdownRef}>
+          {/* 1. Discover & Stream Dropdown (Listen, Explore, DJ Mixes, Creators, Singles/Albums, Podcasts, Web Player) */}
+          <li
+            className="dropdown-container"
+            onMouseEnter={() => setOpenMenu('discover')}
+            onMouseLeave={() => setOpenMenu(prev => (prev === 'discover' ? null : prev))}
+          >
             <button
-              className="nav-link dropdown-trigger"
-              onClick={() => setLibraryDropdownOpen(!libraryDropdownOpen)}
+              type="button"
+              data-testid="nav-discover-dropdown-trigger"
+              className={`nav-link dropdown-trigger ${['listen', 'explore', 'browse-podcasts'].includes(view) ? 'active' : ''}`}
+              onClick={() => toggleDropdown('discover')}
             >
-              My Suite
-              <RiArrowDownSFill size={14} />
+              Discover &amp; Stream
+              <RiArrowDownSFill size={14} style={{ transform: openMenu === 'discover' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
             </button>
-            <ul className={`dropdown-menu ${libraryDropdownOpen ? 'open' : ''}`}>
+            <ul className={`dropdown-menu ${openMenu === 'discover' ? 'open' : ''}`} style={{ minWidth: '240px' }}>
               <li>
-                <Link to="?view=playlists" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
-                  Playlists
+                <Link to="?view=listen" className="dropdown-link" onClick={() => { setView('listen'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiHeadphoneFill size={16} /> Listen Home &amp; Featured
                 </Link>
               </li>
               <li>
-                <Link to="?view=create-playlist" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
-                  Create Playlist
+                <Link to="?view=explore&filter=all" className="dropdown-link" onClick={() => { setView('explore'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiDiscFill size={16} /> Explore Full Catalog
                 </Link>
               </li>
               <li>
-                <Link to="?view=browse-podcasts" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
-                  Browse Podcasts
+                <Link to="?view=explore&filter=dj-mixes" className="dropdown-link" onClick={() => { setView('explore'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiEqualizerFill size={16} /> Cleared DJ Mixes &amp; DJ EPKs
                 </Link>
               </li>
               <li>
-                <Link to="?view=tours" className="dropdown-link" onClick={() => { setLibraryDropdownOpen(false); setMobileOpen(false); }}>
-                  Tours and Events
+                <Link to="?view=explore&filter=creators" className="dropdown-link" onClick={() => { setView('explore'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiRadioFill size={16} /> Signed Creators &amp; EPKs
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=explore&filter=singles" className="dropdown-link" onClick={() => { setView('explore'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiMusicFill size={16} /> Singles, Albums &amp; EPs
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=browse-podcasts" className="dropdown-link" onClick={() => { setView('browse-podcasts'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiMicFill size={16} /> Podcasts &amp; Host EPKs
+                </Link>
+              </li>
+              <li>
+                <Link to="/stream" className="dropdown-link" onClick={() => { setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiPlayFill size={16} /> Full Hi-Fi Web Player
                 </Link>
               </li>
             </ul>
           </li>
 
-          <li>
-            <Link to="?view=apps" className={`nav-link ${view === 'apps' ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
-              Apps
-            </Link>
-          </li>
-          <li className="dropdown-container" ref={supportDropdownRef}>
+          {/* 2. My Suite & Live Dropdown (Playlists, Create Playlist, Tours & Events, Tour Capital) */}
+          <li
+            className="dropdown-container"
+            onMouseEnter={() => setOpenMenu('suite')}
+            onMouseLeave={() => setOpenMenu(prev => (prev === 'suite' ? null : prev))}
+          >
             <button
               type="button"
+              data-testid="nav-suite-dropdown-trigger"
+              className={`nav-link dropdown-trigger ${['playlists', 'create-playlist', 'tours', 'tour-capital'].includes(view) ? 'active' : ''}`}
+              onClick={() => toggleDropdown('suite')}
+            >
+              My Suite &amp; Live
+              <RiArrowDownSFill size={14} style={{ transform: openMenu === 'suite' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+            <ul className={`dropdown-menu ${openMenu === 'suite' ? 'open' : ''}`} style={{ minWidth: '230px' }}>
+              <li>
+                <Link to="?view=playlists" className="dropdown-link" onClick={() => { setView('playlists'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiMusicFill size={16} /> My Playlists
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=create-playlist" className="dropdown-link" onClick={() => { setView('create-playlist'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiFolderAddFill size={16} /> Create Playlist
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=tours" className="dropdown-link" onClick={() => { setView('tours'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiTicket2Fill size={16} /> Tours, Concerts &amp; Events
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=tour-capital" className="dropdown-link" onClick={() => { setView('tour-capital'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiCoinsFill size={16} /> Tour Venture Capital Vault
+                </Link>
+              </li>
+            </ul>
+          </li>
+
+          {/* 3. Apps & Plans Dropdown (Device Apps, Credit Plans, Always-Free Tier) */}
+          <li
+            className="dropdown-container"
+            onMouseEnter={() => setOpenMenu('apps')}
+            onMouseLeave={() => setOpenMenu(prev => (prev === 'apps' ? null : prev))}
+          >
+            <button
+              type="button"
+              data-testid="nav-apps-plans-dropdown-trigger"
+              className={`nav-link dropdown-trigger ${['apps', 'plans', 'free', 'premium'].includes(view) ? 'active' : ''}`}
+              onClick={() => toggleDropdown('apps')}
+            >
+              Apps &amp; Plans
+              <RiArrowDownSFill size={14} style={{ transform: openMenu === 'apps' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+            <ul className={`dropdown-menu ${openMenu === 'apps' ? 'open' : ''}`} style={{ minWidth: '230px' }}>
+              <li>
+                <Link to="?view=apps" className="dropdown-link" onClick={() => { setView('apps'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiSmartphoneFill size={16} /> TuneStream Device Apps
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=plans" className="dropdown-link" onClick={() => { setView('plans'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiCoinsFill size={16} /> Listener Credit Plans
+                </Link>
+              </li>
+              <li>
+                <Link to="?view=free" className="dropdown-link" onClick={() => { setView('free'); setOpenMenu(null); setMobileOpen(false); }}>
+                  <RiHeadphoneFill size={16} /> Always-Free Listener Tier
+                </Link>
+              </li>
+            </ul>
+          </li>
+
+          {/* 4. Support & Community Dropdown */}
+          <li
+            className="dropdown-container"
+            onMouseEnter={() => setOpenMenu('support')}
+            onMouseLeave={() => setOpenMenu(prev => (prev === 'support' ? null : prev))}
+          >
+            <button
+              type="button"
+              data-testid="nav-support-dropdown-trigger"
               className={`nav-link dropdown-trigger ${['help', 'docs', 'blog', 'forum', 'support', 'tickets'].includes(view) ? 'active' : ''}`}
-              onClick={() => {
-                setLibraryDropdownOpen(false);
-                setSupportDropdownOpen(!supportDropdownOpen);
-              }}
+              onClick={() => toggleDropdown('support')}
             >
               Support &amp; Community
-              <RiArrowDownSFill size={14} />
+              <RiArrowDownSFill size={14} style={{ transform: openMenu === 'support' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
             </button>
-            <ul className={`dropdown-menu ${supportDropdownOpen ? 'open' : ''}`}>
+            <ul className={`dropdown-menu ${openMenu === 'support' ? 'open' : ''}`} style={{ minWidth: '220px' }}>
               <li>
                 <Link
                   to="?view=blog"
                   className="dropdown-link"
                   onClick={() => {
                     setView('blog');
-                    setSupportDropdownOpen(false);
+                    setOpenMenu(null);
                     setMobileOpen(false);
                   }}
                 >
-                  <RiFileList3Line size={16} /> Blog &amp; Forum
+                  <RiFileList3Line size={16} /> Blog &amp; Sound Forum
                 </Link>
               </li>
               <li>
@@ -3901,7 +4068,7 @@ export function LandingNavbar({ view, setView, sessionUser, onLogout }) {
                   className="dropdown-link"
                   onClick={() => {
                     setView('help');
-                    setSupportDropdownOpen(false);
+                    setOpenMenu(null);
                     setMobileOpen(false);
                   }}
                 >
@@ -3914,7 +4081,7 @@ export function LandingNavbar({ view, setView, sessionUser, onLogout }) {
                   className="dropdown-link"
                   onClick={() => {
                     setView('support');
-                    setSupportDropdownOpen(false);
+                    setOpenMenu(null);
                     setMobileOpen(false);
                   }}
                 >

@@ -531,7 +531,10 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const [podcastsList, setPodcastsList] = useState(AUTHORITATIVE_PODCAST_SHOWS);
   const [activePodcasterEpkShow, setActivePodcasterEpkShow] = useState(null);
   const [exploreSearch, setExploreSearch] = useState('');
-  const [exploreFilter, setExploreFilter] = useState('all');
+  const [exploreFilter, setExploreFilter] = useState(() => {
+    const f = searchParams.get('filter');
+    return (f && ['all', 'creators', 'singles', 'albums', 'dj-mixes', 'playlists'].includes(f)) ? f : 'all';
+  });
   const [exploreGenre, setExploreGenre] = useState('all');
   const [exploreSort, setExploreSort] = useState('newest');
   const [activeHiFiTrack, setActiveHiFiTrack] = useState(() =>
@@ -542,6 +545,14 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
   const [isHiFiPlaying, setIsHiFiPlaying] = useState(() => normalizedSlug === 'tunestream');
   const [activePlaylistName, setActivePlaylistName] = useState('Featured Playlist: Global Afrobeat & Amapiano Masters');
   const creatorSlugParam = searchParams.get('creator');
+  const filterParam = searchParams.get('filter');
+
+  useEffect(() => {
+    if (filterParam && ['all', 'creators', 'singles', 'albums', 'dj-mixes', 'playlists'].includes(filterParam)) {
+      setExploreFilter(filterParam);
+      setExplorePage(1);
+    }
+  }, [filterParam]);
   const [selectedCreatorProfile, setSelectedCreatorProfile] = useState(null);
   const { formatPrice, currencyInfo } = useRegion ? useRegion() : { formatPrice: (v) => `$${v}`, currencyInfo: { symbol: '$' } };
   const [planBillingCycle, setPlanBillingCycle] = useState('monthly');
@@ -1641,11 +1652,18 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       const popularCreators = artists.map(a => ({
         id: a.id,
         name: a.name,
-        role: a.role || 'Signed Creator',
+        role: a.role || (a.creator_type === 'dj' ? 'Club & Festival DJ' : 'Signed Creator'),
         genre: a.genre || 'Afro-fusion',
-        listeners: a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners',
+        listeners: a.listeners || (a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners'),
         avatar: normalizeMediaUrl(a.avatar) || `https://picsum.photos/seed/${a.id}/400/400`,
-        subdomain: a.subdomain
+        banner: a.banner,
+        bio: a.bio,
+        location: a.location,
+        socials: a.socials,
+        followers_count: a.followers_count,
+        subscribers_count: a.subscribers_count,
+        creator_type: a.creator_type || 'artist',
+        subdomain: a.subdomain || (a.name ? a.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'ndufo')
       }));
 
       const popularSingles = singlesList.map((t, idx) => ({
@@ -1720,20 +1738,47 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                 renderItem={(artist) => (
                   <div 
                     className="landing-feature-card" 
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box' }} 
+                    style={{ background: 'rgba(255,255,255,0.02)', border: artist.creator_type === 'dj' ? '1px solid rgba(168,85,247,0.35)' : '1px solid rgba(255,255,255,0.06)', padding: '16px', borderRadius: '3px', textAlign: 'center', transition: 'all 0.2s ease', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }} 
                     onClick={() => handleArtistClick(artist)}
                   >
-                    <div style={{ width: '90px', height: '90px', borderRadius: '3px', margin: '0 auto 12px', overflow: 'hidden', background: '#0e1424', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ width: '90px', height: '90px', borderRadius: '3px', margin: '0 auto 12px', overflow: 'hidden', background: '#0e1424', border: artist.creator_type === 'dj' ? '1.5px solid #a855f7' : '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
                       <img 
                         src={artist.avatar} 
                         alt={artist.name} 
                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
                         onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${artist.id}/400/400`; }}
                       />
+                      {artist.creator_type === 'dj' && (
+                        <span style={{ position: 'absolute', bottom: '4px', left: '4px', right: '4px', background: 'rgba(124,58,237,0.92)', color: '#fff', fontSize: '8px', fontWeight: 900, padding: '2px 4px', borderRadius: '2px', textTransform: 'uppercase' }}>
+                          🎧 DJ
+                        </span>
+                      )}
                     </div>
                     <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{artist.name}</h3>
-                    <span style={{ fontSize: '11px', color: 'var(--cyan)', display: 'block', marginBottom: '4px' }}>{artist.genre}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--mu)' }}>{artist.listeners}</span>
+                    <span style={{ fontSize: '11px', color: artist.creator_type === 'dj' ? '#c084fc' : 'var(--cyan)', display: 'block', marginBottom: '4px' }}>{artist.genre}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--mu)', marginBottom: '10px', display: 'block' }}>{artist.listeners}</span>
+                    <button
+                      type="button"
+                      data-testid={`listen-creator-epk-btn-${artist.subdomain}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/epk/${artist.subdomain}?persona=${artist.creator_type || 'artist'}`);
+                      }}
+                      style={{
+                        marginTop: 'auto',
+                        width: '100%',
+                        padding: '6px 10px',
+                        borderRadius: '3px',
+                        border: artist.creator_type === 'dj' ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(0,242,254,0.35)',
+                        background: artist.creator_type === 'dj' ? 'rgba(168,85,247,0.15)' : 'rgba(0,242,254,0.1)',
+                        color: artist.creator_type === 'dj' ? '#c084fc' : '#00f2fe',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {artist.creator_type === 'dj' ? '🌐 DJ EPK & Book' : '🌐 Open EPK'}
+                    </button>
                   </div>
                 )}
               />
@@ -1898,9 +1943,12 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
     };
     const renderExplore = () => {
       if (selectedCreatorProfile) {
+        const resolvedSub = selectedCreatorProfile.subdomain || (selectedCreatorProfile.name ? selectedCreatorProfile.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'ndufo');
+        const resolvedPersona = selectedCreatorProfile.creator_type || (resolvedSub.includes('dj') || resolvedSub.includes('khalid') || resolvedSub.includes('selector') ? 'dj' : 'artist');
         return (
           <CreatorProfileView
             creator={selectedCreatorProfile}
+            subdomain={resolvedSub}
             tracks={tracks}
             onBack={() => {
               setSelectedCreatorProfile(null);
@@ -1909,7 +1957,7 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
               navigate(`?${sp.toString()}`, { replace: true });
             }}
             onPlayTrack={handlePlaySong}
-            onNavigateToEpk={(sub) => navigate(`/epk/${sub}`)}
+            onNavigateToEpk={(sub, persona) => navigate(`/epk/${sub || resolvedSub}?persona=${persona || resolvedPersona}`)}
             sessionUser={sessionUser}
           />
         );
@@ -2159,25 +2207,30 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
           targetCreator = item.data;
         } else {
           const artistName = item.data?.artist || item.title || '';
+          const cleanSlug = artistName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const isDj = item.kind === 'dj-mix' || cleanSlug.startsWith('dj') || cleanSlug.startsWith('selector') || cleanSlug.includes('khalid');
           targetCreator = popularCreators.find(c => 
             c.name.toLowerCase() === artistName.toLowerCase() ||
-            c.subdomain.toLowerCase() === artistName.toLowerCase().replace(/[^a-z0-9]/g, '')
+            (c.subdomain && c.subdomain.toLowerCase() === cleanSlug) ||
+            (isDj && cleanSlug.includes('khalid') && c.subdomain === 'khalid')
           );
           if (!targetCreator) {
             targetCreator = {
-              id: `art_${artistName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+              id: `${isDj ? 'dj' : 'art'}_${cleanSlug}`,
               name: artistName,
-              creator_type: item.kind === 'album' ? 'artist' : 'artist',
-              role: 'Signed Recording Artist',
-              genre: item.genre || 'Afro-fusion',
-              bio: `${artistName} is an active creator in the TuneMavens ecosystem, producing high-fidelity lossless masters with automated split contracts and international sync clearance.`,
+              creator_type: isDj ? 'dj' : 'artist',
+              role: isDj ? 'Resident Club & Festival DJ' : 'Signed Recording Artist',
+              genre: item.genre || (isDj ? 'Afro-Tech / Amapiano' : 'Afro-fusion'),
+              bio: isDj
+                ? `${artistName} is a verified TuneMavens club & festival DJ curating 100% split-cleared master sets with instant M-Pesa & TM Credit downloads, official rate cards, and direct gig booking.`
+                : `${artistName} is an active creator in the TuneMavens ecosystem, producing high-fidelity lossless masters with automated split contracts and international sync clearance.`,
               avatar: item.cover,
               banner: item.cover,
               location: 'Nairobi, Kenya',
               listeners: '1.2M listeners',
               followers_count: 85000,
               subscribers_count: 22000,
-              subdomain: artistName.toLowerCase().replace(/[^a-z0-9]/g, '')
+              subdomain: cleanSlug.includes('khalid') ? 'khalid' : cleanSlug
             };
           }
         }
@@ -2463,11 +2516,43 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
                   </div>
                   <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: '700', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</h3>
                   <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subtitle}</p>
-                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                    <span style={{ color: 'var(--mu)', fontFamily: item.kind === 'single' ? 'monospace' : 'inherit' }}>{item.metaLeft}</span>
-                    <span style={{ color: (item.kind === 'podcaster' || item.kind === 'podcast') ? '#ec4899' : item.kind === 'creator' ? 'var(--cyan)' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold' }}>
-                      {(item.kind === 'podcaster' || item.kind === 'podcast') ? 'Open Podcaster EPK →' : 'View Creator Profile →'}
-                    </span>
+                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)', gap: '6px' }}>
+                    <span style={{ color: 'var(--mu)', fontFamily: item.kind === 'single' ? 'monospace' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.metaLeft}</span>
+                    {(item.kind === 'dj-mix' || item.kind === 'creator') ? (
+                      <button
+                        type="button"
+                        data-testid={`explore-open-epk-btn-${item.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.kind === 'dj-mix') {
+                            const rawDj = (item.data?.artist || 'khalid').toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const djSlug = rawDj.includes('khalid') ? 'khalid' : rawDj;
+                            navigate(`/epk/${djSlug}?persona=dj`);
+                          } else {
+                            const sub = item.data?.subdomain || (item.title || 'ndufo').toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const persona = item.data?.creator_type || (sub.includes('dj') || sub.includes('khalid') || sub.includes('selector') ? 'dj' : 'artist');
+                            navigate(`/epk/${sub}?persona=${persona}`);
+                          }
+                        }}
+                        style={{
+                          background: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? 'rgba(168,85,247,0.18)' : 'rgba(0,242,254,0.12)',
+                          border: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(0,242,254,0.35)',
+                          color: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '#c084fc' : 'var(--cyan)',
+                          padding: '3px 8px',
+                          borderRadius: '3px',
+                          fontSize: '10.5px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {(item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '🌐 Open DJ EPK →' : '🌐 Open EPK →'}
+                      </button>
+                    ) : (
+                      <span style={{ color: (item.kind === 'podcaster' || item.kind === 'podcast') ? '#ec4899' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                        {(item.kind === 'podcaster' || item.kind === 'podcast') ? 'Open Podcaster EPK →' : 'View Creator Profile →'}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

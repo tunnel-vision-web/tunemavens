@@ -1,14 +1,20 @@
 import {
   getPersonaNavLinks,
+  PersonaAudienceCalloutBanner,
   PodcasterEpisodesSection,
   PodcasterAdRatesSection,
   PodcasterDemographicsSection,
+  DjMixesAndSetsSection,
+  DjRateCardSection,
+  DjGigBookingSection,
   DjTechRiderSection,
   ProducerBeatStoreSection,
-  LabelRosterSection
+  LabelRosterSection,
+  CANONICAL_DJ_RATE_CARD,
+  generateAndDownloadDjRateCard
 } from './PersonaEpkSections.jsx';
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 // JSZip dynamically loaded on download
 import {
   RiHomeFill, RiUserFill, RiCalendarEventFill, RiVideoFill,
@@ -24,7 +30,8 @@ import {
   RiStopFill, RiSkipBackFill, RiSkipForwardFill, RiSparklingFill,
   RiMapPin2Fill, RiTimeFill, RiQrCodeFill, RiCoinsFill, RiExchangeDollarLine,
   RiEyeLine, RiEyeOffLine, RiShuffleLine, RiRepeatLine, RiRepeatOneLine,
-  RiDragMove2Fill, RiVolumeUpFill, RiVolumeMuteFill, RiUploadFill
+  RiDragMove2Fill, RiVolumeUpFill, RiVolumeMuteFill, RiUploadFill,
+  RiMicFill, RiEqualizerFill, RiHeadphoneFill, RiPriceTag3Fill
 } from 'react-icons/ri'
 
 import heroSlide1 from '../../assets/creator_hero_banner.jpg'
@@ -73,6 +80,7 @@ export const EPK_THEMES = [
 export function CreatorEpkView(props = {}) {
   const { username } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const passedEpk = props.creatorEpk
   const lastSavedSub = (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || ''
@@ -124,27 +132,85 @@ export function CreatorEpkView(props = {}) {
   })
 
   // Persona-Adaptive EPK Intelligence (Artist, Podcaster, DJ, Producer, Label)
-  const [previewPersona, setPreviewPersona] = useState(() => {
+  const resolveQueryPersona = () => {
     try {
-      const sp = new URLSearchParams(window.location.search);
-      return sp.get('persona') || sp.get('role') || null;
+      const searchStr = location?.search || window.location.search || (window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : '');
+      const sp = new URLSearchParams(searchStr);
+      return sp.get('persona') || sp.get('role') || sp.get('type') || null;
     } catch {
       return null;
     }
-  });
+  };
+
+  const [previewPersona, setPreviewPersona] = useState(resolveQueryPersona);
+
+  useEffect(() => {
+    const qp = resolveQueryPersona();
+    if (qp) setPreviewPersona(qp);
+  }, [location?.search, location?.hash, username]);
+
+  const inferPersonaFromSlug = (slugVal) => {
+    const s = (slugVal || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (!s) return null;
+    const djSlugs = ['khalid', 'khalidwaves', 'djksouldier', 'dj-k-souldier', 'djzinhlevibes', 'dj-zinhle-vibes', 'djmaphoria', 'dj-maphoria', 'selectorkofi', 'selector-kofi', 'djkalonje', 'dj-kalonje', 'dj_kalonje'];
+    if (djSlugs.includes(s) || s.startsWith('dj') || s.startsWith('selector') || s.includes('deejay') || s.includes('kalonje')) return 'dj';
+    if (s.includes('pod') || s.includes('brief') || s.includes('wanjiru') || s.includes('otieno') || s.includes('amina') || s.includes('mutua')) return 'podcaster';
+    if (s === 'brian-omondi' || s === 'brianomondi' || s.includes('producer') || s.includes('rivera') || s.includes('beats')) return 'producer';
+    if (s === 'nairobicybersound' || s === 'intermavenpublishing' || s.includes('label') || s.includes('records') || s.includes('publishing')) return 'label';
+    return null;
+  };
+
+  const rawRole = String(epkData?.creator_type || epkData?.persona || epkData?.role || '').toLowerCase();
+  const normalizedDataPersona =
+    rawRole.includes('dj') || rawRole.includes('turntablist') || rawRole.includes('selector') ? 'dj' :
+    rawRole.includes('pod') ? 'podcaster' :
+    rawRole.includes('prod') || rawRole.includes('beat') || rawRole.includes('engineer') ? 'producer' :
+    rawRole.includes('label') || rawRole.includes('publish') || rawRole.includes('executive') ? 'label' :
+    (rawRole === 'artist' ? 'artist' : null);
 
   const creatorType = (
     previewPersona ||
-    epkData?.creator_type ||
-    epkData?.persona ||
-    epkData?.role ||
+    inferPersonaFromSlug(effectiveUsername) ||
+    inferPersonaFromSlug(artistSlug) ||
+    normalizedDataPersona ||
     (epkData?.isPodcast ? 'podcaster' : null) ||
-    (effectiveUsername?.toLowerCase().startsWith('dj_') || effectiveUsername?.toLowerCase().includes('kalonje') ? 'dj' : null) ||
-    (effectiveUsername?.toLowerCase().includes('pod') || effectiveUsername?.toLowerCase().includes('brief') ? 'podcaster' : null) ||
-    (effectiveUsername?.toLowerCase().includes('producer') || effectiveUsername?.toLowerCase().includes('rivera') ? 'producer' : null) ||
-    (effectiveUsername?.toLowerCase().includes('label') || effectiveUsername?.toLowerCase().includes('records') ? 'label' : null) ||
     'artist'
   ).toLowerCase();
+
+  const [selectedDjBookingTier, setSelectedDjBookingTier] = useState(null);
+  const [epkCurrencyCode, setEpkCurrencyCode] = useState(() => {
+    try {
+      return localStorage.getItem('tm_currency_code') || 'USD';
+    } catch {
+      return 'USD';
+    }
+  });
+
+  useEffect(() => {
+    const syncCur = () => {
+      try {
+        const c = localStorage.getItem('tm_currency_code');
+        if (c) setEpkCurrencyCode(c);
+      } catch (_) {}
+    };
+    window.addEventListener('currency_changed', syncCur);
+    window.addEventListener('region_changed', syncCur);
+    window.addEventListener('storage', syncCur);
+    return () => {
+      window.removeEventListener('currency_changed', syncCur);
+      window.removeEventListener('region_changed', syncCur);
+      window.removeEventListener('storage', syncCur);
+    };
+  }, []);
+
+  const formatEpkPrice = (usdVal) => {
+    const num = Number(usdVal) || 0;
+    const rates = { USD: { r: 1, s: '$' }, KES: { r: 130, s: 'KSh ' }, NGN: { r: 1550, s: '₦' }, ZAR: { r: 18.5, s: 'R ' }, GHS: { r: 15.2, s: 'GH₵ ' }, UGX: { r: 3750, s: 'USh ' }, TZS: { r: 2600, s: 'TSh ' }, GBP: { r: 0.79, s: '£' }, EUR: { r: 0.92, s: '€' } };
+    const cfg = rates[epkCurrencyCode] || rates.USD;
+    const converted = num * cfg.r;
+    if (cfg.r >= 10) return `${cfg.s}${Math.round(converted).toLocaleString()}`;
+    return `${cfg.s}${converted % 1 === 0 ? converted.toLocaleString() : converted.toFixed(2)}`;
+  };
 
   const personaNavLinks = getPersonaNavLinks(creatorType);
   const [isPlaying, setIsPlaying] = useState(false)
@@ -2099,6 +2165,7 @@ Direct Management Contact: mgmt@intermaven.io`
     const handleOutsideClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setMediaDropdownOpen(false)
+        setOpenNavDropdown(null)
       }
     }
     document.addEventListener('mousedown', handleOutsideClick)
@@ -2894,14 +2961,19 @@ Direct Management Contact: mgmt@intermaven.io`
               <RiHomeFill /> Home
             </button>
 
-            {/* 2. Music Dropdown */}
-            <div style={{ position: 'relative' }}>
+            {/* 2. Catalog / Mixes / Music Dropdown */}
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setOpenNavDropdown('music')}
+              onMouseLeave={() => setOpenNavDropdown(prev => prev === 'music' ? null : prev)}
+            >
               <button
                 type="button"
+                data-testid="epk-nav-catalog-dropdown"
                 onClick={() => setOpenNavDropdown(openNavDropdown === 'music' ? null : 'music')}
                 style={{
-                  background: (activeTab === 'discography' || activeTab === 'beat-store' || activeTab === 'episodes' || activeTab === 'dj-sets' || activeTab === 'promopool' || openNavDropdown === 'music') ? effectiveAccent : 'transparent',
-                  color: (activeTab === 'discography' || activeTab === 'beat-store' || activeTab === 'episodes' || activeTab === 'dj-sets' || activeTab === 'promopool' || openNavDropdown === 'music') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  background: (activeTab === 'discography' || activeTab === 'beat-store' || activeTab === 'episodes' || activeTab === 'dj-sets' || activeTab === 'promopool' || activeTab === 'roster' || openNavDropdown === 'music') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'discography' || activeTab === 'beat-store' || activeTab === 'episodes' || activeTab === 'dj-sets' || activeTab === 'promopool' || activeTab === 'roster' || openNavDropdown === 'music') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
                   border: 'none',
                   padding: '7px 14px',
                   borderRadius: '3px',
@@ -2913,7 +2985,9 @@ Direct Management Contact: mgmt@intermaven.io`
                   fontSize: '0.88rem'
                 }}
               >
-                <RiDiscFill /> Music <RiArrowDownSLine style={{ transform: openNavDropdown === 'music' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+                <RiDiscFill />
+                {creatorType === 'dj' ? 'Mixes & Music' : creatorType === 'podcaster' ? 'Episodes & Audio' : creatorType === 'producer' ? 'Beats & Catalog' : (creatorType === 'label' || creatorType === 'publisher') ? 'Roster & Catalog' : 'Music & Catalog'}
+                <RiArrowDownSLine style={{ transform: openNavDropdown === 'music' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
               {openNavDropdown === 'music' && (
                 <div
@@ -2922,48 +2996,50 @@ Direct Management Contact: mgmt@intermaven.io`
                     position: 'absolute',
                     top: '100%',
                     left: 0,
-                    marginTop: '6px',
+                    marginTop: '4px',
                     background: isLight ? '#fff' : '#0a0d18',
                     border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '3px',
                     boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
-                    minWidth: '220px',
+                    minWidth: '250px',
                     zIndex: 1100,
                     overflow: 'hidden'
                   }}
                 >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('discography');
-                      setOpenNavDropdown(null);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'discography' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-                  >
-                    <RiDiscFill style={{ color: effectiveAccent }} />
-                    <div>
-                      <div style={{ fontWeight: 700 }}>Discography &amp; Albums</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Catalog releases &amp; streaming</div>
-                    </div>
-                  </button>
-
-                  {creatorType === 'producer' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('beat-store');
-                        setOpenNavDropdown(null);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'beat-store' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-                    >
-                      <RiMusic2Fill style={{ color: effectiveAccent }} />
-                      <div>
-                        <div style={{ fontWeight: 700 }}>Beat Store &amp; Stems</div>
-                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Exclusive licenses &amp; stems</div>
-                      </div>
-                    </button>
+                  {creatorType === 'dj' && (
+                    <>
+                      <button
+                        type="button"
+                        data-testid="dj-epk-nav-mixes"
+                        onClick={() => {
+                          setActiveTab('dj-sets');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'dj-sets' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiDiscFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 800 }}>Cleared Mixes &amp; Live Sets</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Stream &amp; buy pre-cleared DJ mixes</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('promopool');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'promopool' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiDownloadFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 700 }}>Promo Pool &amp; Club Edits</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Extended intros &amp; DJ VIP dubs</div>
+                        </div>
+                      </button>
+                    </>
                   )}
 
                   {creatorType === 'podcaster' && (
@@ -2976,48 +3052,65 @@ Direct Management Contact: mgmt@intermaven.io`
                       }}
                       style={{ width: '100%', textAlign: 'left', background: activeTab === 'episodes' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                     >
-                      <RiMicFill style={{ color: effectiveAccent }} />
+                      <RiMicFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontWeight: 700 }}>Episodes &amp; Transcripts</div>
-                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>All podcast seasons</div>
+                        <div style={{ fontWeight: 800 }}>Episodes &amp; Transcripts</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>All podcast seasons &amp; chapters</div>
                       </div>
                     </button>
                   )}
 
-                  {creatorType === 'dj' && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('dj-sets');
-                          setOpenNavDropdown(null);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'dj-sets' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-                      >
-                        <RiDiscFill style={{ color: effectiveAccent }} />
-                        <div>
-                          <div style={{ fontWeight: 700 }}>Live Sets &amp; Mixes</div>
-                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Club &amp; festival recordings</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('promopool');
-                          setOpenNavDropdown(null);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'promopool' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-                      >
-                        <RiDownloadFill style={{ color: effectiveAccent }} />
-                        <div>
-                          <div style={{ fontWeight: 700 }}>Promo Pool &amp; Mixtapes</div>
-                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>DJ promos &amp; downloads</div>
-                        </div>
-                      </button>
-                    </>
+                  {creatorType === 'producer' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('beat-store');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'beat-store' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiMusic2Fill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 800 }}>Beat Store &amp; Stems</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Instant leases, exclusives &amp; WAV stems</div>
+                      </div>
+                    </button>
                   )}
+
+                  {(creatorType === 'label' || creatorType === 'publisher') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('roster');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'roster' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiUserAddFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 800 }}>Signed Artist Roster</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Official label &amp; publishing talent</div>
+                      </div>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('discography');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'discography' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiDiscFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{creatorType === 'dj' ? 'Originals, Remixes & Stems' : 'Discography & Albums'}</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Catalog releases &amp; master streaming</div>
+                    </div>
+                  </button>
 
                   <button
                     type="button"
@@ -3035,24 +3128,29 @@ Direct Management Contact: mgmt@intermaven.io`
                     }}
                     style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiPlayFill style={{ color: effectiveAccent }} />
+                    <RiPlayFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontWeight: 700 }}>Featured Singles</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>TuneStream Hi-Fi player</div>
+                      <div style={{ fontWeight: 700 }}>Featured Audio Player</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>TuneStream Hi-Fi master player</div>
                     </div>
                   </button>
                 </div>
               )}
             </div>
 
-            {/* 3. Shows & Tour Dropdown */}
-            <div style={{ position: 'relative' }}>
+            {/* 3. Booking, Rates & Live Dropdown */}
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setOpenNavDropdown('tour')}
+              onMouseLeave={() => setOpenNavDropdown(prev => prev === 'tour' ? null : prev)}
+            >
               <button
                 type="button"
+                data-testid="epk-nav-booking-dropdown"
                 onClick={() => setOpenNavDropdown(openNavDropdown === 'tour' ? null : 'tour')}
                 style={{
-                  background: (activeTab === 'shows' || activeTab === 'tech-rider' || openNavDropdown === 'tour') ? effectiveAccent : 'transparent',
-                  color: (activeTab === 'shows' || activeTab === 'tech-rider' || openNavDropdown === 'tour') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  background: (activeTab === 'shows' || activeTab === 'tech-rider' || activeTab === 'rate-card' || activeTab === 'dj-rate-card' || activeTab === 'dj-booking' || activeTab === 'ad-rates' || openNavDropdown === 'tour') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'shows' || activeTab === 'tech-rider' || activeTab === 'rate-card' || activeTab === 'dj-rate-card' || activeTab === 'dj-booking' || activeTab === 'ad-rates' || openNavDropdown === 'tour') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
                   border: 'none',
                   padding: '7px 14px',
                   borderRadius: '3px',
@@ -3064,7 +3162,9 @@ Direct Management Contact: mgmt@intermaven.io`
                   fontSize: '0.88rem'
                 }}
               >
-                <RiCalendarEventFill /> Shows <RiArrowDownSLine style={{ transform: openNavDropdown === 'tour' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+                <RiCalendarEventFill />
+                {creatorType === 'dj' ? 'Booking & Rates' : creatorType === 'podcaster' ? 'Sponsorships & Live' : 'Shows & Booking'}
+                <RiArrowDownSLine style={{ transform: openNavDropdown === 'tour' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
               {openNavDropdown === 'tour' && (
                 <div
@@ -3073,16 +3173,87 @@ Direct Management Contact: mgmt@intermaven.io`
                     position: 'absolute',
                     top: '100%',
                     left: 0,
-                    marginTop: '6px',
+                    marginTop: '4px',
                     background: isLight ? '#fff' : '#0a0d18',
                     border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '3px',
                     boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
-                    minWidth: '220px',
+                    minWidth: '260px',
                     zIndex: 1100,
                     overflow: 'hidden'
                   }}
                 >
+                  {creatorType === 'dj' && (
+                    <>
+                      <button
+                        type="button"
+                        data-testid="dj-epk-nav-rate-card"
+                        onClick={() => {
+                          setActiveTab('rate-card');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'rate-card' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiCoinsFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 800 }}>Official DJ Rate Card</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Club, festival, corporate &amp; private tiers</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        data-testid="dj-epk-nav-booking"
+                        onClick={() => {
+                          setActiveTab('dj-booking');
+                          setOpenNavDropdown(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: activeTab === 'dj-booking' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiCalendarEventFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 800 }}>Book DJ for Gig (Escrow)</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Instant hold with 50% TuneLedger deposit</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          generateAndDownloadDjRateCard(effectiveArtistName, epkData?.rate_card || CANONICAL_DJ_RATE_CARD, formatEpkPrice, epkData?.bookingEmail || 'booking@tunemavens.com');
+                          setOpenNavDropdown(null);
+                        }}
+                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <RiDownloadFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 700 }}>Download DJ Rate Card</div>
+                          <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Printable 2026 rate card one-sheet</div>
+                        </div>
+                      </button>
+                    </>
+                  )}
+
+                  {creatorType === 'podcaster' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('ad-rates');
+                        setOpenNavDropdown(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'ad-rates' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <RiCoinsFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 800 }}>Ad Rates &amp; Media Kit</div>
+                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Podcast sponsor flight packages</div>
+                      </div>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => {
@@ -3092,25 +3263,46 @@ Direct Management Contact: mgmt@intermaven.io`
                     }}
                     style={{ width: '100%', textAlign: 'left', background: activeTab === 'shows' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiCalendarEventFill style={{ color: effectiveAccent }} />
+                    <RiTicket2Fill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 700 }}>Tour Dates &amp; Live Shows</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Upcoming concerts &amp; ticketing</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Upcoming concerts &amp; direct ticketing</div>
                     </div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      setTechRiderModalOpen(true);
+                      if (creatorType === 'dj') {
+                        setActiveTab('tech-rider');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else {
+                        setTechRiderModalOpen(true);
+                      }
                       setOpenNavDropdown(null);
                     }}
-                    style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'tech-rider' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiEqualizerFill style={{ color: effectiveAccent }} />
+                    <RiEqualizerFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontWeight: 700 }}>Technical Rider &amp; Specs</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>FOH, IEM &amp; stage specifications</div>
+                      <div style={{ fontWeight: 700 }}>{creatorType === 'dj' ? 'Booth Specs & Tech Rider' : 'Technical Rider & Stage Specs'}</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>{creatorType === 'dj' ? 'CDJ-3000 / DJM-A9 & monitoring' : 'FOH, IEM & stage specifications'}</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('contact');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'contact' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiMailFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Booking &amp; Management Inquiry</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Direct booking agent &amp; sync desk</div>
                     </div>
                   </button>
                 </div>
@@ -3118,9 +3310,14 @@ Direct Management Contact: mgmt@intermaven.io`
             </div>
 
             {/* 4. Media & Press Dropdown */}
-            <div style={{ position: 'relative' }}>
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setOpenNavDropdown('media')}
+              onMouseLeave={() => setOpenNavDropdown(prev => prev === 'media' ? null : prev)}
+            >
               <button
                 type="button"
+                data-testid="epk-nav-media-dropdown"
                 onClick={() => setOpenNavDropdown(openNavDropdown === 'media' ? null : 'media')}
                 style={{
                   background: (activeTab === 'media' || activeTab === 'press' || activeTab === 'bio' || openNavDropdown === 'media') ? effectiveAccent : 'transparent',
@@ -3136,7 +3333,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   fontSize: '0.88rem'
                 }}
               >
-                <RiVideoFill /> Media <RiArrowDownSLine style={{ transform: openNavDropdown === 'media' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+                <RiVideoFill /> Media &amp; Press <RiArrowDownSLine style={{ transform: openNavDropdown === 'media' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
               {openNavDropdown === 'media' && (
                 <div
@@ -3145,16 +3342,34 @@ Direct Management Contact: mgmt@intermaven.io`
                     position: 'absolute',
                     top: '100%',
                     left: 0,
-                    marginTop: '6px',
+                    marginTop: '4px',
                     background: isLight ? '#fff' : '#0a0d18',
                     border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '3px',
                     boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
-                    minWidth: '220px',
+                    minWidth: '240px',
                     zIndex: 1100,
                     overflow: 'hidden'
                   }}
                 >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('media');
+                      setMediaFilter('all');
+                      setMediaPage(1);
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: (activeTab === 'media' && mediaFilter === 'all') ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiVideoFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>All Visual Media</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Complete video &amp; photo archive</div>
+                    </div>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -3166,10 +3381,10 @@ Direct Management Contact: mgmt@intermaven.io`
                     }}
                     style={{ width: '100%', textAlign: 'left', background: (activeTab === 'media' && mediaFilter === 'videos') ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiVideoFill style={{ color: effectiveAccent }} />
+                    <RiYoutubeFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 700 }}>4K Videos &amp; Visuals</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Music videos &amp; performances</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Music videos &amp; live performances</div>
                     </div>
                   </button>
 
@@ -3184,10 +3399,10 @@ Direct Management Contact: mgmt@intermaven.io`
                     }}
                     style={{ width: '100%', textAlign: 'left', background: (activeTab === 'media' && mediaFilter === 'gallery') ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiImageFill style={{ color: effectiveAccent }} />
+                    <RiImageFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 700 }}>Photo Gallery</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>High-res press photography</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>High-res 300 DPI press photography</div>
                     </div>
                   </button>
 
@@ -3200,10 +3415,10 @@ Direct Management Contact: mgmt@intermaven.io`
                     }}
                     style={{ width: '100%', textAlign: 'left', background: activeTab === 'press' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiFileTextFill style={{ color: effectiveAccent }} />
+                    <RiFileTextFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 700 }}>Press Kit &amp; Reviews</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Official media kit &amp; reviews</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Official media kit &amp; PDF export</div>
                     </div>
                   </button>
 
@@ -3216,10 +3431,10 @@ Direct Management Contact: mgmt@intermaven.io`
                     }}
                     style={{ width: '100%', textAlign: 'left', background: activeTab === 'bio' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiUserFill style={{ color: effectiveAccent }} />
+                    <RiUserFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 700 }}>Biography &amp; Story</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Heritage &amp; background</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Heritage, milestones &amp; background</div>
                     </div>
                   </button>
                 </div>
@@ -3227,13 +3442,18 @@ Direct Management Contact: mgmt@intermaven.io`
             </div>
 
             {/* 5. Store & VIP Dropdown */}
-            <div style={{ position: 'relative' }}>
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setOpenNavDropdown('store')}
+              onMouseLeave={() => setOpenNavDropdown(prev => prev === 'store' ? null : prev)}
+            >
               <button
                 type="button"
+                data-testid="epk-nav-store-dropdown"
                 onClick={() => setOpenNavDropdown(openNavDropdown === 'store' ? null : 'store')}
                 style={{
-                  background: (activeTab === 'store' || activeTab === 'pricing' || activeTab === 'ad-rates' || activeTab === 'roster' || openNavDropdown === 'store') ? effectiveAccent : 'transparent',
-                  color: (activeTab === 'store' || activeTab === 'pricing' || activeTab === 'ad-rates' || activeTab === 'roster' || openNavDropdown === 'store') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
+                  background: (activeTab === 'store' || activeTab === 'pricing' || activeTab === 'contact' || openNavDropdown === 'store') ? effectiveAccent : 'transparent',
+                  color: (activeTab === 'store' || activeTab === 'pricing' || activeTab === 'contact' || openNavDropdown === 'store') ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
                   border: 'none',
                   padding: '7px 14px',
                   borderRadius: '3px',
@@ -3245,7 +3465,7 @@ Direct Management Contact: mgmt@intermaven.io`
                   fontSize: '0.88rem'
                 }}
               >
-                <RiShoppingBagFill /> Store <RiArrowDownSLine style={{ transform: openNavDropdown === 'store' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+                <RiShoppingBagFill /> Store &amp; More <RiArrowDownSLine style={{ transform: openNavDropdown === 'store' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
               {openNavDropdown === 'store' && (
                 <div
@@ -3253,13 +3473,13 @@ Direct Management Contact: mgmt@intermaven.io`
                   style={{
                     position: 'absolute',
                     top: '100%',
-                    left: 0,
-                    marginTop: '6px',
+                    right: 0,
+                    marginTop: '4px',
                     background: isLight ? '#fff' : '#0a0d18',
                     border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '3px',
                     boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
-                    minWidth: '220px',
+                    minWidth: '240px',
                     zIndex: 1100,
                     overflow: 'hidden'
                   }}
@@ -3273,10 +3493,10 @@ Direct Management Contact: mgmt@intermaven.io`
                     }}
                     style={{ width: '100%', textAlign: 'left', background: activeTab === 'store' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiShoppingBagFill style={{ color: effectiveAccent }} />
+                    <RiShoppingBagFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 700 }}>Official Merch Store</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Vinyl, apparel &amp; physical merch</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Vinyl, apparel &amp; collector bundles</div>
                     </div>
                   </button>
 
@@ -3289,76 +3509,47 @@ Direct Management Contact: mgmt@intermaven.io`
                     }}
                     style={{ width: '100%', textAlign: 'left', background: activeTab === 'pricing' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <RiCoinsFill style={{ color: effectiveAccent }} />
+                    <RiCoinsFill style={{ color: effectiveAccent, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 700 }}>Fan Credits &amp; Top-Up</div>
-                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Intermaven VIP balances</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Non-expiring Intermaven VIP credits</div>
                     </div>
                   </button>
 
-                  {creatorType === 'podcaster' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('ad-rates');
-                        setOpenNavDropdown(null);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'ad-rates' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-                    >
-                      <RiCoinsFill style={{ color: effectiveAccent }} />
-                      <div>
-                        <div style={{ fontWeight: 700 }}>Ad Rates &amp; Media Kit</div>
-                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Podcast sponsor flight packages</div>
-                      </div>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (fanUser) setFanPortalOpen(true);
+                      else setAuthModalOpen(true);
+                      setOpenNavDropdown(null);
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiShieldCheckFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>VIP Fan Club &amp; Vault</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Exclusive dubs, pre-sales &amp; perks</div>
+                    </div>
+                  </button>
 
-                  {creatorType === 'label' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('roster');
-                        setOpenNavDropdown(null);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      style={{ width: '100%', textAlign: 'left', background: activeTab === 'roster' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-                    >
-                      <RiUserAddFill style={{ color: effectiveAccent }} />
-                      <div>
-                        <div style={{ fontWeight: 700 }}>Artist Roster</div>
-                        <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Signed talent &amp; catalog</div>
-                      </div>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('contact');
+                      setOpenNavDropdown(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ width: '100%', textAlign: 'left', background: activeTab === 'contact' ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)') : 'none', border: 'none', padding: '10px 14px', color: isLight ? '#0f172a' : '#fff', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                  >
+                    <RiMailFill style={{ color: effectiveAccent, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Contact &amp; Representation</div>
+                      <div style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8' }}>Management, booking &amp; press desk</div>
+                    </div>
+                  </button>
                 </div>
               )}
             </div>
-
-            {/* 6. Booking & Contact */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('contact');
-                setOpenNavDropdown(null);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              style={{
-                background: activeTab === 'contact' ? effectiveAccent : 'transparent',
-                color: activeTab === 'contact' ? '#000' : (isLight ? '#0f172a' : '#ffffff'),
-                border: 'none',
-                padding: '7px 14px',
-                borderRadius: '3px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '0.88rem'
-              }}
-            >
-              <RiMailFill /> Contact
-            </button>
           </nav>
 
           {/* Right Action Controls: Localization Switcher, Cart, Fan Portal / VIP Modal, Hamburger */}
@@ -3814,6 +4005,15 @@ Direct Management Contact: mgmt@intermaven.io`
             <h1 style={{ fontSize: '2.5rem', margin: '0 auto 6px auto', fontWeight: 900, fontFamily: effectiveFont, color: '#fff', textTransform: 'capitalize', textAlign: 'center' }}>
               {activeTab === 'press' ? 'Electronic Press Kit (EPK)' :
                activeTab === 'discography' ? 'Music & Discography' :
+               activeTab === 'dj-sets' || activeTab === 'promopool' ? 'DJ Mixes & Live Sets (Stream & Purchase)' :
+               activeTab === 'rate-card' ? 'Official DJ Performance Rate Card' :
+               activeTab === 'dj-booking' ? 'Book DJ for Gig & Event Escrow' :
+               activeTab === 'tech-rider' ? 'Booth Technical & Hospitality Rider' :
+               activeTab === 'beat-store' ? 'Producer Beat Store & Multi-Track Stems' :
+               activeTab === 'episodes' ? 'Podcast Episodes & Transcripts' :
+               activeTab === 'ad-rates' ? 'Podcast Sponsorship & Ad Rate Card' :
+               activeTab === 'demographics' ? 'Verified Listener Demographics' :
+               activeTab === 'roster' ? 'Signed Artist Roster & Master Catalog' :
                activeTab === 'contact' ? 'Booking & Inquiries' :
                activeTab === 'shows' ? 'Live Shows & Tour Dates' :
                activeTab === 'store' ? 'Official Store & Merchandise' :
@@ -3834,10 +4034,114 @@ Direct Management Contact: mgmt@intermaven.io`
 
       {/* ================= 3. MAIN BODY CONTENT ================= */}
       <main style={{ flex: 1, padding: '40px 32px', maxWidth: maxContentWidth, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+        {/* Persona-Specific Audience & Capabilities Callout Banner */}
+        <PersonaAudienceCalloutBanner
+          creatorType={creatorType}
+          artistName={effectiveArtistName}
+          accentColor={effectiveAccent}
+          onNavigateTab={(tab) => {
+            setActiveTab(tab);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onDownloadRateCard={() => {
+            generateAndDownloadDjRateCard(
+              effectiveArtistName,
+              epkData?.rate_card || CANONICAL_DJ_RATE_CARD,
+              formatEpkPrice,
+              epkData?.bookingEmail || 'booking@tunemavens.com'
+            );
+            showToast('📥 Official DJ Rate Card & Technical Summary downloaded!');
+          }}
+        />
         
         {/* ================= TAB 1: HOME ================= */}
         {activeTab === 'home' && (
-          effectiveVariant === 'aside-left' ? (
+          <>
+            {/* Persona-Specific Primary Showcase on Home Tab */}
+            {creatorType === 'dj' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
+                <DjMixesAndSetsSection
+                  djName={effectiveArtistName}
+                  djSlug={artistSlug}
+                  mixes={epkData?.dj_mixes}
+                  formatPrice={formatEpkPrice}
+                  accentColor={effectiveAccent}
+                  onPlayMix={(mixTrack) => handleSelectAndPlayTrack(mixTrack)}
+                  onNotify={(msg) => showToast(msg)}
+                />
+                <DjRateCardSection
+                  djName={effectiveArtistName}
+                  rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+                  formatPrice={formatEpkPrice}
+                  accentColor={effectiveAccent}
+                  bookingEmail={epkData?.bookingEmail || 'booking@tunemavens.com'}
+                  onSelectPackageForBooking={(pkg) => {
+                    setSelectedDjBookingTier(pkg);
+                    const el = document.getElementById('dj-epk-home-booking-anchor');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    else {
+                      setActiveTab('dj-booking');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+                />
+                <div id="dj-epk-home-booking-anchor">
+                  <DjGigBookingSection
+                    djName={effectiveArtistName}
+                    djSlug={artistSlug}
+                    rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+                    selectedInitialTier={selectedDjBookingTier}
+                    formatPrice={formatEpkPrice}
+                    accentColor={effectiveAccent}
+                  />
+                </div>
+              </div>
+            )}
+            {creatorType === 'podcaster' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
+                <PodcasterEpisodesSection
+                  episodes={epkData?.episodes || []}
+                  onPlayEpisode={(ep) => {
+                    handleSelectAndPlayTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/uploads/audio/enenda.wav' });
+                  }}
+                  accentColor={effectiveAccent}
+                />
+                <PodcasterAdRatesSection
+                  adRates={epkData?.ad_rates}
+                  formatPrice={formatEpkPrice}
+                  accentColor={effectiveAccent}
+                  onBookSlot={() => {
+                    setActiveTab('contact');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+                <PodcasterDemographicsSection demographics={epkData?.demographics} accentColor={effectiveAccent} />
+              </div>
+            )}
+            {creatorType === 'producer' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
+                <ProducerBeatStoreSection
+                  beats={epkData?.beats}
+                  formatPrice={formatEpkPrice}
+                  accentColor={effectiveAccent}
+                  onPlayBeat={(beatTrack) => handleSelectAndPlayTrack(beatTrack)}
+                  onNotify={(msg) => showToast(msg)}
+                />
+              </div>
+            )}
+            {(creatorType === 'label' || creatorType === 'publisher') && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
+                <LabelRosterSection
+                  roster={epkData?.roster}
+                  accentColor={effectiveAccent}
+                  onRequestBlanketLicense={() => {
+                    setActiveTab('contact');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              </div>
+            )}
+          {effectiveVariant === 'aside-left' ? (
             <div className="epk-aside-layout">
               {/* Aside on the Left */}
               <aside className="epk-sticky-aside" style={{ display: 'flex', flexDirection: 'column', gap: '22px', position: 'sticky', top: '90px' }}>
@@ -4348,7 +4652,8 @@ Direct Management Contact: mgmt@intermaven.io`
               </div>
 
             </div>
-          )
+          )}
+          </>
         )}
 
         {/* ================= TAB 2: BIO ================= */}
@@ -4973,7 +5278,8 @@ Direct Management Contact: mgmt@intermaven.io`
                 {[
                   { id: 'photos', title: 'Official Press Photos (300 DPI)', desc: 'High-res color & monochrome portraits', format: 'ZIP • 42 MB' },
                   { id: 'rider', title: 'Stage Plot & Technical Rider', desc: 'Channel list, monitor mixes & backline specs', format: 'PDF • 2.4 MB' },
-                  { id: 'epk', title: 'One-Sheet & Press Coverage', desc: 'Album reviews, bio highlights & stats', format: 'PDF • 1.8 MB' }
+                  { id: 'epk', title: 'One-Sheet & Press Coverage', desc: 'Album reviews, bio highlights & stats', format: 'PDF • 1.8 MB' },
+                  ...(creatorType === 'dj' ? [{ id: 'dj-rate-card', title: 'Official DJ Rate Card & Booking Sheet', desc: '5-tier performance fee schedule & CDJ-3000 specs', format: 'HTML/PDF • 1.2 MB' }] : [])
                 ].map((item, idx) => (
                   <div key={idx} style={{ padding: '16px', background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)', border: `1px solid ${effectiveAccent}33`, borderRadius: '4px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
@@ -4989,6 +5295,14 @@ Direct Management Contact: mgmt@intermaven.io`
                           handleDownloadTechRiderPdf()
                         } else if (item.id === 'photos') {
                           handleDownloadPressPhotosZip()
+                        } else if (item.id === 'dj-rate-card') {
+                          generateAndDownloadDjRateCard(
+                            effectiveArtistName,
+                            epkData?.rate_card || CANONICAL_DJ_RATE_CARD,
+                            formatEpkPrice,
+                            epkData?.bookingEmail || 'booking@tunemavens.com'
+                          )
+                          showToast('📥 Official DJ Rate Card & Technical Summary downloaded!')
                         } else {
                           showToast('📥 Downloading requested press asset...')
                         }
@@ -5161,12 +5475,11 @@ Direct Management Contact: mgmt@intermaven.io`
         {/* ── PERSONA SPECIFIC TABS ── */}
         {/* Podcaster Tabs */}
         {activeTab === 'episodes' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
             <PodcasterEpisodesSection
               episodes={epkData?.episodes || []}
               onPlayEpisode={(ep) => {
-                setActiveTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/api/stream/track/KE-TM1-26-00042' });
-                setIsPlaying(true);
+                handleSelectAndPlayTrack({ id: ep.id, title: ep.title, isrc: ep.isrc || ep.id, audioUrl: ep.audioUrl || '/uploads/audio/enenda.wav' });
               }}
               accentColor={effectiveAccent}
             />
@@ -5174,35 +5487,126 @@ Direct Management Contact: mgmt@intermaven.io`
         )}
 
         {activeTab === 'ad-rates' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
-            <PodcasterAdRatesSection formatPrice={(v) => `$${v}`} accentColor={effectiveAccent} />
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
+            <PodcasterAdRatesSection
+              adRates={epkData?.ad_rates}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              onBookSlot={() => {
+                setActiveTab('contact');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           </div>
         )}
 
         {activeTab === 'demographics' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
             <PodcasterDemographicsSection demographics={epkData?.demographics} accentColor={effectiveAccent} />
           </div>
         )}
 
-        {/* DJ Tabs */}
+        {/* DJ Tabs: Mixes (Stream & Buy), Rate Card (with Download), Book DJ for Gig, Tech Rider */}
+        {(activeTab === 'dj-sets' || activeTab === 'promopool') && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <DjMixesAndSetsSection
+              djName={effectiveArtistName}
+              djSlug={artistSlug}
+              mixes={epkData?.dj_mixes}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              onPlayMix={(mixTrack) => handleSelectAndPlayTrack(mixTrack)}
+              onNotify={(msg) => showToast(msg)}
+            />
+          </div>
+        )}
+
+        {activeTab === 'rate-card' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <DjRateCardSection
+              djName={effectiveArtistName}
+              rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              bookingEmail={epkData?.bookingEmail || 'booking@tunemavens.com'}
+              onSelectPackageForBooking={(pkg) => {
+                setSelectedDjBookingTier(pkg);
+                setActiveTab('dj-booking');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === 'dj-booking' && (
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <DjGigBookingSection
+              djName={effectiveArtistName}
+              djSlug={artistSlug}
+              rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+              selectedInitialTier={selectedDjBookingTier}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+            />
+            <DjRateCardSection
+              djName={effectiveArtistName}
+              rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              bookingEmail={epkData?.bookingEmail || 'booking@tunemavens.com'}
+              onSelectPackageForBooking={(pkg) => {
+                setSelectedDjBookingTier(pkg);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          </div>
+        )}
+
         {activeTab === 'tech-rider' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
-            <DjTechRiderSection accentColor={effectiveAccent} />
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
+            <DjTechRiderSection
+              techRider={epkData?.tech_rider}
+              rateCard={epkData?.rate_card || CANONICAL_DJ_RATE_CARD}
+              bookingEmail={epkData?.bookingEmail || 'booking@tunemavens.com'}
+              djName={effectiveArtistName}
+              accentColor={effectiveAccent}
+              onDownloadRider={() => {
+                generateAndDownloadDjRateCard(
+                  effectiveArtistName,
+                  epkData?.rate_card || CANONICAL_DJ_RATE_CARD,
+                  formatEpkPrice,
+                  epkData?.bookingEmail || 'booking@tunemavens.com'
+                );
+                showToast('📥 Official DJ Booth Tech Rider & Rate Card downloaded!');
+              }}
+            />
           </div>
         )}
 
         {/* Producer Tabs */}
         {activeTab === 'beat-store' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
-            <ProducerBeatStoreSection formatPrice={(v) => `$${v}`} accentColor={effectiveAccent} />
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
+            <ProducerBeatStoreSection
+              beats={epkData?.beats}
+              formatPrice={formatEpkPrice}
+              accentColor={effectiveAccent}
+              onPlayBeat={(beatTrack) => handleSelectAndPlayTrack(beatTrack)}
+              onNotify={(msg) => showToast(msg)}
+            />
           </div>
         )}
 
         {/* Label Tabs */}
         {activeTab === 'roster' && (
-          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 24px' }}>
-            <LabelRosterSection accentColor={effectiveAccent} />
+          <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
+            <LabelRosterSection
+              roster={epkData?.roster}
+              accentColor={effectiveAccent}
+              onRequestBlanketLicense={() => {
+                setActiveTab('contact');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           </div>
         )}
 

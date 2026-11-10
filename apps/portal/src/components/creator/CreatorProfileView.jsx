@@ -41,6 +41,18 @@ import {
   RiCameraFill
 } from 'react-icons/ri'
 import { normalizeMediaUrl } from '../../lib/api'
+import {
+  DjMixesAndSetsSection,
+  DjRateCardSection,
+  DjGigBookingSection,
+  DjTechRiderSection,
+  ProducerBeatStoreSection,
+  PodcasterAdRatesSection,
+  PodcasterEpisodesSection,
+  LabelRosterSection,
+  PersonaAudienceCalloutBanner,
+  generateAndDownloadDjRateCard
+} from '../../views/creator/PersonaEpkSections'
 
 // Role badge configuration adhering strictly to Design Standards §4D (Solid flat colors, NO gradients)
 const ROLE_BADGE_CONFIG = {
@@ -196,7 +208,7 @@ const AI_HEADER_STYLE_PRESETS = [
 
 export default function CreatorProfileView({
   creator,
-  subdomain,
+  subdomain: rawSubdomain,
   tracks = [],
   currentTrack,
   isPlaying,
@@ -207,7 +219,22 @@ export default function CreatorProfileView({
 }) {
   if (!creator) return null
 
-  const creatorType = creator.creator_type || 'artist'
+  const subdomain = rawSubdomain || creator.subdomain || (creator.name ? creator.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'ndufo')
+  const lowerSub = String(subdomain).toLowerCase()
+  const lowerRole = String(creator.role || '').toLowerCase()
+  const creatorType = creator.creator_type || (
+    lowerSub === 'khalid' || lowerSub.startsWith('dj') || lowerSub.startsWith('selector') || lowerRole.includes('dj')
+      ? 'dj'
+      : lowerSub.includes('producer') || lowerSub === 'brian-omondi' || lowerRole.includes('producer')
+        ? 'producer'
+        : lowerSub.includes('label') || lowerSub.includes('cyber')
+          ? 'label'
+          : lowerSub.includes('publish')
+            ? 'publisher'
+            : lowerSub.includes('pod')
+              ? 'podcaster'
+              : 'artist'
+  )
   const roleConfig = ROLE_BADGE_CONFIG[creatorType] || ROLE_BADGE_CONFIG.artist
   const RoleIcon = roleConfig.icon
 
@@ -774,21 +801,22 @@ export default function CreatorProfileView({
           {/* CTA: Actual EPK */}
           <button
             type="button"
+            data-testid="creator-profile-open-epk-btn"
             onClick={() => {
               if (onNavigateToEpk) {
-                onNavigateToEpk(subdomain)
+                onNavigateToEpk(subdomain, creatorType)
               } else {
-                window.location.href = `#/epk/${subdomain}`
+                window.location.href = `#/epk/${subdomain}?persona=${creatorType}`
               }
             }}
             style={{
-              background: 'transparent',
-              color: '#f8fafc',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              background: creatorType === 'dj' ? 'rgba(168, 85, 247, 0.2)' : 'transparent',
+              color: creatorType === 'dj' ? '#e9d5ff' : '#f8fafc',
+              border: creatorType === 'dj' ? '1.5px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '3px',
               padding: '10px 18px',
               fontSize: '13px',
-              fontWeight: '700',
+              fontWeight: '800',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
@@ -797,9 +825,33 @@ export default function CreatorProfileView({
             }}
             title="Launch the full Web World / Press Kit"
           >
-            <RiFileTextFill size={16} color="#22d3ee" />
-            Actual EPK 🌐
+            <RiFileTextFill size={16} color={creatorType === 'dj' ? '#c084fc' : '#22d3ee'} />
+            {creatorType === 'dj' ? 'Official DJ EPK, Mixes & Rate Card 🌐' : 'Actual EPK 🌐'}
           </button>
+
+          {creatorType === 'dj' && (
+            <button
+              type="button"
+              data-testid="creator-profile-download-rate-card-btn"
+              onClick={() => generateAndDownloadDjRateCard(creator.name, null, null, `${subdomain}@bookings.tunemavens.com`)}
+              style={{
+                background: 'rgba(16, 185, 129, 0.14)',
+                color: '#10b981',
+                border: '1px solid rgba(16, 185, 129, 0.45)',
+                borderRadius: '3px',
+                padding: '10px 16px',
+                fontSize: '13px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Download Official Printable DJ Rate Card"
+            >
+              ⬇ Rate Card
+            </button>
+          )}
 
           {/* CTA: AI Header Editor Tool */}
           <button
@@ -1561,6 +1613,82 @@ export default function CreatorProfileView({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Persona-Specific Interactive EPK Modules inside Creator Profile */}
+      <div style={{ marginTop: '32px' }}>
+        <PersonaAudienceCalloutBanner
+          creatorType={creatorType}
+          artistName={creator.name}
+          accentColor={creatorType === 'dj' ? '#a855f7' : '#22d3ee'}
+          onNavigateTab={() => {
+            if (onNavigateToEpk) {
+              onNavigateToEpk(subdomain, creatorType)
+            } else {
+              window.location.href = `#/epk/${subdomain}?persona=${creatorType}`
+            }
+          }}
+          onDownloadRateCard={() => generateAndDownloadDjRateCard(creator.name, null, null, `${subdomain}@bookings.tunemavens.com`)}
+        />
+        {creatorType === 'dj' && (
+          <>
+            <DjMixesAndSetsSection
+              djName={creator.name}
+              subdomain={subdomain}
+              accentColor="#a855f7"
+              onPlayTrack={(trackObj) => onPlayTrack && onPlayTrack(trackObj)}
+              onNavigateBooking={() => {
+                const el = document.querySelector('[data-testid="dj-epk-gig-booking-section"]')
+                if (el) el.scrollIntoView({ behavior: 'smooth' })
+              }}
+            />
+            <DjRateCardSection
+              djName={creator.name}
+              accentColor="#a855f7"
+              onSelectPackageForBooking={() => {
+                const el = document.querySelector('[data-testid="dj-epk-gig-booking-section"]')
+                if (el) el.scrollIntoView({ behavior: 'smooth' })
+              }}
+            />
+            <DjGigBookingSection
+              djName={creator.name}
+              subdomain={subdomain}
+              accentColor="#a855f7"
+            />
+            <DjTechRiderSection
+              djName={creator.name}
+              accentColor="#a855f7"
+              onDownloadRateCard={() => generateAndDownloadDjRateCard(creator.name, null, null, `${subdomain}@bookings.tunemavens.com`)}
+            />
+          </>
+        )}
+        {creatorType === 'producer' && (
+          <ProducerBeatStoreSection
+            producerName={creator.name}
+            accentColor="#2563eb"
+            onPlayBeat={(beatTrack) => onPlayTrack && onPlayTrack(beatTrack)}
+          />
+        )}
+        {creatorType === 'podcaster' && (
+          <>
+            <PodcasterEpisodesSection
+              hostName={creator.name}
+              showTitle={creator.name}
+              accentColor="#ec4899"
+              onPlayEpisode={(epTrack) => onPlayTrack && onPlayTrack(epTrack)}
+            />
+            <PodcasterAdRatesSection
+              hostName={creator.name}
+              accentColor="#ec4899"
+            />
+          </>
+        )}
+        {(creatorType === 'label' || creatorType === 'publisher') && (
+          <LabelRosterSection
+            labelName={creator.name}
+            accentColor="#10b981"
+          />
+        )}
       </div>
 
       {/* AI-ASSISTED HEADER EDITOR MODAL (Design Standards & Backend AI Header API) */}
