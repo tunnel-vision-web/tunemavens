@@ -3034,3 +3034,29 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
 
 - **Icon-Only Dashboard Topbar (`apps/portal/src/App.jsx`, `apps/portal/src/App.css`)**:
   - Converted top header action buttons (`Reload Credits`, `Currency Selector`, `Restart Guide`, `Get Help`, `Ask AI`) to compact icon buttons with hover tooltips (`data-tooltip`), keeping full text labels on the right-side Account Type pill, Notification Bell, and Master Admin badge.
+
+### 9.44.53 Phase 12: Persona-Specific EPK Architecture, Universal TunePlayer Floating Audio Engine & Selection-Specific Synchronization
+
+- **Universal TunePlayer Overlay Engine (`apps/{portal,tunestream}/src/views/creator/CreatorEpkView.jsx`)**:
+  - **Single Authoritative Floating Instance**: Consolidated all audio playback on public and portal EPKs into a single persistent floating overlay card (`#epk-live-audio`), eliminating duplicate inline player widgets and ensuring uninterrupted playback when navigating tabs.
+  - **Persona-Specific Playlist Routing**:
+    - **DJ Persona (`creatorType === 'dj'`)**: Defaults to `🎧 DJ Mixes & Live Sets`, displaying DJ set title, DJ name, artwork, and `🎧 DJ Mix • Lossless Master` badge.
+    - **Podcaster Persona (`creatorType === 'podcaster'`)**: Defaults to `🎙️ Podcast Episodes`, rendering episode numbers, chapter markers, transcripts, and `🎙️ Podcast Episode • Stereo Master` badge.
+    - **Producer Persona (`creatorType === 'producer'`)**: Defaults to `🎹 Producer Beat Store`, rendering beat title, producer name, BPM, musical key, and `🎹 Producer Beat • {bpm} BPM` badge.
+    - **Artist & Record Label Personas**: Defaults to `🎵 All Singles`, `🔒 VIP Fan Vault Exclusives`, and `🔥 Top Singles` with lossless master badges.
+  - **Selection-Specific Playback (`handleSelectAndPlayTrack`)**:
+    - Universal URL resolution supporting `audioUrl`, `audio_url`, `fileUrl`, `url`, and `streamUrl`.
+    - Explicit `audio.load()` and `audio.currentTime = 0` invocation before `audio.play()` ensuring immediate buffer readiness on user interaction.
+    - Automatic floating player un-minimize and visibility reveal on track/mix selection.
+    - Fallback error recovery: automatically falls back to `/uploads/audio/enenda.wav` if an external or remote stream fails to load or rejects, ensuring playback is never silently blocked.
+    - Bidirectional state synchronization: native DOM `onPlay` and `onPause` listeners keep React UI play state 100% in sync with physical browser playback.
+
+- **Grouped Hierarchical EPK Navigation & Margin Architecture**:
+  - Restructured top menu navigation to group related interior surfaces into clean hover/click dropdown menus (`Media & Press`, `Store & Vault`, `Booking, Rates & Live`), preventing header clutter while keeping top-level items under 6.
+  - Increased spacing and padding between the artist brand logo and the navigation links (`margin-left: 28px; gap: 8px`), providing balanced breathing room and responsive mobile collapse.
+  - Removed duplicate secondary menu bars behind or above the primary fixed header.
+
+- **FastAPI DJ Mixes Endpoint Aliasing (`backend/routes/dj_mixes_router.py`, `backend/server.py`)**:
+  - Registered route alias `@alias_router.get("")` mounted at `/api/dj-mixes` in addition to `/api/dj/mixes`.
+  - Both endpoints return HTTP 200 with the 20 verified seed mixes and full Split Cascade metadata.
+  - Static audio asset `/uploads/audio/enenda.wav` verified with streaming byte-range support (`Accept-Ranges: bytes`) via Vite proxying and Uvicorn static mounting.

@@ -108,6 +108,7 @@ Each persona gets its own top menu (`getPersonaNavLinks`), audience banner (`Per
 | Element | Standard |
 |---|---|
 | Header | One fixed header only (`position: fixed; top: 0; z-index: 1000`). **Never** render banners or toolbars above or behind it. Group related tabs into dropdowns (max ~5 top-level items). |
+| Logo Clearance | Keep at least `28px` margin between the brand logo and the first navigation link, with `8px` gap between nav buttons. |
 | Radius | 3–4px on cards and buttons |
 | Accent | `effectiveAccent` from the theme. Primary CTAs filled with the accent; secondary CTAs outlined. |
 | Cards | `#0a0e20` background, `1px solid rgba(255,255,255,0.08)` border, 20–24px padding |
@@ -119,13 +120,97 @@ Each persona gets its own top menu (`getPersonaNavLinks`), audience banner (`Per
 
 ---
 
-## 5. Checklist: adding a new section or persona
+## 5. Universal TunePlayer Overlay & Playback Architecture
+
+Every EPK must provide smooth, uninterrupted audio playback as visitors navigate between tabs and sections. Audio is governed by a **single authoritative floating player overlay**.
+
+### 5.1 Single Floating Player Instance
+- **Audio element:** `<audio id="epk-live-audio" ref={epkAudioRef} preload="auto" style={{ display: 'none' }} />`
+- **Never instantiate multiple `<audio>` elements** on an EPK page. All buttons (cards, hero, discography, mixes, episodes, beats) route through `handleSelectAndPlayTrack(track)`.
+- When minimized, the player contracts to a compact floating bar (`320px`), or can be hidden to a bottom-left launcher pill (`TuneMavens Hi-Fi Player • Playing`).
+- When a track or mix is selected anywhere on the page, the player automatically un-minimizes and reveals itself.
+
+### 5.2 Persona-Specific & Selection-Specific Playlists
+
+The TunePlayer dropdown selector and initial playback queue adapt automatically to the active `creator_type`:
+
+| Persona | Default Playlist | Displayed Badge | Displayed Subtitle |
+|---|---|---|---|
+| **DJ** (`creatorType === 'dj'`) | `🎧 DJ Mixes & Live Sets` | `🎧 DJ Mix • Lossless Master` | `{mix.dj_name \|\| artist}` • Genre |
+| **Podcaster** (`creatorType === 'podcaster'`) | `🎙️ Podcast Episodes` | `🎙️ Podcast Episode • Stereo Master` | `{ep.host \|\| artist}` • Duration |
+| **Producer** (`creatorType === 'producer'`) | `🎹 Producer Beat Store` | `🎹 Producer Beat • {bpm} BPM` | `{beat.producer \|\| artist}` • Key |
+| **Artist / Label** (`creatorType === 'artist'`) | `🎵 All Singles` | `Lossless MP3 • 320kbps` | `{track.artist \|\| artist}` • ISRC |
+
+### 5.3 Selection & Playback Protocol (`handleSelectAndPlayTrack`)
+```javascript
+const handleSelectAndPlayTrack = (track) => {
+  if (!track) return;
+  // 1. Normalize track properties
+  const normalizedTrack = {
+    ...track,
+    id: track.id || `trk-${Date.now()}`,
+    title: track.title || 'Untitled Track',
+    artist: track.artist || track.dj_name || track.host || track.producer || effectiveArtistName,
+    audioUrl: track.audioUrl || track.audio_url || track.fileUrl || track.url || track.streamUrl || '/uploads/audio/enenda.wav',
+    coverArt: track.coverArt || track.artwork_url || track.cover || 'https://picsum.photos/seed/epk_play/400',
+    badge: track.badge || 'Lossless MP3 • 320kbps'
+  };
+
+  // 2. Sync state & unminimize player
+  setActiveTrack(normalizedTrack);
+  setIsPlayerVisible(true);
+  setIsPlayerMinimized(false);
+
+  // 3. Command the native audio element
+  const audio = epkAudioRef.current;
+  if (audio) {
+    if (activeTrack?.id === normalizedTrack.id && isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+      return;
+    }
+    const rawSrc = normalizedTrack.audioUrl;
+    const resolvedUrl = new URL(rawSrc, window.location.origin).href;
+    if (audio.src !== resolvedUrl) {
+      audio.src = rawSrc;
+      audio.load();
+    }
+    audio.currentTime = 0;
+    setPlaybackProgress(0);
+    audio.volume = isPlayerMuted ? 0 : playerVolume;
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => setIsPlaying(true))
+        .catch((err) => {
+          // 4. Automatic lossless fallback on playback rejection or missing stream
+          console.warn('Playback error on rawSrc, falling back to local master audio:', err);
+          audio.src = '/uploads/audio/enenda.wav';
+          audio.load();
+          audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        });
+    }
+  }
+};
+```
+
+### 5.4 DOM State Synchronization
+To prevent UI "phantom play" states where the button shows "Pause" but the browser audio element is stopped:
+- `<audio>` element registers native `onPlay={() => setIsPlaying(true)}` and `onPause={() => setIsPlaying(false)}`.
+- Scrubber seeking calls `handleSeek(time)` which updates `audio.currentTime`.
+- Stop button pauses audio and sets `audio.currentTime = 0`.
+- Native `onError` triggers automatic fallback to `/uploads/audio/enenda.wav`.
+
+---
+
+## 6. Checklist: adding a new section or persona
 
 1. **Defaults:** export a `CANONICAL_*` constant from `PersonaEpkSections.jsx`.
 2. **Component:** accept the data prop, resolve it with `pickEditable(prop, CANONICAL_*)`, accept `accentColor` and `formatPrice`, and wire every button to a real handler.
 3. **Mirror:** copy `PersonaEpkSections.jsx` to `apps/tunestream/src/views/creator/`.
 4. **View:** pass `epkData?.<key>` in **both** `CreatorEpkView.jsx` files (home showcase and dedicated tab).
 5. **Navigation:** add the tab to `getPersonaNavLinks` and the matching dropdown group in the header.
-6. **Editor:** add a schema to `SCHEMAS` in `PersonaEpkEditor.jsx` (or a tab in `DashboardCmsStudio.jsx`) and render it for the persona.
-7. **Docs:** add the key to Section 2 of this guide.
-8. **Verify:** `cmd.exe /c "npm run build:portal && npm run build --workspace=tunestream"`. Then edit a value in the CMS, click **Save & Sync**, and confirm the open EPK tab updates without reloading.
+6. **TunePlayer:** ensure all item play buttons pass normalized tracks to `handleSelectAndPlayTrack(item)`.
+7. **Editor:** add a schema to `SCHEMAS` in `PersonaEpkEditor.jsx` (or a tab in `DashboardCmsStudio.jsx`) and render it for the persona.
+8. **Docs:** add the key to Section 2 of this guide.
+9. **Verify:** `cmd.exe /c "npm run build:portal && npm run build --workspace=tunestream"`. Then edit a value in the CMS, click **Save & Sync**, and confirm the open EPK tab updates without reloading.
