@@ -766,11 +766,12 @@ def send_admin_wall_of_fame_invite(
     whatsapp_status = "skipped"
     if recipient_phone and send_whatsapp_flag:
         try:
+            note_str = f"{custom_note}\n\n" if custom_note else ""
             wa_body = (
                 f"🏆 *TuneMavens Wall of Fame Official Induction*\n\n"
                 f"Congratulations *{subject_name}*!\n\n"
                 f"The TuneMavens curatorial board has officially nominated you for induction as a recognized *{role_display}*.\n\n"
-                f"{custom_note + '\n\n' if custom_note else ''}"
+                f"{note_str}"
                 f"Accept your induction & claim your verified creator credentials here:\n"
                 f"{claim_url}"
             )
