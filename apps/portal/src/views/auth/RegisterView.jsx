@@ -6,6 +6,22 @@ import { ROLE_LOGOS } from '../../components/PerfectForSidebar.jsx'
 import { reconcileUserApps, persistAppActivation } from '../../lib/activatedApps.js'
 import { getToolById } from '../../data/toolsCatalog.js'
 
+export const PERSONA_DASHBOARDS = {
+  consumer: 'home',
+  creator: 'home',
+  label: 'catalog',
+  dj: 'dj-mixes',
+  studio: 'sync',
+  supervisor: 'sync',
+  corporate: 'corporate-ads',
+  media: 'stream-controls',
+  media_house: 'stream-controls',
+  podcaster: 'podcaster-studio',
+  vc: 'vc-portfolio',
+  investor: 'vc-portfolio',
+  affiliate: 'affiliates',
+};
+
 export default function RegisterView({ onLogin }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -106,7 +122,11 @@ export default function RegisterView({ onLogin }) {
   const [payoutBankName, setPayoutBankName] = useState(() => sessionStorage.getItem('signup_payout_bank_name') || '');
   const [payoutAccountNum, setPayoutAccountNum] = useState(() => sessionStorage.getItem('signup_payout_account_num') || '');
   const [payoutRoutingNum, setPayoutRoutingNum] = useState(() => sessionStorage.getItem('signup_payout_routing_num') || '');
-  const [createEpkOptIn, setCreateEpkOptIn] = useState(() => sessionStorage.getItem('signup_epk_opt_in') !== 'false');
+  const [createEpkOptIn, setCreateEpkOptIn] = useState(() => {
+    const isEpkRole = roles.some(r => ['creator', 'podcaster'].includes(r));
+    const saved = sessionStorage.getItem('signup_epk_opt_in');
+    return isEpkRole && saved !== 'false';
+  });
   useEffect(() => { sessionStorage.setItem('signup_epk_opt_in', createEpkOptIn.toString()); }, [createEpkOptIn]);
 
   // Attribution capture per Spec §3
@@ -155,12 +175,14 @@ export default function RegisterView({ onLogin }) {
     let preselected = [];
     if (toolMeta && toolMeta.role) {
       preselected = [toolMeta.role];
-    } else if (roleParam && ['consumer', 'creator', 'label', 'dj', 'studio', 'corporate', 'media', 'podcaster', 'vc'].includes(roleParam)) {
+    } else if (roleParam && ['consumer', 'creator', 'label', 'dj', 'studio', 'corporate', 'media', 'podcaster', 'vc', 'affiliate'].includes(roleParam)) {
       preselected = [roleParam];
     } else if (roleParam === 'media_house' || roleParam === 'media-house') {
       preselected = ['media'];
     } else if (roleParam === 'supervisor') {
       preselected = ['studio'];
+    } else if (roleParam === 'affiliate' || roleParam === 'affiliates') {
+      preselected = ['affiliate'];
     } else {
       const fromPath = location.state?.from || '';
       preselected = getPreselectedRolesForPath(fromPath);
@@ -255,7 +277,10 @@ export default function RegisterView({ onLogin }) {
       }
     }
     list.push('Security');
-    list.push('Free EPK');
+    const isEpkEligible = selectedRoles.some(r => ['creator', 'podcaster'].includes(r));
+    if (isEpkEligible) {
+      list.push('Free EPK');
+    }
     return list;
   };
 
@@ -356,7 +381,8 @@ export default function RegisterView({ onLogin }) {
     const targetApp = sp.get('app') || toolMeta?.appSlug;
     const targetTab = sp.get('tab') || toolMeta?.tab || sessionStorage.getItem('preferred_dashboard_tab');
 
-    const bypassRoles = activeTool ? [activeTool.role] : ['creator', 'label'];
+    const bypassRole = activeTool?.role || sp.get('role') || 'creator';
+    const bypassRoles = activeTool ? [activeTool.role] : [bypassRole];
     setRoles(bypassRoles);
     setName('Alex Rivera');
     setEmail('alex.rivera@tunemavens.com');
@@ -366,7 +392,7 @@ export default function RegisterView({ onLogin }) {
       email: 'alex.rivera@tunemavens.com',
       password: 'sandbox123456',
       name: 'Alex Rivera',
-      role: activeTool?.role || 'creator',
+      role: bypassRole,
       brand_name: 'Alex Rivera Productions',
       country: 'KE',
       sandbox: true,
@@ -377,17 +403,15 @@ export default function RegisterView({ onLogin }) {
       }
       onLogin(reconcileUserApps(user));
       clearSignupMemory();
-      if (targetTab) {
-        sessionStorage.setItem('preferred_dashboard_tab', targetTab);
-        navigate(`/dashboard?tab=${targetTab}${tp ? `&tool=${tp}` : ''}`);
-      } else {
-        navigate('/dashboard');
-      }
+      const defaultTab = (createEpkOptIn && ['creator', 'podcaster'].includes(bypassRole)) ? 'epk-builder' : (PERSONA_DASHBOARDS[bypassRole] || 'home');
+      const resolvedTab = targetTab || defaultTab;
+      sessionStorage.setItem('preferred_dashboard_tab', resolvedTab);
+      navigate(`/dashboard?tab=${resolvedTab}${tp ? `&tool=${tp}` : ''}`);
     }).catch(() => {
       const fallbackUser = {
         email: 'alex.rivera@tunemavens.com',
         name: 'Alex Rivera',
-        role: activeTool?.role || 'creator',
+        role: bypassRole,
         credits: 600,
         plan: 'creator',
         brand_name: 'Alex Rivera Productions',
@@ -398,12 +422,10 @@ export default function RegisterView({ onLogin }) {
       }
       onLogin(reconcileUserApps(fallbackUser));
       clearSignupMemory();
-      if (targetTab) {
-        sessionStorage.setItem('preferred_dashboard_tab', targetTab);
-        navigate(`/dashboard?tab=${targetTab}${tp ? `&tool=${tp}` : ''}`);
-      } else {
-        navigate('/dashboard');
-      }
+      const defaultTab = (createEpkOptIn && ['creator', 'podcaster'].includes(bypassRole)) ? 'epk-builder' : (PERSONA_DASHBOARDS[bypassRole] || 'home');
+      const resolvedTab = targetTab || defaultTab;
+      sessionStorage.setItem('preferred_dashboard_tab', resolvedTab);
+      navigate(`/dashboard?tab=${resolvedTab}${tp ? `&tool=${tp}` : ''}`);
     });
   };
 
@@ -614,7 +636,8 @@ export default function RegisterView({ onLogin }) {
         }
       }
 
-      if (createEpkOptIn) {
+      const isCreatorOrPodcaster = ['creator', 'podcaster'].includes(userRole);
+      if (createEpkOptIn && isCreatorOrPodcaster) {
         sessionStorage.setItem('preferred_dashboard_tab', 'epk-builder');
         localStorage.setItem('tunemavens_created_free_epk', 'true');
         const epkSlug = name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '') : 'creator';
@@ -625,14 +648,13 @@ export default function RegisterView({ onLogin }) {
       alert(access_token && regRes ? `Welcome, ${name}! We sent a confirmation email to ${email}. Please check your inbox.` : `Welcome, ${name}!`);
       clearSignupMemory();
 
-      if (targetTab) {
-        sessionStorage.setItem('preferred_dashboard_tab', targetTab);
-        navigate(`/dashboard?tab=${targetTab}${toolId ? `&tool=${toolId}` : ''}`);
-      } else if (createEpkOptIn) {
-        navigate('/dashboard?tab=epk-builder');
-      } else {
-        navigate('/dashboard');
-      }
+      const defaultTab = (createEpkOptIn && isCreatorOrPodcaster)
+        ? 'epk-builder'
+        : (PERSONA_DASHBOARDS[userRole] || 'home');
+      const resolvedTab = targetTab || defaultTab;
+
+      sessionStorage.setItem('preferred_dashboard_tab', resolvedTab);
+      navigate(`/dashboard?tab=${resolvedTab}${toolId ? `&tool=${toolId}` : ''}`);
     } catch (err) {
       if (err?.status === 409) {
         alert('This email already has an account. Please log in instead.');

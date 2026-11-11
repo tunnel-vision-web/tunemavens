@@ -279,6 +279,7 @@ export const storageApi = {
   uploadFile: async (file, mediaType = 'audio') => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('folder', mediaType);
     formData.append('media_type', mediaType);
     const token = tokenStore.get();
     const res = await fetch(`${BASE}/api/storage/upload`, {

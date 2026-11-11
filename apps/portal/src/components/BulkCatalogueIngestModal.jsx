@@ -7,6 +7,7 @@ import {
   RiMusic2Fill, RiShieldCheckFill, RiAddLine, RiCheckLine
 } from 'react-icons/ri';
 import { getCachedGenres } from '../lib/genres.js';
+import { BASE, tokenStore } from '../lib/api.js';
 
 export default function BulkCatalogueIngestModal({
   isOpen,
@@ -344,9 +345,12 @@ export default function BulkCatalogueIngestModal({
 
     try {
       const sub = (activeSubdomain || 'ndufo').toLowerCase().trim();
-      const res = await fetch('/api/catalog/bulk-ingest', {
+      const token = tokenStore.get();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`${BASE}/api/catalog/bulk-ingest`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           subdomain: sub,
           tracks: parsedTracks,

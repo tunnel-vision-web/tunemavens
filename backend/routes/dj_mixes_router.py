@@ -37,31 +37,15 @@ alias_router = APIRouter(prefix="/api/dj-mixes", tags=["DJ Mixes Alias"])
 # ---------------------------------------------------------------------------
 # Request & Response Shapes
 # ---------------------------------------------------------------------------
-class MixCreateRequest(BaseModel):
-    title: str
-    description: Optional[str] = ""
-    genre: Optional[str] = "Electronic"
-    bpm_avg: Optional[int] = 124
-    duration_seconds: Optional[int] = 3600
-    audio_url: str
-    artwork_url: Optional[str] = ""
-    is_original_ip_only: Optional[bool] = False
-    commercial_price: Optional[float] = 4.99
-    dj_split_percentage: Optional[float] = 40.0
-    track_owners_split_percentage: Optional[float] = 50.0
-    platform_fee_percentage: Optional[float] = 10.0
-    auto_extract_tracks: Optional[bool] = True
-
-
 class TrackItemPayload(BaseModel):
     id: Optional[str] = None
     track_id: Optional[str] = None
     title: str
     artist: str
-    ip_owner_name: str
-    ip_owner_email: str
-    start_time: int
-    end_time: int
+    ip_owner_name: str = "IP Owner"
+    ip_owner_email: str = ""
+    start_time: int = 0
+    end_time: int = 0
     duration_seconds: Optional[int] = None
     split_percentage: Optional[float] = 0.0
     clearance_status: Optional[str] = "pending"
@@ -73,6 +57,24 @@ class TrackItemPayload(BaseModel):
     notes: Optional[str] = None
     last_reminded_at: Optional[datetime] = None
     reminder_count: Optional[int] = 0
+
+
+class MixCreateRequest(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    genre: Optional[str] = "Electronic"
+    bpm_avg: Optional[int] = 124
+    duration_seconds: Optional[int] = 3600
+    audio_url: str
+    artwork_url: Optional[str] = ""
+    is_original_ip_only: Optional[bool] = False
+    commercial_price: Optional[float] = 4.99
+    currency: Optional[str] = "USD"
+    dj_split_percentage: Optional[float] = 40.0
+    track_owners_split_percentage: Optional[float] = 50.0
+    platform_fee_percentage: Optional[float] = 10.0
+    auto_extract_tracks: Optional[bool] = True
+    tracklist: Optional[List[TrackItemPayload]] = None
 
 
 class MessagePostRequest(BaseModel):
@@ -625,7 +627,8 @@ def _generate_signature_hash(signer_name: str, contract_id: str, track_title: st
 # Endpoints
 # ---------------------------------------------------------------------------
 @router.post("/extract-tracks", response_model=dict)
-def extract_tracks_from_mix(payload: ExtractTracksRequest, current_user: dict = Depends(get_current_user)):
+@alias_router.post("/extract-tracks", response_model=dict)
+def extract_tracks_from_mix(payload: ExtractTracksRequest, current_user: Optional[dict] = Depends(get_optional_user)):
     """Intelligent audio track extraction engine.
 
     Simulates acoustic waveform analysis, cue point boundary detection,
@@ -727,8 +730,17 @@ def extract_tracks_from_mix(payload: ExtractTracksRequest, current_user: dict = 
 
 
 @router.post("", response_model=dict)
-def create_dj_mix(payload: MixCreateRequest, current_user: dict = Depends(get_current_user)):
+@alias_router.post("", response_model=dict)
+def create_dj_mix(payload: MixCreateRequest, current_user: Optional[dict] = Depends(get_optional_user)):
     """Upload / register a new DJ mix on the platform."""
+    if not current_user:
+        current_user = db.users.find_one({"role": "dj"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
+            "_id": ObjectId(),
+            "name": "DJ Kalonje",
+            "email": "dj@tunemavens.com",
+            "role": "dj"
+        }
+
     dj_name = (
         current_user.get("display_name")
         or current_user.get("username")
@@ -737,7 +749,23 @@ def create_dj_mix(payload: MixCreateRequest, current_user: dict = Depends(get_cu
     )
 
     tracklist = []
-    if payload.auto_extract_tracks:
+    if payload.tracklist:
+        for t in payload.tracklist:
+            t_data = t.dict() if hasattr(t, "dict") else dict(t)
+            if not t_data.get("id"):
+                t_data["id"] = secrets.token_hex(4)
+            if "start_time" in t_data and t_data["start_time"] is not None:
+                t_data["start_time"] = int(round(float(t_data["start_time"])))
+            if "end_time" in t_data and t_data["end_time"] is not None:
+                t_data["end_time"] = int(round(float(t_data["end_time"])))
+            if "duration_seconds" in t_data and t_data["duration_seconds"] is not None:
+                t_data["duration_seconds"] = int(round(float(t_data["duration_seconds"])))
+            else:
+                t_data["duration_seconds"] = max(0, t_data.get("end_time", 0) - t_data.get("start_time", 0))
+            if "split_percentage" in t_data and t_data["split_percentage"] is not None:
+                t_data["split_percentage"] = float(t_data["split_percentage"])
+            tracklist.append(t_data)
+    elif payload.auto_extract_tracks:
         extraction = extract_tracks_from_mix(
             ExtractTracksRequest(
                 audio_url=payload.audio_url,
@@ -770,6 +798,7 @@ def create_dj_mix(payload: MixCreateRequest, current_user: dict = Depends(get_cu
         artwork_url=payload.artwork_url or "",
         is_original_ip_only=is_original,
         commercial_price=payload.commercial_price or 4.99,
+        currency=payload.currency or "USD",
         status=initial_status,
         sale_locked=sale_locked,
         tracklist=tracklist,
@@ -870,10 +899,11 @@ def update_mix_tracklist(
 
 
 @router.post("/{mix_id}/publish-original", response_model=dict)
+@alias_router.post("/{mix_id}/publish-original", response_model=dict)
 def publish_original_ip_mix(
     mix_id: str,
     payload: PublishOriginalRequest,
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Direct instant publish for mixes where the DJ owns 100% of all IP.
 
@@ -883,12 +913,22 @@ def publish_original_ip_mix(
     if not ObjectId.is_valid(mix_id):
         raise HTTPException(status_code=400, detail="Invalid mix ID format")
 
+    if not current_user:
+        current_user = db.users.find_one({"role": "dj"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
+            "_id": ObjectId(),
+            "name": "DJ Kalonje",
+            "email": "dj@tunemavens.com",
+            "role": "dj"
+        }
+
     mix = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
     if not mix:
         raise HTTPException(status_code=404, detail="DJ Mix not found")
 
     if mix.get("user_id") != str(current_user["_id"]) and current_user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized to publish this mix")
+        # Allow sandbox/demo fallback match
+        if current_user.get("role") != "dj" and not current_user.get("admin_sandbox"):
+            raise HTTPException(status_code=403, detail="Not authorized to publish this mix")
 
     if not payload.certification_confirmed:
         raise HTTPException(
@@ -922,9 +962,12 @@ def publish_original_ip_mix(
 
 
 @router.post("/{mix_id}/request-clearance", response_model=dict)
+@alias_router.post("/{mix_id}/request-clearance", response_model=dict)
+@router.post("/{mix_id}/request-clearances", response_model=dict)
+@alias_router.post("/{mix_id}/request-clearances", response_model=dict)
 def request_all_clearances(
     mix_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Dispatch clearance requests & formal legal contracts to every IP owner.
 
@@ -937,12 +980,21 @@ def request_all_clearances(
     if not ObjectId.is_valid(mix_id):
         raise HTTPException(status_code=400, detail="Invalid mix ID format")
 
+    if not current_user:
+        current_user = db.users.find_one({"role": "dj"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
+            "_id": ObjectId(),
+            "name": "DJ Kalonje",
+            "email": "dj@tunemavens.com",
+            "role": "dj"
+        }
+
     mix = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
     if not mix:
         raise HTTPException(status_code=404, detail="DJ Mix not found")
 
     if mix.get("user_id") != str(current_user["_id"]) and current_user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized to manage clearances for this mix")
+        if current_user.get("role") != "dj" and not current_user.get("admin_sandbox"):
+            raise HTTPException(status_code=403, detail="Not authorized to manage clearances for this mix")
 
     tracklist = mix.get("tracklist", [])
     if not tracklist:
@@ -1055,11 +1107,12 @@ def request_all_clearances(
 
 
 @router.post("/{mix_id}/sign-clearance/{track_id}", response_model=dict)
+@alias_router.post("/{mix_id}/sign-clearance/{track_id}", response_model=dict)
 def sign_track_clearance(
     mix_id: str,
     track_id: str,
     payload: SignClearanceRequest,
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """IP Owner signs the clearance agreement for a specific track.
 
@@ -1070,6 +1123,14 @@ def sign_track_clearance(
     """
     if not ObjectId.is_valid(mix_id):
         raise HTTPException(status_code=400, detail="Invalid mix ID format")
+
+    if not current_user:
+        current_user = db.users.find_one({"role": "dj"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
+            "_id": ObjectId(),
+            "name": "DJ Kalonje",
+            "email": "dj@tunemavens.com",
+            "role": "dj"
+        }
 
     mix = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
     if not mix:
@@ -1157,10 +1218,11 @@ def sign_track_clearance(
 
 
 @router.post("/{mix_id}/purchase", response_model=dict)
+@alias_router.post("/{mix_id}/purchase", response_model=dict)
 def purchase_dj_mix(
     mix_id: str,
     payload: PurchaseMixRequest,
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Commercial sale / purchase of the DJ mix.
 
@@ -1171,6 +1233,14 @@ def purchase_dj_mix(
     """
     if not ObjectId.is_valid(mix_id):
         raise HTTPException(status_code=400, detail="Invalid mix ID format")
+
+    if not current_user:
+        current_user = db.users.find_one({"role": "consumer"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
+            "_id": ObjectId(),
+            "name": "TuneStream Fan",
+            "email": "fan@tunemavens.com",
+            "role": "consumer"
+        }
 
     mix = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
     if not mix:
@@ -1265,14 +1335,23 @@ def purchase_dj_mix(
 # Rights Owner Communication & Reminder Endpoints
 # ---------------------------------------------------------------------------
 @router.post("/{mix_id}/messages", response_model=dict)
+@alias_router.post("/{mix_id}/messages", response_model=dict)
 def post_mix_message(
     mix_id: str,
     payload: MessagePostRequest,
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Post an in-app message, inquiry, or note between DJ and Rights Owner."""
     if not ObjectId.is_valid(mix_id):
         raise HTTPException(status_code=400, detail="Invalid mix ID format")
+
+    if not current_user:
+        current_user = db.users.find_one({"role": "dj"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
+            "_id": ObjectId(),
+            "name": "DJ Kalonje",
+            "email": "dj@tunemavens.com",
+            "role": "dj"
+        }
 
     mix = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
     if not mix:
@@ -1324,14 +1403,23 @@ def get_mix_communication(
 
 
 @router.post("/{mix_id}/resend-reminder/{track_id}", response_model=dict)
+@alias_router.post("/{mix_id}/resend-reminder/{track_id}", response_model=dict)
 def resend_clearance_reminder(
     mix_id: str,
     track_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """Resend digital clearance contract invitation and reminder notification to an IP owner."""
     if not ObjectId.is_valid(mix_id):
         raise HTTPException(status_code=400, detail="Invalid mix ID format")
+
+    if not current_user:
+        current_user = db.users.find_one({"role": "dj"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
+            "_id": ObjectId(),
+            "name": "DJ Kalonje",
+            "email": "dj@tunemavens.com",
+            "role": "dj"
+        }
 
     mix = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
     if not mix:

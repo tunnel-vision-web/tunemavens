@@ -46,6 +46,7 @@ export function getStoredActivatedApps(user = null) {
         const parsed = JSON.parse(perUser);
         if (Array.isArray(parsed)) return parsed;
       }
+      return null;
     }
     const globalVal = localStorage.getItem(STORAGE_KEY_ACTIVE);
     if (globalVal) {

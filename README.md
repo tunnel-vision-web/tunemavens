@@ -167,3 +167,16 @@ npm test
 - **TuneStream DJ Mixes Category (`apps/tunestream/src/App.jsx` & `NativeAppLandingView.jsx`)**: Dedicated `DJ Mixes & Sets` navigation section, Explore filter pill (`🎧 DJ Mixes`), and public landing filter with full tracklist attribution and Hi-Fi playback.
 - **Icon-Only Dashboard Topbar (`App.jsx` & `App.css`)**: Streamlined top header action controls into hover-tooltip icon buttons while preserving full labels on the Account Type pill, Notification Bell, and Master Admin badge.
 
+### 16. Canonical Persona Registration Routing, DJ Mix Ingest & Catalogue Machine Hardening
+- **Persona-Specific Dashboard Routing Matrix**: Seamless registration and sandbox onboarding for all 10 canonical personas (`consumer`, `creator`, `label`, `dj`, `studio`/`supervisor`, `corporate`, `media`/`media_house`, `podcaster`, `vc`/`investor`, `affiliate`), routing each persona directly to their designated dashboard console.
+- **Selective Free EPK Opt-In**: The "Free EPK" setup step is reserved specifically for Creators and Podcasters; non-EPK personas bypass the step directly to their core workspace.
+- **Per-User App Storage Isolation**: Eliminates session cache-bleed by ensuring fresh accounts without stored records cleanly adopt persona-specific `roleDefaults`.
+- **DJ Mix Upload Engine Hardening (`DJMixesManager.jsx` & `backend/routes/dj_mixes_router.py`)**:
+  - Instantaneous audio upload validation upon file drop without waiting on asynchronous metadata decoding.
+  - Full Pydantic `tracklist` schema preservation for manual/extracted playlists.
+  - Demo/sandbox authentication fallback ensuring seamless unauthenticated or demo test sessions.
+  - Singular and plural `/request-clearance` endpoint aliasing.
+- **Catalogue Machine Audio Ingestion Verification (`CatalogueWizard.jsx`, `BulkCatalogueIngestModal.jsx`, `catalog_router.py`)**:
+  - Verified multi-track and single-release wizard ingest into MongoDB `db.catalog_tracks`, `db.releases`, `db.epks`, and `db.cms_layouts`.
+  - Frontend components hardened with proper Bearer token headers and unified API base prefixes.
+

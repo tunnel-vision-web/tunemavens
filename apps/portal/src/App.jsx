@@ -1359,7 +1359,7 @@ function DashboardView({
     if (['vc-portfolio', 'vc-sponsorship', 'tours-vault'].includes(initialTabQuery)) {
       return 'vc';
     }
-    if (initialTabQuery && !['home', 'explore', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
+    if (initialTabQuery && !['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
       if (sessionUser?.role === 'consumer') {
         return 'creator';
       }
@@ -2083,6 +2083,7 @@ function DashboardView({
         return <AppMarketplacePanel sessionUser={sessionUser} onUpdateUser={onUpdateUser} setActiveTab={setActiveTab} onOpenWizard={() => setWizardOpen(true)} wizardAnswers={wizardAnswers} onOpenAppModal={(url, title) => setActiveModalApp({ url, title })} />;
       case 'corporate-ads':
         return <CorporateAdsPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
+      case 'media':
       case 'media-house':
       case 'broadcast':
       case 'syndication':

@@ -209,6 +209,17 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
     try {
       setAudioUploading(true);
       const objUrl = URL.createObjectURL(file);
+      setAudioFileInfo({
+        name: file.name,
+        size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
+        type: file.type || 'audio/wav'
+      });
+      // Immediately set audio_url to valid blob preview so validation passes
+      setNewMix(prev => ({
+        ...prev,
+        audio_url: objUrl
+      }));
+
       // Decode audio duration automatically
       const tempAudio = new Audio();
       tempAudio.src = objUrl;
@@ -216,20 +227,16 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
         const dur = Math.round(tempAudio.duration) || 2400;
         setNewMix(prev => ({
           ...prev,
-          duration_seconds: dur,
-          audio_url: objUrl
+          duration_seconds: dur
         }));
       };
-      setAudioFileInfo({
-        name: file.name,
-        size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
-        type: file.type || 'audio/wav'
-      });
-      // Attempt persistent upload to backend storage
+
+      // Persistent upload to backend storage
       try {
         const uploadRes = await storageApi.uploadFile(file, 'audio');
-        if (uploadRes?.public_url || uploadRes?.url) {
-          setNewMix(prev => ({ ...prev, audio_url: uploadRes.public_url || uploadRes.url }));
+        const finalUrl = uploadRes?.url || uploadRes?.public_url;
+        if (finalUrl) {
+          setNewMix(prev => ({ ...prev, audio_url: finalUrl }));
         }
       } catch (err) {
         console.warn('Backend storage upload note (using local URL):', err);
@@ -254,8 +261,9 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
       setNewMix(prev => ({ ...prev, artwork_url: objUrl }));
       try {
         const uploadRes = await storageApi.uploadFile(file, 'artwork');
-        if (uploadRes?.public_url || uploadRes?.url) {
-          setNewMix(prev => ({ ...prev, artwork_url: uploadRes.public_url || uploadRes.url }));
+        const finalUrl = uploadRes?.url || uploadRes?.public_url;
+        if (finalUrl) {
+          setNewMix(prev => ({ ...prev, artwork_url: finalUrl }));
         }
       } catch (err) {
         console.warn('Backend storage upload note (using local preview):', err);

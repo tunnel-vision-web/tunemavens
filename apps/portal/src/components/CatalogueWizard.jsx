@@ -8,6 +8,7 @@ import {
   RiImageAddFill, RiMagicFill, RiPaletteFill, RiCloseLine, RiRefreshLine, RiUploadCloud2Fill
 } from 'react-icons/ri';
 import { DEFAULT_CANONICAL_GENRES, fetchGenres, getCachedGenres } from '../lib/genres.js';
+import { BASE, tokenStore } from '../lib/api.js';
 import BulkCatalogueIngestModal from './BulkCatalogueIngestModal';
 
 const GENRES = DEFAULT_CANONICAL_GENRES;
@@ -80,7 +81,7 @@ export default function CatalogueWizard({
     };
     window.addEventListener('tunemavens-genres-updated', handleGenres);
 
-    fetch('/api/catalog/artists')
+    fetch(`${BASE}/api/catalog/artists`)
       .then(r => r.json())
       .then(d => {
         if (Array.isArray(d.artists)) setRosterArtists(d.artists);
@@ -88,7 +89,7 @@ export default function CatalogueWizard({
       .catch(() => {});
 
     const handleArtists = () => {
-      fetch('/api/catalog/artists')
+      fetch(`${BASE}/api/catalog/artists`)
         .then(r => r.json())
         .then(d => {
           if (Array.isArray(d.artists)) setRosterArtists(d.artists);
@@ -468,8 +469,10 @@ export default function CatalogueWizard({
           formData.append('title', t.title);
           formData.append('subdomain', sessionUser?.username || 'ndufo');
 
-          const uploadRes = await fetch('/api/storage/upload', {
+          const token = tokenStore.get();
+          const uploadRes = await fetch(`${BASE}/api/storage/upload`, {
             method: 'POST',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
             body: formData
           });
           if (uploadRes.ok) {
@@ -547,9 +550,12 @@ export default function CatalogueWizard({
     };
 
     try {
-      const resp = await fetch('/api/catalog/wizard-ingest', {
+      const token = tokenStore.get();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const resp = await fetch(`${BASE}/api/catalog/wizard-ingest`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload)
       });
 
