@@ -3089,3 +3089,33 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - **End-to-End Pipeline Verification**: Verified multi-track and single-release ingestion via `/api/catalog/wizard-ingest` and `/api/catalog/bulk-ingest` into MongoDB collections `db.catalog_tracks`, `db.releases`, `db.epks`, and `db.cms_layouts`.
   - **Bearer Token Attachment**: Hardened frontend wizard and bulk ingest components to attach `Authorization: Bearer <token>` and `BASE` prefixes to `/api/catalog/wizard-ingest`, `/api/storage/upload`, and artist roster lookups.
   - **Automated Regression Suite (`backend/tests/verify_personas_mixes_catalogue.py`)**: Implemented automated integration tests verifying registration across all 10 canonical personas, DJ mix upload with tracklist ingestion and clearance dispatch, and Catalogue Machine wizard ingestion.
+
+### 9.44.55 Phase 14: Venture Capital Pitch Deck, Multi-Source DJ Pool Aggregation, and Persona Backend Integrity
+
+- **Venture Capital Pitch Deck & Financial Model (`docs/PITCH_DECK_INTERMAVEN_TUNEMAVENS.html`, `docs/PITCH_DECK_INTERMAVEN_TUNEMAVENS.pdf`, `scripts/build_pitch_deck_pdf.py`)**:
+  - **Launch Date & Event Economics**: Verified launch date set for Friday November 27 at B52 Lounge. Modeled weekly revenue of KES 285,000 (Venue fixed fee KES 80,000, bar beverage share KES 100,000, net merchandise profit KES 15,000, and brand partnerships KES 75,000) yielding KES 1,140,000 ($8,769 USD) monthly gross revenue.
+  - **Capital Facility & Credit Top-Up Monetization**: Formatted a 3-month rollout revolving credit facility with three investor return options (Competitive interest, revenue-share tranche, or convertible debt), reinforcing the platform's strictly credit-based top-up model (zero monthly charges).
+  - **Strategic Partnerships & Global Corporate Infrastructure**:
+    - Sony Music Publishing sync deal economics ($120,000 benchmark deals, $70,000/yr residual royalties, $30/song submission budget).
+    - Corporate entity registrations: Intermaven Network LTD in Kenya (KES 10,000), Maven Global Inc. in the USA ($225), and ASCAP publishing house registration ($50).
+    - Hostinger VPS and reseller infrastructure, TuneStream music domain acquisition, and 5-year multi-scenario financial forecasts.
+  - **Vector PDF Generation**: Authored standalone high-fidelity HTML slide deck and automated headless Chrome export script (`scripts/build_pitch_deck_pdf.py`), generating a 16:9 publication-ready vector PDF in `docs/PITCH_DECK_INTERMAVEN_TUNEMAVENS.pdf`.
+
+- **Backend Persona Routing & Anti-Hijack Guard (`apps/portal/src/App.jsx`, `apps/portal/src/components/common/Navbar.jsx`)**:
+  - **Eliminated Listener Backend Override**: Removed unauthorized setting of `sessionStorage.setItem('tunestream_active_backend', 'true')` and `localStorage.setItem('tunemavens_active_persona', 'consumer')` from public stream links in `Navbar.jsx`.
+  - **Strict Persona Precedence**: Refactored `effectiveRole` and `demoFallbackUser` in `App.jsx` to guarantee that authenticated roles (`creator`, `label`, `dj`, `supervisor`, `media_house`, `corporate`, `podcaster`, `vc`, `affiliate`) and stored `tunemavens_active_persona` always take precedence over stream listener flags.
+  - **Tailored Console Metrics**: Extended `getRoleSpecificData` in `DashboardHome` to deliver dedicated KPI consoles, growth pacing charts, and channel breakdowns for `media_house` (broadcast cue sheets and CMO airplay) and `podcaster` (show downloads and dynamic CPM ad insertion).
+
+- **Multi-Source DJ Pool Aggregation Pipeline (`backend/routes/djpool_router.py`)**:
+  - **Triple-Source Ingestion**: Upgraded `/api/djpool/tracks` (`list_promo_tracks`) to aggregate from:
+    1. Native DJ Pool promo tracks (`db.dj_pool_tracks`, 20 cuts)
+    2. Catalogue Machine sovereign masters (`get_catalog_tracks(subdomain="all")`, 36 cuts)
+    3. Sovereign DJ Mixes (`db.dj_mixes`, 28 mixes)
+    - **Total: 84 aggregated cuts and continuous mixes** available for DJs to preview, add to crate, review, clear, and download.
+  - **Camelot Key & BPM Harmonization**: Integrated automated key detection and Camelot notation (1A through 12B) and genre-specific BPM derivation across all ingested catalogue cuts.
+  - **Universal Download Resolution**: Updated `/api/djpool/download/{track_id}` (`download_promo_track`) to handle catalog cuts, DJ mixes, and native promo tracks, updating download metrics and releasing lossless audio streams seamlessly.
+
+- **Search and Pagination Standardization in DJ Pool (`apps/portal/src/components/dj/DJPoolPanel.jsx`, `DJPoolPanel.css`)**:
+  - Implemented top search bar filtering across title, artist, genre, and Camelot key.
+  - Added bottom pagination controls with dynamic page sizing and page indicators for Promo Pool records and Dancefloor Clearance requests.
+  - Retained strict dark-mode design standards (midnight navy background `#070e18`, flat buttons, and 3px border radius).

@@ -1334,16 +1334,33 @@ function DashboardView({
   // Provide an immediate active fallback demo session so users entering via standalone apps or direct tab links are never blocked by a login wall
   const demoFallbackUser = useMemo(() => {
     const params = new URLSearchParams(location.search);
-    const reqRole = params.get('role') || 'creator';
+    let storedPersona = null;
+    try {
+      storedPersona = localStorage.getItem('tunemavens_active_persona');
+    } catch (_) {}
+    const reqRole = params.get('role') || (storedPersona && storedPersona !== 'consumer' ? storedPersona : 'creator');
     const targetApps = DEFAULT_ACTIVE_APPS_BY_ROLE[reqRole] || DEFAULT_ACTIVE_APPS_BY_ROLE.creator;
+    const personaNames = {
+      creator: 'TuneMavens Studio',
+      label: 'TuneMavens Records',
+      dj: 'DJ Crate & Live Set Console',
+      supervisor: 'Sync Licensing Supervisor',
+      studio: 'Recording Studio Partner',
+      media_house: 'Media House & Broadcast Sync',
+      corporate: 'Corporate Brand Partner',
+      podcaster: 'Podcaster Studio & Ad Insertion',
+      vc: 'Venture Capital & LP Desk',
+      affiliate: 'Affiliate Partner Network',
+      consumer: 'TuneStream Listener'
+    };
     return reconcileUserApps({
       id: 'sandbox_user_demo',
       email: `${reqRole}_demo@tunemavens.com`,
-      name: reqRole === 'consumer' ? 'TuneStream Listener' : (reqRole === 'label' ? 'TuneMavens Records' : 'TuneMavens Studio'),
+      name: personaNames[reqRole] || (reqRole === 'consumer' ? 'TuneStream Listener' : 'TuneMavens Studio'),
       role: reqRole,
       credits: 600,
       plan: 'pro',
-      brand_name: reqRole === 'consumer' ? 'TuneStream Hi-Fi' : (reqRole === 'label' ? 'TuneMavens Records' : 'Studio Roster'),
+      brand_name: personaNames[reqRole] || (reqRole === 'consumer' ? 'TuneStream Hi-Fi' : 'Studio Roster'),
       country: 'KE',
       admin_sandbox: true,
       apps: [...targetApps]
@@ -1353,6 +1370,21 @@ function DashboardView({
   // Compute effective role immediately on first render to prevent any consumer backend redirection
   const effectiveRole = useMemo(() => {
     if (reqRoleParam) return reqRoleParam;
+
+    let storedPersona = null;
+    try {
+      storedPersona = localStorage.getItem('tunemavens_active_persona');
+    } catch (_) {}
+
+    // A real logged-in or simulated non-consumer user role must ALWAYS take precedence over any tunestream backend flag
+    if (sessionUser?.role && sessionUser.role !== 'consumer') {
+      return sessionUser.role;
+    }
+
+    if (storedPersona && storedPersona !== 'consumer') {
+      return storedPersona;
+    }
+
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('tunestream_active_backend') === 'true') {
       return 'consumer';
     }
@@ -1364,7 +1396,7 @@ function DashboardView({
         return 'creator';
       }
     }
-    return sessionUser?.role || 'creator';
+    return sessionUser?.role || storedPersona || 'creator';
   }, [sessionUser?.role, reqRoleParam, initialTabQuery]);
 
   const activeUser = useMemo(() => {
@@ -5811,6 +5843,45 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
             { label: "Tier Status", val: "Partner (+1.0% Matrix Bonus)", color: "var(--cyan)" },
             { label: "Payout Rail", val: "M-Pesa STK (+254712345678)", color: "#10b981" },
             { label: "Tracking Cookie", val: "90 Days Active", color: "#f59e0b" }
+          ]
+        };
+      case 'media_house':
+      case 'media':
+        return {
+          title: "Media House & Broadcast Sync Console",
+          statLabel: "Active Broadcast Cue Sheets",
+          statValue: "28 Cue Sheets",
+          statTrend: "↗ +6 filed with CMOs this week",
+          stat2Label: "Cleared Sync Ingests",
+          stat2Value: "18 Releases",
+          stat2Trend: "⚡ 100% Pre-cleared for TV & Radio Airplay",
+          chartTitle: "Broadcast Airplay Minutes & Reach",
+          chartPoints: [12000, 24000, 39000, 58000, 78000, 104000],
+          chartLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          detailsTitle: "Programming Channels",
+          detailsItems: [
+            { label: "Prime Time Television", val: "45% of airplay", color: "var(--cyan)" },
+            { label: "National FM Radio Syndication", val: "35% of airplay", color: "#8b5cf6" },
+            { label: "Digital OTT & Podcasts", val: "20% of airplay", color: "#10b981" }
+          ]
+        };
+      case 'podcaster':
+        return {
+          title: "Podcaster Studio & Ad Insertion Console",
+          statLabel: "Total Show Downloads",
+          statValue: "48,290 Listens",
+          statTrend: "↗ +8,420 listens this month",
+          stat2Label: "Dynamic Ad Impressions",
+          stat2Value: "112,400 Impressions",
+          stat2Trend: "🎯 $18.50 Blended Dynamic CPM",
+          chartTitle: "Monthly Episode Streams & Listens",
+          chartPoints: [6500, 12800, 21400, 31000, 39800, 48290],
+          chartLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          detailsTitle: "Monetization Streams",
+          detailsItems: [
+            { label: "Host-Read Brand Ads", val: "55% ($4,120)", color: "var(--cyan)" },
+            { label: "Programmatic Pre-Roll", val: "30% ($2,250)", color: "#8b5cf6" },
+            { label: "Listener Tips & Merch", val: "15% ($1,125)", color: "#10b981" }
           ]
         };
       case 'creator':

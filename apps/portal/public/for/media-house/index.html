@@ -79,6 +79,32 @@
   
   </head>
   <body>
+    <script>
+      // Unregister service worker in local development to avoid stale cached HTML pages
+      if ('serviceWorker' in navigator && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var i = 0; i < regs.length; i++) {
+            regs[i].unregister();
+          }
+        }).catch(function() {});
+      }
+
+      // Automatically route path-based navigation to HashRouter routes
+      (function() {
+        var p = window.location.pathname;
+        if (!window.location.hash && p !== '/' && p !== '/index.html') {
+          if (p.startsWith('/dashboard')) {
+            window.location.replace('/#' + p + window.location.search);
+          } else if (p.startsWith('/for/dj') || p.startsWith('/for-djs')) {
+            window.location.replace('/#/dashboard?role=dj');
+          } else if (p.startsWith('/for/creator') || p.startsWith('/for-creators')) {
+            window.location.replace('/#/dashboard?role=creator');
+          } else if (p.startsWith('/for/label') || p.startsWith('/for-labels')) {
+            window.location.replace('/#/dashboard?role=label');
+          }
+        }
+      })();
+    </script>
     <div id="root">
     <div id="ssr-container" style="max-width: 1200px; margin: 0 auto; padding: 48px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #f1f5f9; background: #0b0f19;">
       <header style="margin-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -162,75 +188,14 @@
       </footer>
     </div>
   </div>
-        <nav style="display: flex; gap: 20px; font-size: 14px;">
-          <a href="/" style="color: #cbd5e1; text-decoration: none;">Home</a>
-          <a href="/pricing" style="color: #cbd5e1; text-decoration: none;">Pricing</a>
-          <a href="/for-creators" style="color: #cbd5e1; text-decoration: none;">Creators</a>
-          <a href="/for-labels" style="color: #cbd5e1; text-decoration: none;">Labels</a>
-          <a href="/about" style="color: #cbd5e1; text-decoration: none;">About</a>
-          <a href="/help" style="color: #cbd5e1; text-decoration: none;">Help</a>
-        </nav>
-      </header>
-
-      <main>
-        <section style="margin: 40px 0 60px 0;">
-          <h1 style="font-size: 38px; line-height: 1.2; font-weight: 800; margin-bottom: 16px; color: #ffffff;">
-            The Pan-African Music Operating System & Rights Engine
-          </h1>
-          <p style="font-size: 18px; line-height: 1.6; color: #94a3b8; max-width: 800px; margin-bottom: 32px;">
-            Unified credits, automated split cascades, pre-cleared sync licensing, and lossless audio delivery across Nairobi and the diaspora.
-          </p>
-          <div style="display: flex; gap: 16px;">
-            <a href="/pricing" style="display: inline-block; background: #00f0ff; color: #0b0f19; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none;">
-              Get Started with Unified Credits
-            </a>
-            <a href="/about" style="display: inline-block; background: rgba(255,255,255,0.08); color: #ffffff; padding: 12px 24px; border-radius: 8px; font-weight: 600; text-decoration: none;">
-              Learn More
-            </a>
-          </div>
-        </section>
-
-        <section style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 32px; margin-bottom: 48px;">
-          <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #e2e8f0;">Platform Capabilities & Guarantees</h2>
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 16px; line-height: 1.8;">
-            
-    <li style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-      <span style="color: #00f0ff;">✔</span> <span>100% Unified Credits — Zero monthly recurring fees or subscription locks</span>
-    </li>
-  
-
-    <li style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-      <span style="color: #00f0ff;">✔</span> <span>Immutable Split Cascade Ledgers — Double-entry accounting for writers and producers</span>
-    </li>
-  
-
-    <li style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-      <span style="color: #00f0ff;">✔</span> <span>Pre-Cleared One-Stop Sync Catalog — Direct brief submissions to commercial supervisors</span>
-    </li>
-  
-
-    <li style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-      <span style="color: #00f0ff;">✔</span> <span>Lossless Audio Stem Archiving — Cloud storage with verified ISRC/ISWC metadata</span>
-    </li>
-  
-          </ul>
-        </section>
-      </main>
-
-      <footer style="margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; font-size: 13px; color: #64748b; display: flex; justify-content: space-between;">
-        <div>&copy; 2026 Intermaven Network Inc. All rights reserved. Nairobi &amp; Global Diaspora.</div>
-        <div style="display: flex; gap: 16px;">
-          <a href="/about" style="color: #64748b; text-decoration: none;">About</a>
-          <a href="/pricing" style="color: #64748b; text-decoration: none;">Credits &amp; Pricing</a>
-          <a href="/help" style="color: #64748b; text-decoration: none;">Support &amp; FAQ</a>
-        </div>
-      </footer>
+        <div style="font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.5px;">Loading TuneMavens Workspace...</div>
+        <style>@keyframes tm-spin { to { transform: rotate(360deg); } }</style>
+      </div>
     </div>
-  </div>
     <script src="/js/localization.js?v=50"></script>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      if ('serviceWorker' in navigator) {
+      if ('serviceWorker' in navigator && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').catch((err) => {
             console.log("[TuneMavens] SW registration note:", err);

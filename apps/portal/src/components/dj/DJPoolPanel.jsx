@@ -121,6 +121,15 @@ export default function DJPoolPanel({ sessionUser, initialTab, onOpenCreditReloa
   const [toastMessage, setToastMessage] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
 
+  // Promo Pool Pagination State
+  const [currentTracksPage, setCurrentTracksPage] = useState(1);
+  const [tracksPerPage, setTracksPerPage] = useState(6);
+
+  // Clearance Search & Pagination State
+  const [clearanceSearchQuery, setClearanceSearchQuery] = useState('');
+  const [currentClearancePage, setCurrentClearancePage] = useState(1);
+  const [clearancesPerPage, setClearancesPerPage] = useState(6);
+
   // Clearance Form State
   const [clearTrackId, setClearTrackId] = useState('');
   const [clearTitle, setClearTitle] = useState('');
@@ -540,6 +549,32 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
     return true;
   });
 
+  // Promo Pool Pagination Calculations
+  const totalTracks = filteredTracks.length;
+  const totalTracksPages = Math.max(1, Math.ceil(totalTracks / tracksPerPage));
+  const safeTracksPage = Math.min(Math.max(1, currentTracksPage), totalTracksPages);
+  const tracksStartIdx = (safeTracksPage - 1) * tracksPerPage;
+  const paginatedTracks = filteredTracks.slice(tracksStartIdx, tracksStartIdx + tracksPerPage);
+
+  // Clearance Filtering & Pagination Calculations
+  const filteredClearances = clearances.filter(c => {
+    if (!clearanceSearchQuery.trim()) return true;
+    const q = clearanceSearchQuery.toLowerCase();
+    return (
+      c.title?.toLowerCase().includes(q) ||
+      c.dj_name?.toLowerCase().includes(q) ||
+      c.venue?.toLowerCase().includes(q) ||
+      c.original_title?.toLowerCase().includes(q) ||
+      c.certificate_id?.toLowerCase().includes(q) ||
+      c.status?.toLowerCase().includes(q)
+    );
+  });
+  const totalClearances = filteredClearances.length;
+  const totalClearancePages = Math.max(1, Math.ceil(totalClearances / clearancesPerPage));
+  const safeClearancePage = Math.min(Math.max(1, currentClearancePage), totalClearancePages);
+  const clearanceStartIdx = (safeClearancePage - 1) * clearancesPerPage;
+  const paginatedClearances = filteredClearances.slice(clearanceStartIdx, clearanceStartIdx + clearancesPerPage);
+
   const harmonicMatchKeys = selectedKey ? getHarmonicMatches(selectedKey) : [];
 
   const vibeOptions = [
@@ -749,7 +784,7 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
                   type="text"
                   placeholder="Search promo pool by title, artist, or tag..."
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={e => { setSearchQuery(e.target.value); setCurrentTracksPage(1); }}
                   className="djpool-search-input"
                 />
               </div>
@@ -759,7 +794,7 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
                 {GENRE_LIST.map(genre => (
                   <button
                     key={genre}
-                    onClick={() => setSelectedGenre(genre)}
+                    onClick={() => { setSelectedGenre(genre); setCurrentTracksPage(1); }}
                     className={`djpool-filter-chip ${selectedGenre === genre ? 'active' : ''}`}
                   >
                     {genre}
@@ -873,105 +908,171 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {filteredTracks.map(track => {
-                const isPlaying = playingTrackId === track.id;
-                const inCrate = crate.some(t => t.id === track.id);
-                return (
-                  <div key={track.id} className="djpool-track-card">
-                    {/* Play / Preview Button */}
-                    <button
-                      onClick={() => handleTogglePlay(track)}
-                      className={`djpool-play-btn ${isPlaying ? 'playing' : ''}`}
-                      title={isPlaying ? 'Pause Preview' : 'Audition Track'}
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {paginatedTracks.map(track => {
+                  const isPlaying = playingTrackId === track.id;
+                  const inCrate = crate.some(t => t.id === track.id);
+                  return (
+                    <div key={track.id} className="djpool-track-card">
+                      {/* Play / Preview Button */}
+                      <button
+                        onClick={() => handleTogglePlay(track)}
+                        className={`djpool-play-btn ${isPlaying ? 'playing' : ''}`}
+                        title={isPlaying ? 'Pause Preview' : 'Audition Track'}
+                      >
+                        {isPlaying ? <RiPauseFill /> : <RiPlayFill style={{ marginLeft: '3px' }} />}
+                      </button>
+
+                      {/* Metadata & Waveform */}
+                      <div className="djpool-track-meta">
+                        <div className="djpool-track-title-row">
+                          <span className="djpool-track-title">{track.title}</span>
+                          <span className="djpool-tag djpool-tag-genre">{track.genre}</span>
+                          <span className="djpool-tag djpool-tag-bpm">{track.bpm} BPM</span>
+                          <span className="djpool-tag djpool-tag-key">Key {track.key}</span>
+                          <span className="djpool-tag djpool-tag-version">{track.version_type || 'Extended Mix'}</span>
+                          {track.stems_available && (
+                            <span className="djpool-tag djpool-tag-stems">🎛️ Stems Ready</span>
+                          )}
+                          {track.feedback_submitted && (
+                            <span className="djpool-tag djpool-tag-reviewed">✓ Reviewed</span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#94a3b8', flexWrap: 'wrap' }}>
+                          <span>Artist: <strong style={{ color: '#fff' }}>{track.artist}</strong></span>
+                          <span>Fidelity: <strong style={{ color: 'var(--cyan)' }}>{track.lossless_format || '24-bit WAV'}</strong></span>
+                          <span>Energy: <strong style={{ color: '#fbbf24' }}>{track.energy_level || 8}/10</strong></span>
+                          <span>Downloads: <strong>{track.downloads_count || 0}</strong></span>
+                          {track.allowed_regions && track.allowed_regions.length > 0 && (
+                            <span style={{ color: '#fbbf24' }}>
+                              <RiGlobalLine style={{ verticalAlign: 'middle', marginRight: '3px' }} />
+                              {track.allowed_regions.join(', ')} Only
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Fake Waveform with Live Progress when auditioning */}
+                        <div className="djpool-waveform-fake">
+                          <div
+                            className="djpool-waveform-progress"
+                            style={{ width: isPlaying ? `${playProgress}%` : '0%' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="djpool-track-actions">
+                        <button
+                          onClick={() => handleToggleCrate(track)}
+                          className={`djpool-btn-crate ${inCrate ? 'in-crate' : ''}`}
+                        >
+                          {inCrate ? (
+                            <>
+                              <RiCheckFill size={14} />
+                              In Crate
+                            </>
+                          ) : (
+                            <>
+                              <RiAddLine size={14} />
+                              Add to Crate
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => handleDownloadAttempt(track)}
+                          disabled={downloadingId === track.id}
+                          className={`djpool-btn-download ${track.feedback_submitted ? 'unlocked' : 'locked'}`}
+                        >
+                          {downloadingId === track.id ? (
+                            <>
+                              <RiRefreshFill size={13} className="spin-animation" />
+                              Prepping Drop...
+                            </>
+                          ) : track.feedback_submitted ? (
+                            <>
+                              <RiDownloadFill size={14} />
+                              Download WAV
+                            </>
+                          ) : (
+                            <>
+                              <RiStarFill size={14} />
+                              Review &amp; Unlock
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Standardized Bottom Pagination Bar */}
+              <div className="djpool-pagination-bar" data-testid="dj-pool-pagination">
+                <div className="djpool-pagination-info">
+                  Showing <strong>{totalTracks === 0 ? 0 : tracksStartIdx + 1}</strong>–<strong>{Math.min(tracksStartIdx + tracksPerPage, totalTracks)}</strong> of <strong>{totalTracks}</strong> promo cuts
+                  <span className="djpool-pagination-sep">·</span>
+                  <span>Page {safeTracksPage} of {totalTracksPages}</span>
+                </div>
+                <div className="djpool-pagination-controls">
+                  <label className="djpool-page-size-label">
+                    <span>Per page:</span>
+                    <select
+                      value={tracksPerPage}
+                      onChange={(e) => {
+                        setTracksPerPage(Number(e.target.value));
+                        setCurrentTracksPage(1);
+                      }}
+                      className="djpool-page-size-select"
+                      data-testid="dj-pool-page-size"
                     >
-                      {isPlaying ? <RiPauseFill /> : <RiPlayFill style={{ marginLeft: '3px' }} />}
+                      <option value={6}>6 / page</option>
+                      <option value={12}>12 / page</option>
+                      <option value={24}>24 / page</option>
+                      <option value={48}>48 / page</option>
+                    </select>
+                  </label>
+                  <div className="djpool-page-buttons">
+                    <button
+                      type="button"
+                      className="djpool-page-btn"
+                      disabled={safeTracksPage <= 1}
+                      onClick={() => setCurrentTracksPage(p => Math.max(1, p - 1))}
+                      data-testid="dj-pool-prev-page"
+                    >
+                      ← Prev
                     </button>
-
-                    {/* Metadata & Waveform */}
-                    <div className="djpool-track-meta">
-                      <div className="djpool-track-title-row">
-                        <span className="djpool-track-title">{track.title}</span>
-                        <span className="djpool-tag djpool-tag-genre">{track.genre}</span>
-                        <span className="djpool-tag djpool-tag-bpm">{track.bpm} BPM</span>
-                        <span className="djpool-tag djpool-tag-key">Key {track.key}</span>
-                        <span className="djpool-tag djpool-tag-version">{track.version_type || 'Extended Mix'}</span>
-                        {track.stems_available && (
-                          <span className="djpool-tag djpool-tag-stems">🎛️ Stems Ready</span>
-                        )}
-                        {track.feedback_submitted && (
-                          <span className="djpool-tag djpool-tag-reviewed">✓ Reviewed</span>
-                        )}
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#94a3b8', flexWrap: 'wrap' }}>
-                        <span>Artist: <strong style={{ color: '#fff' }}>{track.artist}</strong></span>
-                        <span>Fidelity: <strong style={{ color: 'var(--cyan)' }}>{track.lossless_format || '24-bit WAV'}</strong></span>
-                        <span>Energy: <strong style={{ color: '#fbbf24' }}>{track.energy_level || 8}/10</strong></span>
-                        <span>Downloads: <strong>{track.downloads_count || 0}</strong></span>
-                        {track.allowed_regions && track.allowed_regions.length > 0 && (
-                          <span style={{ color: '#fbbf24' }}>
-                            <RiGlobalLine style={{ verticalAlign: 'middle', marginRight: '3px' }} />
-                            {track.allowed_regions.join(', ')} Only
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Fake Waveform with Live Progress when auditioning */}
-                      <div className="djpool-waveform-fake">
-                        <div
-                          className="djpool-waveform-progress"
-                          style={{ width: isPlaying ? `${playProgress}%` : '0%' }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="djpool-track-actions">
-                      <button
-                        onClick={() => handleToggleCrate(track)}
-                        className={`djpool-btn-crate ${inCrate ? 'in-crate' : ''}`}
-                      >
-                        {inCrate ? (
-                          <>
-                            <RiCheckFill size={14} />
-                            In Crate
-                          </>
-                        ) : (
-                          <>
-                            <RiAddLine size={14} />
-                            Add to Crate
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => handleDownloadAttempt(track)}
-                        disabled={downloadingId === track.id}
-                        className={`djpool-btn-download ${track.feedback_submitted ? 'unlocked' : 'locked'}`}
-                      >
-                        {downloadingId === track.id ? (
-                          <>
-                            <RiRefreshFill size={13} className="spin-animation" />
-                            Prepping Drop...
-                          </>
-                        ) : track.feedback_submitted ? (
-                          <>
-                            <RiDownloadFill size={14} />
-                            Download WAV
-                          </>
-                        ) : (
-                          <>
-                            <RiStarFill size={14} />
-                            Review &amp; Unlock
-                          </>
-                        )}
-                      </button>
-                    </div>
+                    {Array.from({ length: totalTracksPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalTracksPages || Math.abs(p - safeTracksPage) <= 1)
+                      .map((p, idx, arr) => (
+                        <React.Fragment key={p}>
+                          {idx > 0 && p > arr[idx - 1] + 1 && (
+                            <span style={{ color: '#475569', padding: '0 2px' }}>…</span>
+                          )}
+                          <button
+                            type="button"
+                            className={`djpool-page-btn num ${p === safeTracksPage ? 'active' : ''}`}
+                            onClick={() => setCurrentTracksPage(p)}
+                          >
+                            {p}
+                          </button>
+                        </React.Fragment>
+                      ))}
+                    <button
+                      type="button"
+                      className="djpool-page-btn"
+                      disabled={safeTracksPage >= totalTracksPages}
+                      onClick={() => setCurrentTracksPage(p => Math.min(totalTracksPages, p + 1))}
+                      data-testid="dj-pool-next-page"
+                    >
+                      Next →
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              </div>
+            </>
           )}
         </>
       )}
@@ -1149,102 +1250,181 @@ Cryptographic Verification Hash: TM-CRATE-${Math.random().toString(36).substring
               Active Bootleg &amp; Remix Clearance Ledger
             </h3>
 
-            {clearances.length === 0 ? (
+            {/* Standardized Clearance Search Input */}
+            <div className="djpool-search-input-wrap" style={{ marginBottom: '14px' }}>
+              <RiSearchLine />
+              <input
+                type="text"
+                placeholder="Search clearances by title, DJ name, venue, or certificate ID..."
+                value={clearanceSearchQuery}
+                onChange={e => { setClearanceSearchQuery(e.target.value); setCurrentClearancePage(1); }}
+                className="djpool-search-input"
+              />
+            </div>
+
+            {filteredClearances.length === 0 ? (
               <div className="dashboard-card" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                <p>No clearance requests logged yet.</p>
+                <p>No clearance requests match your search.</p>
                 <p style={{ fontSize: '13px' }}>Submit a remix or festival drop clearance request on the right.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {clearances.map(req => {
-                  const isApproved = req.status === 'approved';
-                  const isDeclined = req.status === 'declined';
-                  return (
-                    <div key={req.id} className="dashboard-card" style={{ padding: '18px 20px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
-                        <div>
-                          <div style={{ fontWeight: '800', fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
-                            {req.title}
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-                            <span>DJ: <strong style={{ color: '#fff' }}>{req.dj_name}</strong></span>
-                            <span>Venue: <strong style={{ color: '#fff' }}>{req.venue}</strong></span>
-                            {req.event_date && <span>Date: <strong style={{ color: '#fbbf24' }}>{req.event_date}</strong></span>}
-                            {req.original_title && (
-                              <span>Original: <strong style={{ color: 'var(--cyan)' }}>{req.original_title}</strong></span>
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {paginatedClearances.map(req => {
+                    const isApproved = req.status === 'approved';
+                    const isDeclined = req.status === 'declined';
+                    return (
+                      <div key={req.id} className="dashboard-card" style={{ padding: '18px 20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+                          <div>
+                            <div style={{ fontWeight: '800', fontSize: '15px', color: '#fff', marginBottom: '4px' }}>
+                              {req.title}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                              <span>DJ: <strong style={{ color: '#fff' }}>{req.dj_name}</strong></span>
+                              <span>Venue: <strong style={{ color: '#fff' }}>{req.venue}</strong></span>
+                              {req.event_date && <span>Date: <strong style={{ color: '#fbbf24' }}>{req.event_date}</strong></span>}
+                              {req.original_title && (
+                                <span>Original: <strong style={{ color: 'var(--cyan)' }}>{req.original_title}</strong></span>
+                              )}
+                            </div>
+                            {req.certificate_id && (
+                              <div style={{ marginTop: '8px', fontSize: '11px', fontFamily: 'monospace', color: '#64748b' }}>
+                                CERT ID: <strong style={{ color: '#86efac' }}>{req.certificate_id}</strong>
+                              </div>
                             )}
                           </div>
-                          {req.certificate_id && (
-                            <div style={{ marginTop: '8px', fontSize: '11px', fontFamily: 'monospace', color: '#64748b' }}>
-                              CERT ID: <strong style={{ color: '#86efac' }}>{req.certificate_id}</strong>
-                            </div>
-                          )}
-                        </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                          <span style={{
-                            padding: '4px 10px',
-                            borderRadius: '99px',
-                            fontSize: '11px',
-                            fontWeight: '800',
-                            background: isApproved ? 'rgba(34,197,94,0.15)' : isDeclined ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                            color: isApproved ? '#86efac' : isDeclined ? '#fca5a5' : '#fbbf24',
-                            border: `1px solid ${isApproved ? 'rgba(34,197,94,0.3)' : isDeclined ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'}`
-                          }}>
-                            {req.status?.toUpperCase()}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                            <span style={{
+                              padding: '4px 10px',
+                              borderRadius: '99px',
+                              fontSize: '11px',
+                              fontWeight: '800',
+                              background: isApproved ? 'rgba(34,197,94,0.15)' : isDeclined ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                              color: isApproved ? '#86efac' : isDeclined ? '#fca5a5' : '#fbbf24',
+                              border: `1px solid ${isApproved ? 'rgba(34,197,94,0.3)' : isDeclined ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'}`
+                            }}>
+                              {req.status?.toUpperCase()}
+                            </span>
 
-                          {isApproved && (
-                            <button
-                              onClick={() => setViewCertModal(req)}
-                              className="djpool-tab-btn"
-                              style={{ padding: '4px 10px', fontSize: '11px', background: 'rgba(34, 211, 238, 0.15)', color: 'var(--cyan)' }}
-                            >
-                              <RiFileTextFill size={13} />
-                              View Passport
-                            </button>
-                          )}
-
-                          {req.is_owner && req.status === 'pending' && (
-                            <div style={{ display: 'flex', gap: '6px' }}>
+                            {isApproved && (
                               <button
-                                onClick={() => handleApproveClearance(req.id, 'approved')}
-                                style={{
-                                  padding: '5px 12px',
-                                  borderRadius: '6px',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  fontSize: '11px',
-                                  fontWeight: '800',
-                                  background: 'rgba(34,197,94,0.2)',
-                                  color: '#86efac'
-                                }}
+                                onClick={() => setViewCertModal(req)}
+                                className="djpool-tab-btn"
+                                style={{ padding: '4px 10px', fontSize: '11px', background: 'rgba(34, 211, 238, 0.15)', color: 'var(--cyan)' }}
                               >
-                                Approve
+                                <RiFileTextFill size={13} />
+                                View Passport
                               </button>
-                              <button
-                                onClick={() => handleApproveClearance(req.id, 'declined')}
-                                style={{
-                                  padding: '5px 12px',
-                                  borderRadius: '6px',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  fontSize: '11px',
-                                  fontWeight: '800',
-                                  background: 'rgba(239,68,68,0.2)',
-                                  color: '#fca5a5'
-                                }}
-                              >
-                                Decline
-                              </button>
-                            </div>
-                          )}
+                            )}
+
+                            {req.is_owner && req.status === 'pending' && (
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  onClick={() => handleApproveClearance(req.id, 'approved')}
+                                  style={{
+                                    padding: '5px 12px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '11px',
+                                    fontWeight: '800',
+                                    background: 'rgba(34,197,94,0.2)',
+                                    color: '#86efac'
+                                  }}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleApproveClearance(req.id, 'declined')}
+                                  style={{
+                                    padding: '5px 12px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '11px',
+                                    fontWeight: '800',
+                                    background: 'rgba(239,68,68,0.2)',
+                                    color: '#fca5a5'
+                                  }}
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+
+                {/* Standardized Bottom Pagination Bar for Clearances */}
+                {totalClearances > 0 && (
+                  <div className="djpool-pagination-bar" data-testid="dj-clearance-pagination" style={{ marginTop: '16px' }}>
+                    <div className="djpool-pagination-info">
+                      Showing <strong>{totalClearances === 0 ? 0 : clearanceStartIdx + 1}</strong>–<strong>{Math.min(clearanceStartIdx + clearancesPerPage, totalClearances)}</strong> of <strong>{totalClearances}</strong> passes
+                      <span className="djpool-pagination-sep">·</span>
+                      <span>Page {safeClearancePage} of {totalClearancePages}</span>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="djpool-pagination-controls">
+                      <label className="djpool-page-size-label">
+                        <span>Per page:</span>
+                        <select
+                          value={clearancesPerPage}
+                          onChange={(e) => {
+                            setClearancesPerPage(Number(e.target.value));
+                            setCurrentClearancePage(1);
+                          }}
+                          className="djpool-page-size-select"
+                          data-testid="dj-clearance-page-size"
+                        >
+                          <option value={6}>6 / page</option>
+                          <option value={12}>12 / page</option>
+                          <option value={24}>24 / page</option>
+                        </select>
+                      </label>
+                      <div className="djpool-page-buttons">
+                        <button
+                          type="button"
+                          className="djpool-page-btn"
+                          disabled={safeClearancePage <= 1}
+                          onClick={() => setCurrentClearancePage(p => Math.max(1, p - 1))}
+                          data-testid="dj-clearance-prev-page"
+                        >
+                          ← Prev
+                        </button>
+                        {Array.from({ length: totalClearancePages }, (_, i) => i + 1)
+                          .filter(p => p === 1 || p === totalClearancePages || Math.abs(p - safeClearancePage) <= 1)
+                          .map((p, idx, arr) => (
+                            <React.Fragment key={p}>
+                              {idx > 0 && p > arr[idx - 1] + 1 && (
+                                <span style={{ color: '#475569', padding: '0 2px' }}>…</span>
+                              )}
+                              <button
+                                type="button"
+                                className={`djpool-page-btn num ${p === safeClearancePage ? 'active' : ''}`}
+                                onClick={() => setCurrentClearancePage(p)}
+                              >
+                                {p}
+                              </button>
+                            </React.Fragment>
+                          ))}
+                        <button
+                          type="button"
+                          className="djpool-page-btn"
+                          disabled={safeClearancePage >= totalClearancePages}
+                          onClick={() => setCurrentClearancePage(p => Math.min(totalClearancePages, p + 1))}
+                          data-testid="dj-clearance-next-page"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

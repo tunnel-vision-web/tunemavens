@@ -40,11 +40,11 @@ export default function Navbar({ sessionUser }) {
     if (!isSubAppPath(currentPath)) {
       sessionStorage.setItem(LAST_TM_PAGE_KEY, currentPath + location.search);
     }
-    if (currentPath === '/native-apps/tunestream' || currentPath.startsWith('/tunestream') || currentPath === '/stream') {
-      sessionStorage.setItem('tunestream_active_backend', 'true');
-      try { localStorage.setItem('tunemavens_active_persona', 'consumer'); } catch (_) {}
-    } else if (['/', '/tools', '/apps', '/pricing', '/publishing', '/distribution', '/about'].includes(currentPath) || currentPath.startsWith('/for/')) {
-      sessionStorage.setItem('tunestream_active_backend', 'false');
+    // Prevent accidental override of user's active persona or backend when navigating public stream routes
+    if (currentPath === '/' || currentPath.startsWith('/for/') || currentPath === '/tools' || currentPath === '/apps') {
+      try {
+        sessionStorage.removeItem('tunestream_active_backend');
+      } catch (_) {}
     }
   }, [currentPath, location.search]);
 
