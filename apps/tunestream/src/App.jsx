@@ -150,7 +150,7 @@ function AppContent() {
 
   // Global TuneStream Lossless Audio Player States (Ready for gesture-unlocked playback)
   const [globalTrack, setGlobalTrack] = useState(() => AUTHORITATIVE_CATALOG_TRACKS[0] || null);
-  const [globalPlaying, setGlobalPlaying] = useState(false);
+  const [globalPlaying, setGlobalPlaying] = useState(true);
   const [globalProgress, setGlobalProgress] = useState(0);
   const [isUndocked, setIsUndocked] = useState(false);
   const [playerPos, setPlayerPos] = useState({ x: 40, y: 120 });
@@ -305,7 +305,7 @@ function AppContent() {
                   setPlaylistQueue(data.tracks);
                   setGlobalTrack(data.tracks[0]);
                   setPlaybackContextTitle(data.title || 'Your Daily Personalized Mix');
-                  setGlobalPlaying(false);
+                  setGlobalPlaying(true);
                 }
               })
               .catch(() => {
@@ -313,7 +313,7 @@ function AppContent() {
                   setPlaylistQueue(config.featured_playlist.tracks);
                   setGlobalTrack(config.featured_playlist.tracks[0]);
                   setPlaybackContextTitle(config.featured_playlist.title);
-                  setGlobalPlaying(false);
+                  setGlobalPlaying(true);
                 }
               });
           } catch {
@@ -321,7 +321,7 @@ function AppContent() {
               setPlaylistQueue(config.featured_playlist.tracks);
               setGlobalTrack(config.featured_playlist.tracks[0]);
               setPlaybackContextTitle(config.featured_playlist.title);
-              setGlobalPlaying(false);
+              setGlobalPlaying(true);
             }
           }
         } else {
@@ -330,7 +330,7 @@ function AppContent() {
             setPlaylistQueue(config.featured_playlist.tracks);
             setGlobalTrack(config.featured_playlist.tracks[0]);
             setPlaybackContextTitle(config.featured_playlist.title);
-            setGlobalPlaying(false);
+            setGlobalPlaying(true);
           }
         }
       } else {
@@ -345,13 +345,13 @@ function AppContent() {
             }
             setPlaybackContextTitle('Introductory Background Audio');
             setShowIntroPill(true);
-            setGlobalPlaying(false);
+            setGlobalPlaying(true);
           }
         } else if (config.featured_playlist?.tracks?.length > 0) {
           setPlaylistQueue(config.featured_playlist.tracks);
           setGlobalTrack(config.featured_playlist.tracks[0]);
           setPlaybackContextTitle(config.featured_playlist.title || 'Featured Playlist: Global Afrobeat & Amapiano Masters');
-          setGlobalPlaying(false);
+          setGlobalPlaying(true);
         }
       }
     };

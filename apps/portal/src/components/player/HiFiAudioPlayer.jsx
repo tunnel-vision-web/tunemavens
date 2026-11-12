@@ -242,10 +242,14 @@ export default function HiFiAudioPlayer({
                 window.removeEventListener('pointerdown', unlockAudio, true);
                 window.removeEventListener('keydown', unlockAudio, true);
                 window.removeEventListener('touchstart', unlockAudio, true);
+                window.removeEventListener('click', unlockAudio, true);
+                window.removeEventListener('scroll', unlockAudio, true);
               };
               window.addEventListener('pointerdown', unlockAudio, true);
               window.addEventListener('keydown', unlockAudio, true);
               window.addEventListener('touchstart', unlockAudio, true);
+              window.addEventListener('click', unlockAudio, true);
+              window.addEventListener('scroll', unlockAudio, true);
             });
         }
       }

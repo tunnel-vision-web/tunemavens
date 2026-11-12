@@ -1727,7 +1727,7 @@ function DashboardView({
     }
     const audioEl = document.getElementById('tunestream-global-audio');
     if (audioEl) {
-      const src = t.audioUrl || t.fileUrl || `/api/stream/track/${encodeURIComponent(t.isrc || t.title || 'preview')}`;
+      const src = resolveAudioStreamUrl(t);
       if (audioEl.src !== src) {
         audioEl.src = src;
         audioEl.load();

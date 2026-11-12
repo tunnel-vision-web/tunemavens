@@ -195,7 +195,8 @@ def stream_catalog_track(
                         media_type = "audio/ogg"
                     return FileResponse(local_path, media_type=media_type)
         elif audio_url.startswith("http://") or audio_url.startswith("https://"):
-            return RedirectResponse(url=audio_url)
+            if "soundhelix.com" not in audio_url and "localhost" not in audio_url and "127.0.0.1" not in audio_url:
+                return RedirectResponse(url=audio_url)
 
     # 3. Fallback: Stream real studio catalog audio from uploads/audio
     search_dirs = [

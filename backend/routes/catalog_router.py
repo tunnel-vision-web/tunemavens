@@ -330,6 +330,8 @@ def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any
             "coverArt": "/uploads/ai_assets/retina_art_1908250_2560x1440.jpg",
             "coverText": "Cyberwave",
             "coverBg": "linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)",
+            "audioUrl": "/uploads/audio/pray_tell.wav",
+            "fileUrl": "/uploads/audio/pray_tell.wav",
             "status": "valid",
             "isFeatured": True,
             "writers": [{"name": artist_name, "pro": "BMI", "share": 100}],
@@ -354,6 +356,8 @@ def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any
             "coverArt": "/headers/discography_retina_header.jpg",
             "coverText": "Sunset",
             "coverBg": "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
+            "audioUrl": "/uploads/audio/enenda.wav",
+            "fileUrl": "/uploads/audio/enenda.wav",
             "status": "valid",
             "isFeatured": True,
             "writers": [{"name": artist_name, "pro": "ASCAP", "share": 100}],
@@ -378,6 +382,8 @@ def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any
             "coverArt": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
             "coverText": "Cascade",
             "coverBg": "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)",
+            "audioUrl": "/uploads/audio/haiya.wav",
+            "fileUrl": "/uploads/audio/haiya.wav",
             "status": "valid",
             "isFeatured": False,
             "writers": [{"name": artist_name, "pro": "BMI", "share": 100}],
@@ -402,6 +408,8 @@ def get_default_catalog_tracks(artist_name: str = "Ndufo") -> List[Dict[str, Any
             "coverArt": "/heroes/ndufo_hero_slide2_retina.jpg",
             "coverText": "Mara",
             "coverBg": "linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)",
+            "audioUrl": "/uploads/audio/running.wav",
+            "fileUrl": "/uploads/audio/running.wav",
             "status": "valid",
             "isFeatured": False,
             "writers": [{"name": artist_name, "pro": "PRS", "share": 100}],
@@ -591,6 +599,14 @@ def _sync_tracks_to_all_collections(subdomain: str, tracks: List[Dict[str, Any]]
     clean = subdomain.lower().strip().replace(" ", "")
     layout_id = f"epk_{clean}"
     now = datetime.now(timezone.utc)
+
+    # Ensure every single track has an authoritative streaming endpoint
+    for t in tracks:
+        if not t.get("audioUrl") and not t.get("fileUrl"):
+            ident = t.get("isrc") or t.get("id") or t.get("title")
+            t["audioUrl"] = f"/api/stream/track/{ident}"
+            t["fileUrl"] = t["audioUrl"]
+
     albums = build_creator_albums(clean, tracks)
 
     # 1. Update/Upsert in db.catalog_tracks
@@ -644,6 +660,10 @@ def get_catalog_tracks(
                 if not cover or "picsum.photos" in cover:
                     t["coverArt"] = get_authoritative_cover(t.get("title") or t.get("isrc") or "")
                     t["cover"] = t["coverArt"]
+                if not t.get("audioUrl") and not t.get("fileUrl"):
+                    ident = t.get("isrc") or t.get("id") or t.get("title")
+                    t["audioUrl"] = f"/api/stream/track/{ident}"
+                    t["fileUrl"] = t["audioUrl"]
                 isrc = t.get("isrc")
                 if isrc and isrc not in seen_isrcs:
                     seen_isrcs.add(isrc)
@@ -654,6 +674,10 @@ def get_catalog_tracks(
         # 2. Pull from db.epks for any creators not in catalog_tracks
         for epk in db.epks.find({}):
             for t in epk.get("tracks", []):
+                if not t.get("audioUrl") and not t.get("fileUrl"):
+                    ident = t.get("isrc") or t.get("id") or t.get("title")
+                    t["audioUrl"] = f"/api/stream/track/{ident}"
+                    t["fileUrl"] = t["audioUrl"]
                 isrc = t.get("isrc")
                 if isrc and isrc not in seen_isrcs:
                     seen_isrcs.add(isrc)
@@ -665,6 +689,10 @@ def get_catalog_tracks(
         for cms in db.cms_layouts.find({}):
             tracks = (cms.get("data") or {}).get("tracks", [])
             for t in tracks:
+                if not t.get("audioUrl") and not t.get("fileUrl"):
+                    ident = t.get("isrc") or t.get("id") or t.get("title")
+                    t["audioUrl"] = f"/api/stream/track/{ident}"
+                    t["fileUrl"] = t["audioUrl"]
                 isrc = t.get("isrc")
                 if isrc and isrc not in seen_isrcs:
                     seen_isrcs.add(isrc)
@@ -674,6 +702,10 @@ def get_catalog_tracks(
             # Seed from default artists if empty
             for artist in DEFAULT_ARTISTS:
                 for t in get_default_catalog_tracks(artist["name"]):
+                    if not t.get("audioUrl") and not t.get("fileUrl"):
+                        ident = t.get("isrc") or t.get("id") or t.get("title")
+                        t["audioUrl"] = f"/api/stream/track/{ident}"
+                        t["fileUrl"] = t["audioUrl"]
                     if t.get("isrc") not in seen_isrcs:
                         seen_isrcs.add(t.get("isrc"))
                         all_tracks.append(t)
@@ -703,6 +735,10 @@ def get_catalog_tracks(
             if not cover or "picsum.photos" in cover:
                 t["coverArt"] = get_authoritative_cover(t.get("title") or t.get("isrc") or "")
                 t["cover"] = t["coverArt"]
+            if not t.get("audioUrl") and not t.get("fileUrl"):
+                ident = t.get("isrc") or t.get("id") or t.get("title")
+                t["audioUrl"] = f"/api/stream/track/{ident}"
+                t["fileUrl"] = t["audioUrl"]
         if not doc.get("albums") or len(doc.get("albums")) == 0:
             _sync_tracks_to_all_collections(clean, doc["tracks"])
         return {"subdomain": clean, "count": len(doc["tracks"]), "tracks": doc["tracks"]}
@@ -826,8 +862,8 @@ def wizard_ingest_release(payload: WizardIngestPayload):
             "coverArt": t.get("coverArt") or album_cover,
             "coverText": title.split(" ")[0] or "Track",
             "coverBg": t.get("coverBg") or "linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)",
-            "audioUrl": t.get("audioUrl") or t.get("fileUrl"),
-            "fileUrl": t.get("fileUrl") or t.get("audioUrl"),
+            "audioUrl": t.get("audioUrl") or t.get("fileUrl") or f"/api/stream/track/{isrc}",
+            "fileUrl": t.get("fileUrl") or t.get("audioUrl") or f"/api/stream/track/{isrc}",
             "status": "valid",
             "isFeatured": t.get("isFeatured", idx == 0),
             "writers": t.get("writers") or [{"name": album_artist, "pro": "BMI", "share": 100}],
@@ -1422,8 +1458,8 @@ def bulk_ingest_catalog(
             "coverArt": t.get("coverArt") or get_authoritative_cover(title),
             "coverBg": t.get("coverBg") or "linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)",
             "coverText": t.get("coverText") or title.split(" ")[0],
-            "audioUrl": t.get("audioUrl"),
-            "fileUrl": t.get("fileUrl"),
+            "audioUrl": t.get("audioUrl") or t.get("fileUrl") or f"/api/stream/track/{isrc}",
+            "fileUrl": t.get("fileUrl") or t.get("audioUrl") or f"/api/stream/track/{isrc}",
             "status": "valid",
             "isFeatured": idx == 0,
             "consumptionType": t.get("consumptionType") or "both",
