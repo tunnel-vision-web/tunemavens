@@ -44,20 +44,21 @@ router = APIRouter(prefix="/api/stream", tags=["stream"])
 PREVIEW_BYTE_LIMIT = 1_500_000
 
 
-def generate_synthesized_preview(seed_text: str = "track", duration_sec: float = 45.0) -> bytes:
+_PREVIEW_CACHE: Dict[int, bytes] = {}
+
+def generate_synthesized_preview(seed_text: str = "track", duration_sec: float = 30.0) -> bytes:
     """Generates an in-memory 44.1kHz 16-bit stereo harmonic audio preview buffer.
     
-    Ensures that newly ingested tracks stream melodically in any browser audio element
-    even prior to high-res stems being uploaded.
+    Uses cycle-tiled synthesis and an in-memory buffer cache for sub-millisecond
+    instant response times without blocking the event loop or triggering client stream timeouts.
     """
+    h = abs(hash(seed_text)) % 5
+    if h in _PREVIEW_CACHE:
+        return _PREVIEW_CACHE[h]
+
     sample_rate = 44100
-    n_samples = int(sample_rate * duration_sec)
-    buf = io.BytesIO()
-    
-    # Hash seed to select musical root key (Am, Dm, Em, F, G)
-    h = abs(hash(seed_text))
     root_freqs = [110.0, 146.83, 164.81, 174.61, 196.0]
-    base_f = root_freqs[h % len(root_freqs)]
+    base_f = root_freqs[h]
     chords = [
         [base_f, base_f * 1.5, base_f * 2.0],
         [base_f * 1.334, base_f * 1.667, base_f * 2.0],
@@ -65,41 +66,57 @@ def generate_synthesized_preview(seed_text: str = "track", duration_sec: float =
         [base_f, base_f * 1.25, base_f * 1.5]
     ]
     
+    # Pre-render a seamless 4-second harmonic bar (1 sec per chord)
+    cycle_duration = 4.0
+    cycle_samples = int(sample_rate * cycle_duration)
+    chord_duration = cycle_duration / len(chords)
+    
+    frames = bytearray()
+    for i in range(cycle_samples):
+        t = i / sample_rate
+        chord_idx = int(t / chord_duration) % len(chords)
+        active_chord = chords[chord_idx]
+        
+        # 124 BPM house pulse
+        beat_phase = (t * (124 / 60)) % 1.0
+        beat_env = math.exp(-beat_phase * 4.5)
+        sub_kick = math.sin(2 * math.pi * (50.0 - 15.0 * beat_phase) * t) * beat_env * 0.4
+        
+        # Ambient harmonic pad with smooth tremolo
+        pad_val = sum(math.sin(2 * math.pi * f * t) for f in active_chord) / len(active_chord) * 0.32
+        tremolo = 0.85 + 0.15 * math.sin(2 * math.pi * 3.5 * t)
+        
+        # Soft shaker pulse on offbeats
+        shaker = (math.sin(2 * math.pi * 3500 * t) if 0.45 < beat_phase < 0.55 else 0.0) * 0.08
+        
+        combined = (sub_kick + pad_val * tremolo + shaker)
+        sample = int(max(-32767, min(32767, combined * 26000)))
+        frames.extend(struct.pack('<hh', sample, sample))
+    
+    repeats = int(duration_sec // cycle_duration) + 1
+    total_frames = (bytes(frames) * repeats)[:int(sample_rate * duration_sec * 4)]
+    
+    buf = io.BytesIO()
     with wave.open(buf, 'wb') as wf:
         wf.setnchannels(2)
         wf.setsampwidth(2)
         wf.setframerate(sample_rate)
+        wf.writeframes(total_frames)
         
-        frames = []
-        chord_duration = duration_sec / len(chords)
-        
-        for i in range(n_samples):
-            t = i / sample_rate
-            chord_idx = int(t / chord_duration) % len(chords)
-            active_chord = chords[chord_idx]
-            
-            # 124 BPM house pulse
-            beat_phase = (t * (124 / 60)) % 1.0
-            beat_env = math.exp(-beat_phase * 4.5)
-            sub_kick = math.sin(2 * math.pi * (50.0 - 15.0 * beat_phase) * t) * beat_env * 0.4
-            
-            # Ambient harmonic pad with smooth tremolo
-            pad_val = sum(math.sin(2 * math.pi * f * t) for f in active_chord) / len(active_chord) * 0.32
-            tremolo = 0.85 + 0.15 * math.sin(2 * math.pi * 3.5 * t)
-            
-            # Soft shaker pulse on offbeats
-            shaker = (math.sin(2 * math.pi * 3500 * t) if beat_phase > 0.45 and beat_phase < 0.55 else 0.0) * 0.08
-            
-            combined = (sub_kick + pad_val * tremolo + shaker)
-            sample = int(max(-32767, min(32767, combined * 26000)))
-            frames.append(struct.pack('<hh', sample, sample))
-            
-        wf.writeframes(b''.join(frames))
-        
-    return buf.getvalue()
+    result = buf.getvalue()
+    _PREVIEW_CACHE[h] = result
+    return result
 
 
-@router.get("/track/{identifier}")
+# Pre-warm synthesized audio cache for all 5 chord roots
+try:
+    for _k in range(5):
+        generate_synthesized_preview(seed_text=f"key_{_k}", duration_sec=30.0)
+except Exception:
+    pass
+
+
+@router.api_route("/track/{identifier}", methods=["GET", "HEAD"])
 def stream_catalog_track(
     identifier: str,
     request: FastAPIRequest = None,
@@ -201,6 +218,20 @@ def stream_catalog_track(
         end = min(end, total_len - 1)
         length = end - start + 1
 
+        if request and request.method == "HEAD":
+            return Response(
+                content=b"",
+                status_code=206,
+                media_type="audio/wav",
+                headers={
+                    "Content-Range": f"bytes {start}-{end}/{total_len}",
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": str(length),
+                    "Cache-Control": "public, max-age=3600",
+                    "X-Stream-Source": "TuneStream-Audio-Engine"
+                }
+            )
+
         return Response(
             content=wav_bytes[start:end + 1],
             status_code=206,
@@ -209,6 +240,19 @@ def stream_catalog_track(
                 "Content-Range": f"bytes {start}-{end}/{total_len}",
                 "Accept-Ranges": "bytes",
                 "Content-Length": str(length),
+                "Cache-Control": "public, max-age=3600",
+                "X-Stream-Source": "TuneStream-Audio-Engine"
+            }
+        )
+
+    if request and request.method == "HEAD":
+        return Response(
+            content=b"",
+            status_code=200,
+            media_type="audio/wav",
+            headers={
+                "Content-Length": str(total_len),
+                "Accept-Ranges": "bytes",
                 "Cache-Control": "public, max-age=3600",
                 "X-Stream-Source": "TuneStream-Audio-Engine"
             }

@@ -8,7 +8,7 @@ import {
   RiAddFill, RiCloseFill, RiDiscFill, RiPlayList2Fill,
   RiArrowUpSLine, RiArrowDownSLine, RiHeadphoneFill
 } from 'react-icons/ri';
-import { normalizeMediaUrl, resolveAudioStreamUrl } from '../../lib/api.js';
+import { normalizeMediaUrl, resolveAudioStreamUrl, getApiBase } from '../../lib/api.js';
 
 export default function HiFiAudioPlayer({
   track,
@@ -87,8 +87,9 @@ export default function HiFiAudioPlayer({
 
   const triggerCorporateAdSpot = () => {
     if (activeCorporateAd) return;
+    const apiBase = getApiBase();
     const genreParam = currentTrack?.genre ? `?genre=${encodeURIComponent(currentTrack.genre)}` : '';
-    fetch(`/api/corporate/next-audio-ad${genreParam}`)
+    fetch(`${apiBase}/api/corporate/next-audio-ad${genreParam}`)
       .then(r => r.ok ? r.json() : null)
       .then(ad => {
         const spot = ad || {
@@ -102,7 +103,7 @@ export default function HiFiAudioPlayer({
         };
         setActiveCorporateAd(spot);
         setAdCountdown(spot.spot_duration_seconds || 15);
-        fetch('/api/corporate/telemetry', {
+        fetch(`${apiBase}/api/corporate/telemetry`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -132,7 +133,8 @@ export default function HiFiAudioPlayer({
   useEffect(() => {
     if (!activeCorporateAd || adCountdown <= 0) {
       if (activeCorporateAd && adCountdown <= 0) {
-        fetch('/api/corporate/telemetry', {
+        const apiBase = getApiBase();
+        fetch(`${apiBase}/api/corporate/telemetry`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -417,7 +419,7 @@ export default function HiFiAudioPlayer({
       {/* Real HTML5 Audio Element */}
       <audio
         ref={audioRef}
-        autoPlay={isPlaying}
+        crossOrigin="anonymous"
         preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={() => {
@@ -427,9 +429,12 @@ export default function HiFiAudioPlayer({
         }}
         onEnded={handleTrackAdvance}
         onError={() => {
+          const mediaErr = audioRef.current?.error;
+          // Ignore aborted requests (code 1 = MEDIA_ERR_ABORTED) triggered by user track changes
+          if (mediaErr && mediaErr.code === 1) return;
           const fallback = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
           if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.endsWith('SoundHelix-Song-1.mp3')) {
-            console.warn('Primary stream unreachable; switching to redundant audio fallback');
+            console.warn('Primary stream unreachable; switching to redundant audio fallback', mediaErr ? `(Code ${mediaErr.code})` : '');
             audioRef.current.src = fallback;
             audioRef.current.load();
             if (isPlaying) {
@@ -1003,7 +1008,8 @@ export default function HiFiAudioPlayer({
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => {
-                        fetch('/api/corporate/telemetry', {
+                        const apiBase = getApiBase();
+                        fetch(`${apiBase}/api/corporate/telemetry`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({

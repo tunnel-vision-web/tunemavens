@@ -419,7 +419,7 @@ export default function HiFiAudioPlayer({
       {/* Real HTML5 Audio Element */}
       <audio
         ref={audioRef}
-        autoPlay={isPlaying}
+        crossOrigin="anonymous"
         preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={() => {
@@ -429,9 +429,12 @@ export default function HiFiAudioPlayer({
         }}
         onEnded={handleTrackAdvance}
         onError={() => {
+          const mediaErr = audioRef.current?.error;
+          // Ignore aborted requests (code 1 = MEDIA_ERR_ABORTED) triggered by user track changes
+          if (mediaErr && mediaErr.code === 1) return;
           const fallback = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
           if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.endsWith('SoundHelix-Song-1.mp3')) {
-            console.warn('Primary stream unreachable; switching to redundant audio fallback');
+            console.warn('Primary stream unreachable; switching to redundant audio fallback', mediaErr ? `(Code ${mediaErr.code})` : '');
             audioRef.current.src = fallback;
             audioRef.current.load();
             if (isPlaying) {
