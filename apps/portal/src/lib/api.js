@@ -471,6 +471,10 @@ export function normalizeMediaUrl(url) {
   } else if (trimmed.includes(':8001/headers/')) {
     trimmed = trimmed.substring(trimmed.indexOf('/headers/'));
   }
+  const apiBase = getApiBase();
+  if (apiBase && (trimmed.startsWith('/uploads/') || trimmed.startsWith('/heroes/') || trimmed.startsWith('/headers/'))) {
+    return `${apiBase}${trimmed}`;
+  }
   return trimmed;
 }
 

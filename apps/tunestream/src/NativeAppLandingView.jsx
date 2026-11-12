@@ -2771,7 +2771,7 @@ export default function NativeAppLandingView({
                     }}>
                       {(item.kind === 'dj' || item.data?.creator_type === 'dj') ? '🎧 RESIDENT DJ EPK' : item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'dj-mix' ? 'CLEARED DJ MIX' : item.kind === 'podcaster' ? 'PODCASTER EPK' : item.kind === 'podcast' ? 'PODCAST EPISODE' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
                     </span>
-                    {item.kind !== 'creator' && item.kind !== 'dj' && (
+                    {item.kind !== 'creator' && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -2783,6 +2783,10 @@ export default function NativeAppLandingView({
                           } else if (item.kind === 'podcaster') {
                             const firstEp = item.data?.show?.episodes?.[0];
                             if (firstEp) handlePlaySong(firstEp);
+                          } else if (item.kind === 'dj') {
+                            const djMix = popularDjMixes.find(m => (m.artist || '').toLowerCase().includes((item.title || '').toLowerCase()));
+                            if (djMix) handlePlaySong(djMix);
+                            else handlePlaySong(tracks[0]);
                           } else {
                             handlePlaySong(item.data);
                           }

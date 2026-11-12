@@ -199,7 +199,8 @@ function AppContent() {
   // Handle listener onboarding completion with 100% total personalization
   const handleSaveOnboardingPreferences = (interests) => {
     const genresParam = (interests.genres || []).join(',');
-    fetch(`/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
       .then(res => res.json())
       .then(data => {
         if (data.tracks && data.tracks.length > 0) {
@@ -222,9 +223,6 @@ function AppContent() {
     const cleanup = initPlaybackSync({
       isBackend,
       onStopRemotePlayback: ({ callerSource }) => {
-        if (audioRef.current && !audioRef.current.paused) {
-          audioRef.current.pause();
-        }
         setGlobalPlaying(false);
       }
     });
@@ -299,7 +297,8 @@ function AppContent() {
           try {
             const interests = JSON.parse(hasSavedInterests);
             const genresParam = (interests.genres || []).join(',');
-            fetch(`/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
+            const apiBase = getApiBase();
+            fetch(`${apiBase}/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
               .then(res => res.json())
               .then(data => {
                 if (data.tracks && data.tracks.length > 0) {
@@ -959,7 +958,8 @@ function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredi
 
   const handlePlayPersonalizedMix = () => {
     const genresParam = (listenerInterests.genres || ['Afrobeat']).join(',');
-    fetch(`/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/api/stream/personalized-playlist?genres=${encodeURIComponent(genresParam)}`)
       .then(r => r.json())
       .then(data => {
         if (data.tracks && data.tracks.length > 0) {
@@ -1773,7 +1773,8 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/dj-mixes')
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/api/dj-mixes`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled) return;
@@ -2069,6 +2070,7 @@ function TuneStreamExplorePanel({
   let displayedPodcasts = [...podcastEpisodes];
   let displayedPodcasters = [...podcastShows];
   let displayedDjMixes = [...djMixesList];
+  const displayedDjs = (filterMode === 'djs' ? djsList : artists).filter(isDjArtist);
 
   if (genreFilter !== 'all') {
     const targetG = genreFilter.toLowerCase();
@@ -2133,6 +2135,11 @@ function TuneStreamExplorePanel({
   }
 
   const sortSorter = (a, b, keyTitle = 'title', keyGenre = 'genre') => {
+    if (sortBy === 'djs-first') {
+      const isDjA = isDjArtist(a) || a.releaseType === 'DJ Mix' || String(a[keyTitle] || '').toLowerCase().includes('dj') ? 1 : 0;
+      const isDjB = isDjArtist(b) || b.releaseType === 'DJ Mix' || String(b[keyTitle] || '').toLowerCase().includes('dj') ? 1 : 0;
+      return isDjB - isDjA || String(a[keyTitle] || a.name || '').localeCompare(String(b[keyTitle] || b.name || ''));
+    }
     if (sortBy === 'title') return String(a[keyTitle] || a.name || '').localeCompare(String(b[keyTitle] || b.name || ''));
     if (sortBy === 'genre') return String(a[keyGenre] || a.category || '').localeCompare(String(b[keyGenre] || b.category || ''));
     if (sortBy === 'oldest') return 1;
@@ -2382,6 +2389,7 @@ function TuneStreamExplorePanel({
             >
               <option value="newest">Newest Releases</option>
               <option value="oldest">Oldest Releases</option>
+              <option value="djs-first">🎧 Resident DJs &amp; Mixes First</option>
               <option value="title">Title / Name (A – Z)</option>
               <option value="genre">Genre / Category (A – Z)</option>
             </select>
@@ -2589,12 +2597,112 @@ function TuneStreamExplorePanel({
         </section>
       )}
 
+      {/* Dedicated Resident DJs & Turntablists Section */}
+      {(filterMode === 'djs' || filterMode === 'all' || (genreFilter !== 'all' && genreFilter.toLowerCase().includes('dj'))) && displayedDjs.length > 0 && (
+        <section data-testid="explore-resident-djs-section">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '16px', margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RiDiscFill style={{ color: '#c084fc' }} /> 🎧 Resident DJs &amp; Turntablists
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'normal' }}>
+                ({displayedDjs.length} resident DJs · Verified EPK, Rate Card &amp; Gig Escrow)
+              </span>
+            </h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+            {displayedDjs.map((dj) => {
+              const djSlug = dj.subdomain || resolveDjSlug(dj.name);
+              const djTracks = tracks.filter(t => t.artist && t.artist.toLowerCase() === dj.name.toLowerCase());
+              return (
+                <div
+                  key={dj.id || dj.name}
+                  style={{
+                    background: '#090c16',
+                    border: '1px solid rgba(192,132,252,0.28)',
+                    borderRadius: '3px',
+                    padding: '18px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '12px'
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                      <img
+                        src={normalizeMediaUrl(dj.avatar) || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400'}
+                        alt={dj.name}
+                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400'; }}
+                        style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.12)' }}
+                      />
+                      <div>
+                        <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#c084fc', background: 'rgba(192,132,252,0.14)', padding: '2px 6px', borderRadius: '3px' }}>
+                          RESIDENT DJ • {dj.genre || 'Deep-House & Club'}
+                        </span>
+                        <h4 style={{ margin: '4px 0 2px', fontSize: '15px', color: '#fff', fontWeight: 800 }}>{dj.name}</h4>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{dj.role || 'Resident Club & Radio DJ'} · {dj.listeners || '1.2M listeners'}</div>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.45, margin: 0 }}>
+                      {dj.bio || 'Verified Intermaven Resident DJ with active club sets, live stems, and gig booking.'}
+                    </p>
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px', gap: '6px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '11px', color: '#c084fc', fontWeight: 700 }}>
+                        {dj.followers_count ? `${Math.round(dj.followers_count / 1000)}K followers` : 'Verified Resident'}
+                      </span>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <a
+                          href={`#/epk/${djSlug}?persona=dj`}
+                          data-testid="explore-resident-dj-epk-link"
+                          style={{ padding: '7px 10px', background: 'rgba(192,132,252,0.12)', color: '#c084fc', border: '1px solid rgba(192,132,252,0.4)', borderRadius: '3px', fontSize: '11px', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          🌐 DJ EPK &amp; Rates
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (djTracks.length > 0) onPlayTrack(djTracks[0]);
+                            else if (displayedDjMixes.length > 0) {
+                              const matchMix = displayedDjMixes.find(m => (m.dj_name && m.dj_name.toLowerCase().includes(dj.name.toLowerCase())) || (m.artist && m.artist.toLowerCase().includes(dj.name.toLowerCase())));
+                              if (matchMix) {
+                                onPlayTrack({
+                                  id: matchMix.id || `mix_${matchMix.title}`,
+                                  title: matchMix.title,
+                                  artist: matchMix.dj_name || dj.name,
+                                  album: 'DJ Mix',
+                                  releaseType: 'DJ Mix',
+                                  genre: matchMix.genre || dj.genre,
+                                  cover: matchMix.artwork_url || dj.avatar,
+                                  audioUrl: matchMix.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+                                });
+                                return;
+                              }
+                              onPlayTrack(tracks[0]);
+                            } else {
+                              onPlayTrack(tracks[0]);
+                            }
+                          }}
+                          style={{ padding: '7px 12px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <RiPlayFill size={14} /> Listen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Main Music Content Area */}
-      {(filterMode === 'artists' || filterMode === 'djs') ? (
+      {(filterMode === 'artists') ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
           {displayedArtists.length === 0 ? (
             <div style={{ gridColumn: '1 / -1', color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '3px' }}>
-              No {filterMode === 'djs' ? 'resident DJs' : 'artists'} match your search query "{searchQuery}".
+              No signed artists match your search query "{searchQuery}".
             </div>
           ) : (
             displayedArtists.map((artist) => {
@@ -3462,7 +3570,7 @@ function TuneStreamSettingsPanel({ sessionUser }) {
   );
 }
 
-function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
+function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(() => SAMPLE_TRACKS[0]);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
@@ -3780,13 +3888,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     eventLoggedRef.current = false;
     setCurrentTime(0);
 
-    const streamSrc = resolveAudioStreamUrl(track);
-    if (audioRef.current) {
-      audioRef.current.src = streamSrc;
-      audioRef.current.load();
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(err => {
-        console.warn('Autoplay error:', err);
-      });
+    if (typeof onPlayGlobalTrack === 'function') {
+      onPlayGlobalTrack(track, catalogTracks);
     }
 
     // Record listening history to TuneStream backend
@@ -4004,7 +4107,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     };
 
     try {
-      await fetch('/api/catalog/tracks?subdomain=ndufo', {
+      const apiBase = getApiBase();
+      await fetch(`${apiBase}/api/catalog/tracks?subdomain=ndufo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTrack)
@@ -4586,26 +4690,6 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
           </div>
         </div>
       </main>
-
-      {/* Real HTML5 Audio Element for live stream decoding */}
-      <audio
-        ref={audioRef}
-        preload="auto"
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={handleNextTrack}
-        onError={() => {
-          setPlaybackError('Stream fallback active');
-          const fallback = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-          if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.endsWith('SoundHelix-Song-1.mp3')) {
-            audioRef.current.src = fallback;
-            audioRef.current.load();
-            if (isPlaying) {
-              audioRef.current.play().catch(() => {});
-            }
-          }
-        }}
-      />
 
       {/* EPK-Style Floating Hi-Fi Audio Player Overlay */}
       {isPlayerOpen && currentTrack && (

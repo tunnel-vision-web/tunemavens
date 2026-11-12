@@ -45,7 +45,7 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     "role": "Resident Club & Radio DJ",
     "genre": "Deep-House & Club",
     "bio": "Coastal ambient and deep house maestro crafting sunset anthems, live radio mixes, and club festival sets from Mombasa to Zanzibar.",
-    "avatar": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
+    "avatar": "/heroes/ndufo_hero_slide3_retina.jpg",
     "banner": "/headers/header_khalid_custom.jpg",
     "location": "Mombasa, Kenya",
     "listeners": "1.8M listeners",
@@ -61,7 +61,7 @@ export const AUTHORITATIVE_CATALOG_ARTISTS = [
     "is_default": false,
     "created_at": "2026-09-14T18:49:58.207000",
     "images": [
-    "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
+    "/heroes/ndufo_hero_slide3_retina.jpg",
     "/headers/header_khalid_custom.jpg",
     "/heroes/ndufo_hero_slide2_retina.jpg",
     "/headers/discography_retina_header.jpg",

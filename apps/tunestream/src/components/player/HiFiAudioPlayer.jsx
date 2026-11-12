@@ -8,7 +8,7 @@ import {
   RiAddFill, RiCloseFill, RiDiscFill, RiPlayList2Fill,
   RiArrowUpSLine, RiArrowDownSLine, RiHeadphoneFill
 } from 'react-icons/ri';
-import { normalizeMediaUrl, resolveAudioStreamUrl } from '../../lib/api.js';
+import { normalizeMediaUrl, resolveAudioStreamUrl, getApiBase } from '../../lib/api.js';
 
 export default function HiFiAudioPlayer({
   track,
@@ -87,8 +87,9 @@ export default function HiFiAudioPlayer({
 
   const triggerCorporateAdSpot = () => {
     if (activeCorporateAd) return;
+    const apiBase = getApiBase();
     const genreParam = currentTrack?.genre ? `?genre=${encodeURIComponent(currentTrack.genre)}` : '';
-    fetch(`/api/corporate/next-audio-ad${genreParam}`)
+    fetch(`${apiBase}/api/corporate/next-audio-ad${genreParam}`)
       .then(r => r.ok ? r.json() : null)
       .then(ad => {
         const spot = ad || {
@@ -102,7 +103,7 @@ export default function HiFiAudioPlayer({
         };
         setActiveCorporateAd(spot);
         setAdCountdown(spot.spot_duration_seconds || 15);
-        fetch('/api/corporate/telemetry', {
+        fetch(`${apiBase}/api/corporate/telemetry`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -132,7 +133,8 @@ export default function HiFiAudioPlayer({
   useEffect(() => {
     if (!activeCorporateAd || adCountdown <= 0) {
       if (activeCorporateAd && adCountdown <= 0) {
-        fetch('/api/corporate/telemetry', {
+        const apiBase = getApiBase();
+        fetch(`${apiBase}/api/corporate/telemetry`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1003,7 +1005,8 @@ export default function HiFiAudioPlayer({
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => {
-                        fetch('/api/corporate/telemetry', {
+                        const apiBase = getApiBase();
+                        fetch(`${apiBase}/api/corporate/telemetry`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
