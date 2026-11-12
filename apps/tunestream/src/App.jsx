@@ -305,7 +305,7 @@ function AppContent() {
                   setPlaylistQueue(data.tracks);
                   setGlobalTrack(data.tracks[0]);
                   setPlaybackContextTitle(data.title || 'Your Daily Personalized Mix');
-                  setGlobalPlaying(true);
+                  setGlobalPlaying(false);
                 }
               })
               .catch(() => {
@@ -313,7 +313,7 @@ function AppContent() {
                   setPlaylistQueue(config.featured_playlist.tracks);
                   setGlobalTrack(config.featured_playlist.tracks[0]);
                   setPlaybackContextTitle(config.featured_playlist.title);
-                  setGlobalPlaying(true);
+                  setGlobalPlaying(false);
                 }
               });
           } catch {
@@ -321,7 +321,7 @@ function AppContent() {
               setPlaylistQueue(config.featured_playlist.tracks);
               setGlobalTrack(config.featured_playlist.tracks[0]);
               setPlaybackContextTitle(config.featured_playlist.title);
-              setGlobalPlaying(true);
+              setGlobalPlaying(false);
             }
           }
         } else {
@@ -330,7 +330,7 @@ function AppContent() {
             setPlaylistQueue(config.featured_playlist.tracks);
             setGlobalTrack(config.featured_playlist.tracks[0]);
             setPlaybackContextTitle(config.featured_playlist.title);
-            setGlobalPlaying(true);
+            setGlobalPlaying(false);
           }
         }
       } else {
@@ -345,13 +345,13 @@ function AppContent() {
             }
             setPlaybackContextTitle('Introductory Background Audio');
             setShowIntroPill(true);
-            setGlobalPlaying(true);
+            setGlobalPlaying(false);
           }
         } else if (config.featured_playlist?.tracks?.length > 0) {
           setPlaylistQueue(config.featured_playlist.tracks);
           setGlobalTrack(config.featured_playlist.tracks[0]);
           setPlaybackContextTitle(config.featured_playlist.title || 'Featured Playlist: Global Afrobeat & Amapiano Masters');
-          setGlobalPlaying(true);
+          setGlobalPlaying(false);
         }
       }
     };
