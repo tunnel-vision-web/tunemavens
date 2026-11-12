@@ -6,7 +6,7 @@ health check probes, and SEO sitemap routing.
 import os
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
@@ -58,6 +58,15 @@ if not uploads_dir:
     else:
         uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
+
+# Audio streaming fallback route: handles static audio requests (/uploads/audio/...) with range support and preview synthesis
+@app.api_route("/uploads/audio/{filename:path}", methods=["GET", "HEAD"])
+def stream_upload_audio_file(filename: str, request: Request):
+    """Serves static audio file if on disk, else delegates to stream router for preview synthesis."""
+    from routes.stream_router import stream_catalog_track
+    clean_name = filename.replace(".wav", "").replace(".mp3", "").replace(".flac", "").replace(".ogg", "")
+    return stream_catalog_track(clean_name, request=request)
+
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 headers_dir = os.path.join(uploads_dir, "headers")

@@ -432,9 +432,10 @@ export default function HiFiAudioPlayer({
           const mediaErr = audioRef.current?.error;
           // Ignore aborted requests (code 1 = MEDIA_ERR_ABORTED) triggered by user track changes
           if (mediaErr && mediaErr.code === 1) return;
-          const fallback = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-          if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.endsWith('SoundHelix-Song-1.mp3')) {
-            console.warn('Primary stream unreachable; switching to redundant audio fallback', mediaErr ? `(Code ${mediaErr.code})` : '');
+          const apiBase = getApiBase();
+          const fallback = `${apiBase || ''}/api/stream/track/${encodeURIComponent(currentTrack?.isrc || currentTrack?.id || 'KE-TM1-26-60013')}`;
+          if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.includes('/api/stream/track/')) {
+            console.warn('Primary stream unreachable; switching to resilient synthesizer fallback', mediaErr ? `(Code ${mediaErr.code})` : '');
             audioRef.current.src = fallback;
             audioRef.current.load();
             if (isPlaying) {

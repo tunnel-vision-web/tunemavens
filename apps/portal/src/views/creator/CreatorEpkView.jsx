@@ -41,6 +41,7 @@ import heroSlide1 from '../../assets/creator_hero_banner.jpg'
 import heroSlide2 from '../../assets/creator_hero_slide2.jpg'
 import heroSlide3 from '../../assets/creator_hero_slide3.jpg'
 import { persistAppActivation } from '../../lib/activatedApps.js'
+import { resolveAudioStreamUrl } from '../../lib/api.js'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 
 // 20 Pre-populated Theme Templates Specification
@@ -933,9 +934,8 @@ export function CreatorEpkView(props = {}) {
       setIsPlaying(false);
     } else {
       const track = currentTrack || tracks[0];
-      const rawSrc = track?.audioUrl || track?.audio_url || track?.fileUrl || track?.url || track?.streamUrl || '/uploads/audio/enenda.wav';
-      const resolvedUrl = new URL(rawSrc, window.location.origin).href;
-      if (audio.src !== resolvedUrl) {
+      const rawSrc = resolveAudioStreamUrl(track);
+      if (audio.src !== rawSrc) {
         audio.src = rawSrc;
         audio.load();
       }
@@ -945,8 +945,8 @@ export function CreatorEpkView(props = {}) {
         playPromise
           .then(() => setIsPlaying(true))
           .catch((err) => {
-            console.warn('TuneStream direct play error, falling back to local master audio:', err);
-            audio.src = '/uploads/audio/enenda.wav';
+            console.warn('TuneStream direct play error, falling back to stream preview:', err);
+            audio.src = resolveAudioStreamUrl('KE-TM1-26-60013');
             audio.load();
             audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
           });
@@ -963,7 +963,7 @@ export function CreatorEpkView(props = {}) {
       title: track.title || 'Untitled Track',
       artist: track.artist || track.dj_name || track.host || track.producer || effectiveArtistName,
       dj_name: track.dj_name || track.artist || effectiveArtistName,
-      audioUrl: track.audioUrl || track.audio_url || track.fileUrl || track.url || track.streamUrl || '/uploads/audio/enenda.wav',
+      audioUrl: resolveAudioStreamUrl(track),
       coverArt: track.coverArt || track.artwork_url || track.cover || 'https://picsum.photos/seed/epk_play/400',
       badge: track.badge || (
         creatorType === 'dj' ? '🎧 DJ Mix • Lossless Master' :
@@ -990,9 +990,8 @@ export function CreatorEpkView(props = {}) {
         return;
       }
 
-      const rawSrc = normalizedTrack.audioUrl;
-      const resolvedUrl = new URL(rawSrc, window.location.origin).href;
-      if (audio.src !== resolvedUrl) {
+      const rawSrc = resolveAudioStreamUrl(normalizedTrack);
+      if (audio.src !== rawSrc) {
         audio.src = rawSrc;
         audio.load();
       }
@@ -1004,8 +1003,8 @@ export function CreatorEpkView(props = {}) {
         playPromise
           .then(() => setIsPlaying(true))
           .catch((err) => {
-            console.warn('TuneStream track select play error, falling back to local master audio:', err);
-            audio.src = '/uploads/audio/enenda.wav';
+            console.warn('TuneStream track select play error, falling back to stream preview:', err);
+            audio.src = resolveAudioStreamUrl('KE-TM1-26-60013');
             audio.load();
             audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
           });
@@ -2321,19 +2320,19 @@ Direct Management Contact: mgmt@intermaven.io`
     const audio = epkAudioRef.current
     if (!audio || !currentTrack) return
 
-    const rawSrc = currentTrack.audioUrl || currentTrack.audio_url || currentTrack.fileUrl || currentTrack.url || '/uploads/audio/enenda.wav'
-    const resolvedUrl = new URL(rawSrc, window.location.origin).href
+    const rawSrc = resolveAudioStreamUrl(currentTrack)
 
-    if (audio.src !== resolvedUrl) {
+    if (audio.src !== rawSrc) {
       audio.src = rawSrc
       audio.load()
     }
 
     if (isPlaying && audio.paused) {
       audio.play().catch(e => {
-        console.warn('EPK audio playback blocked/delayed, fallback to local enenda.wav:', e)
-        if (audio.src && !audio.src.includes('enenda.wav')) {
-          audio.src = '/uploads/audio/enenda.wav'
+        console.warn('EPK audio playback blocked/delayed, fallback to stream preview:', e)
+        const fallback = resolveAudioStreamUrl('KE-TM1-26-60013')
+        if (audio.src && !audio.src.includes('/api/stream/track/')) {
+          audio.src = fallback
           audio.load()
           audio.play().catch(() => {})
         }
@@ -2798,9 +2797,10 @@ Direct Management Contact: mgmt@intermaven.io`
         onPause={() => setIsPlaying(false)}
         onEnded={handleTrackAdvance}
         onError={(e) => {
-          console.warn('Audio playback error, attempting fallback to enenda.wav', e)
-          if (epkAudioRef.current && epkAudioRef.current.src && !epkAudioRef.current.src.includes('enenda.wav')) {
-            epkAudioRef.current.src = '/uploads/audio/enenda.wav'
+          console.warn('Audio playback error, attempting fallback to stream synthesizer', e)
+          const fallback = resolveAudioStreamUrl('KE-TM1-26-60013')
+          if (epkAudioRef.current && epkAudioRef.current.src && !epkAudioRef.current.src.includes('/api/stream/track/')) {
+            epkAudioRef.current.src = fallback
             epkAudioRef.current.load()
             epkAudioRef.current.play().catch(err => console.warn('Fallback play failed:', err))
           }
