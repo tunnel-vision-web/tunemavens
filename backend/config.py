@@ -62,8 +62,33 @@ COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() == "true"
 COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax")
 
 # --- CORS ---
-_cors = os.environ.get("CORS_ORIGINS", "*")
-CORS_ORIGINS = [o.strip() for o in _cors.split(",")] if _cors != "*" else ["*"]
+_default_trusted_origins = [
+    "https://tunemavens.com",
+    "https://www.tunemavens.com",
+    "https://syncmavens.com",
+    "https://www.syncmavens.com",
+    "https://tunestream.co",
+    "https://www.tunestream.co",
+    "https://intermaven.io",
+    "https://www.intermaven.io",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+]
+_cors = os.environ.get("CORS_ORIGINS")
+if _cors and _cors != "*":
+    # Parse explicit env origins and ensure all ecosystem trusted domains are present
+    env_origins = [o.strip() for o in _cors.split(",") if o.strip()]
+    merged = list(env_origins)
+    for origin in _default_trusted_origins:
+        if origin not in merged:
+            merged.append(origin)
+    CORS_ORIGINS = merged
+elif _cors == "*":
+    CORS_ORIGINS = ["*"]
+else:
+    CORS_ORIGINS = _default_trusted_origins
 
 
 def validate_production_security():

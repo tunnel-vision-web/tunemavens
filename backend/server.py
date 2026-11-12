@@ -69,23 +69,25 @@ os.makedirs(heroes_dir, exist_ok=True)
 app.mount("/heroes", StaticFiles(directory=heroes_dir), name="heroes")
 
 ENV = os.environ.get("ENV", "development")
-cors_origins = CORS_ORIGINS
-if ENV == "production" and "*" in cors_origins:
-    cors_origins = [
-        "https://tunemavens.com",
-        "https://www.tunemavens.com",
-        "https://syncmavens.com",
-        "https://www.syncmavens.com",
-        "https://tunestream.co",
-        "https://www.tunestream.co",
-        "https://intermaven.io",
-        "https://www.intermaven.io"
-    ]
+cors_origins = list(CORS_ORIGINS) if CORS_ORIGINS != ["*"] else []
+default_production_origins = [
+    "https://tunemavens.com",
+    "https://www.tunemavens.com",
+    "https://syncmavens.com",
+    "https://www.syncmavens.com",
+    "https://tunestream.co",
+    "https://www.tunestream.co",
+    "https://intermaven.io",
+    "https://www.intermaven.io"
+]
+for origin in default_production_origins:
+    if origin not in cors_origins:
+        cors_origins.append(origin)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex=r"https://.*\.onrender\.com",
+    allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.tunemavens\.com|https://.*\.tunestream\.co|https://.*\.syncmavens\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

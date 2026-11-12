@@ -1,3 +1,5 @@
+import { getApiBase } from './api.js';
+
 // Cross-Tab and Cross-Origin Playback Intelligence Coordinator
 const instanceId = 'player_' + Math.random().toString(36).substring(2, 9);
 let currentSource = 'frontend';
@@ -14,6 +16,7 @@ try {
 export function initPlaybackSync({ isBackend = false, onStopRemotePlayback = null } = {}) {
   currentSource = isBackend ? 'backend' : 'frontend';
   onRemoteStopCallback = onStopRemotePlayback;
+  const apiBase = getApiBase();
 
   const handleMessage = (data) => {
     if (!data) return;
@@ -41,9 +44,9 @@ export function initPlaybackSync({ isBackend = false, onStopRemotePlayback = nul
   };
   window.addEventListener('storage', handleStorage);
 
-  // Cross-origin heartbeat / active session sync (coordinating across port 3000 and 3001)
+  // Cross-origin heartbeat / active session sync
   const pollTimer = setInterval(() => {
-    fetch('/api/stream/active-playback')
+    fetch(`${apiBase}/api/stream/active-playback`)
       .then(r => r.ok ? r.json() : null)
       .then(session => {
         if (session && session.status === 'playing' && session.instance_id && session.instance_id !== instanceId) {
@@ -85,7 +88,8 @@ export function broadcastPlaybackStart(sourceOverride = null, track = null) {
   } catch (_) {}
 
   // Cross-origin API notification
-  fetch('/api/stream/active-playback', {
+  const apiBase = getApiBase();
+  fetch(`${apiBase}/api/stream/active-playback`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -107,7 +111,8 @@ export function broadcastPlaybackStop() {
   if (syncChannel) {
     try { syncChannel.postMessage(payload); } catch (_) {}
   }
-  fetch('/api/stream/active-playback', {
+  const apiBase = getApiBase();
+  fetch(`${apiBase}/api/stream/active-playback`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

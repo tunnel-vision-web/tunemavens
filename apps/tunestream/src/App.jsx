@@ -357,7 +357,8 @@ function AppContent() {
       }
     };
 
-    fetch('/api/stream/config')
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/api/stream/config`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -3829,7 +3830,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     if (ct >= 30 && !eventLoggedRef.current && currentTrack) {
       eventLoggedRef.current = true;
       try {
-        fetch('/api/stream/event', {
+        const apiBase = getApiBase();
+        fetch(`${apiBase}/api/stream/event`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -3869,7 +3871,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     }
 
     try {
-      await fetch('/api/stream/tip', {
+      const apiBase = getApiBase();
+      await fetch(`${apiBase}/api/stream/tip`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
