@@ -208,7 +208,7 @@ export default function HiFiAudioPlayer({
 
     if (audio.src !== streamSrc && !audio.src.endsWith(streamSrc)) {
       audio.src = streamSrc;
-      audio.load();
+      audio.currentTime = 0;
       setPlaybackProgress(0);
       setPreviewLimitReached(false);
     }
@@ -231,8 +231,9 @@ export default function HiFiAudioPlayer({
               );
               broadcastPlaybackStart(isBackend ? 'backend' : 'frontend', currentTrack);
             })
-            .catch(() => {
-              // Browser autoplay policy blocked initial unmuted play before gesture:
+            .catch((err) => {
+              console.warn('[TuneStream Player] Audio play requires user gesture or pending buffer:', err?.message || err);
+              // Browser autoplay policy blocked unmuted play:
               // Unlock automatically on the very first user gesture anywhere on the page
               const unlockAudio = () => {
                 if (audioRef.current && isPlaying) {
@@ -437,7 +438,6 @@ export default function HiFiAudioPlayer({
           if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.includes('/api/stream/track/')) {
             console.warn('Primary stream unreachable; switching to resilient synthesizer fallback', mediaErr ? `(Code ${mediaErr.code})` : '');
             audioRef.current.src = fallback;
-            audioRef.current.load();
             if (isPlaying) {
               audioRef.current.play().catch(() => {});
             }

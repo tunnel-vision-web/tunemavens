@@ -148,9 +148,9 @@ function AppContent() {
 
   const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
 
-  // Global TuneStream Lossless Audio Player States (Autostart on load with Featured Playlist)
+  // Global TuneStream Lossless Audio Player States (Ready for gesture-unlocked playback)
   const [globalTrack, setGlobalTrack] = useState(() => AUTHORITATIVE_CATALOG_TRACKS[0] || null);
-  const [globalPlaying, setGlobalPlaying] = useState(true);
+  const [globalPlaying, setGlobalPlaying] = useState(false);
   const [globalProgress, setGlobalProgress] = useState(0);
   const [isUndocked, setIsUndocked] = useState(false);
   const [playerPos, setPlayerPos] = useState({ x: 40, y: 120 });
@@ -1668,7 +1668,7 @@ export const AUTHORITATIVE_DJ_MIXES = [
     is_original_ip_only: false,
     sale_locked: false,
     artwork_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
-    audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    audio_url: '/api/stream/track/KE-TM1-DJ-001',
     description: 'Hypnotic 45-minute sunrise Afro-Tech journey recorded live on the Indian Ocean coast with full artist and label clearance.',
     tracklist: [
       { id: 'k1', title: 'Bahari Breeze (Coastal Dub)', artist: 'Ndufo', start_time: 0, clearance_status: 'signed' },
@@ -1689,7 +1689,7 @@ export const AUTHORITATIVE_DJ_MIXES = [
     is_original_ip_only: false,
     sale_locked: false,
     artwork_url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
-    audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    audio_url: '/api/stream/track/KE-TM1-DJ-002',
     description: 'Soulful keys, deep log drums, and vocal Amapiano exclusives bridging Johannesburg and Lagos club floors.',
     tracklist: [
       { id: 'jz1', title: 'Sandton Rooftop Chords', artist: 'DJ Maphoria', start_time: 0, clearance_status: 'signed' },
@@ -1709,7 +1709,7 @@ export const AUTHORITATIVE_DJ_MIXES = [
     is_original_ip_only: true,
     sale_locked: false,
     artwork_url: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&auto=format&fit=crop&q=80',
-    audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    audio_url: '/api/stream/track/KE-TM1-DJ-003',
     description: '100% self-composed hardware synth modular set performed exclusively with custom analog hardware.',
     tracklist: [
       { id: 'og1', title: 'Subterranean Voltage (Original Mix)', artist: 'DJ Maphoria', start_time: 0, clearance_status: 'self_owned' },
@@ -1730,7 +1730,7 @@ export const AUTHORITATIVE_DJ_MIXES = [
     is_original_ip_only: false,
     sale_locked: false,
     artwork_url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80',
-    audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    audio_url: '/api/stream/track/KE-TM1-DJ-004',
     description: 'Warm brass-driven Highlife classics blended seamlessly into modern West African Afrobeats anthems.',
     tracklist: [
       { id: 'ac1', title: 'Labadi Beach Horns', artist: 'Kofi Mensah', start_time: 0, clearance_status: 'signed' },
@@ -1815,7 +1815,7 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
       duration: mix.duration || `${Math.round((mix.duration_seconds || 2400) / 60)}:00`,
       cover: mix.artwork_url,
       coverArt: mix.artwork_url,
-      audioUrl: mix.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+      audioUrl: mix.audio_url || `/api/stream/track/${encodeURIComponent(mix.id || mix.title || 'preview')}`,
     });
   };
 
@@ -2581,7 +2581,7 @@ function TuneStreamExplorePanel({
                             duration: mix.duration || `${Math.round((mix.duration_seconds || 2400) / 60)}:00`,
                             cover: mix.artwork_url,
                             coverArt: mix.artwork_url,
-                            audioUrl: mix.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                            audioUrl: mix.audio_url || `/api/stream/track/${encodeURIComponent(mix.id || mix.title || 'preview')}`,
                           })
                         }
                         style={{ padding: '7px 12px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -2674,7 +2674,7 @@ function TuneStreamExplorePanel({
                                   releaseType: 'DJ Mix',
                                   genre: matchMix.genre || dj.genre,
                                   cover: matchMix.artwork_url || dj.avatar,
-                                  audioUrl: matchMix.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+                                  audioUrl: matchMix.audio_url || `/api/stream/track/${encodeURIComponent(matchMix.id || matchMix.title || 'preview')}`
                                 });
                                 return;
                               }

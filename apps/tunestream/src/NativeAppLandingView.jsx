@@ -2149,7 +2149,7 @@ export default function NativeAppLandingView({
           duration: '45:00',
           streams: '1.5K plays',
           cover: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
-          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+          audioUrl: '/api/stream/track/KE-TM1-DJ-001',
           year: 2026
         },
         {
@@ -2161,7 +2161,7 @@ export default function NativeAppLandingView({
           duration: '40:00',
           streams: '2.1K plays',
           cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
-          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+          audioUrl: '/api/stream/track/KE-TM1-DJ-002',
           year: 2026
         },
         {
@@ -2173,7 +2173,7 @@ export default function NativeAppLandingView({
           duration: '30:00',
           streams: '890 plays',
           cover: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&auto=format&fit=crop&q=80',
-          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+          audioUrl: '/api/stream/track/KE-TM1-DJ-003',
           year: 2026
         },
         {
@@ -2185,7 +2185,7 @@ export default function NativeAppLandingView({
           duration: '35:00',
           streams: '1.2K plays',
           cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80',
-          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+          audioUrl: '/api/stream/track/KE-TM1-DJ-004',
           year: 2026
         }
       ];
@@ -2431,7 +2431,23 @@ export default function NativeAppLandingView({
       const pageItems = combinedItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
       const handleCardClick = (item) => {
-        if (item.kind === 'podcaster' || item.kind === 'podcast') {
+        if (item.kind === 'single') {
+          handlePlaySong(item.data);
+          return;
+        }
+        if (item.kind === 'album') {
+          handlePlayAlbum(item.data);
+          return;
+        }
+        if (item.kind === 'dj-mix') {
+          handlePlaySong(item.data);
+          return;
+        }
+        if (item.kind === 'podcast') {
+          handlePlaySong(item.data.episode || item.data);
+          return;
+        }
+        if (item.kind === 'podcaster') {
           const targetShow = item.data?.show || activePodcastShows[0];
           setActivePodcasterEpkShow(targetShow);
           return;
@@ -2439,12 +2455,6 @@ export default function NativeAppLandingView({
         if (item.kind === 'dj' || item.data?.creator_type === 'dj') {
           const sub = item.data?.subdomain || (item.title || 'khalid').toLowerCase().replace(/[^a-z0-9]/g, '');
           navigate(`/epk/${sub}?persona=dj`);
-          return;
-        }
-        if (item.kind === 'dj-mix') {
-          const rawDj = (item.data?.artist || 'khalid').toLowerCase().replace(/[^a-z0-9]/g, '');
-          const djSlug = rawDj.includes('khalid') ? 'khalid' : rawDj;
-          navigate(`/epk/${djSlug}?persona=dj`);
           return;
         }
         let targetCreator = null;
