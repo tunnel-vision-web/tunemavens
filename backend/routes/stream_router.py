@@ -139,14 +139,29 @@ def stream_catalog_track(
     audio_url = target_track.get("audioUrl") or target_track.get("fileUrl") if target_track else None
 
     # If no audio_url, try to find matching audio file on disk in uploads/audio
+    search_dirs = [
+        os.path.join(os.environ.get("LOCAL_UPLOADS_DIR", "uploads"), "audio"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "audio"),
+        "uploads/audio",
+        "backend/uploads/audio"
+    ]
+
+    # 1. Direct filename or identifier match on disk (e.g. pray_tell, enenda, haiya)
+    if not audio_url:
+        clean_name = clean_id.lower().replace("_", "").replace("-", "").replace(" ", "").split(".")[0]
+        for s_dir in search_dirs:
+            if os.path.exists(s_dir):
+                for fname in os.listdir(s_dir):
+                    fname_clean = fname.lower().replace("_", "").replace("-", "").replace(" ", "").split(".")[0]
+                    if clean_name and clean_name == fname_clean:
+                        audio_url = f"/uploads/audio/{fname}"
+                        break
+            if audio_url:
+                break
+
+    # 2. Fuzzy title match against catalog tracks
     if not audio_url and target_track:
         clean_title = target_track.get("title", "").lower().strip()
-        search_dirs = [
-            os.path.join(os.environ.get("LOCAL_UPLOADS_DIR", "uploads"), "audio"),
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "audio"),
-            "uploads/audio",
-            "backend/uploads/audio"
-        ]
         for s_dir in search_dirs:
             if os.path.exists(s_dir):
                 for fname in os.listdir(s_dir):

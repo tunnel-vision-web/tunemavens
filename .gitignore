@@ -82,7 +82,6 @@ credentials.json
 .credentials
 
 # Local media uploads (keep pre-bundled heroes and ai_assets)
-backend/uploads/audio/
 backend/uploads/artwork/
 
 __pycache__/
@@ -94,6 +93,10 @@ __pycache__/
 
 **/__pycache__/
 
-uploads/
+/uploads/
 
 scratch/
+
+# Track authoritative studio catalog audio
+!backend/uploads/audio/*.wav
+!backend/uploads/audio/*.mp3
