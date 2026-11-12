@@ -62,7 +62,7 @@ import {
   AUTHORITATIVE_CATALOG_ARTISTS,
   AUTHORITATIVE_CATALOG_ALBUMS
 } from './data/authoritativeCatalog';
-import { catalogApi, streamApi, normalizeMediaUrl } from './lib/api';
+import { catalogApi, streamApi, normalizeMediaUrl, getApiBase } from './lib/api';
 
 export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
@@ -2013,7 +2013,8 @@ function TuneStreamExplorePanel({
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/dj-mixes')
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/api/dj-mixes`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled) return;
@@ -2023,6 +2024,13 @@ function TuneStreamExplorePanel({
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
+
+  const isDjArtist = (a) => a.creator_type === 'dj' ||
+    (a.role && (a.role.toLowerCase().includes('dj') || a.role.toLowerCase().includes('turntablist') || a.role.toLowerCase().includes('selector'))) ||
+    (a.subdomain && (a.subdomain.includes('dj') || a.subdomain.includes('khalid') || a.subdomain.includes('selector'))) ||
+    (a.name && (a.name.toLowerCase().startsWith('dj') || a.name.toLowerCase().includes('khalid') || a.name.toLowerCase().includes('selector')));
+
+  const djsList = artists.filter(isDjArtist);
 
   const singles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
   const albums = tracks.filter(t => t.releaseType !== 'Single' && !(t.release && t.release.toLowerCase().includes('single')));
@@ -2039,8 +2047,11 @@ function TuneStreamExplorePanel({
   );
 
   const availableGenres = Array.from(new Set([
-    'DJ Mixes', 'Afrobeats', 'Amapiano', 'Afro-House', 'Afro-fusion', 'Electronic', 'Hip-Hop',
+    '🎧 DJ Mixes & Resident Sets',
+    '🎧 Resident DJs & Turntablists',
+    'Afrobeats', 'Amapiano', 'Afro-House', 'Afro-fusion', 'Electronic', 'Hip-Hop', 'Deep-House & Club', 'Afro-Tech & Amapiano',
     ...tracks.map(t => t.genre).filter(Boolean),
+    ...artists.map(a => a.genre).filter(Boolean),
     ...podcastShows.map(s => `Podcast • ${s.category}`).filter(Boolean)
   ]));
 
@@ -2053,26 +2064,35 @@ function TuneStreamExplorePanel({
     displayedTracks = displayedTracks.filter(t => t.artist && t.artist.toLowerCase() === selectedArtist.toLowerCase());
   }
 
-  if (genreFilter !== 'all') {
-    displayedTracks = displayedTracks.filter(t => t.genre && t.genre.toLowerCase().includes(genreFilter.toLowerCase()));
-  }
-
-  let displayedArtists = [...artists];
+  let displayedArtists = filterMode === 'djs' ? [...djsList] : [...artists];
   let displayedPodcasts = [...podcastEpisodes];
   let displayedPodcasters = [...podcastShows];
   let displayedDjMixes = [...djMixesList];
 
-  if (genreFilter !== 'all' && genreFilter !== 'DJ Mixes') {
-    displayedPodcasts = displayedPodcasts.filter(ep =>
-      (ep.genre && ep.genre.toLowerCase().includes(genreFilter.toLowerCase())) ||
-      (ep.category && `podcast • ${ep.category}`.toLowerCase().includes(genreFilter.toLowerCase()))
-    );
-    displayedPodcasters = displayedPodcasters.filter(s =>
-      s.category && `podcast • ${s.category}`.toLowerCase().includes(genreFilter.toLowerCase())
-    );
-    displayedDjMixes = displayedDjMixes.filter(m =>
-      m.genre && m.genre.toLowerCase().replace('-', ' ').includes(genreFilter.toLowerCase().replace('-', ' '))
-    );
+  if (genreFilter !== 'all') {
+    const targetG = genreFilter.toLowerCase();
+    if (targetG.includes('dj') || targetG.includes('mix')) {
+      displayedTracks = [];
+      displayedPodcasts = [];
+      displayedPodcasters = [];
+      displayedArtists = displayedArtists.filter(isDjArtist);
+      // Keep DJ mixes active
+    } else {
+      displayedTracks = displayedTracks.filter(t => t.genre && t.genre.toLowerCase().includes(targetG));
+      displayedPodcasts = displayedPodcasts.filter(ep =>
+        (ep.genre && ep.genre.toLowerCase().includes(targetG)) ||
+        (ep.category && `podcast • ${ep.category}`.toLowerCase().includes(targetG))
+      );
+      displayedPodcasters = displayedPodcasters.filter(s =>
+        s.category && `podcast • ${s.category}`.toLowerCase().includes(targetG)
+      );
+      displayedDjMixes = displayedDjMixes.filter(m =>
+        m.genre && m.genre.toLowerCase().replace('-', ' ').includes(targetG.replace('-', ' '))
+      );
+      displayedArtists = displayedArtists.filter(a =>
+        a.genre && a.genre.toLowerCase().includes(targetG)
+      );
+    }
   }
 
   if (searchQuery.trim()) {
@@ -2121,6 +2141,8 @@ function TuneStreamExplorePanel({
   displayedTracks.sort((a, b) => sortSorter(a, b, 'title', 'genre'));
   displayedPodcasts.sort((a, b) => sortSorter(a, b, 'title', 'category'));
   displayedPodcasters.sort((a, b) => sortSorter(a, b, 'host', 'category'));
+  displayedDjMixes.sort((a, b) => sortSorter(a, b, 'title', 'genre'));
+  displayedArtists.sort((a, b) => sortSorter(a, b, 'name', 'genre'));
 
   const spotlightTrack = tracks[0] || {
     title: 'Nairobi Cyberwave (Master)',
@@ -2239,6 +2261,24 @@ function TuneStreamExplorePanel({
               }}
             >
               Signed Artists ({artists.length || 5})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setFilterMode('djs'); setSelectedArtist(null); }}
+              data-testid="explore-filter-djs"
+              style={{
+                padding: '6px 12px',
+                borderRadius: '3px',
+                border: filterMode === 'djs' ? '1px solid #c084fc' : '1px solid rgba(255,255,255,0.08)',
+                background: filterMode === 'djs' ? '#c084fc' : 'rgba(255,255,255,0.03)',
+                color: filterMode === 'djs' ? '#060813' : '#fff',
+                fontSize: '12px',
+                fontWeight: '800',
+                cursor: 'pointer'
+              }}
+            >
+              🎧 Resident DJs ({djsList.length})
             </button>
 
             <button
@@ -2549,11 +2589,11 @@ function TuneStreamExplorePanel({
       )}
 
       {/* Main Music Content Area */}
-      {filterMode === 'artists' ? (
+      {(filterMode === 'artists' || filterMode === 'djs') ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
           {displayedArtists.length === 0 ? (
             <div style={{ gridColumn: '1 / -1', color: '#64748b', padding: '36px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '3px' }}>
-              No artists match your search query "{searchQuery}".
+              No {filterMode === 'djs' ? 'resident DJs' : 'artists'} match your search query "{searchQuery}".
             </div>
           ) : (
             displayedArtists.map((artist) => {
@@ -3620,8 +3660,9 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
 
   // Live fetch from backend API endpoints on mount
   useEffect(() => {
+    const apiBase = getApiBase();
     // 1. Fetch live tracks from /api/catalog/tracks?all=true
-    fetch('/api/catalog/tracks?all=true')
+    fetch(`${apiBase}/api/catalog/tracks?all=true`)
       .then(res => res.json())
       .then(data => {
         if (data && data.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
@@ -3644,21 +3685,37 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       .catch(err => console.warn('Could not fetch backend tracks:', err));
 
     // 2. Fetch live artists from /api/catalog/artists
-    fetch('/api/catalog/artists')
+    fetch(`${apiBase}/api/catalog/artists`)
       .then(res => res.json())
       .then(data => {
         if (data && data.artists && Array.isArray(data.artists) && data.artists.length > 0) {
-          const mapped = data.artists.map(a => ({
-            ...a,
-            avatar: normalizeMediaUrl(a.avatar || a.image)
-          }));
-          setArtists(mapped);
+          const incoming = data.artists.map(a => {
+            const isDj = a.creator_type === 'dj' ||
+              (a.role && (a.role.toLowerCase().includes('dj') || a.role.toLowerCase().includes('turntablist') || a.role.toLowerCase().includes('selector'))) ||
+              (a.subdomain && (a.subdomain.includes('dj') || a.subdomain.includes('khalid') || a.subdomain.includes('selector'))) ||
+              (a.name && (a.name.toLowerCase().startsWith('dj') || a.name.toLowerCase().includes('khalid') || a.name.toLowerCase().includes('selector')));
+            return {
+              ...a,
+              creator_type: isDj ? 'dj' : (a.creator_type || 'artist'),
+              avatar: normalizeMediaUrl(a.avatar || a.image)
+            };
+          });
+          const merged = [...incoming];
+          for (const authArtist of AUTHORITATIVE_CATALOG_ARTISTS) {
+            if (!merged.some(m => (m.id && m.id === authArtist.id) || (m.subdomain && m.subdomain.toLowerCase() === authArtist.subdomain?.toLowerCase()))) {
+              merged.push({
+                ...authArtist,
+                avatar: normalizeMediaUrl(authArtist.avatar)
+              });
+            }
+          }
+          setArtists(merged);
         }
       })
       .catch(err => console.warn('Could not fetch backend artists:', err));
 
     // 3. Fetch live albums from /api/catalog/albums
-    fetch('/api/catalog/albums')
+    fetch(`${apiBase}/api/catalog/albums`)
       .then(res => res.json())
       .then(data => {
         if (data && data.albums && Array.isArray(data.albums) && data.albums.length > 0) {

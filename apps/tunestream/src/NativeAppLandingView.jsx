@@ -10,7 +10,7 @@ import {
   AUTHORITATIVE_CATALOG_ARTISTS, 
   AUTHORITATIVE_CATALOG_ALBUMS 
 } from './data/authoritativeCatalog';
-import { normalizeMediaUrl } from './lib/api';
+import { normalizeMediaUrl, getApiBase } from './lib/api';
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill, RiSearchLine, RiArrowDownSLine, RiCheckFill } from 'react-icons/ri'
@@ -599,7 +599,8 @@ export default function NativeAppLandingView({
   }, [creatorSlugParam, artists]);
 
   useEffect(() => {
-    fetch('/api/catalog/tracks?all=true')
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/api/catalog/tracks?all=true`)
       .then(res => res.json())
       .then(data => {
         if (data && data.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
@@ -608,16 +609,32 @@ export default function NativeAppLandingView({
       })
       .catch(() => {});
 
-    fetch('/api/catalog/artists')
+    fetch(`${apiBase}/api/catalog/artists`)
       .then(res => res.json())
       .then(data => {
         if (data && data.artists && Array.isArray(data.artists) && data.artists.length > 0) {
-          setArtists(data.artists);
+          const incoming = data.artists.map(a => {
+            const isDj = a.creator_type === 'dj' ||
+              (a.role && (a.role.toLowerCase().includes('dj') || a.role.toLowerCase().includes('turntablist') || a.role.toLowerCase().includes('selector'))) ||
+              (a.subdomain && (a.subdomain.includes('dj') || a.subdomain.includes('khalid') || a.subdomain.includes('selector'))) ||
+              (a.name && (a.name.toLowerCase().startsWith('dj') || a.name.toLowerCase().includes('khalid') || a.name.toLowerCase().includes('selector')));
+            return {
+              ...a,
+              creator_type: isDj ? 'dj' : (a.creator_type || 'artist')
+            };
+          });
+          const merged = [...incoming];
+          for (const authArtist of AUTHORITATIVE_CATALOG_ARTISTS) {
+            if (!merged.some(m => (m.id && m.id === authArtist.id) || (m.subdomain && m.subdomain.toLowerCase() === authArtist.subdomain?.toLowerCase()))) {
+              merged.push(authArtist);
+            }
+          }
+          setArtists(merged);
         }
       })
       .catch(() => {});
 
-    fetch('/api/catalog/albums')
+    fetch(`${apiBase}/api/catalog/albums`)
       .then(res => res.json())
       .then(data => {
         if (data && data.albums && Array.isArray(data.albums) && data.albums.length > 0) {
@@ -2040,22 +2057,30 @@ export default function NativeAppLandingView({
           />
         );
       }
-      const popularCreators = (artists && artists.length > 0 ? artists : AUTHORITATIVE_CATALOG_ARTISTS).map(a => ({
-        id: a.id,
-        name: a.name,
-        role: a.role || 'Signed Creator',
-        genre: a.genre || 'Afro-fusion',
-        listeners: a.listeners || (a.name === 'Ndufo' ? '3.4M listeners' : '1.2M listeners'),
-        avatar: normalizeMediaUrl(a.avatar) || `/uploads/artwork/ndufo_cover.jpg`,
-        banner: a.banner,
-        bio: a.bio,
-        location: a.location,
-        socials: a.socials,
-        followers_count: a.followers_count,
-        subscribers_count: a.subscribers_count,
-        creator_type: a.creator_type,
-        subdomain: a.subdomain
-      }));
+      const popularCreators = (artists && artists.length > 0 ? artists : AUTHORITATIVE_CATALOG_ARTISTS).map(a => {
+        const isDj = a.creator_type === 'dj' ||
+          (a.role && (a.role.toLowerCase().includes('dj') || a.role.toLowerCase().includes('turntablist') || a.role.toLowerCase().includes('selector'))) ||
+          (a.subdomain && (a.subdomain.includes('dj') || a.subdomain.includes('khalid') || a.subdomain.includes('selector'))) ||
+          (a.name && (a.name.toLowerCase().startsWith('dj') || a.name.toLowerCase().includes('khalid') || a.name.toLowerCase().includes('selector')));
+        return {
+          id: a.id,
+          name: a.name,
+          role: a.role || (isDj ? 'Resident Club & Festival DJ' : 'Signed Creator'),
+          genre: a.genre || (isDj ? 'Afro-Tech / Amapiano' : 'Afro-fusion'),
+          listeners: a.listeners || (a.name === 'Ndufo' ? '3.4M listeners' : isDj ? '1.4M listeners' : '1.2M listeners'),
+          avatar: normalizeMediaUrl(a.avatar) || `/uploads/artwork/ndufo_cover.jpg`,
+          banner: a.banner,
+          bio: a.bio,
+          location: a.location,
+          socials: a.socials,
+          followers_count: a.followers_count || (isDj ? 75000 : 50000),
+          subscribers_count: a.subscribers_count || (isDj ? 25000 : 15000),
+          creator_type: isDj ? 'dj' : (a.creator_type || 'artist'),
+          subdomain: a.subdomain
+        };
+      });
+
+      const popularDjs = popularCreators.filter(c => c.creator_type === 'dj');
 
       const singlesList = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
       const popularSingles = singlesList.map((t, idx) => ({
@@ -2169,7 +2194,8 @@ export default function NativeAppLandingView({
 
       // Collect available unique genres for filter dropdown
       const BASE_GENRES = [
-        'DJ Mixes',
+        '🎧 DJ Mixes & Resident Sets',
+        '🎧 Resident DJs & Turntablists',
         'Afrobeats',
         'Afro-House',
         'Deep-House',
@@ -2202,17 +2228,46 @@ export default function NativeAppLandingView({
 
       if (exploreFilter === 'all' || exploreFilter === 'creators') {
         combinedItems = combinedItems.concat(popularCreators.map(c => ({
-          kind: 'creator',
+          kind: c.creator_type === 'dj' ? 'dj' : 'creator',
           id: c.id,
           title: c.name,
           subtitle: `${c.genre} · ${c.role}`,
-          genre: c.genre || 'Afrobeats',
+          genre: c.genre || (c.creator_type === 'dj' ? 'Deep-House & Club' : 'Afrobeats'),
           metaLeft: c.listeners,
-          metaRight: 'Enter Web World 🌐 →',
+          metaRight: c.creator_type === 'dj' ? '🎧 DJ EPK & Rates →' : 'Enter Web World 🌐 →',
           cover: c.avatar,
           year: 2026,
-          date: '2026-01-01',
+          date: c.creator_type === 'dj' ? '2026-03-15' : '2026-01-01',
           data: c
+        })));
+      }
+
+      if (exploreFilter === 'djs') {
+        combinedItems = combinedItems.concat(popularDjs.map(c => ({
+          kind: 'dj',
+          id: c.id,
+          title: c.name,
+          subtitle: `${c.genre} · ${c.role}`,
+          genre: c.genre || 'Deep-House & Club',
+          metaLeft: c.listeners,
+          metaRight: '🎧 DJ EPK & Rates →',
+          cover: c.avatar,
+          year: 2026,
+          date: '2026-03-15',
+          data: c
+        })));
+        combinedItems = combinedItems.concat(popularDjMixes.map(dm => ({
+          kind: 'dj-mix',
+          id: dm.id,
+          title: dm.title,
+          subtitle: `Curated by ${dm.artist} · ${dm.bpm} BPM`,
+          genre: dm.genre,
+          metaLeft: `${dm.duration} · ${dm.streams}`,
+          metaRight: 'Stream Mix ▶',
+          cover: dm.cover,
+          year: 2026,
+          date: '2026-03-14',
+          data: dm
         })));
       }
 
@@ -2308,20 +2363,52 @@ export default function NativeAppLandingView({
         });
       }
 
-      // 2. Genre Filter
+      // 2. Genre Filter (Inclusive of DJ mixes, DJ artists & subgenres)
       if (exploreGenre !== 'all') {
-        combinedItems = combinedItems.filter(item => 
-          item.genre && item.genre.toLowerCase().includes(exploreGenre.toLowerCase())
-        );
+        const targetG = exploreGenre.toLowerCase();
+        combinedItems = combinedItems.filter(item => {
+          const itemG = (item.genre || '').toLowerCase();
+          const itemTitle = (item.title || '').toLowerCase();
+          const itemSubtitle = (item.subtitle || '').toLowerCase();
+
+          if (targetG.includes('dj') || targetG.includes('mix')) {
+            if (item.kind === 'dj' || item.kind === 'dj-mix' || item.data?.creator_type === 'dj') return true;
+            if (itemG.includes('dj') || itemG.includes('mix')) return true;
+            if (itemTitle.startsWith('dj ') || itemSubtitle.includes('dj ') || itemSubtitle.includes('curated by dj')) return true;
+          }
+
+          return itemG.includes(targetG) || targetG.includes(itemG);
+        });
       }
 
-      // 3. Sorting (Date, Genre, Title, Popularity)
+      // 3. Sorting (Date, Genre, Title, Popularity, DJs First)
+      const parsePopularityScore = (item) => {
+        const str = `${item.metaLeft || ''} ${item.subtitle || ''} ${item.data?.listeners || ''} ${item.data?.streams || ''} ${item.data?.followers_count || ''}`;
+        let score = 0;
+        const mMatch = str.match(/([\d.]+)\s*M/i);
+        if (mMatch) score += parseFloat(mMatch[1]) * 1000000;
+        const kMatch = str.match(/([\d.]+)\s*K/i);
+        if (kMatch) score += parseFloat(kMatch[1]) * 1000;
+        if (item.data?.followers_count) score += Number(item.data.followers_count);
+        if (item.data?.subscribers_count) score += Number(item.data.subscribers_count);
+        return score;
+      };
+
       combinedItems.sort((a, b) => {
+        if (exploreSort === 'djs-first') {
+          const isDjA = (a.kind === 'dj' || a.kind === 'dj-mix' || a.data?.creator_type === 'dj') ? 1 : 0;
+          const isDjB = (b.kind === 'dj' || b.kind === 'dj-mix' || b.data?.creator_type === 'dj') ? 1 : 0;
+          return isDjB - isDjA || (a.title || '').localeCompare(b.title || '');
+        }
         if (exploreSort === 'newest') {
-          return (b.year || 2026) - (a.year || 2026) || (b.title || '').localeCompare(a.title || '');
+          const dateA = new Date(a.date || `${a.year || 2026}-01-01`).getTime();
+          const dateB = new Date(b.date || `${b.year || 2026}-01-01`).getTime();
+          return dateB - dateA || (a.title || '').localeCompare(b.title || '');
         }
         if (exploreSort === 'oldest') {
-          return (a.year || 2026) - (b.year || 2026) || (a.title || '').localeCompare(b.title || '');
+          const dateA = new Date(a.date || `${a.year || 2026}-01-01`).getTime();
+          const dateB = new Date(b.date || `${b.year || 2026}-01-01`).getTime();
+          return dateA - dateB || (a.title || '').localeCompare(b.title || '');
         }
         if (exploreSort === 'genre') {
           return (a.genre || '').localeCompare(b.genre || '');
@@ -2330,7 +2417,7 @@ export default function NativeAppLandingView({
           return (a.title || '').localeCompare(b.title || '');
         }
         if (exploreSort === 'popularity') {
-          return String(b.id || '').localeCompare(String(a.id || ''));
+          return parsePopularityScore(b) - parsePopularityScore(a) || (a.title || '').localeCompare(b.title || '');
         }
         return 0;
       });
@@ -2347,6 +2434,17 @@ export default function NativeAppLandingView({
         if (item.kind === 'podcaster' || item.kind === 'podcast') {
           const targetShow = item.data?.show || activePodcastShows[0];
           setActivePodcasterEpkShow(targetShow);
+          return;
+        }
+        if (item.kind === 'dj' || item.data?.creator_type === 'dj') {
+          const sub = item.data?.subdomain || (item.title || 'khalid').toLowerCase().replace(/[^a-z0-9]/g, '');
+          navigate(`/epk/${sub}?persona=dj`);
+          return;
+        }
+        if (item.kind === 'dj-mix') {
+          const rawDj = (item.data?.artist || 'khalid').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const djSlug = rawDj.includes('khalid') ? 'khalid' : rawDj;
+          navigate(`/epk/${djSlug}?persona=dj`);
           return;
         }
         let targetCreator = null;
@@ -2483,6 +2581,40 @@ export default function NativeAppLandingView({
             </button>
             <button
               type="button"
+              onClick={() => { setExploreFilter('djs'); setExplorePage(1); }}
+              data-testid="landing-explore-filter-djs"
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'djs' ? '1px solid #c084fc' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'djs' ? '#c084fc' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'djs' ? '#060813' : '#fff',
+                fontWeight: '800',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              🎧 Resident DJs ({popularDjs.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => { setExploreFilter('dj-mixes'); setExplorePage(1); }}
+              data-testid="landing-explore-filter-dj-mixes"
+              style={{
+                padding: '6px 14px',
+                borderRadius: '3px',
+                border: exploreFilter === 'dj-mixes' ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.1)',
+                background: exploreFilter === 'dj-mixes' ? '#00f2fe' : 'rgba(255,255,255,0.03)',
+                color: exploreFilter === 'dj-mixes' ? '#060813' : '#fff',
+                fontWeight: '800',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              🎧 DJ Mixes ({popularDjMixes.length})
+            </button>
+            <button
+              type="button"
               onClick={() => { setExploreFilter('singles'); setExplorePage(1); }}
               style={{
                 padding: '6px 14px',
@@ -2545,23 +2677,6 @@ export default function NativeAppLandingView({
             >
               Podcasters &amp; EPKs ({popularPodcasters.length})
             </button>
-            <button
-              type="button"
-              onClick={() => { setExploreFilter('dj-mixes'); setExplorePage(1); }}
-              data-testid="landing-explore-filter-dj-mixes"
-              style={{
-                padding: '6px 14px',
-                borderRadius: '3px',
-                border: exploreFilter === 'dj-mixes' ? '1px solid #00f2fe' : '1px solid rgba(255,255,255,0.1)',
-                background: exploreFilter === 'dj-mixes' ? '#00f2fe' : 'rgba(255,255,255,0.03)',
-                color: exploreFilter === 'dj-mixes' ? '#060813' : '#fff',
-                fontWeight: '800',
-                fontSize: '12px',
-                cursor: 'pointer'
-              }}
-            >
-              🎧 DJ Mixes ({popularDjMixes.length})
-            </button>
           </div>
 
           {/* Filtering & Sorting Controls (Genre & Date/Title/Popularity) */}
@@ -2585,9 +2700,10 @@ export default function NativeAppLandingView({
               options={[
                 { value: 'newest', label: 'Newest Releases (Date)' },
                 { value: 'oldest', label: 'Oldest Releases (Date)' },
+                { value: 'popularity', label: 'Most Popular' },
+                { value: 'djs-first', label: '🎧 Resident DJs & Mixes First' },
                 { value: 'title', label: 'Title (A – Z)' },
-                { value: 'genre', label: 'Genre (A – Z)' },
-                { value: 'popularity', label: 'Most Popular' }
+                { value: 'genre', label: 'Genre (A – Z)' }
               ]}
               onChange={(val) => {
                 setExploreSort(val);
@@ -2648,14 +2764,14 @@ export default function NativeAppLandingView({
                       left: '8px', 
                       fontSize: '9px', 
                       fontWeight: 'bold', 
-                      background: item.kind === 'creator' ? 'rgba(0,0,0,0.75)' : item.kind === 'dj-mix' ? 'rgba(0,242,254,0.9)' : item.kind === 'podcaster' ? 'rgba(236,72,153,0.9)' : item.kind === 'podcast' ? 'rgba(34,211,238,0.9)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
-                      color: item.kind === 'creator' ? '#00f2fe' : (item.kind === 'podcast' || item.kind === 'dj-mix') ? '#000' : '#fff', 
+                      background: (item.kind === 'dj' || item.data?.creator_type === 'dj') ? 'rgba(168,85,247,0.92)' : item.kind === 'creator' ? 'rgba(0,0,0,0.75)' : item.kind === 'dj-mix' ? 'rgba(0,242,254,0.9)' : item.kind === 'podcaster' ? 'rgba(236,72,153,0.9)' : item.kind === 'podcast' ? 'rgba(34,211,238,0.9)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
+                      color: (item.kind === 'podcast' || item.kind === 'dj-mix') ? '#000' : '#fff', 
                       padding: '2px 6px', 
                       borderRadius: '3px' 
                     }}>
-                      {item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'dj-mix' ? 'CLEARED DJ MIX' : item.kind === 'podcaster' ? 'PODCASTER EPK' : item.kind === 'podcast' ? 'PODCAST EPISODE' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
+                      {(item.kind === 'dj' || item.data?.creator_type === 'dj') ? '🎧 RESIDENT DJ EPK' : item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'dj-mix' ? 'CLEARED DJ MIX' : item.kind === 'podcaster' ? 'PODCASTER EPK' : item.kind === 'podcast' ? 'PODCAST EPISODE' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
                     </span>
-                    {item.kind !== 'creator' && (
+                    {item.kind !== 'creator' && item.kind !== 'dj' && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -2682,7 +2798,7 @@ export default function NativeAppLandingView({
                   <p data-no-i18n="true" style={{ fontSize: '12px', color: 'var(--mu)', margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subtitle}</p>
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)', gap: '6px' }}>
                     <span style={{ color: 'var(--mu)', fontFamily: item.kind === 'single' ? 'monospace' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.metaLeft}</span>
-                    {(item.kind === 'dj-mix' || item.kind === 'creator') ? (
+                    {(item.kind === 'dj-mix' || item.kind === 'dj' || item.kind === 'creator') ? (
                       <button
                         type="button"
                         data-testid={`explore-open-epk-btn-${item.id}`}
@@ -2694,14 +2810,15 @@ export default function NativeAppLandingView({
                             navigate(`/epk/${djSlug}?persona=dj`);
                           } else {
                             const sub = item.data?.subdomain || (item.title || 'ndufo').toLowerCase().replace(/[^a-z0-9]/g, '');
-                            const persona = item.data?.creator_type || (sub.includes('dj') || sub.includes('khalid') || sub.includes('selector') ? 'dj' : 'artist');
+                            const isDj = item.kind === 'dj' || item.data?.creator_type === 'dj' || sub.includes('dj') || sub.includes('khalid') || sub.includes('selector');
+                            const persona = isDj ? 'dj' : (item.data?.creator_type || 'artist');
                             navigate(`/epk/${sub}?persona=${persona}`);
                           }
                         }}
                         style={{
-                          background: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? 'rgba(168,85,247,0.18)' : 'rgba(0,242,254,0.12)',
-                          border: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(0,242,254,0.35)',
-                          color: (item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '#c084fc' : 'var(--cyan)',
+                          background: (item.kind === 'dj-mix' || item.kind === 'dj' || item.data?.creator_type === 'dj') ? 'rgba(168,85,247,0.18)' : 'rgba(0,242,254,0.12)',
+                          border: (item.kind === 'dj-mix' || item.kind === 'dj' || item.data?.creator_type === 'dj') ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(0,242,254,0.35)',
+                          color: (item.kind === 'dj-mix' || item.kind === 'dj' || item.data?.creator_type === 'dj') ? '#c084fc' : 'var(--cyan)',
                           padding: '3px 8px',
                           borderRadius: '3px',
                           fontSize: '10.5px',
@@ -2710,7 +2827,7 @@ export default function NativeAppLandingView({
                           whiteSpace: 'nowrap'
                         }}
                       >
-                        {(item.kind === 'dj-mix' || item.data?.creator_type === 'dj') ? '🌐 Open DJ EPK →' : '🌐 Open EPK →'}
+                        {(item.kind === 'dj-mix' || item.kind === 'dj' || item.data?.creator_type === 'dj') ? '🎧 DJ EPK & Rates →' : '🌐 Open EPK →'}
                       </button>
                     ) : (
                       <span style={{ color: (item.kind === 'podcaster' || item.kind === 'podcast') ? '#ec4899' : item.kind === 'single' ? 'var(--green)' : '#c084fc', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
