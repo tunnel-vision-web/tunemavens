@@ -514,7 +514,7 @@ export function resolveAudioStreamUrl(trackOrUrl) {
   if (candidate.includes('/uploads/audio/')) {
     const rawFile = candidate.split('/uploads/audio/')[1].split('?')[0];
     const filename = rawFile.replace(/\.[^/.]+$/, '');
-    const cleanId = identifier || filename || 'track';
+    const cleanId = filename || identifier || 'track';
     return `${backendBase || ''}/api/stream/track/${encodeURIComponent(cleanId)}`;
   }
 

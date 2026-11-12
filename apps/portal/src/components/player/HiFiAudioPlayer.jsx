@@ -212,6 +212,11 @@ export default function HiFiAudioPlayer({
       audio.currentTime = 0;
       setPlaybackProgress(0);
       setPreviewLimitReached(false);
+      setIsMutedForAutoplay(false);
+      if (!isPlayerMuted) {
+        audio.muted = false;
+        audio.volume = playerVolume || 0.85;
+      }
     }
 
     if (isPlaying) {
@@ -220,12 +225,21 @@ export default function HiFiAudioPlayer({
         setPreviewLimitReached(true);
         if (onTogglePlay) onTogglePlay(false);
       } else {
+        // Ensure volume and unmuted status before initiating playback
+        audio.volume = isPlayerMuted ? 0 : (playerVolume || 0.85);
+        if (!isPlayerMuted && !isMutedForAutoplay) {
+          audio.muted = false;
+        }
+
         const playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise
             .then(() => {
               setAutoplayUnlocked(true);
-              setIsMutedForAutoplay(false);
+              if (!isPlayerMuted) {
+                audio.muted = false;
+                setIsMutedForAutoplay(false);
+              }
               const isBackend = Boolean(
                 window.location.hash.includes('/dashboard') ||
                 window.location.pathname.includes('/dashboard') ||
@@ -239,15 +253,15 @@ export default function HiFiAudioPlayer({
                 // Instantly start playback in muted mode so the stream buffers and starts immediately
                 if (audioRef.current && isPlaying) {
                   audioRef.current.muted = true;
+                  setIsMutedForAutoplay(true);
                   audioRef.current.play()
                     .then(() => {
-                      setIsMutedForAutoplay(true);
                       setAutoplayUnlocked(true);
                     })
                     .catch(() => {});
                 }
 
-                // Unmute automatically on first gesture anywhere on the page
+                // Unmute automatically on first authentic user gesture anywhere on the page
                 const unmuteOnInteraction = () => {
                   if (audioRef.current) {
                     audioRef.current.muted = false;
@@ -258,17 +272,15 @@ export default function HiFiAudioPlayer({
                   }
                   setIsMutedForAutoplay(false);
                   window.removeEventListener('pointerdown', unmuteOnInteraction, true);
+                  window.removeEventListener('click', unmuteOnInteraction, true);
                   window.removeEventListener('keydown', unmuteOnInteraction, true);
                   window.removeEventListener('touchstart', unmuteOnInteraction, true);
-                  window.removeEventListener('click', unmuteOnInteraction, true);
-                  window.removeEventListener('scroll', unmuteOnInteraction, true);
                 };
 
                 window.addEventListener('pointerdown', unmuteOnInteraction, true);
+                window.addEventListener('click', unmuteOnInteraction, true);
                 window.addEventListener('keydown', unmuteOnInteraction, true);
                 window.addEventListener('touchstart', unmuteOnInteraction, true);
-                window.addEventListener('click', unmuteOnInteraction, true);
-                window.addEventListener('scroll', unmuteOnInteraction, true);
               } else {
                 console.warn('[TuneStream Player] Playback notice:', err?.message || err);
               }
@@ -280,28 +292,13 @@ export default function HiFiAudioPlayer({
     }
   }, [currentTrack, isPlaying, hasCredits]);
 
-  // Fallback visual progress ticker if isPlaying is true while browser waits for first gesture or stream buffer
-  useEffect(() => {
-    if (!isPlaying) return;
-    const timer = setInterval(() => {
-      const audio = audioRef.current;
-      if (!audio || audio.paused) {
-        setPlaybackProgress(prev => {
-          const maxDur = hasCredits ? (trackDuration || 210) : PREVIEW_LIMIT;
-          if (prev + 1 >= maxDur) return 0;
-          return prev + 1;
-        });
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isPlaying, hasCredits, trackDuration]);
-
   // Sync volume & mute
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = isPlayerMuted ? 0 : playerVolume;
-  }, [playerVolume, isPlayerMuted]);
+    audio.muted = isPlayerMuted || isMutedForAutoplay;
+    audio.volume = isPlayerMuted ? 0 : (playerVolume || 0.85);
+  }, [playerVolume, isPlayerMuted, isMutedForAutoplay]);
 
   // Time update with 30s limit
   const handleTimeUpdate = () => {
@@ -391,6 +388,12 @@ export default function HiFiAudioPlayer({
         setPreviewLimitReached(false);
       }
     }
+    // Any direct user toggle breaks out of autoplay mute lock and enables audible playback
+    setIsMutedForAutoplay(false);
+    if (audioRef.current) {
+      audioRef.current.muted = false;
+      audioRef.current.volume = playerVolume || 0.85;
+    }
     if (onTogglePlay) onTogglePlay(!isPlaying);
   };
 
@@ -448,6 +451,7 @@ export default function HiFiAudioPlayer({
         ref={audioRef}
         crossOrigin="anonymous"
         preload="auto"
+        muted={isPlayerMuted || isMutedForAutoplay}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={() => {
           if (audioRef.current && audioRef.current.duration && !isNaN(audioRef.current.duration)) {
