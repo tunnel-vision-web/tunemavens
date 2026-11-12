@@ -28,6 +28,7 @@ export default function HiFiAudioPlayer({
   const [playerVolume, setPlayerVolume] = useState(0.85);
   const [shuffleMode, setShuffleMode] = useState(false);
   const [repeatMode, setRepeatMode] = useState('playlist'); // 'off' | 'track' | 'playlist'
+  const [isMutedForAutoplay, setIsMutedForAutoplay] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0); // in seconds
   const [trackDuration, setTrackDuration] = useState(210); // in seconds
   const [previewLimitReached, setPreviewLimitReached] = useState(false);
@@ -224,6 +225,7 @@ export default function HiFiAudioPlayer({
           playPromise
             .then(() => {
               setAutoplayUnlocked(true);
+              setIsMutedForAutoplay(false);
               const isBackend = Boolean(
                 window.location.hash.includes('/dashboard') ||
                 window.location.pathname.includes('/dashboard') ||
@@ -232,24 +234,44 @@ export default function HiFiAudioPlayer({
               broadcastPlaybackStart(isBackend ? 'backend' : 'frontend', currentTrack);
             })
             .catch((err) => {
-              console.warn('[TuneStream Player] Audio play requires user gesture or pending buffer:', err?.message || err);
               // Browser autoplay policy blocked unmuted play:
-              // Unlock automatically on the very first user gesture anywhere on the page
-              const unlockAudio = () => {
+              if (err && (err.name === 'NotAllowedError' || String(err.message || '').includes('interact'))) {
+                // Instantly start playback in muted mode so the stream buffers and starts immediately
                 if (audioRef.current && isPlaying) {
-                  audioRef.current.play().then(() => setAutoplayUnlocked(true)).catch(() => {});
+                  audioRef.current.muted = true;
+                  audioRef.current.play()
+                    .then(() => {
+                      setIsMutedForAutoplay(true);
+                      setAutoplayUnlocked(true);
+                    })
+                    .catch(() => {});
                 }
-                window.removeEventListener('pointerdown', unlockAudio, true);
-                window.removeEventListener('keydown', unlockAudio, true);
-                window.removeEventListener('touchstart', unlockAudio, true);
-                window.removeEventListener('click', unlockAudio, true);
-                window.removeEventListener('scroll', unlockAudio, true);
-              };
-              window.addEventListener('pointerdown', unlockAudio, true);
-              window.addEventListener('keydown', unlockAudio, true);
-              window.addEventListener('touchstart', unlockAudio, true);
-              window.addEventListener('click', unlockAudio, true);
-              window.addEventListener('scroll', unlockAudio, true);
+
+                // Unmute automatically on first gesture anywhere on the page
+                const unmuteOnInteraction = () => {
+                  if (audioRef.current) {
+                    audioRef.current.muted = false;
+                    audioRef.current.volume = playerVolume || 0.85;
+                    if (audioRef.current.paused && isPlaying) {
+                      audioRef.current.play().catch(() => {});
+                    }
+                  }
+                  setIsMutedForAutoplay(false);
+                  window.removeEventListener('pointerdown', unmuteOnInteraction, true);
+                  window.removeEventListener('keydown', unmuteOnInteraction, true);
+                  window.removeEventListener('touchstart', unmuteOnInteraction, true);
+                  window.removeEventListener('click', unmuteOnInteraction, true);
+                  window.removeEventListener('scroll', unmuteOnInteraction, true);
+                };
+
+                window.addEventListener('pointerdown', unmuteOnInteraction, true);
+                window.addEventListener('keydown', unmuteOnInteraction, true);
+                window.addEventListener('touchstart', unmuteOnInteraction, true);
+                window.addEventListener('click', unmuteOnInteraction, true);
+                window.addEventListener('scroll', unmuteOnInteraction, true);
+              } else {
+                console.warn('[TuneStream Player] Playback notice:', err?.message || err);
+              }
             });
         }
       }
@@ -449,6 +471,54 @@ export default function HiFiAudioPlayer({
         }}
         style={{ display: 'none' }}
       />
+
+      {/* Floating Unmute Banner if playing in muted autoplay mode */}
+      {isMutedForAutoplay && (
+        <div
+          data-testid="autoplay-unmute-banner"
+          onClick={() => {
+            if (audioRef.current) {
+              audioRef.current.muted = false;
+              audioRef.current.volume = playerVolume || 0.85;
+              if (audioRef.current.paused && isPlaying) {
+                audioRef.current.play().catch(() => {});
+              }
+            }
+            setIsMutedForAutoplay(false);
+          }}
+          style={{
+            position: 'fixed',
+            top: '72px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            background: 'rgba(6, 10, 22, 0.94)',
+            border: '1px solid rgba(0, 242, 254, 0.6)',
+            boxShadow: '0 8px 32px rgba(0, 242, 254, 0.25), 0 0 16px rgba(0,0,0,0.8)',
+            backdropFilter: 'blur(12px)',
+            color: '#fff',
+            padding: '8px 18px',
+            borderRadius: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: 700,
+            fontSize: '12.5px',
+            cursor: 'pointer',
+            letterSpacing: '0.2px'
+          }}
+        >
+          <div style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: '#00f2fe',
+            boxShadow: '0 0 8px #00f2fe'
+          }} />
+          <RiVolumeMuteFill size={16} color="#00f2fe" />
+          <span>Playing {currentTrack?.title || 'Audio'} • <strong>Click anywhere to listen</strong></span>
+        </div>
+      )}
 
       {/* Floating Minimized Pill when player closed/minimized */}
       {!isPlayerVisible && (
