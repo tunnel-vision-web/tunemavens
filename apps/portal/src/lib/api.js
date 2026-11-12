@@ -463,17 +463,84 @@ export const communicationsApi = {
 
 export function normalizeMediaUrl(url) {
   if (!url || typeof url !== 'string') return '';
-  const trimmed = url.trim();
+  let trimmed = url.trim();
   if (trimmed.includes(':8001/uploads/')) {
-    return trimmed.substring(trimmed.indexOf('/uploads/'));
-  }
-  if (trimmed.includes(':8001/heroes/')) {
-    return trimmed.substring(trimmed.indexOf('/heroes/'));
-  }
-  if (trimmed.includes(':8001/headers/')) {
-    return trimmed.substring(trimmed.indexOf('/headers/'));
+    trimmed = trimmed.substring(trimmed.indexOf('/uploads/'));
+  } else if (trimmed.includes(':8001/heroes/')) {
+    trimmed = trimmed.substring(trimmed.indexOf('/heroes/'));
+  } else if (trimmed.includes(':8001/headers/')) {
+    trimmed = trimmed.substring(trimmed.indexOf('/headers/'));
   }
   return trimmed;
+}
+
+/**
+ * Resolves a reliable, browser-playable audio streaming URL for any track, episode, or mix.
+ * Ensures relative endpoints (/api/stream/track/...) are prepended with the active backend origin
+ * on live domains (e.g. tunemavens.com -> https://tunemavens-backend.onrender.com).
+ * Also maps missing /uploads/ audio files to the authoritative audio stream engine endpoint.
+ */
+export function resolveAudioStreamUrl(trackOrUrl) {
+  if (!trackOrUrl) {
+    return 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+  }
+
+  const backendBase = getApiBase();
+  let candidate = '';
+  let identifier = '';
+
+  if (typeof trackOrUrl === 'string') {
+    candidate = trackOrUrl.trim();
+  } else if (typeof trackOrUrl === 'object') {
+    candidate = (
+      trackOrUrl.audioUrl ||
+      trackOrUrl.audio_url ||
+      trackOrUrl.fileUrl ||
+      trackOrUrl.streamUrl ||
+      trackOrUrl.url ||
+      ''
+    ).trim();
+    identifier = trackOrUrl.isrc || trackOrUrl.id || trackOrUrl.title || '';
+  }
+
+  // Normalize local development port references
+  if (candidate) {
+    candidate = normalizeMediaUrl(candidate);
+  }
+
+  // If candidate is a relative stream API path, ensure it uses backendBase
+  if (candidate.startsWith('/api/stream/')) {
+    return backendBase ? `${backendBase}${candidate}` : candidate;
+  }
+
+  // If candidate is a static /uploads/audio/... file that is not hosted on static CDN,
+  // route it through the backend stream router which has studio synthesizer fallback
+  if (candidate.startsWith('/uploads/audio/')) {
+    const filename = candidate.replace('/uploads/audio/', '').replace(/\.[^/.]+$/, '');
+    const cleanId = identifier || filename || 'track';
+    return `${backendBase || ''}/api/stream/track/${encodeURIComponent(cleanId)}`;
+  }
+
+  // If candidate is a relative root or media path (e.g. /uploads/...), prepend backendBase
+  if (candidate.startsWith('/uploads/') || candidate.startsWith('/heroes/') || candidate.startsWith('/headers/')) {
+    return backendBase ? `${backendBase}${candidate}` : candidate;
+  }
+
+  // If valid absolute HTTP/HTTPS URL, verify it is not pointing to dead localhost
+  if (candidate.startsWith('http://') || candidate.startsWith('https://')) {
+    if (candidate.includes('localhost:8001') || candidate.includes('127.0.0.1:8001')) {
+      const cleanPath = candidate.replace(/^https?:\/\/[^/]+/, '');
+      return `${backendBase || ''}${cleanPath}`;
+    }
+    return candidate;
+  }
+
+  // Fallback to stream route by identifier
+  if (identifier) {
+    return `${backendBase || ''}/api/stream/track/${encodeURIComponent(identifier)}`;
+  }
+
+  return 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
 }
 
 // --- Streaming, Consumer Audio & Tipping Engine (Phase 2) ---

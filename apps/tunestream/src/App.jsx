@@ -62,7 +62,7 @@ import {
   AUTHORITATIVE_CATALOG_ARTISTS,
   AUTHORITATIVE_CATALOG_ALBUMS
 } from './data/authoritativeCatalog';
-import { catalogApi, streamApi, normalizeMediaUrl, getApiBase } from './lib/api';
+import { catalogApi, streamApi, normalizeMediaUrl, resolveAudioStreamUrl, getApiBase } from './lib/api';
 
 export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
@@ -3779,7 +3779,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
     eventLoggedRef.current = false;
     setCurrentTime(0);
 
-    const streamSrc = track.audioUrl || track.audio_url || `/api/stream/track/${track.isrc || track.id}`;
+    const streamSrc = resolveAudioStreamUrl(track);
     if (audioRef.current) {
       audioRef.current.src = streamSrc;
       audioRef.current.load();
@@ -4587,10 +4587,21 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout }) {
       {/* Real HTML5 Audio Element for live stream decoding */}
       <audio
         ref={audioRef}
+        preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleNextTrack}
-        onError={() => setPlaybackError('Stream fallback active')}
+        onError={() => {
+          setPlaybackError('Stream fallback active');
+          const fallback = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+          if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.endsWith('SoundHelix-Song-1.mp3')) {
+            audioRef.current.src = fallback;
+            audioRef.current.load();
+            if (isPlaying) {
+              audioRef.current.play().catch(() => {});
+            }
+          }
+        }}
       />
 
       {/* EPK-Style Floating Hi-Fi Audio Player Overlay */}

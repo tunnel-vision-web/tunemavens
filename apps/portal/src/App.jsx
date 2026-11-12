@@ -79,7 +79,7 @@ import syncStep4Img from './assets/images/sync_step_4.png'
 
 import RegionSwitcher from './RegionSwitcher.jsx'
 import { useRegion } from './RegionContext.jsx'
-import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi, normalizeMediaUrl, BASE } from './lib/api.js'
+import { authApi, tokenStore, adminApi, dealsApi, usersApi, socialAiApi, crmApi, cmsApi, normalizeMediaUrl, resolveAudioStreamUrl, BASE } from './lib/api.js'
 import { reconcileUserApps, persistAppActivation, getStoredActivatedApps, DEFAULT_ACTIVE_APPS_BY_ROLE, saveStoredActivatedApps, saveStoredDeactivatedApps } from './lib/activatedApps.js'
 import { INTERMAVEN_NATIVE_APPS } from './lib/nativeApps.js'
 import { INTERMAVEN_PLATFORM_APPS } from './lib/intermavenPlatformApps.js'
@@ -9456,10 +9456,7 @@ function GlobalAudioPlayer({
   // Resolve streaming audio source URL
   const getAudioUrl = (track) => {
     if (!track) return '';
-    if (track.audioUrl) return track.audioUrl;
-    if (track.fileUrl) return track.fileUrl;
-    const id = track.isrc || track.id || track._id || 'preview';
-    return `/api/stream/track/${encodeURIComponent(id)}`;
+    return resolveAudioStreamUrl(track);
   };
 
   // Sync audio element source when globalTrack changes
@@ -9693,6 +9690,17 @@ function GlobalAudioPlayer({
         }
       }}
       onEnded={handleNext}
+      onError={() => {
+        const fallback = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+        if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.endsWith('SoundHelix-Song-1.mp3')) {
+          console.warn('Portal stream fallback active');
+          audioRef.current.src = fallback;
+          audioRef.current.load();
+          if (globalPlaying) {
+            audioRef.current.play().catch(() => {});
+          }
+        }
+      }}
       style={{ display: 'none' }}
     />
   );

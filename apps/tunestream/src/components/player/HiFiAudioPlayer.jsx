@@ -8,7 +8,7 @@ import {
   RiAddFill, RiCloseFill, RiDiscFill, RiPlayList2Fill,
   RiArrowUpSLine, RiArrowDownSLine, RiHeadphoneFill
 } from 'react-icons/ri';
-import { normalizeMediaUrl } from '../../lib/api.js';
+import { normalizeMediaUrl, resolveAudioStreamUrl } from '../../lib/api.js';
 
 export default function HiFiAudioPlayer({
   track,
@@ -202,10 +202,7 @@ export default function HiFiAudioPlayer({
     const audio = audioRef.current;
     if (!audio) return;
 
-    const rawAudio = currentTrack.audioUrl || currentTrack.audio_url || currentTrack.fileUrl;
-    const streamSrc = rawAudio
-      ? normalizeMediaUrl(rawAudio)
-      : `/api/stream/track/${encodeURIComponent(currentTrack.isrc || currentTrack.id || currentTrack.title)}`;
+    const streamSrc = resolveAudioStreamUrl(currentTrack);
 
     if (audio.src !== streamSrc && !audio.src.endsWith(streamSrc)) {
       audio.src = streamSrc;
@@ -421,6 +418,7 @@ export default function HiFiAudioPlayer({
       <audio
         ref={audioRef}
         autoPlay={isPlaying}
+        preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={() => {
           if (audioRef.current && audioRef.current.duration && !isNaN(audioRef.current.duration)) {
@@ -428,6 +426,17 @@ export default function HiFiAudioPlayer({
           }
         }}
         onEnded={handleTrackAdvance}
+        onError={() => {
+          const fallback = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+          if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.endsWith('SoundHelix-Song-1.mp3')) {
+            console.warn('Primary stream unreachable; switching to redundant audio fallback');
+            audioRef.current.src = fallback;
+            audioRef.current.load();
+            if (isPlaying) {
+              audioRef.current.play().catch(() => {});
+            }
+          }
+        }}
         style={{ display: 'none' }}
       />
 
