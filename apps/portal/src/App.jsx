@@ -4653,7 +4653,7 @@ function ConsumerHomeOverviewPanel({ sessionUser, tracks = [], userCredits = 600
           </div>
           <button
             type="button"
-            onClick={() => onOpenCreditReload ? onOpenCreditReload('Top-Up Listener TM Credits') : setUserCredits(c => c + 250)}
+            onClick={() => onOpenCreditReload ? onOpenCreditReload('Top-Up Listener TM Credits') : window.dispatchEvent(new CustomEvent('tunemavens-prompt-credit-reload', { detail: { reason: 'Top-Up Listener TM Credits', suggestedPackageId: 'starter-floor' } }))}
             className="btn-primary"
             style={{ width: '100%', marginTop: '14px', padding: '7px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}
           >
@@ -5681,12 +5681,9 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
   ]);
 
   const handleBuyCredits = () => {
-    setUserCredits(prev => prev + 250);
-    alert('Mock credit package purchased successfully! Added 250 credits to your sandbox account.');
-    setRecentActivities(prev => [
-      { id: Date.now(), text: "Purchased 250 credit sandbox package", time: "Just now", icon: "💳", type: "success" },
-      ...prev
-    ]);
+    window.dispatchEvent(new CustomEvent('tunemavens-prompt-credit-reload', {
+      detail: { reason: 'Dashboard credit reload', suggestedPackageId: 'starter-floor' }
+    }));
   };
 
   // Get data sets specific to each user role
@@ -9651,10 +9648,10 @@ function GlobalAudioPlayer({
   };
 
   const handleTopUpCredits = () => {
-    if (typeof setUserCredits === 'function') {
-      setUserCredits(prev => prev + 250);
-    }
-    alert('Top-Up Successful! +250 Credits added to your sandbox account.');
+    setShowUnlockModal(false);
+    window.dispatchEvent(new CustomEvent('tunemavens-prompt-credit-reload', {
+      detail: { reason: 'Audio Master Track Unlock replenishment', suggestedPackageId: 'starter-floor' }
+    }));
   };
 
   const handleReplayPreview = () => {

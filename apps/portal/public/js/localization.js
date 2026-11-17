@@ -20,7 +20,7 @@
       currencySymbol: 'KSh',
       rate: 1.0,               // Base currency (1 KES = 1.0 KES, 1 USD = 130 KES)
       usdRate: 130.0,
-      defaultLang: 'sw',
+      defaultLang: 'en',
       supportedLanguages: ['en', 'sw', 'ki'],
       isEastAfrica: true,
       hasMpesa: true,

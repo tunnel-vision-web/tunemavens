@@ -94,7 +94,7 @@ export const useRegion = () => useContext(RegionContext) || {
   region: 'east-africa',
   currency: 'KES',
   currencyInfo: { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
-  language: 'sw',
+  language: 'en',
   languages: LANGUAGES_LIST,
   regionalMessaging: REGIONAL_MESSAGING.KE,
   getRegionalMessaging,
@@ -112,7 +112,7 @@ export const useRegion = () => useContext(RegionContext) || {
 const STORAGE_KEY = 'tunemaven_region';
 
 export const COUNTRIES_LIST = [
-  { code: 'KE', name: 'Kenya', flag: '🇰🇪', currency: 'KES', lang: 'sw', supportedLangs: ['en', 'sw', 'ki'] },
+  { code: 'KE', name: 'Kenya', flag: '🇰🇪', currency: 'KES', lang: 'en', supportedLangs: ['en', 'sw', 'ki'] },
   { code: 'US', name: 'United States', flag: '🇺🇸', currency: 'USD', lang: 'en', supportedLangs: ['en', 'es'] },
   { code: 'TZ', name: 'Tanzania', flag: '🇹🇿', currency: 'TZS', lang: 'sw', supportedLangs: ['en', 'sw'] },
   { code: 'UG', name: 'Uganda', flag: '🇺🇬', currency: 'UGX', lang: 'sw', supportedLangs: ['en', 'sw'] },
@@ -169,7 +169,7 @@ function isSupportedLanguageCode(code) {
 function getInitialLocaleState() {
   let country = 'KE';
   let currency = 'KES';
-  let language = 'sw';
+  let language = 'en';
 
   try {
     const synMarket = localStorage.getItem('synergy_market');

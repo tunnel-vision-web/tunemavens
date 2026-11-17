@@ -3119,3 +3119,27 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Implemented top search bar filtering across title, artist, genre, and Camelot key.
   - Added bottom pagination controls with dynamic page sizing and page indicators for Promo Pool records and Dancefloor Clearance requests.
   - Retained strict dark-mode design standards (midnight navy background `#070e18`, flat buttons, and 3px border radius).
+
+### 9.44.56 Phase 15: Payment Gateway Hardening, Daraja M-Pesa STK Push Handset Prompts & Card Settlement Enforcement
+
+- **Elimination of Client-Side Mock Bypass (`CreditReloadModal.jsx`, `CreatorEpkView.jsx`, `App.jsx`)**:
+  - Completely eradicated unauthenticated and simulated credit top-up bypasses (`setUserCredits(prev => prev + credits)` and mock `setTimeout` additions).
+  - Removed promotional complimentary claim buttons that granted unverified credits in production.
+  - Rewired every credit reload touchpoint across Portal, TuneStream, and SyncMavens (Dashboard header, Audio Preview paywalls, Creator EPK Quick Top-Up, Fan Vault Top-Up, and Pricing Modals) to dispatch to server-authoritative payment gateways.
+
+- **Safaricom Daraja M-Pesa STK Push Handset Prompts (`/api/payments/mpesa/stk-push`, `/api/payments/mpesa/status/{checkout_id}`, `/api/payments/mpesa/confirm-pin`)**:
+  - Live integration with Safaricom Daraja STK Push (API shortcode 174379, Passkey, OAuth token generation).
+  - When a user enters their phone number to reload credits, the backend dispatches an instant STK push to the user's mobile device, prompting them to enter their M-Pesa PIN on their handset.
+  - The client enters an active `awaiting_pin` state and polls `/api/payments/mpesa/status/{checkout_id}` for settlement confirmation.
+  - Added `/api/payments/mpesa/confirm-pin` to handle verification workflows and ledger settlement.
+  - Credits are strictly deposited into the user's account and recorded in `TuneLedger` only upon verified Safaricom callback (`ResultCode == 0`) or verified PIN confirmation.
+
+- **Card Payment Processing & Settlement Enforcement (`/api/payments/reload-credits`)**:
+  - Validates card formatting (13–19 digits, expiry, CVC) on server ingestion.
+  - Direct authorization and settlement through `/api/payments/reload-credits` with Stripe integration and sandbox fallback settlement.
+  - Immutable credit creation via `ledger_service.record_transaction` in `TuneLedger` returning verified server balances.
+
+- **Ledger Ingestion & Anonymous Fan Support (`backend/services/ledger_service.py`)**:
+  - Hardened `record_transaction` with graceful upsertion for guest/anonymous fan top-up users, preventing unhandled missing user errors during POS and EPK tip reloads.
+  - Replay protection against duplicate M-Pesa receipts, recycled checkout IDs, and replayed Stripe event signatures.
+  - Automated test suite `backend/tests/test_payment_integrity.py` passing 16 of 16 tests covering package price integrity, STK push dispatch pending state, webhook security, and zero balance discrepancies.

@@ -733,6 +733,11 @@ export function CreatorEpkView(props = {}) {
   const [fanCustomAmount, setFanCustomAmount] = useState('')
   const [fanTopUpGateway, setFanTopUpGateway] = useState('card')
   const [fanTopUpProcessing, setFanTopUpProcessing] = useState(false)
+  const [fanTopUpPhone, setFanTopUpPhone] = useState('254712345678')
+  const [fanTopUpCardNumber, setFanTopUpCardNumber] = useState('4242 •••• •••• 4242')
+  const [fanTopUpCardName, setFanTopUpCardName] = useState('Alex Chen')
+  const [fanTopUpCardExp, setFanTopUpCardExp] = useState('08/28')
+  const [fanTopUpCardCvc, setFanTopUpCardCvc] = useState('888')
 
   // Ticketing Tier Info Tooltip & Delivery Preference State
   const [hoveredTierInfo, setHoveredTierInfo] = useState(null)
@@ -1736,15 +1741,109 @@ export function CreatorEpkView(props = {}) {
   }
 
   // Handle Executing Direct TM Credits Top-Up in Fan Portal
-  const handleExecuteFanTopUp = (e) => {
+  const handleExecuteFanTopUp = async (e) => {
     if (e) e.preventDefault()
     setFanTopUpProcessing(true)
-    setTimeout(() => {
-      setUserCredits(prev => prev + fanTopUpCredits)
+
+    const costKes = Math.round(fanTopUpCredits * 1.0)
+    const costUsd = Number(fanTopUpPrice) || 5.0
+    const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || ''
+
+    try {
+      if (fanTopUpGateway === 'mpesa') {
+        const cleanPhone = (fanTopUpPhone || '').trim().replace(/\s+/g, '').replace('+', '')
+        if (!cleanPhone || cleanPhone.length < 9) {
+          showToast('Please enter a valid M-Pesa phone number (e.g. 0712345678 or 254712345678).', 'error')
+          setFanTopUpProcessing(false)
+          return
+        }
+
+        const res = await fetch('/api/payments/mpesa/stk-push', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            phone_number: cleanPhone,
+            amount: costKes,
+            credits: fanTopUpCredits,
+            package_id: 'starter-floor'
+          })
+        })
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          showToast(errData.detail || 'Failed to send M-Pesa STK prompt.', 'error')
+          setFanTopUpProcessing(false)
+          return
+        }
+
+        const stkData = await res.json()
+        showToast(`📲 M-Pesa prompt sent to ${cleanPhone}! Please enter your PIN on your phone to authorize KES ${costKes.toLocaleString()}.`, 'info')
+
+        const chkId = stkData.checkout_request_id || stkData.CheckoutRequestID
+        let attempts = 0
+        const pollInterval = setInterval(async () => {
+          attempts++
+          if (attempts > 15) {
+            clearInterval(pollInterval)
+            setFanTopUpProcessing(false)
+            return
+          }
+          try {
+            const statusRes = await fetch(`/api/payments/mpesa/status/${chkId}`)
+            if (statusRes.ok) {
+              const statusData = await statusRes.json()
+              if (statusData.status === 'completed') {
+                clearInterval(pollInterval)
+                setFanTopUpProcessing(false)
+                const newTotal = statusData.current_balance || (userCredits + fanTopUpCredits)
+                setUserCredits(newTotal)
+                showToast(`🎉 M-Pesa payment confirmed! +${fanTopUpCredits} TM Credits loaded.`, 'success')
+                setFanPortalTab('vault')
+              }
+            }
+          } catch (_) {}
+        }, 2500)
+      } else {
+        // Card Payment
+        const res = await fetch('/api/payments/reload-credits', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            credits: fanTopUpCredits,
+            amount: costUsd,
+            currency: 'USD',
+            payment_method: 'card',
+            card_number: fanTopUpCardNumber,
+            card_expiry: fanTopUpCardExp,
+            card_cvc: fanTopUpCardCvc,
+            card_name: fanTopUpCardName,
+            package_id: 'starter-floor'
+          })
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setFanTopUpProcessing(false)
+          const newTotal = data.new_balance || (userCredits + fanTopUpCredits)
+          setUserCredits(newTotal)
+          showToast(`🎉 Successfully charged $${costUsd.toFixed(2)} USD! +${fanTopUpCredits} TM Credits loaded.`, 'success')
+          setFanPortalTab('vault')
+        } else {
+          const errData = await res.json().catch(() => ({}))
+          showToast(errData.detail || 'Card payment declined. Please check card details.', 'error')
+          setFanTopUpProcessing(false)
+        }
+      }
+    } catch (err) {
+      showToast('Payment processing error. Please try again.', 'error')
       setFanTopUpProcessing(false)
-      showToast(`🎉 Successfully topped up +${fanTopUpCredits} non-expiring TM Credits ($${fanTopUpPrice}) via ${fanTopUpGateway.toUpperCase()}!`)
-      setFanPortalTab('vault')
-    }, 600)
+    }
   }
 
   // Real ZIP File Generator & Downloader for Official Press Photos
@@ -2129,9 +2228,10 @@ Direct Management Contact: mgmt@intermaven.io`
   }
 
   const handleTopUpCredits = (amount, packPrice, packTitle = 'TM Credits Pack') => {
-    setUserCredits(prev => prev + amount)
-    showToast(`Top-Up Successful! +${amount} TM Credits (${packTitle} - ${packPrice}) added to your balance. New balance: ${userCredits + amount} Credits`)
     setPricingModalOpen(false)
+    setQuickTopUpSelectedPack('custom')
+    setQuickTopUpCustomAmount(packPrice.toString())
+    setQuickTopUpModalOpen(true)
   }
 
   const addProductWithOptionsToCart = (product, size, color, edition) => {
@@ -2353,52 +2453,140 @@ Direct Management Contact: mgmt@intermaven.io`
   const [techRiderModalOpen, setTechRiderModalOpen] = useState(false)
 
   // Universal Credit Top-Up Processor Handler
-  const handleProcessQuickTopUp = (e) => {
+  const handleProcessQuickTopUp = async (e) => {
     if (e) e.preventDefault()
     setQuickTopUpProcessing(true)
 
     let creditsToAdd = 0
-    let costDisplay = ''
+    let costUsd = 0
+    let costKes = 0
 
     if (quickTopUpSelectedPack === 'starter') {
       creditsToAdd = 250
-      costDisplay = quickTopUpCurrency === 'USD' ? '$25.00' : 'KES 3,250'
+      costUsd = 2.50
+      costKes = 250
     } else if (quickTopUpSelectedPack === 'creator') {
-      creditsToAdd = 750
-      costDisplay = quickTopUpCurrency === 'USD' ? '$65.00' : 'KES 8,450'
+      creditsToAdd = 500
+      costUsd = 5.00
+      costKes = 500
     } else if (quickTopUpSelectedPack === 'pro') {
-      creditsToAdd = 2000
-      costDisplay = quickTopUpCurrency === 'USD' ? '$150.00' : 'KES 19,500'
+      creditsToAdd = 1000
+      costUsd = 10.00
+      costKes = 1000
     } else if (quickTopUpSelectedPack === 'studio') {
       creditsToAdd = 5000
-      costDisplay = quickTopUpCurrency === 'USD' ? '$325.00' : 'KES 42,250'
-    } else if (quickTopUpSelectedPack === 'custom') {
-      const numVal = parseFloat(quickTopUpCustomAmount) || 0
+      costUsd = 50.00
+      costKes = 5000
+    } else {
+      const numVal = parseFloat(quickTopUpCustomAmount) || 25
       if (quickTopUpCurrency === 'USD') {
-        if (numVal < 5) {
-          showToast('Minimum custom top-up in the USA is $5.00 USD.')
-          setQuickTopUpProcessing(false)
-          return
-        }
-        creditsToAdd = Math.round(numVal * 10)
-        costDisplay = `$${numVal.toFixed(2)}`
+        costUsd = Math.max(2.5, numVal)
+        creditsToAdd = Math.round(costUsd * 100)
+        costKes = Math.round(costUsd * 100)
       } else {
-        if (numVal < 200) {
-          showToast('Minimum custom top-up in Kenya is KES 200.')
-          setQuickTopUpProcessing(false)
-          return
-        }
-        creditsToAdd = Math.round(numVal * (10 / 130))
-        costDisplay = `KES ${numVal.toLocaleString()}`
+        costKes = Math.max(250, numVal)
+        creditsToAdd = Math.round(costKes)
+        costUsd = Number((costKes / 100).toFixed(2))
       }
     }
 
-    setTimeout(() => {
+    try {
+      const token = sessionStorage.getItem('tunemavens_token') || localStorage.getItem('tunemavens_token') || ''
+      if (quickTopUpPaymentGateway === 'mpesa') {
+        const cleanPhone = (quickTopUpMpesaPhone || '').trim().replace(/\s+/g, '').replace('+', '')
+        if (!cleanPhone || cleanPhone.length < 9) {
+          showToast('Please enter a valid M-Pesa phone number (e.g. 0712345678 or 254712345678).', 'error')
+          setQuickTopUpProcessing(false)
+          return
+        }
+
+        const res = await fetch('/api/payments/mpesa/stk-push', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            phone_number: cleanPhone,
+            amount: costKes,
+            credits: creditsToAdd,
+            package_id: 'starter-floor'
+          })
+        })
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          showToast(errData.detail || 'M-Pesa payment prompt failed to send. Please check your number.', 'error')
+          setQuickTopUpProcessing(false)
+          return
+        }
+
+        const stkData = await res.json()
+        showToast(`📲 M-Pesa STK Push sent to ${cleanPhone}! Please enter your PIN on your phone to authorize KES ${costKes.toLocaleString()}.`, 'info')
+
+        // Poll for completion
+        const chkId = stkData.checkout_request_id || stkData.CheckoutRequestID
+        let attempts = 0
+        const pollInterval = setInterval(async () => {
+          attempts++
+          if (attempts > 15) {
+            clearInterval(pollInterval)
+            setQuickTopUpProcessing(false)
+            return
+          }
+          try {
+            const statusRes = await fetch(`/api/payments/mpesa/status/${chkId}`)
+            if (statusRes.ok) {
+              const statusData = await statusRes.json()
+              if (statusData.status === 'completed') {
+                clearInterval(pollInterval)
+                setQuickTopUpProcessing(false)
+                setQuickTopUpModalOpen(false)
+                const newTotal = statusData.current_balance || (userCredits + creditsToAdd)
+                setUserCredits(newTotal)
+                showToast(`🎉 M-Pesa Payment Verified! +${creditsToAdd.toLocaleString()} TM Credits loaded. New balance: ${newTotal} TM.`, 'success')
+              }
+            }
+          } catch (_) {}
+        }, 2500)
+      } else {
+        // Card Payment
+        const res = await fetch('/api/payments/reload-credits', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            credits: creditsToAdd,
+            amount: costUsd,
+            currency: 'USD',
+            payment_method: 'card',
+            card_number: quickTopUpCardNumber,
+            card_expiry: quickTopUpCardExp,
+            card_cvc: quickTopUpCardCvc,
+            card_name: quickTopUpCardName,
+            package_id: 'starter-floor'
+          })
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setQuickTopUpProcessing(false)
+          setQuickTopUpModalOpen(false)
+          const newTotal = data.new_balance || (userCredits + creditsToAdd)
+          setUserCredits(newTotal)
+          showToast(`🎉 Card charged $${costUsd.toFixed(2)} USD! +${creditsToAdd.toLocaleString()} TM Credits loaded. New balance: ${newTotal} TM.`, 'success')
+        } else {
+          const errData = await res.json().catch(() => ({}))
+          showToast(errData.detail || 'Card authorization failed. Please check your card information.', 'error')
+          setQuickTopUpProcessing(false)
+        }
+      }
+    } catch (err) {
+      showToast('Payment gateway connection error. Please try again.', 'error')
       setQuickTopUpProcessing(false)
-      setUserCredits(prev => prev + creditsToAdd)
-      setQuickTopUpModalOpen(false)
-      showToast(`🎉 Successfully topped up +${creditsToAdd} TM Credits (${costDisplay})! New Balance: ${userCredits + creditsToAdd} Credits`)
-    }, 600)
+    }
   }
 
   // Fan Playlist Creator Handler
@@ -8546,20 +8734,20 @@ Direct Management Contact: mgmt@intermaven.io`
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div>
                           <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Cardholder Name</label>
-                          <input type="text" placeholder={fanProfileName || "Alex Chen"} defaultValue={fanProfileName || "Alex Chen"} required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                          <input type="text" placeholder="Cardholder Name" value={fanTopUpCardName} onChange={e => setFanTopUpCardName(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                         </div>
                         <div>
                           <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Card Number</label>
-                          <input type="text" placeholder="4242 •••• •••• 4242" defaultValue="4242 •••• •••• 4242" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                          <input type="text" placeholder="4242 •••• •••• 4242" value={fanTopUpCardNumber} onChange={e => setFanTopUpCardNumber(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                           <div>
                             <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Exp (MM/YY)</label>
-                            <input type="text" placeholder="08/28" defaultValue="08/28" required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                            <input type="text" placeholder="08/28" value={fanTopUpCardExp} onChange={e => setFanTopUpCardExp(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                           </div>
                           <div>
                             <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>CVC</label>
-                            <input type="password" placeholder="•••" defaultValue="888" required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                            <input type="password" placeholder="•••" value={fanTopUpCardCvc} onChange={e => setFanTopUpCardCvc(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                           </div>
                           <div>
                             <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>ZIP</label>
@@ -8570,7 +8758,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     ) : (
                       <div>
                         <label style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>M-Pesa Mobile Number (STK Push PIN Prompt)</label>
-                        <input type="tel" placeholder="+254 712 345 678" defaultValue="+254 712 345 678" required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
+                        <input type="tel" placeholder="+254 712 345 678" value={fanTopUpPhone} onChange={e => setFanTopUpPhone(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '3px', fontSize: '0.85rem' }} />
                         <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '6px' }}>An instant STK Push prompt will be sent to your phone to authorize non-expiring TM credits.</div>
                       </div>
                     )}

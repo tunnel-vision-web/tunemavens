@@ -92,6 +92,13 @@ def record_transaction(
             {"$inc": {"credits": amount}, "$set": {"updated_at": now}},
             return_document=True
         )
+        if not updated_user and amount > 0:
+            db.users.update_one(
+                {"_id": norm_id},
+                {"$setOnInsert": {"created_at": now, "role": "listener"}, "$set": {"credits": amount, "updated_at": now}},
+                upsert=True
+            )
+            updated_user = db.users.find_one({"_id": norm_id})
 
     if not updated_user:
         raise ValueError(f"User {user_id} not found when applying ledger transaction.")

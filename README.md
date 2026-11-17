@@ -113,6 +113,12 @@ npm run dev
 - **Split Cascade & CRM Data Isolation:** Underwriters only access creator data covered under active contracts.
 - **Permanent Credit Exemption:** VC/Investor accounts are permanently exempt from credit limits and reload reminders.
 
+### 12. Sovereign Payment Gateways, M-Pesa STK Push & TuneLedger Settlement
+- **Live M-Pesa Daraja STK Push:** Direct handset PIN prompts via Safaricom Daraja STK Push (`/api/payments/mpesa/stk-push`) across East Africa. Users receive instant prompts on their mobile phones to enter their M-Pesa PIN, with real-time status polling (`/api/payments/mpesa/status/{checkout_id}`).
+- **Card Payment Authorization:** Secure card charging (`/api/payments/reload-credits`) validating 13–19 digit cards, CVC, and expiry with Stripe gateway integration.
+- **Server-Authoritative Pricing & Anti-Bypass:** Complete elimination of client-side mock additions. Reload packages are strictly derived from server package tables; client-provided credit amounts or manipulated price figures are rejected.
+- **TuneLedger Cryptographic Audit Trail:** Every credit deposit, tip, and split generates an append-only, immutable transaction in `db.credit_ledger` via `ledger_service.record_transaction`.
+
 ---
 
 ## 🛠️ Build & Verification

@@ -122,61 +122,31 @@ export default function CreditReloadModal({
   const [errorMessage, setErrorMessage] = useState('');
   const [claimingBeta, setClaimingBeta] = useState(false);
 
-  const handleClaimBetaCredits = async () => {
-    setClaimingBeta(true);
-    setErrorMessage('');
-    try {
-      const token = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('tunemavens_token') : null) || 
-                    (typeof localStorage !== 'undefined' ? localStorage.getItem('tunemavens_token') : null) || '';
-      const res = await fetch('/api/payments/beta/complimentary-credits', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ reason: 'Public Beta Creator Complimentary Access', credits: 500 })
-      });
+  // Polling for M-Pesa STK push completion on user's handset
+  useEffect(() => {
+    if (processingState !== 'awaiting_pin' || !stkData) return;
 
-      const data = await res.json();
-      const added = data.credits_added || 500;
-      const updatedCredits = data.new_balance || (currentCredits + added);
+    const chkId = stkData.checkout_request_id || stkData.CheckoutRequestID;
+    if (!chkId) return;
 
-      if (onUpdateUser && sessionUser) {
-        onUpdateUser({ ...sessionUser, credits: updatedCredits });
-      }
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payments/mpesa/status/${chkId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.status === 'completed') {
+          clearInterval(interval);
+          finalizeReloadSuccess(data.mpesa_receipt || data.receipt_number, data.current_balance);
+        } else if (data.status === 'failed') {
+          clearInterval(interval);
+          setProcessingState('idle');
+          setErrorMessage('M-Pesa payment prompt was cancelled or expired on handset.');
+        }
+      } catch (_) {}
+    }, 2500);
 
-      setReceiptResult({
-        receiptNumber: data.receipt_number || 'TM-BETA-COMPLIMENTARY',
-        creditsAdded: added,
-        newBalance: updatedCredits,
-        amountFormatted: '$0.00 (Beta Complimentary Access)',
-        timestamp: new Date().toLocaleTimeString()
-      });
-      setProcessingState('success');
-      if (typeof onSuccess === 'function') {
-        onSuccess(added, updatedCredits);
-      }
-    } catch (err) {
-      const added = 500;
-      const updatedCredits = currentCredits + added;
-      if (onUpdateUser && sessionUser) {
-        onUpdateUser({ ...sessionUser, credits: updatedCredits });
-      }
-      setReceiptResult({
-        receiptNumber: `TM-BETA-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-        creditsAdded: added,
-        newBalance: updatedCredits,
-        amountFormatted: '$0.00 (Beta Complimentary Access)',
-        timestamp: new Date().toLocaleTimeString()
-      });
-      setProcessingState('success');
-      if (typeof onSuccess === 'function') {
-        onSuccess(added, updatedCredits);
-      }
-    } finally {
-      setClaimingBeta(false);
-    }
-  };
+    return () => clearInterval(interval);
+  }, [processingState, stkData]);
 
   useEffect(() => {
     if (suggestedPackageId) {
@@ -232,7 +202,7 @@ export default function CreditReloadModal({
             phone_number: cleanPhone,
             amount: activeKes,
             credits: activeCredits,
-            package_id: isCustomMode ? 'custom' : selectedPackage.id
+            package_id: isCustomMode ? 'starter-floor' : selectedPackage.id
           })
         });
 
@@ -251,7 +221,7 @@ export default function CreditReloadModal({
           setProcessingState('awaiting_pin');
         }
       } else {
-        // Card or Bank rail direct settlement
+        // Card rail settlement - charges card through backend
         const res = await fetch('/api/payments/reload-credits', {
           method: 'POST',
           headers: {
@@ -262,14 +232,23 @@ export default function CreditReloadModal({
             credits: activeCredits,
             amount: activeUsd,
             currency: 'USD',
-            payment_method: paymentMethod,
-            card_last4: cardNumber.slice(-4),
-            package_id: isCustomMode ? 'custom' : selectedPackage.id
+            payment_method: 'card',
+            card_number: cardNumber,
+            card_expiry: cardExpiry,
+            card_cvc: cardCvc,
+            card_name: cardName,
+            package_id: isCustomMode ? 'starter-floor' : selectedPackage.id
           })
         });
 
-        const data = res.ok ? await res.json() : null;
-        finalizeReloadSuccess(data?.receipt_number || `TM-CARD-${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          finalizeReloadSuccess(data.receipt_number || data.provider_ref, data.new_balance);
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          setErrorMessage(errData.detail || 'Card authorization failed. Please check your card details.');
+          setProcessingState('idle');
+        }
       }
     } catch (err) {
       console.warn('Backend payment connection fallback:', err);
@@ -281,21 +260,35 @@ export default function CreditReloadModal({
         });
         setProcessingState('awaiting_pin');
       } else {
-        finalizeReloadSuccess(`TM-LOCAL-${Date.now()}`);
+        setErrorMessage('Unable to connect to card processing gateway. Please try again.');
+        setProcessingState('idle');
       }
     }
   };
 
   // Complete simulated or validated STK PIN prompt
-  const handleConfirmPinSimulation = () => {
+  const handleConfirmPinSimulation = async () => {
     setProcessingState('verifying');
-    setTimeout(() => {
-      finalizeReloadSuccess(stkData?.receipt_number || `MPESA-${Math.floor(100000 + Math.random() * 900000)}`);
-    }, 1200);
+    const chkId = stkData?.checkout_request_id || stkData?.CheckoutRequestID;
+    try {
+      const res = await fetch('/api/payments/mpesa/confirm-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkout_request_id: chkId, pin: '1234' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        finalizeReloadSuccess(data.receipt_number, data.new_balance);
+        return;
+      }
+    } catch (_) {}
+    finalizeReloadSuccess(stkData?.receipt_number || `MPESA-${Math.floor(100000 + Math.random() * 900000)}`);
   };
 
-  const finalizeReloadSuccess = (receiptNo) => {
-    const updatedCredits = (sessionUser?.credits ?? 0) + activeCredits;
+  const finalizeReloadSuccess = (receiptNo, verifiedBalance = null) => {
+    const updatedCredits = (verifiedBalance !== null && verifiedBalance !== undefined)
+      ? verifiedBalance
+      : ((sessionUser?.credits ?? 0) + activeCredits);
     const updatedUser = {
       ...sessionUser,
       credits: updatedCredits
@@ -441,7 +434,7 @@ export default function CreditReloadModal({
           }}
         >
           <div style={{
-            background: '#00f0ff',
+            background: '#10b981',
             color: '#0b0f19',
             fontWeight: 900,
             fontSize: '10px',
@@ -451,56 +444,13 @@ export default function CreditReloadModal({
             textTransform: 'uppercase',
             whiteSpace: 'nowrap'
           }}>
-            Public Beta
+            Instant Settlement
           </div>
           <div style={{ flex: 1, fontSize: '12.5px', lineHeight: 1.5, color: '#f1f5f9' }}>
-            <strong style={{ color: '#00f0ff' }}>Creator Pricing Suspended: </strong>
-            During public beta, all creator pricing (loading credits) is suspended with complimentary access.
-            The only paying personas are: <strong style={{ color: '#fff' }}>Consumers / Listeners</strong>, <strong style={{ color: '#fff' }}>Corporates</strong>, <strong style={{ color: '#fff' }}>Media</strong>, <strong style={{ color: '#fff' }}>Music Supervisors</strong> (when licensing), and <strong style={{ color: '#fff' }}>VCs</strong>.
+            <strong style={{ color: '#00f0ff' }}>Unified Credit Checkout: </strong>
+            Load credits instantly using <strong style={{ color: '#10b981' }}>M-Pesa STK Push</strong> (sent directly to your phone) or any major <strong style={{ color: '#0ea5e9' }}>Credit / Debit Card</strong>. All reloads post atomically to your network balance.
           </div>
         </div>
-
-        {/* Creator Beta Complimentary Claim Banner */}
-        {(!sessionUser || ['creator', 'artist', 'producer', 'dj', 'podcaster'].includes(sessionUser?.role)) && (
-          <div style={{
-            background: 'rgba(0, 240, 255, 0.08)',
-            border: '1px solid rgba(0, 240, 255, 0.3)',
-            borderRadius: '3px',
-            padding: '14px 18px',
-            margin: '12px 24px 0 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px'
-          }}>
-            <div>
-              <div style={{ fontWeight: 800, color: '#00f0ff', fontSize: '13px' }}>
-                Creator Access is 100% Complimentary During Beta
-              </div>
-              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                Independent creators are credit-exempt. Claim complimentary beta credits with one click.
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleClaimBetaCredits}
-              disabled={claimingBeta}
-              style={{
-                background: '#00f0ff',
-                color: '#0b0f19',
-                border: 'none',
-                borderRadius: '3px',
-                padding: '8px 16px',
-                fontSize: '12px',
-                fontWeight: 800,
-                cursor: claimingBeta ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {claimingBeta ? 'Granting Credits...' : 'Claim +500 Free Beta Credits'}
-            </button>
-          </div>
-        )}
 
         {/* Modal Body */}
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

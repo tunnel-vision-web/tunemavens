@@ -20,32 +20,37 @@ foreach ($port in $targetPorts) {
 
 Start-Sleep -Seconds 2
 
+$logDir = "c:\BOCM\Apps\tunemavens\logs"
+if (!(Test-Path $logDir)) {
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+}
+
 Write-Host "`nStarting all 5 TuneMavens ecosystem services..." -ForegroundColor Cyan
 
 $procList = @()
 
 # 1. FastAPI Backend (Port 8001)
-$pBackend = Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--reload" -WorkingDirectory "c:\BOCM\Apps\tunemavens" -WindowStyle Hidden -PassThru
+$pBackend = Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--host", "0.0.0.0", "--reload" -WorkingDirectory "c:\BOCM\Apps\tunemavens" -RedirectStandardOutput "$logDir\backend.log" -RedirectStandardError "$logDir\backend_err.log" -PassThru
 $procList += $pBackend
 Write-Host "  [+] Spawned FastAPI Backend (PID: $($pBackend.Id))" -ForegroundColor Gray
 
 # 2. Portal (Port 3000)
-$pPortal = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\portal" -WindowStyle Hidden -PassThru
+$pPortal = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\portal" -RedirectStandardOutput "$logDir\portal.log" -RedirectStandardError "$logDir\portal_err.log" -PassThru
 $procList += $pPortal
 Write-Host "  [+] Spawned Portal (PID: $($pPortal.Id))" -ForegroundColor Gray
 
 # 3. TuneStream (Port 3001)
-$pTuneStream = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\tunestream" -WindowStyle Hidden -PassThru
+$pTuneStream = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\tunestream" -RedirectStandardOutput "$logDir\tunestream.log" -RedirectStandardError "$logDir\tunestream_err.log" -PassThru
 $procList += $pTuneStream
 Write-Host "  [+] Spawned TuneStream (PID: $($pTuneStream.Id))" -ForegroundColor Gray
 
 # 4. SyncMavens (Port 3002)
-$pSyncMavens = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\syncmavens" -WindowStyle Hidden -PassThru
+$pSyncMavens = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\syncmavens" -RedirectStandardOutput "$logDir\syncmavens.log" -RedirectStandardError "$logDir\syncmavens_err.log" -PassThru
 $procList += $pSyncMavens
 Write-Host "  [+] Spawned SyncMavens (PID: $($pSyncMavens.Id))" -ForegroundColor Gray
 
 # 5. Express API (Port 5000)
-$pApi = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\api" -WindowStyle Hidden -PassThru
+$pApi = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\api" -RedirectStandardOutput "$logDir\api.log" -RedirectStandardError "$logDir\api_err.log" -PassThru
 $procList += $pApi
 Write-Host "  [+] Spawned Express API (PID: $($pApi.Id))" -ForegroundColor Gray
 
@@ -59,7 +64,7 @@ $services = @(
     @{ Name = "FastAPI Backend"; Port = 8001; Url = "http://localhost:8001" }
 )
 
-$timeoutSeconds = 20
+$timeoutSeconds = 25
 $elapsed = 0
 $allReady = $false
 
@@ -96,6 +101,8 @@ foreach ($svc in $services) {
 }
 
 if (-not $NoWait) {
-    $trackedPids = $procList | ForEach-Object { $_.Id }
-    Wait-Process -Id $trackedPids -ErrorAction SilentlyContinue
+    Write-Host "`nTuneMavens supervisor is active. Keeping services alive..." -ForegroundColor Cyan
+    while ($true) {
+        Start-Sleep -Seconds 60
+    }
 }

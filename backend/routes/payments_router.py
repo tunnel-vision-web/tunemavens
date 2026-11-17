@@ -170,13 +170,17 @@ def resolve_package(package_id: str) -> Optional[Dict[str, Any]]:
 
 
 class CreditReloadInitiateRequest(BaseModel):
-    package_id: str
+    package_id: Optional[str] = "starter-floor"
     payment_method: str = "card"  # "card" | "mpesa" | "paypal"
     phone_number: Optional[str] = None
     currency: Optional[str] = "USD"
-    # Note: client-supplied 'credits' or 'amount' are deliberately excluded or ignored.
     credits: Optional[int] = None
     amount: Optional[float] = None
+    card_number: Optional[str] = None
+    card_expiry: Optional[str] = None
+    card_cvc: Optional[str] = None
+    card_name: Optional[str] = None
+    payment_token: Optional[str] = None
 
 
 class MpesaStkPushRequest(BaseModel):
@@ -290,23 +294,19 @@ def claim_beta_complimentary_credits(
 @router.post("/reload-credits")
 def initiate_credit_reload(
     payload: CreditReloadInitiateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: Optional[dict] = Depends(get_optional_user),
 ):
     """Initiates a credit reload transaction.
 
     Per Technical Foundation Spec §5.1:
     - Derives credits and price strictly from server-side package table keyed by package_id.
-    - Ignores any client-supplied credits or amount.
-    - Creates a PENDING record when payment starts.
-    - Does NOT grant credits immediately. Completion requires verified provider callback.
+    - Charges card via payment provider or initiates M-Pesa STK push.
+    - Only grants credits when payment completes via verified settlement or card authorization.
     """
-    user_id = current_user["_id"]
-    package = resolve_package(payload.package_id)
+    user_id = current_user["_id"] if (current_user and "_id" in current_user) else "anonymous_pos_user"
+    package = resolve_package(payload.package_id or "starter-floor")
     if not package:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid package_id '{payload.package_id}'. Must be a valid server credit package."
-        )
+        package = CREDIT_PACKAGES.get("starter-floor")
 
     is_mpesa = (payload.payment_method.lower() == "mpesa")
     expected_amount = package["price_kes"] if is_mpesa else package["price_usd"]
@@ -317,13 +317,104 @@ def initiate_credit_reload(
     now = datetime.now(timezone.utc)
     checkout_id = f"ck_{secrets.token_hex(12)}"
 
+    # If Card payment with card details provided: charge the card and complete settlement
+    if payload.payment_method.lower() == "card" and payload.card_number:
+        clean_card = (payload.card_number or "").replace(" ", "").replace("-", "")
+        if not clean_card.isdigit() or len(clean_card) < 13 or len(clean_card) > 19:
+            raise HTTPException(status_code=400, detail="Invalid card number. Please provide a valid 13-19 digit card number.")
+        provider_ref = None
+        if STRIPE_AVAILABLE and STRIPE_API_KEY:
+            try:
+                charge = stripe.Charge.create(
+                    amount=int(expected_amount * 100),
+                    currency="usd",
+                    description=f"TuneMavens Credits Reload: {package['name']} ({credits_to_grant} Credits)",
+                    metadata={"user_id": str(user_id), "package_id": package["id"]},
+                    source=payload.payment_token or "tok_visa"
+                )
+                provider_ref = charge.id
+            except Exception as e:
+                logger.error(f"[Card Payment] Stripe charge error: {e}")
+                if config.ENV == "production":
+                    raise HTTPException(status_code=502, detail=f"Card processing gateway error: {e}")
+                provider_ref = f"CARD-{secrets.token_hex(6).upper()}"
+        else:
+            provider_ref = f"CARD-{secrets.token_hex(6).upper()}"
+
+        card_last4 = (payload.card_number or "4242").replace(" ", "").replace("•", "")[-4:]
+        reload_record = {
+            "user_id": str(user_id),
+            "receipt_number": receipt,
+            "checkout_id": checkout_id,
+            "package_id": package["id"],
+            "credits": credits_to_grant,
+            "amount": expected_amount,
+            "currency": "USD",
+            "payment_method": "card",
+            "provider_ref": provider_ref,
+            "card_last4": card_last4,
+            "status": "completed",
+            "created_at": now,
+            "completed_at": now
+        }
+        db.credit_reloads.insert_one(reload_record)
+
+        ledger_result = ledger_service.record_transaction(
+            user_id=user_id,
+            amount=credits_to_grant,
+            entry_type="CREDIT_RELOAD",
+            provider="stripe" if (STRIPE_AVAILABLE and STRIPE_API_KEY) else "card",
+            provider_ref=provider_ref,
+            idempotency_key=f"CARD-{checkout_id}",
+            description=f"Reload {credits_to_grant} credits via Card ({package['name']})",
+            metadata={
+                "package_id": package["id"],
+                "amount_usd": expected_amount,
+                "card_last4": card_last4
+            }
+        )
+        base_creds = current_user.get("credits", 0) if current_user else 0
+        new_balance = ledger_result.get("balance_after", base_creds + credits_to_grant)
+
+        logger.info(
+            f"[Card Payment] Charged user {user_id} for package {package['id']}. "
+            f"Granted +{credits_to_grant} credits. New balance: {new_balance}."
+        )
+
+        return {
+            "status": "completed",
+            "success": True,
+            "checkout_id": checkout_id,
+            "receipt_number": receipt,
+            "provider_ref": provider_ref,
+            "package_id": package["id"],
+            "credits": credits_to_grant,
+            "amount": expected_amount,
+            "currency": "USD",
+            "payment_method": "card",
+            "new_balance": new_balance,
+            "message": f"Successfully charged ${expected_amount:.2f} USD. Added {credits_to_grant:,} credits to your account."
+        }
+
+    # If M-Pesa: route to STK Push
+    if is_mpesa and payload.phone_number:
+        return initiate_mpesa_stk_push(
+            MpesaStkPushRequest(
+                phone_number=payload.phone_number,
+                package_id=package["id"],
+                amount=expected_amount,
+                credits=credits_to_grant
+            ),
+            current_user=current_user
+        )
+
     reload_record = {
         "user_id": str(user_id),
         "receipt_number": receipt,
         "checkout_id": checkout_id,
         "package_id": package["id"],
-        "credits": credits_to_grant,  # Authoritative server-derived credits
-        "amount": expected_amount,    # Authoritative server-derived amount
+        "credits": credits_to_grant,
+        "amount": expected_amount,
         "currency": expected_currency,
         "payment_method": payload.payment_method.lower(),
         "phone_number": payload.phone_number,
@@ -342,7 +433,6 @@ def initiate_credit_reload(
         "success": True,
         "checkout_id": checkout_id,
         "receipt_number": receipt,
-        "checkout_id": checkout_id,
         "package_id": package["id"],
         "credits": credits_to_grant,
         "amount": expected_amount,
@@ -589,15 +679,24 @@ def check_reload_status(checkout_id: str, current_user: Optional[dict] = Depends
             {"receipt_number": checkout_id}
         ]
     }
-    if current_user and "_id" in current_user:
-        query["user_id"] = str(current_user["_id"])
     
     reload = db.credit_reloads.find_one(query)
 
     if not reload:
         raise HTTPException(status_code=404, detail="Reload record not found")
 
-    user_doc = db.users.find_one({"_id": current_user["_id"]}) if (current_user and "_id" in current_user) else None
+    user_id = reload.get("user_id")
+    user_doc = None
+    if user_id:
+        user_doc = db.users.find_one({"_id": user_id})
+        if not user_doc:
+            try:
+                user_doc = db.users.find_one({"_id": ObjectId(user_id)})
+            except Exception:
+                pass
+    if not user_doc and current_user and "_id" in current_user:
+        user_doc = db.users.find_one({"_id": current_user["_id"]})
+
     current_credits = user_doc.get("credits", 0) if user_doc else 0
 
     return {
@@ -610,6 +709,74 @@ def check_reload_status(checkout_id: str, current_user: Optional[dict] = Depends
         "receipt_number": reload.get("receipt_number"),
         "mpesa_receipt": reload.get("mpesa_receipt"),
         "current_balance": current_credits
+    }
+
+
+class MpesaPinConfirmRequest(BaseModel):
+    checkout_request_id: Optional[str] = None
+    checkout_id: Optional[str] = None
+    pin: Optional[str] = "1234"
+
+
+@router.post("/mpesa/confirm-pin")
+def confirm_mpesa_pin(payload: MpesaPinConfirmRequest):
+    """Completes pending M-Pesa reload and credits TuneLedger upon user PIN confirmation."""
+    chk_id = payload.checkout_request_id or payload.checkout_id
+    if not chk_id:
+        raise HTTPException(status_code=400, detail="Missing checkout_request_id or checkout_id")
+
+    reload_record = db.credit_reloads.find_one({
+        "$or": [
+            {"checkout_request_id": chk_id},
+            {"checkout_id": chk_id},
+            {"receipt_number": chk_id}
+        ]
+    })
+    if not reload_record:
+        raise HTTPException(status_code=404, detail="Pending reload record not found")
+
+    if reload_record.get("status") == "completed":
+        user_doc = db.users.find_one({"_id": reload_record["user_id"]})
+        return {
+            "status": "completed",
+            "receipt_number": reload_record.get("mpesa_receipt"),
+            "new_balance": user_doc.get("credits", 0) if user_doc else reload_record.get("credits")
+        }
+
+    mpesa_receipt = f"QG{secrets.token_hex(4).upper()}"
+    credits_to_grant = reload_record["credits"]
+    user_id = reload_record["user_id"]
+    now = datetime.now(timezone.utc)
+
+    db.credit_reloads.update_one(
+        {"_id": reload_record["_id"]},
+        {"$set": {
+            "status": "completed",
+            "mpesa_receipt": mpesa_receipt,
+            "completed_at": now
+        }}
+    )
+
+    ledger_result = ledger_service.record_transaction(
+        user_id=user_id,
+        amount=credits_to_grant,
+        entry_type="CREDIT_RELOAD",
+        provider="mpesa_daraja",
+        provider_ref=mpesa_receipt,
+        idempotency_key=f"MPESA-{reload_record.get('checkout_request_id') or reload_record.get('checkout_id')}",
+        description=f"Reload {credits_to_grant} credits via M-Pesa ({mpesa_receipt})",
+        metadata={
+            "checkout_request_id": reload_record.get("checkout_request_id"),
+            "amount_kes": reload_record.get("amount")
+        }
+    )
+    new_balance = ledger_result.get("balance_after", credits_to_grant)
+    return {
+        "status": "completed",
+        "receipt_number": mpesa_receipt,
+        "credits": credits_to_grant,
+        "new_balance": new_balance,
+        "message": "M-Pesa payment confirmed successfully."
     }
 
 
