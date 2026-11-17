@@ -334,6 +334,8 @@ function AppContent() {
   const [progress, setProgress] = useState(0);
   const [titleHovered, setTitleHovered] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('syncmavens_logged_in') === 'true' || !!sessionStorage.getItem('syncmavens_session'));
   const [userRole, setUserRole] = useState(() => localStorage.getItem('syncmavens_user_role') || 'creator');
   const [userName, setUserName] = useState(() => localStorage.getItem('syncmavens_user_name') || 'Creator Pro');
@@ -341,6 +343,20 @@ function AppContent() {
 
   const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
   const isAuthModalActive = location.pathname === '/login' || location.pathname === '/register';
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileNavOpen(false);
+    setOpenDropdown(null);
+  }, [location.pathname]);
+
+  // Close mobile drawer if viewport is resized back to desktop
+  useEffect(() => {
+    if (!isTabletOrMobile && mobileNavOpen) {
+      setMobileNavOpen(false);
+      setOpenDropdown(null);
+    }
+  }, [isTabletOrMobile, mobileNavOpen]);
 
   useEffect(() => {
     if (location.pathname !== '/login' && location.pathname !== '/register') {
@@ -2335,7 +2351,7 @@ function AppContent() {
       <header className={`navbar ${scrolled ? 'scrolled' : ''}`}>
         <div className="nav-inner-container">
           <div className="nav-logo-container-role">
-            <Link to="/" className="nav-logo-link">
+            <Link to="/" className="nav-logo-link" onClick={() => setMobileNavOpen(false)}>
               <img 
                 src={smLogo} 
                 alt="SyncMavens Logo" 
@@ -2351,109 +2367,183 @@ function AppContent() {
             </a>
           </div>
 
+          {/* Mobile Menu Button */}
+          <button 
+            type="button" 
+            className="mobile-toggle" 
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {mobileNavOpen ? <RiCloseFill size={26} /> : <RiMenuFill size={26} />}
+          </button>
+
           {/* Consolidated Dropdowns menu to fit width */}
-          <ul className="nav-links">
-            <li className="nav-dropdown-wrapper">
-              <span className="nav-link dropdown-trigger">Distribute</span>
-              <div className="nav-dropdown-menu">
-                <Link to="/distribution" className="dropdown-item">
+          <ul className={`nav-links ${mobileNavOpen ? 'mobile-open' : ''}`}>
+            <li className={`nav-dropdown-wrapper ${openDropdown === 'distribute' ? 'dropdown-open' : ''}`}>
+              <button 
+                type="button" 
+                className="nav-link dropdown-trigger"
+                onClick={() => setOpenDropdown(openDropdown === 'distribute' ? null : 'distribute')}
+              >
+                Distribute
+              </button>
+              <div className={`nav-dropdown-menu ${openDropdown === 'distribute' ? 'mobile-expanded' : ''}`}>
+                <Link to="/distribution" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Digital Release Ingestion</strong>
                   <span>Upload and distribute singles, EPs, and albums worldwide.</span>
                 </Link>
-                <Link to="/global-dsp" className="dropdown-item">
+                <Link to="/global-dsp" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Global DSP Distribution</strong>
                   <span>Push your catalog to Spotify, Apple Music, and Amazon.</span>
                 </Link>
-                <Link to="/creator-dashboard" className="dropdown-item">
+                <Link to="/creator-dashboard" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Creator Dashboard</strong>
                   <span>Track your streams, analytics, and payouts in real-time.</span>
                 </Link>
               </div>
             </li>
 
-            <li className="nav-dropdown-wrapper">
-              <span className="nav-link dropdown-trigger">Monetize</span>
-              <div className="nav-dropdown-menu">
-                <Link to="/opportunities" className="dropdown-item">
+            <li className={`nav-dropdown-wrapper ${openDropdown === 'monetize' ? 'dropdown-open' : ''}`}>
+              <button 
+                type="button" 
+                className="nav-link dropdown-trigger"
+                onClick={() => setOpenDropdown(openDropdown === 'monetize' ? null : 'monetize')}
+              >
+                Monetize
+              </button>
+              <div className={`nav-dropdown-menu ${openDropdown === 'monetize' ? 'mobile-expanded' : ''}`}>
+                <Link to="/opportunities" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Sync Opportunities</strong>
                   <span>Browse active briefs from Netflix, HBO, and EA Sports.</span>
                 </Link>
-                <Link to="/analyzer" className="dropdown-item">
+                <Link to="/analyzer" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>AI Match Simulator</strong>
                   <span>Check your compatibility score against supervisor projects.</span>
                 </Link>
-                <Link to="/sync-ready" className="dropdown-item">
+                <Link to="/sync-ready" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Sync-Ready Catalog</strong>
                   <span>Browse and preview our active registry of licensable music.</span>
                 </Link>
-                <Link to="/publishing" className="dropdown-item">
+                <Link to="/publishing" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Music Publishing</strong>
                   <span>Register with PROs and collect 100% of your composer royalties.</span>
                 </Link>
-                <Link to="/youtube-id" className="dropdown-item">
+                <Link to="/youtube-id" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>YouTube Content ID</strong>
                   <span>Monetize user videos containing your music on YouTube & TikTok.</span>
                 </Link>
               </div>
             </li>
 
-            <li className="nav-dropdown-wrapper">
-              <span className="nav-link dropdown-trigger">Promote</span>
-              <div className="nav-dropdown-menu">
-                <Link to="/smartlinks" className="dropdown-item">
+            <li className={`nav-dropdown-wrapper ${openDropdown === 'promote' ? 'dropdown-open' : ''}`}>
+              <button 
+                type="button" 
+                className="nav-link dropdown-trigger"
+                onClick={() => setOpenDropdown(openDropdown === 'promote' ? null : 'promote')}
+              >
+                Promote
+              </button>
+              <div className={`nav-dropdown-menu ${openDropdown === 'promote' ? 'mobile-expanded' : ''}`}>
+                <Link to="/smartlinks" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>SmartLinks Generator</strong>
                   <span>Create track smartlinks and pre-save campaigns for Spotify.</span>
                 </Link>
-                <Link to="/playlist-submissions" className="dropdown-item">
+                <Link to="/playlist-submissions" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Playlist Submissions</strong>
                   <span>Submit your releases to active curators and radio pools.</span>
                 </Link>
-                <Link to="/press-releases" className="dropdown-item">
+                <Link to="/press-releases" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Press Release Service</strong>
                   <span>Draft and distribute professional EPKs and announcements.</span>
                 </Link>
               </div>
             </li>
 
-            <li className="nav-dropdown-wrapper">
-              <span className="nav-link dropdown-trigger">Learn</span>
-              <div className="nav-dropdown-menu">
-                <Link to="/calculator" className="dropdown-item">
+            <li className={`nav-dropdown-wrapper ${openDropdown === 'learn' ? 'dropdown-open' : ''}`}>
+              <button 
+                type="button" 
+                className="nav-link dropdown-trigger"
+                onClick={() => setOpenDropdown(openDropdown === 'learn' ? null : 'learn')}
+              >
+                Learn
+              </button>
+              <div className={`nav-dropdown-menu ${openDropdown === 'learn' ? 'mobile-expanded' : ''}`}>
+                <Link to="/calculator" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Waterfall Calculator</strong>
                   <span>Simulate agency payouts and split cascades.</span>
                 </Link>
-                <Link to="/pricing" className="dropdown-item">
+                <Link to="/pricing" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Ecosystem Pricing</strong>
                   <span>View non-expiring credit packages and payment protocols.</span>
                 </Link>
-                <Link to="/success" className="dropdown-item">
+                <Link to="/success" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Success Stories</strong>
                   <span>See independent creators who secured sync deals.</span>
                 </Link>
-                <Link to="/faq" className="dropdown-item">
+                <Link to="/faq" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Sync Licensing FAQs</strong>
                   <span>Learn about composer shares and mechanical royalties.</span>
                 </Link>
-                <Link to="/blog" className="dropdown-item">
+                <Link to="/blog" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Artist Advice Blog</strong>
                   <span>Tips on collecting mechanicals and performance royalties.</span>
                 </Link>
               </div>
             </li>
 
-            <li className="nav-dropdown-wrapper">
-              <span className="nav-link dropdown-trigger">Apps</span>
-              <div className="nav-dropdown-menu">
-                <Link to="/apps" className="dropdown-item">
+            <li className={`nav-dropdown-wrapper ${openDropdown === 'apps' ? 'dropdown-open' : ''}`}>
+              <button 
+                type="button" 
+                className="nav-link dropdown-trigger"
+                onClick={() => setOpenDropdown(openDropdown === 'apps' ? null : 'apps')}
+              >
+                Apps
+              </button>
+              <div className={`nav-dropdown-menu ${openDropdown === 'apps' ? 'mobile-expanded' : ''}`}>
+                <Link to="/apps" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Dashboard Apps</strong>
                   <span>Consolidated web portals for distribution and marketing.</span>
                 </Link>
-                <Link to="/native-apps" className="dropdown-item">
+                <Link to="/native-apps" className="dropdown-item" onClick={() => { setMobileNavOpen(false); setOpenDropdown(null); }}>
                   <strong>Native Apps</strong>
                   <span>Standalone mobile companions for split sheets and live pay.</span>
                 </Link>
               </div>
             </li>
+
+            {/* Mobile Region Switcher & CTAs inside scroll flow */}
+            {mobileNavOpen && (
+              <li className="mobile-nav-actions">
+                <div className="mobile-switcher-wrapper">
+                  <RegionSwitcher />
+                </div>
+                <div className="mobile-nav-ctas">
+                  {isLoggedIn ? (
+                    <button 
+                      onClick={() => { setMobileNavOpen(false); navigate('/dashboard'); }} 
+                      className="btn-primary mobile-cta-btn"
+                    >
+                      Dashboard
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => { setMobileNavOpen(false); navigate('/login'); }} 
+                        className="btn-secondary mobile-cta-btn"
+                      >
+                        Log In
+                      </button>
+                      <button 
+                        onClick={() => { setMobileNavOpen(false); navigate('/register'); }} 
+                        className="btn-primary mobile-cta-btn"
+                      >
+                        Start Free
+                      </button>
+                    </>
+                  )}
+                </div>
+              </li>
+            )}
           </ul>
 
           {/* Desktop Actions */}
