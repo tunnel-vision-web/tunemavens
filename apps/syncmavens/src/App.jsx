@@ -7,7 +7,7 @@ import {
   RiArrowLeftSFill, RiArrowRightSFill, RiFileListLine, RiQuestionLine,
   RiNetflixFill, RiMovieLine, RiVolumeUpFill, RiMusicFill, RiUserFill,
   RiPlayFill, RiPauseFill, RiAlertLine, RiCheckLine, RiLoader4Line, RiMenuFill, RiCloseFill,
-  RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiLogoutBoxRFill, RiCoinsFill,
+  RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiShieldCheckFill, RiLogoutBoxRFill, RiCoinsFill,
   RiFileTextFill, RiMenuUnfoldLine, RiMenuFoldLine, RiHomeFill
 } from 'react-icons/ri';
 import { 
@@ -1469,54 +1469,176 @@ function AppContent() {
             
             {/* Row 2: Menu items & action icons toolbar */}
             <div className="dashboard-topbar-menu-items-row dashboard-topbar-actions">
-              {/* Unified Credits Badge & Reload Trigger on Topbar */}
+              {/* Unified Credits Badge & Persona Permissions during Beta */}
               {(() => {
-                const isAffiliate = userRole === 'affiliate' || activeTab === 'affiliates';
-                const creditsCount = userCredits ?? 0;
+                if (userRole === 'admin') {
+                  return (
+                    <div
+                      className="topbar-credits-btn"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: 'rgba(14, 165, 233, 0.12)',
+                        border: '1px solid rgba(14, 165, 233, 0.35)',
+                        color: '#38bdf8',
+                        padding: '4px 10px',
+                        borderRadius: '3px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'default'
+                      }}
+                      title="Admin Console: Administrators are 100% exempt from credit fees during Beta."
+                      data-tooltip="Admin Console · Credit-Exempt"
+                    >
+                      <RiShieldCheckFill size={15} style={{ color: '#38bdf8' }} />
+                      <span>Admin · Credit-Exempt</span>
+                    </div>
+                  );
+                }
+
+                if (userRole === 'supervisor') {
+                  return (
+                    <div
+                      className="topbar-credits-btn"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: 'rgba(236, 72, 153, 0.12)',
+                        border: '1px solid rgba(236, 72, 153, 0.35)',
+                        color: '#ec4899',
+                        padding: '4px 10px',
+                        borderRadius: '3px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'default'
+                      }}
+                      title="Music Supervisors enjoy 100% free Sovereign Access during Beta (Zero credit charges)."
+                      data-tooltip="Music Supervisor · Beta Free Access"
+                    >
+                      <RiShieldCheckFill size={15} style={{ color: '#ec4899' }} />
+                      <span>Supervisor · Free Beta</span>
+                    </div>
+                  );
+                }
+
+                if (userRole === 'vc') {
+                  return (
+                    <div
+                      className="topbar-credits-btn"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: 'rgba(0, 242, 254, 0.1)',
+                        border: '1px solid rgba(0, 242, 254, 0.35)',
+                        color: '#00f2fe',
+                        padding: '4px 10px',
+                        borderRadius: '3px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'default'
+                      }}
+                      title="Tour Capital Institutional LP: Access and allocation are per unique syndicate selection."
+                      data-tooltip="Tour Capital LP · Syndicate Deal Selection"
+                    >
+                      <RiShieldCheckFill size={15} style={{ color: '#00f2fe' }} />
+                      <span>Institutional LP · Syndicate Selection</span>
+                    </div>
+                  );
+                }
+
+                if (userRole === 'corporate') {
+                  return (
+                    <div
+                      className="topbar-credits-btn"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: 'rgba(249, 115, 22, 0.1)',
+                        border: '1px solid rgba(249, 115, 22, 0.35)',
+                        color: '#f97316',
+                        padding: '4px 10px',
+                        borderRadius: '3px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'default'
+                      }}
+                      title="Corporate Brand Account: Invoiced per enterprise ad flight & sponsorship selection."
+                      data-tooltip="Corporate Brand · Custom Ad Selection"
+                    >
+                      <RiShieldCheckFill size={15} style={{ color: '#f97316' }} />
+                      <span>Corporate · Custom Selection</span>
+                    </div>
+                  );
+                }
+
+                if (userRole === 'consumer') {
+                  const creditsCount = userCredits ?? 150;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setIsCreditReloadOpen(true)}
+                      className="topbar-credits-btn"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: creditsCount < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)',
+                        border: creditsCount < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)',
+                        color: creditsCount < 50 ? '#ef4444' : '#10b981',
+                        padding: '4px 10px',
+                        borderRadius: '3px',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title="Click to reload unified listener credits (Zero monthly charges)"
+                      data-tooltip={`${creditsCount.toLocaleString()} Credits · Top Up`}
+                    >
+                      <RiCoinsFill size={15} style={{ color: creditsCount < 50 ? '#ef4444' : '#10b981' }} />
+                      <span>{creditsCount.toLocaleString()} Credits</span>
+                      <span style={{
+                        fontSize: '9.5px',
+                        background: creditsCount < 50 ? '#ef4444' : '#10b981',
+                        color: '#ffffff',
+                        padding: '1px 5px',
+                        borderRadius: '2px',
+                        fontWeight: 800,
+                        textTransform: 'uppercase'
+                      }}>
+                        Top Up
+                      </span>
+                    </button>
+                  );
+                }
+
+                // Default creator/label/studio tools during beta: 100% free access
                 return (
-                  <button
-                    type="button"
-                    onClick={() => setIsCreditReloadOpen(true)}
+                  <div
                     className="topbar-credits-btn"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '6px',
-                      background: isAffiliate
-                        ? 'rgba(34, 211, 238, 0.1)'
-                        : (creditsCount < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)'),
-                      border: isAffiliate
-                        ? '1px solid rgba(34, 211, 238, 0.35)'
-                        : (creditsCount < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)'),
-                      color: isAffiliate
-                        ? '#22d3ee'
-                        : (creditsCount < 50 ? '#ef4444' : '#10b981'),
+                      background: 'rgba(34, 211, 238, 0.08)',
+                      border: '1px solid rgba(34, 211, 238, 0.25)',
+                      color: '#22d3ee',
                       padding: '4px 10px',
                       borderRadius: '3px',
-                      fontSize: '11.5px',
+                      fontSize: '11px',
                       fontWeight: 700,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
+                      cursor: 'default'
                     }}
-                    title={isAffiliate 
-                      ? "Unified Credits: Applies only if you use creator tools (MasterLab AI, Sync briefs, etc.). The Affiliate Dashboard requires 0 credits." 
-                      : "Click to reload unified platform credits (Zero monthly charges)"}
-                    data-tooltip={`${creditsCount.toLocaleString()} Credits · ${isAffiliate ? 'Studio Tools' : 'Top Up'}`}
+                    title="Creator Studio: Zero credit charges during Beta."
+                    data-tooltip="Studio Tools · Beta Free Access"
                   >
-                    <RiCoinsFill size={15} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
-                    <span>{creditsCount.toLocaleString()} Credits</span>
-                    <span style={{
-                      fontSize: '9.5px',
-                      background: isAffiliate ? 'rgba(34, 211, 238, 0.25)' : (creditsCount < 50 ? '#ef4444' : '#10b981'),
-                      color: isAffiliate ? '#22d3ee' : '#ffffff',
-                      padding: '1px 5px',
-                      borderRadius: '2px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase'
-                    }}>
-                      {isAffiliate ? 'Studio' : 'Top Up'}
-                    </span>
-                  </button>
+                    <RiShieldCheckFill size={15} style={{ color: '#22d3ee' }} />
+                    <span>Studio Tools · Beta Free</span>
+                  </div>
                 );
               })()}
 
@@ -1679,33 +1801,58 @@ function AppContent() {
                       </div>
                     </div>
 
-                    <div style={{ padding: '0 16px 12px 16px' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAccountOpen(false);
-                          setIsCreditReloadOpen(true);
-                        }}
-                        style={{
+                    {userRole === 'consumer' ? (
+                      <div style={{ padding: '0 16px 12px 16px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAccountOpen(false);
+                            setIsCreditReloadOpen(true);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            width: '100%',
+                            padding: '7px 12px',
+                            background: '#10b981',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <RiCoinsFill size={14} />
+                          <span>Reload Listener Credits</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '0 16px 12px 16px' }}>
+                        <div style={{
+                          padding: '7px 12px',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          color: '#94a3b8',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          width: '100%',
-                          padding: '7px 12px',
-                          background: '#10b981',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <RiCoinsFill size={14} />
-                        <span>Reload Unified Credits</span>
-                      </button>
-                    </div>
+                          gap: '6px'
+                        }}>
+                          <RiShieldCheckFill size={14} style={{ color: currentRoleObj?.color || '#22d3ee' }} />
+                          <span>
+                            {userRole === 'supervisor' ? 'Music Supervisor · Beta Free Access' :
+                             userRole === 'admin' ? 'Admin Console · Credit-Exempt' :
+                             userRole === 'vc' ? 'Institutional LP · Syndicate Selection' :
+                             userRole === 'corporate' ? 'Corporate Brand · Deal Selection' :
+                             'Beta Studio Access · Zero Charges'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="topbar-dropdown-divider" />
 

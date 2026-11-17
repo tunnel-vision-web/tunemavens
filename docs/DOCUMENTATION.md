@@ -3428,6 +3428,31 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - **Ecosystem Alignment**: Implemented identical single-line responsive layouts across TuneStream (`apps/tunestream`) and TuneMavens Portal (`apps/portal`).
   - **Verification**: Verified via `npm run build:all` with 0 errors across all workspaces.
 
+### 9.44.75 Phase 34: Beta Credit Exemption Persona Rules & KSh 50+ / USD $1+ Direct Tipping Architecture
+
+- **Beta Phase Persona Credit Rules Enforcement (`apps/syncmavens`, `apps/tunestream`, `apps/portal`)**:
+  - **Consumers / Listeners**: The sole persona group charged credits and enabled to load credits during the public beta phase (via unified M-Pesa STK push and Card checkouts).
+  - **Music Supervisors (`role === 'supervisor'`)**: 100% exempt from credit fees during Beta; credit reload triggers replaced with a dedicated `Music Supervisor · Beta Free Access` badge across topbars, account menus, and modal dialogs.
+  - **Administrators (`role === 'admin'`)**: 100% exempt from credit fees with sovereign system-wide access; topbars display `Admin Console · Credit-Exempt`.
+  - **Institutional LPs & Corporate Brands (`role === 'vc'`, `role === 'corporate'`)**: Invoiced and allocated as per their unique syndicate deal and ad flight contract selections, rather than consumer credit packs (`Institutional LP · Syndicate Selection`, `Corporate · Custom Selection`).
+  - **Studio Creators & Labels**: Zero credit charges for catalog management, EPKs, and split cascades during the beta phase (`Studio Tools · Beta Free Access`).
+
+- **Direct Creator Tipping Standardization (`KSh 50+ / USD $1+`)**:
+  - **TuneStream Direct Tips Panel (`apps/tunestream/src/App.jsx`)**:
+    - Initialized starting default tip at 10 TM credits (`USD $1.00+` / `KSh 50+`).
+    - Standardized preset buttons to explicitly display both currencies starting from the platform minimum:
+      - `KSh 50+ ($1+)` [10 TM credits · Platform Min Starting Tip]
+      - `KSh 100+ ($2+)` [20 TM credits]
+      - `KSh 250+ ($5+)` [50 TM credits]
+      - `KSh 500+ ($10+)` [100 TM credits]
+    - Enforced client and API validation preventing any tip submission below the KSh 50+ / USD $1+ threshold.
+    - Updated submit button to explicitly indicate active amount: `✨ Send Tip · KSh {kes}+ / USD ${usd}+ ({credits} TM) to {creator}`.
+  - **TuneStream Hi-Fi Audio Player (`apps/tunestream/src/components/player/HiFiAudioPlayer.jsx`)**:
+    - Integrated direct 1-tap `Tip Artist · KSh 50+ / $1+` button directly into player bar controls beside FLAC stream tier status, dispatching sovereign split cascade micro-royalties.
+  - **Portal Consumer Hub Tips Panel (`apps/portal/src/App.jsx`)**:
+    - Updated `ConsumerTipsPanel` default tip to $1+ (KSh 50+) with preset buttons displaying `KSh 50+ ($1+)`, `KSh 100+ ($2+)`, `KSh 250+ ($5+)`, and `KSh 500+ ($10+)`.
+- **Verification**: Built and verified across all workspaces (`portal`, `syncmavens`, `tunestream`) via `npm run build:all` with 0 errors.
+
 
 
 

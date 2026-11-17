@@ -384,6 +384,48 @@ export default function CreditReloadModal({
           </div>
         </div>
 
+        {/* Beta Exemption Banner for Supervisors & Admins */}
+        {(sessionUser?.role === 'supervisor' || sessionUser?.role === 'admin') && (
+          <div style={{
+            margin: '16px 24px 0 24px',
+            padding: '12px 16px',
+            background: 'rgba(236, 72, 153, 0.1)',
+            border: '1px solid rgba(236, 72, 153, 0.35)',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#f472b6',
+            fontSize: '12.5px'
+          }}>
+            <RiShieldCheckFill size={18} style={{ color: '#ec4899', flexShrink: 0 }} />
+            <div>
+              <strong>{sessionUser?.role === 'supervisor' ? 'Music Supervisor Beta Exemption' : 'Administrator Sovereign Access'}:</strong> During the beta phase, Music Supervisors and Administrators are 100% exempt from credit fees and zero credits will ever be deducted from this account.
+            </div>
+          </div>
+        )}
+
+        {/* Corporate & VC Syndicate Notice */}
+        {(sessionUser?.role === 'vc' || sessionUser?.role === 'corporate') && (
+          <div style={{
+            margin: '16px 24px 0 24px',
+            padding: '12px 16px',
+            background: 'rgba(0, 242, 254, 0.08)',
+            border: '1px solid rgba(0, 242, 254, 0.3)',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#38bdf8',
+            fontSize: '12.5px'
+          }}>
+            <RiShieldCheckFill size={18} style={{ color: '#00f2fe', flexShrink: 0 }} />
+            <div>
+              <strong>{sessionUser?.role === 'vc' ? 'Institutional LP Account' : 'Corporate Brand Account'}:</strong> Billing, allocation, and investments operate as per your unique enterprise contract or syndicate deal selection.
+            </div>
+          </div>
+        )}
+
         {/* Modal Body */}
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Reason Alert (If triggered automatically by insufficient credits for an action) */}

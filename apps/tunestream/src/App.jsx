@@ -1424,7 +1424,7 @@ function TuneStreamLibraryPanel({ tracks = [], onPlayTrack }) {
 function TuneStreamTipsPanel({ userCredits, sessionUser }) {
   const [tipsHistory, setTipsHistory] = useState([]);
   const [selectedCreator, setSelectedCreator] = useState('Ndufo');
-  const [tipCredits, setTipCredits] = useState(50);
+  const [tipCredits, setTipCredits] = useState(10); // Starts at minimum KSh 50+ / USD $1+ (10 TM credits)
   const [tipMessage, setTipMessage] = useState('');
   const [tipSuccessNotice, setTipSuccessNotice] = useState(null);
   const [tipSubmitting, setTipSubmitting] = useState(false);
@@ -1441,9 +1441,15 @@ function TuneStreamTipsPanel({ userCredits, sessionUser }) {
 
   const handleSendDirectTip = (e) => {
     e.preventDefault();
-    if (tipCredits <= 0) return;
+    if (tipCredits < 10) {
+      alert('All creator tipping must start at KSh 50+ or USD $1+ (10 TM credits minimum).');
+      return;
+    }
     setTipSubmitting(true);
     setTipSuccessNotice(null);
+
+    const tipKes = Math.round(tipCredits * 5);
+    const tipUsd = (tipCredits / 10).toFixed(2);
 
     streamApi.tipCreator({
       creator_id: selectedCreator.toLowerCase().replace(/\s+/g, '_'),
@@ -1459,13 +1465,13 @@ function TuneStreamTipsPanel({ userCredits, sessionUser }) {
           creator_name: selectedCreator,
           track: 'Studio Master Stream',
           credits: tipCredits,
-          amount: `$${(tipCredits / 10).toFixed(2)}`,
+          amount: `KSh ${tipKes}+ ($${tipUsd}+)`,
           date: 'Just now',
           status: 'Settled 100% Direct via Split Cascade',
           receipt_token: receipt
         };
         setTipsHistory(prev => [newTipItem, ...prev]);
-        setTipSuccessNotice(`Tip of ${tipCredits} TM ($${(tipCredits / 10).toFixed(2)}) sent to ${selectedCreator}! Receipt: ${receipt}`);
+        setTipSuccessNotice(`Tip of KSh ${tipKes}+ / $${tipUsd}+ (${tipCredits} TM) sent to ${selectedCreator}! Receipt: ${receipt}`);
         setTipMessage('');
       })
       .catch(err => {
@@ -1477,13 +1483,13 @@ function TuneStreamTipsPanel({ userCredits, sessionUser }) {
           creator_name: selectedCreator,
           track: 'Studio Master Stream',
           credits: tipCredits,
-          amount: `$${(tipCredits / 10).toFixed(2)}`,
+          amount: `KSh ${tipKes}+ ($${tipUsd}+)`,
           date: 'Just now',
           status: 'Settled 100% Direct via Split Cascade',
           receipt_token: receipt
         };
         setTipsHistory(prev => [newTipItem, ...prev]);
-        setTipSuccessNotice(`Tip of ${tipCredits} TM ($${(tipCredits / 10).toFixed(2)}) sent to ${selectedCreator}! Receipt: ${receipt}`);
+        setTipSuccessNotice(`Tip of KSh ${tipKes}+ / $${tipUsd}+ (${tipCredits} TM) sent to ${selectedCreator}! Receipt: ${receipt}`);
         setTipMessage('');
       })
       .finally(() => setTipSubmitting(false));
@@ -1500,7 +1506,7 @@ function TuneStreamTipsPanel({ userCredits, sessionUser }) {
               {(userCredits ?? 150).toLocaleString()} <span style={{ fontSize: '16px', color: '#94a3b8' }}>TM Credits</span>
             </h3>
             <p style={{ fontSize: '12px', color: '#10b981', margin: 0 }}>
-              100% Non-expiring TM credits • Zero monthly subscriptions • Instant micro-royalties
+              100% Non-expiring TM credits • Zero monthly subscriptions • Direct micro-royalties
             </p>
           </div>
           <button
@@ -1515,9 +1521,14 @@ function TuneStreamTipsPanel({ userCredits, sessionUser }) {
 
       {/* 1-Tap Direct Creator Tip Box */}
       <div className="dashboard-card" style={{ padding: '24px', background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-        <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: '0 0 12px' }}>1-Tap Direct Creator Tipping Flow</h4>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+          <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>1-Tap Direct Creator Tipping Flow</h4>
+          <span style={{ fontSize: '11px', fontWeight: 800, padding: '3px 8px', borderRadius: '3px', background: 'rgba(34, 211, 238, 0.12)', border: '1px solid rgba(34, 211, 238, 0.3)', color: '#22d3ee' }}>
+            Starts at KSh 50+ / USD $1+
+          </span>
+        </div>
         <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px' }}>
-          Tip favorite creators directly from your wallet with 95% to 100% net payout via sovereign Split Cascade routing.
+          Tip favorite creators directly from your wallet. All tipping starts at a minimum of <strong>KSh 50+ or USD $1+</strong> (10 TM credits) with 95% to 100% net payout via sovereign Split Cascade routing.
         </p>
 
         {tipSuccessNotice && (
@@ -1543,26 +1554,38 @@ function TuneStreamTipsPanel({ userCredits, sessionUser }) {
               </select>
             </div>
             <div>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>TIP AMOUNT</label>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {[50, 100, 250].map(amt => (
+              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
+                TIP AMOUNT <span style={{ color: '#00f2fe', fontSize: '10px' }}>(Min. KSh 50+ / USD $1+)</span>
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '6px' }}>
+                {[
+                  { credits: 10, label: 'KSh 50+ ($1+)', isMin: true },
+                  { credits: 20, label: 'KSh 100+ ($2+)' },
+                  { credits: 50, label: 'KSh 250+ ($5+)' },
+                  { credits: 100, label: 'KSh 500+ ($10+)' }
+                ].map(tier => (
                   <button
-                    key={amt}
+                    key={tier.credits}
                     type="button"
-                    onClick={() => setTipCredits(amt)}
+                    onClick={() => setTipCredits(tier.credits)}
                     style={{
-                      flex: 1,
-                      padding: '8px',
-                      background: tipCredits === amt ? '#00f2fe' : 'rgba(255,255,255,0.05)',
-                      color: tipCredits === amt ? '#060813' : '#fff',
-                      border: '1px solid rgba(255,255,255,0.15)',
+                      padding: '8px 6px',
+                      background: tipCredits === tier.credits ? '#00f2fe' : 'rgba(255,255,255,0.05)',
+                      color: tipCredits === tier.credits ? '#060813' : '#fff',
+                      border: tipCredits === tier.credits ? '1px solid #00f2fe' : (tier.isMin ? '1px solid rgba(0, 242, 254, 0.4)' : '1px solid rgba(255,255,255,0.15)'),
                       borderRadius: '3px',
                       fontSize: '11px',
                       fontWeight: 'bold',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    {amt} TM (${(amt / 10).toFixed(0)})
+                    <span>{tier.label}</span>
+                    <span style={{ fontSize: '9px', opacity: 0.85 }}>{tier.credits} TM</span>
                   </button>
                 ))}
               </div>
@@ -1584,18 +1607,22 @@ function TuneStreamTipsPanel({ userCredits, sessionUser }) {
             type="submit"
             disabled={tipSubmitting}
             style={{
-              padding: '10px 20px',
+              padding: '11px 22px',
               background: '#10b981',
               color: '#fff',
               border: 'none',
               borderRadius: '3px',
-              fontSize: '12px',
+              fontSize: '12.5px',
               fontWeight: '800',
               cursor: 'pointer',
-              alignSelf: 'flex-start'
+              alignSelf: 'flex-start',
+              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
             }}
           >
-            {tipSubmitting ? 'Processing Sovereign Split...' : `✨ Send ${tipCredits} TM ($${(tipCredits / 10).toFixed(2)}) Directly to ${selectedCreator}`}
+            {tipSubmitting ? 'Processing Sovereign Split...' : `✨ Send Tip · KSh ${Math.round(tipCredits * 5)}+ / USD $${(tipCredits / 10).toFixed(2)}+ (${tipCredits} TM) to ${selectedCreator}`}
           </button>
         </form>
       </div>
@@ -4113,8 +4140,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
 
   const handleTipArtist = async () => {
     if (!currentTrack) return;
-    const tipAmount = 50; // 50 credits = $5.00
-    const isCreditExempt = userRole === 'vc' || userRole === 'investor' || userRole === 'admin';
+    const tipAmount = 10; // 10 credits = KSh 50+ / USD $1+ (platform minimum starting tip)
+    const isCreditExempt = userRole === 'vc' || userRole === 'investor' || userRole === 'admin' || userRole === 'supervisor';
     if (!isCreditExempt && userCredits < tipAmount) {
       setIsCreditReloadOpen(true);
       return;
@@ -4141,9 +4168,17 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
       console.warn('Tip API note:', err);
     }
 
-    setTipToast(`Tipped 50 credits ($5.00) to ${currentTrack.artist} — settled into TuneLedger splits!`);
+    setTipToast(`Tipped 10 credits (KSh 50+ / USD $1+) to ${currentTrack.artist} — settled into TuneLedger splits!`);
     setTimeout(() => setTipToast(''), 4500);
   };
+
+  useEffect(() => {
+    const handleQuickTipEvt = () => {
+      handleTipArtist();
+    };
+    window.addEventListener('tunestreamQuickTip', handleQuickTipEvt);
+    return () => window.removeEventListener('tunestreamQuickTip', handleQuickTipEvt);
+  });
 
   // Hydrate likes and library from backend on mount
   useEffect(() => {
@@ -4768,29 +4803,74 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
               <span>24-Bit / 96kHz FLAC</span>
             </button>
 
-            {/* Unified Listener Credits Vault / Institutional LP Exemption */}
-            {userRole === 'vc' || userRole === 'investor' ? (
-              <div 
-                className="topbar-credits-btn"
-                style={{ cursor: 'default', background: 'rgba(0, 242, 254, 0.08)', borderColor: 'rgba(0, 242, 254, 0.35)', color: '#00f2fe' }}
-                title="Institutional LP Syndicate Account: VCs & Investors are 100% exempt from platform credit fees."
-              >
-                <RiShieldCheckFill size={15} color="#00f2fe" />
-                <span className="credits-amount">Institutional LP</span>
-                <span className="credits-reload-action" style={{ background: 'rgba(0, 242, 254, 0.2)', color: '#00f2fe' }}>Exempt</span>
-              </div>
-            ) : (
-              <button 
-                type="button" 
-                className="topbar-credits-btn"
-                onClick={() => setIsCreditReloadOpen(true)}
-                title="Click to top up non-expiring listener credits (Zero monthly subscriptions)"
-              >
-                <RiCoinsFill size={15} color="#00f2fe" />
-                <span className="credits-amount">{(userCredits ?? 150).toLocaleString()} Credits</span>
-                <span className="credits-reload-action">+ Top Up</span>
-              </button>
-            )}
+            {/* Unified Listener Credits Vault / Persona Exemption during Beta */}
+            {(() => {
+              if (userRole === 'admin') {
+                return (
+                  <div 
+                    className="topbar-credits-btn"
+                    style={{ cursor: 'default', background: 'rgba(14, 165, 233, 0.08)', borderColor: 'rgba(14, 165, 233, 0.35)', color: '#38bdf8' }}
+                    title="Admin Console: Administrators are 100% exempt from credit fees during Beta."
+                  >
+                    <RiShieldCheckFill size={15} color="#38bdf8" />
+                    <span className="credits-amount">Admin Console</span>
+                    <span className="credits-reload-action" style={{ background: 'rgba(14, 165, 233, 0.2)', color: '#38bdf8' }}>Exempt</span>
+                  </div>
+                );
+              }
+              if (userRole === 'supervisor') {
+                return (
+                  <div 
+                    className="topbar-credits-btn"
+                    style={{ cursor: 'default', background: 'rgba(236, 72, 153, 0.08)', borderColor: 'rgba(236, 72, 153, 0.35)', color: '#ec4899' }}
+                    title="Music Supervisors enjoy 100% free Sovereign Access during Beta (Zero credit charges)."
+                  >
+                    <RiShieldCheckFill size={15} color="#ec4899" />
+                    <span className="credits-amount">Music Supervisor</span>
+                    <span className="credits-reload-action" style={{ background: 'rgba(236, 72, 153, 0.2)', color: '#ec4899' }}>Free Beta</span>
+                  </div>
+                );
+              }
+              if (userRole === 'vc' || userRole === 'investor') {
+                return (
+                  <div 
+                    className="topbar-credits-btn"
+                    style={{ cursor: 'default', background: 'rgba(0, 242, 254, 0.08)', borderColor: 'rgba(0, 242, 254, 0.35)', color: '#00f2fe' }}
+                    title="Institutional LP Syndicate Account: VCs & Investors are 100% exempt from platform credit fees."
+                  >
+                    <RiShieldCheckFill size={15} color="#00f2fe" />
+                    <span className="credits-amount">Institutional LP</span>
+                    <span className="credits-reload-action" style={{ background: 'rgba(0, 242, 254, 0.2)', color: '#00f2fe' }}>Exempt</span>
+                  </div>
+                );
+              }
+              if (userRole === 'corporate') {
+                return (
+                  <div 
+                    className="topbar-credits-btn"
+                    style={{ cursor: 'default', background: 'rgba(249, 115, 22, 0.08)', borderColor: 'rgba(249, 115, 22, 0.35)', color: '#f97316' }}
+                    title="Corporate Brand Account: Invoiced as per enterprise ad flight selection."
+                  >
+                    <RiShieldCheckFill size={15} color="#f97316" />
+                    <span className="credits-amount">Corporate Brand</span>
+                    <span className="credits-reload-action" style={{ background: 'rgba(249, 115, 22, 0.2)', color: '#f97316' }}>Selection</span>
+                  </div>
+                );
+              }
+              // Consumers & Listeners: fully enabled to load and use credits
+              return (
+                <button 
+                  type="button" 
+                  className="topbar-credits-btn"
+                  onClick={() => setIsCreditReloadOpen(true)}
+                  title="Click to top up non-expiring listener credits (Zero monthly subscriptions)"
+                >
+                  <RiCoinsFill size={15} color="#00f2fe" />
+                  <span className="credits-amount">{(userCredits ?? 150).toLocaleString()} Credits</span>
+                  <span className="credits-reload-action">+ Top Up</span>
+                </button>
+              );
+            })()}
 
             {/* Quick Return to Web Player */}
             <Link
@@ -5132,6 +5212,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
           sessionUser={sessionUser}
           onTogglePlay={(p) => setIsPlaying(typeof p === 'boolean' ? p : !isPlaying)}
           onTrackSelect={(t) => handleTrackSelect(t)}
+          onTipArtist={handleTipArtist}
           onClose={() => {
             setIsPlaying(false);
             setIsPlayerOpen(false);

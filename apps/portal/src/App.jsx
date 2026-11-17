@@ -685,49 +685,102 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                   color: '#00f2fe',
                   cursor: 'default'
                 }}
-                title="Institutional LP · Credit-Exempt"
+                title="Institutional LP · Syndicate Selection (Credit-Exempt)"
                 data-tooltip="Institutional LP · Credit-Exempt"
                 data-testid="topbar-vc-credit-exempt-badge"
                 data-tour="topbar-credits"
               >
                 <RiShieldCheckFill size={16} style={{ color: '#00f2fe' }} />
-                <span className="topbar-item-label">Institutional LP Credit-Exempt</span>
+                <span className="topbar-item-label">Institutional LP · Credit-Exempt</span>
+              </div>
+            );
+          }
+          const isSupervisor = sessionUser?.role === 'supervisor';
+          if (isSupervisor) {
+            return (
+              <div
+                className="topbar-nav-icon-btn topbar-admin-credit-exempt-badge"
+                style={{
+                  background: 'rgba(236, 72, 153, 0.12)',
+                  border: '1px solid rgba(236, 72, 153, 0.35)',
+                  color: '#ec4899',
+                  cursor: 'default'
+                }}
+                title="Music Supervisor · 100% Free Sovereign Access during Beta (Zero Charges)"
+                data-tooltip="Music Supervisor · Beta Free Access"
+                data-testid="topbar-supervisor-credit-exempt-badge"
+                data-tour="topbar-credits"
+              >
+                <RiShieldCheckFill size={16} style={{ color: '#ec4899' }} />
+                <span className="topbar-item-label">Music Supervisor · Beta Free</span>
+              </div>
+            );
+          }
+          const isCorporate = sessionUser?.role === 'corporate';
+          if (isCorporate) {
+            return (
+              <div
+                className="topbar-nav-icon-btn topbar-admin-credit-exempt-badge"
+                style={{
+                  background: 'rgba(249, 115, 22, 0.1)',
+                  border: '1px solid rgba(249, 115, 22, 0.35)',
+                  color: '#f97316',
+                  cursor: 'default'
+                }}
+                title="Corporate Brand · Custom Ad & Sponsorship Selection (Credit-Exempt)"
+                data-tooltip="Corporate Brand · Custom Selection"
+                data-testid="topbar-corporate-credit-exempt-badge"
+                data-tour="topbar-credits"
+              >
+                <RiShieldCheckFill size={16} style={{ color: '#f97316' }} />
+                <span className="topbar-item-label">Corporate · Custom Selection</span>
+              </div>
+            );
+          }
+          const isConsumer = sessionUser?.role === 'consumer';
+          if (!isConsumer) {
+            return (
+              <div
+                className="topbar-nav-icon-btn"
+                style={{
+                  background: 'rgba(34, 211, 238, 0.08)',
+                  border: '1px solid rgba(34, 211, 238, 0.25)',
+                  color: '#22d3ee',
+                  cursor: 'default'
+                }}
+                title="Creator Studio Tools · Free Access during Beta"
+                data-tooltip="Studio Tools · Beta Free Access"
+              >
+                <RiShieldCheckFill size={16} style={{ color: '#22d3ee' }} />
+                <span className="topbar-item-label">Beta Studio Access · Free</span>
               </div>
             );
           }
           const isAffiliate = sessionUser?.role === 'affiliate' || activeTab === 'affiliates';
           const creditsCount = sessionUser?.credits ?? 0;
-          const creditTooltip = isAffiliate
-            ? `${creditsCount.toLocaleString()} Credits · Studio Tools`
-            : `${creditsCount.toLocaleString()} Credits · Top Up`;
+          const creditTooltip = `${creditsCount.toLocaleString()} Credits · Listener Top Up`;
           return (
             <button
               type="button"
               className="topbar-nav-icon-btn"
               onClick={() => {
                 if (typeof onOpenCreditReload === 'function') {
-                  onOpenCreditReload(isAffiliate ? 'Creator Tools Credit Reload' : 'Top-Up Unified Platform Credits');
+                  onOpenCreditReload('Top-Up Unified Platform Credits');
                 }
               }}
               style={{
-                background: isAffiliate
-                  ? 'rgba(34, 211, 238, 0.1)'
-                  : (creditsCount < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)'),
-                border: isAffiliate
-                  ? '1px solid rgba(34, 211, 238, 0.35)'
-                  : (creditsCount < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)'),
-                color: isAffiliate
-                  ? '#22d3ee'
-                  : (creditsCount < 50 ? '#ef4444' : '#10b981')
+                background: creditsCount < 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)',
+                border: creditsCount < 50 ? '1px solid #ef4444' : '1px solid rgba(16, 185, 129, 0.35)',
+                color: creditsCount < 50 ? '#ef4444' : '#10b981'
               }}
               title={creditTooltip}
               data-tooltip={creditTooltip}
               data-testid="topbar-unified-credits-btn"
               data-tour="topbar-credits"
             >
-              <RiCoinsFill size={16} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
+              <RiCoinsFill size={16} style={{ color: creditsCount < 50 ? '#ef4444' : '#10b981' }} />
               <span className="topbar-item-label">
-                {creditsCount.toLocaleString()} Credits {isAffiliate ? 'Studio Tools' : 'Top Up'}
+                {creditsCount.toLocaleString()} Credits Top Up
               </span>
             </button>
           );
@@ -5240,26 +5293,41 @@ function ConsumerLibraryPanel() {
 }
 
 function ConsumerTipsPanel() {
-  const [defaultTip, setDefaultTip] = useState(2);
+  const [defaultTip, setDefaultTip] = useState(1);
+  const tipOptions = [
+    { usd: 1, kes: 50, label: 'KSh 50+ ($1+)', isMin: true },
+    { usd: 2, kes: 100, label: 'KSh 100+ ($2+)' },
+    { usd: 5, kes: 250, label: 'KSh 250+ ($5+)' },
+    { usd: 10, kes: 500, label: 'KSh 500+ ($10+)' }
+  ];
   const history = [
-    { id: 1, to: 'Aisha Okoro', amount: 5, date: '2026-06-28', kind: 'tip' },
-    { id: 2, to: 'Caleb', amount: 2, date: '2026-06-26', kind: 'tip' },
-    { id: 3, to: 'DJ Afro', amount: 12.99, date: '2026-06-20', kind: 'purchase' },
+    { id: 1, to: 'Aisha Okoro', amount: 'KSh 250+ ($5.00+)', date: '2026-06-28', kind: 'tip' },
+    { id: 2, to: 'Caleb', amount: 'KSh 100+ ($2.00+)', date: '2026-06-26', kind: 'tip' },
+    { id: 3, to: 'DJ Afro', amount: '$12.99', date: '2026-06-20', kind: 'purchase' },
   ];
   return (
     <div className="dashboard-card">
-      <PanelHeader title="Tips & Purchases" desc="Configure your default tip amount and review what you've sent through the Compensation Engine." />
+      <PanelHeader title="Tips & Purchases" desc="Configure your default tip amount and review what you've sent through the Compensation Engine. All creator tipping starts at KSh 50+ or USD $1+." />
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <label style={{ fontSize: '12px', color: '#94a3b8' }}>Default tip (USD)</label>
-        {[1, 2, 5, 10].map(v => (
-          <button key={v} onClick={() => setDefaultTip(v)} className={defaultTip === v ? 'btn-primary' : 'plan-btn outline'} style={{ padding: '6px 14px', fontSize: '12px' }} data-testid={`tip-default-${v}`}>${v}</button>
+        <label style={{ fontSize: '12px', color: '#94a3b8' }}>Default Tip Amount (Min. KSh 50+ / USD $1+):</label>
+        {tipOptions.map(opt => (
+          <button 
+            key={opt.usd} 
+            onClick={() => setDefaultTip(opt.usd)} 
+            className={defaultTip === opt.usd ? 'btn-primary' : 'plan-btn outline'} 
+            style={{ padding: '6px 14px', fontSize: '12px' }} 
+            data-testid={`tip-default-${opt.usd}`}
+            title={`Tip preset starting at ${opt.label}`}
+          >
+            {opt.label}
+          </button>
         ))}
       </div>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {history.map(h => (
           <li key={h.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '13px' }}>
             <span style={{ color: '#f1f5f9' }}>{h.kind === 'tip' ? '💸 Tip to' : '🛒 Purchase from'} <strong>{h.to}</strong></span>
-            <span style={{ color: '#94a3b8' }}>${h.amount.toFixed(2)} · {h.date}</span>
+            <span style={{ color: '#94a3b8' }}>{typeof h.amount === 'number' ? `$${h.amount.toFixed(2)}` : h.amount} · {h.date}</span>
           </li>
         ))}
       </ul>

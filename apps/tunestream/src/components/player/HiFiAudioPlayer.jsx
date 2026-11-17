@@ -6,7 +6,7 @@ import {
   RiRepeatLine, RiRepeatOneLine, RiVolumeUpFill,
   RiVolumeMuteFill, RiDragMove2Fill, RiSubtractFill,
   RiAddFill, RiCloseFill, RiDiscFill, RiPlayList2Fill,
-  RiArrowUpSLine, RiArrowDownSLine, RiHeadphoneFill
+  RiArrowUpSLine, RiArrowDownSLine, RiHeadphoneFill, RiCoinsFill
 } from 'react-icons/ri';
 import { normalizeMediaUrl, resolveAudioStreamUrl, getApiBase } from '../../lib/api.js';
 
@@ -19,7 +19,8 @@ export default function HiFiAudioPlayer({
   playlistName = '',
   accentColor = '#00f2fe',
   sessionUser = null,
-  onClose
+  onClose,
+  onTipArtist
 }) {
   const [isPlayerVisible, setIsPlayerVisible] = useState(true);
   const [isPlayerMinimized, setIsPlayerMinimized] = useState(false);
@@ -935,6 +936,33 @@ export default function HiFiAudioPlayer({
                       }}
                     >
                       {simulateZeroCredits ? 'Restore Credits' : 'Test 0-Credit Ad Mode'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof onTipArtist === 'function') {
+                          onTipArtist(currentTrack);
+                        } else {
+                          window.dispatchEvent(new CustomEvent('tunestreamQuickTip', { detail: { track: currentTrack } }));
+                        }
+                      }}
+                      title="Tip this artist directly (Starts at KSh 50+ / USD $1+)"
+                      style={{
+                        background: 'rgba(236, 72, 153, 0.15)',
+                        border: '1px solid rgba(236, 72, 153, 0.4)',
+                        color: '#f43f5e',
+                        borderRadius: '3px',
+                        padding: '1px 7px',
+                        fontSize: '0.62rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <RiCoinsFill size={10} color="#f43f5e" />
+                      <span>Tip Artist · KSh 50+ / $1+</span>
                     </button>
                     <span style={{ fontSize: '0.66rem', color: '#94a3b8' }}>
                       • {safeIndex + 1}/{tracks.length || 1}
