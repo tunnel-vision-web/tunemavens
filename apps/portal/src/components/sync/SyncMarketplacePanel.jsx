@@ -78,10 +78,13 @@ export default function SyncMarketplacePanel({ sessionUser }) {
   const [expandedDetailsId, setExpandedDetailsId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
+  const hasLoadedRef = useRef(false);
+
   // Load live sync data from backend
   useEffect(() => {
     let isMounted = true;
     const loadSyncData = async () => {
+      if (hasLoadedRef.current) return;
       try {
         const { syncApi } = await import('../../lib/api.js');
         const [briefsData, catalogData, pitchesData] = await Promise.all([
@@ -109,13 +112,17 @@ export default function SyncMarketplacePanel({ sessionUser }) {
             setMyPitches(pitchesData);
           }
         }
+        hasLoadedRef.current = true;
       } catch (err) {
-        console.warn('Sync live data fallback:', err);
+        if (!hasLoadedRef.current) {
+          console.info('Sync live API offline, fallback to verified pre-cleared catalog & active briefs.');
+        }
+        hasLoadedRef.current = true;
       }
     };
     loadSyncData();
     return () => { isMounted = false; };
-  }, [sessionUser]);
+  }, [sessionUser?.role, sessionUser?.id]);
 
   const handleUpdatePitchStatus = async (pitchId, newStatus) => {
     try {

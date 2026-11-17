@@ -3264,6 +3264,19 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
 - **Web3 Browser Extension Diagnostics (`contentscript.js`)**:
   - Clarified that `contentscript.js` warnings (`MaxListenersExceededWarning`, `ObjectMultiplex - orphaned data for stream "app-init-liveness"`) originate exclusively from third-party Web3 browser extensions (e.g. MetaMask, Phantom) injected into client tabs. These do not originate from TuneMavens application code or backend services, and have zero impact on application integrity.
 
+### 9.44.63 Phase 22: Eliminating Root Re-render Loops & Network Socket Starvation
+
+- **Eliminated 60 FPS Root Component Re-render Churn (`apps/syncmavens/src/App.jsx` & `App.css`)**:
+  - Identified root cause of `ERR_INSUFFICIENT_RESOURCES`: `requestAnimationFrame` was triggering `setProgress` 60–120 times per second directly on the root `App` component across all routes, causing the entire React tree and child route views to re-render continuously.
+  - Restricted hero slider timers exclusively to the homepage route (`location.pathname === '/'`).
+  - Replaced JavaScript-driven progress bar state updates with hardware-accelerated CSS keyframe animations (`.spb.animating` keyed to `currentSlide`).
+  - Wrapped `sessionUser` in `useMemo` in `App.jsx` and `SyncReadyView` to preserve referential equality.
+
+- **Network Fetch Cascade Prevention (`SyncMarketplacePanel.jsx`)**:
+  - Replaced object literal dependency `[sessionUser]` with primitive scalar dependencies `[sessionUser?.role, sessionUser?.id]`.
+  - Added `hasLoadedRef` guard to eliminate redundant network roundtrips.
+  - Replaced repeating console warnings on offline fallback with a single clean informational notice, preventing console log floods.
+
 
 
 

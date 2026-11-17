@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { 
   RiCompass3Line, RiListCheck, RiFolderMusicLine, RiBriefcaseLine, 
@@ -419,7 +419,7 @@ function AppContent() {
       return false;
     })();
 
-  const sessionUser = {
+  const sessionUser = useMemo(() => ({
     id: 'user_syncmavens_01',
     name: userName,
     email: userEmail,
@@ -428,7 +428,7 @@ function AppContent() {
     phone: '254712345678',
     is_admin: isVerifiedAdmin,
     tier: 'pro'
-  };
+  }), [userName, userEmail, userRole, userCredits, isVerifiedAdmin]);
 
   const currentRoleObj = PERSONA_ROLES.find(r => r.id === userRole) || PERSONA_ROLES[0];
   const isAdminSimulated = Boolean(sessionUser.is_admin && userRole !== 'admin');
@@ -471,13 +471,11 @@ function AppContent() {
 
   const goToSlide = (index) => {
     if (index === currentSlide) return;
-    if (progressRef.current) cancelAnimationFrame(progressRef.current);
     if (timerRef.current) clearTimeout(timerRef.current);
     
     setSlideState('out');
     setTimeout(() => {
       setCurrentSlide(index);
-      setProgress(0);
       setSlideState('in');
     }, 400);
   };
@@ -523,33 +521,20 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    if (isDashboardRoute) return;
-
-    const startTime = Date.now();
-    const updateProgress = () => {
-      const elapsed = Date.now() - startTime;
-      const newProgress = Math.min((elapsed / SLIDE_DURATION) * 100, 100);
-      setProgress(newProgress);
-      if (newProgress < 100) {
-        progressRef.current = requestAnimationFrame(updateProgress);
-      }
-    };
-    progressRef.current = requestAnimationFrame(updateProgress);
+    if (location.pathname !== '/' || isDashboardRoute) return;
 
     timerRef.current = setTimeout(() => {
       setSlideState('out');
       setTimeout(() => {
         setCurrentSlide((prev) => (prev + 1) % slideCount);
-        setProgress(0);
         setSlideState('in');
       }, 400);
     }, SLIDE_DURATION);
 
     return () => {
-      if (progressRef.current) cancelAnimationFrame(progressRef.current);
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [currentSlide, isDashboardRoute]);
+  }, [currentSlide, location.pathname, isDashboardRoute, slideCount]);
 
   const handleHeroAction = (action) => {
     if (action.startsWith('/')) {
@@ -2564,7 +2549,7 @@ function AppContent() {
 
               <div className={`sui-bottom ${slideState}`}>
                 <div className="spr">
-                  <div className="spb" style={{ width: `${progress}%` }} />
+                  <div key={currentSlide} className="spb animating" />
                 </div>
                 <div className="sdots">
                   {SLIDES.map((_, index) => (
@@ -3582,11 +3567,11 @@ const SYNC_READY_SONGS = [
 ];
 
 function SyncReadyView({ standalone }) {
-  const sessionUser = {
+  const sessionUser = useMemo(() => ({
     role: localStorage.getItem('syncmavens_user_role') || 'supervisor',
     name: localStorage.getItem('syncmavens_user_name') || 'Music Supervisor Pro',
     email: localStorage.getItem('syncmavens_user_email') || 'supervisor@tunemavens.com'
-  };
+  }), []);
 
   return (
     <div className={standalone ? "standalone-page-wrapper" : ""}>

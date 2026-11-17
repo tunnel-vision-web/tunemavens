@@ -428,7 +428,16 @@ body {
 .spb {
   height: 100%;
   background: var(--accent-cyan);
-  transition: width 0.05s linear;
+  width: 0%;
+}
+
+.spb.animating {
+  animation: heroSlideProgress 8s linear forwards;
+}
+
+@keyframes heroSlideProgress {
+  from { width: 0%; }
+  to { width: 100%; }
 }
 
 .sdots {
