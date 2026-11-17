@@ -3325,6 +3325,21 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Applied solid midnight opaque backgrounds (`#0b0f1e !important`), ensuring apps, typography, and charts remain 100% crisp, high-contrast, and completely unblurred across all viewport sizes.
   - Verified across `apps/portal`, `apps/syncmavens`, and `apps/tunestream` with clean Vite production builds.
 
+### 9.44.67 Phase 26: Responsive Dashboard Overview Stacking (Monthly Earnings Progress through Activity Log)
+
+- **Single Column Responsive Stacking (`apps/portal/src/App.jsx`, `apps/portal/src/App.css`)**:
+  - Replaced hardcoded inline grid declarations (`gridTemplateColumns: '2fr 1fr'`) with responsive CSS class names `.dashboard-overview-charts-grid`, `.dashboard-overview-status-grid`, and `.dashboard-ecosystem-status-grid`.
+  - Stacked all four key overview cards into clean, full-width single column rows (`display: flex; flex-direction: column; width: 100%`) on tablet and mobile viewports (`<= 1024px` and `<= 768px`):
+    1. **Monthly Earnings Progress / Activity Trend ($)** (Chart card with SVG sparkline graph and dynamic persona titles).
+    2. **Catalog Genre Breakdown / Performance Details** (Details card with genre percentage progress bars).
+    3. **Ecosystem Status** (Ecosystem operational health overview with 4 sub-modules).
+    4. **Activity Log** (Real-time ecosystem activity and audit feed).
+  - Configured `.dashboard-ecosystem-status-grid` to stack its 4 sub-items (DJ POOL MVPs, SYNC MARKETPLACE, ESCROW MODULE, SPLIT CASCADE) into a full-width single column on mobile devices (`<= 768px`), ensuring metadata and status notes remain readable without text truncation or horizontal overflow.
+  - Fixed chart wrapper height (`.dashboard-overview-chart-wrapper`) at a steady `180px` on responsive screens to prevent SVG viewBox clipping.
+  - Preserved the original desktop 2-column grid (`2fr 1fr`) on screens wider than `1024px`.
+  - Strictly adheres to `docs/DESIGN_STANDARDS.md`: 3px border-radius, midnight palette (`#060813`, `#0b0f1e`), cyan hover accents (`#22d3ee`), and crystal-clear contrast.
+
+
 
 
 

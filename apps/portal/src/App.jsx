@@ -6248,11 +6248,11 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
       </div>
 
       {/* Charts and Details Segment */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '24px' }} data-tour="admin-overview-chart">
-        <div className="dashboard-card">
+      <div className="dashboard-overview-charts-grid" data-tour="admin-overview-chart">
+        <div className="dashboard-card dashboard-overview-chart-card">
           <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff' }}>{data.chartTitle}</h3>
           
-          <div style={{ position: 'relative', width: '100%', height: '180px' }}>
+          <div className="dashboard-overview-chart-wrapper">
             <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width="100%" height="100%">
               <defs>
                 <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
@@ -6300,7 +6300,7 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
           </div>
         </div>
 
-        <div className="dashboard-card">
+        <div className="dashboard-card dashboard-overview-details-card">
           <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '14px', color: '#fff' }}>{data.detailsTitle}</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
@@ -6327,26 +6327,26 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '24px' }}>
-        <div className="dashboard-card">
+      <div className="dashboard-overview-status-grid">
+        <div className="dashboard-card dashboard-overview-ecosystem-card">
           <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Ecosystem Status</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className="dashboard-ecosystem-status-grid">
+            <div className="dashboard-ecosystem-status-item">
               <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>DJ POOL MVPs</div>
               <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginTop: '4px' }}>WAV / MP3-320</div>
               <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0' }}>Intro/Outro tag injection active.</p>
             </div>
-            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div className="dashboard-ecosystem-status-item">
               <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>SYNC MARKETPLACE</div>
               <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginTop: '4px' }}>AI Mood Tagging</div>
               <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0' }}>Scene tags &amp; 30s previews verified.</p>
             </div>
-            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div className="dashboard-ecosystem-status-item">
               <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>ESCROW MODULE</div>
               <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginTop: '4px' }}>Appearance Booking</div>
               <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0' }}>Venue checkpoint verification online.</p>
             </div>
-            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div className="dashboard-ecosystem-status-item">
               <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>SPLIT CASCADE</div>
               <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginTop: '4px' }}>Recoupment Ledger</div>
               <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0' }}>Platform commission fixed at 10%.</p>
@@ -6354,7 +6354,7 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
           </div>
         </div>
 
-        <div className="dashboard-card">
+        <div className="dashboard-card dashboard-overview-activity-card">
           <h3 style={{ fontSize: '15px', fontWeight: '800', marginBottom: '16px', color: '#fff' }}>Activity Log</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {recentActivities.map(act => (
