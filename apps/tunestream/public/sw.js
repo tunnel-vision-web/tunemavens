@@ -1,8 +1,7 @@
 // TuneStream Native Service Worker — Offline Audio & App Installation
-const CACHE_NAME = 'tunestream-cache-v1';
+const CACHE_NAME = 'tunestream-cache-v3';
 const OFFLINE_URLS = [
   '/',
-  '/#/native',
   '/manifest.json',
   '/favicon.png'
 ];
@@ -31,17 +30,47 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  
+  const url = new URL(event.request.url);
+
+  // Network-first for navigations, HTML documents, manifest, and API calls
+  if (
+    event.request.mode === 'navigate' ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('.json') ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname === '/' ||
+    url.pathname === '/privacy' ||
+    url.pathname === '/terms' ||
+    url.pathname === '/cookies' ||
+    url.pathname === '/refund' ||
+    url.pathname === '/legal'
+  ) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request) || caches.match('/'))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate / cache-first for static immutable assets (hashed JS, CSS, images)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
-      return fetch(event.request).catch(() => {
-        // Return offline root if navigating
-        if (event.request.mode === 'navigate') {
-          return caches.match('/#/native') || caches.match('/');
+      return fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
+        return networkResponse;
       });
     })
   );

@@ -225,6 +225,94 @@ const SYNCMAVENS_ROUTES = [
   }
 ];
 
+function getLegalRoutes(domain) {
+  const brandName = domain === 'tunestream.co' ? 'TuneStream' : domain === 'syncmavens.com' ? 'SyncMavens' : 'TuneMavens';
+  return [
+    {
+      path: '/privacy',
+      slug: 'privacy',
+      title: `Privacy Policy — ${brandName}`,
+      description: 'Official Privacy Policy covering creator data protection, rights registry confidentiality, GDPR compliance, and Kenya Data Protection Act 2019 standards.',
+      h1: 'Privacy Policy',
+      subhead: 'Our commitment to protecting your creator data, audio stems, banking details, and intellectual property across the global diaspora.',
+      canonical: `https://${domain}/privacy`,
+      ogImage: `https://${domain}/headers/discography_retina_header.jpg`,
+      features: [
+        'Comprehensive data protection under GDPR and Kenya Data Protection Act 2019',
+        'Zero unauthorized training of third-party AI models on creator masters or stems',
+        'End-to-end encrypted financial routing for M-Pesa and international card rails',
+        'Granular visibility and consent controls in your Creator Privacy Center'
+      ]
+    },
+    {
+      path: '/terms',
+      slug: 'terms',
+      title: `Terms of Service — ${brandName}`,
+      description: 'Official Terms of Service governing platform usage, unified credit agreements, master split cascade disbursement, and sync licensing clearance.',
+      h1: 'Terms of Service',
+      subhead: 'Clear, transparent rules governing account ownership, unified credits, catalog ingestion, and irrevocable royalty cascading.',
+      canonical: `https://${domain}/terms`,
+      ogImage: `https://${domain}/headers/discography_retina_header.jpg`,
+      features: [
+        '100% creator ownership of underlying master and composition copyrights',
+        'Unified credit purchasing and irrevocable ledger transactions',
+        'Legally binding basis-point split cascade execution upon payment receipt',
+        'Pre-cleared indemnified sync licensing warranties and representations'
+      ]
+    },
+    {
+      path: '/cookies',
+      slug: 'cookies',
+      title: `Cookie Policy — ${brandName}`,
+      description: 'Learn how we use essential cookies, authentication session tokens, and local storage to power lossless streaming and secure payments.',
+      h1: 'Cookie Policy',
+      subhead: 'Transparent overview of cookies, session tokens, and localized audio preferences across our digital platforms.',
+      canonical: `https://${domain}/cookies`,
+      ogImage: `https://${domain}/headers/discography_retina_header.jpg`,
+      features: [
+        'Essential authentication and session security tokens',
+        'Lossless audio buffer and player state persistence',
+        'Localized currency (KES / USD) and diaspora region caching',
+        'Zero cross-site advertising or third-party behavioral tracking cookies'
+      ]
+    },
+    {
+      path: '/refund',
+      slug: 'refund',
+      title: `Refund & Credit Policy — ${brandName}`,
+      description: 'Official Refund Policy covering unified credit reloads, disputed transactions, unspent balances, and failed payment escrow returns.',
+      h1: 'Refund & Credit Policy',
+      subhead: 'Clear rules and guarantees for credit purchases, unspent credit escrow, and failed payment reconciliation.',
+      canonical: `https://${domain}/refund`,
+      ogImage: `https://${domain}/headers/discography_retina_header.jpg`,
+      features: [
+        'Automatic instant reversal on unfulfilled M-Pesa STK push timeouts',
+        'Dispute resolution escrow for contested split cascade disbursements',
+        'Credit balance restoration for verified system outage periods',
+        'Transparent 14-day review window for unauthorized account charges'
+      ]
+    },
+    {
+      path: '/legal',
+      slug: 'legal',
+      title: `Legal & Compliance Hub — ${brandName}`,
+      description: 'Authoritative ecosystem legal hub for Terms of Service, Privacy Policy, Cookie Policy, and Refund agreements.',
+      h1: 'Legal & Compliance Hub',
+      subhead: 'Access all ecosystem policies, rights agreements, and regulatory disclosures in one authoritative center.',
+      canonical: `https://${domain}/legal`,
+      ogImage: `https://${domain}/headers/discography_retina_header.jpg`,
+      features: [
+        'Unified Terms of Service for Creators, Listeners, Labels, and Supervisors',
+        'Comprehensive Privacy Policy and Data Protection Disclosures',
+        'Transparent Refund and Dispute Resolution Guidelines',
+        'Verified ISRC / ISWC Intellectual Property Protection Standards'
+      ]
+    }
+  ];
+}
+
+
+
 
 function getCleanTemplate(rawTemplate) {
   let clean = rawTemplate;
@@ -392,7 +480,8 @@ function generateHtml(route, baseHtmlTemplate) {
 }
 
 function generate404Html(baseTemplate) {
-  let html = baseTemplate;
+  let html = getCleanTemplate(baseTemplate);
+  html = html.replace(/<script type="module" src="\/src\/main\.jsx"><\/script>/gi, "");
   html = html.replace(/<title>.*?<\/title>/i, `<title>404 — Page Not Found | TuneMavens</title>`);
 
   const errorBody = `
@@ -424,9 +513,9 @@ export function prerenderAll() {
   const portalRoutes = [...TUNEMAVENS_ROUTES, ...registryRoutes];
 
   const apps = [
-    { name: 'portal', routes: portalRoutes, domain: 'tunemavens.com' },
-    { name: 'tunestream', routes: TUNESTREAM_ROUTES, domain: 'tunestream.co' },
-    { name: 'syncmavens', routes: SYNCMAVENS_ROUTES, domain: 'syncmavens.com' }
+    { name: 'portal', routes: [...portalRoutes, ...getLegalRoutes('tunemavens.com')], domain: 'tunemavens.com' },
+    { name: 'tunestream', routes: [...TUNESTREAM_ROUTES, ...getLegalRoutes('tunestream.co')], domain: 'tunestream.co' },
+    { name: 'syncmavens', routes: [...SYNCMAVENS_ROUTES, ...getLegalRoutes('syncmavens.com')], domain: 'syncmavens.com' }
   ];
 
   for (const app of apps) {

@@ -25,3 +25,31 @@ services:
         value: "1487430954445292"
       - key: WHATSAPP_VERIFY_TOKEN
         value: "tunemavens_whatsapp_verify_token_2026"
+
+  - type: static
+    name: tunestream
+    buildCommand: "npm run build:tunestream"
+    staticPublishPath: "apps/tunestream/dist"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: static
+    name: tunemavens-portal
+    buildCommand: "npm run build:portal"
+    staticPublishPath: "apps/portal/dist"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: static
+    name: syncmavens
+    buildCommand: "npm run build:syncmavens"
+    staticPublishPath: "apps/syncmavens/dist"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
