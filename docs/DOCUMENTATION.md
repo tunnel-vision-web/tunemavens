@@ -3339,6 +3339,28 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Preserved the original desktop 2-column grid (`2fr 1fr`) on screens wider than `1024px`.
   - Strictly adheres to `docs/DESIGN_STANDARDS.md`: 3px border-radius, midnight palette (`#060813`, `#0b0f1e`), cyan hover accents (`#22d3ee`), and crystal-clear contrast.
 
+### 9.44.68 Phase 27: Cross-Persona & TuneStream Backend Responsive Layout Harmonization
+
+- **Admin Persona Simulation & Role Elevation Persistence (`apps/portal/src/App.jsx`)**:
+  - Resolved root cause where switching to the `admin` persona previously reverted on reload or failed to persist:
+    - Retained `localStorage.setItem('tunemavens_active_persona', targetRole)` when switching to `admin`, preventing accidental deletion of the active simulated role.
+    - Updated `isActualAdmin` evaluation across `App()`, `handleLogin`, and `authApi.me` to honor `localStorage.getItem('tunemavens_admin_verified') === 'true'`, preventing non-admin session resets during persona testing.
+    - Added `.topbar-admin-credit-exempt-badge` styling with `width: auto !important` and `padding: 4px 10px !important`, preventing the Admin Credit-Exempt badge from being forced into a 34px icon square in Row 2 toolbar.
+
+- **Cross-Persona Dashboard Responsive Stacking Across Workspaces**:
+  - **Portal Consumer Dedicated Backend (`apps/portal/src/App.jsx`)**:
+    - Restructured consumer dedicated backend topbar to strictly conform to the 3-row responsive architecture: Row 1 (`.dashboard-topbar-row-header`), Row 2 (`.dashboard-topbar-menu-items-row`), and Row 3 (`.dashboard-topbar-account-row`).
+    - Replaced hardcoded `2fr 1fr` inline grid in `ConsumerHomeOverviewPanel` with `.dashboard-overview-charts-grid`, stacking "Your Daily Tailored Crate" and "Listener Apps & Quick Actions" into full-width single-column rows on mobile viewports.
+  - **TuneStream Backend Dashboard (`apps/tunestream/src/App.jsx`, `apps/tunestream/src/App.css`)**:
+    - Ported full `.dashboard-overview-charts-grid`, `.dashboard-overview-status-grid`, and `.dashboard-ecosystem-status-grid` responsive stylesheet to `tunestream`.
+    - Added responsive stacking rules for `TuneStreamHomePanel` at `@media (max-width: 1024px)` and `@media (max-width: 768px)`, ensuring listener metrics, hero cards, and quick actions stack into single-column rows on tablets and mobile handhelds.
+    - Updated `handleSwitchRole` in TuneStream to route `admin` persona to `home` and added an `Admin Operations` section in `getCategorizedMenu()` for immediate administrative governance.
+  - **Admin Team Roster & Operations (`AdminTeamRosterPanel.jsx`)**:
+    - Clamped platform admin roles grid to `minmax(min(100%, 320px), 1fr)`, preventing horizontal overflow and clipping on small mobile viewports across both `portal` and `tunestream`.
+  - **FastAPI Operations Backend Console (`backend/admin_app/index.html`)**:
+    - Added `@media (max-width: 900px)` responsive rules for top navbar, collapsible sidebar, and single-column `.stats-grid`, ensuring full responsiveness on `:8001/admin`.
+
+
 
 
 

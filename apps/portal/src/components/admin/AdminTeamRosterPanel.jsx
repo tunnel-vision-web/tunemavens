@@ -1146,7 +1146,7 @@ export default function AdminTeamRosterPanel({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '14px' }}>
           {PLATFORM_ADMIN_ROLES.map((roleDef) => (
             <div
               key={roleDef.id}

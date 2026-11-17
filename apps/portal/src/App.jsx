@@ -321,11 +321,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
       try {
         localStorage.setItem('tunemavens_admin_verified', 'true');
-        if (targetRole === 'admin') {
-          localStorage.removeItem('tunemavens_active_persona');
-        } else {
-          localStorage.setItem('tunemavens_active_persona', targetRole);
-        }
+        localStorage.setItem('tunemavens_active_persona', targetRole);
         saveStoredDeactivatedApps(updatedUser, []);
         saveStoredActivatedApps(updatedUser, targetApps);
         sessionStorage.setItem('tunemavens_session', JSON.stringify(updatedUser));
@@ -651,7 +647,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           if (isAdmin) {
             return (
               <div
-                className="topbar-nav-icon-btn"
+                className="topbar-nav-icon-btn topbar-admin-credit-exempt-badge"
                 style={{
                   background: 'rgba(14, 165, 233, 0.12)',
                   border: '1px solid rgba(14, 165, 233, 0.35)',
@@ -672,7 +668,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           if (isVc) {
             return (
               <div
-                className="topbar-nav-icon-btn"
+                className="topbar-nav-icon-btn topbar-admin-credit-exempt-badge"
                 style={{
                   background: 'rgba(0, 242, 254, 0.1)',
                   border: '1px solid rgba(0, 242, 254, 0.35)',
@@ -2769,30 +2765,39 @@ function DashboardView({
         </aside>
 
         <main className="dashboard-main-content">
-          <header className="dashboard-topbar" style={{ borderBottom: '1px solid rgba(0, 242, 254, 0.12)', background: 'rgba(7, 11, 22, 0.95)' }}>
-            <div className="dashboard-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <button
-                type="button"
-                className="topbar-sidecar-toggle-btn"
-                onClick={() => setCollapsed(!collapsed)}
-                title={isIconMenu ? "Expand Sidecar" : "Switch Sidecar to Icon Menu"}
-                aria-label="Toggle Sidecar Menu"
-                data-testid="consumer-topbar-sidecar-toggle-btn"
-              >
-                {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
-              </button>
-              <div className="dashboard-topbar-title" style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '10px', color: '#00f2fe', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>TuneStream Personal Audio Engine</span>
-                <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '2px 0 0' }}>
-                  {listenerTabTitles[activeTab] || 'TuneStream Listener Hub'}
-                </h1>
+          <header className="dashboard-topbar" style={{ borderBottom: '1px solid rgba(0, 242, 254, 0.12)', background: '#0b0f1e' }}>
+            {/* Row 1: Admin Console and Account Type */}
+            <div className="dashboard-topbar-row-header">
+              <div className="dashboard-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="topbar-sidecar-toggle-btn"
+                  onClick={() => setCollapsed(!collapsed)}
+                  title={isIconMenu ? "Expand Sidecar" : "Switch Sidecar to Icon Menu"}
+                  aria-label="Toggle Sidecar Menu"
+                  data-testid="consumer-topbar-sidecar-toggle-btn"
+                >
+                  {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
+                </button>
+                <div className="dashboard-topbar-title" style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '10px', color: '#00f2fe', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>TuneStream Personal Audio Engine</span>
+                  <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '2px 0 0' }}>
+                    {listenerTabTitles[activeTab] || 'TuneStream Listener Hub'}
+                  </h1>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '3px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', fontSize: '11px', fontWeight: 700 }}>
+                  ● Lossless Edge Active
+                </span>
               </div>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '3px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', fontSize: '11px', fontWeight: 700 }}>
-                ● Lossless Edge Active
-              </span>
+
+              <div className="dashboard-topbar-account-type-badge topbar-simulation-badge">
+                <span className="topbar-simulation-dot" style={{ background: '#00f2fe' }} />
+                <span className="topbar-simulation-text">Account: <strong style={{ color: '#00f2fe' }}>Verified Listener</strong></span>
+              </div>
             </div>
 
-            <div className="dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Row 2: Menu items & action icons toolbar */}
+            <div className="dashboard-topbar-menu-items-row dashboard-topbar-actions">
               <button
                 type="button"
                 onClick={() => handleExitListenerMode()}
@@ -2816,97 +2821,6 @@ function DashboardView({
                 <RiArrowLeftLine size={14} />
                 <span>{isAdminUser ? 'Return to Admin Console' : 'Return to TuneMavens Console'}</span>
               </button>
-
-              <div style={{ position: 'relative' }} ref={consumerPersonaRef}>
-                <button
-                  type="button"
-                  onClick={() => setConsumerPersonaDropdownOpen(!consumerPersonaDropdownOpen)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.14)',
-                    color: '#f8fafc',
-                    padding: '6px 12px',
-                    borderRadius: '3px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                  data-testid="consumer-persona-switcher-btn"
-                  title="Switch to another persona view"
-                >
-                  <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
-                  <span>Switch Persona</span>
-                  <RiArrowDownSFill size={12} />
-                </button>
-
-                {consumerPersonaDropdownOpen && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 'calc(100% + 8px)',
-                      right: 0,
-                      zIndex: 1000,
-                      background: '#0d1322',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      borderRadius: '3px',
-                      padding: '12px',
-                      width: '320px',
-                      boxShadow: '0 12px 36px rgba(0,0,0,0.6)'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Switch Ecosystem Persona
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleExitListenerMode('admin')}
-                        style={{ background: 'transparent', border: 'none', color: '#0ea5e9', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
-                      >
-                        Reset to Admin
-                      </button>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
-                      {PERSONA_ROLES.map((roleItem) => {
-                        const isActive = roleItem.id === 'consumer';
-                        const RoleIcon = roleItem.icon;
-                        return (
-                          <button
-                            key={roleItem.id}
-                            type="button"
-                            onClick={() => {
-                              setConsumerPersonaDropdownOpen(false);
-                              handleExitListenerMode(roleItem.id);
-                            }}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              padding: '7px 8px',
-                              background: isActive ? 'rgba(0, 242, 254, 0.12)' : 'rgba(255, 255, 255, 0.03)',
-                              border: isActive ? '1px solid #00f2fe' : '1px solid rgba(255, 255, 255, 0.06)',
-                              borderRadius: '3px',
-                              color: '#fff',
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              textAlign: 'left',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <RoleIcon size={14} style={{ color: roleItem.color, flexShrink: 0 }} />
-                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {roleItem.shortLabel}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
 
               <button
                 type="button"
@@ -2950,6 +2864,105 @@ function DashboardView({
                 <RiCompass3Fill size={14} color="#00f2fe" />
                 <span>Take Tour</span>
               </button>
+            </div>
+
+            {/* Row 3: Admin / Persona dropdown */}
+            <div className="dashboard-topbar-account-row" ref={consumerPersonaRef}>
+              <div style={{ position: 'relative', width: '100%' }}>
+                <button
+                  type="button"
+                  onClick={() => setConsumerPersonaDropdownOpen(!consumerPersonaDropdownOpen)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(34, 211, 238, 0.25)',
+                    color: '#f8fafc',
+                    padding: '8px 12px',
+                    borderRadius: '3px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                  data-testid="consumer-persona-switcher-btn"
+                  title="Switch to another persona view"
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <RiShieldFill size={14} style={{ color: '#0ea5e9' }} />
+                    <span>Switch Ecosystem Persona</span>
+                  </span>
+                  <RiArrowDownSFill size={14} />
+                </button>
+
+                {consumerPersonaDropdownOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      left: 0,
+                      right: 0,
+                      zIndex: 1000,
+                      background: '#0d1322',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '3px',
+                      padding: '12px',
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      boxShadow: '0 12px 36px rgba(0,0,0,0.6)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Switch Ecosystem Persona
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleExitListenerMode('admin')}
+                        style={{ background: 'transparent', border: 'none', color: '#0ea5e9', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Reset to Admin
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '6px' }}>
+                      {PERSONA_ROLES.map((roleItem) => {
+                        const isActive = roleItem.id === 'consumer';
+                        const RoleIcon = roleItem.icon;
+                        return (
+                          <button
+                            key={roleItem.id}
+                            type="button"
+                            onClick={() => {
+                              setConsumerPersonaDropdownOpen(false);
+                              handleExitListenerMode(roleItem.id);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '7px 8px',
+                              background: isActive ? 'rgba(0, 242, 254, 0.12)' : 'rgba(255, 255, 255, 0.03)',
+                              border: isActive ? '1px solid #00f2fe' : '1px solid rgba(255, 255, 255, 0.06)',
+                              borderRadius: '3px',
+                              color: '#fff',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              textAlign: 'left',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <RoleIcon size={14} style={{ color: roleItem.color, flexShrink: 0 }} />
+                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {roleItem.shortLabel}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
 
@@ -4868,7 +4881,7 @@ function ConsumerHomeOverviewPanel({ sessionUser, tracks = [], userCredits = 600
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+      <div className="dashboard-overview-charts-grid">
         <div className="dashboard-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div>
@@ -11164,7 +11177,8 @@ function App() {
           parsed?.role === 'admin' ||
           parsed?.is_admin === true ||
           parsed?.original_role === 'admin' ||
-          (Array.isArray(parsed?.roles) && parsed.roles.includes('admin'))
+          (Array.isArray(parsed?.roles) && parsed.roles.includes('admin')) ||
+          localStorage.getItem('tunemavens_admin_verified') === 'true'
         );
         if (activePersona && isActualAdmin) {
           parsed.role = activePersona;
@@ -11301,7 +11315,8 @@ function App() {
       user?.role === 'admin' ||
       user?.is_admin === true ||
       user?.original_role === 'admin' ||
-      (Array.isArray(user?.roles) && user.roles.includes('admin'))
+      (Array.isArray(user?.roles) && user.roles.includes('admin')) ||
+      localStorage.getItem('tunemavens_admin_verified') === 'true'
     );
     try {
       sessionStorage.removeItem('tunestream_active_backend');
@@ -11310,9 +11325,6 @@ function App() {
         localStorage.removeItem('tunemavens_admin_verified');
       } else {
         localStorage.setItem('tunemavens_admin_verified', 'true');
-        if (user?.role === 'admin') {
-          localStorage.removeItem('tunemavens_active_persona');
-        }
       }
     } catch (_) {}
     const activePersona = localStorage.getItem('tunemavens_active_persona');
@@ -11375,7 +11387,8 @@ function App() {
           user?.role === 'admin' ||
           user?.is_admin === true ||
           user?.original_role === 'admin' ||
-          (Array.isArray(user?.roles) && user.roles.includes('admin'))
+          (Array.isArray(user?.roles) && user.roles.includes('admin')) ||
+          localStorage.getItem('tunemavens_admin_verified') === 'true'
         );
         if (!isActualAdmin) {
           try {

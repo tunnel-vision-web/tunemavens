@@ -1011,7 +1011,7 @@ function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredi
   return (
     <div className="tunestream-home-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Listener KPI Overview Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+      <div className="dashboard-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
         <div className="dashboard-card" style={{ padding: '20px', background: '#090c16', border: '1px solid rgba(0, 240, 255, 0.25)', borderRadius: '3px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.8px' }}>TM Credits Balance</span>
@@ -3849,12 +3849,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     try {
       localStorage.setItem('tunemavens_admin_verified', 'true');
       localStorage.setItem('tunestream_user_role', targetRole);
+      localStorage.setItem('tunemavens_active_persona', targetRole);
       setUserRole(targetRole);
 
       if (targetRole === 'affiliate') {
         setActiveTab('affiliates');
       } else if (targetRole === 'admin') {
-        setActiveTab('admin-team');
+        setActiveTab('home');
       } else if (targetRole === 'label') {
         setActiveTab('label-team');
       } else if (targetRole === 'supervisor') {
@@ -4176,6 +4177,12 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     };
 
     // Discover & Stream
+    if (userRole === 'admin') {
+      add('Admin Operations', { id: 'admin-team', label: 'Admin Team & Seats', icon: RiShieldCheckFill, color: '#38bdf8', badge: 'ADMIN' });
+      add('Admin Operations', { id: 'sync-marketplace', label: 'Sync Licensing', icon: RiCompass3Line, color: '#ec4899' });
+      add('Admin Operations', { id: 'affiliates', label: 'Affiliates Desk', icon: RiExchangeDollarLine, color: '#22d3ee' });
+      add('Admin Operations', { id: 'tours-vault', label: 'Tour Capital Vault', icon: RiFundsBoxFill, color: '#00f2fe' });
+    }
     if (userRole === 'vc' || userRole === 'investor') {
       add('Tour Capital & Underwriting', { id: 'vc-discover', label: 'Discover Creators & Catalog', icon: RiSearchLine, color: '#00f2fe', badge: 'DEALS' });
       add('Tour Capital & Underwriting', { id: 'tours-vault', label: 'Tour Underwriting Vault', icon: RiFundsBoxFill, color: '#00f2fe', badge: 'IRR 24%' });

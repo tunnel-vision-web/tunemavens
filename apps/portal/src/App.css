@@ -2582,6 +2582,16 @@
   box-shadow: 0 4px 12px rgba(34, 211, 238, 0.22);
 }
 
+.dashboard-topbar-actions .topbar-admin-credit-exempt-badge,
+.dashboard-topbar-menu-items-row .topbar-admin-credit-exempt-badge {
+  width: auto !important;
+  height: 34px !important;
+  padding: 4px 10px !important;
+  gap: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
 /* Screen-reader & DOM-accessible label hidden visually inside icon buttons */
 .dashboard-topbar-actions .topbar-item-label,
 .dashboard-topbar-menu-items-row .topbar-item-label {
