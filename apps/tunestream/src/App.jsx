@@ -3623,7 +3623,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
   });
 
   // Unified Dashboard States
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' ? window.innerWidth <= 1024 : false);
   const [windowWidth, setWindowWidth] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -4617,80 +4617,116 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
       {/* Main Content Pane */}
       <main className="dashboard-main-content">
         <header className="dashboard-topbar">
-          <div className="topbar-left">
-            <button
-              type="button"
-              className="topbar-sidecar-toggle-btn"
-              onClick={() => {
-                setCollapsed(!collapsed);
-                setHoveredNavItem(null);
-              }}
-              aria-label={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
-              title={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+          {/* Row 1: Admin Console and Account Type */}
+          <div className="dashboard-topbar-row-header">
+            <div className="topbar-left dashboard-topbar-left">
+              <button
+                type="button"
+                className="topbar-sidecar-toggle-btn"
+                onClick={() => {
+                  setCollapsed(!collapsed);
+                  setHoveredNavItem(null);
+                }}
+                aria-label={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+                title={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+              >
+                {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
+              </button>
+              <div className="dashboard-topbar-title">
+                <span style={{ fontSize: '10.5px', color: '#00f2fe', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  TuneStream Listener Console • 24-Bit Lossless
+                </span>
+                <h2 className="topbar-page-title" style={{ margin: '2px 0 0', fontSize: '15px' }}>
+                  {{
+                    home: 'For You & Personalized Mixes',
+                    explore: 'Explore & Lossless Stream',
+                    radio: 'Live 24-Bit Radio Node',
+                    singles: 'Lossless Singles Showcase',
+                    artists: 'Featured Artists & Web Worlds',
+                    library: 'My Playlist Crates & Vault',
+                    favorites: 'Liked Tracks Collection',
+                    concerts: 'Live Shows & VIP Tour Passes',
+                    'stream-controls': '24-Bit / 96kHz Studio EQ & DAC',
+                    companion: 'Mobile & 8GB Offline Crate Sync',
+                    tips: 'Direct Artist Tipping & Wallet',
+                    apps: 'TuneStream Listener Apps Suite',
+                    support: 'Listener Support & Community',
+                    settings: 'Listener Taste & Audio Preferences'
+                  }[activeTab] || 'TuneStream Listener Hub'}
+                </h2>
+              </div>
+              <div className="topbar-status-chip">
+                <span className="chip-indicator"></span>
+                Lossless Edge Active
+              </div>
+            </div>
+
+            {/* Account Type Badge (Displayed in Row 1) */}
+            <div
+              className="dashboard-topbar-account-type-badge topbar-simulation-badge"
+              onClick={() => setAccountOpen(true)}
+              title="Active Account Type. Click account dropdown to switch or configure."
+              data-testid="topbar-account-type-badge"
             >
-              {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
-            </button>
-            <h2 className="topbar-page-title">
-              {{
-                home: 'For You & Personalized Mixes',
-                explore: 'Explore & Lossless Stream',
-                radio: 'Live 24-Bit Radio Node',
-                singles: 'Lossless Singles Showcase',
-                artists: 'Featured Artists & Web Worlds',
-                library: 'My Playlist Crates & Vault',
-                favorites: 'Liked Tracks Collection',
-                concerts: 'Live Shows & VIP Tour Passes',
-                'stream-controls': '24-Bit / 96kHz Studio EQ & DAC',
-                companion: 'Mobile & 8GB Offline Crate Sync',
-                tips: 'Direct Artist Tipping & Wallet',
-                apps: 'TuneStream Listener Apps Suite',
-                support: 'Listener Support & Community',
-                settings: 'Listener Taste & Audio Preferences'
-              }[activeTab] || 'TuneStream Listener Hub'}
-            </h2>
-            <div className="topbar-status-chip">
-              <span className="chip-indicator"></span>
-              Lossless Edge Active
+              <span className="topbar-simulation-dot" style={{ background: currentRoleObj?.color || '#00f2fe' }} />
+              <span className="topbar-simulation-text">
+                Account: <strong style={{ color: currentRoleObj?.color || '#00f2fe' }}>{currentRoleObj?.label || currentRoleObj?.shortLabel || 'Verified Listener'}</strong>
+              </span>
+              {isAdminUser && (userRole !== 'admin' && activeUser?.role !== 'admin') && (
+                <button
+                  type="button"
+                  className="topbar-quick-reset-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSwitchRole('admin');
+                  }}
+                  title="Reset to Administrator view"
+                >
+                  <RiShieldFill size={11} />
+                  <span>Reset</span>
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Global Search Bar */}
-          <div style={{ flex: 1, maxWidth: '440px', margin: '0 20px', position: 'relative' }}>
-            <RiSearchLine size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
-            <input 
-              type="text"
-              placeholder="Search tracks, artists, albums, ISRC..."
-              value={globalSearch}
-              onChange={(e) => {
-                setGlobalSearch(e.target.value);
-                if (activeTab !== 'explore' && activeTab !== 'singles' && activeTab !== 'artists') {
-                  setActiveTab('explore');
-                }
-              }}
-              style={{
-                width: '100%',
-                padding: '7px 32px 7px 34px',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '3px',
-                color: '#fff',
-                fontSize: '12px',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
-            {globalSearch && (
-              <button
-                type="button"
-                onClick={() => setGlobalSearch('')}
-                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '12px', padding: 0 }}
-              >
-                ✕
-              </button>
-            )}
-          </div>
+          {/* Row 2: Menu items & action icons toolbar */}
+          <div className="dashboard-topbar-menu-items-row topbar-right">
+            {/* Global Search Bar */}
+            <div style={{ flex: 1, minWidth: '180px', maxWidth: '340px', position: 'relative' }}>
+              <RiSearchLine size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+              <input 
+                type="text"
+                placeholder="Search tracks, artists, albums, ISRC..."
+                value={globalSearch}
+                onChange={(e) => {
+                  setGlobalSearch(e.target.value);
+                  if (activeTab !== 'explore' && activeTab !== 'singles' && activeTab !== 'artists') {
+                    setActiveTab('explore');
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '7px 32px 7px 34px',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '3px',
+                  color: '#fff',
+                  fontSize: '12px',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+              {globalSearch && (
+                <button
+                  type="button"
+                  onClick={() => setGlobalSearch('')}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '12px', padding: 0 }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
 
-          <div className="topbar-right">
             {/* 24-Bit Lossless DAC Indicator Pill */}
             <button
               type="button"
@@ -4835,13 +4871,16 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
                 </div>
               )}
             </div>
+          </div>
 
-            {/* User Profile Dropdown */}
-            <div className="topbar-popover-container" ref={accountRef}>
+          {/* Row 3: Admin dropdown */}
+          <div className="dashboard-topbar-account-row" ref={accountRef}>
+            <div className="topbar-popover-container" style={{ width: '100%' }}>
               <button 
                 type="button" 
-                className="topbar-user-profile-btn"
+                className="topbar-user-profile-btn topbar-account-btn"
                 onClick={() => setAccountOpen(!accountOpen)}
+                style={{ width: '100%' }}
               >
                 <div className="dashboard-avatar" style={{ background: currentRoleObj.color }}>
                   {activeUser.name.slice(0, 1).toUpperCase()}

@@ -137,7 +137,7 @@ function AppContent() {
   const navigate = useNavigate();
   const isDashboardRoute = location.pathname.startsWith('/dashboard');
 
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' ? window.innerWidth <= 1024 : false);
   const [windowWidth, setWindowWidth] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -1290,44 +1290,41 @@ function AppContent() {
         {/* Main Content Pane */}
         <main className="dashboard-main-content">
           <header className="dashboard-topbar">
-            <div className="dashboard-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <button
-                type="button"
-                className="topbar-sidecar-toggle-btn"
-                onClick={() => {
-                  setCollapsed(!collapsed);
-                  setHoveredNavItem(null);
-                }}
-                aria-label={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
-                title={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
-              >
-                {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
-              </button>
-              <div className="dashboard-topbar-title">
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Sync Console</span>
-                <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
-                  {activeUser?.brand_name || activeUser?.name || 'SyncMavens'}
-                </h1>
-              </div>
-            </div>
-            
-            <div className="dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div className="search-bar" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <RiSearchLine />
-                <input type="text" placeholder="Search briefs, deals, metadata..." style={{ fontSize: '13px' }} />
+            {/* Row 1: Admin Console and Account Type */}
+            <div className="dashboard-topbar-row-header">
+              <div className="dashboard-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="topbar-sidecar-toggle-btn"
+                  onClick={() => {
+                    setCollapsed(!collapsed);
+                    setHoveredNavItem(null);
+                  }}
+                  aria-label={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+                  title={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+                >
+                  {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
+                </button>
+                <div className="dashboard-topbar-title">
+                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Sync Console</span>
+                  <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
+                    {activeUser?.brand_name || activeUser?.name || 'SyncMavens'}
+                  </h1>
+                </div>
               </div>
 
-              {/* Persona Simulation Badge */}
-              {isAdminSimulated && (
-                <div
-                  className="topbar-simulation-badge"
-                  onClick={() => setAccountOpen(true)}
-                  title="Simulating persona for admin verification. Click account dropdown to switch or reset."
-                >
-                  <span className="topbar-simulation-dot" />
-                  <span className="topbar-simulation-text">
-                    Verifying: <strong>{currentRoleObj.shortLabel}</strong>
-                  </span>
+              {/* Account Type Badge (Displayed in Row 1) */}
+              <div
+                className="dashboard-topbar-account-type-badge topbar-simulation-badge"
+                onClick={() => setAccountOpen(true)}
+                title="Active Account Type. Click account dropdown to switch or configure."
+                data-testid="topbar-account-type-badge"
+              >
+                <span className="topbar-simulation-dot" style={{ background: currentRoleObj?.color || '#22d3ee' }} />
+                <span className="topbar-simulation-text">
+                  Account: <strong style={{ color: currentRoleObj?.color || '#22d3ee' }}>{currentRoleObj?.label || currentRoleObj?.shortLabel || 'Creator Pro'}</strong>
+                </span>
+                {isAdminSimulated && (
                   <button
                     type="button"
                     className="topbar-quick-reset-btn"
@@ -1340,8 +1337,16 @@ function AppContent() {
                     <RiShieldFill size={11} />
                     <span>Reset</span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+            
+            {/* Row 2: Menu items & action icons toolbar */}
+            <div className="dashboard-topbar-menu-items-row dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div className="search-bar" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <RiSearchLine />
+                <input type="text" placeholder="Search briefs, deals, metadata..." style={{ fontSize: '13px' }} />
+              </div>
 
               {/* Unified Credits Badge & Reload Trigger on Topbar */}
               {(() => {
@@ -1524,16 +1529,23 @@ function AppContent() {
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Account Dropdown */}
-              <div className="dashboard-topbar-item" ref={accountRef}>
+            {/* Row 3: Admin dropdown */}
+            <div className="dashboard-topbar-account-row" ref={accountRef}>
+              <div className="dashboard-topbar-item" style={{ width: '100%' }}>
                 <button
                   className="topbar-account-btn"
                   onClick={() => { setAccountOpen(o => !o); setNotifOpen(false); }}
-                  title="Account"
+                  title="Account & Profile"
                 >
-                  <span className="topbar-avatar">{userName.charAt(0).toUpperCase()}</span>
-                  <span className="topbar-account-name">{userName}</span>
+                  <span className="topbar-avatar" style={{ background: currentRoleObj?.color || '#0ea5e9' }}>{userName.charAt(0).toUpperCase()}</span>
+                  <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15, textAlign: 'left' }}>
+                    <span className="topbar-account-name">{userName}</span>
+                    <span style={{ fontSize: '9.5px', fontWeight: 800, color: currentRoleObj?.color || '#00f2fe', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      {currentRoleObj?.shortLabel || 'Member'}
+                    </span>
+                  </span>
                   <RiArrowDownSFill size={14} />
                 </button>
                 {accountOpen && (

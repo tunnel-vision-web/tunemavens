@@ -3306,6 +3306,26 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - In `list_sync_catalog()`, cross-references every record against the authoritative catalog map, guaranteeing 100% cover population (`all(bool(t.get('cover')) for t in cat) == True`).
   - Verified live via FastAPI TestClient on `/api/match/catalog` and `/api/match/briefs`.
 
+### 9.44.66 Phase 25: Responsive Dashboard Architecture, 3-Row Topbar Stacking, Slim 52px Icon Rail & Crystal Clear Unblurred Workspace
+
+- **Responsive Topbar 3-Row Layout Architecture**:
+  - Restructured `DashboardTopbar` across all frontends (`apps/portal`, `apps/syncmavens`, `apps/tunestream`) to dynamically stack into 3 dedicated, ergonomically prioritized rows on responsive and mobile screens (`@media (max-width: 900px)`):
+    - **Row 1 (`.dashboard-topbar-row-header`)**: Displays the Admin Console / TuneStream Listener Console subtitle, brand title, sidebar toggle button, and active **Account Type badge** (`currentRoleObj.label || currentRoleObj.shortLabel`) with persona indicator dot, border accent, and instant Reset button when simulating.
+    - **Row 2 (`.dashboard-topbar-menu-items-row`)**: Displays the menu items and action icons toolbar (Credits badge / topup, Back to Site, Take Tour, Universal Get Help & Ask AI buttons, Region Switcher, DJ Mixes trigger, Notifications button & dropdown).
+    - **Row 3 (`.dashboard-topbar-account-row`)**: Displays the full-width Admin / Account dropdown trigger button (`.topbar-account-btn`) with user avatar, name, and role description, opening the complete Persona Role Switcher and account management modal without cramped wrapping or clipping.
+  - On desktop (`> 900px`), seamlessly flexes inline as a unified horizontal topbar.
+
+- **Slim 52px-54px Icon Rail**:
+  - Reduced sidebar collapsed width from `76px` / `80px` / `66px` down to **`52px - 54px`** (`padding: 10px 3px` to `14px 4px`), sizing it just wide enough to contain the icon buttons (`36px - 38px`), leaving maximum horizontal space for apps, tables, and audio tools.
+  - Centered navigation icons with tactile hover animations, 3px border-radius per Section 14, and futuristic floating hover tooltips.
+
+- **Eliminated App Background Blurring**:
+  - Fixed mobile drawer state initialization: initialized `collapsed` state to `window.innerWidth <= 1024` so tablets and mobile devices default to the compact, non-intrusive inline icon rail instead of auto-expanding a full-screen drawer on initial page load.
+  - Removed all `backdrop-filter: blur(...)` and `-webkit-backdrop-filter: blur(...)` from `.dashboard-sidebar`, `.dashboard-sidebar.collapsed`, and `.dashboard-sidebar-backdrop`.
+  - Applied solid midnight opaque backgrounds (`#0b0f1e !important`), ensuring apps, typography, and charts remain 100% crisp, high-contrast, and completely unblurred across all viewport sizes.
+  - Verified across `apps/portal`, `apps/syncmavens`, and `apps/tunestream` with clean Vite production builds.
+
+
 
 
 

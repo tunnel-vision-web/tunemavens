@@ -587,43 +587,44 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
   return (
     <header className="dashboard-topbar" data-testid="dashboard-topbar">
-      <div className="dashboard-topbar-left">
-        {typeof onToggleSidebar === 'function' && (
-          <button
-            type="button"
-            className="topbar-sidecar-toggle-btn"
-            onClick={onToggleSidebar}
-            title={isSidebarCollapsed ? "Expand Sidecar Menu" : "Switch Sidecar to Icon Menu"}
-            aria-label="Toggle Sidecar Menu"
-            data-testid="topbar-sidecar-toggle-btn"
-          >
-            {isSidebarCollapsed ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
-          </button>
-        )}
-        <div className="dashboard-topbar-title">
-          <span style={{ fontSize: '10.5px', color: sessionUser?.role === 'consumer' ? '#00f2fe' : '#64748b', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            {sessionUser?.role === 'consumer' ? 'TuneStream Listener Console • 24-Bit Lossless' : 'Admin Console'}
-          </span>
-          <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', margin: '2px 0 0' }}>
-            {sessionUser?.brand_name || sessionUser?.name || 'TuneMavens'}
-          </h1>
-        </div>
-      </div>
-
-      <div className="dashboard-topbar-actions">
-        {/* If simulating a non-admin role, show active persona indicator pill on topbar */}
-        {isAdminUser && sessionUser?.role !== 'admin' && (
-          <div
-            className="topbar-simulation-badge"
-            onClick={() => setAccountOpen(true)}
-            title="Simulating persona for admin verification. Click account dropdown to switch or reset."
-            data-testid="topbar-simulation-badge"
-            data-tour="topbar-simulation-badge"
-          >
-            <span className="topbar-simulation-dot" />
-            <span className="topbar-simulation-text">
-              Verifying: <strong>{currentRoleObj.shortLabel}</strong>
+      {/* Row 1: Admin Console and Account Type */}
+      <div className="dashboard-topbar-row-header">
+        <div className="dashboard-topbar-left">
+          {typeof onToggleSidebar === 'function' && (
+            <button
+              type="button"
+              className="topbar-sidecar-toggle-btn"
+              onClick={onToggleSidebar}
+              title={isSidebarCollapsed ? "Expand Sidecar Menu" : "Switch Sidecar to Icon Menu"}
+              aria-label="Toggle Sidecar Menu"
+              data-testid="topbar-sidecar-toggle-btn"
+            >
+              {isSidebarCollapsed ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
+            </button>
+          )}
+          <div className="dashboard-topbar-title">
+            <span style={{ fontSize: '10.5px', color: sessionUser?.role === 'consumer' ? '#00f2fe' : '#64748b', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {sessionUser?.role === 'consumer' ? 'TuneStream Listener Console • 24-Bit Lossless' : 'Admin Console'}
             </span>
+            <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', margin: '2px 0 0' }}>
+              {sessionUser?.brand_name || sessionUser?.name || 'TuneMavens'}
+            </h1>
+          </div>
+        </div>
+
+        {/* Account Type Badge (Displayed in Row 1) */}
+        <div
+          className="dashboard-topbar-account-type-badge topbar-simulation-badge"
+          onClick={() => setAccountOpen(true)}
+          title="Active Account Type. Click account dropdown to switch or configure."
+          data-testid="topbar-account-type-badge"
+          data-tour="topbar-account-type-badge"
+        >
+          <span className="topbar-simulation-dot" style={{ background: currentRoleObj?.color || '#22d3ee' }} />
+          <span className="topbar-simulation-text">
+            Account: <strong style={{ color: currentRoleObj?.color || '#22d3ee' }}>{sessionUser?.role === 'consumer' ? 'Verified Listener' : (currentRoleObj?.label || currentRoleObj?.shortLabel || 'Master Administrator')}</strong>
+          </span>
+          {isAdminUser && sessionUser?.role !== 'admin' && (
             <button
               type="button"
               className="topbar-quick-reset-btn"
@@ -637,8 +638,12 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
               <RiShieldFill size={11} />
               <span>Reset</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
+
+      {/* Row 2: Menu items & action icons toolbar */}
+      <div className="dashboard-topbar-menu-items-row dashboard-topbar-actions">
 
         {/* Unified Credits Badge & Reload Trigger on Topbar */}
         {(() => {
@@ -918,8 +923,11 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           )}
         </div>
 
-        {/* Account dropdown */}
-        <div className="dashboard-topbar-item" ref={accountRef}>
+      </div>
+
+      {/* Row 3: Admin dropdown */}
+      <div className="dashboard-topbar-account-row" ref={accountRef}>
+        <div className="dashboard-topbar-item" style={{ width: '100%' }}>
           <button
             className="topbar-account-btn"
             onClick={() => { setAccountOpen(o => !o); setNotifOpen(false); }}
@@ -1713,7 +1721,7 @@ function DashboardView({
   }, []);
 
   const [payoutBalance, setPayoutBalance] = useState(4235.80);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => (typeof window !== 'undefined' ? window.innerWidth <= 1024 : false));
   const [hoveredNavItem, setHoveredNavItem] = useState(null);
 
   // Responsive Viewport Monitoring for Sidecar Auto-Switching
