@@ -42,6 +42,7 @@ import { DEFAULT_ACTIVE_APPS_BY_ROLE, reconcileUserApps } from './lib/activatedA
 import { authApi, tokenStore } from './lib/api.js';
 import LoginView from './views/auth/LoginView.jsx';
 import RegisterView from './views/auth/RegisterView.jsx';
+import LegalPoliciesView from './views/LegalPoliciesView.jsx';
 import RegionSwitcher from './RegionSwitcher.jsx';
 import { getUnifiedCatalog, saveUnifiedCatalog, AUTHORITATIVE_CATALOG_TRACKS } from './data/authoritativeCatalog';
 
@@ -2509,6 +2510,17 @@ function AppContent() {
         <Route path="/creator-dashboard" element={<CreatorDashboardPageView standalone={true} />} />
         <Route path="/blog" element={<BlogView standalone={true} />} />
         <Route path="/pricing" element={<PricingView standalone={true} />} />
+        <Route path="/privacy" element={<LegalPoliciesView defaultPolicy="privacy" />} />
+        <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
+        <Route path="/terms" element={<LegalPoliciesView defaultPolicy="terms" />} />
+        <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
+        <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
+        <Route path="/cookies" element={<LegalPoliciesView defaultPolicy="cookies" />} />
+        <Route path="/cookie-policy" element={<Navigate to="/cookies" replace />} />
+        <Route path="/refund" element={<LegalPoliciesView defaultPolicy="refund" />} />
+        <Route path="/refund-policy" element={<Navigate to="/refund" replace />} />
+        <Route path="/refunds" element={<Navigate to="/refund" replace />} />
+        <Route path="/legal" element={<LegalPoliciesView defaultPolicy="privacy" />} />
         <Route path="/login" element={<div style={{ minHeight: '80vh' }} />} />
         <Route path="/register" element={<div style={{ minHeight: '80vh' }} />} />
       </Routes>
@@ -2594,10 +2606,10 @@ function AppContent() {
 
           <div className="footer-bottom">
             <div className="footer-bottom-links">
-              <a href="#privacy" className="fbl" onClick={() => alert('Privacy policy is synchronized with Intermaven.')}>Privacy Policy</a>
-              <a href="#terms" className="fbl" onClick={() => alert('Terms of service are synchronized with Intermaven.')}>Terms of Service</a>
-              <a href="#cookies" className="fbl" onClick={() => alert('Cookie policy is synchronized.')}>Cookie Policy</a>
-              <a href="#refund" className="fbl" onClick={() => alert('Refund policy is synchronized.')}>Refund Policy</a>
+              <Link to="/privacy" className="fbl">Privacy Policy</Link>
+              <Link to="/terms" className="fbl">Terms of Service</Link>
+              <Link to="/cookies" className="fbl">Cookie Policy</Link>
+              <Link to="/refund" className="fbl">Refund Policy</Link>
             </div>
             <a 
               href="https://intermaven.io" 

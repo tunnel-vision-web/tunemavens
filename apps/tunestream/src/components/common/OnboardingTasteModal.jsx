@@ -74,13 +74,20 @@ export default function OnboardingTasteModal({
   });
 
   const [activeStep, setActiveStep] = useState(1);
+  const [agreedLegal, setAgreedLegal] = useState(() => {
+    try {
+      return localStorage.getItem('tunestream_agreed_legal') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   if (!isOpen) return null;
 
   const toggleCreator = (creatorId) => {
     setSelectedCreators(prev => {
       if (prev.includes(creatorId)) {
-        if (prev.length <= 1) return prev; // keep at least 1
+        if (prev.length <= 1) return prev;
         return prev.filter(id => id !== creatorId);
       } else {
         return [...prev, creatorId];
@@ -100,13 +107,20 @@ export default function OnboardingTasteModal({
   };
 
   const handleSave = () => {
+    if (!agreedLegal) {
+      alert('Please read and agree to the Terms of Service and Privacy Policy to complete onboarding.');
+      return;
+    }
     const preferences = {
       creators: selectedCreators,
       genres: selectedGenres,
       vibe: selectedVibe,
+      agreed_terms: true,
+      agreed_privacy: true,
       updated_at: new Date().toISOString()
     };
     try {
+      localStorage.setItem('tunestream_agreed_legal', 'true');
       localStorage.setItem('tunestream_user_interests', JSON.stringify(preferences));
       localStorage.setItem('tunestream_listener_onboarding', JSON.stringify(preferences));
     } catch (_) {}
@@ -376,6 +390,38 @@ export default function OnboardingTasteModal({
                   );
                 })}
               </div>
+
+              {/* Mandatory Legal Agreement */}
+              <div
+                style={{
+                  marginTop: '18px',
+                  padding: '14px 16px',
+                  background: agreedLegal ? 'rgba(0, 242, 254, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                  border: agreedLegal ? '1px solid #00f2fe' : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '3px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={agreedLegal}
+                    onChange={(e) => setAgreedLegal(e.target.checked)}
+                    data-testid="onboarding-legal-agree-checkbox"
+                    style={{ marginTop: '2px', accentColor: '#00f2fe', width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.5 }}>
+                    I acknowledge that I have read and agree to the{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#00f2fe', textDecoration: 'underline' }}>
+                      Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#00f2fe', textDecoration: 'underline' }}>
+                      Privacy Policy
+                    </a>.
+                  </div>
+                </label>
+              </div>
             </div>
           )}
         </div>
@@ -434,19 +480,21 @@ export default function OnboardingTasteModal({
               <button
                 type="button"
                 onClick={handleSave}
+                disabled={!agreedLegal}
+                data-testid="onboarding-save-taste-btn"
                 style={{
                   padding: '10px 24px',
-                  background: '#10b981',
+                  background: agreedLegal ? '#10b981' : 'rgba(255,255,255,0.08)',
                   border: 'none',
                   borderRadius: '3px',
-                  color: '#040711',
+                  color: agreedLegal ? '#040711' : '#64748b',
                   fontSize: '13px',
                   fontWeight: 900,
-                  cursor: 'pointer',
+                  cursor: agreedLegal ? 'pointer' : 'not-allowed',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  boxShadow: '0 4px 16px rgba(16,185,129,0.3)'
+                  boxShadow: agreedLegal ? '0 4px 16px rgba(16,185,129,0.3)' : 'none'
                 }}
               >
                 <RiCheckFill size={16} /> Save Taste Profile &amp; Generate Mix

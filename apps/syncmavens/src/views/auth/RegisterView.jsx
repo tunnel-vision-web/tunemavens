@@ -15,6 +15,7 @@ export default function RegisterView({ onLogin, onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(paramRole === 'supervisor' ? 'supervisor' : 'creator');
+  const [agreedLegal, setAgreedLegal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -37,6 +38,10 @@ export default function RegisterView({ onLogin, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    if (!agreedLegal) {
+      setErrorMsg('Please read and agree to the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
     setSubmitting(true);
     try {
       try {
@@ -164,15 +169,49 @@ export default function RegisterView({ onLogin, onClose }) {
           />
         </div>
 
+        <div style={{ marginBottom: '16px', textAlign: 'left', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.45', margin: 0 }}>
+            <input
+              type="checkbox"
+              checked={agreedLegal}
+              onChange={e => setAgreedLegal(e.target.checked)}
+              required
+              style={{ marginTop: '2px', accentColor: 'var(--accent-cyan, #00f2fe)', cursor: 'pointer' }}
+            />
+            <span>
+              I have read and agree to the{' '}
+              <Link to="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan, #00f2fe)', textDecoration: 'underline' }}>
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link to="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan, #00f2fe)', textDecoration: 'underline' }}>
+                Privacy Policy
+              </Link>
+              , including commercial sync terms and data processing policies.
+            </span>
+          </label>
+        </div>
+
         {errorMsg && (
           <p style={{ color: '#ff6b6b', fontSize: '12px', marginBottom: '12px' }}>{errorMsg}</p>
         )}
 
         <button 
           type="submit" 
-          disabled={submitting}
+          disabled={submitting || !agreedLegal}
           className="btn-primary" 
-          style={{ width: '100%', padding: '10px', fontSize: '13px', background: 'var(--accent-cyan, #00f2fe)', border: 'none', color: '#000', fontWeight: 'bold', borderRadius: '3px', cursor: submitting ? 'wait' : 'pointer' }}
+          style={{ 
+            width: '100%', 
+            padding: '10px', 
+            fontSize: '13px', 
+            background: 'var(--accent-cyan, #00f2fe)', 
+            border: 'none', 
+            color: '#000', 
+            fontWeight: 'bold', 
+            borderRadius: '3px', 
+            cursor: submitting || !agreedLegal ? 'not-allowed' : 'pointer',
+            opacity: agreedLegal ? 1 : 0.6
+          }}
         >
           {submitting ? 'Creating account…' : 'Create Free Sync Account'}
         </button>

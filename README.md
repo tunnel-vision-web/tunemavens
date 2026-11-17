@@ -186,3 +186,9 @@ npm test
   - Verified multi-track and single-release wizard ingest into MongoDB `db.catalog_tracks`, `db.releases`, `db.epks`, and `db.cms_layouts`.
   - Frontend components hardened with proper Bearer token headers and unified API base prefixes.
 
+### 17. Legal & Compliance Suite, Menu Placements & Mandatory Onboarding Verification
+- **Canonical Legal & Compliance Policies (`/privacy`, `/terms`, `/cookies`, `/refund`, `/legal`)**: Comprehensive, industry-standard policies tailored for music rights, master/composition sync licensing, credit reloads, and streaming distribution under dual Kenya (KDPA 2019 / Nairobi) and United States (Delaware) jurisdictions. Includes digestible "In Plain English" summaries alongside formal legal clauses.
+- **Responsive Multi-Workspace UI**: Deployed across `portal`, `tunestream`, and `syncmavens` featuring sticky Table of Contents navigation, policy tab switching, deep-link sharing, dedicated print stylesheets, and strict 1280px container alignment.
+- **Global Footer & Menu Integration**: Replaced legacy placeholder links across all workspace footers and navigation dropdowns with direct router links to Privacy Policy, Terms of Service, Cookie Policy, Refund Policy, and Legal & Compliance hub.
+- **Mandatory Onboarding Agreement Enforcement**: Integrated required Terms and Privacy agreement gates with in-modal policy readers inside the Creator Onboarding Wizard (`OnboardingWizardModal`), Listener Onboarding Modal (`OnboardingTasteModal`), and User Registration views across all apps.
+

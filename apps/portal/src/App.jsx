@@ -101,6 +101,7 @@ import RoleLandingView from './views/landing/RoleLandingView.jsx'
 import PricingView from './views/landing/PricingView.jsx'
 import AboutView from './views/landing/AboutView.jsx'
 import HelpView from './views/landing/HelpView.jsx'
+import LegalPoliciesView from './views/landing/LegalPoliciesView.jsx'
 import SupportPageView from './views/community/SupportPageView.jsx'
 import BlogPageView from './views/community/BlogPageView.jsx'
 import CommunityView from './views/community/CommunityView.jsx'
@@ -10691,6 +10692,17 @@ function AppContent({
           <Route path="/tours-vault" element={<Navigate to="/tour-capital" replace />} />
           <Route path="/sync-placement" element={<SyncPlacementView sessionUser={sessionUser} />} />
           <Route path="/about" element={<AboutView />} />
+          <Route path="/privacy" element={<LegalPoliciesView defaultPolicy="privacy" />} />
+          <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
+          <Route path="/terms" element={<LegalPoliciesView defaultPolicy="terms" />} />
+          <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
+          <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
+          <Route path="/cookies" element={<LegalPoliciesView defaultPolicy="cookies" />} />
+          <Route path="/cookie-policy" element={<Navigate to="/cookies" replace />} />
+          <Route path="/refund" element={<LegalPoliciesView defaultPolicy="refund" />} />
+          <Route path="/refund-policy" element={<Navigate to="/refund" replace />} />
+          <Route path="/refunds" element={<Navigate to="/refund" replace />} />
+          <Route path="/legal" element={<LegalPoliciesView defaultPolicy="privacy" />} />
           <Route path="/affiliates" element={<AffiliatesView sessionUser={sessionUser} />} />
           <Route path="/help" element={<HelpView sessionUser={sessionUser} />} />
           <Route path="/community/support" element={<SupportPageView sessionUser={sessionUser} catalogTracks={catalogTracks} />} />

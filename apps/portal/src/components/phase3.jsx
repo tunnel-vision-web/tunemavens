@@ -14,6 +14,7 @@ import { getIntermavenUrl } from '../PerfectForSidebar.jsx'
 import { persistAppActivation, persistAppDeactivation, getStoredActivatedApps } from '../lib/activatedApps.js'
 import InAppDocModal from './common/InAppDocModal.jsx'
 import { AffiliatePayoutSettingsModal, AffiliateReferralLinkModal, AffiliateDirectTalentModal } from './affiliates/AffiliateActionModals.jsx'
+import { LEGAL_POLICIES } from '../data/legalPolicies.js'
 
 // Small shared helper  -  a plain title + description block used by every
 // Phase 3 panel. Kept next to the panels that use it.
@@ -690,6 +691,8 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial, session
     team_size_other: initial?.team_size_other || '',
     freeform_notes: initial?.freeform_notes || '',
     create_free_epk: initial?.create_free_epk !== undefined ? initial.create_free_epk : true,
+    agreed_terms: initial?.agreed_terms || false,
+    agreed_privacy: initial?.agreed_privacy || false,
   }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -697,6 +700,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial, session
   const [wizardRecs, setWizardRecs] = useState([]);
   const [activatedSlugs, setActivatedSlugs] = useState(() => getStoredActivatedApps(sessionUser) || sessionUser?.apps || []);
   const [busyActivate, setBusyActivate] = useState(null);
+  const [viewingPolicyKey, setViewingPolicyKey] = useState(null);
 
   useEffect(() => {
     if (open) {
@@ -710,7 +714,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial, session
   if (!open) return null;
 
   const userRole = sessionUser?.role || 'dj';
-  const totalSteps = WIZARD_QUESTIONS.length + 2;
+  const totalSteps = WIZARD_QUESTIONS.length + 3;
   const isLast = step === totalSteps - 1;
   const current = step < WIZARD_QUESTIONS.length ? WIZARD_QUESTIONS[step] : null;
   const otherKey = current ? `${current.key}_other` : null;
@@ -721,7 +725,10 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial, session
   const hasSelection = current
     ? (current.multi ? Array.isArray(currentValue) && currentValue.length > 0 : !!currentValue)
     : true;
-  const canProceed = current ? (hasSelection || !!currentOther) : true;
+  let canProceed = current ? (hasSelection || !!currentOther) : true;
+  if (step === WIZARD_QUESTIONS.length + 2) {
+    canProceed = Boolean(answers.agreed_terms && answers.agreed_privacy);
+  }
 
   const toggleOption = (key, value, multi) => {
     setAnswers((a) => {
@@ -740,6 +747,10 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial, session
   };
 
   const save = async () => {
+    if (!answers.agreed_terms || !answers.agreed_privacy) {
+      setError('You must read and agree to both the Terms of Service and Privacy Policy to finish setup.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -1073,6 +1084,246 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial, session
             </div>
           </div>
         )}
+
+        {step === WIZARD_QUESTIONS.length + 2 && (
+          <div data-testid="wizard-legal-step">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <RiShieldFill style={{ fontSize: '20px', color: '#00f0ff' }} />
+              <p style={{ fontSize: '15px', color: '#e2e8f0', margin: 0, fontWeight: 700 }}>
+                Terms of Service &amp; Privacy Policy Agreement
+              </p>
+            </div>
+            <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px', lineHeight: 1.5 }}>
+              TuneMavens protects creative sovereignty: you retain 100% copyright ownership of your music, and your transactions are secured via immutable TuneLedger accounting. Reading and accepting our Terms of Service and Privacy Policy is required to proceed.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              {/* Terms of Service Card */}
+              <div
+                style={{
+                  background: answers.agreed_terms ? 'rgba(0, 240, 255, 0.06)' : 'rgba(255, 255, 255, 0.02)',
+                  border: answers.agreed_terms ? '1px solid #00f0ff' : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '3px',
+                  padding: '14px 16px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <RiBookOpenFill style={{ color: '#00f0ff', fontSize: '16px' }} />
+                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#f1f5f9' }}>Terms of Service</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setViewingPolicyKey('terms')}
+                    data-testid="wizard-read-terms-btn"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.16)',
+                      color: '#00f0ff',
+                      borderRadius: '3px',
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Read Full Terms &rarr;
+                  </button>
+                </div>
+                <p style={{ fontSize: '11.5px', color: '#94a3b8', margin: '0 0 10px 0', lineHeight: 1.45 }}>
+                  Key terms: You retain 100% of your copyright. Collaborative split sheets are contractually binding. Non-expiring network credits apply without recurring monthly subscriptions.
+                </p>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={answers.agreed_terms}
+                    onChange={(e) => setAnswers(a => ({ ...a, agreed_terms: e.target.checked }))}
+                    data-testid="wizard-agree-terms-checkbox"
+                    style={{ accentColor: '#00f0ff', width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: answers.agreed_terms ? '#00f0ff' : '#cbd5e1' }}>
+                    I have read and agree to the Terms of Service
+                  </span>
+                </label>
+              </div>
+
+              {/* Privacy Policy Card */}
+              <div
+                style={{
+                  background: answers.agreed_privacy ? 'rgba(0, 240, 255, 0.06)' : 'rgba(255, 255, 255, 0.02)',
+                  border: answers.agreed_privacy ? '1px solid #00f0ff' : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '3px',
+                  padding: '14px 16px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <RiShieldFill style={{ color: '#00f0ff', fontSize: '16px' }} />
+                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#f1f5f9' }}>Privacy Policy</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setViewingPolicyKey('privacy')}
+                    data-testid="wizard-read-privacy-btn"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.16)',
+                      color: '#00f0ff',
+                      borderRadius: '3px',
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Read Full Privacy Policy &rarr;
+                  </button>
+                </div>
+                <p style={{ fontSize: '11.5px', color: '#94a3b8', margin: '0 0 10px 0', lineHeight: 1.45 }}>
+                  Key protections: We never sell your personal data. Daraja M-Pesa PINs are never stored. Cloud master audio files and stems are encrypted at rest with AES-256.
+                </p>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={answers.agreed_privacy}
+                    onChange={(e) => setAnswers(a => ({ ...a, agreed_privacy: e.target.checked }))}
+                    data-testid="wizard-agree-privacy-checkbox"
+                    style={{ accentColor: '#00f0ff', width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: answers.agreed_privacy ? '#00f0ff' : '#cbd5e1' }}>
+                    I have read and agree to the Privacy Policy
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {viewingPolicyKey && (
+          <div
+            data-testid="wizard-policy-viewer-modal"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(3, 7, 18, 0.85)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 10001,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }}
+          >
+            <div
+              style={{
+                background: '#091120',
+                border: '1px solid #00f0ff',
+                borderRadius: '3px',
+                width: '100%',
+                maxWidth: '740px',
+                maxHeight: '85vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 20px 48px rgba(0, 0, 0, 0.8)'
+              }}
+            >
+              <div
+                style={{
+                  padding: '16px 20px',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', color: '#fff', fontWeight: 800 }}>
+                    {LEGAL_POLICIES[viewingPolicyKey]?.title}
+                  </h3>
+                  <div style={{ fontSize: '11px', color: '#00f0ff', marginTop: '2px' }}>
+                    Effective Date: {LEGAL_POLICIES[viewingPolicyKey]?.effectiveDate}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewingPolicyKey(null)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    fontSize: '20px'
+                  }}
+                >
+                  <RiCloseFill />
+                </button>
+              </div>
+              <div
+                style={{
+                  padding: '20px',
+                  overflowY: 'auto',
+                  flex: 1,
+                  fontSize: '12.5px',
+                  color: '#cbd5e1',
+                  lineHeight: 1.6
+                }}
+              >
+                <div style={{ background: 'rgba(0, 240, 255, 0.06)', borderLeft: '3px solid #00f0ff', padding: '10px 14px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '10px', color: '#00f0ff', fontWeight: 800, textTransform: 'uppercase' }}>Plain English Summary</div>
+                  <div style={{ marginTop: '4px', color: '#fff' }}>{LEGAL_POLICIES[viewingPolicyKey]?.plainEnglishSummary}</div>
+                </div>
+                {LEGAL_POLICIES[viewingPolicyKey]?.sections?.map((sec) => (
+                  <div key={sec.id} style={{ marginBottom: '18px' }}>
+                    <h4 style={{ color: '#fff', fontSize: '14px', margin: '0 0 6px 0', fontWeight: 700 }}>{sec.title}</h4>
+                    {sec.inPlainEnglish && (
+                      <div style={{ fontSize: '11px', color: '#00f0ff', marginBottom: '6px' }}>
+                        Quick Take: {sec.inPlainEnglish}
+                      </div>
+                    )}
+                    <div style={{ color: '#94a3b8', whiteSpace: 'pre-line' }}>{sec.content}</div>
+                  </div>
+                ))}
+              </div>
+              <div
+                style={{
+                  padding: '14px 20px',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '10px'
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (viewingPolicyKey === 'terms') {
+                      setAnswers(a => ({ ...a, agreed_terms: true }));
+                    } else if (viewingPolicyKey === 'privacy') {
+                      setAnswers(a => ({ ...a, agreed_privacy: true }));
+                    }
+                    setViewingPolicyKey(null);
+                  }}
+                  data-testid="wizard-accept-policy-btn"
+                  style={{
+                    background: '#00f0ff',
+                    color: '#070e18',
+                    border: 'none',
+                    borderRadius: '3px',
+                    padding: '8px 18px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✓ Done Reading &amp; Agree
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {error && <p style={{ color: '#f87171', fontSize: '12px', marginBottom: '12px' }} data-testid="wizard-error">{error}</p>}
 

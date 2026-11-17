@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill } from 'react-icons/ri'
+import { RiArrowDownSFill, RiFileList3Line, RiStackFill, RiSmartphoneFill, RiQuestionFill, RiMessage2Fill, RiBookOpenFill, RiCloseFill, RiMenuFill, RiCpuFill, RiCalendarEventFill, RiVolumeUpFill, RiCustomerService2Fill, RiUserSharedFill, RiShieldCheckFill } from 'react-icons/ri'
 import { ROLE_LOGOS, getServiceUrl } from '../PerfectForSidebar.jsx'
 import RegionSwitcher from '../../RegionSwitcher.jsx'
 import { useRegion } from '../../RegionContext.jsx'
@@ -418,6 +418,15 @@ export default function Navbar({ sessionUser }) {
                 onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}
               >
                 <RiUserSharedFill size={16} /> Affiliate Programme
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/legal" 
+                className={`dropdown-link ${isActive('/legal') || isActive('/privacy') || isActive('/terms') || isActive('/cookies') || isActive('/refund') ? 'active' : ''}`} 
+                onClick={() => { setDropdownOpen(false); setMobileOpen(false); }}
+              >
+                <RiShieldCheckFill size={16} /> Legal &amp; Policies
               </Link>
             </li>
           </ul>

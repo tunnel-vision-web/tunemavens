@@ -53,6 +53,7 @@ import AdminTeamRosterPanel from './components/admin/AdminTeamRosterPanel.jsx';
 import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx';
 import TuneLedgerSplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx';
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx';
+import LegalPoliciesView from './views/landing/LegalPoliciesView.jsx';
 import TuneCompanionApp from './components/companion/TuneCompanionApp.jsx';
 import MyContractsPanel from './components/contracts/MyContractsPanel.jsx';
 import { 
@@ -467,6 +468,17 @@ function AppContent() {
           <Route path="/dashboard" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="home" onLogout={handleLogout} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
+          <Route path="/privacy" element={<LegalPoliciesView defaultPolicy="privacy" />} />
+          <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
+          <Route path="/terms" element={<LegalPoliciesView defaultPolicy="terms" />} />
+          <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
+          <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
+          <Route path="/cookies" element={<LegalPoliciesView defaultPolicy="cookies" />} />
+          <Route path="/cookie-policy" element={<Navigate to="/cookies" replace />} />
+          <Route path="/refund" element={<LegalPoliciesView defaultPolicy="refund" />} />
+          <Route path="/refund-policy" element={<Navigate to="/refund" replace />} />
+          <Route path="/refunds" element={<Navigate to="/refund" replace />} />
+          <Route path="/legal" element={<LegalPoliciesView defaultPolicy="privacy" />} />
           <Route path="/help" element={<Navigate to="/?view=help" replace />} />
           <Route path="/docs" element={<Navigate to="/?view=help" replace />} />
           <Route path="/support" element={<Navigate to="/?view=support" replace />} />

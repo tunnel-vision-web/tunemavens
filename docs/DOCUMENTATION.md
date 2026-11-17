@@ -3143,3 +3143,29 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Hardened `record_transaction` with graceful upsertion for guest/anonymous fan top-up users, preventing unhandled missing user errors during POS and EPK tip reloads.
   - Replay protection against duplicate M-Pesa receipts, recycled checkout IDs, and replayed Stripe event signatures.
   - Automated test suite `backend/tests/test_payment_integrity.py` passing 16 of 16 tests covering package price integrity, STK push dispatch pending state, webhook security, and zero balance discrepancies.
+
+### 9.44.57 Phase 16: Legal & Compliance Suite, Menu Placements & Mandatory Onboarding Verification
+
+- **Canonical Industry-Standard Legal & Compliance Policies (`apps/portal/src/data/legalPolicies.js`)**:
+  - Authored comprehensive, industry-standard legal frameworks across four core policies:
+    1. **Privacy Policy (`/privacy`, `/privacy-policy`)**: Full data collection, processing, and retention disclosures compliant with the Kenya Data Protection Act (KDPA 2019), GDPR (Regulation EU 2016/679), and California Consumer Privacy Act (CCPA). Details rights of access, correction, erasure, audio telemetry tracking, and international data transfers between Kenya and Delaware, USA.
+    2. **Terms of Service (`/terms`, `/terms-of-service`, `/terms-and-conditions`)**: Governs account creation, sovereign audio licensing, sync placements, creator payouts, pro-rata pool allocations, zero-tolerance copyright infringement, DMCA / Section 35 Kenya Copyright Act takedown procedures, and mandatory binding arbitration (Nairobi Centre for International Arbitration / American Arbitration Association).
+    3. **Cookie Policy (`/cookies`, `/cookie-policy`)**: Classifies strictly necessary, performance, functional, and targeting cookies. Details granular cookie controls, session storage management, and browser-level opt-out instructions.
+    4. **Refund Policy (`/refund`, `/refund-policy`, `/refunds`)**: Comprehensive consumer protection policy covering pay-as-you-go credit reloads, digital sync licensing fees, DJ pool downloads, and merchandise sales. Details 14-day statutory withdrawal rules, unspent credit refund mechanisms, non-refundable consumed digital deliverables, and chargeback dispute protocols.
+  - **"In Plain English" Summaries**: Every policy contains digestible, bulleted summaries alongside strict legal clauses, guaranteeing high readability for artists, DJs, music supervisors, and everyday listeners.
+  - **Dual Jurisdiction Coverage**: Formatted under dual operational entities: *Intermaven Network Limited* (Nairobi, Kenya) and *Maven Global Inc.* (Delaware, USA).
+
+- **Responsive Multi-Workspace Legal UI (`LegalPoliciesView.jsx` & `LegalPoliciesView.css`)**:
+  - Implemented across all three frontends: `apps/portal`, `apps/tunestream`, and `apps/syncmavens`.
+  - Responsive 2-column layout with sticky Table of Contents navigation, active policy tab switcher, deep-link copy button, and high-contrast print stylesheet (`@media print`).
+  - Adheres strictly to design tokens: midnight navy background (`#070e18`), 1280px max-width layout constraint, flat buttons, and 3px border radius.
+
+- **Global Navigation & Footer Integration**:
+  - Replaced legacy `alert(...)` stub links in `Footer.jsx` across all three applications with real `<Link>` components to `/privacy`, `/terms`, `/cookies`, and `/refund`.
+  - Added "Legal & Compliance" links under the "Support & Community" columns in both footers and navigation bar dropdown menus (`Navbar.jsx`).
+  - Added dedicated `/legal` hub routes with multi-tab policy switching.
+
+- **Mandatory Policy Reading & Agreement during Onboarding**:
+  - **Creator Onboarding Wizard (`apps/portal/src/components/phase3.jsx`)**: Added a dedicated mandatory Legal Agreement step (`agreed_terms` and `agreed_privacy`) in `OnboardingWizardModal`. Displays interactive review cards, full-policy in-modal reading dialog (`viewingPolicyKey`) allowing users to read the full policy text without leaving their onboarding state, and disables the completion button until both policies are explicitly confirmed.
+  - **Listener Onboarding (`apps/portal/src/components/common/OnboardingTasteModal.jsx`, `apps/tunestream/src/components/common/OnboardingTasteModal.jsx`)**: Required acceptance of Terms and Privacy before saving taste preferences and generating tailored listener mixes.
+  - **User Registration (`RegisterView.jsx` across `portal`, `tunestream`, and `syncmavens`)**: Embedded required Terms of Service and Privacy Policy checkboxes and server/client validation blocking account creation until confirmed.

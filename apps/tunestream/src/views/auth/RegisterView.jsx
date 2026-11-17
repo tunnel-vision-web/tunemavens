@@ -93,6 +93,8 @@ export default function RegisterView({ onLogin, onClose }) {
   const [payoutBankName, setPayoutBankName] = useState(() => sessionStorage.getItem('signup_payout_bank_name') || '');
   const [payoutAccountNum, setPayoutAccountNum] = useState(() => sessionStorage.getItem('signup_payout_account_num') || '');
   const [payoutRoutingNum, setPayoutRoutingNum] = useState(() => sessionStorage.getItem('signup_payout_routing_num') || '');
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [payoutCardNum, setPayoutCardNum] = useState(() => sessionStorage.getItem('signup_payout_card_num') || '');
   const [payoutMobilePhone, setPayoutMobilePhone] = useState(() => sessionStorage.getItem('signup_payout_mobile_phone') || '');
   const [payoutMobileProvider, setPayoutMobileProvider] = useState(() => sessionStorage.getItem('signup_payout_mobile_provider') || 'M-Pesa');
@@ -270,6 +272,10 @@ export default function RegisterView({ onLogin, onClose }) {
     }
     if (currentStepName === 'Broadcaster Info' && !mediaNetwork) {
       alert('Please specify your broadcasting media network name.');
+      return;
+    }
+    if (currentStepName === 'Security' && (!agreedTerms || !agreedPrivacy)) {
+      alert('You must read and agree to the Terms of Service and Privacy Policy to proceed.');
       return;
     }
 
@@ -482,6 +488,10 @@ export default function RegisterView({ onLogin, onClose }) {
   const submitRegister = async () => {
     if (!name || !email || !password) {
       alert('Please fill out name, email, and password on the Security credentials step.');
+      return;
+    }
+    if (!agreedTerms || !agreedPrivacy) {
+      alert('You must read and agree to both the Terms of Service and Privacy Policy to complete registration.');
       return;
     }
     const userRole = roles[0] || 'consumer';
@@ -1357,6 +1367,33 @@ export default function RegisterView({ onLogin, onClose }) {
               <div className="form-group" style={{ marginBottom: '14px' }}>
                 <label className="form-label" style={{ fontSize: '11px', marginBottom: '4px', display: 'block', color: 'var(--mu)' }}>Choose Password</label>
                 <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="form-control" style={{ fontSize: '13px', padding: '8px 12px' }} required />
+              </div>
+
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '10px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={agreedTerms} 
+                    onChange={(e) => setAgreedTerms(e.target.checked)} 
+                    style={{ marginTop: '2px', accentColor: 'var(--cyan)' }} 
+                    required 
+                  />
+                  <span style={{ fontSize: '11.5px', color: '#cbd5e1', lineHeight: 1.4 }}>
+                    I have read and agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--cyan)', textDecoration: 'underline' }}>Terms of Service</a> (including 100% creator ownership and binding split cascades).
+                  </span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={agreedPrivacy} 
+                    onChange={(e) => setAgreedPrivacy(e.target.checked)} 
+                    style={{ marginTop: '2px', accentColor: 'var(--cyan)' }} 
+                    required 
+                  />
+                  <span style={{ fontSize: '11.5px', color: '#cbd5e1', lineHeight: 1.4 }}>
+                    I have read and agree to the <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--cyan)', textDecoration: 'underline' }}>Privacy Policy</a> (understanding how my data and catalog assets are protected).
+                  </span>
+                </label>
               </div>
             </div>
           )}
