@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   RiCloseLine,
   RiFolderMusicLine,
@@ -17,6 +17,7 @@ import './SyncMarketplace.css'
 export default function SyncProjectBinsModal({
   isOpen,
   onClose,
+  embedded = false,
   bins,
   currentBinId,
   onSelectBin,
@@ -26,13 +27,19 @@ export default function SyncProjectBinsModal({
   playingTrackId,
   onTogglePlay
 }) {
-  if (!isOpen) return null;
+  if (!embedded && !isOpen) return null;
 
   const [activeBinId, setActiveBinId] = useState(currentBinId || 'bin_default');
   const [newBinName, setNewBinName] = useState('');
   const [showNewBinInput, setShowNewBinInput] = useState(false);
   const [cueData, setCueData] = useState({});
   const [exportSuccess, setExportSuccess] = useState(false);
+
+  useEffect(() => {
+    if (currentBinId) {
+      setActiveBinId(currentBinId);
+    }
+  }, [currentBinId]);
 
   const activeBin = (bins || []).find(b => b.id === activeBinId) || (bins && bins[0]) || {
     id: 'bin_default',
@@ -126,28 +133,35 @@ export default function SyncProjectBinsModal({
     setTimeout(() => setExportSuccess(false), 4000);
   };
 
-  return (
-    <div className="sync-wizard-overlay" onClick={onClose}>
-      <div
-        className="sync-wizard-modal"
-        style={{ maxWidth: '920px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="sync-wizard-header">
-          <div className="sync-wizard-title-group">
-            <span className="sync-wizard-badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
-              <RiFolderMusicLine /> SUPERVISOR WORKSPACE
-            </span>
-            <h2 className="sync-wizard-title">Project Bins & Cue Sheet Manager</h2>
-            <p className="sync-wizard-subtitle">
-              Shortlist candidate cues, log in/out timecodes, and export standardized broadcast cue sheets for PRO reporting.
-            </p>
-          </div>
+  const modalCard = (
+    <div
+      className={embedded ? "sync-bins-embedded-container" : "sync-wizard-card sync-wizard-modal"}
+      style={{
+        maxWidth: embedded ? '100%' : '920px',
+        maxHeight: embedded ? 'none' : '90vh',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="sync-wizard-header">
+        <div className="sync-wizard-title-group">
+          <span className="sync-wizard-badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+            <RiFolderMusicLine /> SUPERVISOR WORKSPACE
+          </span>
+          <h2 className="sync-wizard-title">Project Bins & Cue Sheet Manager</h2>
+          <p className="sync-wizard-subtitle">
+            Shortlist candidate cues, log in/out timecodes, and export standardized broadcast cue sheets for PRO reporting.
+          </p>
+        </div>
+        {!embedded && (
           <button className="sync-wizard-close-btn" onClick={onClose} aria-label="Close">
             <RiCloseLine />
           </button>
-        </div>
+        )}
+      </div>
 
         {/* Bin Switcher Bar */}
         <div style={{
@@ -534,15 +548,26 @@ export default function SyncProjectBinsModal({
           <div style={{ fontSize: '12px', color: '#94a3b8' }}>
             TuneMavens Sync Licensing Escrow Guarantee • 100% Legal Master Indemnity
           </div>
-          <button
-            type="button"
-            className="sync-secondary-btn"
-            onClick={onClose}
-          >
-            Close
-          </button>
+          {!embedded && (
+            <button
+              type="button"
+              className="sync-secondary-btn"
+              onClick={onClose}
+            >
+              Close
+            </button>
+          )}
         </div>
       </div>
+    );
+
+  if (embedded) {
+    return modalCard;
+  }
+
+  return (
+    <div className="sync-wizard-backdrop sync-wizard-overlay" onClick={onClose}>
+      {modalCard}
     </div>
   );
 }

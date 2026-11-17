@@ -747,7 +747,8 @@
 /* =====================================================================
    Wizard Modal Styles
    ===================================================================== */
-.sync-wizard-backdrop {
+.sync-wizard-backdrop,
+.sync-wizard-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -766,7 +767,8 @@
   box-sizing: border-box;
 }
 
-.sync-wizard-card {
+.sync-wizard-card,
+.sync-wizard-modal {
   background: #090e1f;
   border: 1px solid rgba(34, 211, 238, 0.3);
   border-radius: 3px;
@@ -779,6 +781,43 @@
   flex-direction: column;
   position: relative;
   box-sizing: border-box;
+}
+
+.sync-bins-embedded-container {
+  background: #090e1f;
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  border-radius: 3px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.sync-wizard-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sync-wizard-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  width: fit-content;
+  margin-bottom: 4px;
+}
+
+.sync-wizard-subtitle {
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .sync-wizard-header {

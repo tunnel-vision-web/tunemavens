@@ -3251,6 +3251,19 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Enhanced account dropdown with direct quick links to Lossless Sound & EQ, Taste Preferences, Mobile & 8GB Offline Sync, Live Shows & Passes, Creator Tipping Ledger, and Support Desk.
   - Fixed role switcher to route each persona to its dedicated active panel without falling through to default.
 
+### 9.44.62 Phase 21: Sync Project Bins & Cue Sheet Manager Resolution & Extension Warning Diagnostics
+
+- **Sync Project Bins & Cue Sheet Manager (`SyncMarketplacePanel.jsx`, `SyncProjectBinsModal.jsx`)**:
+  - Fixed "Project Bins & Cue Sheet" button in `SyncMarketplacePanel`: mapped navigation tab click to `setActiveTab('bins')` while retaining header action button for opening modal dialog.
+  - Added dedicated embedded view for `activeTab === 'bins'` in `SyncMarketplacePanel` across `syncmavens`, `portal`, and `tunestream`.
+  - Added `embedded` mode support to `SyncProjectBinsModal` allowing it to render seamlessly inline inside the dashboard or as a centered modal.
+  - Synchronized `currentBinId` changes via `useEffect` in `SyncProjectBinsModal`.
+  - Standardized modal backdrop and card styling: mapped `.sync-wizard-overlay` and `.sync-wizard-modal` to `.sync-wizard-backdrop` and `.sync-wizard-card` with `position: fixed`, `z-index: 999999`, midnight background blur, and strict 3px border-radius.
+  - Added missing CSS rules for `.sync-bins-embedded-container`, `.sync-wizard-title-group`, `.sync-wizard-badge`, and `.sync-wizard-subtitle`.
+
+- **Web3 Browser Extension Diagnostics (`contentscript.js`)**:
+  - Clarified that `contentscript.js` warnings (`MaxListenersExceededWarning`, `ObjectMultiplex - orphaned data for stream "app-init-liveness"`) originate exclusively from third-party Web3 browser extensions (e.g. MetaMask, Phantom) injected into client tabs. These do not originate from TuneMavens application code or backend services, and have zero impact on application integrity.
+
 
 
 

@@ -164,9 +164,9 @@ export default function SyncBriefCreationWizard({
   };
 
   return (
-    <div className="sync-wizard-overlay" onClick={onClose}>
+    <div className="sync-wizard-backdrop sync-wizard-overlay" onClick={onClose}>
       <div
-        className="sync-wizard-modal"
+        className="sync-wizard-card sync-wizard-modal"
         style={{ maxWidth: '820px' }}
         onClick={(e) => e.stopPropagation()}
       >

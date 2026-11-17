@@ -391,7 +391,7 @@ export default function SyncMarketplacePanel({ sessionUser }) {
           <button
             type="button"
             className={`sync-nav-tab-btn ${activeTab === 'bins' ? 'active' : ''}`}
-            onClick={() => setIsBinsModalOpen(true)}
+            onClick={() => setActiveTab('bins')}
           >
             <RiFolderMusicLine /> Project Bins & Cue Sheet
             <span className="sync-nav-badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }}>
@@ -1392,6 +1392,39 @@ export default function SyncMarketplacePanel({ sessionUser }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========================================================
+          TAB 4: PROJECT BINS & CUE SHEET (SUPERVISOR WORKSPACE)
+          ======================================================== */}
+      {activeTab === 'bins' && (
+        <SyncProjectBinsModal
+          isOpen={true}
+          embedded={true}
+          onClose={() => setActiveTab('browse')}
+          bins={projectBins}
+          currentBinId={currentBinId}
+          onSelectBin={(binId) => setCurrentBinId(binId)}
+          onCreateBin={(newBin) => {
+            setProjectBins(prev => [...prev, newBin]);
+            setCurrentBinId(newBin.id);
+            showToast(`Created new project bin "${newBin.name}"`);
+          }}
+          onRemoveTrackFromBin={(binId, trackId) => {
+            setProjectBins(prev => prev.map(b => {
+              if (b.id === binId) {
+                return { ...b, tracks: b.tracks.filter(t => t.id !== trackId) };
+              }
+              return b;
+            }));
+          }}
+          onOpenLicensingWizard={(track) => {
+            setLicensingTrack(track);
+            setIsLicensingOpen(true);
+          }}
+          playingTrackId={playingTrackId}
+          onTogglePlay={handleTogglePlay}
+        />
       )}
 
       {/* ========================================================
