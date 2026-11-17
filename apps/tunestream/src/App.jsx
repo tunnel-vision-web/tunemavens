@@ -3809,6 +3809,42 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
   };
   const isAdminSimulated = Boolean(activeUser.is_admin && userRole !== 'admin');
 
+  const handleNotificationAction = (n) => {
+    if (!n) return;
+    setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+    setNotifOpen(false);
+
+    if (n.actionType === 'payout') {
+      setIsPayoutSettingsModalOpen(true);
+    } else if (n.actionType === 'link') {
+      setIsReferralLinkModalOpen(true);
+    } else if (n.actionType === 'talent') {
+      setIsDirectTalentModalOpen(true);
+    } else if (n.actionType === 'guide') {
+      setActiveTab('affiliates');
+    } else if (n.actionType === 'vc-guide' || n.actionType === 'tours-vault' || n.actionType === 'vc-portfolio' || n.actionType === 'vc-sponsorship') {
+      setActiveTab('tours-vault');
+    } else if (n.actionType === 'vc-discover') {
+      setActiveTab('vc-discover');
+    } else if (n.actionType === 'concerts' || n.actionType === 'events') {
+      setActiveTab('concerts');
+    } else if (n.actionType === 'tips') {
+      setActiveTab('tips');
+    } else if (n.actionType === 'home') {
+      setActiveTab('home');
+    } else if (n.actionType === 'companion') {
+      setActiveTab('companion');
+    } else if (n.actionType === 'stream-controls') {
+      setActiveTab('stream-controls');
+    } else if (n.actionType === 'podcasts' || n.actionType === 'podcaster-studio') {
+      setActiveTab(userRole === 'podcaster' ? 'podcaster-studio' : 'podcasts');
+    } else if (n.actionType === 'reload' || n.actionType === 'credits') {
+      setIsCreditReloadOpen(true);
+    } else if (n.actionType && typeof setActiveTab === 'function') {
+      setActiveTab(n.actionType);
+    }
+  };
+
   const handleSwitchRole = (targetRole) => {
     try {
       localStorage.setItem('tunemavens_admin_verified', 'true');
@@ -3827,12 +3863,26 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
         setActiveTab('tours-vault');
       } else if (targetRole === 'podcaster') {
         setActiveTab('podcaster-studio');
+      } else if (targetRole === 'dj') {
+        setActiveTab('dj-mixes');
+      } else if (targetRole === 'creator') {
+        setActiveTab('singles');
+      } else if (targetRole === 'corporate' || targetRole === 'media_house') {
+        setActiveTab('corporate');
+      } else {
+        setActiveTab('home');
       }
       setAccountOpen(false);
     } catch (err) {
       console.error('Failed to switch role:', err);
     }
   };
+
+  useEffect(() => {
+    const handleReload = () => setIsCreditReloadOpen(true);
+    window.addEventListener('tunestreamOpenReload', handleReload);
+    return () => window.removeEventListener('tunestreamOpenReload', handleReload);
+  }, []);
 
   useEffect(() => {
     const handleTopbarClick = (e) => {
@@ -4375,6 +4425,30 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
         return <ConsumerSupportCommunityView sessionUser={activeUser} catalogTracks={catalogTracks} initialSection="blog" />;
       case 'settings':
         return <TuneStreamSettingsPanel sessionUser={activeUser} onSwitchRole={handleSwitchRole} />;
+      case 'sync':
+      case 'sync-marketplace':
+      case 'supervisor':
+        return <SyncMarketplacePanel sessionUser={activeUser} />;
+      case 'affiliates':
+      case 'affiliate':
+        return <AffiliateAdminPanel sessionUser={activeUser} setActiveTab={setActiveTab} />;
+      case 'admin-team':
+      case 'admin':
+        return <AdminTeamRosterPanel sessionUser={activeUser} setActiveTab={setActiveTab} onUpdateUser={() => {}} />;
+      case 'label-team':
+      case 'label':
+        return <LabelTeamRosterPanel sessionUser={activeUser} setActiveTab={setActiveTab} activeArtist={activeArtist} onSelectArtist={handleSwitchArtist} />;
+      case 'my-catalog':
+      case 'catalog':
+        return <TuneStreamLibraryPanel tracks={catalogTracks} onPlayTrack={handleTrackSelect} />;
+      case 'corporate':
+      case 'corporate-ads':
+      case 'media_house':
+        return (
+          <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 20px 40px' }}>
+            <TourCapitalView sessionUser={activeUser} />
+          </div>
+        );
       default:
         return (
           <TuneStreamHomePanel
@@ -4644,7 +4718,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
               <button 
                 type="button" 
                 className="topbar-credits-btn"
-                onClick={() => window.dispatchEvent(new CustomEvent('tunestreamOpenReload'))}
+                onClick={() => setIsCreditReloadOpen(true)}
                 title="Click to top up non-expiring listener credits (Zero monthly subscriptions)"
               >
                 <RiCoinsFill size={15} color="#00f2fe" />
@@ -4683,27 +4757,80 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
               </button>
 
               {notifOpen && (
-                <div className="topbar-dropdown notif-dropdown">
-                  <div className="dropdown-header">
-                    <span className="dropdown-header-title">Notifications</span>
-                    <button 
-                      type="button" 
-                      className="dropdown-header-action"
-                      onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
-                    >
-                      Mark all read
-                    </button>
+                <div className="topbar-dropdown topbar-dropdown-notif" data-testid="topbar-notifications-dropdown">
+                  <div className="topbar-dropdown-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <RiBellFill size={15} style={{ color: '#00f2fe' }} />
+                      <strong style={{ fontSize: '13px', color: '#f1f5f9' }}>Listener Notifications</strong>
+                    </div>
+                    {notifications.some(n => !n.read) && (
+                      <button 
+                        type="button" 
+                        className="topbar-link-btn" 
+                        onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
+                        data-testid="topbar-mark-all-read"
+                      >
+                        Mark all read
+                      </button>
+                    )}
                   </div>
-                  <div className="dropdown-body">
+                  <ul className="topbar-notif-list">
+                    {notifications.length === 0 && (
+                      <li className="topbar-notif-empty">You&apos;re all caught up.</li>
+                    )}
                     {notifications.map(n => (
-                      <div key={n.id} className={`dropdown-item ${!n.read ? 'unread' : ''}`}>
-                        <div className="dropdown-item-content">
-                          <div className="dropdown-item-title">{n.title}</div>
-                          <div className="dropdown-item-sub">{n.body}</div>
+                      <li 
+                        key={n.id} 
+                        className={`topbar-notif-item ${n.read ? 'read' : 'unread'}`}
+                        onClick={() => handleNotificationAction(n)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="topbar-notif-dot" />
+                        <div className="topbar-notif-body" style={{ flex: 1, minWidth: 0 }}>
+                          <div className="topbar-notif-title">{n.title}</div>
+                          <div className="topbar-notif-text">{n.body}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
+                            <span className="topbar-notif-time">{n.at}</span>
+                            {n.actionText && (
+                              <button
+                                type="button"
+                                className="topbar-notif-action-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleNotificationAction(n);
+                                }}
+                              >
+                                {n.actionText} &rarr;
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <span className="dropdown-item-time">{n.at}</span>
-                      </div>
+                      </li>
                     ))}
+                  </ul>
+                  <div className="topbar-dropdown-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <button
+                      type="button"
+                      className="topbar-link-btn"
+                      style={{ color: '#00f2fe', fontWeight: 700, fontSize: '11px', textDecoration: 'none' }}
+                      onClick={() => {
+                        setNotifOpen(false);
+                        setActiveTab('dj-mixes');
+                      }}
+                    >
+                      • Lossless DJ Mixes
+                    </button>
+                    <button
+                      type="button"
+                      className="topbar-link-btn"
+                      style={{ color: '#a855f7', fontWeight: 700, fontSize: '11px', textDecoration: 'none' }}
+                      onClick={() => {
+                        setNotifOpen(false);
+                        setActiveTab('companion');
+                      }}
+                    >
+                      Offline Sync &rarr;
+                    </button>
                   </div>
                 </div>
               )}
@@ -4729,7 +4856,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
               </button>
 
               {accountOpen && (
-                <div className="topbar-dropdown account-dropdown" style={{ minWidth: '280px', padding: '16px' }}>
+                <div className="topbar-dropdown account-dropdown topbar-dropdown-account" style={{ minWidth: '320px', padding: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '3px', background: 'rgba(0,240,255,0.15)', border: '1px solid #00f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00f2fe', fontWeight: '900', fontSize: '18px' }}>
                       {activeUser.name.slice(0, 1).toUpperCase()}
@@ -4751,7 +4878,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
                       type="button"
                       onClick={() => {
                         setAccountOpen(false);
-                        window.dispatchEvent(new CustomEvent('tunestreamOpenReload'));
+                        setIsCreditReloadOpen(true);
                       }}
                       style={{ width: '100%', padding: '8px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
@@ -4804,6 +4931,51 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
                         <span>Mobile & 8GB Offline Sync</span>
                       </div>
                       <span style={{ fontSize: '10px', color: '#c084fc' }}>Synced ✓</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        setActiveTab('concerts');
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', color: '#e2e8f0', fontSize: '12px', cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <RiTicket2Fill size={15} style={{ color: '#f59e0b' }} />
+                        <span>Live Shows & Passes</span>
+                      </div>
+                      <span style={{ fontSize: '10px', color: '#f59e0b' }}>Wallet</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        setActiveTab('tips');
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', color: '#e2e8f0', fontSize: '12px', cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <RiCoinsFill size={15} style={{ color: '#00f2fe' }} />
+                        <span>Creator Tipping Ledger</span>
+                      </div>
+                      <span style={{ fontSize: '10px', color: '#00f2fe' }}>Direct</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        setActiveTab('support');
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', color: '#e2e8f0', fontSize: '12px', cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <RiQuestionLine size={15} style={{ color: '#94a3b8' }} />
+                        <span>Support Desk & Help</span>
+                      </div>
+                      <span style={{ fontSize: '10px', color: '#94a3b8' }}>Tickets</span>
                     </button>
                   </div>
 

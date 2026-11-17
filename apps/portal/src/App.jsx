@@ -847,11 +847,11 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                               } else if (n.actionType === 'talent') {
                                 window.dispatchEvent(new CustomEvent('tunemavens:open-direct-talent'));
                               } else if (n.actionType === 'guide') {
-                                window.dispatchEvent(new CustomEvent('tunemavens:open-reading-doc', { detail: { docId: 'affiliate-program-guide' } }));
+                                if (typeof setActiveTab === 'function') setActiveTab('affiliates');
                               } else if (n.actionType === 'navigate' && n.targetTab && typeof setActiveTab === 'function') {
                                 setActiveTab(n.targetTab);
                               } else if (n.actionType === 'vc-guide') {
-                                window.dispatchEvent(new CustomEvent('tunemavens:open-vc-guide'));
+                                if (typeof setActiveTab === 'function') setActiveTab('tours-vault');
                               }
                               setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
                             }}

@@ -1390,6 +1390,28 @@ input[type="range"]::-webkit-slider-thumb {
 .topbar-notif-title { font-size: 13px; font-weight: 700; color: #f1f5f9; }
 .topbar-notif-text  { font-size: 12px; color: #94a3b8; margin-top: 2px; line-height: 1.4; }
 .topbar-notif-time  { font-size: 10px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.topbar-notif-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: rgba(34, 211, 238, 0.12) !important;
+  border: 1px solid rgba(34, 211, 238, 0.35) !important;
+  color: #00f2fe !important;
+  padding: 3px 9px !important;
+  border-radius: 3px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  line-height: normal !important;
+  height: auto !important;
+  width: auto !important;
+}
+.topbar-notif-action-btn:hover {
+  background: rgba(34, 211, 238, 0.22) !important;
+  border-color: #00f2fe !important;
+  box-shadow: 0 0 8px rgba(0, 242, 254, 0.25) !important;
+}
 
 .topbar-dropdown-footer {
   padding: 8px 14px;

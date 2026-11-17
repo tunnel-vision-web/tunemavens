@@ -1512,10 +1512,29 @@ function AppContent() {
                         </li>
                       ))}
                     </ul>
-                    <div className="topbar-dropdown-footer">
-                      <span style={{ fontSize: '11px', color: '#64748b' }}>
-                        Live notifications coming soon.
-                      </span>
+                    <div className="topbar-dropdown-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <button
+                        type="button"
+                        className="topbar-link-btn"
+                        style={{ color: '#00f2fe', fontWeight: 700, fontSize: '11px', textDecoration: 'none' }}
+                        onClick={() => {
+                          setNotifOpen(false);
+                          setActiveTab('marketplace');
+                        }}
+                      >
+                        • Sync Briefs
+                      </button>
+                      <button
+                        type="button"
+                        className="topbar-link-btn"
+                        style={{ color: '#22d3ee', fontWeight: 700, fontSize: '11px', textDecoration: 'none' }}
+                        onClick={() => {
+                          setNotifOpen(false);
+                          setActiveTab('contracts');
+                        }}
+                      >
+                        Licensing Vault &rarr;
+                      </button>
                     </div>
                   </div>
                 )}

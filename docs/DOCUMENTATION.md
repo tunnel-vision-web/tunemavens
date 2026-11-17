@@ -3226,5 +3226,31 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Added role switcher grid to TuneStream's topbar account dropdown for seamless cross-application consistency.
   - Preserved strict 3px border-radius (`border-radius: 3px !important`) and flat color schemes across all persona cards and buttons in adherence to Section 14 Design Standards.
 
+### 9.44.61 Phase 20: TuneStream Dropdown Navigation, Notification Actions & Platform-Wide Link Integrity
+
+- **TuneStream Notification Dropdown Engine (`apps/tunestream/src/App.jsx` & `apps/tunestream/src/App.css`)**:
+  - Replaced unstyled notification items with the authoritative theme-compliant `.topbar-notif-list` and `.topbar-notif-item` system.
+  - Added pulsating unread notification indicator dots (`.topbar-notif-dot`, glowing cyan `#00f2fe`).
+  - Implemented `handleNotificationAction(n)` to handle all notification actions (`actionText` / `actionType`), linking directly to live routes and panels:
+    - Concert & Tour Passes (`concerts`, `events` $\rightarrow$ `LiveEventsSection`).
+    - Direct Creator Tipping Ledger (`tips` $\rightarrow$ `TuneStreamTipsPanel`).
+    - Tour Capital Vault & Telemetry (`tours-vault`, `vc-portfolio`, `vc-sponsorship` $\rightarrow$ `TourCapitalView`).
+    - Creator Discovery (`vc-discover` $\rightarrow$ `VcDiscoverCreatorsApp`).
+    - Partner Payout Rails, Referral Links & Direct Talent Modals (`payout`, `link`, `talent`).
+  - Standardized `.topbar-notif-action-btn` across all apps (`portal`, `tunestream`, `syncmavens`) with flat cyan accents and 3px border-radius.
+
+- **TuneStream Account Dropdown & Panel Route Completeness**:
+  - Fixed Credit Reload button trigger in topbar and dropdown: directly activates `setIsCreditReloadOpen(true)` while maintaining backwards-compatible event listener for `tunestreamOpenReload`.
+  - Integrated missing panels into TuneStream's `renderActivePanel()` router:
+    - `sync` / `sync-marketplace` / `supervisor` $\rightarrow$ `SyncMarketplacePanel`.
+    - `affiliates` / `affiliate` $\rightarrow$ `AffiliateAdminPanel`.
+    - `admin-team` / `admin` $\rightarrow$ `AdminTeamRosterPanel`.
+    - `label-team` / `label` $\rightarrow$ `LabelTeamRosterPanel`.
+    - `my-catalog` / `catalog` $\rightarrow$ `TuneStreamLibraryPanel`.
+    - `corporate` / `corporate-ads` / `media_house` $\rightarrow$ `TourCapitalView`.
+  - Enhanced account dropdown with direct quick links to Lossless Sound & EQ, Taste Preferences, Mobile & 8GB Offline Sync, Live Shows & Passes, Creator Tipping Ledger, and Support Desk.
+  - Fixed role switcher to route each persona to its dedicated active panel without falling through to default.
+
+
 
 
