@@ -1407,7 +1407,7 @@ function AppContent() {
           <header className="dashboard-topbar">
             {/* Row 1: Admin Console and Account Type */}
             <div className="dashboard-topbar-row-header">
-              <div className="dashboard-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className="dashboard-topbar-left">
                 <button
                   type="button"
                   className="topbar-sidecar-toggle-btn"
@@ -1428,8 +1428,8 @@ function AppContent() {
                   onError={(e) => { e.currentTarget.src = '/favicon.png'; }}
                 />
                 <div className="dashboard-topbar-title">
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Sync Console</span>
-                  <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
+                  <span className="topbar-console-subtitle">Sync Console</span>
+                  <h1 className="topbar-console-title">
                     {sessionUser?.brand_name || sessionUser?.name || 'SyncMavens'}
                   </h1>
                 </div>
@@ -1444,7 +1444,11 @@ function AppContent() {
               >
                 <span className="topbar-simulation-dot" style={{ background: currentRoleObj?.color || '#22d3ee' }} />
                 <span className="topbar-simulation-text">
-                  Account: <strong style={{ color: currentRoleObj?.color || '#22d3ee' }}>{currentRoleObj?.label || currentRoleObj?.shortLabel || 'Creator Pro'}</strong>
+                  <span className="topbar-simulation-prefix">Account: </span>
+                  <strong style={{ color: currentRoleObj?.color || '#22d3ee' }}>
+                    <span className="topbar-role-full">{currentRoleObj?.label || currentRoleObj?.shortLabel || 'Creator Pro'}</span>
+                    <span className="topbar-role-short">{currentRoleObj?.shortLabel || currentRoleObj?.label || 'Creator'}</span>
+                  </strong>
                 </span>
                 {isAdminSimulated && (
                   <button
@@ -1457,7 +1461,7 @@ function AppContent() {
                     title="Reset to Administrator view"
                   >
                     <RiShieldFill size={11} />
-                    <span>Reset</span>
+                    <span className="topbar-reset-text">Reset</span>
                   </button>
                 )}
               </div>

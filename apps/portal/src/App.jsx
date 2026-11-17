@@ -624,7 +624,11 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
         >
           <span className="topbar-simulation-dot" style={{ background: currentRoleObj?.color || '#22d3ee' }} />
           <span className="topbar-simulation-text">
-            Account: <strong style={{ color: currentRoleObj?.color || '#22d3ee' }}>{sessionUser?.role === 'consumer' ? 'Verified Listener' : (currentRoleObj?.label || currentRoleObj?.shortLabel || 'Master Administrator')}</strong>
+            <span className="topbar-simulation-prefix">Account: </span>
+            <strong style={{ color: currentRoleObj?.color || '#22d3ee' }}>
+              <span className="topbar-role-full">{sessionUser?.role === 'consumer' ? 'Verified Listener' : (currentRoleObj?.label || currentRoleObj?.shortLabel || 'Master Administrator')}</span>
+              <span className="topbar-role-short">{sessionUser?.role === 'consumer' ? 'Listener' : (currentRoleObj?.shortLabel || currentRoleObj?.label || 'Admin')}</span>
+            </strong>
           </span>
           {isAdminUser && sessionUser?.role !== 'admin' && (
             <button
@@ -638,7 +642,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
               data-testid="topbar-quick-reset-btn"
             >
               <RiShieldFill size={11} />
-              <span>Reset</span>
+              <span className="topbar-reset-text">Reset</span>
             </button>
           )}
         </div>

@@ -4695,7 +4695,11 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
             >
               <span className="topbar-simulation-dot" style={{ background: currentRoleObj?.color || '#00f2fe' }} />
               <span className="topbar-simulation-text">
-                Account: <strong style={{ color: currentRoleObj?.color || '#00f2fe' }}>{currentRoleObj?.label || currentRoleObj?.shortLabel || 'Verified Listener'}</strong>
+                <span className="topbar-simulation-prefix">Account: </span>
+                <strong style={{ color: currentRoleObj?.color || '#00f2fe' }}>
+                  <span className="topbar-role-full">{currentRoleObj?.label || currentRoleObj?.shortLabel || 'Verified Listener'}</span>
+                  <span className="topbar-role-short">{currentRoleObj?.shortLabel || currentRoleObj?.label || 'Listener'}</span>
+                </strong>
               </span>
               {isAdminUser && (userRole !== 'admin' && activeUser?.role !== 'admin') && (
                 <button
@@ -4708,7 +4712,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
                   title="Reset to Administrator view"
                 >
                   <RiShieldFill size={11} />
-                  <span>Reset</span>
+                  <span className="topbar-reset-text">Reset</span>
                 </button>
               )}
             </div>

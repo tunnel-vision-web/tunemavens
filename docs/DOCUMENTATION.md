@@ -3411,22 +3411,22 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
        - Clamped team card grid column template to `minmax(min(100%, 320px), 1fr)`, eliminating horizontal overflow in narrow mobile viewports.
   - Verified across all workspaces via `npm run build:all` with zero errors.
 
-### 9.44.73 Phase 32: Responsive Brand Logo Switching to Compact Icon Mark
+### 9.44.74 Phase 33: Responsive Topbar Row 1 Single-Line Layout & Account Badge Optimization
 
-- **Responsive Brand Mark Adaptation Across Monorepo Apps (`apps/syncmavens`, `apps/tunestream`, `apps/portal`)**:
-  - **Requirement**: Switch from full horizontal wordmark logos to compact square icon marks in responsive viewports (`<= 768px` / `<= 900px`) and collapsed sidecar icon menus across all dashboards and landing headers.
-  - **SyncMavens (`apps/syncmavens/src/App.jsx`, `apps/syncmavens/src/App.css`)**:
-    - Extracted brand icon marks (`apps/syncmavens/src/assets/syncmavens-icon.png`, `syncmavens-icon.svg`) with runtime fallback to `/favicon.png`.
-    - **Sidebar Navigation**: When `isIconMenu` is active (collapsed or viewport `<= 1024px`), rendered 32px x 32px `smIcon` instead of squished wordmark, with centered `beta` tag and accessible title.
-    - **Landing Navbar**: Configured dual-element rendering with `.logo-desktop` (full horizontal logo) and `.logo-mobile-icon` (34px icon mark). On viewports `<= 768px`, desktop wordmark is hidden and mobile icon mark is displayed alongside centered beta tag and backlink.
-    - **Backend Topbar**: Added `.topbar-brand-icon` to Row 1 (`.dashboard-topbar-row-header`), displayed automatically on viewports `<= 900px` beside the Sync Console title.
-  - **TuneStream (`apps/tunestream/src/App.jsx`, `apps/tunestream/src/App.css`)**:
-    - Created `apps/tunestream/src/assets/tunestream-icon.png` from high-resolution favicon.
-    - **Sidebar Navigation**: When `isIconMenu` is true, renders 30px x 30px `tsIcon` with centered beta tag, cleanly fitting the 52px icon rail.
-    - **Backend Topbar**: Integrated `.topbar-brand-icon` displayed in Row 1 on mobile viewports `<= 900px`.
-  - **TuneMavens Portal (`apps/portal/src/App.jsx`, `apps/portal/src/App.css`)**:
-    - Added `.topbar-brand-icon` in both Admin Console and TuneStream Consumer Hub topbar Row 1, displayed on viewports `<= 900px`.
-  - **Verification**: Executed `npm run build:all` across all monorepo packages (`portal`, `syncmavens`, `tunestream`), verifying zero asset resolution or syntax errors.
+- **Single-Line Topbar Row 1 Adaptation Across Viewports (`apps/syncmavens`, `apps/tunestream`, `apps/portal`)**:
+  - **Issue**: On responsive viewports (especially mobile viewports `<= 768px` / `<= 600px`), items in Row 1 (`.dashboard-topbar-row-header`) exceeded the container width due to the long "Account: [Role Name]" badge, reset button, and unconstrained title element.
+  - **Account Badge Compression (`.dashboard-topbar-account-type-badge`)**:
+    - Created dual-label architecture (`.topbar-role-full` vs `.topbar-role-short`) alongside `.topbar-simulation-prefix` and `.topbar-reset-text`.
+    - On screens `<= 900px`, hid the static "Account: " prefix and automatically switched to concise short labels (e.g., "Supervisor", "Creator", "Affiliate", "Admin") with `max-width: 50%` and ellipsis truncation.
+    - Compressed padding (`4px 8px`, down to `3px 6px` on `<= 600px`) and reduced indicator dot to 6px.
+    - On screens `<= 600px`, hid the "Reset" text label while preserving the interactive shield icon (`<RiShieldFill />`) for 1-tap admin resetting.
+  - **Row 1 Flexbox & Title Clamping (`.dashboard-topbar-row-header`, `.dashboard-topbar-left`)**:
+    - Enforced `flex-wrap: nowrap !important; overflow: hidden !important; width: 100% !important; min-width: 0 !important;`.
+    - Set `.dashboard-topbar-left` and `.dashboard-topbar-title` to `min-width: 0 !important; flex: 1 1 auto !important; overflow: hidden !important;`.
+    - Applied single-line text truncation (`white-space: nowrap; overflow: hidden; text-overflow: ellipsis`) to the console title and subtitle.
+    - Streamlined gaps (`8px` on `<= 900px`, `6px` on `<= 600px`), guaranteeing all elements stay strictly on a single row without horizontal overflow.
+  - **Ecosystem Alignment**: Implemented identical single-line responsive layouts across TuneStream (`apps/tunestream`) and TuneMavens Portal (`apps/portal`).
+  - **Verification**: Verified via `npm run build:all` with 0 errors across all workspaces.
 
 
 

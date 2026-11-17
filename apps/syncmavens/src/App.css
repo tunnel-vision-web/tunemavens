@@ -1084,6 +1084,44 @@ body {
   background: rgba(34, 211, 238, 0.14);
   border-color: rgba(34, 211, 238, 0.45);
 }
+.dashboard-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.topbar-console-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-console-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-role-full {
+  display: inline;
+}
+.topbar-role-short {
+  display: none;
+}
+.topbar-simulation-prefix {
+  display: inline;
+}
+.topbar-reset-text {
+  display: inline;
+}
 .dashboard-topbar-menu-items-row {
   display: flex;
   align-items: center;
@@ -2987,28 +3025,95 @@ button.dropdown-trigger:focus-visible {
     height: auto !important;
   }
 
-  /* Row 1: Admin Console and Account Type */
+  /* Row 1: Admin Console and Account Type (Single-line responsive fit) */
   .dashboard-topbar-row-header {
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    gap: 10px !important;
+    gap: 8px !important;
     padding-bottom: 2px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-topbar-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-topbar-title {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+  }
+
+  .topbar-console-subtitle {
+    font-size: 10px !important;
+    letter-spacing: 0.8px !important;
+    display: block !important;
+  }
+
+  .topbar-console-title {
+    font-size: 13.5px !important;
+    display: block !important;
+    max-width: 100% !important;
+  }
+
+  .topbar-brand-icon {
+    display: block !important;
+    height: 22px !important;
+    width: 22px !important;
+    object-fit: contain;
+    flex-shrink: 0 !important;
+  }
+
+  .topbar-sidecar-toggle-btn {
+    flex-shrink: 0 !important;
   }
 
   .dashboard-topbar-account-type-badge {
     margin-left: auto !important;
     flex-shrink: 0 !important;
+    padding: 4px 8px !important;
+    font-size: 10.5px !important;
+    gap: 5px !important;
+    white-space: nowrap !important;
+    max-width: 52% !important;
+    min-width: 0 !important;
   }
 
-  .topbar-brand-icon {
-    display: block !important;
-    height: 24px !important;
-    width: 24px !important;
-    object-fit: contain;
-    flex-shrink: 0;
+  .topbar-simulation-prefix {
+    display: none !important;
+  }
+
+  .topbar-role-full {
+    display: none !important;
+  }
+
+  .topbar-role-short {
+    display: inline !important;
+    font-weight: 700 !important;
+  }
+
+  .topbar-simulation-text {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
+  }
+
+  .topbar-quick-reset-btn {
+    padding: 2px 5px !important;
+    font-size: 9.5px !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
   }
 
   /* Row 2: Menu items / Action icons toolbar */
@@ -3178,6 +3283,62 @@ button.dropdown-trigger:focus-visible {
 
   .onboarding-step-cta {
     align-self: flex-end !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-topbar {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-topbar-row-header {
+    gap: 6px !important;
+  }
+
+  .dashboard-topbar-left {
+    gap: 6px !important;
+  }
+
+  .topbar-console-subtitle {
+    font-size: 9px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .topbar-console-title {
+    font-size: 12px !important;
+  }
+
+  .topbar-sidecar-toggle-btn {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 3px !important;
+  }
+
+  .topbar-brand-icon {
+    height: 20px !important;
+    width: 20px !important;
+  }
+
+  .dashboard-topbar-account-type-badge {
+    padding: 3px 6px !important;
+    font-size: 9.5px !important;
+    gap: 4px !important;
+    max-width: 48% !important;
+  }
+
+  .topbar-simulation-dot {
+    width: 6px !important;
+    height: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .topbar-reset-text {
+    display: none !important;
+  }
+
+  .topbar-quick-reset-btn {
+    padding: 2px 4px !important;
   }
 }
 
