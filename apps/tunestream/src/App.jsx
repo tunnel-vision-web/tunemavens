@@ -135,6 +135,24 @@ function TuneStreamNativeWrapper({ sessionUser, onLogout }) {
   );
 }
 
+function LegalPoliciesWrapper({ defaultPolicy = 'privacy', sessionUser, onLogout }) {
+  const navigate = useNavigate();
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', background: '#060813' }}>
+      <LandingNavbar 
+        view="legal" 
+        setView={(v) => navigate(`/?view=${v}`)} 
+        sessionUser={sessionUser} 
+        onLogout={onLogout} 
+      />
+      <div style={{ flex: 1 }}>
+        <LegalPoliciesView defaultPolicy={defaultPolicy} />
+      </div>
+      <LandingFooter view="legal" />
+    </div>
+  );
+}
+
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -468,17 +486,17 @@ function AppContent() {
           <Route path="/dashboard" element={<PlayerDashboard sessionUser={sessionUser} onPlayGlobalTrack={handlePlayGlobalTrack} initialTab="home" onLogout={handleLogout} />} />
           <Route path="/epk/:username" element={<CreatorEpkView sessionUser={sessionUser} />} />
           <Route path="/epk" element={<CreatorEpkView sessionUser={sessionUser} />} />
-          <Route path="/privacy" element={<LegalPoliciesView defaultPolicy="privacy" />} />
+          <Route path="/privacy" element={<LegalPoliciesWrapper defaultPolicy="privacy" sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
-          <Route path="/terms" element={<LegalPoliciesView defaultPolicy="terms" />} />
+          <Route path="/terms" element={<LegalPoliciesWrapper defaultPolicy="terms" sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
           <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
-          <Route path="/cookies" element={<LegalPoliciesView defaultPolicy="cookies" />} />
+          <Route path="/cookies" element={<LegalPoliciesWrapper defaultPolicy="cookies" sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/cookie-policy" element={<Navigate to="/cookies" replace />} />
-          <Route path="/refund" element={<LegalPoliciesView defaultPolicy="refund" />} />
+          <Route path="/refund" element={<LegalPoliciesWrapper defaultPolicy="refund" sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/refund-policy" element={<Navigate to="/refund" replace />} />
           <Route path="/refunds" element={<Navigate to="/refund" replace />} />
-          <Route path="/legal" element={<LegalPoliciesView defaultPolicy="privacy" />} />
+          <Route path="/legal" element={<LegalPoliciesWrapper defaultPolicy="privacy" sessionUser={sessionUser} onLogout={handleLogout} />} />
           <Route path="/help" element={<Navigate to="/?view=help" replace />} />
           <Route path="/docs" element={<Navigate to="/?view=help" replace />} />
           <Route path="/support" element={<Navigate to="/?view=support" replace />} />

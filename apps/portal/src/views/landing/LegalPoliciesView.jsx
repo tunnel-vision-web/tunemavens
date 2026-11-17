@@ -135,15 +135,6 @@ export default function LegalPoliciesView({ defaultPolicy = 'privacy' }) {
         description={activePolicy.summary}
       />
 
-      {/* Breadcrumbs */}
-      <nav className="legal-breadcrumbs" aria-label="Breadcrumb">
-        <Link to="/">Home</Link>
-        <span>/</span>
-        <Link to="/help">Support &amp; Community</Link>
-        <span>/</span>
-        <span className="active">{activePolicy.title}</span>
-      </nav>
-
       {/* Header Banner */}
       <header className="legal-header">
         <div className="legal-header-top">
