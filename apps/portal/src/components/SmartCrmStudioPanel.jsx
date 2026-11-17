@@ -1328,7 +1328,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
 
         {/* ================= TAB 2: OMNICHANNEL BROADCASTS ================= */}
         {activeTab === 'broadcasts' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+          <div className="crm-broadcast-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px' }}>
             {/* Broadcast Composer */}
             <div style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
@@ -1557,7 +1557,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+            <div className="crm-pipeline-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '14px' }}>
               {[
                 { stage: '1. INBOUND INQUIRIES', count: 4, desc: 'EPK Contact form submissions & sync licensing leads', color: '#3b82f6' },
                 { stage: '2. VIP FAN VAULT', count: contacts.length, desc: 'Subscribed fans with preferred comms and verified mobile numbers', color: '#00f0ff' },

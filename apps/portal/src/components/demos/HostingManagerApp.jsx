@@ -409,7 +409,7 @@ export default function HostingManagerApp({ goBack, sessionUser }) {
       </div>
 
       {/* Core Infrastructure Capabilities Matrix */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '20px', marginBottom: '32px' }}>
         <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px 22px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ color: '#3b82f6', marginBottom: '12px' }}><RiGlobalFill size={26} /></div>
           <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Edge Anycast Routing (240+ POPs)</h4>

@@ -558,7 +558,7 @@ export default function PublishingTrackerApp({ sessionUser, initialTab = 'pipeli
 
       {/* TAB 2: PUBLISHING ELECTION & TERMS LOCKING */}
       {activeTab === 'setup' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '24px' }}>
           {/* Current Locked Status */}
           <div style={{
             background: '#0d1322',
@@ -759,7 +759,7 @@ export default function PublishingTrackerApp({ sessionUser, initialTab = 'pipeli
 
       {/* TAB 3: ROYALTIES & TELEMETRY */}
       {activeTab === 'analytics' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div className="publishing-analytics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '24px' }}>
           {/* Top Societies Breakdown */}
           <div style={{ background: '#0d1322', border: '1px solid #1e293b', borderRadius: '3px', padding: '24px' }}>
             <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 700, color: '#fff' }}>
@@ -928,7 +928,7 @@ export default function PublishingTrackerApp({ sessionUser, initialTab = 'pipeli
           {/* Societies Grid */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
             gap: '16px'
           }}>
             {filteredSocieties.map((soc) => (

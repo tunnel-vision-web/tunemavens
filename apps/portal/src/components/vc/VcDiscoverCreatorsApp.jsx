@@ -567,7 +567,7 @@ export default function VcDiscoverCreatorsApp({ sessionUser, onNavigateTab }) {
           <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>Try adjusting your search criteria or creator type filter.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '22px' }}>
+        <div className="vc-creators-discover-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '22px' }}>
           {paginatedCreators.map(creator => {
             const projections = creator.forward_projections || {};
             const contracted = isContracted(creator.name);
@@ -673,7 +673,7 @@ export default function VcDiscoverCreatorsApp({ sessionUser, onNavigateTab }) {
                 </div>
 
                 {/* Historical Audited Telemetry vs Forward Projections (2 Columns) */}
-                <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', flex: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div className="vc-creator-telemetry-grid" style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '14px', flex: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
                   
                   {/* Past Data Column */}
                   <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.04)' }}>

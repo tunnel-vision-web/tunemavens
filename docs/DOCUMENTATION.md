@@ -3453,6 +3453,53 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Updated `ConsumerTipsPanel` default tip to $1+ (KSh 50+) with preset buttons displaying `KSh 50+ ($1+)`, `KSh 100+ ($2+)`, `KSh 250+ ($5+)`, and `KSh 500+ ($10+)`.
 - **Verification**: Built and verified across all workspaces (`portal`, `syncmavens`, `tunestream`) via `npm run build:all` with 0 errors.
 
+### 9.44.76 Phase 35: Ecosystem-Wide Responsive Architecture Across All Native Apps & Functionalities
+
+- **Fluid Pane Wrapper Architecture (`apps/portal`, `apps/syncmavens`, `apps/tunestream`)**:
+  - Replaced hardcoded desktop padding (`padding: '24px 32px'`) on app wrappers (`catalogue-acquisitions`, `pos-terminal`, `distribution-tracker`, `distribution-election`, `hosting-manager`) with the responsive class `.dashboard-app-pane-container`.
+  - Configured fluid multi-breakpoint padding: `24px 32px` on desktop (`> 900px`), `16px 12px !important` on tablets (`<= 900px`), and `10px 4px !important` on handhelds (`<= 768px`) preventing horizontal container blowout.
+  - Removed inline `style={{ padding: '24px' }}` on `.dashboard-main-scroll` and synchronized responsive padding (`10px 6px !important` on mobile).
+
+- **Native App & Functional Pane Responsive Grid Stacking**:
+  - **Catalogue & Ingestion Machine (`CataloguePanel`, `CatalogueAcquisitionLedger`)**:
+    - Converted 2-column album editor (`360px 1fr`) to `.album-editor-grid` with `grid-template-columns: 1fr !important;` on `<= 900px`.
+    - Upgraded `.catalogue-collections-grid` to fluid `minmax(min(100%, 280px), 1fr)`.
+    - Converted `.catalogue-table-layout` from static `320px 1fr` to fluid stacking on `<= 900px`.
+    - Wrapped catalog tables and POS tables in `.dashboard-table-responsive` with `-webkit-overflow-scrolling: touch`.
+    - Optimized modal acquisition forms with `.ledger-form-grid` stacking to 1 column on `<= 600px`.
+  - **POS & Event Commerce (`MpesaPosTerminal`, `PosInventoryPanel`, `PosSettlementPanel`)**:
+    - Replaced rigid `minmax(320px, 1fr)` grid with `.pos-terminal-grid` utilizing `minmax(min(100%, 280px), 1fr)`.
+    - Added handheld touch scrolling to POS SKU tables and settlement logs.
+  - **Distribution & Publishing Trackers (`DistributionTrackerApp`, `PublishingTrackerApp`)**:
+    - Upgraded `.publishing-analytics-grid` from rigid `1fr 1fr` to fluid single-column layout on `<= 900px`.
+    - Applied fluid `minmax(min(100%, 280px), 1fr)` to global store and PRO society directories.
+  - **TuneLedger Split Cascade (`TuneLedgerSplitCascadePanel`)**:
+    - Transformed `.split-cascade-waterfall-grid` from rigid `minmax(420px, 1fr)` to single-column stacking on `<= 900px`.
+    - Transformed `.split-university-grid` from rigid `minmax(360px, 1fr)` to single column on `<= 768px`.
+  - **Sync Marketplace & Briefs (`SyncMarketplacePanel`)**:
+    - Converted `.sync-briefs-grid` from rigid `minmax(360px, 1fr)` to fluid single column on mobile viewports.
+  - **Intermaven Smart CRM & Social AI Studio (`SmartCrmStudioPanel`, `SocialAiPanel`)**:
+    - Transformed CRM Omnichannel Broadcast composer (`1.2fr 1fr`) to `.crm-broadcast-grid` stacking to 1 column on `<= 900px`.
+    - Upgraded CRM audience conversion funnel (`repeat(4, 1fr)`) to `.crm-pipeline-grid` displaying 2 columns on tablets and 1 column on handhelds.
+    - Upgraded Social AI generator options grid to `.social-ai-options-grid` stacking gracefully on `<= 600px`.
+  - **Intermaven EPK Builder Wizard (`EpkWizard`)**:
+    - Converted width selector, layout variant, and analogous color schemes grids (`.epk-grid-3`, `.epk-grid-2`, `.epk-grid-split`, `.epk-grid-responsive`) to fluid single column on `<= 768px`.
+  - **VC Discover Creators & Tour LP Command Center (`VcDashboardPanel`, `VcDiscoverCreatorsApp`)**:
+    - Added comprehensive media queries for `.vc-metrics-grid`, `.vc-recoupment-cards-grid`, `.vc-creators-grid`, `.vc-vault-grid`, and `.vault-metrics-row` with single-column mobile stacking.
+    - Fluidized `.vc-creators-discover-grid` and `.vc-creator-telemetry-grid`.
+  - **DJ Mixes Manager & Pool (`DJMixesManager`)**:
+    - Added responsive rules for `.mixes-grid`, `.form-grid-2`, `.pathway-cards-grid`, `.comm-counterparty-grid`, `.djmix-stats-grid`, and `.djmix-pagination-bar`.
+  - **Podcaster Studio Workspace (`PodcasterStudioWorkspace`)**:
+    - Replaced 4-column episode metadata row (`2fr 1fr 1fr 1fr`) with `.podcaster-form-row` stacking to single column on mobile.
+    - Fluidized monetization ad cards grid (`.podcaster-cards-grid`).
+  - **Affiliate Admin Panel (`AffiliateAdminPanel`)**:
+    - Added tablet and handheld responsive queries across `apps/portal`, `apps/syncmavens`, and `apps/tunestream`.
+- **Design Standards Compliance**:
+  - Preserved strict 3px border radius (`var(--r)` / `border-radius: 3px`) across all cards, badges, and controls per `docs/DESIGN_STANDARDS.md`.
+  - Maintained midnight palette (`#060813`, `#090e24`, `#0b0f1e`), cyan accents (`#00f0ff`, `#22d3ee`), zero backdrop blur over content.
+- **Verification**: Built and verified across all workspaces (`portal`, `syncmavens`, `tunestream`) via `npm run build:all` with 0 errors.
+
+
 
 
 

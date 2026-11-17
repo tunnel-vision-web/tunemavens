@@ -1282,7 +1282,7 @@ export default function TuneLedgerSplitCascadePanel({
           </div>
 
           {/* Main Grid: Active Step Wizard & Visual Waterfall Companion */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px' }}>
+          <div className="split-cascade-waterfall-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px' }}>
             
             {/* LEFT COLUMN: The Active Step Container */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -2931,7 +2931,7 @@ export default function TuneLedgerSplitCascadePanel({
       {/* ================= TAB 5: ROYALTY UNIVERSITY & GUIDANCE HUB ================= */}
       {activeTab === 'university' && (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
+          <div className="split-university-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
             {ROYALTY_GUIDES.map(guide => (
               <div key={guide.id} style={{ background: '#090e24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>

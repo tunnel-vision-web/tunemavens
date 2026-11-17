@@ -2534,3 +2534,44 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* Responsive Styles for DJ Mixes Manager */
+@media (max-width: 900px) {
+  .djmix-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  .mixes-grid,
+  .pathway-cards-grid,
+  .comm-counterparty-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)) !important;
+    gap: 16px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .djmix-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .mixes-grid,
+  .pathway-cards-grid,
+  .comm-counterparty-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .form-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .djmix-pagination-bar {
+    padding: 10px 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .djmix-pagination-controls {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+}

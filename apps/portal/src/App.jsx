@@ -2144,7 +2144,7 @@ function DashboardView({
         return <SyncLicensingPanel sessionUser={sessionUser} tracks={catalogTracks} activeArtist={activeArtist} />;
       case 'catalogue-acquisitions':
         return (
-          <div style={{ padding: '24px 32px' }}>
+          <div className="dashboard-app-pane-container">
             <CatalogueAcquisitionLedger sessionUser={activeUser} />
           </div>
         );
@@ -2227,7 +2227,7 @@ function DashboardView({
         return <ConsumerDeviceSyncPanel tracks={catalogTracks} />;
       case 'pos-terminal':
         return (
-          <div style={{ padding: '24px 32px' }}>
+          <div className="dashboard-app-pane-container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Live Event Commerce</span>
@@ -2267,19 +2267,19 @@ function DashboardView({
         return <PosDevicesPanel />;
       case 'distribution-tracker':
         return (
-          <div style={{ padding: '24px 32px' }}>
+          <div className="dashboard-app-pane-container">
             <DistributionTrackerApp sessionUser={activeUser} initialTab="pipeline" />
           </div>
         );
       case 'distribution-election':
         return (
-          <div style={{ padding: '24px 32px' }}>
+          <div className="dashboard-app-pane-container">
             <DistributionTrackerApp sessionUser={activeUser} initialTab="setup" />
           </div>
         );
       case 'hosting-manager':
         return (
-          <div style={{ padding: '24px 32px' }}>
+          <div className="dashboard-app-pane-container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Cloud Infrastructure</span>
@@ -3035,7 +3035,7 @@ function DashboardView({
             </div>
           </header>
 
-          <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll" data-tour="main-content" style={{ padding: '24px' }}>
+          <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll" data-tour="main-content">
             {renderActivePanel()}
           </div>
 
@@ -5416,31 +5416,33 @@ function PosInventoryPanel() {
         <p style={{ color: '#cbd5e1', textAlign: 'center', padding: '24px' }}>No inventory items matched your search query.</p>
       ) : (
         <>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <th style={{ padding: '10px 8px' }}>SKU</th>
-                <th style={{ padding: '10px 8px' }}>Item</th>
-                <th style={{ padding: '10px 8px' }}>Price</th>
-                <th style={{ padding: '10px 8px' }}>Stock</th>
-                <th style={{ padding: '10px 8px' }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedItems.map(i => (
-                <tr key={i.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }} data-testid={`pos-item-row-${i.id}`}>
-                  <td style={{ padding: '10px 8px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{i.sku}</td>
-                  <td style={{ padding: '10px 8px', color: '#f1f5f9' }}>{i.name}</td>
-                  <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>${i.price.toFixed(2)}</td>
-                  <td style={{ padding: '10px 8px', color: i.stock < 10 ? '#f59e0b' : '#10b981', fontWeight: 700 }}>{i.stock}</td>
-                  <td style={{ padding: '10px 8px', display: 'flex', gap: '6px' }}>
-                    <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, -1)} data-testid={`pos-stock-dec-${i.id}`}>âˆ’</button>
-                    <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, +1)} data-testid={`pos-stock-inc-${i.id}`}>+</button>
-                  </td>
+          <div className="dashboard-table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <th style={{ padding: '10px 8px' }}>SKU</th>
+                  <th style={{ padding: '10px 8px' }}>Item</th>
+                  <th style={{ padding: '10px 8px' }}>Price</th>
+                  <th style={{ padding: '10px 8px' }}>Stock</th>
+                  <th style={{ padding: '10px 8px' }}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginatedItems.map(i => (
+                  <tr key={i.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }} data-testid={`pos-item-row-${i.id}`}>
+                    <td style={{ padding: '10px 8px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{i.sku}</td>
+                    <td style={{ padding: '10px 8px', color: '#f1f5f9' }}>{i.name}</td>
+                    <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>${i.price.toFixed(2)}</td>
+                    <td style={{ padding: '10px 8px', color: i.stock < 10 ? '#f59e0b' : '#10b981', fontWeight: 700 }}>{i.stock}</td>
+                    <td style={{ padding: '10px 8px', display: 'flex', gap: '6px' }}>
+                      <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, -1)} data-testid={`pos-stock-dec-${i.id}`}>−</button>
+                      <button className="plan-btn outline" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => adjustStock(i.id, +1)} data-testid={`pos-stock-inc-${i.id}`}>+</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <DashboardPagination 
             currentPage={currentPage} 
             totalItems={filtered.length} 
@@ -5703,7 +5705,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
       <p style={{ fontSize: '12px', color: 'var(--mu)', marginBottom: '20px' }}>Update your creator identity and public brand metadata.</p>
       
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="social-ai-options-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '16px' }}>
           <div>
             <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Full Name</label>
             <input 
@@ -5728,7 +5730,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="social-ai-options-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '16px' }}>
           <div>
             <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Brand / Label Name</label>
             <input 
@@ -7772,7 +7774,7 @@ function CataloguePanel({
               </div>
 
               {/* Two Column Layout: Left Artwork & Release Details, Right Tracklist Editor */}
-              <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '24px', alignItems: 'start' }}>
+              <div className="album-editor-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px', alignItems: 'start' }}>
                 
                 {/* LEFT: Artwork & Album Info */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -8299,7 +8301,7 @@ function CataloguePanel({
                 </div>
               ) : (
                 <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '20px' }}>
+                <div className="catalogue-collections-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
                   {paginatedReleases.map((rel) => {
                     const isExpanded = expandedReleaseTitle === rel.title;
                     const typeColor = rel.releaseType === 'Album' ? '#00f0ff' : rel.releaseType === 'EP' ? '#a855f7' : '#f59e0b';
@@ -8660,7 +8662,7 @@ function CataloguePanel({
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: ingestSidebarCollapsed ? '1fr' : '320px 1fr', gap: '24px', alignItems: 'start' }}>
+              <div className="catalogue-table-layout" style={{ display: 'grid', gridTemplateColumns: ingestSidebarCollapsed ? '1fr' : 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '24px', alignItems: 'start' }}>
                 {/* Collapsible Ingestion Sidebar */}
                 {!ingestSidebarCollapsed && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -11926,7 +11928,7 @@ function SocialAiPanel({ setActiveTab, sessionUser, onPlayTrack }) {
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="social-ai-options-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '16px' }}>
           <div>
             <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Asset Type</label>
             <div style={{ display: 'flex', gap: '10px' }}>

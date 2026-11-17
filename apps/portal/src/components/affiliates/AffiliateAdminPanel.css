@@ -1744,3 +1744,29 @@
   font-size: 11.5px;
 }
 
+/* Responsive adjustments for Affiliate Admin & Partner Workspace */
+@media (max-width: 900px) {
+  .aff-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .aff-admin-panel {
+    padding: 10px 4px !important;
+  }
+  .aff-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .aff-table-wrapper {
+    -webkit-overflow-scrolling: touch;
+  }
+  .aff-admin-table th,
+  .aff-admin-table td {
+    padding: 8px 10px !important;
+    font-size: 11.5px !important;
+  }
+}
+

@@ -899,7 +899,7 @@ export default function SyncMarketplacePanel({ sessionUser }) {
           </div>
 
           {/* Active Briefs Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
+          <div className="sync-briefs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
             {activeBriefs.map(brief => {
               const isUrgent = brief.urgency === 'critical';
 

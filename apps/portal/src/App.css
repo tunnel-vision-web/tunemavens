@@ -5229,6 +5229,79 @@
   }
 }
 
+/* Dashboard App Pane Containers & Responsive Platform Grids */
+.dashboard-app-pane-container {
+  padding: 24px 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 900px) {
+  .dashboard-app-pane-container {
+    padding: 16px 12px !important;
+  }
+  .album-editor-grid,
+  .catalogue-table-layout,
+  .publishing-analytics-grid,
+  .split-cascade-waterfall-grid,
+  .crm-broadcast-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .crm-pipeline-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-app-pane-container {
+    padding: 10px 4px !important;
+  }
+  .album-editor-grid,
+  .catalogue-collections-grid,
+  .catalogue-table-layout,
+  .publishing-analytics-grid,
+  .split-cascade-waterfall-grid,
+  .split-university-grid,
+  .sync-briefs-grid,
+  .crm-broadcast-grid,
+  .crm-pipeline-grid,
+  .pos-terminal-grid,
+  .epk-grid-3,
+  .epk-grid-2,
+  .epk-grid-split,
+  .epk-grid-responsive,
+  .vc-creators-discover-grid,
+  .vc-creator-telemetry-grid,
+  .podcaster-form-row,
+  .podcaster-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .pos-terminal-widget {
+    padding: 12px 8px !important;
+  }
+  .ledger-form-grid,
+  .social-ai-options-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .modal-dialog,
+  .wizard-container,
+  .dialog-content,
+  .pos-terminal-widget {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
 
 /* Strict 3px border radius for all buttons and boxes on Homepage */
 .hw .hbp,

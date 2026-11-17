@@ -517,7 +517,7 @@ export default function PodcasterStudioWorkspace({ sessionUser, initialSection =
           </p>
 
           <form onSubmit={handlePublishEpisode} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '12px' }}>
+            <div className="podcaster-form-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
               <div>
                 <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Episode Title</label>
                 <input
@@ -792,7 +792,7 @@ export default function PodcasterStudioWorkspace({ sessionUser, initialSection =
 
       {/* SECTION 4: CORPORATE AD SERVICES & SPLIT CASCADE */}
       {activeSection === 'monetization' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+        <div className="podcaster-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
           <div style={{ background: '#090c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '22px' }}>
             <h3 style={{ fontSize: '17px', fontWeight: 900, color: '#fff', margin: '0 0 8px' }}>
               Corporate Ad Services Dynamic Insertion

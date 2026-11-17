@@ -3342,3 +3342,39 @@ button.dropdown-trigger:focus-visible {
   }
 }
 
+/* Dashboard App Pane Containers & Responsive Platform Grids */
+.dashboard-app-pane-container {
+  padding: 24px 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 900px) {
+  .dashboard-app-pane-container {
+    padding: 16px 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-app-pane-container {
+    padding: 10px 4px !important;
+  }
+  .sync-briefs-grid,
+  .sync-titles-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .modal-dialog,
+  .wizard-container,
+  .dialog-content {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+

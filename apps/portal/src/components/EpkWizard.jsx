@@ -649,7 +649,7 @@ function Step2Width({ data, onChange }) {
         <h3 style={{ margin:'0 0 6px', fontSize:18, fontWeight:800, color:'#fff' }}>Layout Width</h3>
         <p style={{ margin:0, fontSize:13, color:C.sub }}>Pick how wide your site content stretches. This defines the overall canvas feel.</p>
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+      <div className="epk-grid-3" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap:14 }}>
         {WIDTH_OPTS.map(opt => {
           const active = data.layoutWidth === opt.id
           return (
@@ -737,7 +737,7 @@ function Step3Wireframe({ data, onChange }) {
         <h3 style={{ margin:'0 0 6px', fontSize:18, fontWeight:800, color:'#fff' }}>Navigation Layout</h3>
         <p style={{ margin:0, fontSize:13, color:C.sub }}>Choose where your logo and menu sit relative to your content. Each option shows a live wireframe preview.</p>
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+      <div className="epk-grid-2" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap:14 }}>
         {WF_OPTS.map(opt => {
           const active = data.layoutVariant === opt.id
           return (
@@ -1035,7 +1035,7 @@ function Step5Colors({ data, onChange }) {
       {/* AI Color Scheme Suggestions with Analogous Harmonies */}
       <div>
         <Label sub={`AI suggested analogous harmonies for ${isLight ? 'Light Mode' : 'Dark Mode'}`}>Analogous Color Schemes</Label>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+        <div className="epk-grid-3" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap:10 }}>
           {activeSchemes.map(s => (
             <div key={s.label} onClick={() => applyScheme(s)} style={{ padding:'10px 12px', borderRadius:8, cursor:'pointer', border:`1px solid ${C.border}`, background:'rgba(255,255,255,0.02)', transition:'all 0.18s' }}>
               <div style={{ display:'flex', gap:5, marginBottom:6 }}>
@@ -1049,7 +1049,7 @@ function Step5Colors({ data, onChange }) {
         </div>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+      <div className="epk-grid-2" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap:16 }}>
         <ColorField label="Primary Accent" value={data.accentColor||(isLight ? '#0284c7' : '#00f0ff')} onChange={v => update('accentColor',v)} />
         <ColorField label="Secondary Analogous Color" value={data.secondaryColor||(isLight ? '#6366f1' : '#8b5cf6')} onChange={v => update('secondaryColor',v)} />
       </div>
@@ -1430,7 +1430,7 @@ function PathwaySelectorModal({ isOpen, onClose, onSelect, currentPathId }) {
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 14 }}>
+        <div className="epk-grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 14 }}>
           {MUSIC_CREATOR_PATHWAYS.map(p => {
             const isSelected = p.id === currentPathId
             return (
@@ -1884,7 +1884,7 @@ function Step7Content({ data, onChange, tracks, sessionUser }) {
       <div style={{ padding:'16px', background:'#060a14', border:`1px solid ${C.border}`, borderRadius:8 }}>
         <Label sub="Choose how your 3 hero headline lines animate on live view">Hero Title Animation Style</Label>
         
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginTop:10, marginBottom:16 }}>
+        <div className="epk-grid-2" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap:12, marginTop:10, marginBottom:16 }}>
           {/* Option 1: Synergy Sugar Cascade */}
           <div
             onClick={() => update('heroAnimStyle', 'synergy')}
@@ -2102,7 +2102,7 @@ function Step7Content({ data, onChange, tracks, sessionUser }) {
         </div>
       )}
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 2fr', gap:12 }}>
+      <div className="epk-grid-split" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap:12 }}>
         <div><Label>Press Outlet</Label><FInput value={data.pressOutlet||''} onChange={e => update('pressOutlet',e.target.value)} placeholder="Pitchfork" /></div>
         <div><Label>Press Quote</Label><FInput value={data.pressQuote||''} onChange={e => update('pressQuote',e.target.value)} placeholder="Outstanding vocal delivery..." /></div>
       </div>
@@ -2139,7 +2139,7 @@ function Step7Content({ data, onChange, tracks, sessionUser }) {
           </div>
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+        <div className="epk-grid-2" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap:12 }}>
           {[
             ['spotify', RiSpotifyFill, `https://open.spotify.com/artist/${currentUsername}`, 'Spotify URL'],
             ['soundcloud', RiSoundcloudFill, `https://soundcloud.com/${currentUsername}`, 'SoundCloud URL'],

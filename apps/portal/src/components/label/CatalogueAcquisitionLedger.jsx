@@ -404,7 +404,7 @@ export default function CatalogueAcquisitionLedger({ sessionUser }) {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div className="ledger-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '10px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '4px' }}>ARTIST / ROSTER ACT</label>
                   <input
@@ -430,7 +430,7 @@ export default function CatalogueAcquisitionLedger({ sessionUser }) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div className="ledger-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '10px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '4px' }}>ADVANCE AMOUNT ($ USD)</label>
                   <input
