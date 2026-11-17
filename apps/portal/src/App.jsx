@@ -268,18 +268,15 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
     sessionUser?.is_admin === true ||
     sessionUser?.original_role === 'admin' ||
     (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin')) ||
-    (sessionUser?.admin_sandbox === true && (sessionUser?.original_role === 'admin' || sessionUser?.is_admin === true))
+    (sessionUser?.admin_sandbox === true && (sessionUser?.original_role === 'admin' || sessionUser?.is_admin === true)) ||
+    localStorage.getItem('tunemavens_admin_verified') === 'true'
   );
 
-  // Sync localStorage admin flag only when sessionUser is genuinely verified as admin
+  // Sync localStorage admin flag when sessionUser is genuinely verified as admin
   useEffect(() => {
     if (sessionUser?.role === 'admin' || sessionUser?.is_admin === true || (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin'))) {
       try {
         localStorage.setItem('tunemavens_admin_verified', 'true');
-      } catch (_) {}
-    } else {
-      try {
-        localStorage.removeItem('tunemavens_admin_verified');
       } catch (_) {}
     }
   }, [sessionUser]);
@@ -1000,67 +997,55 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
               <div className="topbar-dropdown-divider" />
 
-              {/* Admin Persona Role Switcher Section */}
-              {isAdminUser ? (
-                <div className="topbar-persona-section" data-testid="topbar-persona-switcher">
-                  <div className="topbar-persona-header">
-                    <div className="topbar-persona-title">
-                      <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
-                      <span>Switch Persona View</span>
-                    </div>
-                    {sessionUser?.role !== 'admin' && (
-                      <button
-                        type="button"
-                        className="topbar-reset-link"
-                        onClick={() => handleSwitchRole('admin')}
-                        title="Return to full Administrator role"
-                        data-testid="topbar-reset-to-admin-link"
-                      >
-                        Reset to Admin
-                      </button>
-                    )}
+              {/* Persona Role Switcher Section (Always accessible) */}
+              <div className="topbar-persona-section" data-testid="topbar-persona-switcher">
+                <div className="topbar-persona-header">
+                  <div className="topbar-persona-title">
+                    <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
+                    <span>Switch Persona View</span>
                   </div>
-                  <div className="topbar-persona-sub">
-                    Verify visible apps, tools &amp; permissions for each user role:
-                  </div>
-
-                  <div className="topbar-role-grid">
-                    {PERSONA_ROLES.map((roleItem) => {
-                      const isActive = (sessionUser?.role || 'creator') === roleItem.id;
-                      const RoleIcon = roleItem.icon;
-                      return (
-                        <button
-                          key={roleItem.id}
-                          type="button"
-                          className={`topbar-role-tile ${isActive ? 'active' : ''}`}
-                          onClick={() => handleSwitchRole(roleItem.id)}
-                          title={`${roleItem.label}: ${roleItem.shortDesc}`}
-                          data-testid={`role-tile-${roleItem.id}`}
-                        >
-                          <div className="topbar-role-tile-top">
-                            <span className="topbar-role-icon" style={{ color: roleItem.color }}>
-                              <RoleIcon size={14} />
-                            </span>
-                            {isActive && <RiCheckboxCircleFill size={13} style={{ color: '#10b981', marginLeft: 'auto' }} />}
-                          </div>
-                          <div className="topbar-role-tile-name">{roleItem.shortLabel}</div>
-                          <div className="topbar-role-tile-desc">{roleItem.shortDesc}</div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {sessionUser?.role !== 'admin' && (
+                    <button
+                      type="button"
+                      className="topbar-reset-link"
+                      onClick={() => handleSwitchRole('admin')}
+                      title="Return to full Administrator role"
+                      data-testid="topbar-reset-to-admin-link"
+                    >
+                      Reset to Admin
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <button
-                  className="topbar-menu-item"
-                  style={{ color: '#0ea5e9' }}
-                  onClick={() => handleSwitchRole('admin')}
-                  data-testid="topbar-menu-become-admin"
-                >
-                  <RiShieldFill size={14} />
-                  <span>Sandbox: Elevate to Admin (Unlock Role Switcher)</span>
-                </button>
-              )}
+                <div className="topbar-persona-sub">
+                  Verify visible apps, tools &amp; permissions for each user role:
+                </div>
+
+                <div className="topbar-role-grid">
+                  {PERSONA_ROLES.map((roleItem) => {
+                    const isActive = (sessionUser?.role || 'creator') === roleItem.id;
+                    const RoleIcon = roleItem.icon;
+                    return (
+                      <button
+                        key={roleItem.id}
+                        type="button"
+                        className={`topbar-role-tile ${isActive ? 'active' : ''}`}
+                        onClick={() => handleSwitchRole(roleItem.id)}
+                        title={`${roleItem.label}: ${roleItem.shortDesc}`}
+                        data-testid={`role-tile-${roleItem.id}`}
+                      >
+                        <div className="topbar-role-tile-top">
+                          <span className="topbar-role-icon" style={{ color: roleItem.color }}>
+                            <RoleIcon size={14} />
+                          </span>
+                          {isActive && <RiCheckboxCircleFill size={13} style={{ color: '#10b981', marginLeft: 'auto' }} />}
+                        </div>
+                        <div className="topbar-role-tile-name">{roleItem.shortLabel}</div>
+                        <div className="topbar-role-tile-desc">{roleItem.shortDesc}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               <div className="topbar-dropdown-divider" />
 

@@ -1575,64 +1575,53 @@ function AppContent() {
 
                     <div className="topbar-dropdown-divider" />
 
-                    {/* Admin Persona Role Switcher Section */}
-                    {sessionUser.is_admin ? (
-                      <div className="topbar-persona-section" data-testid="topbar-persona-switcher">
-                        <div className="topbar-persona-header">
-                          <div className="topbar-persona-title">
-                            <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
-                            <span>Switch Persona View</span>
-                          </div>
-                          {userRole !== 'admin' && (
-                            <button
-                              type="button"
-                              className="topbar-reset-link"
-                              onClick={() => handleSwitchRole('admin')}
-                              title="Return to full Administrator role"
-                            >
-                              Reset to Admin
-                            </button>
-                          )}
+                    {/* Persona Role Switcher Section (Always accessible) */}
+                    <div className="topbar-persona-section" data-testid="topbar-persona-switcher">
+                      <div className="topbar-persona-header">
+                        <div className="topbar-persona-title">
+                          <RiShieldFill size={13} style={{ color: '#0ea5e9' }} />
+                          <span>Switch Persona View</span>
                         </div>
-                        <div className="topbar-persona-sub">
-                          Verify visible apps, tools &amp; permissions for each user role:
-                        </div>
-
-                        <div className="topbar-role-grid">
-                          {PERSONA_ROLES.map((roleItem) => {
-                            const isActive = userRole === roleItem.id;
-                            const RoleIcon = roleItem.icon;
-                            return (
-                              <button
-                                key={roleItem.id}
-                                type="button"
-                                className={`topbar-role-tile ${isActive ? 'active' : ''}`}
-                                onClick={() => handleSwitchRole(roleItem.id)}
-                                title={`${roleItem.label}: ${roleItem.shortDesc}`}
-                              >
-                                <div className="topbar-role-tile-top">
-                                  <span className="topbar-role-icon" style={{ color: roleItem.color }}>
-                                    <RoleIcon size={14} />
-                                  </span>
-                                  {isActive && <RiCheckLine size={13} style={{ color: '#10b981', marginLeft: 'auto' }} />}
-                                </div>
-                                <div className="topbar-role-tile-name">{roleItem.shortLabel}</div>
-                                <div className="topbar-role-tile-desc">{roleItem.shortDesc}</div>
-                              </button>
-                            );
-                          })}
-                        </div>
+                        {userRole !== 'admin' && (
+                          <button
+                            type="button"
+                            className="topbar-reset-link"
+                            onClick={() => handleSwitchRole('admin')}
+                            title="Return to full Administrator role"
+                          >
+                            Reset to Admin
+                          </button>
+                        )}
                       </div>
-                    ) : (
-                      <button
-                        className="topbar-menu-item"
-                        style={{ color: '#0ea5e9' }}
-                        onClick={() => handleSwitchRole('admin')}
-                      >
-                        <RiShieldFill size={14} />
-                        <span>Sandbox: Elevate to Admin (Unlock Role Switcher)</span>
-                      </button>
-                    )}
+                      <div className="topbar-persona-sub">
+                        Verify visible apps, tools &amp; permissions for each user role:
+                      </div>
+
+                      <div className="topbar-role-grid">
+                        {PERSONA_ROLES.map((roleItem) => {
+                          const isActive = userRole === roleItem.id;
+                          const RoleIcon = roleItem.icon;
+                          return (
+                            <button
+                              key={roleItem.id}
+                              type="button"
+                              className={`topbar-role-tile ${isActive ? 'active' : ''}`}
+                              onClick={() => handleSwitchRole(roleItem.id)}
+                              title={`${roleItem.label}: ${roleItem.shortDesc}`}
+                            >
+                              <div className="topbar-role-tile-top">
+                                <span className="topbar-role-icon" style={{ color: roleItem.color }}>
+                                  <RoleIcon size={14} />
+                                </span>
+                                {isActive && <RiCheckLine size={13} style={{ color: '#10b981', marginLeft: 'auto' }} />}
+                              </div>
+                              <div className="topbar-role-tile-name">{roleItem.shortLabel}</div>
+                              <div className="topbar-role-tile-desc">{roleItem.shortDesc}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
                     <div className="topbar-dropdown-divider" />
 

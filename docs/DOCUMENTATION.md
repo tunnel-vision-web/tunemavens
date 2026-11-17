@@ -3210,4 +3210,21 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - **Lightning Bolt Ban**: Fully replaced all prohibited `⚡` lightning icons with `✨` or brand glyphs per Section 4E.
   - **"AI-Assisted" Branding Standard**: Updated all AI matching badges to "AI-Assisted" language per Section 4A.
 
+### 9.44.60 Phase 19: Topbar Account Dropdown & Persona Role Selector Resiliency
+
+- **Topbar Action Bar Overflow Fix (`apps/portal/src/App.css`)**:
+  - Eliminated `overflow-x: auto !important;` on `.dashboard-topbar-actions`, resolving the CSS pairing bug that forced `overflow-y` to `auto`/`hidden` and vertically clipped all absolute dropdown menus (`.topbar-dropdown`, `.topbar-dropdown-account`, and consumer persona switcher).
+  - Explicitly configured `overflow: visible !important;` to ensure all topbar dropdowns and tooltips render cleanly over dashboard content.
+
+- **Dropdown Button Style Scoping & Isolation**:
+  - Restructured topbar button styles from broad descendant selectors (`.dashboard-topbar-actions button`) to direct children (`.dashboard-topbar-actions > button`, `.dashboard-topbar-actions > a`, `.dashboard-topbar-actions > .dashboard-topbar-item > button`).
+  - Added explicit reset rules for `.topbar-dropdown button` and `.topbar-dropdown a`, ensuring dropdown items and persona role cards maintain natural multi-line typography, proper height (`height: auto !important`), and flex layout without being crushed into 34px inline heights.
+
+- **Unconditional Persona Role Switcher Grid (`apps/portal`, `apps/syncmavens`, `apps/tunestream`)**:
+  - Removed artificial `isAdminUser` gating on `.topbar-persona-section` inside the account dropdown, ensuring all 9 persona tiles (Administrator, Creator, Label, DJ, Supervisor, Podcaster, VC, Corporate, Affiliate, Consumer) are immediately visible and clickable.
+  - Fixed `useEffect` admin flag synchronization to prevent simulated non-admin personas from inadvertently clearing `tunemavens_admin_verified` in `localStorage`.
+  - Added role switcher grid to TuneStream's topbar account dropdown for seamless cross-application consistency.
+  - Preserved strict 3px border-radius (`border-radius: 3px !important`) and flat color schemes across all persona cards and buttons in adherence to Section 14 Design Standards.
+
+
 

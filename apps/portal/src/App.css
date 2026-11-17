@@ -2437,19 +2437,19 @@
   align-items: center;
   gap: 7px;
   flex-wrap: nowrap;
-  overflow-x: auto !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+  overflow: visible !important;
   padding: 2px 0;
+  position: relative;
 }
 
 .dashboard-topbar-actions::-webkit-scrollbar {
   display: none !important;
 }
 
-/* Universal Button Non-Overlapping Alignment Guard */
-.dashboard-topbar-actions button,
-.dashboard-topbar-actions a,
+/* Universal Button Non-Overlapping Alignment Guard (Direct topbar items only) */
+.dashboard-topbar-actions > button,
+.dashboard-topbar-actions > a,
+.dashboard-topbar-actions > .dashboard-topbar-item > button,
 .dashboard-topbar-actions .topbar-nav-icon-btn,
 .dashboard-topbar-actions .topbar-dashboard-tour-btn,
 .dashboard-topbar-actions .topbar-back-to-site,
@@ -2552,14 +2552,16 @@
   gap: 9px !important;
 }
 
-.dashboard-topbar-actions button svg,
-.dashboard-topbar-actions a svg {
+.dashboard-topbar-actions > button svg,
+.dashboard-topbar-actions > a svg,
+.dashboard-topbar-actions > .dashboard-topbar-item > button svg {
   flex-shrink: 0 !important;
   margin: 0 !important;
 }
 
-.dashboard-topbar-actions button span,
-.dashboard-topbar-actions a span {
+.dashboard-topbar-actions > button span,
+.dashboard-topbar-actions > a span,
+.dashboard-topbar-actions > .dashboard-topbar-item > button span {
   line-height: 1 !important;
   display: inline-block !important;
 }
@@ -2670,9 +2672,9 @@
   max-width: 390px;
   background: #0b0f1e; /* 100% solid flat midnight so no underlying buttons bleed through */
   border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 10px;
+  border-radius: 3px !important; /* Strict 3px border radius per Section 14 */
   box-shadow: 0 24px 60px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.1);
-  z-index: 100001; /* Unequivocally above in-app headers and AI assistance buttons */
+  z-index: 100005 !important; /* Unequivocally above in-app headers and AI assistance buttons */
   overflow: hidden;
   pointer-events: auto;
   animation: topbar-dropdown-in 0.15s ease-out;
@@ -2682,12 +2684,32 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 .topbar-dropdown-account {
-  min-width: 320px;
-  max-width: 380px;
+  min-width: 330px !important;
+  max-width: 400px !important;
   max-height: calc(100vh - 75px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(34, 211, 238, 0.25) transparent;
+}
+
+/* Explicit Reset: Prevent buttons & spans inside dropdowns from inheriting topbar action heights */
+.dashboard-topbar-actions .topbar-dropdown button,
+.dashboard-topbar-actions .topbar-dropdown a,
+.topbar-dropdown button,
+.topbar-dropdown a {
+  height: auto !important;
+  white-space: normal !important;
+  line-height: normal !important;
+  flex-shrink: initial !important;
+  box-sizing: border-box !important;
+}
+
+.dashboard-topbar-actions .topbar-dropdown button span,
+.dashboard-topbar-actions .topbar-dropdown a span,
+.topbar-dropdown button span,
+.topbar-dropdown a span {
+  line-height: inherit !important;
+  display: inline !important;
 }
 
 .topbar-dropdown-header {
@@ -2903,26 +2925,31 @@
   gap: 6px;
 }
 .topbar-role-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  padding: 8px 10px;
-  border-radius: 4px;
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  min-width: 0;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  height: auto !important;
+  padding: 8px 10px !important;
+  border-radius: 3px !important; /* Strict 3px border radius per Section 14 */
+  background: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+  box-sizing: border-box !important;
 }
 .topbar-role-tile:hover {
-  background: #1e293b;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 .topbar-role-tile.active {
-  background: #1e293b;
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 1px #0ea5e9;
+  background: #1e293b !important;
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 1px #0ea5e9 !important;
 }
 .topbar-role-tile-top {
   display: flex;
