@@ -1,0 +1,1039 @@
+"""Authoritative Sync Marketplace Catalog & Briefs Data.
+
+Contains 24 pre-cleared one-stop tracks and production briefs established
+for TuneMavens Sync Licensing platform.
+"""
+
+DEFAULT_SYNC_COVERS = [
+    "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=500&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80"
+]
+
+AUTHORITATIVE_SYNC_CATALOG = [
+    {
+        "track_id": "sync_trk_01",
+        "title": "Nairobi Cyberwave",
+        "artist": "Ndufo",
+        "genre": "Synthwave / Afrofuturism",
+        "moods": [
+            "action",
+            "energetic",
+            "cinematic"
+        ],
+        "bpm": 122,
+        "key": "D Minor",
+        "duration": "3:45",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-345.891.002-1",
+        "isrc": "KEN922600101",
+        "pro_affiliation": "MCSK / BMI",
+        "master_owner": "Ndufo Recordings Ltd (100%)",
+        "publishing_owner": "TuneMavens Publishing / Ndufo Music (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Drums & Perc",
+            "Bassline",
+            "Lead Synths",
+            "SFX"
+        ],
+        "pricing": {
+            "indie_film": 350,
+            "tv_series": 950,
+            "commercial": 1800,
+            "game_loop": 750,
+            "broadcast_worldwide": 3200
+        },
+        "cover": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    },
+    {
+        "track_id": "sync_trk_02",
+        "title": "Kilimanjaro Sunrise",
+        "artist": "Aisha Okoro",
+        "genre": "Afrobeats / Organic Groove",
+        "moods": [
+            "uplifting",
+            "sunset",
+            "happy"
+        ],
+        "bpm": 108,
+        "key": "G Major",
+        "duration": "3:20",
+        "vocal_type": "Vocal + Clean Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-819.340.119-4",
+        "isrc": "KEN922600102",
+        "pro_affiliation": "MCSK / ASCAP",
+        "master_owner": "Aisha Okoro (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Main Vocals",
+            "Backing Vocals",
+            "Talking Drums",
+            "Guitars"
+        ],
+        "pricing": {
+            "indie_film": 450,
+            "tv_series": 1200,
+            "commercial": 2400,
+            "game_loop": 900,
+            "broadcast_worldwide": 4500
+        },
+        "cover": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+    },
+    {
+        "track_id": "sync_trk_03",
+        "title": "Rift Valley Rain",
+        "artist": "Brian Omondi",
+        "genre": "Amapiano / Deep House",
+        "moods": [
+            "chill",
+            "atmospheric",
+            "sunset"
+        ],
+        "bpm": 114,
+        "key": "F# Minor",
+        "duration": "4:10",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-902.115.672-8",
+        "isrc": "KEN922600103",
+        "pro_affiliation": "SAMRO / MCSK",
+        "master_owner": "Omondi Beats (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Log Drum",
+            "Shakers",
+            "Rhodes Piano",
+            "Sub Bass"
+        ],
+        "pricing": {
+            "indie_film": 300,
+            "tv_series": 850,
+            "commercial": 1600,
+            "game_loop": 650,
+            "broadcast_worldwide": 2800
+        },
+        "cover": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    },
+    {
+        "track_id": "sync_trk_04",
+        "title": "Mara Plains Orchestral",
+        "artist": "Savannah Symphony",
+        "genre": "Cinematic Orchestral",
+        "moods": [
+            "cinematic",
+            "epic",
+            "melancholy"
+        ],
+        "bpm": 82,
+        "key": "C Minor",
+        "duration": "4:50",
+        "vocal_type": "Orchestral Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-103.448.910-3",
+        "isrc": "KEN922600104",
+        "pro_affiliation": "PRS / MCSK",
+        "master_owner": "Savannah Symphony Collective (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Live Strings 52pc",
+            "Brass Ensemble",
+            "Woodwinds",
+            "Timpani & Cinematic Perc"
+        ],
+        "pricing": {
+            "indie_film": 800,
+            "tv_series": 2200,
+            "commercial": 4800,
+            "game_loop": 1800,
+            "broadcast_worldwide": 8500
+        },
+        "cover": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+    },
+    {
+        "track_id": "sync_trk_05",
+        "title": "Boma Tension & 808s",
+        "artist": "DJ Kazi",
+        "genre": "Gqom / Dark Techno",
+        "moods": [
+            "tension",
+            "action",
+            "dark"
+        ],
+        "bpm": 128,
+        "key": "A Minor",
+        "duration": "3:35",
+        "vocal_type": "Club Vocal Chants + Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-772.301.442-9",
+        "isrc": "KEN922600105",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Kazi Soundlab (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Distorted Sub",
+            "Percussion Loops",
+            "Vocal Chants",
+            "Atmospheric FX"
+        ],
+        "pricing": {
+            "indie_film": 400,
+            "tv_series": 1100,
+            "commercial": 2100,
+            "game_loop": 950,
+            "broadcast_worldwide": 3800
+        },
+        "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+    },
+    {
+        "track_id": "sync_trk_06",
+        "title": "Golden Horizon Acoustic",
+        "artist": "Maya Wendo",
+        "genre": "Indie Pop / Acoustic Soul",
+        "moods": [
+            "happy",
+            "uplifting",
+            "sunset"
+        ],
+        "bpm": 96,
+        "key": "E Major",
+        "duration": "3:12",
+        "vocal_type": "Warm Female Vocal + Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-654.120.988-1",
+        "isrc": "KEN922600106",
+        "pro_affiliation": "MCSK / BMI",
+        "master_owner": "Maya Wendo (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Lead Vocals",
+            "Acoustic Guitar",
+            "Upright Bass",
+            "Handclaps"
+        ],
+        "pricing": {
+            "indie_film": 500,
+            "tv_series": 1400,
+            "commercial": 2900,
+            "game_loop": 800,
+            "broadcast_worldwide": 5200
+        },
+        "cover": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+    },
+    {
+        "track_id": "sync_trk_07",
+        "title": "Midnight in Mombasa",
+        "artist": "Coastal Collective",
+        "genre": "Taarab Fusion / Lo-Fi Chill",
+        "moods": [
+            "chill",
+            "sunset",
+            "melancholy"
+        ],
+        "bpm": 88,
+        "key": "B-Flat Minor",
+        "duration": "3:50",
+        "vocal_type": "Instrumental Oud & Synths",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-490.871.220-5",
+        "isrc": "KEN922600107",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Coastal Heritage Audio (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Arabic Oud",
+            "Vinyl Dust Lo-Fi",
+            "Bassline",
+            "Ambient Waves"
+        ],
+        "pricing": {
+            "indie_film": 350,
+            "tv_series": 900,
+            "commercial": 1700,
+            "game_loop": 700,
+            "broadcast_worldwide": 3100
+        },
+        "cover": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
+    },
+    {
+        "track_id": "sync_trk_08",
+        "title": "Urban Pulse Nairobi",
+        "artist": "Matatu Boyz",
+        "genre": "Trap / East African Hip-Hop",
+        "moods": [
+            "energetic",
+            "action",
+            "tension"
+        ],
+        "bpm": 140,
+        "key": "C# Minor",
+        "duration": "2:55",
+        "vocal_type": "Bilingual Sheng Rap + Clean Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-881.002.553-6",
+        "isrc": "KEN922600108",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Matatu Sound Ent (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Trap Drums",
+            "808 Bass",
+            "Brass Stabs",
+            "Clean Instrumental"
+        ],
+        "pricing": {
+            "indie_film": 450,
+            "tv_series": 1300,
+            "commercial": 2600,
+            "game_loop": 1200,
+            "broadcast_worldwide": 4800
+        },
+        "cover": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+    },
+    {
+        "track_id": "sync_trk_09",
+        "title": "Serengeti Starlight",
+        "artist": "Aether Echo",
+        "genre": "Ambient / Neo-Classical",
+        "moods": [
+            "cinematic",
+            "melancholy",
+            "chill"
+        ],
+        "bpm": 74,
+        "key": "D Major",
+        "duration": "4:20",
+        "vocal_type": "Spacious Instrumental Piano",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-220.912.441-7",
+        "isrc": "KEN922600109",
+        "pro_affiliation": "MCSK / BMI",
+        "master_owner": "Aether Echo (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Felt Piano Solo",
+            "Cello Quartet",
+            "Shimmer Reverb Pad"
+        ],
+        "pricing": {
+            "indie_film": 300,
+            "tv_series": 800,
+            "commercial": 1500,
+            "game_loop": 600,
+            "broadcast_worldwide": 2700
+        },
+        "cover": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3"
+    },
+    {
+        "track_id": "sync_trk_10",
+        "title": "Djembe Firestorm",
+        "artist": "Safari Percussion Group",
+        "genre": "Afro Percussion / High Energy",
+        "moods": [
+            "action",
+            "energetic",
+            "epic"
+        ],
+        "bpm": 134,
+        "key": "A Major",
+        "duration": "3:05",
+        "vocal_type": "Percussive Chants + Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-399.882.109-2",
+        "isrc": "KEN922600110",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Safari Drum Guild (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Lead Djembe",
+            "Dunun Bass Drums",
+            "Talking Drum",
+            "Shakers"
+        ],
+        "pricing": {
+            "indie_film": 500,
+            "tv_series": 1500,
+            "commercial": 3200,
+            "game_loop": 1400,
+            "broadcast_worldwide": 5800
+        },
+        "cover": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"
+    },
+    {
+        "track_id": "sync_trk_11",
+        "title": "Electric Safari",
+        "artist": "Hologram Club",
+        "genre": "Electro House / Cyberpunk",
+        "moods": [
+            "action",
+            "energetic",
+            "dark"
+        ],
+        "bpm": 126,
+        "key": "F Minor",
+        "duration": "3:40",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-665.231.904-4",
+        "isrc": "KEN922600111",
+        "pro_affiliation": "MCSK / ASCAP",
+        "master_owner": "Hologram Club (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Acid Synths",
+            "Punchy Kick & Snare",
+            "Bass Arp",
+            "Risers"
+        ],
+        "pricing": {
+            "indie_film": 400,
+            "tv_series": 1100,
+            "commercial": 2200,
+            "game_loop": 1100,
+            "broadcast_worldwide": 4200
+        },
+        "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3"
+    },
+    {
+        "track_id": "sync_trk_12",
+        "title": "Lake Victoria Nyatiti Echoes",
+        "artist": "Nyatiti Sound Project",
+        "genre": "East African Folk Fusion",
+        "moods": [
+            "cinematic",
+            "chill",
+            "sunset"
+        ],
+        "bpm": 100,
+        "key": "G Minor",
+        "duration": "4:15",
+        "vocal_type": "Luo Folk Chants + Nyatiti Harp",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-114.908.773-0",
+        "isrc": "KEN922600112",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Luo Heritage Sound (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Nyatiti Harp Solos",
+            "Traditional Shakers",
+            "Luo Vocal Calls",
+            "Warm Bass"
+        ],
+        "pricing": {
+            "indie_film": 600,
+            "tv_series": 1600,
+            "commercial": 3100,
+            "game_loop": 1200,
+            "broadcast_worldwide": 6000
+        },
+        "cover": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3"
+    },
+    {
+        "track_id": "sync_trk_13",
+        "title": "Serengeti Dusk",
+        "artist": "Amina Mwangi",
+        "genre": "Afro-Soul / Acoustic",
+        "moods": [
+            "sunset",
+            "chill",
+            "cinematic"
+        ],
+        "bpm": 94,
+        "key": "E Minor",
+        "duration": "3:35",
+        "vocal_type": "Swahili Vocal + Acoustic Guitar",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-221.789.441-2",
+        "isrc": "KEN922600113",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Amina Mwangi (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Lead Vocals",
+            "Fingerpicked Guitars",
+            "Warm Bass",
+            "Percussion"
+        ],
+        "pricing": {
+            "indie_film": 380,
+            "tv_series": 980,
+            "commercial": 1950,
+            "game_loop": 800,
+            "broadcast_worldwide": 3500
+        },
+        "cover": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3"
+    },
+    {
+        "track_id": "sync_trk_14",
+        "title": "Old Town Mombasa Taarab",
+        "artist": "Swahili Coast Collective",
+        "genre": "Taarab Chillhop / Coastal Groove",
+        "moods": [
+            "chill",
+            "sunset",
+            "happy"
+        ],
+        "bpm": 88,
+        "key": "C Major",
+        "duration": "3:50",
+        "vocal_type": "Instrumental + Oud & Kanun",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-551.982.019-8",
+        "isrc": "KEN922600114",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Coastline Heritage Music (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Oud Solos",
+            "Kanun Melodies",
+            "Lofi Drums",
+            "Accordion"
+        ],
+        "pricing": {
+            "indie_film": 420,
+            "tv_series": 1050,
+            "commercial": 2100,
+            "game_loop": 850,
+            "broadcast_worldwide": 3800
+        },
+        "cover": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3"
+    },
+    {
+        "track_id": "sync_trk_15",
+        "title": "Eldoret Stomp",
+        "artist": "Rift Runners",
+        "genre": "East African Drill / Trap",
+        "moods": [
+            "action",
+            "energetic",
+            "tension"
+        ],
+        "bpm": 142,
+        "key": "G# Minor",
+        "duration": "2:55",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-772.339.810-6",
+        "isrc": "KEN922600115",
+        "pro_affiliation": "MCSK / BMI",
+        "master_owner": "Rift Runner Sound (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Sliding 808 Bass",
+            "Drill Hi-Hats",
+            "Dark Bell Arp",
+            "Snares"
+        ],
+        "pricing": {
+            "indie_film": 320,
+            "tv_series": 890,
+            "commercial": 1750,
+            "game_loop": 950,
+            "broadcast_worldwide": 3100
+        },
+        "cover": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"
+    },
+    {
+        "track_id": "sync_trk_16",
+        "title": "Ngong Hills Sunset",
+        "artist": "Kigo Beats",
+        "genre": "Lofi Chillhop / Ambient",
+        "moods": [
+            "chill",
+            "sunset",
+            "melancholy"
+        ],
+        "bpm": 78,
+        "key": "B Major",
+        "duration": "3:12",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-334.619.004-9",
+        "isrc": "KEN922600116",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Kigo Audio (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Vinyl Crackle & Rhodes",
+            "Warm Lofi Kick",
+            "Woodwinds",
+            "Bass"
+        ],
+        "pricing": {
+            "indie_film": 300,
+            "tv_series": 750,
+            "commercial": 1500,
+            "game_loop": 600,
+            "broadcast_worldwide": 2700
+        },
+        "cover": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3"
+    },
+    {
+        "track_id": "sync_trk_17",
+        "title": "Lamu Archipelago Waves",
+        "artist": "Zuri Island Project",
+        "genre": "Afrobeats / Island Pop",
+        "moods": [
+            "happy",
+            "uplifting",
+            "sunset"
+        ],
+        "bpm": 112,
+        "key": "A Major",
+        "duration": "3:22",
+        "vocal_type": "Vocal + Clean Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-889.102.551-3",
+        "isrc": "KEN922600117",
+        "pro_affiliation": "MCSK / ASCAP",
+        "master_owner": "Zuri Creative Lab (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Lead Vocals",
+            "Brass Horns",
+            "Steel Drums",
+            "Afro Shakers"
+        ],
+        "pricing": {
+            "indie_film": 480,
+            "tv_series": 1250,
+            "commercial": 2600,
+            "game_loop": 1100,
+            "broadcast_worldwide": 4800
+        },
+        "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    },
+    {
+        "track_id": "sync_trk_18",
+        "title": "Gikomba Market Rush",
+        "artist": "Matatu Sound System",
+        "genre": "Gengetone / Urban Dance",
+        "moods": [
+            "action",
+            "energetic",
+            "club"
+        ],
+        "bpm": 128,
+        "key": "D Major",
+        "duration": "2:48",
+        "vocal_type": "Sheng Chants + Bass Boosted",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-992.441.876-1",
+        "isrc": "KEN922600118",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Nairobi Underground (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Gengetone Bass",
+            "Synth Stabs",
+            "Chanted Vocals",
+            "Percussion"
+        ],
+        "pricing": {
+            "indie_film": 360,
+            "tv_series": 950,
+            "commercial": 2100,
+            "game_loop": 900,
+            "broadcast_worldwide": 3600
+        },
+        "cover": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+    },
+    {
+        "track_id": "sync_trk_19",
+        "title": "Mount Kenya Summit Hymn",
+        "artist": "Kirinyaga Choir & Strings",
+        "genre": "Cinematic Choral / Orchestral",
+        "moods": [
+            "cinematic",
+            "epic",
+            "melancholy"
+        ],
+        "bpm": 72,
+        "key": "C# Minor",
+        "duration": "4:40",
+        "vocal_type": "Choral Harmonization",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-118.990.231-5",
+        "isrc": "KEN922600119",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Kirinyaga Choral Guild (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Choir High Stems",
+            "Choir Bass Stems",
+            "Cello & Strings",
+            "French Horns"
+        ],
+        "pricing": {
+            "indie_film": 650,
+            "tv_series": 1750,
+            "commercial": 3500,
+            "game_loop": 1300,
+            "broadcast_worldwide": 6200
+        },
+        "cover": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    },
+    {
+        "track_id": "sync_trk_20",
+        "title": "Tsavo Night Safari",
+        "artist": "Boma Syndicate",
+        "genre": "Dark Cinematic / Tribal Hybrid",
+        "moods": [
+            "tension",
+            "dark",
+            "action"
+        ],
+        "bpm": 118,
+        "key": "F Minor",
+        "duration": "3:30",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-447.129.803-7",
+        "isrc": "KEN922600120",
+        "pro_affiliation": "MCSK / BMI",
+        "master_owner": "Boma Music Group (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Heavy Tribal Drums",
+            "Dark Pulse Synths",
+            "Distorted Brass",
+            "Atmospheres"
+        ],
+        "pricing": {
+            "indie_film": 450,
+            "tv_series": 1200,
+            "commercial": 2500,
+            "game_loop": 1200,
+            "broadcast_worldwide": 4700
+        },
+        "cover": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+    },
+    {
+        "track_id": "sync_trk_21",
+        "title": "Naivasha Flamingo Flight",
+        "artist": "Lake Shore Ensemble",
+        "genre": "Neo-Classical Piano & Kora",
+        "moods": [
+            "cinematic",
+            "chill",
+            "uplifting"
+        ],
+        "bpm": 84,
+        "key": "D Major",
+        "duration": "4:02",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-883.210.667-2",
+        "isrc": "KEN922600121",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Lake Shore Audio (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Grand Piano Solos",
+            "West-East Kora Strings",
+            "Subtle Violin",
+            "Air Pads"
+        ],
+        "pricing": {
+            "indie_film": 420,
+            "tv_series": 1100,
+            "commercial": 2300,
+            "game_loop": 950,
+            "broadcast_worldwide": 4200
+        },
+        "cover": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+    },
+    {
+        "track_id": "sync_trk_22",
+        "title": "Carnivore Club Groove",
+        "artist": "DJ Shujaa",
+        "genre": "Afro Tech / Deep Gqom",
+        "moods": [
+            "club",
+            "action",
+            "energetic"
+        ],
+        "bpm": 124,
+        "key": "G Minor",
+        "duration": "3:40",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-990.114.772-8",
+        "isrc": "KEN922600122",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Shujaa Records (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Gqom Kick Drum",
+            "Syncopated Shakers",
+            "Dark Tech Bass",
+            "Clap FX"
+        ],
+        "pricing": {
+            "indie_film": 350,
+            "tv_series": 900,
+            "commercial": 1900,
+            "game_loop": 1100,
+            "broadcast_worldwide": 3800
+        },
+        "cover": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+    },
+    {
+        "track_id": "sync_trk_23",
+        "title": "Diani Beach Sunrise",
+        "artist": "Coastal Groove Lab",
+        "genre": "Amapiano Jazz / Organic House",
+        "moods": [
+            "sunset",
+            "happy",
+            "chill"
+        ],
+        "bpm": 113,
+        "key": "F Major",
+        "duration": "3:52",
+        "vocal_type": "Instrumental + Saxophone",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-554.009.123-6",
+        "isrc": "KEN922600123",
+        "pro_affiliation": "MCSK / SAMRO",
+        "master_owner": "Coastal Groove Lab (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Soprano Saxophone",
+            "Log Drum Pattern",
+            "Rhodes Velvet Chord",
+            "Percussion"
+        ],
+        "pricing": {
+            "indie_film": 440,
+            "tv_series": 1150,
+            "commercial": 2400,
+            "game_loop": 1000,
+            "broadcast_worldwide": 4400
+        },
+        "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
+    },
+    {
+        "track_id": "sync_trk_24",
+        "title": "Turkana Stargazer",
+        "artist": "Desert Echoes",
+        "genre": "Psychedelic Afro-Rock / Guitar Fusion",
+        "moods": [
+            "cinematic",
+            "epic",
+            "action"
+        ],
+        "bpm": 104,
+        "key": "A Minor",
+        "duration": "4:18",
+        "vocal_type": "Instrumental",
+        "clearance_status": "100% Pre-Cleared One-Stop",
+        "iswc": "T-771.884.992-0",
+        "isrc": "KEN922600124",
+        "pro_affiliation": "MCSK",
+        "master_owner": "Desert Echoes (100%)",
+        "publishing_owner": "TuneMavens Publishing (100%)",
+        "stems_available": [
+            "Full Mix",
+            "Overdriven Lead Guitar",
+            "Rumble Bass",
+            "Organic Drumkit",
+            "Reverb Tails"
+        ],
+        "pricing": {
+            "indie_film": 490,
+            "tv_series": 1300,
+            "commercial": 2700,
+            "game_loop": 1150,
+            "broadcast_worldwide": 4900
+        },
+        "cover": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+    }
+]
+
+AUTHORITATIVE_SYNC_BRIEFS = [
+    {
+        "brief_id": "brief_net_01",
+        "title": "Untitled Cyberpunk Nairobi Thriller",
+        "client": "Netflix International Original Series",
+        "production_house": "Film Studios Africa / Netflix UK",
+        "budget": 18000.0,
+        "currency": "USD",
+        "genres": [
+            "Synthwave",
+            "Afrofuturism",
+            "Dark Techno"
+        ],
+        "moods": [
+            "action",
+            "dark",
+            "energetic"
+        ],
+        "target_bpm": 120,
+        "duration_needed": "Full Track & 60s Trailer Stems",
+        "deadline_date": "In 3 days",
+        "status": "ACTIVE",
+        "urgency": "high",
+        "synopsis": "High-octane car chase through futuristic neon Nairobi city streets at night. Looking for heavy, driving basslines, aggressive analog synths, and subtle African percussive rhythms.",
+        "reference_tracks": "Kavinsky, Gesaffelstein, Ndufo Cyberwave",
+        "creator_split_promise": "90% Gross ($16,200 via TuneLedger Cascade)"
+    },
+    {
+        "brief_id": "brief_auto_02",
+        "title": "Summer 4x4 Safari Global Ad",
+        "client": "Land Rover / Ogilvy Kenya",
+        "production_house": "Ogilvy East Africa & EMEA",
+        "budget": 45000.0,
+        "currency": "USD",
+        "genres": [
+            "Afrobeats",
+            "Indie Pop",
+            "Organic Groove"
+        ],
+        "moods": [
+            "uplifting",
+            "happy",
+            "sunset"
+        ],
+        "target_bpm": 108,
+        "duration_needed": "30s TV Cut, 60s Cinema Cut + Instrumental",
+        "deadline_date": "In 5 days",
+        "status": "ACTIVE",
+        "urgency": "medium",
+        "synopsis": "Aspirational luxury automotive TV commercial celebrating freedom, open savannas, and warm sunsets across East Africa. Needs bright acoustic guitars, infectious rhythmic bounce, and an undeniable feel-good hook.",
+        "reference_tracks": "Burna Boy, Vance Joy, Aisha Okoro",
+        "creator_split_promise": "90% Gross ($40,500 via TuneLedger Cascade)"
+    },
+    {
+        "brief_id": "brief_ea_03",
+        "title": "EA Sports FC 2027 In-Game Arena Track",
+        "client": "EA Sports Trax",
+        "production_house": "Electronic Arts Vancouver",
+        "budget": 25000.0,
+        "currency": "USD",
+        "genres": [
+            "Trap",
+            "Amapiano",
+            "Afro Percussion"
+        ],
+        "moods": [
+            "energetic",
+            "action",
+            "epic"
+        ],
+        "target_bpm": 134,
+        "duration_needed": "Full In-Game Loop & Stems",
+        "deadline_date": "24 hours left",
+        "status": "ACTIVE",
+        "urgency": "critical",
+        "synopsis": "Main arena menu track and Volta street football sequence. Seeking aggressive bounce, heavy sub bass, chanting crowd energy, and high BPM percussion.",
+        "reference_tracks": "Uncle Waffles, Asake, Travis Scott",
+        "creator_split_promise": "90% Gross ($22,500 via TuneLedger Cascade)"
+    },
+    {
+        "brief_id": "brief_doc_04",
+        "title": "Rift Valley Chronicles Wildlife Doc",
+        "client": "BBC Natural History Unit / National Geographic",
+        "production_house": "Silverback Films Bristol",
+        "budget": 12500.0,
+        "currency": "USD",
+        "genres": [
+            "Cinematic Orchestral",
+            "Neo-Classical",
+            "Ambient"
+        ],
+        "moods": [
+            "cinematic",
+            "epic",
+            "melancholy"
+        ],
+        "target_bpm": 80,
+        "duration_needed": "Main Theme & 3 Tension Cues",
+        "deadline_date": "In 8 days",
+        "status": "ACTIVE",
+        "urgency": "low",
+        "synopsis": "Sweeping 4K aerial shots of the Great Migration and Great Rift Valley lakes. Needs rich orchestral strings, subtle traditional flutes or harp, and deep emotional resonance.",
+        "reference_tracks": "Hans Zimmer, Max Richter, Savannah Symphony",
+        "creator_split_promise": "90% Gross ($11,250 via TuneLedger Cascade)"
+    },
+    {
+        "brief_id": "brief_tech_05",
+        "title": "Safaricom M-Pesa Next-Gen Campaign",
+        "client": "Safaricom Kenya PLC / Dentsu",
+        "production_house": "Dentsu Creative Nairobi",
+        "budget": 10000.0,
+        "currency": "USD",
+        "genres": [
+            "Indie Pop",
+            "Lo-Fi Chill",
+            "Afrobeats"
+        ],
+        "moods": [
+            "happy",
+            "chill",
+            "uplifting"
+        ],
+        "target_bpm": 96,
+        "duration_needed": "15s & 30s Digital Video Ads",
+        "deadline_date": "In 4 days",
+        "status": "ACTIVE",
+        "urgency": "medium",
+        "synopsis": "Everyday entrepreneurs, street vendors, and young creatives transacting effortlessly on their phones. Music should feel modern, crisp, relatable, and optimistic.",
+        "reference_tracks": "Maya Wendo, Coastal Collective",
+        "creator_split_promise": "90% Gross ($9,000 via TuneLedger Cascade)"
+    }
+]

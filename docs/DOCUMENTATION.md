@@ -3291,6 +3291,22 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Added `background-color: #0b0f1e` to `.sync-card-art-box` in `SyncMarketplace.css` preventing grey/white background flashes during image load.
   - Mirrored and verified across all workspaces: `apps/syncmavens`, `apps/portal`, and `apps/tunestream`.
 
+### 9.44.65 Phase 24: Authoritative Backend Catalog & Artwork Synchronization
+
+- **Authoritative Backend Data Source (`backend/routes/sync_data.py`)**:
+  - Established canonical Python definitions for all 24 pre-cleared one-stop tracks (`AUTHORITATIVE_SYNC_CATALOG`) and active production briefs (`AUTHORITATIVE_SYNC_BRIEFS`).
+  - Contains complete metadata for each track: `track_id`, `title`, `artist`, `genre`, `moods`, `bpm`, `key`, `duration`, `vocal_type`, `clearance_status`, `iswc`, `isrc`, `pro_affiliation`, `master_owner`, `publishing_owner`, `stems_available`, `pricing`, `audio_url`, and high-resolution `cover`.
+  - Added `DEFAULT_SYNC_COVERS` rotating pool for robust image resolution.
+
+- **Idempotent Synchronization Engine (`backend/routes/match_router.py`)**:
+  - Re-architected `seed_sync_marketplace_if_empty()` to strictly upsert and synchronize all 24 authoritative catalog tracks and 5 briefs in MongoDB `db.sync_catalogs` and `db.briefs`.
+  - Automatically updates any legacy database documents lacking `cover` or having stale metadata.
+  - Automatically backfills non-empty covers for any user/custom tracks (`cover: {$exists: false}`) using `DEFAULT_SYNC_COVERS`.
+  - Cleans up orphaned or malformed test records lacking titles.
+  - In `list_sync_catalog()`, cross-references every record against the authoritative catalog map, guaranteeing 100% cover population (`all(bool(t.get('cover')) for t in cat) == True`).
+  - Verified live via FastAPI TestClient on `/api/match/catalog` and `/api/match/briefs`.
+
+
 
 
 

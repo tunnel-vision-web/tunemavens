@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from auth import get_current_user
 from config import db
+from routes.sync_data import AUTHORITATIVE_SYNC_CATALOG, AUTHORITATIVE_SYNC_BRIEFS, DEFAULT_SYNC_COVERS
 
 logger = logging.getLogger(__name__)
 
@@ -21,205 +22,75 @@ router = APIRouter(prefix="/api/match", tags=["matching"])
 
 
 def seed_sync_marketplace_if_empty():
-    """Ensure rich active briefs and pre-cleared catalog tracks exist in MongoDB."""
-    if db.briefs.count_documents({}) < 5:
-        broadcast_briefs = [
-            {
-                "brief_id": "brief_net_01",
-                "title": "Untitled Cyberpunk Nairobi Thriller",
-                "client": "Netflix International Original Series",
-                "production_house": "Film Studios Africa / Netflix UK",
-                "project_type": "Film / TV Series",
-                "budget": 18000.0,
-                "currency": "USD",
-                "genres": ["synthwave", "afrofuturism", "dark techno"],
-                "moods": ["action", "dark", "energetic"],
-                "target_bpm": 120,
-                "duration_needed": "Full Track & 60s Trailer Stems",
-                "deadline": "2026-12-15",
-                "deadline_date": "In 3 days",
-                "status": "OPEN",
-                "urgency": "high",
-                "synopsis": "High-octane car chase through futuristic neon Nairobi city streets at night. Looking for heavy, driving basslines, aggressive analog synths, and subtle African percussive rhythms.",
-                "reference_tracks": "Kavinsky, Gesaffelstein, Ndufo Cyberwave",
-                "creator_split_promise": "90% Gross ($16,200 via TuneLedger Cascade)",
-                "created_at": datetime.now(timezone.utc),
-            },
-            {
-                "brief_id": "brief_auto_02",
-                "title": "Summer 4x4 Safari Global Ad",
-                "client": "Land Rover / Ogilvy Kenya",
-                "production_house": "Ogilvy East Africa & EMEA",
-                "project_type": "Commercial Ad",
-                "budget": 45000.0,
-                "currency": "USD",
-                "genres": ["afrobeats", "indie pop", "organic groove"],
-                "moods": ["uplifting", "happy", "sunset"],
-                "target_bpm": 108,
-                "duration_needed": "30s TV Cut, 60s Cinema Cut + Instrumental",
-                "deadline": "2026-12-20",
-                "deadline_date": "In 5 days",
-                "status": "OPEN",
-                "urgency": "medium",
-                "synopsis": "Stunning vistas of Maasai Mara savannah at golden hour. Music must start stripped back with acoustic plucks/kora, blooming into a soaring, joyful hook.",
-                "reference_tracks": "Burna Boy, Bakermat, Aisha Okoro",
-                "creator_split_promise": "90% Gross ($40,500 via TuneLedger Cascade)",
-                "created_at": datetime.now(timezone.utc),
-            },
-            {
-                "brief_id": "brief_ea_03",
-                "title": "EA Sports FC 27 African Roster Soundtrack",
-                "client": "EA Sports Worldwide",
-                "production_house": "Electronic Arts Vancouver & London",
-                "project_type": "Video Game OST",
-                "budget": 25000.0,
-                "currency": "USD",
-                "genres": ["amapiano", "gengetone", "afro-house"],
-                "moods": ["swagger", "energetic", "celebration"],
-                "target_bpm": 113,
-                "duration_needed": "In-Game Menu Loop & Stadium Goal Stinger",
-                "deadline": "2026-12-25",
-                "deadline_date": "In 8 days",
-                "status": "OPEN",
-                "urgency": "medium",
-                "synopsis": "In-game menu and pre-match tunnel music. Heavy bass log drums with confident vocal chants and syncopated shakers. Must exude swagger and high athletic energy.",
-                "reference_tracks": "Uncle Waffles, Kabza De Small, Matatu Boys",
-                "creator_split_promise": "90% Gross ($22,500 via TuneLedger Cascade)",
-                "created_at": datetime.now(timezone.utc),
-            },
-            {
-                "brief_id": "brief_a24_04",
-                "title": "A24 Indie Psychological Drama End Credits",
-                "client": "A24 Feature Films",
-                "production_house": "A24 New York / Plan B",
-                "project_type": "Indie Feature Film",
-                "budget": 32000.0,
-                "currency": "USD",
-                "genres": ["ambient", "neo-classical", "ethereal vocal"],
-                "moods": ["melancholy", "cinematic", "hypnotic"],
-                "target_bpm": 88,
-                "duration_needed": "Full 4-minute End Title Recording",
-                "deadline": "2026-12-28",
-                "deadline_date": "In 12 days",
-                "status": "OPEN",
-                "urgency": "low",
-                "synopsis": "Slow-burn dramatic resolution. Needs haunting soprano vocalizations over sweeping bowed strings and minimal Rhodes piano.",
-                "reference_tracks": "Max Richter, Labrinth, Ólafur Arnalds",
-                "creator_split_promise": "90% Gross ($28,800 via TuneLedger Cascade)",
-                "created_at": datetime.now(timezone.utc),
-            },
-            {
-                "brief_id": "brief_hbo_05",
-                "title": "HBO Max Thriller Montages",
-                "client": "Warner Bros. Discovery / HBO",
-                "production_house": "Bad Robot / HBO Drama",
-                "project_type": "Premium Cable Drama",
-                "budget": 28000.0,
-                "currency": "USD",
-                "genres": ["dark techno", "industrial", "cinematic bass"],
-                "moods": ["tension", "dark", "suspense"],
-                "target_bpm": 126,
-                "duration_needed": "Episodic Recurring Theme + Scene Cues",
-                "deadline": "2026-12-30",
-                "deadline_date": "In 14 days",
-                "status": "OPEN",
-                "urgency": "high",
-                "synopsis": "Interrogation room and surveillance scenes. Rhythmic ticking pulses, low sub-bass drones, and abrupt dynamic drops.",
-                "reference_tracks": "Trent Reznor, Atticus Ross, Static Pulse",
-                "creator_split_promise": "90% Gross ($25,200 via TuneLedger Cascade)",
-                "created_at": datetime.now(timezone.utc),
-            }
-        ]
-        for b in broadcast_briefs:
-            if not db.briefs.find_one({"title": b["title"]}):
-                db.briefs.insert_one(b)
+    """Synchronizes authoritative briefs and all 24 pre-cleared catalog tracks with valid covers in MongoDB."""
+    # 1. Sync Authoritative Briefs
+    for b in AUTHORITATIVE_SYNC_BRIEFS:
+        existing = db.briefs.find_one({
+            "$or": [
+                {"brief_id": b.get("brief_id")},
+                {"title": b.get("title")}
+            ]
+        })
+        brief_doc = {
+            "brief_id": b["brief_id"],
+            "title": b["title"],
+            "client": b.get("client", "Commercial / Film Client"),
+            "production_house": b.get("production_house", ""),
+            "project_type": b.get("project_type", "Film / TV"),
+            "budget": float(b.get("budget", 15000.0)),
+            "budget_fee": float(b.get("budget", 15000.0)),
+            "currency": b.get("currency", "USD"),
+            "genres": b.get("genres", []),
+            "required_genres": b.get("genres", []),
+            "moods": b.get("moods", []),
+            "required_moods": b.get("moods", []),
+            "target_bpm": int(b.get("target_bpm", 120)),
+            "duration_needed": b.get("duration_needed", "Full Track"),
+            "deadline": b.get("deadline", "2026-12-25"),
+            "deadline_date": b.get("deadline_date", "In 5 days"),
+            "status": b.get("status", "OPEN"),
+            "urgency": b.get("urgency", "medium"),
+            "synopsis": b.get("synopsis", ""),
+            "reference_tracks": b.get("reference_tracks", ""),
+            "creator_split_promise": b.get("creator_split_promise", "90% Gross via TuneLedger Cascade")
+        }
+        if not existing:
+            brief_doc["created_at"] = datetime.now(timezone.utc)
+            db.briefs.insert_one(brief_doc)
+        else:
+            db.briefs.update_one({"_id": existing["_id"]}, {"$set": brief_doc})
 
-    if db.sync_catalogs.count_documents({}) < 4:
-        sample_catalog = [
-            {
-                "track_id": "sync_trk_01",
-                "title": "Nairobi Cyberwave",
-                "artist": "Ndufo",
-                "genre": "Synthwave / Afrofuturism",
-                "moods": ["action", "energetic", "cinematic"],
-                "bpm": 122,
-                "key": "D Minor",
-                "duration": "3:45",
-                "vocal_type": "Instrumental",
-                "clearance_status": "100% Pre-Cleared One-Stop",
-                "iswc": "T-345.891.002-1",
-                "isrc": "KEN922600101",
-                "pro_affiliation": "MCSK / BMI",
-                "stems_available": ["Full Mix", "Drums", "Bass", "Synths"],
-                "pricing": {"indie_film": 350, "tv_series": 950, "commercial": 1800},
-                "cover": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
-                "audio_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-                "created_at": datetime.now(timezone.utc)
-            },
-            {
-                "track_id": "sync_trk_02",
-                "title": "Kilimanjaro Sunrise",
-                "artist": "Aisha Okoro",
-                "genre": "Afrobeats / Organic Groove",
-                "moods": ["uplifting", "sunset", "happy"],
-                "bpm": 108,
-                "key": "G Major",
-                "duration": "3:20",
-                "vocal_type": "Vocal + Clean Instrumental",
-                "clearance_status": "100% Pre-Cleared One-Stop",
-                "iswc": "T-819.340.119-4",
-                "isrc": "KEN922600102",
-                "pro_affiliation": "MCSK / ASCAP",
-                "stems_available": ["Full Mix", "Main Vocals", "Talking Drums", "Guitars"],
-                "pricing": {"indie_film": 450, "tv_series": 1200, "commercial": 2400},
-                "cover": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
-                "audio_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-                "created_at": datetime.now(timezone.utc)
-            },
-            {
-                "track_id": "sync_trk_03",
-                "title": "Midnight In Soweto",
-                "artist": "DJ Maphoria",
-                "genre": "Amapiano / Afro-House",
-                "moods": ["swagger", "energetic", "celebration"],
-                "bpm": 113,
-                "key": "F# Minor",
-                "duration": "4:10",
-                "vocal_type": "Clean Hook + Instrumental",
-                "clearance_status": "100% Pre-Cleared One-Stop",
-                "iswc": "T-992.103.882-0",
-                "isrc": "ZAE722600303",
-                "pro_affiliation": "SAMRO / PRS",
-                "stems_available": ["Full Mix", "Log Drum", "Percussion", "Keys"],
-                "pricing": {"indie_film": 400, "tv_series": 1100, "commercial": 2200},
-                "cover": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
-                "audio_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-                "created_at": datetime.now(timezone.utc)
-            },
-            {
-                "track_id": "sync_trk_04",
-                "title": "Ethereal Rift",
-                "artist": "Aether Echo",
-                "genre": "Ambient / Neo-Classical",
-                "moods": ["melancholy", "cinematic", "hypnotic"],
-                "bpm": 88,
-                "key": "A Minor",
-                "duration": "3:58",
-                "vocal_type": "Instrumental + Ethereal Choir",
-                "clearance_status": "100% Pre-Cleared One-Stop",
-                "iswc": "T-114.772.339-2",
-                "isrc": "USN922600404",
-                "pro_affiliation": "BMI",
-                "stems_available": ["Full Mix", "Strings", "Choir", "Sub"],
-                "pricing": {"indie_film": 500, "tv_series": 1300, "commercial": 2600},
-                "cover": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
-                "audio_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-                "created_at": datetime.now(timezone.utc)
-            }
+    # 2. Sync Authoritative Catalog (24 Tracks with covers)
+    for t in AUTHORITATIVE_SYNC_CATALOG:
+        existing = db.sync_catalogs.find_one({
+            "$or": [
+                {"track_id": t["track_id"]},
+                {"title": t["title"]}
+            ]
+        })
+        track_doc = dict(t)
+        if not existing:
+            track_doc["created_at"] = datetime.now(timezone.utc)
+            db.sync_catalogs.insert_one(track_doc)
+        else:
+            # Strictly synchronize authoritative fields ensuring cover, pricing, audio_url, etc. are 100% matched
+            db.sync_catalogs.update_one({"_id": existing["_id"]}, {"$set": track_doc})
+
+    # 3. Clean up broken test tracks that lack title or track_id
+    db.sync_catalogs.delete_many({
+        "$or": [
+            {"title": {"$exists": False}},
+            {"title": None},
+            {"title": ""}
         ]
-        for c in sample_catalog:
-            if not db.sync_catalogs.find_one({"title": c["title"]}):
-                db.sync_catalogs.insert_one(c)
+    })
+
+    # 4. Ensure any remaining custom/user tracks in database have valid non-empty cover
+    db.sync_catalogs.update_many(
+        {"$or": [{"cover": {"$exists": False}}, {"cover": None}, {"cover": ""}]},
+        {"$set": {"cover": DEFAULT_SYNC_COVERS[0]}}
+    )
+
 
 # Seed on load
 seed_sync_marketplace_if_empty()
@@ -573,21 +444,29 @@ def calculate_waterfall_split(sync_fee: float = 10000.0, mode: str = "administra
 
 @router.get("/catalog")
 def list_sync_catalog():
-    """Lists pre-cleared one-stop tracks ready for sync placement."""
-    cursor = db.sync_catalogs.find({}).sort("created_at", -1)
+    """Lists pre-cleared one-stop tracks ready for sync placement, ensuring full sync with authoritative catalog."""
+    seed_sync_marketplace_if_empty()
+    cursor = db.sync_catalogs.find({}).sort("track_id", 1)
     tracks = []
-    default_covers = [
-        "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80"
-    ]
+    auth_map = {t["track_id"]: t for t in AUTHORITATIVE_SYNC_CATALOG}
+    auth_title_map = {t["title"]: t for t in AUTHORITATIVE_SYNC_CATALOG}
+
     for idx, doc in enumerate(cursor):
         doc["id"] = str(doc["_id"])
         doc["_id"] = str(doc["_id"])
+        tid = doc.get("track_id")
+        title = doc.get("title")
+        auth_match = auth_map.get(tid) or auth_title_map.get(title)
+
         if not doc.get("cover"):
-            doc["cover"] = default_covers[idx % len(default_covers)]
+            if auth_match and auth_match.get("cover"):
+                doc["cover"] = auth_match["cover"]
+            else:
+                doc["cover"] = DEFAULT_SYNC_COVERS[idx % len(DEFAULT_SYNC_COVERS)]
+        if not doc.get("audio_url") and auth_match:
+            doc["audio_url"] = auth_match.get("audio_url")
+        if not doc.get("pricing") and auth_match:
+            doc["pricing"] = auth_match.get("pricing")
         tracks.append(doc)
     return tracks
 
@@ -595,11 +474,12 @@ def list_sync_catalog():
 @router.post("/catalog", status_code=status.HTTP_201_CREATED)
 def add_sync_catalog_track(payload: dict, current_user: dict = Depends(get_current_user)):
     """Allows creators to register a pre-cleared track in the sync marketplace."""
+    default_cover = DEFAULT_SYNC_COVERS[0]
     track_doc = {
         "user_id": str(current_user["_id"]),
         "track_id": f"sync_trk_{secrets.token_hex(3)}",
         "title": payload.get("title", ""),
-        "artist": payload.get("artist", current_user.get("username", "Artist")),
+        "artist": payload.get("artist", current_user.get("full_name") or current_user.get("username", "Artist")),
         "genre": payload.get("genre", "Afrobeats"),
         "moods": payload.get("moods", ["energetic", "cinematic"]),
         "bpm": int(payload.get("bpm", 120)),
@@ -612,7 +492,7 @@ def add_sync_catalog_track(payload: dict, current_user: dict = Depends(get_curre
         "pro_affiliation": payload.get("pro_affiliation", "MCSK / ASCAP"),
         "stems_available": payload.get("stems_available", ["Full Mix", "Drums", "Bass", "Synths"]),
         "pricing": payload.get("pricing", {"indie_film": 350, "tv_series": 950, "commercial": 1800}),
-        "cover": payload.get("cover") or "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
+        "cover": payload.get("cover") or default_cover,
         "audio_url": payload.get("audio_url", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"),
         "created_at": datetime.now(timezone.utc)
     }
