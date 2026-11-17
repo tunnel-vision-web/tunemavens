@@ -1010,7 +1010,7 @@ export function OnboardingWizardModal({ open, onClose, onSaved, initial, session
         {step === WIZARD_QUESTIONS.length + 1 && (
           <div data-testid="wizard-epk-step">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '18px' }}>⚡</span>
+              <span style={{ fontSize: '18px' }}>✨</span>
               <p style={{ fontSize: '15px', color: '#e2e8f0', margin: 0, fontWeight: 700 }}>
                 Create Your Free EPK Web World (Optional)
               </p>

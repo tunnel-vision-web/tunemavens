@@ -3569,8 +3569,8 @@ export default function NativeAppLandingView({
               Top up frictionlessly using Instant M-Pesa STK Push in Kenya &amp; East Africa (KES), or global Visa / Mastercard / Stripe (USD, GBP, EUR).
             </p>
           </div>
-          <span style={{ fontSize: '12px', color: '#00f0ff', background: 'rgba(0, 240, 255, 0.1)', padding: '6px 12px', borderRadius: '4px', fontWeight: 700 }}>
-            ⚡ Instant Balance Settlement · Zero Lock-In
+          <span style={{ fontSize: '12px', color: '#00f0ff', background: 'rgba(0, 240, 255, 0.1)', padding: '6px 12px', borderRadius: '3px', fontWeight: 700 }}>
+            ✨ Instant Balance Settlement · Zero Lock-In
           </span>
         </div>
       </div>

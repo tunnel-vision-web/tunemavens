@@ -8,7 +8,7 @@ import {
   RiNetflixFill, RiMovieLine, RiVolumeUpFill, RiMusicFill, RiUserFill,
   RiPlayFill, RiPauseFill, RiAlertLine, RiCheckLine, RiLoader4Line, RiMenuFill, RiCloseFill,
   RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiLogoutBoxRFill, RiCoinsFill,
-  RiFileTextFill
+  RiFileTextFill, RiMenuUnfoldLine, RiMenuFoldLine
 } from 'react-icons/ri';
 import { 
   SiSpotify, SiApplemusic, SiYoutube, SiTiktok, SiTidal, SiDeezer 
@@ -138,6 +138,76 @@ function AppContent() {
   const isDashboardRoute = location.pathname.startsWith('/dashboard');
 
   const [collapsed, setCollapsed] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isTabletOrMobile = windowWidth <= 1024;
+  const isMobile = windowWidth <= 768;
+  const isIconMenu = collapsed || isTabletOrMobile;
+  const isMobileExpanded = isMobile && !collapsed;
+
+  // Futuristic Floating Tooltip for Icon Menu Mode
+  const [hoveredNavItem, setHoveredNavItem] = useState(null);
+
+  const handleNavItemMouseEnter = (id, item, e) => {
+    if (!isIconMenu && !isTabletOrMobile) return;
+    if (!e || !e.currentTarget) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const category = item?.category || 'SyncMavens';
+    const title = item?.label || item?.title || id;
+    const desc = item?.desc || `Open ${title} in SyncMavens`;
+    
+    const tooltipEstimatedHeight = 70;
+    const centerY = rect.top + rect.height / 2;
+    const clampedTop = Math.max(20, Math.min(window.innerHeight - tooltipEstimatedHeight - 16, centerY));
+    
+    setHoveredNavItem({
+      id,
+      title,
+      category,
+      desc,
+      isActive: activeTab === id,
+      top: clampedTop,
+      left: rect.right + 12
+    });
+  };
+
+  const handleNavItemMouseLeave = () => {
+    setHoveredNavItem(null);
+  };
+
+  const renderHoverTooltip = () => {
+    if ((!isIconMenu && !isTabletOrMobile) || !hoveredNavItem) return null;
+    return (
+      <div 
+        className="sidebar-collapsed-tooltip"
+        style={{
+          top: `${hoveredNavItem.top}px`,
+          left: `${hoveredNavItem.left}px`,
+          transform: 'translateY(-50%)',
+        }}
+      >
+        <div className="sidebar-tooltip-header">
+          <span className="sidebar-tooltip-category">{hoveredNavItem.category}</span>
+          {hoveredNavItem.isActive && (
+            <span className="sidebar-tooltip-active-badge">
+              <span className="sidebar-tooltip-active-dot" />
+              ACTIVE
+            </span>
+          )}
+        </div>
+        <div className="sidebar-tooltip-title">{hoveredNavItem.title}</div>
+        {hoveredNavItem.desc && (
+          <div className="sidebar-tooltip-desc">{hoveredNavItem.desc}</div>
+        )}
+      </div>
+    );
+  };
+
   const [activeTab, setActiveTab] = useState('briefs');
   
   // Dashboard states
@@ -784,34 +854,45 @@ function AppContent() {
 
   const mainLayoutContent = isEffectiveDashboard ? (
     <div className="dashboard-container">
+        {/* Mobile Drawer Backdrop */}
+        {isMobileExpanded && (
+          <div 
+            className="dashboard-sidebar-backdrop" 
+            onClick={() => setCollapsed(true)} 
+            aria-label="Close Sidecar Menu"
+          />
+        )}
         {/* Sidebar Navigation */}
-        <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
-          <div className="dashboard-sidebar-scroll">
-            <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center', justifyContent: 'center', padding: '16px 0' }}>
+        <aside className={`dashboard-sidebar ${isIconMenu ? 'collapsed' : ''} ${isMobileExpanded ? 'mobile-expanded' : ''}`}>
+          <div className="dashboard-sidebar-scroll" onScroll={() => setHoveredNavItem(null)}>
+            <div className="dashboard-sidebar-header" style={{ flexDirection: isIconMenu ? 'column' : 'row', gap: '10px', alignItems: 'center', justifyContent: 'center', padding: '16px 0' }}>
               <Link to="/" className="nav-logo-link">
                 <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
                   <img 
                     src={smLogo} 
                     alt="SyncMavens Logo" 
                     className="nav-logo-image" 
-                    style={{ height: collapsed ? '20px' : '32px', width: 'auto', display: 'block' }} 
+                    style={{ height: isIconMenu ? '20px' : '32px', width: 'auto', display: 'block' }} 
                   />
-                  <span style={{ fontSize: collapsed ? '7px' : '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+                  <span style={{ fontSize: isIconMenu ? '7px' : '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
                 </div>
               </Link>
             </div>
 
             <button 
-              onClick={() => setCollapsed(!collapsed)} 
+              onClick={() => {
+                setCollapsed(!collapsed);
+                setHoveredNavItem(null);
+              }} 
               className="dashboard-nav-item collapse-toggle-btn"
               style={{ border: 'none', background: 'transparent', padding: '6px', justifyContent: 'center', width: '100%', marginBottom: '16px', color: '#94a3b8' }}
-              title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              title={isIconMenu ? "Expand Sidebar" : "Collapse Sidebar"}
             >
-              {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
+              {isIconMenu ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
             </button>
 
             <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
-              {!collapsed && (
+              {!isIconMenu && (
                 <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                   Operations
                 </div>
@@ -821,22 +902,34 @@ function AppContent() {
                   <>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('briefs_mgmt')} 
+                        onClick={() => {
+                          setActiveTab('briefs_mgmt');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('briefs_mgmt', { label: 'Create Sync Brief', category: 'Operations', desc: 'Author and deploy sync licensing briefs' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'briefs_mgmt' ? 'active' : ''}`}
-                        title="Create Sync Brief"
+                        title={!isIconMenu ? "Create Sync Brief" : undefined}
                       >
                         <RiBriefcaseLine size={16} />
-                        {!collapsed && "Create Sync Brief"}
+                        {!isIconMenu && "Create Sync Brief"}
                       </button>
                     </li>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('sync_ready_vault')} 
+                        onClick={() => {
+                          setActiveTab('sync_ready_vault');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('sync_ready_vault', { label: 'Sync-Ready Vault', category: 'Operations', desc: 'Browse pre-cleared tracks and master stems' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'sync_ready_vault' ? 'active' : ''}`}
-                        title="Sync-Ready Vault"
+                        title={!isIconMenu ? "Sync-Ready Vault" : undefined}
                       >
                         <RiMusicFill size={16} />
-                        {!collapsed && "Sync-Ready Vault"}
+                        {!isIconMenu && "Sync-Ready Vault"}
                       </button>
                     </li>
                   </>
@@ -844,42 +937,66 @@ function AppContent() {
                   <>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('briefs')} 
+                        onClick={() => {
+                          setActiveTab('briefs');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('briefs', { label: 'Active Briefs', category: 'Operations', desc: 'View open sync licensing briefs from film/TV supervisors' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'briefs' ? 'active' : ''}`}
-                        title="Active Briefs"
+                        title={!isIconMenu ? "Active Briefs" : undefined}
                       >
                         <RiBriefcaseLine size={16} />
-                        {!collapsed && "Active Briefs"}
+                        {!isIconMenu && "Active Briefs"}
                       </button>
                     </li>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('catalog')} 
+                        onClick={() => {
+                          setActiveTab('catalog');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('catalog', { label: 'My Catalog', category: 'Operations', desc: 'Manage your sovereign catalog and metadata' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'catalog' ? 'active' : ''}`}
-                        title="My Catalog"
+                        title={!isIconMenu ? "My Catalog" : undefined}
                       >
                         <RiFolderMusicLine size={16} />
-                        {!collapsed && "My Catalog"}
+                        {!isIconMenu && "My Catalog"}
                       </button>
                     </li>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('dashboard_publishing')} 
+                        onClick={() => {
+                          setActiveTab('dashboard_publishing');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('dashboard_publishing', { label: 'Music Publishing', category: 'Operations', desc: 'Publishing rights, PRO registration and splits' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'dashboard_publishing' ? 'active' : ''}`}
-                        title="Music Publishing"
+                        title={!isIconMenu ? "Music Publishing" : undefined}
                       >
                         <RiFileListLine size={16} />
-                        {!collapsed && "Music Publishing"}
+                        {!isIconMenu && "Music Publishing"}
                       </button>
                     </li>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('dashboard_youtube')} 
+                        onClick={() => {
+                          setActiveTab('dashboard_youtube');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('dashboard_youtube', { label: 'YouTube Content ID', category: 'Operations', desc: 'Monetize and protect digital audio fingerprinting' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'dashboard_youtube' ? 'active' : ''}`}
-                        title="YouTube Content ID"
+                        title={!isIconMenu ? "YouTube Content ID" : undefined}
                       >
                         <RiUpload2Line size={16} />
-                        {!collapsed && "YouTube Content ID"}
+                        {!isIconMenu && "YouTube Content ID"}
                       </button>
                     </li>
                   </>
@@ -888,7 +1005,7 @@ function AppContent() {
             </div>
 
             <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
-              {!collapsed && (
+              {!isIconMenu && (
                 <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                   Transactions
                 </div>
@@ -898,22 +1015,34 @@ function AppContent() {
                   <>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('pitches_received')} 
+                        onClick={() => {
+                          setActiveTab('pitches_received');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('pitches_received', { label: 'Pitches Received', category: 'Transactions', desc: 'Incoming music sync submissions from artists and labels' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'pitches_received' ? 'active' : ''}`}
-                        title="Pitches Received"
+                        title={!isIconMenu ? "Pitches Received" : undefined}
                       >
                         <RiListCheck size={16} />
-                        {!collapsed && "Pitches Received"}
+                        {!isIconMenu && "Pitches Received"}
                       </button>
                     </li>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('contracts')} 
+                        onClick={() => {
+                          setActiveTab('contracts');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('contracts', { label: 'MyContracts & Escrow', category: 'Transactions', desc: 'Smart legal contracts and sovereign escrow disbursements' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${(activeTab === 'contracts' || activeTab === 'escrow_splits' || activeTab === 'mycontracts') ? 'active' : ''}`}
-                        title="MyContracts & Escrow"
+                        title={!isIconMenu ? "MyContracts & Escrow" : undefined}
                       >
                         <RiFileTextFill size={16} />
-                        {!collapsed && "MyContracts & Escrow"}
+                        {!isIconMenu && "MyContracts & Escrow"}
                       </button>
                     </li>
                   </>
@@ -921,22 +1050,34 @@ function AppContent() {
                   <>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('pitches')} 
+                        onClick={() => {
+                          setActiveTab('pitches');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('pitches', { label: 'My Pitches', category: 'Transactions', desc: 'Active sync submissions to production houses and studios' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'pitches' ? 'active' : ''}`}
-                        title="My Pitches"
+                        title={!isIconMenu ? "My Pitches" : undefined}
                       >
                         <RiListCheck size={16} />
-                        {!collapsed && "My Pitches"}
+                        {!isIconMenu && "My Pitches"}
                       </button>
                     </li>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('ledger')} 
+                        onClick={() => {
+                          setActiveTab('ledger');
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
+                        }} 
+                        onMouseEnter={(e) => handleNavItemMouseEnter('ledger', { label: 'Deal Ledger', category: 'Transactions', desc: 'Sync licensing deal accounting and payment records' }, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === 'ledger' ? 'active' : ''}`}
-                        title="Deal Ledger"
+                        title={!isIconMenu ? "Deal Ledger" : undefined}
                       >
                         <RiExchangeDollarLine size={16} />
-                        {!collapsed && "Deal Ledger"}
+                        {!isIconMenu && "Deal Ledger"}
                       </button>
                     </li>
                   </>
@@ -945,7 +1086,7 @@ function AppContent() {
             </div>
 
             <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
-              {!collapsed && (
+              {!isIconMenu && (
                 <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                   Governance & Splits
                 </div>
@@ -953,73 +1094,109 @@ function AppContent() {
               <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('splits')} 
+                    onClick={() => {
+                      setActiveTab('splits');
+                      setHoveredNavItem(null);
+                      if (isMobile) setCollapsed(true);
+                    }} 
+                    onMouseEnter={(e) => handleNavItemMouseEnter('splits', { label: 'TuneLedger Splits', category: 'Governance & Splits', desc: 'Automated multi-party royalty and sync split cascade' }, e)}
+                    onMouseLeave={handleNavItemMouseLeave}
                     className={`dashboard-nav-item ${activeTab === 'splits' ? 'active' : ''}`}
-                    title="TuneLedger Split Cascade"
+                    title={!isIconMenu ? "TuneLedger Split Cascade" : undefined}
                   >
                     <RiExchangeDollarLine size={16} style={{ color: '#22d3ee' }} />
-                    {!collapsed && "TuneLedger Splits"}
+                    {!isIconMenu && "TuneLedger Splits"}
                   </button>
                 </li>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('affiliates')} 
+                    onClick={() => {
+                      setActiveTab('affiliates');
+                      setHoveredNavItem(null);
+                      if (isMobile) setCollapsed(true);
+                    }} 
+                    onMouseEnter={(e) => handleNavItemMouseEnter('affiliates', { label: 'Affiliate Hub', category: 'Governance & Splits', desc: 'Partner links, commission tracking, and payout ledger' }, e)}
+                    onMouseLeave={handleNavItemMouseLeave}
                     className={`dashboard-nav-item ${activeTab === 'affiliates' ? 'active' : ''}`}
-                    title="Affiliate Scheme"
+                    title={!isIconMenu ? "Affiliate Scheme" : undefined}
                   >
                     <RiSparklingLine size={16} style={{ color: '#22d3ee' }} />
-                    {!collapsed && "Affiliate Hub"}
+                    {!isIconMenu && "Affiliate Hub"}
                   </button>
                 </li>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('contracts')} 
+                    onClick={() => {
+                      setActiveTab('contracts');
+                      setHoveredNavItem(null);
+                      if (isMobile) setCollapsed(true);
+                    }} 
+                    onMouseEnter={(e) => handleNavItemMouseEnter('contracts', { label: 'MyContracts', category: 'Governance & Splits', desc: 'Smart legal vault and executed licensing agreements' }, e)}
+                    onMouseLeave={handleNavItemMouseLeave}
                     className={`dashboard-nav-item ${(activeTab === 'contracts' || activeTab === 'mycontracts') ? 'active' : ''}`}
-                    title="MyContracts Smart Legal Vault"
+                    title={!isIconMenu ? "MyContracts Smart Legal Vault" : undefined}
                   >
                     <RiFileTextFill size={16} style={{ color: '#38bdf8' }} />
-                    {!collapsed && "MyContracts"}
+                    {!isIconMenu && "MyContracts"}
                   </button>
                 </li>
                 {(userRole === 'admin' || userRole === 'label') && (
                   <li>
                     <button 
-                      onClick={() => setActiveTab('label-team')} 
+                      onClick={() => {
+                        setActiveTab('label-team');
+                        setHoveredNavItem(null);
+                        if (isMobile) setCollapsed(true);
+                      }} 
+                      onMouseEnter={(e) => handleNavItemMouseEnter('label-team', { label: 'Label Roster', category: 'Governance & Splits', desc: 'Roster artists, team management, and signing privileges' }, e)}
+                      onMouseLeave={handleNavItemMouseLeave}
                       className={`dashboard-nav-item ${activeTab === 'label-team' ? 'active' : ''}`}
-                      title="Label Signed Roster"
+                      title={!isIconMenu ? "Label Signed Roster" : undefined}
                     >
                       <RiFolderMusicLine size={16} style={{ color: '#a855f7' }} />
-                      {!collapsed && "Label Roster"}
+                      {!isIconMenu && "Label Roster"}
                     </button>
                   </li>
                 )}
                 {userRole === 'admin' && (
                   <li>
                     <button 
-                      onClick={() => setActiveTab('admin-team')} 
+                      onClick={() => {
+                        setActiveTab('admin-team');
+                        setHoveredNavItem(null);
+                        if (isMobile) setCollapsed(true);
+                      }} 
+                      onMouseEnter={(e) => handleNavItemMouseEnter('admin-team', { label: 'Admin Team Seats', category: 'Governance & Splits', desc: 'Configure platform administration team seats and RBAC' }, e)}
+                      onMouseLeave={handleNavItemMouseLeave}
                       className={`dashboard-nav-item ${activeTab === 'admin-team' ? 'active' : ''}`}
-                      title="Site Admin Team"
+                      title={!isIconMenu ? "Site Admin Team" : undefined}
                     >
                       <RiShieldFill size={16} style={{ color: '#ec4899' }} />
-                      {!collapsed && "Admin Team Seats"}
+                      {!isIconMenu && "Admin Team Seats"}
                     </button>
                   </li>
                 )}
                 <li>
                   <button 
-                    onClick={() => setActiveTab('support')} 
+                    onClick={() => {
+                      setActiveTab('support');
+                      setHoveredNavItem(null);
+                      if (isMobile) setCollapsed(true);
+                    }} 
+                    onMouseEnter={(e) => handleNavItemMouseEnter('support', { label: 'Support Desk', category: 'Governance & Splits', desc: 'Disputes, licensing support, and community tickets' }, e)}
+                    onMouseLeave={handleNavItemMouseLeave}
                     className={`dashboard-nav-item ${activeTab === 'support' ? 'active' : ''}`}
-                    title="Support & Claims Desk"
+                    title={!isIconMenu ? "Support & Claims Desk" : undefined}
                   >
                     <RiQuestionLine size={16} />
-                    {!collapsed && "Support Desk"}
+                    {!isIconMenu && "Support Desk"}
                   </button>
                 </li>
               </ul>
             </div>
 
             <div className="sidebar-category-group" style={{ marginBottom: '12px' }}>
-              {!collapsed && (
+              {!isIconMenu && (
                 <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                   Ecosystem Admin
                 </div>
@@ -1027,32 +1204,50 @@ function AppContent() {
               <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('app_marketplace')} 
+                    onClick={() => {
+                      setActiveTab('app_marketplace');
+                      setHoveredNavItem(null);
+                      if (isMobile) setCollapsed(true);
+                    }} 
+                    onMouseEnter={(e) => handleNavItemMouseEnter('app_marketplace', { label: 'App Marketplace', category: 'Ecosystem Admin', desc: 'Browse and activate modular apps across the suite' }, e)}
+                    onMouseLeave={handleNavItemMouseLeave}
                     className={`dashboard-nav-item ${activeTab === 'app_marketplace' ? 'active' : ''}`}
-                    title="App Marketplace"
+                    title={!isIconMenu ? "App Marketplace" : undefined}
                   >
                     <RiGlobalLine size={16} />
-                    {!collapsed && "App Marketplace"}
+                    {!isIconMenu && "App Marketplace"}
                   </button>
                 </li>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('domain_mappings')} 
+                    onClick={() => {
+                      setActiveTab('domain_mappings');
+                      setHoveredNavItem(null);
+                      if (isMobile) setCollapsed(true);
+                    }} 
+                    onMouseEnter={(e) => handleNavItemMouseEnter('domain_mappings', { label: 'Domain Mappings', category: 'Ecosystem Admin', desc: 'Manage custom CNAME domains and routing' }, e)}
+                    onMouseLeave={handleNavItemMouseLeave}
                     className={`dashboard-nav-item ${activeTab === 'domain_mappings' ? 'active' : ''}`}
-                    title="Domain Mappings"
+                    title={!isIconMenu ? "Domain Mappings" : undefined}
                   >
                     <RiGlobalLine size={16} />
-                    {!collapsed && "Domain Mappings"}
+                    {!isIconMenu && "Domain Mappings"}
                   </button>
                 </li>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('promoted_acts')} 
+                    onClick={() => {
+                      setActiveTab('promoted_acts');
+                      setHoveredNavItem(null);
+                      if (isMobile) setCollapsed(true);
+                    }} 
+                    onMouseEnter={(e) => handleNavItemMouseEnter('promoted_acts', { label: 'Promoted Acts', category: 'Ecosystem Admin', desc: 'Promoted artist placements and campaign analytics' }, e)}
+                    onMouseLeave={handleNavItemMouseLeave}
                     className={`dashboard-nav-item ${activeTab === 'promoted_acts' ? 'active' : ''}`}
-                    title="Promoted Acts"
+                    title={!isIconMenu ? "Promoted Acts" : undefined}
                   >
                     <RiSparklingLine size={16} />
-                    {!collapsed && "Promoted Acts"}
+                    {!isIconMenu && "Promoted Acts"}
                   </button>
                 </li>
               </ul>
@@ -1062,22 +1257,28 @@ function AppContent() {
               <li>
                 <button 
                   onClick={() => navigate('/')} 
+                  onMouseEnter={(e) => handleNavItemMouseEnter('back-landing', { label: 'Back to Landing Page', category: 'Navigation', desc: 'Exit dashboard and return to SyncMavens public portal' }, e)}
+                  onMouseLeave={handleNavItemMouseLeave}
                   className="dashboard-nav-item"
-                  title="Back to Landing Page"
+                  title={!isIconMenu ? "Back to Landing Page" : undefined}
                 >
                   <RiArrowLeftSFill size={16} />
-                  {!collapsed && "Back to Landing Page"}
+                  {!isIconMenu && "Back to Landing Page"}
                 </button>
               </li>
             </ul>
           </div>
 
           <div className="dashboard-sidebar-footer">
-            <div className="dashboard-profile-card">
+            <div 
+              className="dashboard-profile-card"
+              onMouseEnter={(e) => handleNavItemMouseEnter('profile', { label: userName, category: 'Account', desc: userRole === 'supervisor' ? "Music Supervisor PRO" : "Creator Sync PRO" }, e)}
+              onMouseLeave={handleNavItemMouseLeave}
+            >
               <div className="dashboard-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: userRole === 'supervisor' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(34, 211, 238, 0.1)', color: userRole === 'supervisor' ? 'var(--accent-purple)' : 'var(--cyan)', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
                 {userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
               </div>
-              {!collapsed && (
+              {!isIconMenu && (
                 <div className="dashboard-profile-info">
                   <h5>{userName}</h5>
                   <span style={{ color: userRole === 'supervisor' ? '#8b5cf6' : '#00f2fe' }}>
@@ -1093,10 +1294,10 @@ function AppContent() {
                 navigate('/');
               }} 
               className="dashboard-nav-item" 
-              style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px' }}
+              style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: isIconMenu ? '10px 0' : '10px 14px' }}
               title="Log Out"
             >
-              {!collapsed && "Log Out"}
+              {!isIconMenu && "Log Out"}
             </button>
           </div>
         </aside>
@@ -1104,11 +1305,25 @@ function AppContent() {
         {/* Main Content Pane */}
         <main className="dashboard-main-content">
           <header className="dashboard-topbar">
-            <div className="dashboard-topbar-title">
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Sync Console</span>
-              <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
-                {activeUser?.brand_name || activeUser?.name || 'SyncMavens'}
-              </h1>
+            <div className="dashboard-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                type="button"
+                className="topbar-sidecar-toggle-btn"
+                onClick={() => {
+                  setCollapsed(!collapsed);
+                  setHoveredNavItem(null);
+                }}
+                aria-label={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+                title={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+              >
+                {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
+              </button>
+              <div className="dashboard-topbar-title">
+                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Sync Console</span>
+                <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
+                  {activeUser?.brand_name || activeUser?.name || 'SyncMavens'}
+                </h1>
+              </div>
             </div>
             
             <div className="dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -2106,6 +2321,7 @@ function AppContent() {
           sessionUser={sessionUser}
         />
 
+        {renderHoverTooltip()}
         {renderContractModal()}
       </div>
   ) : (

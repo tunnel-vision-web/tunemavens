@@ -22,7 +22,8 @@ import {
   RiFolderMusicLine, RiQuestionLine, RiBriefcaseLine, RiArrowDownSFill,
   RiApps2Fill, RiAppleFill, RiHomeFill, RiBarChartFill, RiGlobalFill, RiArrowLeftFill, RiCloseLine,
   RiLineChartFill, RiFileTextFill,
-  RiHeadphoneFill, RiEqualizerFill, RiSmartphoneFill, RiMicFill, RiFundsBoxFill, RiDiscFill, RiShieldCheckFill
+  RiHeadphoneFill, RiEqualizerFill, RiSmartphoneFill, RiMicFill, RiFundsBoxFill, RiDiscFill, RiShieldCheckFill,
+  RiMenuUnfoldLine, RiMenuFoldLine
 } from 'react-icons/ri';
 import tsLogo from './assets/tunestream-logo.png';
 import tcLogo from './assets/tunecompanion-logo.png';
@@ -1593,7 +1594,7 @@ function TuneStreamTipsPanel({ userCredits, sessionUser }) {
               alignSelf: 'flex-start'
             }}
           >
-            {tipSubmitting ? 'Processing Sovereign Split...' : `⚡ Send ${tipCredits} TM ($${(tipCredits / 10).toFixed(2)}) Directly to ${selectedCreator}`}
+            {tipSubmitting ? 'Processing Sovereign Split...' : `✨ Send ${tipCredits} TM ($${(tipCredits / 10).toFixed(2)}) Directly to ${selectedCreator}`}
           </button>
         </form>
       </div>
@@ -3623,6 +3624,76 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
 
   // Unified Dashboard States
   const [collapsed, setCollapsed] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isTabletOrMobile = windowWidth <= 1024;
+  const isMobile = windowWidth <= 768;
+  const isIconMenu = collapsed || isTabletOrMobile;
+  const isMobileExpanded = isMobile && !collapsed;
+
+  // Futuristic Floating Tooltip for Icon Menu Mode
+  const [hoveredNavItem, setHoveredNavItem] = useState(null);
+
+  const handleNavItemMouseEnter = (id, item, e) => {
+    if (!isIconMenu && !isTabletOrMobile) return;
+    if (!e || !e.currentTarget) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const category = item?.category || 'TuneStream';
+    const title = item?.label || item?.title || id;
+    const desc = item?.desc || `Open ${title} in TuneStream`;
+    
+    const tooltipEstimatedHeight = 70;
+    const centerY = rect.top + rect.height / 2;
+    const clampedTop = Math.max(20, Math.min(window.innerHeight - tooltipEstimatedHeight - 16, centerY));
+    
+    setHoveredNavItem({
+      id,
+      title,
+      category,
+      desc,
+      isActive: activeTab === id,
+      top: clampedTop,
+      left: rect.right + 12
+    });
+  };
+
+  const handleNavItemMouseLeave = () => {
+    setHoveredNavItem(null);
+  };
+
+  const renderHoverTooltip = () => {
+    if ((!isIconMenu && !isTabletOrMobile) || !hoveredNavItem) return null;
+    return (
+      <div 
+        className="sidebar-collapsed-tooltip"
+        style={{
+          top: `${hoveredNavItem.top}px`,
+          left: `${hoveredNavItem.left}px`,
+          transform: 'translateY(-50%)',
+        }}
+      >
+        <div className="sidebar-tooltip-header">
+          <span className="sidebar-tooltip-category">{hoveredNavItem.category}</span>
+          {hoveredNavItem.isActive && (
+            <span className="sidebar-tooltip-active-badge">
+              <span className="sidebar-tooltip-active-dot" />
+              ACTIVE
+            </span>
+          )}
+        </div>
+        <div className="sidebar-tooltip-title">{hoveredNavItem.title}</div>
+        {hoveredNavItem.desc && (
+          <div className="sidebar-tooltip-desc">{hoveredNavItem.desc}</div>
+        )}
+      </div>
+    );
+  };
+
   const [activeTab, setActiveTab] = useState(initialTab || 'home');
   useEffect(() => {
     if (initialTab) setActiveTab(initialTab);
@@ -4343,15 +4414,24 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
         </div>
       )}
 
+      {/* Mobile Drawer Backdrop */}
+      {isMobileExpanded && (
+        <div 
+          className="dashboard-sidebar-backdrop" 
+          onClick={() => setCollapsed(true)} 
+          aria-label="Close Sidecar Menu"
+        />
+      )}
+
       {/* Left Sidebar */}
-      <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <aside className={`dashboard-sidebar ${isIconMenu ? 'collapsed' : ''} ${isMobileExpanded ? 'mobile-expanded' : ''}`}>
         <div className="sidebar-brand-wrapper">
           <Link to="/" className="sidebar-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none' }}>
             <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
               <img src={tsLogo} alt="TuneStream" className="sidebar-logo-img" />
               <span style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
             </div>
-            {!collapsed && (
+            {!isIconMenu && (
               <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase', marginTop: '2px' }}>
                 a tunemavens utility
               </span>
@@ -4360,15 +4440,23 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
           <button 
             type="button" 
             className="sidebar-collapse-btn" 
-            onClick={() => setCollapsed(!collapsed)}
-            title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            onClick={() => {
+              setCollapsed(!collapsed);
+              setHoveredNavItem(null);
+            }}
+            title={isIconMenu ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            {collapsed ? <RiArrowRightSFill /> : <RiArrowLeftSFill />}
+            {isIconMenu ? <RiArrowRightSFill /> : <RiArrowLeftSFill />}
           </button>
         </div>
 
         {/* User Role Card */}
-        <div className="sidebar-persona-badge-card" style={{ borderColor: currentRoleObj.color }}>
+        <div 
+          className="sidebar-persona-badge-card" 
+          style={{ borderColor: currentRoleObj.color }}
+          onMouseEnter={(e) => handleNavItemMouseEnter('role-badge', { label: currentRoleObj.shortLabel, category: 'Account Role', desc: currentRoleObj.shortDesc }, e)}
+          onMouseLeave={handleNavItemMouseLeave}
+        >
           <div className="persona-badge-icon" style={{ background: currentRoleObj.color }}>
             <currentRoleObj.icon size={16} color="#060813" />
           </div>
@@ -4392,7 +4480,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
                       key={item.id}
                       type="button"
                       className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                      onClick={() => setActiveTab(item.id)}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setHoveredNavItem(null);
+                        if (isMobile) setCollapsed(true);
+                      }}
+                      onMouseEnter={(e) => handleNavItemMouseEnter(item.id, { label: item.label, category, desc: `${item.label} in TuneStream` }, e)}
+                      onMouseLeave={handleNavItemMouseLeave}
                     >
                       {item.iconImg ? (
                         <img src={item.iconImg} alt="" className="sidebar-nav-custom-img" style={{ height: '16px', width: 'auto' }} />
@@ -4417,7 +4511,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
         <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button
             type="button"
-            onClick={() => setActiveTab('explore')}
+            onClick={() => {
+              setActiveTab('explore');
+              setHoveredNavItem(null);
+              if (isMobile) setCollapsed(true);
+            }}
+            onMouseEnter={(e) => handleNavItemMouseEnter('explore-cta', { label: 'TuneStream Explore', category: 'Navigation', desc: 'Browse the 24-bit lossless streaming catalogue' }, e)}
+            onMouseLeave={handleNavItemMouseLeave}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -4430,11 +4530,12 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
               fontSize: '11px',
               fontWeight: 700,
               cursor: 'pointer',
-              textAlign: 'left'
+              textAlign: 'left',
+              justifyContent: isIconMenu ? 'center' : 'flex-start'
             }}
           >
             <RiCompass3Line size={14} />
-            <span>TuneStream Explore</span>
+            {!isIconMenu && <span>TuneStream Explore</span>}
           </button>
         </div>
       </aside>
@@ -4443,6 +4544,18 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
       <main className="dashboard-main-content">
         <header className="dashboard-topbar">
           <div className="topbar-left">
+            <button
+              type="button"
+              className="topbar-sidecar-toggle-btn"
+              onClick={() => {
+                setCollapsed(!collapsed);
+                setHoveredNavItem(null);
+              }}
+              aria-label={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+              title={isIconMenu ? "Expand navigation sidebar" : "Switch to icon menu"}
+            >
+              {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
+            </button>
             <h2 className="topbar-page-title">
               {{
                 home: 'For You & Personalized Mixes',
@@ -4767,6 +4880,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
         activeTab={activeTab}
         sessionUser={activeUser}
       />
+      {renderHoverTooltip()}
     </div>
   );
 }

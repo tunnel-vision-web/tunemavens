@@ -302,15 +302,26 @@ Positioned absolutely below trigger buttons.
   ```
 
 ### B. Dashboard Sidebar Menu (`.dashboard-sidebar`)
-The sidebar features a collapsible layout.
+The sidebar (or Sidecar) features a fully responsive, collapsible layout engineered for both desktop power users and touch-first devices.
 - **Expanded Width:** `260px` (padding `24px 16px`)
-- **Collapsed Width:** `80px` (padding `24px 12px`)
+- **Collapsed / Icon Rail Width:** `76px` on desktop/tablet (padding `20px 8px`), and `66px` on mobile ($\le 768\text{px}$)
 - **Transition:** `width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)`
-- **Header Separator:** Features a subtle `border-bottom: 1px solid rgba(255, 255, 255, 0.05)` and a vertical margin of `20px` separating logo branding from navigation links.
+- **Header Separator:** Subtle `border-bottom: 1px solid rgba(255, 255, 255, 0.05)` and a vertical margin of `16px–20px` separating logo branding from navigation links.
 - **Navigation Links (`.dashboard-nav-item`):**
-  - **Default:** `color: #94a3b8`, `font-size: 14px`, `font-weight: 500`, border-radius `6px`.
+  - **Default:** `color: #94a3b8`, `font-size: 13.5px`, `font-weight: 500`, border-radius `3px` (strictly complying with Section 14).
   - **Hover:** `color: #ffffff`, background `rgba(255, 255, 255, 0.05)`.
   - **Active State (`.active`):** Color shifts to `var(--cyan)`, background changes to `rgba(34, 211, 238, 0.06)`, and font-weight changes to `600`.
+- **Responsive Auto-Switching Engine:**
+  - **Tablet & Compact Screens ($\le 1024\text{px}$):** Automatically collapses inline category headers, badge text, and labels into an icon menu rail (`76px`), centering icons.
+  - **Mobile Handhelds ($\le 768\text{px}$):** Stays in compact `66px` icon rail mode by default. Tapping the topbar toggle button (`.topbar-sidecar-toggle-btn`) expands the sidebar into a sliding overlay drawer (`.mobile-expanded`, `260px`, `z-index: 2005`, box-shadow `0 0 50px rgba(0, 0, 0, 0.9)`).
+  - **Frosted Backdrop (`.dashboard-sidebar-backdrop`):** Renders behind `.mobile-expanded` with `backdrop-filter: blur(8px)` and dismisses the drawer on tap.
+- **Futuristic Floating Hover Tooltips (`.sidebar-collapsed-tooltip`):**
+  - Whenever the sidecar is in collapsed / icon rail mode, hovering over any navigation item renders a floating tooltip with:
+    - **Category Eyebrow (`.sidebar-tooltip-category`):** Monospace uppercase tag using `Space Grotesk` (`9px`, `var(--cyan)` with cyan border and subtle glow).
+    - **Active Indicator (`.sidebar-tooltip-active-badge`):** Pulsing `#10b981` dot indicating the currently active tab.
+    - **Module Title (`.sidebar-tooltip-title`):** Crisp high-contrast title in `Sansation` / `Outfit` (`13.5px`, `#ffffff`).
+    - **Module Description (`.sidebar-tooltip-desc`):** Explanatory sentence (`11px`, `#94a3b8`).
+    - **Callout Arrow:** Analogous cyan callout triangle aligned dynamically to the hovered icon.
 - **Pinned Footer Scroll Behavior:** To allow scrolling long menus without losing secondary links, the upper sidebar section scrolls dynamically while the footer controls remain absolute.
   ```css
   .dashboard-sidebar-scroll {

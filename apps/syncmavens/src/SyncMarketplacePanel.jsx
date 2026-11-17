@@ -1076,14 +1076,14 @@ export default function SyncMarketplacePanel({ sessionUser }) {
                           <span style={{ fontSize: '13px', color: '#94a3b8' }}>by <strong style={{ color: '#cbd5e1' }}>{p.artist}</strong></span>
                           <span style={{
                             padding: '2px 8px',
-                            borderRadius: '99px',
+                            borderRadius: '3px',
                             fontSize: '11px',
                             fontWeight: '800',
                             background: 'rgba(34, 211, 238, 0.15)',
                             color: '#22d3ee',
                             border: '1px solid rgba(34, 211, 238, 0.3)'
                           }}>
-                            ⚡ {p.match_score || 88}% AI Match
+                            ✨ {p.match_score || 88}% AI-Assisted Match
                           </span>
                         </div>
 
@@ -1237,14 +1237,14 @@ export default function SyncMarketplacePanel({ sessionUser }) {
                           <span style={{ fontSize: '13px', color: '#94a3b8' }}>by <strong style={{ color: '#cbd5e1' }}>{p.artist}</strong></span>
                           <span style={{
                             padding: '2px 8px',
-                            borderRadius: '99px',
+                            borderRadius: '3px',
                             fontSize: '11px',
                             fontWeight: '800',
                             background: 'rgba(34, 211, 238, 0.15)',
                             color: '#22d3ee',
                             border: '1px solid rgba(34, 211, 238, 0.3)'
                           }}>
-                            ⚡ {p.match_score || 88}% AI Match
+                            ✨ {p.match_score || 88}% AI-Assisted Match
                           </span>
                         </div>
 

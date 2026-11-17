@@ -53,7 +53,7 @@ class GlobalErrorBoundary extends Component {
             width: '100%',
             boxShadow: '0 20px 50px rgba(0,0,0,0.6)'
           }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>⚡</div>
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}>✨</div>
             <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>
               TuneMavens Workspace Recovery
             </h2>
@@ -65,12 +65,12 @@ class GlobalErrorBoundary extends Component {
                 type="button"
                 onClick={this.handleReset}
                 style={{
-                  background: 'linear-gradient(135deg, #22d3ee 0%, #0284c7 100%)',
+                  background: '#22d3ee',
                   color: '#060813',
                   fontWeight: 800,
                   fontSize: '13px',
                   padding: '10px 22px',
-                  borderRadius: '6px',
+                  borderRadius: '3px',
                   border: 'none',
                   cursor: 'pointer'
                 }}
@@ -85,7 +85,7 @@ class GlobalErrorBoundary extends Component {
                   color: '#fff',
                   fontSize: '13px',
                   padding: '10px 18px',
-                  borderRadius: '6px',
+                  borderRadius: '3px',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
                   cursor: 'pointer'
                 }}

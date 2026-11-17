@@ -256,7 +256,7 @@ const PERSONA_ROLES = [
   { id: 'consumer', label: 'Consumer / Fan', shortLabel: 'Consumer', shortDesc: 'Player, Library & Tips', icon: RiHeadphoneFill, color: '#6366f1' },
 ];
 
-function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab, onOpenCreditReload, onStartTour }) {
+function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab, onOpenCreditReload, onStartTour, onToggleSidebar, isSidebarCollapsed }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const notifRef = useRef(null);
@@ -590,13 +590,27 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
 
   return (
     <header className="dashboard-topbar" data-testid="dashboard-topbar">
-      <div className="dashboard-topbar-title">
-        <span style={{ fontSize: '10.5px', color: sessionUser?.role === 'consumer' ? '#00f2fe' : '#64748b', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          {sessionUser?.role === 'consumer' ? 'TuneStream Listener Console • 24-Bit Lossless' : 'Admin Console'}
-        </span>
-        <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', margin: '2px 0 0' }}>
-          {sessionUser?.brand_name || sessionUser?.name || 'TuneMavens'}
-        </h1>
+      <div className="dashboard-topbar-left">
+        {typeof onToggleSidebar === 'function' && (
+          <button
+            type="button"
+            className="topbar-sidecar-toggle-btn"
+            onClick={onToggleSidebar}
+            title={isSidebarCollapsed ? "Expand Sidecar Menu" : "Switch Sidecar to Icon Menu"}
+            aria-label="Toggle Sidecar Menu"
+            data-testid="topbar-sidecar-toggle-btn"
+          >
+            {isSidebarCollapsed ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
+          </button>
+        )}
+        <div className="dashboard-topbar-title">
+          <span style={{ fontSize: '10.5px', color: sessionUser?.role === 'consumer' ? '#00f2fe' : '#64748b', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            {sessionUser?.role === 'consumer' ? 'TuneStream Listener Console • 24-Bit Lossless' : 'Admin Console'}
+          </span>
+          <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', margin: '2px 0 0' }}>
+            {sessionUser?.brand_name || sessionUser?.name || 'TuneMavens'}
+          </h1>
+        </div>
       </div>
 
       <div className="dashboard-topbar-actions">
@@ -1311,6 +1325,91 @@ const NAV_ITEM_DESCRIPTIONS = {
     title: 'POS Devices',
     desc: 'Manage connected mobile card readers, contactless terminals, and merchant hardware',
     category: 'TunePay'
+  },
+  'podcaster-episodes': {
+    title: 'Episode Publisher & LUFS',
+    desc: 'Upload podcast episodes, normalize to -16 LUFS, and edit chapters & transcripts',
+    category: 'Podcasts & Shows'
+  },
+  'podcaster-epk': {
+    title: 'Podcaster EPK Builder',
+    desc: 'Configure your public Podcaster EPK, audience demographics, and press kit',
+    category: 'Podcasts & Shows'
+  },
+  'podcaster-monetization': {
+    title: 'Podcast Ad Rates & Splits',
+    desc: 'Localized Corporate Ad Services sponsorship rates and automated co-host split cascades',
+    category: 'Podcasts & Shows'
+  },
+  'podcaster-guests': {
+    title: 'Guest Booking CRM',
+    desc: 'Manage incoming guest pitches and signed audio/video broadcast waivers',
+    category: 'Podcasts & Shows'
+  },
+  'media-house': {
+    title: 'Broadcast Operations',
+    desc: 'Television & radio rotation playout routing, commercial ad traffic, and automated PRO cue sheets',
+    category: 'Media & Broadcast'
+  },
+  'pos-terminal': {
+    title: 'POS Terminal',
+    desc: 'Process live concert merch card & mobile sales with instant inventory decrement',
+    category: 'Live Commerce'
+  },
+  'distribution-tracker': {
+    title: 'Distribution Radar',
+    desc: 'Real-time DSP ingest tracking and metadata delivery telemetry across 150+ platforms',
+    category: 'Distribution'
+  },
+  'hosting-manager': {
+    title: 'Hosting & Domains',
+    desc: 'Creator custom domain provisioning, SSL issuance, and DNS cluster status',
+    category: 'Infrastructure'
+  },
+  'backend-admin': {
+    title: 'Backend Admin Console',
+    desc: 'System observability, database schema inspector, user lifecycle audit & platform metrics',
+    category: 'Admin'
+  },
+  'admin-team': {
+    title: 'Admin Team & Seats',
+    desc: 'Manage authorized superuser accounts, access scopes, and multi-factor auth protocols',
+    category: 'Admin'
+  },
+  'corporate-ads': {
+    title: 'Corporate Ads & Rates',
+    desc: 'Institutional audio campaigns, dynamic frequency capping, and rate cards',
+    category: 'Brand Sponsorships'
+  },
+  affiliates: {
+    title: 'Affiliate Programme',
+    desc: 'Track creator referral links, conversion milestones, and automated tiered commissions',
+    category: 'Affiliate Partner'
+  },
+  inbox: {
+    title: 'In-App Inbox',
+    desc: 'Direct communications from platform supervisors, sync pitch requests, and system alerts',
+    category: 'Community'
+  },
+  explore: {
+    title: 'Explore & Stream',
+    desc: 'Discover sovereign artists, curated playlists, and lossless African releases',
+    category: 'TuneStream'
+  },
+  radio: {
+    title: 'Live 24-Bit Radio',
+    desc: 'Continuous lossless broadcasts, live DJ mixes, and algorithmic radio stations',
+    category: 'TuneStream'
+  },
+  concerts: {
+    title: 'Live Shows & Passes',
+    desc: 'Verified tour dates, ticket purchases, and VIP digital access passes',
+    category: 'TuneStream'
+  },
+  settings: {
+    title: 'Taste & Audio Preferences',
+    desc: 'High-fidelity audio resolution, equalizer presets, and interface customization',
+    category: 'Settings'
   }
 };
 
@@ -1631,6 +1730,86 @@ function DashboardView({
   const [payoutBalance, setPayoutBalance] = useState(4235.80);
   const [collapsed, setCollapsed] = useState(false);
   const [hoveredNavItem, setHoveredNavItem] = useState(null);
+
+  // Responsive Viewport Monitoring for Sidecar Auto-Switching
+  const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200));
+
+  useEffect(() => {
+    let resizeTimer = null;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        setWindowWidth(window.innerWidth);
+      }, 40);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimer);
+    };
+  }, []);
+
+  const isTabletOrMobile = windowWidth <= 1024;
+  const isMobile = windowWidth <= 768;
+  // Sidecar automatically switches to icon menu mode on tablet/mobile OR when manually collapsed
+  const isIconMenu = collapsed || isTabletOrMobile;
+  const isMobileExpanded = isMobile && !collapsed;
+
+  const handleNavItemMouseEnter = (id, fallbackItem, e) => {
+    if (!isIconMenu && !isTabletOrMobile) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const descObj = NAV_ITEM_DESCRIPTIONS[id] || {};
+    const category = descObj.category || fallbackItem?.category || 'Workspace';
+    const title = descObj.title || fallbackItem?.label || fallbackItem?.title || id;
+    const desc = descObj.desc || fallbackItem?.desc || `Open ${title} in your workspace`;
+    
+    // Boundary check so tooltip stays nicely within viewport
+    const tooltipEstimatedHeight = 80;
+    const centerY = rect.top + rect.height / 2;
+    const clampedTop = Math.max(20, Math.min(window.innerHeight - tooltipEstimatedHeight - 16, centerY));
+    
+    setHoveredNavItem({
+      id,
+      title,
+      category,
+      desc,
+      isActive: activeTab === id,
+      top: clampedTop,
+      left: rect.right + 12
+    });
+  };
+
+  const handleNavItemMouseLeave = () => {
+    setHoveredNavItem(null);
+  };
+
+  const renderHoverTooltip = () => {
+    if ((!isIconMenu && !isTabletOrMobile) || !hoveredNavItem) return null;
+    return (
+      <div 
+        className="sidebar-collapsed-tooltip"
+        style={{
+          top: `${hoveredNavItem.top}px`,
+          left: `${hoveredNavItem.left}px`,
+          transform: 'translateY(-50%)',
+        }}
+      >
+        <div className="sidebar-tooltip-header">
+          <span className="sidebar-tooltip-category">{hoveredNavItem.category}</span>
+          {hoveredNavItem.isActive && (
+            <span className="sidebar-tooltip-active-badge">
+              <span className="sidebar-tooltip-active-dot" />
+              ACTIVE
+            </span>
+          )}
+        </div>
+        <div className="sidebar-tooltip-title">{hoveredNavItem.title}</div>
+        {hoveredNavItem.desc && (
+          <div className="sidebar-tooltip-desc">{hoveredNavItem.desc}</div>
+        )}
+      </div>
+    );
+  };
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardAnswers, setWizardAnswers] = useState(null);
   const [activeModalApp, setActiveModalApp] = useState(null);
@@ -2383,18 +2562,40 @@ function DashboardView({
 
     return (
       <div className="dashboard-container" data-testid="tunestream-dedicated-listener-backend">
-        <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`} data-tour="consumer-sidebar" style={{ borderRight: '1px solid rgba(0, 242, 254, 0.14)', background: '#070b16' }}>
-          <div className="dashboard-sidebar-scroll" data-testid="dashboard-sidebar-scroll" data-tour="sidebar-scroll">
+        {isMobileExpanded && (
+          <div 
+            className="dashboard-sidebar-backdrop" 
+            onClick={() => setCollapsed(true)} 
+            aria-label="Close Sidecar Menu"
+          />
+        )}
+        <aside 
+          className={`dashboard-sidebar ${isIconMenu ? 'collapsed' : ''} ${isMobileExpanded ? 'mobile-expanded' : ''}`} 
+          data-tour="consumer-sidebar" 
+          style={{ borderRight: '1px solid rgba(0, 242, 254, 0.14)', background: '#070b16' }}
+        >
+          <div 
+            className="dashboard-sidebar-scroll" 
+            data-testid="dashboard-sidebar-scroll" 
+            data-tour="sidebar-scroll"
+            onScroll={() => setHoveredNavItem(null)}
+          >
             <div className="dashboard-sidebar-header" style={{ flexDirection: 'column', gap: '6px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <Link to="/native-apps/tunestream" title="Back to TuneStream Player" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', gap: '3px' }}>
-                <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: collapsed ? '26px' : '32px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
-                {!collapsed && (
+              <Link 
+                to="/native-apps/tunestream" 
+                title={!isIconMenu ? "Back to TuneStream Player" : undefined}
+                onMouseEnter={(e) => handleNavItemMouseEnter('consumer-logo', { label: 'TuneStream', category: 'TuneStream', desc: 'Back to TuneStream Lossless Player' }, e)}
+                onMouseLeave={handleNavItemMouseLeave}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', gap: '3px' }}
+              >
+                <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Logo" style={{ height: isIconMenu ? '26px' : '32px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/tunemavens-logo-white.png'; }} />
+                {!isIconMenu && (
                   <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase' }}>
                     a tunemavens utility
                   </span>
                 )}
               </Link>
-              {!collapsed && (
+              {!isIconMenu && (
                 <div style={{ marginTop: '6px', width: '100%', padding: '7px 10px', borderRadius: '3px', background: 'rgba(0, 242, 254, 0.08)', border: '1px solid rgba(0, 242, 254, 0.25)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <RiHeadphoneFill size={15} color="#00f2fe" />
                   <div style={{ textAlign: 'left' }}>
@@ -2407,6 +2608,8 @@ function DashboardView({
                 type="button"
                 onClick={() => handleExitListenerMode()}
                 className="dashboard-nav-item"
+                onMouseEnter={(e) => handleNavItemMouseEnter('exit-listener', { label: isAdminUser ? "Exit to Admin Console" : "Exit to TuneMavens Console", category: 'Workspace', desc: 'Exit listener mode and return to main TuneMavens workspace' }, e)}
+                onMouseLeave={handleNavItemMouseLeave}
                 style={{
                   marginTop: '8px',
                   width: '100%',
@@ -2422,26 +2625,31 @@ function DashboardView({
                   alignItems: 'center',
                   gap: '6px'
                 }}
-                title="Exit listener mode and return to main TuneMavens workspace"
+                title={!isIconMenu ? "Exit listener mode and return to main TuneMavens workspace" : undefined}
                 data-testid="consumer-sidebar-exit-btn"
               >
                 <RiArrowLeftLine size={14} />
-                {!collapsed && (isAdminUser ? "Exit to Admin Console" : "Exit to TuneMavens Console")}
+                {!isIconMenu && (isAdminUser ? "Exit to Admin Console" : "Exit to TuneMavens Console")}
               </button>
             </div>
 
             <button
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={() => {
+                setCollapsed(!collapsed);
+                setHoveredNavItem(null);
+              }}
               className="dashboard-nav-item collapse-toggle-btn"
+              onMouseEnter={(e) => handleNavItemMouseEnter('collapse-toggle', { label: isIconMenu ? "Expand Sidecar" : "Switch to Icon Menu", category: 'Navigation', desc: 'Toggle sidecar layout between icon menu and full labels' }, e)}
+              onMouseLeave={handleNavItemMouseLeave}
               style={{ border: 'none', background: 'transparent', padding: '6px', justifyContent: 'center', width: '100%', margin: '8px 0', color: '#94a3b8' }}
-              title={!collapsed ? "Collapse Sidebar" : "Expand Sidebar"}
+              title={!isIconMenu ? "Collapse Sidebar" : undefined}
             >
-              {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
+              {isIconMenu ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
             </button>
 
             {Object.entries(listenerCategories).map(([category, items]) => (
               <div key={category} className="sidebar-category-group" data-tour="sidebar-nav" style={{ marginBottom: '12px' }}>
-                {!collapsed && (
+                {!isIconMenu && (
                   <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                     {category}
                   </div>
@@ -2454,17 +2662,24 @@ function DashboardView({
                       <li key={item.id}>
                         <button
                           type="button"
-                          onClick={() => setActiveTab(item.id)}
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setHoveredNavItem(null);
+                            if (isMobile) setCollapsed(true);
+                          }}
                           data-tour={`nav-${item.id}`}
                           data-tab={item.id}
                           className={`dashboard-nav-item ${isActive ? 'active' : ''}`}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
+                          onMouseEnter={(e) => handleNavItemMouseEnter(item.id, { label: item.label, category: category, desc: listenerTabTitles[item.id] || `Manage ${item.label.toLowerCase()}` }, e)}
+                          onMouseLeave={handleNavItemMouseLeave}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: isIconMenu ? 'center' : 'space-between', width: '100%' }}
+                          title={!isIconMenu ? item.label : undefined}
                         >
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: isIconMenu ? '0' : '10px' }}>
                             <Icon size={16} style={{ color: isActive ? '#00f2fe' : (item.color || '#94a3b8') }} />
-                            {!collapsed && <span>{item.label}</span>}
+                            {!isIconMenu && <span>{item.label}</span>}
                           </span>
-                          {!collapsed && item.badge && (
+                          {!isIconMenu && item.badge && (
                             <span style={{ fontSize: '8.5px', fontWeight: 800, padding: '2px 5px', borderRadius: '3px', background: 'rgba(0,242,254,0.12)', color: item.color || '#00f2fe' }}>
                               {item.badge}
                             </span>
@@ -2483,32 +2698,42 @@ function DashboardView({
                   type="button"
                   onClick={() => handleExitListenerMode()}
                   className="dashboard-nav-item"
-                  style={{ width: '100%', border: 'none', background: 'transparent', textAlign: 'left', color: '#0ea5e9', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                  onMouseEnter={(e) => handleNavItemMouseEnter('admin-return', { label: isAdminUser ? "TuneMavens Admin Studio" : "TuneMavens Creator Studio", category: 'Workspace', desc: 'Open master management console' }, e)}
+                  onMouseLeave={handleNavItemMouseLeave}
+                  style={{ width: '100%', border: 'none', background: 'transparent', textAlign: 'left', color: '#0ea5e9', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: isIconMenu ? 'center' : 'flex-start', gap: '8px', cursor: 'pointer' }}
                   data-testid="consumer-sidebar-nav-exit-btn"
+                  title={!isIconMenu ? (isAdminUser ? "TuneMavens Admin Studio" : "TuneMavens Creator Studio") : undefined}
                 >
                   <RiShieldFill size={16} />
-                  {!collapsed && (isAdminUser ? "TuneMavens Admin Studio" : "TuneMavens Creator Studio")}
+                  {!isIconMenu && (isAdminUser ? "TuneMavens Admin Studio" : "TuneMavens Creator Studio")}
                 </button>
               </li>
               <li>
                 <Link
                   to="/native-apps/tunestream"
                   className="dashboard-nav-item"
-                  style={{ textDecoration: 'none', color: '#00f2fe', fontWeight: 700 }}
+                  onMouseEnter={(e) => handleNavItemMouseEnter('back-player', { label: "Back to TuneStream Player", category: 'TuneStream', desc: 'Return to listener audio stream' }, e)}
+                  onMouseLeave={handleNavItemMouseLeave}
+                  style={{ textDecoration: 'none', color: '#00f2fe', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: isIconMenu ? 'center' : 'flex-start' }}
+                  title={!isIconMenu ? "Back to TuneStream Player" : undefined}
                 >
                   <RiArrowLeftFill size={16} />
-                  {!collapsed && "Back to TuneStream Player"}
+                  {!isIconMenu && "Back to TuneStream Player"}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div className="dashboard-sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="dashboard-profile-card">
+            <div 
+              className="dashboard-profile-card"
+              onMouseEnter={(e) => handleNavItemMouseEnter('listener-profile', { label: activeUser?.name || 'TuneStream Listener', category: 'Account', desc: 'Hi-Fi Audiophile • 24-Bit / 96kHz Lossless' }, e)}
+              onMouseLeave={handleNavItemMouseLeave}
+            >
               <div className="dashboard-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 242, 254, 0.15)', color: '#00f2fe', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
                 {(activeUser?.name || 'L').charAt(0).toUpperCase()}
               </div>
-              {!collapsed && (
+              {!isIconMenu && (
                 <div className="dashboard-profile-info">
                   <h5 style={{ color: '#fff', margin: 0 }}>{activeUser?.name || 'TuneStream Listener'}</h5>
                   <span style={{ fontSize: '10px', color: '#00f2fe', fontWeight: 700, display: 'inline-block', marginTop: '2px' }}>
@@ -2538,21 +2763,34 @@ function DashboardView({
                 }
               }}
               className="dashboard-nav-item"
-              style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px', cursor: 'pointer' }}
+              onMouseEnter={(e) => handleNavItemMouseEnter('logout', { label: 'Log Out', category: 'Account', desc: 'Securely sign out of your TuneStream session' }, e)}
+              onMouseLeave={handleNavItemMouseLeave}
+              style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: isIconMenu ? '10px 0' : '10px 14px', cursor: 'pointer' }}
               data-testid="consumer-logout-btn"
+              title={!isIconMenu ? "Log Out" : undefined}
             >
               <RiCloseFill size={14} />
-              {!collapsed && "Log Out"}
+              {!isIconMenu && "Log Out"}
             </button>
           </div>
         </aside>
 
         <main className="dashboard-main-content">
           <header className="dashboard-topbar" style={{ borderBottom: '1px solid rgba(0, 242, 254, 0.12)', background: 'rgba(7, 11, 22, 0.95)' }}>
-            <div className="dashboard-topbar-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div>
+            <div className="dashboard-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                type="button"
+                className="topbar-sidecar-toggle-btn"
+                onClick={() => setCollapsed(!collapsed)}
+                title={isIconMenu ? "Expand Sidecar" : "Switch Sidecar to Icon Menu"}
+                aria-label="Toggle Sidecar Menu"
+                data-testid="consumer-topbar-sidecar-toggle-btn"
+              >
+                {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
+              </button>
+              <div className="dashboard-topbar-title" style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '10px', color: '#00f2fe', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>TuneStream Personal Audio Engine</span>
-                <h1 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: '2px 0 0' }}>
+                <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '2px 0 0' }}>
                   {listenerTabTitles[activeTab] || 'TuneStream Listener Hub'}
                 </h1>
               </div>
@@ -2569,7 +2807,7 @@ function DashboardView({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  background: '#0ea5e9',
                   color: '#ffffff',
                   border: 'none',
                   padding: '6px 14px',
@@ -2771,23 +3009,41 @@ function DashboardView({
           setActiveTab={setActiveTab}
           onReturnToMain={handleExitListenerMode}
         />
+        {renderHoverTooltip()}
       </div>
     );
   }
 
   return (
     <div className="dashboard-container">
+      {isMobileExpanded && (
+        <div 
+          className="dashboard-sidebar-backdrop" 
+          onClick={() => setCollapsed(true)} 
+          aria-label="Close Sidecar Menu"
+        />
+      )}
       {/* Sidebar Navigation */}
-      <aside className={`dashboard-sidebar ${collapsed ? 'collapsed' : ''}`} data-tour="sidebar">
+      <aside 
+        className={`dashboard-sidebar ${isIconMenu ? 'collapsed' : ''} ${isMobileExpanded ? 'mobile-expanded' : ''}`} 
+        data-tour="sidebar"
+      >
         <div 
           className="dashboard-sidebar-scroll" 
           data-testid="dashboard-sidebar-scroll"
           data-tour="sidebar-scroll"
           onScroll={() => setHoveredNavItem(null)}
         >
-          <div className="dashboard-sidebar-header" style={{ flexDirection: collapsed ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
-            <Link to={activeUser?.role === 'consumer' ? "/native-apps/tunestream" : "/"} title={activeUser?.role === 'consumer' ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site"} data-testid="sidebar-logo-link" style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
-              {collapsed ? (
+          <div className="dashboard-sidebar-header" style={{ flexDirection: isIconMenu ? 'column' : 'row', gap: '10px', alignItems: 'center' }}>
+            <Link 
+              to={activeUser?.role === 'consumer' ? "/native-apps/tunestream" : "/"} 
+              title={!isIconMenu ? (activeUser?.role === 'consumer' ? "TuneStream - a tunemavens utility" : "Back to TuneMavens public site") : undefined} 
+              data-testid="sidebar-logo-link" 
+              onMouseEnter={(e) => handleNavItemMouseEnter('sidebar-logo', { label: activeUser?.role === 'consumer' ? "TuneStream" : "TuneMavens", category: 'Navigation', desc: 'Return to portal overview' }, e)}
+              onMouseLeave={handleNavItemMouseLeave}
+              style={{ display: 'flex', justifyContent: 'center', width: '100%', textDecoration: 'none' }}
+            >
+              {isIconMenu ? (
                 activeUser?.role === 'consumer' ? (
                   <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
                     <img src={ROLE_LOGOS['consumer'] || "/assets/tunestream-logo.png"} alt="TuneStream Icon" style={{ height: '28px', width: 'auto', display: 'block' }} onError={e => { e.currentTarget.src = '/favicon.png'; }} />
@@ -2823,29 +3079,18 @@ function DashboardView({
               setCollapsed(!collapsed);
               setHoveredNavItem(null);
             }} 
-            onMouseEnter={(e) => {
-              if (collapsed) {
-                const rect = e.currentTarget.getBoundingClientRect();
-                setHoveredNavItem({
-                  id: 'collapse-toggle',
-                  title: 'Expand Sidebar',
-                  category: 'Navigation',
-                  desc: 'Expand sidebar to display full module names and labels',
-                  rect
-                });
-              }
-            }}
-            onMouseLeave={() => setHoveredNavItem(null)}
+            onMouseEnter={(e) => handleNavItemMouseEnter('collapse-toggle', { label: isIconMenu ? "Expand Sidecar" : "Switch to Icon Menu", category: 'Navigation', desc: 'Toggle sidecar layout between icon menu and full labels' }, e)}
+            onMouseLeave={handleNavItemMouseLeave}
             className="dashboard-nav-item collapse-toggle-btn"
             style={{ border: 'none', background: 'transparent', padding: '6px', justifyContent: 'center', width: '100%', marginBottom: '16px', color: '#94a3b8' }}
-            title={!collapsed ? "Collapse Sidebar" : undefined}
+            title={!isIconMenu ? "Collapse Sidebar" : undefined}
           >
-            {collapsed ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
+            {isIconMenu ? <RiArrowRightSFill size={16} /> : <RiArrowLeftSFill size={16} />}
           </button>
 
           {Object.entries(getCategorizedMenu()).map(([category, items]) => (
             <div key={category} className="sidebar-category-group" data-tour="sidebar-nav" style={{ marginBottom: '12px' }}>
-              {!collapsed && (
+              {!isIconMenu && (
                 <div style={{ fontSize: '10px', color: '#475569', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '6px 14px 4px' }}>
                   {category}
                 </div>
@@ -2863,27 +3108,17 @@ function DashboardView({
                             setCollapsed(true);
                           }
                           setActiveTab(item.id);
+                          setHoveredNavItem(null);
+                          if (isMobile) setCollapsed(true);
                         }} 
-                        onMouseEnter={(e) => {
-                          if (collapsed) {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const descObj = NAV_ITEM_DESCRIPTIONS[item.id] || {};
-                            setHoveredNavItem({
-                              id: item.id,
-                              title: descObj.title || item.label,
-                              category: descObj.category || item.category,
-                              desc: descObj.desc || `Manage ${item.label.toLowerCase()} in your workspace`,
-                              isActive: activeTab === item.id,
-                              rect
-                            });
-                          }
-                        }}
-                        onMouseLeave={() => setHoveredNavItem(null)}
+                        onMouseEnter={(e) => handleNavItemMouseEnter(item.id, item, e)}
+                        onMouseLeave={handleNavItemMouseLeave}
                         className={`dashboard-nav-item ${activeTab === item.id ? 'active' : ''}`}
-                        title={!collapsed ? item.label : undefined}
+                        title={!isIconMenu ? item.label : undefined}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: isIconMenu ? 'center' : 'flex-start' }}
                       >
                         <Icon size={16} />
-                        {!collapsed && item.label}
+                        {!isIconMenu && <span>{item.label}</span>}
                       </button>
                     </li>
                   );
@@ -2897,35 +3132,28 @@ function DashboardView({
               <Link 
                 to="/" 
                 className="dashboard-nav-item"
-                style={{ textDecoration: 'none' }}
-                onMouseEnter={(e) => {
-                  if (collapsed) {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setHoveredNavItem({
-                      id: 'back-to-site',
-                      title: 'Back to Home Site',
-                      category: 'Navigation',
-                      desc: 'Exit dashboard and return to TuneMavens public landing page',
-                      rect
-                    });
-                  }
-                }}
-                onMouseLeave={() => setHoveredNavItem(null)}
-                title={!collapsed ? "Back to Home Site" : undefined}
+                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: isIconMenu ? 'center' : 'flex-start' }}
+                onMouseEnter={(e) => handleNavItemMouseEnter('back-to-site', { label: 'Back to Home Site', category: 'Navigation', desc: 'Exit dashboard and return to TuneMavens public landing page' }, e)}
+                onMouseLeave={handleNavItemMouseLeave}
+                title={!isIconMenu ? "Back to Home Site" : undefined}
               >
                 <RiArrowLeftFill size={16} />
-                {!collapsed && (activeUser?.role === 'consumer' ? "Back to TuneStream Player" : "Back to Home Site")}
+                {!isIconMenu && (activeUser?.role === 'consumer' ? "Back to TuneStream Player" : "Back to Home Site")}
               </Link>
             </li>
           </ul>
         </div>
 
         <div className="dashboard-sidebar-footer" data-tour="sidebar-profile-card">
-          <div className="dashboard-profile-card">
+          <div 
+            className="dashboard-profile-card"
+            onMouseEnter={(e) => handleNavItemMouseEnter('profile-card', { label: sessionUser.name || 'Sandbox User', category: 'Account', desc: `Role: ${sessionUser.role || 'creator'} • Click to toggle Admin/Creator role` }, e)}
+            onMouseLeave={handleNavItemMouseLeave}
+          >
             <div className="dashboard-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(34, 211, 238, 0.1)', color: 'var(--cyan)', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
               {sessionUser.name ? sessionUser.name.charAt(0) : 'A'}
             </div>
-            {!collapsed && (
+            {!isIconMenu && (
               <div className="dashboard-profile-info">
                 <h5>{sessionUser.name || 'Sandbox User'}</h5>
                 <span 
@@ -2964,24 +3192,13 @@ function DashboardView({
               }
             }}
             className="dashboard-nav-item" 
-            style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: collapsed ? '10px 0' : '10px 14px' }}
-            onMouseEnter={(e) => {
-              if (collapsed) {
-                const rect = e.currentTarget.getBoundingClientRect();
-                setHoveredNavItem({
-                  id: 'logout',
-                  title: 'Log Out',
-                  category: 'Account',
-                  desc: 'Securely sign out of your TuneMavens account session',
-                  rect
-                });
-              }
-            }}
-            onMouseLeave={() => setHoveredNavItem(null)}
-            title={!collapsed ? "Log Out" : undefined}
+            style={{ width: '100%', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', justifyContent: 'center', marginTop: '8px', padding: isIconMenu ? '10px 0' : '10px 14px' }}
+            onMouseEnter={(e) => handleNavItemMouseEnter('logout', { label: 'Log Out', category: 'Account', desc: 'Securely sign out of your TuneMavens account session' }, e)}
+            onMouseLeave={handleNavItemMouseLeave}
+            title={!isIconMenu ? "Log Out" : undefined}
           >
             <RiLogoutBoxRFill size={14} />
-            {!collapsed && "Log Out"}
+            {!isIconMenu && "Log Out"}
           </button>
         </div>
       </aside>
@@ -2996,6 +3213,8 @@ function DashboardView({
           activeTab={activeTab}
           onOpenCreditReload={handleOpenCreditReload}
           onStartTour={() => setTourOpen(true)}
+          onToggleSidebar={() => setCollapsed(prev => !prev)}
+          isSidebarCollapsed={isIconMenu}
         />
         <div className="dashboard-main-scroll" data-testid="dashboard-main-scroll" data-tour="main-content">
           {/* Low unified credits prompt banner - Excludes admins, affiliates, and VCs since administrators and institutional accounts are credit-exempt */}
@@ -3247,46 +3466,7 @@ function DashboardView({
       )}
 
       {/* Collapsed Sidebar Hover Tooltip */}
-      {collapsed && hoveredNavItem && (
-        <div 
-          className="sidebar-collapsed-tooltip"
-          style={{
-            top: `${hoveredNavItem.rect.top + hoveredNavItem.rect.height / 2}px`,
-            left: `${hoveredNavItem.rect.right + 12}px`,
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', gap: '8px' }}>
-            <span style={{ 
-              fontSize: '9px', 
-              fontWeight: 800, 
-              letterSpacing: '0.8px', 
-              textTransform: 'uppercase', 
-              color: '#22d3ee', 
-              background: 'rgba(34, 211, 238, 0.12)', 
-              padding: '2px 6px', 
-              borderRadius: '3px',
-              border: '1px solid rgba(34, 211, 238, 0.25)'
-            }}>
-              {hoveredNavItem.category}
-            </span>
-            {hoveredNavItem.isActive && (
-              <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
-                ACTIVE
-              </span>
-            )}
-          </div>
-
-          <div style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc', marginBottom: '4px', letterSpacing: '-0.2px' }}>
-            {hoveredNavItem.title}
-          </div>
-
-          <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.45, fontWeight: 400 }}>
-            {hoveredNavItem.desc}
-          </div>
-        </div>
-      )}
+      {renderHoverTooltip()}
 
       {/* Global TuneStream Audio Player */}
       <GlobalAudioPlayer
@@ -5719,7 +5899,7 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
           statTrend: "↗ 3 arena tranches fully subscribed",
           stat2Label: "Blended Target IRR",
           stat2Value: "21.4%",
-          stat2Trend: "⚡ Senior-Secured Split Cascade Recoupment",
+          stat2Trend: "✨ Senior-Secured Split Cascade Recoupment",
           chartTitle: "Tour Debt Recoupment & Box Office Pacing ($)",
           chartPoints: [45000, 92000, 140000, 185000, 215000, 240000],
           chartLabels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"],
@@ -5852,7 +6032,7 @@ function DashboardHome({ sessionUser, userCredits, payoutBalance, setUserCredits
           statTrend: "↗ +6 filed with CMOs this week",
           stat2Label: "Cleared Sync Ingests",
           stat2Value: "18 Releases",
-          stat2Trend: "⚡ 100% Pre-cleared for TV & Radio Airplay",
+          stat2Trend: "✨ 100% Pre-cleared for TV & Radio Airplay",
           chartTitle: "Broadcast Airplay Minutes & Reach",
           chartPoints: [12000, 24000, 39000, 58000, 78000, 104000],
           chartLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
