@@ -3372,6 +3372,17 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Hidden desktop actions box (`.nav-desktop-actions-box`) and clamped logo width (`.logo-image-role`) on mobile viewports (`<= 768px`) to prevent horizontal overflow and guarantee touch-target accessibility.
   - Verified across all monorepo workspaces via `npm run build:all` with zero errors.
 
+### 9.44.70 Phase 29: SyncMavens Dashboard Black Screen Fix & ErrorBoundary Hardening
+
+- **Resolution of `ReferenceError: activeUser is not defined` (`apps/syncmavens/src/App.jsx`)**:
+  - Fixed regression in `dashboard-topbar-title` where `{activeUser?.brand_name || activeUser?.name || 'SyncMavens'}` was evaluated without `activeUser` declared in scope.
+  - Replaced `activeUser` with the unified `sessionUser` memoized object (`{sessionUser?.brand_name || sessionUser?.name || 'SyncMavens'}`), eliminating the uncaught reference exception when opening `/dashboard`.
+- **Global Error Boundary Protection (`apps/syncmavens/src/App.jsx`)**:
+  - Wrapped `<AppContent />` in a customized React `ErrorBoundary` component with midnight design aesthetics (`#060813`, `#0b0f1e`, `#22d3ee` accents, 3px border radius).
+  - Prevents total black screens or silent application crashes from any unhandled subcomponent errors, surfacing friendly recovery actions ("Return to Home" and "Reload").
+  - Verified across all workspaces via `npm run build:all` with zero warnings or errors.
+
+
 
 
 

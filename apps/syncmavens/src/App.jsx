@@ -123,11 +123,99 @@ const INITIAL_PITCHES = [
 
 import LocaleWelcomeBanner from './components/common/LocaleWelcomeBanner.jsx';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("SyncMavens ErrorBoundary caught an error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#060813',
+          color: '#f8fafc',
+          padding: '24px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            background: '#0b0f1e',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '3px',
+            padding: '32px',
+            maxWidth: '480px',
+            width: '100%'
+          }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc', marginBottom: '8px' }}>Something went wrong</h2>
+            <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.5, marginBottom: '20px' }}>
+              The application encountered an unexpected error. You can reload the view or return to the landing page.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  this.setState({ hasError: false, error: null });
+                  window.location.hash = '#/';
+                  window.location.reload();
+                }}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#e2e8f0',
+                  padding: '8px 16px',
+                  borderRadius: '3px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Return to Home
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  this.setState({ hasError: false, error: null });
+                  window.location.reload();
+                }}
+                style={{
+                  background: '#22d3ee',
+                  border: 'none',
+                  color: '#060813',
+                  padding: '8px 18px',
+                  borderRadius: '3px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Reload
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
     <Router>
       <LocaleWelcomeBanner />
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </Router>
   );
 }
@@ -1324,7 +1412,7 @@ function AppContent() {
                 <div className="dashboard-topbar-title">
                   <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Sync Console</span>
                   <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
-                    {activeUser?.brand_name || activeUser?.name || 'SyncMavens'}
+                    {sessionUser?.brand_name || sessionUser?.name || 'SyncMavens'}
                   </h1>
                 </div>
               </div>
