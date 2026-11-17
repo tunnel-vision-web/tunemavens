@@ -1773,7 +1773,7 @@ function AppContent() {
           </header>
 
           {/* Dashboard Panels */}
-          <div className="dashboard-main-scroll" style={{ padding: '24px 32px' }}>
+          <div className="dashboard-main-scroll">
             <OnboardingChecklist 
               userRole={userRole} 
               userName={userName} 
@@ -1787,7 +1787,7 @@ function AppContent() {
             />
             
             {activeTab === 'briefs' && (
-              <div className="sm-workspace" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
+              <div className="sm-workspace">
                 {/* Briefs grid */}
                 <section className="briefs-section">
                   <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Incoming Licensing Briefs</h3>
@@ -1858,7 +1858,7 @@ function AppContent() {
                   </div>
                 )}
 
-                <form onSubmit={handleIngestSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 120px', gap: '12px', marginBottom: '24px' }}>
+                <form onSubmit={handleIngestSubmit} className="sm-ingest-form">
                   <input 
                     type="text" 
                     placeholder="Track Title" 
@@ -1883,65 +1883,69 @@ function AppContent() {
                   <button type="submit" className="btn-get-signed">Ingest</button>
                 </form>
 
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', color: '#64748b' }}>
-                      <th style={{ padding: '10px' }}>ID</th>
-                      <th style={{ padding: '10px' }}>Title</th>
-                      <th style={{ padding: '10px' }}>Artist</th>
-                      <th style={{ padding: '10px' }}>Genre</th>
-                      <th style={{ padding: '10px' }}>Duration</th>
-                      <th style={{ padding: '10px' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myCatalog.map(track => (
-                      <tr key={track.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={{ padding: '10px', color: '#64748b' }}>{track.id}</td>
-                        <td style={{ padding: '10px', fontWeight: 'bold' }}>{track.title}</td>
-                        <td style={{ padding: '10px' }}>{track.artist}</td>
-                        <td style={{ padding: '10px', color: '#00f2fe' }}>{track.genre}</td>
-                        <td style={{ padding: '10px' }}>{track.duration}</td>
-                        <td style={{ padding: '10px', color: '#10b981' }}>{track.status}</td>
+                <div className="sm-table-responsive">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', color: '#64748b' }}>
+                        <th style={{ padding: '10px' }}>ID</th>
+                        <th style={{ padding: '10px' }}>Title</th>
+                        <th style={{ padding: '10px' }}>Artist</th>
+                        <th style={{ padding: '10px' }}>Genre</th>
+                        <th style={{ padding: '10px' }}>Duration</th>
+                        <th style={{ padding: '10px' }}>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {myCatalog.map(track => (
+                        <tr key={track.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ padding: '10px', color: '#64748b' }}>{track.id}</td>
+                          <td style={{ padding: '10px', fontWeight: 'bold' }}>{track.title}</td>
+                          <td style={{ padding: '10px' }}>{track.artist}</td>
+                          <td style={{ padding: '10px', color: '#00f2fe' }}>{track.genre}</td>
+                          <td style={{ padding: '10px' }}>{track.duration}</td>
+                          <td style={{ padding: '10px', color: '#10b981' }}>{track.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
             {activeTab === 'pitches' && (
               <div style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px', padding: '24px' }}>
                 <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>My Submitted Sync Pitches</h3>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', color: '#64748b' }}>
-                      <th style={{ padding: '10px' }}>Date</th>
-                      <th style={{ padding: '10px' }}>Target Project</th>
-                      <th style={{ padding: '10px' }}>Pitched Track</th>
-                      <th style={{ padding: '10px' }}>Client</th>
-                      <th style={{ padding: '10px' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myPitches.map(pitch => (
-                      <tr key={pitch.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={{ padding: '10px', color: '#64748b' }}>{pitch.date}</td>
-                        <td style={{ padding: '10px', fontWeight: 'bold' }}>{pitch.briefTitle}</td>
-                        <td style={{ padding: '10px' }}>{pitch.trackTitle}</td>
-                        <td style={{ padding: '10px' }}>{pitch.client}</td>
-                        <td style={{ padding: '10px', color: '#00f2fe' }}>{pitch.status}</td>
+                <div className="sm-table-responsive">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', color: '#64748b' }}>
+                        <th style={{ padding: '10px' }}>Date</th>
+                        <th style={{ padding: '10px' }}>Target Project</th>
+                        <th style={{ padding: '10px' }}>Pitched Track</th>
+                        <th style={{ padding: '10px' }}>Client</th>
+                        <th style={{ padding: '10px' }}>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {myPitches.map(pitch => (
+                        <tr key={pitch.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ padding: '10px', color: '#64748b' }}>{pitch.date}</td>
+                          <td style={{ padding: '10px', fontWeight: 'bold' }}>{pitch.briefTitle}</td>
+                          <td style={{ padding: '10px' }}>{pitch.trackTitle}</td>
+                          <td style={{ padding: '10px' }}>{pitch.client}</td>
+                          <td style={{ padding: '10px', color: '#00f2fe' }}>{pitch.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
             {activeTab === 'ledger' && (
               <div style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px', padding: '24px' }}>
                 <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Compensation Deal Ledger</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                <div className="sm-deal-ledger-grid">
                   <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px' }}>
                     <span style={{ fontSize: '11px', color: '#64748b' }}>Sync Fees Invoiced</span>
                     <h4 style={{ margin: '8px 0 0', color: '#00f2fe' }}>${syncFeesInvoiced.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h4>
@@ -1982,7 +1986,7 @@ function AppContent() {
                   setBriefs([newBrief, ...briefs]);
                   setBriefForm({ project: '', client: '', budget: '$10,000', genre: 'Synthwave', mood: 'Action', deadline: '5 days left', description: '' });
                   alert("Brief published successfully! Creators on the network are notified immediately.");
-                }} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                }} className="sm-brief-create-form">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Project Title</label>
                     <input type="text" placeholder="e.g. Cyberpunk Action Spot" value={briefForm.project} onChange={e => setBriefForm({ ...briefForm, project: e.target.value })} required style={{ width: '100%' }} />
@@ -2017,36 +2021,38 @@ function AppContent() {
                       <option value="Tension">Tension</option>
                     </select>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
+                  <div className="full-width-span" style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
                     <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>Detailed Brief Description</label>
                     <textarea placeholder="Specify mood shifts, style references, and cues..." value={briefForm.description} onChange={e => setBriefForm({ ...briefForm, description: e.target.value })} required style={{ width: '100%', height: '80px', padding: '8px', background: '#050409', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', fontSize: '13px', outline: 'none' }} />
                   </div>
-                  <button type="submit" className="btn-get-signed" style={{ gridColumn: 'span 2', padding: '12px' }}>Publish Sync Brief</button>
+                  <button type="submit" className="btn-get-signed full-width-span" style={{ gridColumn: 'span 2', padding: '12px' }}>Publish Sync Brief</button>
                 </form>
 
                 <h4 style={{ fontSize: '14px', marginBottom: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>Active Briefs Under Your Management</h4>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', color: '#64748b' }}>
-                      <th style={{ padding: '10px' }}>Project</th>
-                      <th style={{ padding: '10px' }}>Client</th>
-                      <th style={{ padding: '10px' }}>Budget</th>
-                      <th style={{ padding: '10px' }}>Deadline</th>
-                      <th style={{ padding: '10px' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {briefs.map(brief => (
-                      <tr key={brief.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={{ padding: '10px', fontWeight: 'bold' }}>{brief.project}</td>
-                        <td style={{ padding: '10px' }}>{brief.client}</td>
-                        <td style={{ padding: '10px', color: '#00f2fe' }}>{brief.budget}</td>
-                        <td style={{ padding: '10px' }}>{brief.deadline}</td>
-                        <td style={{ padding: '10px', color: '#10b981' }}>{brief.status}</td>
+                <div className="sm-table-responsive">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', color: '#64748b' }}>
+                        <th style={{ padding: '10px' }}>Project</th>
+                        <th style={{ padding: '10px' }}>Client</th>
+                        <th style={{ padding: '10px' }}>Budget</th>
+                        <th style={{ padding: '10px' }}>Deadline</th>
+                        <th style={{ padding: '10px' }}>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {briefs.map(brief => (
+                        <tr key={brief.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ padding: '10px', fontWeight: 'bold' }}>{brief.project}</td>
+                          <td style={{ padding: '10px' }}>{brief.client}</td>
+                          <td style={{ padding: '10px', color: '#00f2fe' }}>{brief.budget}</td>
+                          <td style={{ padding: '10px' }}>{brief.deadline}</td>
+                          <td style={{ padding: '10px', color: '#10b981' }}>{brief.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -2061,46 +2067,48 @@ function AppContent() {
             {activeTab === 'pitches_received' && (
               <div style={{ background: 'var(--bg-panel)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px', padding: '24px' }}>
                 <h3 style={{ fontSize: '16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><RiListCheck style={{ color: '#8b5cf6' }} /> Creator Sync Pitches Received</h3>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', color: '#64748b' }}>
-                      <th style={{ padding: '10px' }}>Date</th>
-                      <th style={{ padding: '10px' }}>Project</th>
-                      <th style={{ padding: '10px' }}>Song Pitched</th>
-                      <th style={{ padding: '10px' }}>Artist</th>
-                      <th style={{ padding: '10px' }}>Rationale</th>
-                      <th style={{ padding: '10px' }}>Status</th>
-                      <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pitchesReceived.map(pitch => (
-                      <tr key={pitch.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={{ padding: '10px', color: '#64748b' }}>{pitch.date}</td>
-                        <td style={{ padding: '10px', fontWeight: 'bold' }}>{pitch.briefTitle}</td>
-                        <td style={{ padding: '10px', color: '#00f2fe' }}>{pitch.songTitle}</td>
-                        <td style={{ padding: '10px' }}>{pitch.artist}</td>
-                        <td style={{ padding: '10px', fontSize: '11px', color: '#94a3b8', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={pitch.rationale}>{pitch.rationale}</td>
-                        <td style={{ padding: '10px', color: pitch.status === 'Approved' ? '#10b981' : pitch.status === 'Declined' ? '#ef4444' : '#eab308' }}>{pitch.status}</td>
-                        <td style={{ padding: '10px', display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                          {pitch.status === 'Pending' ? (
-                            <>
-                              <button onClick={() => {
-                                setActiveContractPitch(pitch);
-                                setSupervisorSignature('');
-                              }} className="btn-get-signed" style={{ padding: '4px 10px', fontSize: '11px', background: '#10b981', border: 'none', color: '#000', borderRadius: '3px' }}>Approve & Sign</button>
-                              <button onClick={() => {
-                                setPitchesReceived(pitchesReceived.map(p => p.id === pitch.id ? { ...p, status: 'Declined' } : p));
-                              }} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px' }}>Decline</button>
-                            </>
-                          ) : (
-                            <span style={{ fontSize: '11px', color: '#64748b' }}>Processed</span>
-                          )}
-                        </td>
+                <div className="sm-table-responsive">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', color: '#64748b' }}>
+                        <th style={{ padding: '10px' }}>Date</th>
+                        <th style={{ padding: '10px' }}>Project</th>
+                        <th style={{ padding: '10px' }}>Song Pitched</th>
+                        <th style={{ padding: '10px' }}>Artist</th>
+                        <th style={{ padding: '10px' }}>Rationale</th>
+                        <th style={{ padding: '10px' }}>Status</th>
+                        <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {pitchesReceived.map(pitch => (
+                        <tr key={pitch.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ padding: '10px', color: '#64748b' }}>{pitch.date}</td>
+                          <td style={{ padding: '10px', fontWeight: 'bold' }}>{pitch.briefTitle}</td>
+                          <td style={{ padding: '10px', color: '#00f2fe' }}>{pitch.songTitle}</td>
+                          <td style={{ padding: '10px' }}>{pitch.artist}</td>
+                          <td style={{ padding: '10px', fontSize: '11px', color: '#94a3b8', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={pitch.rationale}>{pitch.rationale}</td>
+                          <td style={{ padding: '10px', color: pitch.status === 'Approved' ? '#10b981' : pitch.status === 'Declined' ? '#ef4444' : '#eab308' }}>{pitch.status}</td>
+                          <td style={{ padding: '10px', display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                            {pitch.status === 'Pending' ? (
+                              <>
+                                <button onClick={() => {
+                                  setActiveContractPitch(pitch);
+                                  setSupervisorSignature('');
+                                }} className="btn-get-signed" style={{ padding: '4px 10px', fontSize: '11px', background: '#10b981', border: 'none', color: '#000', borderRadius: '3px' }}>Approve & Sign</button>
+                                <button onClick={() => {
+                                  setPitchesReceived(pitchesReceived.map(p => p.id === pitch.id ? { ...p, status: 'Declined' } : p));
+                                }} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '3px' }}>Decline</button>
+                              </>
+                            ) : (
+                              <span style={{ fontSize: '11px', color: '#64748b' }}>Processed</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -2113,36 +2121,38 @@ function AppContent() {
                 <h3 style={{ fontSize: '16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><RiFileListLine style={{ color: '#00f2fe' }} /> Music Publishing Administration</h3>
                 <p style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '24px' }}>Register your compositions globally with Performing Rights Organizations (PROs) and collect streaming mechanicals.</p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
+                <div className="sm-split-columns-grid">
                   {/* Left: Registered tracks */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '16px', borderRadius: '4px' }}>
                       <h4 style={{ fontSize: '13px', margin: '0 0 12px 0', color: '#fff' }}>Registered Compositions</h4>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
-                        <thead>
-                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#64748b' }}>
-                            <th style={{ padding: '8px 4px' }}>Work Title</th>
-                            <th style={{ padding: '8px 4px' }}>ISWC</th>
-                            <th style={{ padding: '8px 4px' }}>Composer Share</th>
-                            <th style={{ padding: '8px 4px' }}>PRO Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                            <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>Midnight Sun</td>
-                            <td style={{ padding: '10px 4px', color: '#00f2fe' }}>T-931.205.419-0</td>
-                            <td style={{ padding: '10px 4px' }}>100% (ASCAP)</td>
-                            <td style={{ padding: '10px 4px', color: '#10b981' }}>✓ Registered</td>
-                          </tr>
-                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                            <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>Resonance</td>
-                            <td style={{ padding: '10px 4px', color: '#00f2fe' }}>T-928.093.582-1</td>
-                            <td style={{ padding: '10px 4px' }}>100% (BMI)</td>
-                            <td style={{ padding: '10px 4px' }}>100% (BMI)</td>
-                            <td style={{ padding: '10px 4px', color: '#10b981' }}>✓ Registered</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                      <div className="sm-table-responsive">
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#64748b' }}>
+                              <th style={{ padding: '8px 4px' }}>Work Title</th>
+                              <th style={{ padding: '8px 4px' }}>ISWC</th>
+                              <th style={{ padding: '8px 4px' }}>Composer Share</th>
+                              <th style={{ padding: '8px 4px' }}>PRO Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                              <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>Midnight Sun</td>
+                              <td style={{ padding: '10px 4px', color: '#00f2fe' }}>T-931.205.419-0</td>
+                              <td style={{ padding: '10px 4px' }}>100% (ASCAP)</td>
+                              <td style={{ padding: '10px 4px', color: '#10b981' }}>✓ Registered</td>
+                            </tr>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                              <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>Resonance</td>
+                              <td style={{ padding: '10px 4px', color: '#00f2fe' }}>T-928.093.582-1</td>
+                              <td style={{ padding: '10px 4px' }}>100% (BMI)</td>
+                              <td style={{ padding: '10px 4px' }}>100% (BMI)</td>
+                              <td style={{ padding: '10px 4px', color: '#10b981' }}>✓ Registered</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
 
@@ -2165,35 +2175,37 @@ function AppContent() {
                 <h3 style={{ fontSize: '16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><RiUpload2Line style={{ color: '#8b5cf6' }} /> YouTube Content ID & UGC Scanner</h3>
                 <p style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '24px' }}>Monitor, claim, and monetize user-generated videos containing your compositions across YouTube and TikTok.</p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
+                <div className="sm-split-columns-grid">
                   {/* Left: Matched videos */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '16px', borderRadius: '4px' }}>
                       <h4 style={{ fontSize: '13px', margin: '0 0 12px 0', color: '#fff' }}>Active UGC Ad Revenue Claims</h4>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
-                        <thead>
-                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#64748b' }}>
-                            <th style={{ padding: '8px 4px' }}>Claimed Video URL</th>
-                            <th style={{ padding: '8px 4px' }}>Track Used</th>
-                            <th style={{ padding: '8px 4px' }}>Est. Revenue</th>
-                            <th style={{ padding: '8px 4px' }}>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                            <td style={{ padding: '10px 4px' }}><a href="#" onClick={e => e.preventDefault()} style={{ color: '#00f2fe', textDecoration: 'none' }}>youtube.com/watch?v=ugc982</a></td>
-                            <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>Midnight Sun</td>
-                            <td style={{ padding: '10px 4px', color: '#10b981' }}>$320.50</td>
-                            <td style={{ padding: '10px 4px', color: '#10b981' }}>Claimed</td>
-                          </tr>
-                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                            <td style={{ padding: '10px 4px' }}><a href="#" onClick={e => e.preventDefault()} style={{ color: '#00f2fe', textDecoration: 'none' }}>tiktok.com/@vibeuser/video/82</a></td>
-                            <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>Summer Drift</td>
-                            <td style={{ padding: '10px 4px', color: '#10b981' }}>$112.10</td>
-                            <td style={{ padding: '10px 4px', color: '#10b981' }}>Claimed</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                      <div className="sm-table-responsive">
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#64748b' }}>
+                              <th style={{ padding: '8px 4px' }}>Claimed Video URL</th>
+                              <th style={{ padding: '8px 4px' }}>Track Used</th>
+                              <th style={{ padding: '8px 4px' }}>Est. Revenue</th>
+                              <th style={{ padding: '8px 4px' }}>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                              <td style={{ padding: '10px 4px' }}><a href="#" onClick={e => e.preventDefault()} style={{ color: '#00f2fe', textDecoration: 'none' }}>youtube.com/watch?v=ugc982</a></td>
+                              <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>Midnight Sun</td>
+                              <td style={{ padding: '10px 4px', color: '#10b981' }}>$320.50</td>
+                              <td style={{ padding: '10px 4px', color: '#10b981' }}>Claimed</td>
+                            </tr>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                              <td style={{ padding: '10px 4px' }}><a href="#" onClick={e => e.preventDefault()} style={{ color: '#00f2fe', textDecoration: 'none' }}>tiktok.com/@vibeuser/video/82</a></td>
+                              <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>Summer Drift</td>
+                              <td style={{ padding: '10px 4px', color: '#10b981' }}>$112.10</td>
+                              <td style={{ padding: '10px 4px', color: '#10b981' }}>Claimed</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
 
@@ -2222,7 +2234,7 @@ function AppContent() {
                   localStorage.setItem('syncmavens_user_email', userEmail);
                   alert('Profile settings updated successfully!');
                 }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sm-form-two-col">
                     <div>
                       <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Full Name</label>
                       <input 
@@ -2245,7 +2257,7 @@ function AppContent() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="sm-form-two-col">
                     <div>
                       <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Brand / Label Name</label>
                       <input 
@@ -2321,30 +2333,32 @@ function AppContent() {
                 <h3 style={{ fontSize: '16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><RiGlobalLine style={{ color: '#00f2fe' }} /> DNS Domain Mappings</h3>
                 <p style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '24px' }}>Map custom domains to separate utility modules on the Intermaven platform.</p>
 
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left', marginBottom: '20px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#64748b' }}>
-                      <th style={{ padding: '8px 4px' }}>Host Domain</th>
-                      <th style={{ padding: '8px 4px' }}>Target Mapping</th>
-                      <th style={{ padding: '8px 4px' }}>Verification</th>
-                      <th style={{ padding: '8px 4px' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>syncmavens.com</td>
-                      <td style={{ padding: '10px 4px', color: '#00f2fe' }}>syncmavens</td>
-                      <td style={{ padding: '10px 4px', color: '#10b981' }}>✓ Verified CNAME</td>
-                      <td style={{ padding: '10px 4px', color: '#10b981' }}>Live</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>tunestream.co</td>
-                      <td style={{ padding: '10px 4px', color: '#00f2fe' }}>tunestream</td>
-                      <td style={{ padding: '10px 4px', color: '#f4d35e' }}>Pending DNS Propagation</td>
-                      <td style={{ padding: '10px 4px', color: '#f4d35e' }}>Propagating</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div className="sm-table-responsive">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left', marginBottom: '20px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#64748b' }}>
+                        <th style={{ padding: '8px 4px' }}>Host Domain</th>
+                        <th style={{ padding: '8px 4px' }}>Target Mapping</th>
+                        <th style={{ padding: '8px 4px' }}>Verification</th>
+                        <th style={{ padding: '8px 4px' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>syncmavens.com</td>
+                        <td style={{ padding: '10px 4px', color: '#00f2fe' }}>syncmavens</td>
+                        <td style={{ padding: '10px 4px', color: '#10b981' }}>✓ Verified CNAME</td>
+                        <td style={{ padding: '10px 4px', color: '#10b981' }}>Live</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <td style={{ padding: '10px 4px', fontWeight: 'bold' }}>tunestream.co</td>
+                        <td style={{ padding: '10px 4px', color: '#00f2fe' }}>tunestream</td>
+                        <td style={{ padding: '10px 4px', color: '#f4d35e' }}>Pending DNS Propagation</td>
+                        <td style={{ padding: '10px 4px', color: '#f4d35e' }}>Propagating</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
                 <button onClick={() => alert("Verification in progress...")} className="btn-primary" style={{ padding: '8px 16px', fontSize: '11px', borderRadius: '3px', background: '#00f2fe', color: '#000', border: 'none', fontWeight: 'bold' }}>Verify New Mapping</button>
               </div>
             )}

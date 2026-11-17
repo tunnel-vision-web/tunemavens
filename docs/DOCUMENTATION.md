@@ -3382,6 +3382,36 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Prevents total black screens or silent application crashes from any unhandled subcomponent errors, surfacing friendly recovery actions ("Return to Home" and "Reload").
   - Verified across all workspaces via `npm run build:all` with zero warnings or errors.
 
+### 9.44.71 Phase 30: SyncMavens Backend Dashboard Responsive Layout Harmonization
+
+- **Harmonized Responsive Dashboard Structure (`apps/syncmavens/src/App.jsx`, `apps/syncmavens/src/App.css`)**:
+  - Ported the responsive dashboard layout paradigms from TuneMavens Portal and TuneStream into SyncMavens backend across all roles and personas:
+    1. **Responsive 3-Row Topbar**:
+       - Row 1 (`.dashboard-topbar-row-header`): Title, sidebar mobile toggle button, and Account Type badge (`currentRoleObj.label`).
+       - Row 2 (`.dashboard-topbar-menu-items-row`): Search input, action icon buttons (Ask AI, Quick Ingest, Notifications, Region Switcher, Back to Site).
+       - Row 3 (`.dashboard-topbar-account-row`): Full-width account & persona switcher dropdown button with avatar and role label.
+    2. **Slim 52px–54px Icon Rail**:
+       - Clamped sidebar width on mobile (`52px`) and tablet (`54px`), leaving maximum horizontal space for apps and workspaces without overlapping content.
+    3. **Zero Background Blurring**:
+       - Applied solid midnight backgrounds (`#0b0f1e` / `#070913`) and zero backdrop blur per Section 14 and `docs/DESIGN_STANDARDS.md`.
+    4. **Single-Column Stacking for Workspaces, Grids & Forms**:
+       - Replaced hardcoded inline grid declarations with semantic classes: `.sm-workspace`, `.sm-split-columns-grid`, `.sm-deal-ledger-grid`, `.sm-ingest-form`, `.sm-brief-create-form`, and `.sm-form-two-col`.
+       - Configured clean single-column stacking (`flex-direction: column; width: 100%`) at `@media (max-width: 1024px)`, `@media (max-width: 900px)`, and `@media (max-width: 768px)` for:
+         - Music Supervisor Workspace & Briefs (`.sm-workspace`)
+         - YouTube Content ID & Publishing Administration (`.sm-split-columns-grid`)
+         - Deal Ledger Metric Cards (`.sm-deal-ledger-grid`)
+         - Catalog Ingest Forms (`.sm-ingest-form`)
+         - Brief Creation & Management Forms (`.sm-brief-create-form`)
+         - Profile & Account Setting Form Rows (`.sm-form-two-col`)
+    5. **Horizontal Table Responsiveness**:
+       - Wrapped all data tables across Catalog Ingest, Pitch Management, Active Briefs, Deals Ledger, Publishing Submissions, YouTube Whitelist, and Domain Mappings in `<div className="sm-table-responsive">` (`overflow-x: auto; -webkit-overflow-scrolling: touch;`), preventing mobile viewport blowout.
+    6. **Onboarding Stripe Responsive Adaptation**:
+       - Adjusted `.onboarding-stripe-header`, `.onboarding-stripe-controls`, and `.onboarding-step` to wrap gracefully into single-column vertical stacks on mobile screens (`<= 768px`).
+    7. **Admin Team Roster Clamping (`apps/syncmavens/src/components/admin/AdminTeamRosterPanel.jsx`)**:
+       - Clamped team card grid column template to `minmax(min(100%, 320px), 1fr)`, eliminating horizontal overflow in narrow mobile viewports.
+  - Verified across all workspaces via `npm run build:all` with zero errors.
+
+
 
 
 
