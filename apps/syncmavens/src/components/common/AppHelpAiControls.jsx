@@ -38,7 +38,9 @@ export default function AppHelpAiControls({
   activeTab,
   sessionUser,
   onNavigateTab,
-  floating = false
+  floating = false,
+  headless = false,
+  noButtons = false
 }) {
   const currentContext = activeTab || activeContext || 'home';
 
@@ -121,6 +123,18 @@ export default function AppHelpAiControls({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [docModalOpen, aiOverlayOpen]);
+
+  // Global listeners for open triggers from topbar icon buttons or other UI elements
+  useEffect(() => {
+    const handleOpenHelp = () => handleOpenDocModal();
+    const handleOpenAi = () => setAiOverlayOpen(true);
+    window.addEventListener('tunemavens:open-help', handleOpenHelp);
+    window.addEventListener('tunemavens:open-ai', handleOpenAi);
+    return () => {
+      window.removeEventListener('tunemavens:open-help', handleOpenHelp);
+      window.removeEventListener('tunemavens:open-ai', handleOpenAi);
+    };
+  }, [relevantDoc]);
 
   // Open contextual doc in an in-app overlay modal (leaving active app completely intact)
   const handleOpenDocModal = (e) => {
@@ -272,31 +286,33 @@ export default function AppHelpAiControls({
 
   return (
     <>
-            {/* Action Button Container */}
-      <div className={`app-help-ai-controls ${floating ? 'floating' : ''}`} data-testid="app-help-ai-controls">
-        <button
-          type="button"
-          onClick={handleOpenDocModal}
-          className="app-help-ai-btn btn-view-docs"
-          title={`Get Help: View documentation for ${relevantDoc.appTitle}`}
-          data-testid="btn-get-help"
-        >
-          <RiBookOpenLine className="doc-icon" />
-          <span>Get Help</span>
-        </button>
+      {/* Action Button Container */}
+      {!headless && !noButtons && (
+        <div className={`app-help-ai-controls ${floating ? 'floating' : ''}`} data-testid="app-help-ai-controls">
+          <button
+            type="button"
+            onClick={handleOpenDocModal}
+            className="app-help-ai-btn btn-view-docs"
+            title={`Get Help: View documentation for ${relevantDoc.appTitle}`}
+            data-testid="btn-get-help"
+          >
+            <RiBookOpenLine className="doc-icon" />
+            <span>Get Help</span>
+          </button>
 
-        <button
-          type="button"
-          className="app-help-ai-btn btn-ask-ai"
-          onClick={() => setAiOverlayOpen(true)}
-          title="Ask AI: Consult Ayo AI Copilot (Lifecycle Memory Active)"
-          data-testid="btn-ask-ai"
-        >
-          <RiSparklingLine className="ai-sparkle-icon" />
-          <span>Ask AI</span>
-          <span className="ai-memory-badge" title="AI Lifecycle Memory Synced" />
-        </button>
-      </div>
+          <button
+            type="button"
+            className="app-help-ai-btn btn-ask-ai"
+            onClick={() => setAiOverlayOpen(true)}
+            title="Ask AI: Consult Ayo AI Copilot (Lifecycle Memory Active)"
+            data-testid="btn-ask-ai"
+          >
+            <RiSparklingLine className="ai-sparkle-icon" />
+            <span>Ask AI</span>
+            <span className="ai-memory-badge" title="AI Lifecycle Memory Synced" />
+          </button>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 1. IN-APP CONTEXTUAL DOC READER MODAL OVERLAY                              */}
@@ -554,29 +570,31 @@ export default function AppHelpAiControls({
 
 
 // Reusable Standalone Button Pair for Topbars & Navigation Bars
-export function GetHelpAskAiButtons({ className = '', style = {}, compact = false }) {
+export function GetHelpAskAiButtons({ className = '', style = {}, compact = false, iconOnly = false }) {
   return (
-    <div className={`topbar-help-ai-group ${className}`} style={style} data-testid="topbar-help-ai-group">
+    <div className={`topbar-help-ai-group ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', ...style }} data-testid="topbar-help-ai-group">
       <button
         type="button"
-        className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''}`}
+        className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
         onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-help'))}
         title="Get Help: Open contextual in-app documentation & guides"
+        data-tooltip="Get Help"
         data-testid="topbar-btn-get-help"
       >
-        <RiBookOpenLine className="topbar-help-icon" size={14} />
-        <span>Get Help</span>
+        <RiBookOpenLine className="topbar-help-icon" size={iconOnly ? 16 : 14} />
+        <span className={iconOnly ? 'topbar-item-label' : ''}>Get Help</span>
       </button>
 
       <button
         type="button"
-        className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''}`}
+        className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
         onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-ai'))}
         title="Ask AI: Consult Ayo AI Copilot (Lifecycle Memory Active)"
+        data-tooltip="Ask AI (Ayo Copilot)"
         data-testid="topbar-btn-ask-ai"
       >
-        <RiSparklingLine className="topbar-ai-icon" size={14} />
-        <span>Ask AI</span>
+        <RiSparklingLine className="topbar-ai-icon" size={iconOnly ? 16 : 14} />
+        <span className={iconOnly ? 'topbar-item-label' : ''}>Ask AI</span>
         <span className="ai-memory-badge" title="AI Lifecycle Memory Synced" />
       </button>
     </div>

@@ -1095,6 +1095,137 @@ body {
   gap: 8px;
 }
 
+/* Universal Button Non-Overlapping Alignment Guard (Direct topbar items only) */
+.dashboard-topbar-actions > button,
+.dashboard-topbar-actions > a,
+.dashboard-topbar-actions > .dashboard-topbar-item > button,
+.dashboard-topbar-actions .topbar-nav-icon-btn,
+.dashboard-topbar-actions .topbar-back-to-site,
+.dashboard-topbar-actions .topbar-simulation-badge,
+.dashboard-topbar-menu-items-row > button,
+.dashboard-topbar-menu-items-row > a,
+.dashboard-topbar-menu-items-row > .dashboard-topbar-item > button,
+.dashboard-topbar-menu-items-row .topbar-nav-icon-btn,
+.dashboard-topbar-menu-items-row .topbar-back-to-site,
+.dashboard-topbar-menu-items-row .topbar-simulation-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  height: 34px !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+  border-radius: 3px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+}
+
+/* Icon-Only Topbar Menu Items with Instant Hover Label Tooltip */
+.dashboard-topbar-actions .topbar-nav-icon-btn,
+.dashboard-topbar-menu-items-row .topbar-nav-icon-btn {
+  width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  position: relative !important;
+  border-radius: 3px !important;
+  cursor: pointer;
+  transition: all 0.16s ease !important;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.dashboard-topbar-actions .topbar-nav-icon-btn:hover,
+.dashboard-topbar-menu-items-row .topbar-nav-icon-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(34, 211, 238, 0.4);
+  color: #22d3ee;
+  box-shadow: 0 4px 12px rgba(34, 211, 238, 0.22);
+}
+
+.dashboard-topbar-actions .topbar-credits-btn,
+.dashboard-topbar-menu-items-row .topbar-credits-btn {
+  width: auto !important;
+  height: 34px !important;
+  padding: 4px 10px !important;
+  gap: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border-radius: 3px !important;
+}
+
+/* Screen-reader & DOM-accessible label hidden visually inside icon buttons */
+.dashboard-topbar-actions .topbar-item-label,
+.dashboard-topbar-menu-items-row .topbar-item-label {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Position AI memory dot neatly in top-right corner of Ask AI icon button */
+.dashboard-topbar-actions .btn-ask-ai-topbar.topbar-nav-icon-btn .ai-memory-badge,
+.dashboard-topbar-menu-items-row .btn-ask-ai-topbar.topbar-nav-icon-btn .ai-memory-badge {
+  position: absolute !important;
+  top: 4px !important;
+  right: 4px !important;
+  width: 6px !important;
+  height: 6px !important;
+  margin: 0 !important;
+}
+
+/* Hover Tooltip displaying Menu Item Name */
+.dashboard-topbar-actions [data-tooltip],
+.dashboard-topbar-menu-items-row [data-tooltip] {
+  position: relative !important;
+}
+
+.dashboard-topbar-actions [data-tooltip]::after,
+.dashboard-topbar-menu-items-row [data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-3px);
+  background: #0b1120;
+  color: #f8fafc;
+  border: 1px solid rgba(34, 211, 238, 0.45);
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 100002;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.65);
+}
+
+.dashboard-topbar-actions [data-tooltip]:hover::after,
+.dashboard-topbar-menu-items-row [data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.dashboard-topbar-menu-items-row .search-bar {
+  flex: 0 1 240px;
+  max-width: 240px;
+  height: 34px;
+  padding: 4px 10px;
+}
+
 .dashboard-main-scroll {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -2862,6 +2993,13 @@ button.dropdown-trigger:focus-visible {
     padding: 8px 0 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .dashboard-topbar-menu-items-row .search-bar {
+    width: 100% !important;
+    max-width: 100% !important;
+    order: 10 !important;
+    margin: 4px 0 0 0 !important;
   }
 
   /* Row 3: Admin dropdown */

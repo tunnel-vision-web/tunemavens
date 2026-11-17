@@ -8,7 +8,7 @@ import {
   RiNetflixFill, RiMovieLine, RiVolumeUpFill, RiMusicFill, RiUserFill,
   RiPlayFill, RiPauseFill, RiAlertLine, RiCheckLine, RiLoader4Line, RiMenuFill, RiCloseFill,
   RiLockLine, RiDownloadLine, RiBellFill, RiArrowDownSFill, RiSettings3Fill, RiShieldFill, RiLogoutBoxRFill, RiCoinsFill,
-  RiFileTextFill, RiMenuUnfoldLine, RiMenuFoldLine
+  RiFileTextFill, RiMenuUnfoldLine, RiMenuFoldLine, RiHomeFill
 } from 'react-icons/ri';
 import { 
   SiSpotify, SiApplemusic, SiYoutube, SiTiktok, SiTidal, SiDeezer 
@@ -1446,12 +1446,7 @@ function AppContent() {
             </div>
             
             {/* Row 2: Menu items & action icons toolbar */}
-            <div className="dashboard-topbar-menu-items-row dashboard-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div className="search-bar" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <RiSearchLine />
-                <input type="text" placeholder="Search briefs, deals, metadata..." style={{ fontSize: '13px' }} />
-              </div>
-
+            <div className="dashboard-topbar-menu-items-row dashboard-topbar-actions">
               {/* Unified Credits Badge & Reload Trigger on Topbar */}
               {(() => {
                 const isAffiliate = userRole === 'affiliate' || activeTab === 'affiliates';
@@ -1460,6 +1455,7 @@ function AppContent() {
                   <button
                     type="button"
                     onClick={() => setIsCreditReloadOpen(true)}
+                    className="topbar-credits-btn"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -1473,9 +1469,9 @@ function AppContent() {
                       color: isAffiliate
                         ? '#22d3ee'
                         : (creditsCount < 50 ? '#ef4444' : '#10b981'),
-                      padding: '5px 11px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
+                      padding: '4px 10px',
+                      borderRadius: '3px',
+                      fontSize: '11.5px',
                       fontWeight: 700,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
@@ -1483,11 +1479,12 @@ function AppContent() {
                     title={isAffiliate 
                       ? "Unified Credits: Applies only if you use creator tools (MasterLab AI, Sync briefs, etc.). The Affiliate Dashboard requires 0 credits." 
                       : "Click to reload unified platform credits (Zero monthly charges)"}
+                    data-tooltip={`${creditsCount.toLocaleString()} Credits · ${isAffiliate ? 'Studio Tools' : 'Top Up'}`}
                   >
                     <RiCoinsFill size={15} style={{ color: isAffiliate ? '#22d3ee' : (creditsCount < 50 ? '#ef4444' : '#10b981') }} />
                     <span>{creditsCount.toLocaleString()} Credits</span>
                     <span style={{
-                      fontSize: '10px',
+                      fontSize: '9.5px',
                       background: isAffiliate ? 'rgba(34, 211, 238, 0.25)' : (creditsCount < 50 ? '#ef4444' : '#10b981'),
                       color: isAffiliate ? '#22d3ee' : '#ffffff',
                       padding: '1px 5px',
@@ -1495,7 +1492,7 @@ function AppContent() {
                       fontWeight: 800,
                       textTransform: 'uppercase'
                     }}>
-                      {isAffiliate ? 'Studio Tools' : 'Top Up'}
+                      {isAffiliate ? 'Studio' : 'Top Up'}
                     </span>
                   </button>
                 );
@@ -1504,42 +1501,31 @@ function AppContent() {
               {/* Back to public site button */}
               <Link
                 to="/"
-                className="topbar-back-to-site"
-                title="Back to public site"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '999px',
-                  border: '1px solid rgba(0, 242, 254, 0.25)',
-                  background: 'rgba(0, 242, 254, 0.06)',
-                  color: '#00f2fe',
-                  fontSize: '12px',
-                  fontWeight: '700',
-                  textDecoration: 'none',
-                  letterSpacing: '0.3px',
-                  transition: 'all 0.15s ease'
-                }}
+                className="topbar-back-to-site topbar-nav-icon-btn"
+                title="Back to Site"
+                data-tooltip="Back to Site"
               >
-                <span>Back to Site</span>
+                <RiHomeFill size={16} />
+                <span className="topbar-item-label">Back to Site</span>
               </Link>
 
               {/* Universal Get Help & Ask AI Action Buttons */}
-              <GetHelpAskAiButtons />
+              <GetHelpAskAiButtons iconOnly />
 
+              {/* Region Switcher */}
               <div className="dashboard-topbar-item">
-                <RegionSwitcher />
+                <RegionSwitcher iconOnly />
               </div>
 
               {/* Notifications */}
               <div className="dashboard-topbar-item" ref={notifRef}>
                 <button
-                  className="topbar-icon-btn"
+                  className="topbar-icon-btn topbar-nav-icon-btn"
                   onClick={() => { setNotifOpen(o => !o); setAccountOpen(false); }}
                   title="Notifications"
+                  data-tooltip="Notifications"
                 >
-                  <RiBellFill size={18} />
+                  <RiBellFill size={17} />
                   {notifications.filter(n => !n.read).length > 0 && (
                     <span className="topbar-badge">{notifications.filter(n => !n.read).length}</span>
                   )}
@@ -1632,6 +1618,12 @@ function AppContent() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Search Bar (responsive toolbar item) */}
+              <div className="search-bar" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <RiSearchLine />
+                <input type="text" placeholder="Search briefs, deals, metadata..." style={{ fontSize: '13px' }} />
               </div>
             </div>
 
@@ -2442,6 +2434,7 @@ function AppContent() {
         <AppHelpAiControls
           activeTab={activeTab}
           sessionUser={sessionUser}
+          headless
         />
 
         {renderHoverTooltip()}
