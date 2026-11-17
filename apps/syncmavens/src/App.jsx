@@ -15,6 +15,7 @@ import {
 } from 'react-icons/si';
 import { FaAmazon } from 'react-icons/fa';
 import smLogo from './assets/syncmavens-logo.png';
+import smIcon from './assets/syncmavens-icon.png';
 import './App.css';
 
 // Import local hero backgrounds copied and generated for syncmavens
@@ -954,16 +955,26 @@ function AppContent() {
         {/* Sidebar Navigation */}
         <aside className={`dashboard-sidebar ${isIconMenu ? 'collapsed' : ''} ${isMobileExpanded ? 'mobile-expanded' : ''}`}>
           <div className="dashboard-sidebar-scroll" onScroll={() => setHoveredNavItem(null)}>
-            <div className="dashboard-sidebar-header" style={{ flexDirection: isIconMenu ? 'column' : 'row', gap: '10px', alignItems: 'center', justifyContent: 'center', padding: '16px 0' }}>
-              <Link to="/" className="nav-logo-link">
-                <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
-                  <img 
-                    src={smLogo} 
-                    alt="SyncMavens Logo" 
-                    className="nav-logo-image" 
-                    style={{ height: isIconMenu ? '20px' : '32px', width: 'auto', display: 'block' }} 
-                  />
-                  <span style={{ fontSize: isIconMenu ? '7px' : '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+            <div className="dashboard-sidebar-header" style={{ flexDirection: isIconMenu ? 'column' : 'row', gap: '10px', alignItems: 'center', justifyContent: 'center', padding: isIconMenu ? '12px 0' : '16px 0' }}>
+              <Link to="/" className="nav-logo-link" title={isIconMenu ? "SyncMavens Home" : undefined}>
+                <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: isIconMenu ? 'center' : 'flex-end', lineHeight: 1 }}>
+                  {isIconMenu ? (
+                    <img 
+                      src={smIcon} 
+                      alt="SyncMavens Icon" 
+                      className="nav-logo-icon" 
+                      style={{ height: '32px', width: '32px', objectFit: 'contain', display: 'block' }} 
+                      onError={(e) => { e.currentTarget.src = '/favicon.png'; }}
+                    />
+                  ) : (
+                    <img 
+                      src={smLogo} 
+                      alt="SyncMavens Logo" 
+                      className="nav-logo-image" 
+                      style={{ height: '32px', width: 'auto', display: 'block' }} 
+                    />
+                  )}
+                  <span style={{ fontSize: isIconMenu ? '7.5px' : '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: isIconMenu ? '2px' : '-3px', alignSelf: isIconMenu ? 'center' : 'flex-end' }}>beta</span>
                 </div>
               </Link>
             </div>
@@ -1409,6 +1420,13 @@ function AppContent() {
                 >
                   {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
                 </button>
+                <img 
+                  src={smIcon} 
+                  alt="SyncMavens" 
+                  className="topbar-brand-icon" 
+                  style={{ height: '22px', width: '22px', objectFit: 'contain' }}
+                  onError={(e) => { e.currentTarget.src = '/favicon.png'; }}
+                />
                 <div className="dashboard-topbar-title">
                   <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Sync Console</span>
                   <h1 style={{ fontSize: '15px', fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0' }}>
@@ -2447,11 +2465,20 @@ function AppContent() {
         <div className="nav-inner-container">
           <div className="nav-logo-container-role">
             <Link to="/" className="nav-logo-link" onClick={() => setMobileNavOpen(false)}>
-              <img 
-                src={smLogo} 
-                alt="SyncMavens Logo" 
-                className="logo-image-role logo-image"
-              />
+              <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                <img 
+                  src={smLogo} 
+                  alt="SyncMavens Logo" 
+                  className="logo-image-role logo-image logo-desktop" 
+                />
+                <img 
+                  src={smIcon} 
+                  alt="SyncMavens Icon" 
+                  className="logo-image-role logo-image logo-mobile-icon" 
+                  onError={(e) => { e.currentTarget.src = '/favicon.png'; }}
+                />
+                <span className="logo-beta-tag" style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+              </div>
             </Link>
             <a
               href="http://localhost:3000/"

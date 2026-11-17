@@ -26,6 +26,7 @@ import {
   RiMenuUnfoldLine, RiMenuFoldLine
 } from 'react-icons/ri';
 import tsLogo from './assets/tunestream-logo.png';
+import tsIcon from './assets/tunestream-icon.png';
 import tcLogo from './assets/tunecompanion-logo.png';
 import tpLogo from './assets/tunepay-logo.png';
 import './App.css';
@@ -4507,10 +4508,20 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
       {/* Left Sidebar */}
       <aside className={`dashboard-sidebar ${isIconMenu ? 'collapsed' : ''} ${isMobileExpanded ? 'mobile-expanded' : ''}`}>
         <div className="sidebar-brand-wrapper">
-          <Link to="/" className="sidebar-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none' }}>
-            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
-              <img src={tsLogo} alt="TuneStream" className="sidebar-logo-img" />
-              <span style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: '-3px', alignSelf: 'flex-end' }}>beta</span>
+          <Link to="/" className="sidebar-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none' }} title={isIconMenu ? "TuneStream Home" : undefined}>
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: isIconMenu ? 'center' : 'flex-end', lineHeight: 1 }}>
+              {isIconMenu ? (
+                <img 
+                  src={tsIcon} 
+                  alt="TuneStream Icon" 
+                  className="sidebar-logo-icon" 
+                  style={{ height: '30px', width: '30px', objectFit: 'contain', display: 'block' }}
+                  onError={(e) => { e.currentTarget.src = '/favicon.png'; }}
+                />
+              ) : (
+                <img src={tsLogo} alt="TuneStream" className="sidebar-logo-img" />
+              )}
+              <span style={{ fontSize: isIconMenu ? '7.5px' : '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: '#00f0ff', marginTop: isIconMenu ? '2px' : '-3px', alignSelf: isIconMenu ? 'center' : 'flex-end' }}>beta</span>
             </div>
             {!isIconMenu && (
               <span data-no-i18n="true" style={{ fontSize: '10px', color: '#00f2fe', letterSpacing: '0.4px', fontWeight: 700, textTransform: 'lowercase', marginTop: '2px' }}>
@@ -4639,6 +4650,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
               >
                 {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
               </button>
+              <img 
+                src={tsIcon} 
+                alt="TuneStream" 
+                className="topbar-brand-icon" 
+                style={{ height: '22px', width: '22px', objectFit: 'contain' }}
+                onError={(e) => { e.currentTarget.src = '/favicon.png'; }}
+              />
               <div className="dashboard-topbar-title">
                 <span style={{ fontSize: '10.5px', color: '#00f2fe', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   TuneStream Listener Console • 24-Bit Lossless

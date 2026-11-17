@@ -3411,27 +3411,22 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
        - Clamped team card grid column template to `minmax(min(100%, 320px), 1fr)`, eliminating horizontal overflow in narrow mobile viewports.
   - Verified across all workspaces via `npm run build:all` with zero errors.
 
-### 9.44.72 Phase 31: SyncMavens Backend Horizontal Cutoff Fix & Topbar Icon Layout Refinement
+### 9.44.73 Phase 32: Responsive Brand Logo Switching to Compact Icon Mark
 
-- **Resolution of Content Cutoff Horizontally & Errant Button Placement (`apps/syncmavens/src/App.jsx`, `apps/syncmavens/src/components/common/AppHelpAiControls.jsx`)**:
-  - **Root Cause**: `<AppHelpAiControls>` rendered a default visible button pair (`<div className="app-help-ai-controls">`) as a direct child of `<div className="dashboard-container">`. Because `.dashboard-container` uses `display: flex; flex-direction: row`, this container became a 3rd horizontal flex child alongside the sidebar and main content pane, pushing main content and cutting it off horizontally halfway across the screen while placing duplicate Get Help and Ask AI buttons in an errant position.
-  - **Fix**:
-    - Added `headless` prop to `AppHelpAiControls`, rendering null for inline DOM buttons and solely mounting the modal overlays (`InAppDocModal` and Ayo AI chat drawer) via portals directly into `document.body`.
-    - Added global window event listeners for `tunemavens:open-help` and `tunemavens:open-ai` in `AppHelpAiControls`, allowing topbar icon buttons to trigger modals seamlessly.
-    - Rendered `<AppHelpAiControls activeTab={activeTab} sessionUser={sessionUser} headless />` in `App.jsx`, eliminating the unwanted flex child and fully restoring full-width content rendering.
-
-- **Refined Topbar Layout as Prescribed Across Breakpoints (`apps/syncmavens/src/App.jsx`, `apps/syncmavens/src/App.css`, `apps/syncmavens/src/RegionSwitcher.jsx`)**:
-  - **Row 1 (`.dashboard-topbar-row-header`)**: Admin/Sync Console title, sidebar collapse/expand toggle button, and active Account Type badge (`topbar-simulation-badge`) with simulation dot and quick reset button.
-  - **Row 2 (`.dashboard-topbar-menu-items-row`)**:
-    - Standardized all topbar action triggers to 34px icon buttons (`.topbar-nav-icon-btn`) with hover tooltips (`data-tooltip`):
-      - **Credits Button**: Compact badge with icon, count, and status.
-      - **Back to Site**: Icon button with `RiHomeFill` and hover tooltip.
-      - **Get Help & Ask AI**: Updated `<GetHelpAskAiButtons iconOnly />` to render standardized 34px icon buttons with Ayo memory badge and hover tooltips.
-      - **Region Switcher**: Updated `<RegionSwitcher iconOnly />` to render a 34px globe icon button with hover tooltip and quick language toggle.
-      - **Notifications**: Icon button with unread count badge.
-    - Relocated Search Bar to the end of Row 2: cleanly sized on desktop and dynamically expanding to 100% full-width on mobile viewports (`order: 10`) without displacing the icon toolbar.
-  - **Row 3 (`.dashboard-topbar-account-row`)**: Full-width account & persona switcher trigger button (`.topbar-account-btn`).
-  - Verified across all monorepo workspaces via `npm run build:all` with zero errors.
+- **Responsive Brand Mark Adaptation Across Monorepo Apps (`apps/syncmavens`, `apps/tunestream`, `apps/portal`)**:
+  - **Requirement**: Switch from full horizontal wordmark logos to compact square icon marks in responsive viewports (`<= 768px` / `<= 900px`) and collapsed sidecar icon menus across all dashboards and landing headers.
+  - **SyncMavens (`apps/syncmavens/src/App.jsx`, `apps/syncmavens/src/App.css`)**:
+    - Extracted brand icon marks (`apps/syncmavens/src/assets/syncmavens-icon.png`, `syncmavens-icon.svg`) with runtime fallback to `/favicon.png`.
+    - **Sidebar Navigation**: When `isIconMenu` is active (collapsed or viewport `<= 1024px`), rendered 32px x 32px `smIcon` instead of squished wordmark, with centered `beta` tag and accessible title.
+    - **Landing Navbar**: Configured dual-element rendering with `.logo-desktop` (full horizontal logo) and `.logo-mobile-icon` (34px icon mark). On viewports `<= 768px`, desktop wordmark is hidden and mobile icon mark is displayed alongside centered beta tag and backlink.
+    - **Backend Topbar**: Added `.topbar-brand-icon` to Row 1 (`.dashboard-topbar-row-header`), displayed automatically on viewports `<= 900px` beside the Sync Console title.
+  - **TuneStream (`apps/tunestream/src/App.jsx`, `apps/tunestream/src/App.css`)**:
+    - Created `apps/tunestream/src/assets/tunestream-icon.png` from high-resolution favicon.
+    - **Sidebar Navigation**: When `isIconMenu` is true, renders 30px x 30px `tsIcon` with centered beta tag, cleanly fitting the 52px icon rail.
+    - **Backend Topbar**: Integrated `.topbar-brand-icon` displayed in Row 1 on mobile viewports `<= 900px`.
+  - **TuneMavens Portal (`apps/portal/src/App.jsx`, `apps/portal/src/App.css`)**:
+    - Added `.topbar-brand-icon` in both Admin Console and TuneStream Consumer Hub topbar Row 1, displayed on viewports `<= 900px`.
+  - **Verification**: Executed `npm run build:all` across all monorepo packages (`portal`, `syncmavens`, `tunestream`), verifying zero asset resolution or syntax errors.
 
 
 

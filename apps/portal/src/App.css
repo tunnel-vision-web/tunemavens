@@ -4882,8 +4882,16 @@
   }
 }
 
+.topbar-brand-icon {
+  display: none;
+}
+
 /* Responsive Topbar 3-Row Layout: Row 1 (Admin Console & Account Type) -> Row 2 (Menu items/icons) -> Row 3 (Admin Dropdown) */
 @media (max-width: 900px) {
+  .topbar-brand-icon {
+    display: block !important;
+  }
+
   .dashboard-topbar {
     display: flex !important;
     flex-direction: column !important;

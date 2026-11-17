@@ -95,6 +95,21 @@ body {
   transform: scale(0.8);
 }
 
+/* Responsive Logo Switching: Full wordmark on desktop, icon on mobile/tablet */
+.logo-desktop {
+  display: block;
+}
+.logo-mobile-icon {
+  display: none !important;
+  height: 34px !important;
+  width: 34px !important;
+  object-fit: contain;
+}
+
+.topbar-brand-icon {
+  display: none;
+}
+
 .back-to-tm-link {
   font-size: 12px;
   color: var(--text-muted);
@@ -2743,11 +2758,20 @@ button.dropdown-trigger:focus-visible {
 }
 
 @media (max-width: 768px) {
-  .logo-image-role {
-    width: 165px;
+  .logo-desktop {
+    display: none !important;
+  }
+  .logo-mobile-icon {
+    display: block !important;
+  }
+  .nav-logo-container-role .logo-beta-tag {
+    align-self: center !important;
+    margin-top: 2px !important;
+    font-size: 7.5px !important;
   }
   .back-to-tm-link {
-    font-size: 10.5px;
+    font-size: 10px !important;
+    margin-top: 2px !important;
   }
 }
 
@@ -2977,6 +3001,14 @@ button.dropdown-trigger:focus-visible {
   .dashboard-topbar-account-type-badge {
     margin-left: auto !important;
     flex-shrink: 0 !important;
+  }
+
+  .topbar-brand-icon {
+    display: block !important;
+    height: 24px !important;
+    width: 24px !important;
+    object-fit: contain;
+    flex-shrink: 0;
   }
 
   /* Row 2: Menu items / Action icons toolbar */

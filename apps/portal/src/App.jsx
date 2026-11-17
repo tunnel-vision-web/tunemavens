@@ -598,6 +598,12 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
               {isSidebarCollapsed ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
             </button>
           )}
+          <img 
+            src="/favicon.png" 
+            alt="TuneMavens" 
+            className="topbar-brand-icon" 
+            style={{ height: '22px', width: '22px', objectFit: 'contain' }} 
+          />
           <div className="dashboard-topbar-title">
             <span style={{ fontSize: '10.5px', color: sessionUser?.role === 'consumer' ? '#00f2fe' : '#64748b', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               {sessionUser?.role === 'consumer' ? 'TuneStream Listener Console • 24-Bit Lossless' : 'Admin Console'}
@@ -2779,6 +2785,12 @@ function DashboardView({
                 >
                   {isIconMenu ? <RiMenuUnfoldLine size={18} /> : <RiMenuFoldLine size={18} />}
                 </button>
+                <img 
+                  src="/favicon.png" 
+                  alt="TuneStream" 
+                  className="topbar-brand-icon" 
+                  style={{ height: '22px', width: '22px', objectFit: 'contain' }} 
+                />
                 <div className="dashboard-topbar-title" style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ fontSize: '10px', color: '#00f2fe', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>TuneStream Personal Audio Engine</span>
                   <h1 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '2px 0 0' }}>
