@@ -28,7 +28,9 @@ import {
 import {
   SYNC_CATALOG_TRACKS,
   SYNC_ACTIVE_BRIEFS,
-  SYNC_RATE_TIERS
+  SYNC_RATE_TIERS,
+  FALLBACK_VINYL_COVER,
+  getTrackCover
 } from './SyncMarketplaceData.js'
 import { syncAudioEngine } from './SyncAudioEngine.js'
 import SyncLicensingAcquisitionWizard from './SyncLicensingAcquisitionWizard.jsx'
@@ -467,7 +469,15 @@ export default function SyncMarketplacePanel({ sessionUser }) {
                   {/* Card Header (Artwork & Meta) */}
                   <div className="sync-card-header">
                     <div className="sync-card-art-box">
-                      <img src={track.cover} alt={track.title} className="sync-card-art" />
+                      <img
+                        src={getTrackCover(track)}
+                        alt={track.title}
+                        className="sync-card-art"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_VINYL_COVER;
+                        }}
+                      />
                       <div
                         className="sync-card-art-overlay"
                         onClick={() => handleTogglePlay(track)}

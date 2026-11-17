@@ -13,6 +13,7 @@ import {
   RiCheckboxCircleFill
 } from 'react-icons/ri'
 import './SyncMarketplace.css'
+import { FALLBACK_VINYL_COVER, getTrackCover } from './SyncMarketplaceData.js'
 
 export default function SyncProjectBinsModal({
   isOpen,
@@ -361,9 +362,13 @@ export default function SyncProjectBinsModal({
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ position: 'relative', width: '50px', height: '50px', borderRadius: '3px', overflow: 'hidden', flexShrink: 0 }}>
                           <img
-                            src={track.cover || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500'}
+                            src={getTrackCover(track)}
                             alt={track.title}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = FALLBACK_VINYL_COVER;
+                            }}
                           />
                           <button
                             type="button"

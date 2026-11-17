@@ -152,6 +152,7 @@ def seed_sync_marketplace_if_empty():
                 "pro_affiliation": "MCSK / BMI",
                 "stems_available": ["Full Mix", "Drums", "Bass", "Synths"],
                 "pricing": {"indie_film": 350, "tv_series": 950, "commercial": 1800},
+                "cover": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
                 "audio_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
                 "created_at": datetime.now(timezone.utc)
             },
@@ -171,6 +172,7 @@ def seed_sync_marketplace_if_empty():
                 "pro_affiliation": "MCSK / ASCAP",
                 "stems_available": ["Full Mix", "Main Vocals", "Talking Drums", "Guitars"],
                 "pricing": {"indie_film": 450, "tv_series": 1200, "commercial": 2400},
+                "cover": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
                 "audio_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
                 "created_at": datetime.now(timezone.utc)
             },
@@ -190,6 +192,7 @@ def seed_sync_marketplace_if_empty():
                 "pro_affiliation": "SAMRO / PRS",
                 "stems_available": ["Full Mix", "Log Drum", "Percussion", "Keys"],
                 "pricing": {"indie_film": 400, "tv_series": 1100, "commercial": 2200},
+                "cover": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
                 "audio_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
                 "created_at": datetime.now(timezone.utc)
             },
@@ -209,6 +212,7 @@ def seed_sync_marketplace_if_empty():
                 "pro_affiliation": "BMI",
                 "stems_available": ["Full Mix", "Strings", "Choir", "Sub"],
                 "pricing": {"indie_film": 500, "tv_series": 1300, "commercial": 2600},
+                "cover": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
                 "audio_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
                 "created_at": datetime.now(timezone.utc)
             }
@@ -572,9 +576,18 @@ def list_sync_catalog():
     """Lists pre-cleared one-stop tracks ready for sync placement."""
     cursor = db.sync_catalogs.find({}).sort("created_at", -1)
     tracks = []
-    for doc in cursor:
+    default_covers = [
+        "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80"
+    ]
+    for idx, doc in enumerate(cursor):
         doc["id"] = str(doc["_id"])
         doc["_id"] = str(doc["_id"])
+        if not doc.get("cover"):
+            doc["cover"] = default_covers[idx % len(default_covers)]
         tracks.append(doc)
     return tracks
 
@@ -599,6 +612,7 @@ def add_sync_catalog_track(payload: dict, current_user: dict = Depends(get_curre
         "pro_affiliation": payload.get("pro_affiliation", "MCSK / ASCAP"),
         "stems_available": payload.get("stems_available", ["Full Mix", "Drums", "Bass", "Synths"]),
         "pricing": payload.get("pricing", {"indie_film": 350, "tv_series": 950, "commercial": 1800}),
+        "cover": payload.get("cover") or "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&auto=format&fit=crop&q=80",
         "audio_url": payload.get("audio_url", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"),
         "created_at": datetime.now(timezone.utc)
     }

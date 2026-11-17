@@ -764,3 +764,14 @@ export const SYNC_RATE_TIERS = [
   { id: 'game_loop', label: 'Video Game / Interactive Media', basePrice: 900, rights: 'Global In-Game Integration & DLC, Perpetuity' },
   { id: 'broadcast_worldwide', label: 'Worldwide Major Studio / Global Campaign', basePrice: 4500, rights: 'All Media, Worldwide, In Perpetuity (Master + Sync)' }
 ];
+
+export const FALLBACK_VINYL_COVER = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500"><rect width="500" height="500" fill="%230b0f1e"/><circle cx="250" cy="250" r="180" fill="%23090e1f" stroke="%2322d3ee" stroke-width="2" stroke-opacity="0.3"/><circle cx="250" cy="250" r="140" fill="none" stroke="%2322d3ee" stroke-width="1" stroke-opacity="0.15"/><circle cx="250" cy="250" r="100" fill="none" stroke="%2322d3ee" stroke-width="1" stroke-opacity="0.15"/><circle cx="250" cy="250" r="70" fill="%2304060d" stroke="%2322d3ee" stroke-width="3"/><circle cx="250" cy="250" r="16" fill="%2322d3ee"/><text x="250" y="380" font-family="system-ui,sans-serif" font-weight="800" font-size="22" fill="%23ffffff" text-anchor="middle">TuneMavens Sync</text><text x="250" y="415" font-family="system-ui,sans-serif" font-weight="600" font-size="14" fill="%2300f2fe" text-anchor="middle">Pre-Cleared One-Stop</text></svg>`;
+
+export const getTrackCover = (track) => {
+  if (track?.cover && typeof track.cover === 'string' && track.cover.trim().length > 5) return track.cover;
+  if (track?.coverArt && typeof track.coverArt === 'string' && track.coverArt.trim().length > 5) return track.coverArt;
+  const title = encodeURIComponent((track?.title || 'TuneMavens Sync').slice(0, 30));
+  const genre = encodeURIComponent((track?.genre || track?.artist || 'Pre-Cleared One-Stop').slice(0, 30));
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500"><rect width="500" height="500" fill="%230b0f1e"/><circle cx="250" cy="250" r="180" fill="%23090e1f" stroke="%2322d3ee" stroke-width="2" stroke-opacity="0.3"/><circle cx="250" cy="250" r="140" fill="none" stroke="%2322d3ee" stroke-width="1" stroke-opacity="0.15"/><circle cx="250" cy="250" r="100" fill="none" stroke="%2322d3ee" stroke-width="1" stroke-opacity="0.15"/><circle cx="250" cy="250" r="70" fill="%2304060d" stroke="%2322d3ee" stroke-width="3"/><circle cx="250" cy="250" r="16" fill="%2322d3ee"/><text x="250" y="380" font-family="system-ui,sans-serif" font-weight="800" font-size="22" fill="%23ffffff" text-anchor="middle">${title}</text><text x="250" y="415" font-family="system-ui,sans-serif" font-weight="600" font-size="14" fill="%2300f2fe" text-anchor="middle">${genre}</text></svg>`;
+};
+

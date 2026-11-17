@@ -18,6 +18,7 @@ import {
   RiMusicFill
 } from 'react-icons/ri'
 import './SyncMarketplace.css'
+import { FALLBACK_VINYL_COVER, getTrackCover } from './SyncMarketplaceData.js'
 
 export default function SyncLicensingAcquisitionWizard({
   isOpen,
@@ -149,7 +150,15 @@ export default function SyncLicensingAcquisitionWizard({
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', gap: '14px', alignItems: 'center', background: 'rgba(15, 23, 42, 0.7)', padding: '12px 14px', borderRadius: '3px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <img src={track.cover} alt={track.title} style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover' }} />
+                <img
+                  src={getTrackCover(track)}
+                  alt={track.title}
+                  style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = FALLBACK_VINYL_COVER;
+                  }}
+                />
                 <div>
                   <strong style={{ fontSize: '14px', color: '#fff', display: 'block' }}>{track.title}</strong>
                   <span style={{ fontSize: '12px', color: '#94a3b8' }}>{track.artist} · {track.genre} · {track.bpm} BPM</span>

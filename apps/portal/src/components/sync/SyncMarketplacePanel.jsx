@@ -28,7 +28,9 @@ import {
 import {
   SYNC_CATALOG_TRACKS,
   SYNC_ACTIVE_BRIEFS,
-  SYNC_RATE_TIERS
+  SYNC_RATE_TIERS,
+  FALLBACK_VINYL_COVER,
+  getTrackCover
 } from './SyncMarketplaceData.js'
 import { syncAudioEngine } from './SyncAudioEngine.js'
 import SyncLicensingAcquisitionWizard from './SyncLicensingAcquisitionWizard.jsx'
@@ -103,10 +105,15 @@ export default function SyncMarketplacePanel({ sessionUser }) {
             })));
           }
           if (Array.isArray(catalogData) && catalogData.length > 0) {
-            setCatalogTracks(catalogData.map(c => ({
-              ...c,
-              id: c.id || c._id || c.track_id
-            })));
+            setCatalogTracks(catalogData.map(c => {
+              const staticMatch = SYNC_CATALOG_TRACKS.find(t => t.id === (c.id || c.track_id) || t.title === c.title);
+              const resolvedCover = c.cover || staticMatch?.cover || getTrackCover(c);
+              return {
+                ...c,
+                id: c.id || c._id || c.track_id,
+                cover: resolvedCover
+              };
+            }));
           }
           if (Array.isArray(pitchesData)) {
             setMyPitches(pitchesData);
@@ -538,7 +545,15 @@ export default function SyncMarketplacePanel({ sessionUser }) {
                   {/* Card Header (Artwork & Meta) */}
                   <div className="sync-card-header">
                     <div className="sync-card-art-box">
-                      <img src={track.cover} alt={track.title} className="sync-card-art" />
+                      <img
+                        src={getTrackCover(track)}
+                        alt={track.title}
+                        className="sync-card-art"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_VINYL_COVER;
+                        }}
+                      />
                       <div
                         className="sync-card-art-overlay"
                         onClick={() => handleTogglePlay(track)}

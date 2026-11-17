@@ -307,6 +307,7 @@
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
+  background-color: #0b0f1e;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 

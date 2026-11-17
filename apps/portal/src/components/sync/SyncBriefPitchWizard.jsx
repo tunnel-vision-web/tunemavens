@@ -11,7 +11,7 @@ import {
   RiSparklingLine,
   RiMusicFill
 } from 'react-icons/ri'
-import { SYNC_CATALOG_TRACKS } from './SyncMarketplaceData.js'
+import { SYNC_CATALOG_TRACKS, FALLBACK_VINYL_COVER, getTrackCover } from './SyncMarketplaceData.js'
 import './SyncMarketplace.css'
 
 export default function SyncBriefPitchWizard({
@@ -180,7 +180,15 @@ export default function SyncBriefPitchWizard({
                         transition: 'all 0.15s ease'
                       }}
                     >
-                      <img src={t.cover} alt="" style={{ width: '44px', height: '44px', borderRadius: '3px', objectFit: 'cover' }} />
+                      <img
+                        src={getTrackCover(t)}
+                        alt=""
+                        style={{ width: '44px', height: '44px', borderRadius: '3px', objectFit: 'cover' }}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_VINYL_COVER;
+                        }}
+                      />
                       <div style={{ flex: 1 }}>
                         <strong style={{ fontSize: '13.5px', color: '#fff', display: 'block' }}>{t.title}</strong>
                         <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>{t.artist} · {t.genre} · {t.bpm} BPM</span>
