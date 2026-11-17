@@ -336,6 +336,19 @@ function AppContent() {
     navigate('/');
   };
 
+  const isVerifiedAdmin = userRole === 'admin' || 
+    (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_admin_verified') === 'true') ||
+    (() => {
+      try {
+        const saved = sessionStorage.getItem('syncmavens_session') || sessionStorage.getItem('tunemavens_session') || localStorage.getItem('tunemavens_saved_user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return parsed.is_admin === true || (Array.isArray(parsed.roles) && parsed.roles.includes('admin'));
+        }
+      } catch (_) {}
+      return false;
+    })();
+
   const sessionUser = {
     id: 'user_syncmavens_01',
     name: userName,
@@ -343,7 +356,7 @@ function AppContent() {
     role: userRole,
     credits: userCredits,
     phone: '254712345678',
-    is_admin: userRole === 'admin' || (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin')),
+    is_admin: isVerifiedAdmin,
     tier: 'pro'
   };
 
