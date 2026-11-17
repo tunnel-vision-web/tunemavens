@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { 
   RiCompass3Line, RiListCheck, RiFolderMusicLine, RiBriefcaseLine, 
   RiUpload2Line, RiSparklingLine, RiGlobalLine, RiCheckDoubleLine, 
