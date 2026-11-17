@@ -3169,3 +3169,22 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - **Creator Onboarding Wizard (`apps/portal/src/components/phase3.jsx`)**: Added a dedicated mandatory Legal Agreement step (`agreed_terms` and `agreed_privacy`) in `OnboardingWizardModal`. Displays interactive review cards, full-policy in-modal reading dialog (`viewingPolicyKey`) allowing users to read the full policy text without leaving their onboarding state, and disables the completion button until both policies are explicitly confirmed.
   - **Listener Onboarding (`apps/portal/src/components/common/OnboardingTasteModal.jsx`, `apps/tunestream/src/components/common/OnboardingTasteModal.jsx`)**: Required acceptance of Terms and Privacy before saving taste preferences and generating tailored listener mixes.
   - **User Registration (`RegisterView.jsx` across `portal`, `tunestream`, and `syncmavens`)**: Embedded required Terms of Service and Privacy Policy checkboxes and server/client validation blocking account creation until confirmed.
+
+### 9.44.58 Phase 17: Production Deployment Synchronization, Multi-Domain Legal Pre-Rendering & Service Worker Cache Invalidation
+
+- **Service Worker Cache Invalidation & Network-First Strategy (`apps/tunestream/public/sw.js` & `apps/tunestream/index.html`)**:
+  - Identified root cause of stale production views on `tunestream.co`: the previous Service Worker (`tunestream-cache-v1`) was using a strict cache-first strategy on the root navigation route `/`, serving cached stale application bundles indefinitely.
+  - Upgraded Service Worker cache to `tunestream-cache-v3` with cache busting query parameter `/sw.js?v=3` in `index.html`.
+  - Configured **network-first strategy** for HTML documents, navigation requests, and `/api/` calls with fallback to cache, guaranteeing users immediately receive the latest deployed assets upon every visit.
+  - Configured proactive lifecycle management with `skipWaiting()` on install and `clients.claim()` on activate to instantly retire deprecated cache buckets.
+
+- **Multi-Domain Static SEO Pre-Rendering for Legal Suites (`scripts/prerender.js`)**:
+  - Extended automated pre-rendering engine to generate static semantic HTML for `/privacy`, `/terms`, `/cookies`, `/refund`, and `/legal` across all three platform workspaces: `tunemavens.com`, `tunestream.co`, and `syncmavens.com`.
+  - Pre-renders static directories (`privacy/index.html`, `terms/index.html`, `cookies/index.html`, `refund/index.html`, `legal/index.html`) directly into `public/` and `dist/`, eliminating 404 errors on direct navigation or browser refresh across CDNs, Render, and Nginx.
+  - Hardened `generate404Html` to strip unbundled development script references (`/src/main.jsx`), ensuring production error fallbacks remain clean and error-free.
+
+- **Blueprint Multi-Site Configuration (`render.yaml`)**:
+  - Configured static site service definitions and single-page application wildcard rewrites (`/* -> /index.html`) for `tunestream`, `tunemavens-portal`, and `syncmavens`.
+  - Verified atomic deployment scripts (`deploy/deploy.sh`) on Hostinger VPS and monorepo workspace builds (`npm run build:all`).
+  - All 4 test suites passing (40/40 tests: SEO rendering, landing page registry, shared identity, payment & credit integrity).
+
