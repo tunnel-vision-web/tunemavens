@@ -4324,16 +4324,16 @@ export function LandingFooter({ view }) {
             <div style={{ display: 'inline-block', textAlign: 'left' }}>
               <h4>Follow us</h4>
               <div className="footer-social">
-                <a className="sico instagram" onClick={() => alert('Instagram handle coming soon!')}>
+                <a className="sico instagram" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                 </a>
-                <a className="sico x" onClick={() => alert('X handle coming soon!')}>
+                <a className="sico x" href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X">
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
                 </a>
-                <a className="sico linkedin" onClick={() => alert('LinkedIn handle coming soon!')}>
+                <a className="sico linkedin" href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                 </a>
-                <a className="sico tiktok" onClick={() => alert('TikTok handle coming soon!')}>
+                <a className="sico tiktok" href="https://tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.2-.43-.43-.64-.67-.07 3.26-.03 6.52-.05 9.77-.04 1.83-.56 3.73-1.88 5.02-1.5 1.54-3.83 2.19-5.94 1.86-2.52-.39-4.71-2.45-5.14-4.96-.58-3.08 1.21-6.38 4.23-7.21.94-.27 1.95-.31 2.91-.18V12.18c-1.28-.21-2.65-.05-3.79.62-1.89 1.12-2.73 3.52-2.12 5.62.58 2.09 2.74 3.59 4.9 3.32 1.76-.2 3.27-1.53 3.65-3.26.17-.75.14-1.53.15-2.3V4.08C13.06 2.76 12.89 1.38 12.525.02z"></path></svg>
                 </a>
               </div>
@@ -4347,10 +4347,10 @@ export function LandingFooter({ view }) {
         {/* Footer Bottom */}
         <div className="footer-bottom">
           <div className="footer-bottom-links">
-            <a href="#privacy" className="fbl" onClick={() => alert('Privacy policy is synchronized with Intermaven.')}>Privacy Policy</a>
-            <a href="#terms" className="fbl" onClick={() => alert('Terms of service are synchronized with Intermaven.')}>Terms of Service</a>
-            <a href="#cookies" className="fbl" onClick={() => alert('Cookie policy is synchronized.')}>Cookie Policy</a>
-            <a href="#refund" className="fbl" onClick={() => alert('Refund policy is synchronized.')}>Refund Policy</a>
+            <Link to="/privacy" className="fbl">Privacy Policy</Link>
+            <Link to="/terms" className="fbl">Terms of Service</Link>
+            <Link to="/cookies" className="fbl">Cookie Policy</Link>
+            <Link to="/refund" className="fbl">Refund Policy</Link>
           </div>
           <a 
             href="https://intermaven.io" 
