@@ -3499,6 +3499,34 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Maintained midnight palette (`#060813`, `#090e24`, `#0b0f1e`), cyan accents (`#00f0ff`, `#22d3ee`), zero backdrop blur over content.
 - **Verification**: Built and verified across all workspaces (`portal`, `syncmavens`, `tunestream`) via `npm run build:all` with 0 errors.
 
+---
+
+### Phase 36 — Comprehensive Responsive Sidebar Architecture & Sovereign Admin Persona Menu Visibility (Shipped)
+- **Problem Statement**:
+  - On responsive viewports (tablets `<= 1024px` and mobile handhelds `<= 768px`), opening the sidebar did not display text labels, category headers, or profile information because `isIconMenu` was hard-bound as `collapsed || isTabletOrMobile`, permanently locking it in icon-only mode even when the user tapped to expand the drawer.
+  - The Admin persona had 15 core tools suppressed from the sidebar due to client-side marketplace activation filtering logic (`APP_SLUGS`), and lacked several administrative modules (`distribution-tracker`, `hosting-manager`, `pos-terminal`, `podcaster-episodes`, `podcaster-monetization`, `podcaster-guests`) in its navigation schema.
+  - SyncMavens and TuneStream exhibited identical icon-rail locking behavior and lacked tablet-to-mobile drawer expandability.
+- **Architectural Solutions & Changes**:
+  - **Decoupled Icon Menu from Viewport Dimensions (`apps/portal`, `apps/syncmavens`, `apps/tunestream`)**:
+    - Changed `const isIconMenu = collapsed;` and `const isMobileExpanded = isTabletOrMobile && !collapsed;`.
+    - When expanded on tablet or mobile, the sidebar transitions smoothly into the slide-out drawer (`.mobile-expanded`), displaying complete category headings, full navigation text labels, and profile cards.
+    - Updated floating hover tooltips to activate only when `isIconMenu` is `true` (avoiding overlap with visible text labels).
+  - **Sovereign Admin Persona Menu Visibility (`apps/portal/src/App.jsx`)**:
+    - Exemption from marketplace activation: Updated `getCategorizedMenu()` with `role !== 'admin'`, allowing platform administrators instant access to all core platform tools without manual activation steps.
+    - Expanded Admin `visibleKeys` to 41 comprehensive tools covering Admin, Catalog, IP, Ledgers, Distribution Radar, Live Commerce POS, Infrastructure Hosting, Broadcast Operations, and Podcaster Studios.
+    - Added missing infrastructure tools (`domain-mappings`, `hosting-manager`) to Corporate and Media House personas.
+  - **SyncMavens & TuneStream Cross-App Alignment (`apps/syncmavens`, `apps/tunestream`)**:
+    - Synchronized `isIconMenu` and `isMobileExpanded` states across SyncMavens and TuneStream.
+    - Provided Admin persona dual visibility in SyncMavens to author sync briefs and inspect sync-ready vaults as well as manage catalogs and active pitches.
+    - Standardized nav item click dismissals to close the drawer automatically across tablet and mobile viewports (`if (isTabletOrMobile) setCollapsed(true);`).
+  - **CSS Responsive Engine (`App.css` across all workspaces)**:
+    - Updated tablet (`max-width: 1024px`) and mobile (`max-width: 768px`) queries to target `.dashboard-sidebar.collapsed:not(.mobile-expanded)` for the slim icon rail (54px / 52px).
+    - Enabled smooth vertical touch scrolling (`-webkit-overflow-scrolling: touch !important; overflow-y: auto !important;`) on both collapsed icon rail and expanded mobile drawer (`.mobile-expanded`).
+    - Added dedicated flex-column rules with `height: 100dvh` and `overflow-y: auto` for `.mobile-expanded` at `<= 1024px`.
+- **Verification**:
+  - Validated menu schema for all 11 personas (`admin`, `creator`, `label`, `vc`, `investor`, `corporate`, `media_house`, `dj`, `studio`, `podcaster`, `consumer`, `affiliate`) with 0 missing item keys.
+  - Full multi-workspace build (`npm run build:all`) succeeded with zero errors.
+
 
 
 

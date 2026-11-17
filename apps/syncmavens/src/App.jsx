@@ -236,14 +236,14 @@ function AppContent() {
 
   const isTabletOrMobile = windowWidth <= 1024;
   const isMobile = windowWidth <= 768;
-  const isIconMenu = collapsed || isTabletOrMobile;
-  const isMobileExpanded = isMobile && !collapsed;
+  const isIconMenu = collapsed;
+  const isMobileExpanded = isTabletOrMobile && !collapsed;
 
   // Futuristic Floating Tooltip for Icon Menu Mode
   const [hoveredNavItem, setHoveredNavItem] = useState(null);
 
   const handleNavItemMouseEnter = (id, item, e) => {
-    if (!isIconMenu && !isTabletOrMobile) return;
+    if (!isIconMenu) return;
     if (!e || !e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const category = item?.category || 'SyncMavens';
@@ -270,7 +270,7 @@ function AppContent() {
   };
 
   const renderHoverTooltip = () => {
-    if ((!isIconMenu && !isTabletOrMobile) || !hoveredNavItem) return null;
+    if (!isIconMenu || !hoveredNavItem) return null;
     return (
       <div 
         className="sidebar-collapsed-tooltip"
@@ -998,14 +998,14 @@ function AppContent() {
                 </div>
               )}
               <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
-                {userRole === 'supervisor' ? (
+                {(userRole === 'supervisor' || userRole === 'admin') && (
                   <>
                     <li>
                       <button 
                         onClick={() => {
                           setActiveTab('briefs_mgmt');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('briefs_mgmt', { label: 'Create Sync Brief', category: 'Operations', desc: 'Author and deploy sync licensing briefs' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1021,7 +1021,7 @@ function AppContent() {
                         onClick={() => {
                           setActiveTab('sync_ready_vault');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('sync_ready_vault', { label: 'Sync-Ready Vault', category: 'Operations', desc: 'Browse pre-cleared tracks and master stems' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1033,14 +1033,15 @@ function AppContent() {
                       </button>
                     </li>
                   </>
-                ) : (
+                )}
+                {(userRole !== 'supervisor') && (
                   <>
                     <li>
                       <button 
                         onClick={() => {
                           setActiveTab('briefs');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('briefs', { label: 'Active Briefs', category: 'Operations', desc: 'View open sync licensing briefs from film/TV supervisors' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1056,7 +1057,7 @@ function AppContent() {
                         onClick={() => {
                           setActiveTab('catalog');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('catalog', { label: 'My Catalog', category: 'Operations', desc: 'Manage your sovereign catalog and metadata' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1072,7 +1073,7 @@ function AppContent() {
                         onClick={() => {
                           setActiveTab('dashboard_publishing');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('dashboard_publishing', { label: 'Music Publishing', category: 'Operations', desc: 'Publishing rights, PRO registration and splits' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1088,7 +1089,7 @@ function AppContent() {
                         onClick={() => {
                           setActiveTab('dashboard_youtube');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('dashboard_youtube', { label: 'YouTube Content ID', category: 'Operations', desc: 'Monetize and protect digital audio fingerprinting' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1111,14 +1112,14 @@ function AppContent() {
                 </div>
               )}
               <ul className="dashboard-nav-list" style={{ gap: '4px' }}>
-                {userRole === 'supervisor' ? (
+                {(userRole === 'supervisor' || userRole === 'admin') && (
                   <>
                     <li>
                       <button 
                         onClick={() => {
                           setActiveTab('pitches_received');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('pitches_received', { label: 'Pitches Received', category: 'Transactions', desc: 'Incoming music sync submissions from artists and labels' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1134,7 +1135,7 @@ function AppContent() {
                         onClick={() => {
                           setActiveTab('contracts');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('contracts', { label: 'MyContracts & Escrow', category: 'Transactions', desc: 'Smart legal contracts and sovereign escrow disbursements' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1146,14 +1147,15 @@ function AppContent() {
                       </button>
                     </li>
                   </>
-                ) : (
+                )}
+                {(userRole !== 'supervisor') && (
                   <>
                     <li>
                       <button 
                         onClick={() => {
                           setActiveTab('pitches');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('pitches', { label: 'My Pitches', category: 'Transactions', desc: 'Active sync submissions to production houses and studios' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1169,7 +1171,7 @@ function AppContent() {
                         onClick={() => {
                           setActiveTab('ledger');
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter('ledger', { label: 'Deal Ledger', category: 'Transactions', desc: 'Sync licensing deal accounting and payment records' }, e)}
                         onMouseLeave={handleNavItemMouseLeave}
@@ -1197,7 +1199,7 @@ function AppContent() {
                     onClick={() => {
                       setActiveTab('splits');
                       setHoveredNavItem(null);
-                      if (isMobile) setCollapsed(true);
+                      if (isTabletOrMobile) setCollapsed(true);
                     }} 
                     onMouseEnter={(e) => handleNavItemMouseEnter('splits', { label: 'TuneLedger Splits', category: 'Governance & Splits', desc: 'Automated multi-party royalty and sync split cascade' }, e)}
                     onMouseLeave={handleNavItemMouseLeave}
@@ -1213,7 +1215,7 @@ function AppContent() {
                     onClick={() => {
                       setActiveTab('affiliates');
                       setHoveredNavItem(null);
-                      if (isMobile) setCollapsed(true);
+                      if (isTabletOrMobile) setCollapsed(true);
                     }} 
                     onMouseEnter={(e) => handleNavItemMouseEnter('affiliates', { label: 'Affiliate Hub', category: 'Governance & Splits', desc: 'Partner links, commission tracking, and payout ledger' }, e)}
                     onMouseLeave={handleNavItemMouseLeave}
@@ -1229,7 +1231,7 @@ function AppContent() {
                     onClick={() => {
                       setActiveTab('contracts');
                       setHoveredNavItem(null);
-                      if (isMobile) setCollapsed(true);
+                      if (isTabletOrMobile) setCollapsed(true);
                     }} 
                     onMouseEnter={(e) => handleNavItemMouseEnter('contracts', { label: 'MyContracts', category: 'Governance & Splits', desc: 'Smart legal vault and executed licensing agreements' }, e)}
                     onMouseLeave={handleNavItemMouseLeave}
@@ -1246,7 +1248,7 @@ function AppContent() {
                       onClick={() => {
                         setActiveTab('label-team');
                         setHoveredNavItem(null);
-                        if (isMobile) setCollapsed(true);
+                        if (isTabletOrMobile) setCollapsed(true);
                       }} 
                       onMouseEnter={(e) => handleNavItemMouseEnter('label-team', { label: 'Label Roster', category: 'Governance & Splits', desc: 'Roster artists, team management, and signing privileges' }, e)}
                       onMouseLeave={handleNavItemMouseLeave}
@@ -1264,7 +1266,7 @@ function AppContent() {
                       onClick={() => {
                         setActiveTab('admin-team');
                         setHoveredNavItem(null);
-                        if (isMobile) setCollapsed(true);
+                        if (isTabletOrMobile) setCollapsed(true);
                       }} 
                       onMouseEnter={(e) => handleNavItemMouseEnter('admin-team', { label: 'Admin Team Seats', category: 'Governance & Splits', desc: 'Configure platform administration team seats and RBAC' }, e)}
                       onMouseLeave={handleNavItemMouseLeave}
@@ -1281,7 +1283,7 @@ function AppContent() {
                     onClick={() => {
                       setActiveTab('support');
                       setHoveredNavItem(null);
-                      if (isMobile) setCollapsed(true);
+                      if (isTabletOrMobile) setCollapsed(true);
                     }} 
                     onMouseEnter={(e) => handleNavItemMouseEnter('support', { label: 'Support Desk', category: 'Governance & Splits', desc: 'Disputes, licensing support, and community tickets' }, e)}
                     onMouseLeave={handleNavItemMouseLeave}
@@ -1307,7 +1309,7 @@ function AppContent() {
                     onClick={() => {
                       setActiveTab('app_marketplace');
                       setHoveredNavItem(null);
-                      if (isMobile) setCollapsed(true);
+                      if (isTabletOrMobile) setCollapsed(true);
                     }} 
                     onMouseEnter={(e) => handleNavItemMouseEnter('app_marketplace', { label: 'App Marketplace', category: 'Ecosystem Admin', desc: 'Browse and activate modular apps across the suite' }, e)}
                     onMouseLeave={handleNavItemMouseLeave}
@@ -1323,7 +1325,7 @@ function AppContent() {
                     onClick={() => {
                       setActiveTab('domain_mappings');
                       setHoveredNavItem(null);
-                      if (isMobile) setCollapsed(true);
+                      if (isTabletOrMobile) setCollapsed(true);
                     }} 
                     onMouseEnter={(e) => handleNavItemMouseEnter('domain_mappings', { label: 'Domain Mappings', category: 'Ecosystem Admin', desc: 'Manage custom CNAME domains and routing' }, e)}
                     onMouseLeave={handleNavItemMouseLeave}
@@ -1339,7 +1341,7 @@ function AppContent() {
                     onClick={() => {
                       setActiveTab('promoted_acts');
                       setHoveredNavItem(null);
-                      if (isMobile) setCollapsed(true);
+                      if (isTabletOrMobile) setCollapsed(true);
                     }} 
                     onMouseEnter={(e) => handleNavItemMouseEnter('promoted_acts', { label: 'Promoted Acts', category: 'Ecosystem Admin', desc: 'Promoted artist placements and campaign analytics' }, e)}
                     onMouseLeave={handleNavItemMouseLeave}

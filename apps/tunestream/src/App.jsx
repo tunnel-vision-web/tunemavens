@@ -3661,14 +3661,14 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
 
   const isTabletOrMobile = windowWidth <= 1024;
   const isMobile = windowWidth <= 768;
-  const isIconMenu = collapsed || isTabletOrMobile;
-  const isMobileExpanded = isMobile && !collapsed;
+  const isIconMenu = collapsed;
+  const isMobileExpanded = isTabletOrMobile && !collapsed;
 
   // Futuristic Floating Tooltip for Icon Menu Mode
   const [hoveredNavItem, setHoveredNavItem] = useState(null);
 
   const handleNavItemMouseEnter = (id, item, e) => {
-    if (!isIconMenu && !isTabletOrMobile) return;
+    if (!isIconMenu) return;
     if (!e || !e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const category = item?.category || 'TuneStream';
@@ -3695,7 +3695,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
   };
 
   const renderHoverTooltip = () => {
-    if ((!isIconMenu && !isTabletOrMobile) || !hoveredNavItem) return null;
+    if (!isIconMenu || !hoveredNavItem) return null;
     return (
       <div 
         className="sidebar-collapsed-tooltip"
@@ -4610,7 +4610,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
                       onClick={() => {
                         setActiveTab(item.id);
                         setHoveredNavItem(null);
-                        if (isMobile) setCollapsed(true);
+                        if (isTabletOrMobile) setCollapsed(true);
                       }}
                       onMouseEnter={(e) => handleNavItemMouseEnter(item.id, { label: item.label, category, desc: `${item.label} in TuneStream` }, e)}
                       onMouseLeave={handleNavItemMouseLeave}
@@ -4641,7 +4641,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
             onClick={() => {
               setActiveTab('explore');
               setHoveredNavItem(null);
-              if (isMobile) setCollapsed(true);
+              if (isTabletOrMobile) setCollapsed(true);
             }}
             onMouseEnter={(e) => handleNavItemMouseEnter('explore-cta', { label: 'TuneStream Explore', category: 'Navigation', desc: 'Browse the 24-bit lossless streaming catalogue' }, e)}
             onMouseLeave={handleNavItemMouseLeave}

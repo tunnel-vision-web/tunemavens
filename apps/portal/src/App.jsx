@@ -1804,11 +1804,11 @@ function DashboardView({
   const isTabletOrMobile = windowWidth <= 1024;
   const isMobile = windowWidth <= 768;
   // Sidecar automatically switches to icon menu mode on tablet/mobile OR when manually collapsed
-  const isIconMenu = collapsed || isTabletOrMobile;
-  const isMobileExpanded = isMobile && !collapsed;
+  const isIconMenu = collapsed;
+  const isMobileExpanded = isTabletOrMobile && !collapsed;
 
   const handleNavItemMouseEnter = (id, fallbackItem, e) => {
-    if (!isIconMenu && !isTabletOrMobile) return;
+    if (!isIconMenu) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const descObj = NAV_ITEM_DESCRIPTIONS[id] || {};
     const category = descObj.category || fallbackItem?.category || 'Workspace';
@@ -1836,7 +1836,7 @@ function DashboardView({
   };
 
   const renderHoverTooltip = () => {
-    if ((!isIconMenu && !isTabletOrMobile) || !hoveredNavItem) return null;
+    if (!isIconMenu || !hoveredNavItem) return null;
     return (
       <div 
         className="sidebar-collapsed-tooltip"
@@ -2489,7 +2489,7 @@ function DashboardView({
     let visibleKeys = [];
     switch (role) {
       case 'admin':
-        visibleKeys = ['home', 'backend-admin', 'dj-mixes', 'djpool', 'admin-team', 'media-house', 'podcaster-studio', 'podcaster-epk', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'profile', 'support', 'label-team', 'catalogue-acquisitions'];
+        visibleKeys = ['home', 'backend-admin', 'dj-mixes', 'djpool', 'admin-team', 'media-house', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'support', 'label-team', 'catalogue-acquisitions'];
         break;
       case 'affiliate':
         visibleKeys = ['home', 'affiliates', 'dj-mixes', 'inbox', 'splits', 'library', 'tips', 'profile', 'support'];
@@ -2499,11 +2499,11 @@ function DashboardView({
         visibleKeys = ['home', 'vc-discover', 'tours-vault', 'vc-portfolio', 'vc-sponsorship', 'inbox', 'splits', 'crm', 'escrow', 'profile', 'support'];
         break;
       case 'corporate':
-        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support'];
         break;
       case 'media_house':
       case 'media':
-        visibleKeys = ['home', 'media-house', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'media-house', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support'];
         break;
       case 'label':
         visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'catalogue-acquisitions', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
@@ -2548,8 +2548,8 @@ function DashboardView({
 
     const categories = {};
     visibleKeys.forEach(k => {
-      // Check if this tab is a marketplace app, and if so, only show if activated (CRM and Corporate Ads are always available).
-      if (role !== 'consumer' && APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads' && k !== 'pos-terminal' && k !== 'distribution-tracker' && k !== 'hosting-manager') {
+      // Check if this tab is a marketplace app, and if so, only show if activated (CRM and Corporate Ads are always available). Admin sees all platform apps sovereignly.
+      if (role !== 'consumer' && role !== 'admin' && APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads' && k !== 'pos-terminal' && k !== 'distribution-tracker' && k !== 'hosting-manager') {
         const activeApps = sessionUser?.apps || getStoredActivatedApps(sessionUser) || [];
         if (!activeApps.includes(APP_SLUGS[k])) {
           return;
@@ -2717,7 +2717,7 @@ function DashboardView({
                           onClick={() => {
                             setActiveTab(item.id);
                             setHoveredNavItem(null);
-                            if (isMobile) setCollapsed(true);
+                            if (isTabletOrMobile) setCollapsed(true);
                           }}
                           data-tour={`nav-${item.id}`}
                           data-tab={item.id}
@@ -3184,7 +3184,7 @@ function DashboardView({
                           }
                           setActiveTab(item.id);
                           setHoveredNavItem(null);
-                          if (isMobile) setCollapsed(true);
+                          if (isTabletOrMobile) setCollapsed(true);
                         }} 
                         onMouseEnter={(e) => handleNavItemMouseEnter(item.id, item, e)}
                         onMouseLeave={handleNavItemMouseLeave}

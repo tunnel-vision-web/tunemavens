@@ -2963,23 +2963,29 @@ button.dropdown-trigger:focus-visible {
 }
 
 @media (max-width: 1024px) {
-  .dashboard-sidebar:not(.mobile-expanded) {
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) {
     width: 54px !important;
     min-width: 54px !important;
     padding: 14px 4px !important;
   }
 
-  .dashboard-sidebar:not(.mobile-expanded) .dashboard-sidebar-header {
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .dashboard-sidebar-scroll {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .dashboard-sidebar-header {
     justify-content: center !important;
     padding-bottom: 10px !important;
     margin-bottom: 10px !important;
   }
 
-  .dashboard-sidebar:not(.mobile-expanded) .collapse-toggle-btn {
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .collapse-toggle-btn {
     display: none !important;
   }
 
-  .dashboard-sidebar:not(.mobile-expanded) .dashboard-nav-item {
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .dashboard-nav-item {
     width: 38px !important;
     height: 38px !important;
     padding: 0 !important;
@@ -2991,13 +2997,65 @@ button.dropdown-trigger:focus-visible {
     gap: 0 !important;
   }
 
-  .dashboard-sidebar:not(.mobile-expanded) .sidebar-category-group > div:first-child,
-  .dashboard-sidebar:not(.mobile-expanded) .dashboard-profile-info {
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .sidebar-category-group > div:first-child,
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .dashboard-profile-info {
     display: none !important;
   }
 
-  .dashboard-sidebar:not(.mobile-expanded) .dashboard-profile-card {
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .dashboard-profile-card {
     justify-content: center !important;
+  }
+
+  /* Slide-out mobile drawer on tablet/mobile when expanded */
+  .dashboard-sidebar.mobile-expanded {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    max-width: 85vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 16px 14px !important;
+    z-index: 2005 !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(34, 211, 238, 0.25) !important;
+    animation: sidebarDrawerSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+    background: #0b0f1e !important;
+  }
+
+  .dashboard-sidebar.mobile-expanded .dashboard-sidebar-scroll {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 24px !important;
+  }
+
+  .dashboard-sidebar.mobile-expanded .dashboard-nav-item {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 38px !important;
+    justify-content: flex-start !important;
+    padding: 9px 12px !important;
+    margin: 2px 0 !important;
+    gap: 11px !important;
+    text-align: left !important;
+    border-radius: 3px !important;
+  }
+
+  .dashboard-sidebar.mobile-expanded .sidebar-category-group > div:first-child,
+  .dashboard-sidebar.mobile-expanded .dashboard-profile-info {
+    display: block !important;
+  }
+
+  .dashboard-sidebar.mobile-expanded .dashboard-profile-card {
+    justify-content: flex-start !important;
   }
 
   .dashboard-main-scroll {
@@ -3183,7 +3241,7 @@ button.dropdown-trigger:focus-visible {
 }
 
 @media (max-width: 768px) {
-  .dashboard-sidebar:not(.mobile-expanded) {
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) {
     width: 52px !important;
     min-width: 52px !important;
     padding: 10px 3px !important;
@@ -3191,7 +3249,13 @@ button.dropdown-trigger:focus-visible {
     flex-shrink: 0 !important;
   }
 
-  .dashboard-sidebar:not(.mobile-expanded) .dashboard-nav-item {
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .dashboard-sidebar-scroll {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .dashboard-sidebar.collapsed:not(.mobile-expanded) .dashboard-nav-item {
     width: 36px !important;
     height: 36px !important;
     padding: 0 !important;
@@ -3207,11 +3271,29 @@ button.dropdown-trigger:focus-visible {
     left: 0 !important;
     top: 0 !important;
     bottom: 0 !important;
-    width: 260px !important;
-    padding: 24px 16px !important;
+    width: 280px !important;
+    max-width: 85vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 16px 14px !important;
     z-index: 2005 !important;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(34, 211, 238, 0.25) !important;
     animation: sidebarDrawerSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+    background: #0b0f1e !important;
+  }
+
+  .dashboard-sidebar.mobile-expanded .dashboard-sidebar-scroll {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 24px !important;
   }
 
   @keyframes sidebarDrawerSlide {
@@ -3220,9 +3302,15 @@ button.dropdown-trigger:focus-visible {
   }
 
   .dashboard-sidebar.mobile-expanded .dashboard-nav-item {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 38px !important;
     justify-content: flex-start !important;
-    padding: 10px 12px !important;
+    padding: 9px 12px !important;
+    margin: 2px 0 !important;
     gap: 11px !important;
+    text-align: left !important;
+    border-radius: 3px !important;
   }
 
   .dashboard-sidebar.mobile-expanded .sidebar-category-group > div:first-child,
