@@ -944,12 +944,24 @@ class PodcastEpisodeCreateRequest(BaseModel):
 
 
 class GuestBookingCreateRequest(BaseModel):
-    guestName: str
-    guestEmail: str
-    inquiryType: str = "guest_pitch"  # 'guest_pitch' | 'sponsorship' | 'speaking'
-    companyOrArtistName: Optional[str] = ""
-    proposedTopic: str
-    proposedBudgetCredits: Optional[int] = 0
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+    guestName: Optional[str] = Field(None, alias="guest_name")
+    guestEmail: Optional[str] = Field(None, alias="guest_email")
+    inquiryType: Optional[str] = Field("guest_pitch", alias="inquiry_type")
+    companyOrArtistName: Optional[str] = Field("", alias="company_or_artist_name")
+    proposedTopic: Optional[str] = Field("", alias="proposed_topic")
+    proposedBudgetCredits: Optional[int] = Field(0, alias="budget_credits")
+
+
+class PodcastTipRequest(BaseModel):
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+    amount_credits: Optional[int] = Field(None, alias="credits")
+    amount_currency: Optional[float] = Field(None, alias="amount")
+    currency: Optional[str] = "USD"
+    payment_method: Optional[str] = "credits"
+    episode_id: Optional[str] = Field(None, alias="track_id")
+    message: Optional[str] = None
+    idempotency_key: Optional[str] = None
 
 
 @router.get("")
@@ -1206,15 +1218,21 @@ def publish_podcast_episode(slug: str, payload: PodcastEpisodeCreateRequest):
 def submit_guest_or_sponsor_booking(slug: str, payload: GuestBookingCreateRequest):
     """Submit a guest appearance pitch or corporate sponsorship booking from a Podcaster EPK."""
     clean = slug.lower().strip()
+    guest_name = (payload.guestName or getattr(payload, "guest_name", "") or "Guest Applicant").strip()
+    guest_email = (payload.guestEmail or getattr(payload, "guest_email", "") or "").strip()
+    proposed_topic = (payload.proposedTopic or getattr(payload, "proposed_topic", "") or getattr(payload, "topic_pitch", "") or "Guest appearance discussion").strip()
+    inquiry_type = payload.inquiryType or getattr(payload, "inquiry_type", "guest_pitch")
+    company = payload.companyOrArtistName or getattr(payload, "company_or_artist_name", "") or getattr(payload, "guest_role", "")
+
     booking_doc = {
         "id": f"gb-{uuid.uuid4().hex[:6]}",
         "podcastSlug": clean,
-        "guestName": payload.guestName.strip(),
-        "guestEmail": payload.guestEmail.strip(),
-        "inquiryType": payload.inquiryType,
-        "companyOrArtistName": payload.companyOrArtistName,
-        "proposedTopic": payload.proposedTopic,
-        "proposedBudgetCredits": payload.proposedBudgetCredits or 0,
+        "guestName": guest_name,
+        "guestEmail": guest_email,
+        "inquiryType": inquiry_type,
+        "companyOrArtistName": company,
+        "proposedTopic": proposed_topic,
+        "proposedBudgetCredits": payload.proposedBudgetCredits or getattr(payload, "budget_credits", 0) or 0,
         "status": "pending",
         "createdAt": "Just now",
         "created_at": datetime.now(timezone.utc)
@@ -1224,11 +1242,104 @@ def submit_guest_or_sponsor_booking(slug: str, payload: GuestBookingCreateReques
         booking_doc.pop("_id", None)
     except Exception:
         pass
+
+    # Record communications CRM audit ledger entry
+    try:
+        db.communications.insert_one({
+            "id": f"COMM-GB-{uuid.uuid4().hex[:8].upper()}",
+            "type": "guest_booking_pitch",
+            "event_type": inquiry_type,
+            "channel": "crm_inbox",
+            "recipient_name": clean,
+            "recipient_email": f"{clean}@podcasts.tunemavens.com",
+            "sender_name": guest_name,
+            "sender_email": guest_email,
+            "subject": f"New Podcast Pitch/Booking Inquiry from {guest_name}",
+            "status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "metadata": booking_doc
+        })
+    except Exception:
+        pass
+
     return {
         "success": True,
         "booking": booking_doc,
         "message": "Your request has been sent directly to the Podcaster's Studio CRM & Booking Desk."
     }
+
+
+@router.post("/{slug}/tip")
+def tip_podcast_host(
+    slug: str,
+    payload: PodcastTipRequest,
+    request: Request,
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
+    """Direct fan tipping to podcaster and show collaborators (Spec §4 floor: Ksh 50+ / USD 1+)."""
+    clean_slug = slug.lower().strip()
+    show = db.podcasts.find_one({"$or": [{"slug": clean_slug}, {"id": clean_slug}]})
+    if not show:
+        for ds in DEFAULT_PODCAST_SHOWS:
+            if ds.get("slug") == clean_slug or ds.get("id") == clean_slug:
+                show = ds
+                break
+    if not show:
+        raise HTTPException(status_code=404, detail=f"Podcast show '{slug}' not found.")
+
+    if not current_user:
+        fan_email = request.headers.get("X-Fan-Email") or "listener-guest@tunestream.co"
+        fan_name = request.headers.get("X-Fan-Name") or "TuneStream Listener"
+        current_user = db.users.find_one({"email": fan_email})
+        if not current_user:
+            current_user = {
+                "email": fan_email,
+                "name": fan_name,
+                "role": "consumer",
+                "credits": 150,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            res = db.users.insert_one(current_user)
+            current_user["_id"] = res.inserted_id
+
+    is_kes = payload.currency == "KES"
+    min_floor = 50 if is_kes else 100
+
+    eff_credits = payload.amount_credits
+    if eff_credits is None:
+        if is_kes and payload.amount_currency:
+            eff_credits = int(payload.amount_currency)
+        elif payload.amount_currency:
+            eff_credits = int(payload.amount_currency * 100)
+        else:
+            eff_credits = min_floor
+
+    if eff_credits < min_floor:
+        eff_credits = min_floor
+
+    fan_balance = current_user.get("credits", 0)
+    if fan_balance < eff_credits:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient credit balance ({fan_balance} available, {eff_credits} needed). Please reload credits."
+        )
+
+    try:
+        from services.stream_service import tip_creator_with_credits
+        result = tip_creator_with_credits(
+            fan_user=current_user,
+            creator_id=clean_slug,
+            amount_credits=eff_credits,
+            track_id=payload.episode_id or clean_slug,
+            message=payload.message or f"Fan tip to {show.get('host')} ({show.get('title')})",
+            idempotency_key=payload.idempotency_key
+        )
+        result["show_title"] = show.get("title")
+        result["host"] = show.get("host")
+        result["splits"] = show.get("splits", [])
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{slug}/rss.xml")

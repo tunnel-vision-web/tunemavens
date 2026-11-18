@@ -542,7 +542,10 @@ export default function NativeAppLandingView({
   sessionUser = null, 
   onLogout = null,
   onPlayTrack = null,
-  onOpenPersonalization = null
+  onOpenPersonalization = null,
+  userCredits = 150,
+  setUserCredits = null,
+  onOpenCreditReload = null
 }) {
   const { slug: paramSlug } = useParams();
   const slug = paramSlug || 'tunestream';
@@ -3064,8 +3067,12 @@ export default function NativeAppLandingView({
       return (
         <PodcastStreamingHub
           sessionUser={sessionUser}
+          userCredits={userCredits}
+          setUserCredits={setUserCredits}
+          onOpenCreditReload={onOpenCreditReload}
           onPlayTrack={(track, queue) => handlePlaySong(track, queue)}
-          onNavigateToPodcasterStudio={() => navigate('/dashboard?role=podcaster&tab=podcaster-overview')}
+          onNavigateToPodcasterStudio={() => navigate('/dashboard?tab=podcaster-studio')}
+          onOpenPodcasterStudio={() => navigate('/dashboard?tab=podcaster-studio')}
         />
       );
     };

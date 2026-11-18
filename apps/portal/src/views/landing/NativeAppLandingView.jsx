@@ -506,7 +506,14 @@ function ExploreCustomDropdown({ label, value, options, onChange }) {
 }
 
 
-export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = [], sessionUser }) {
+export default function NativeAppLandingView({ 
+  creatorEpk = {}, 
+  catalogTracks = [], 
+  sessionUser,
+  userCredits = 150,
+  setUserCredits = null,
+  onOpenCreditReload = null
+}) {
   const { slug } = useParams();
   const normalizedSlug = (slug === 'tunestream' || slug === 'tunemavens') ? 'tunestream' : slug;
   const data = NATIVE_APP_LANDING_DATA[normalizedSlug];
@@ -2765,8 +2772,12 @@ export default function NativeAppLandingView({ creatorEpk = {}, catalogTracks = 
       return (
         <PodcastStreamingHub
           sessionUser={sessionUser}
+          userCredits={userCredits}
+          setUserCredits={setUserCredits}
+          onOpenCreditReload={onOpenCreditReload}
           onPlayTrack={(track, queue) => handlePlaySong(track, queue)}
-          onNavigateToPodcasterStudio={() => navigate('/dashboard?role=podcaster&tab=podcaster-overview')}
+          onNavigateToPodcasterStudio={() => navigate('/dashboard?tab=podcaster-studio')}
+          onOpenPodcasterStudio={() => navigate('/dashboard?tab=podcaster-studio')}
         />
       );
     };

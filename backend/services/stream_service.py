@@ -416,12 +416,41 @@ def tip_creator_with_credits(
         raise ValueError(f"Insufficient credit balance ({fan_balance} available, {amount_credits} needed).")
 
     # Resolve creator
+    creator = None
     try:
-        c_obj = ObjectId(creator_id)
+        creator = db.users.find_one({"_id": ObjectId(creator_id)})
     except Exception:
-        c_obj = creator_id
-
-    creator = db.users.find_one({"_id": c_obj})
+        pass
+    if not creator:
+        creator = db.users.find_one({"$or": [
+            {"_id": str(creator_id)},
+            {"email": str(creator_id)},
+            {"username": str(creator_id)},
+            {"name": str(creator_id)},
+            {"slug": str(creator_id)}
+        ]})
+    podcast = None
+    if not creator:
+        podcast = db.podcasts.find_one({"$or": [
+            {"slug": str(creator_id)},
+            {"id": str(creator_id)},
+            {"host": str(creator_id)},
+            {"title": str(creator_id)}
+        ]})
+        if podcast:
+            pod_email = f"{podcast.get('slug', 'host')}@podcasts.tunemavens.com"
+            creator = db.users.find_one({"email": pod_email})
+            if not creator:
+                creator_user = {
+                    "name": podcast.get("host") or podcast.get("title"),
+                    "email": pod_email,
+                    "role": "podcaster",
+                    "credits": 0,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "podcast_slug": podcast.get("slug")
+                }
+                res = db.users.insert_one(creator_user)
+                creator = db.users.find_one({"_id": res.inserted_id})
     if not creator:
         raise ValueError(f"Creator '{creator_id}' not found.")
 
@@ -462,6 +491,7 @@ def tip_creator_with_credits(
     )
 
     # 3. Save tip receipt record
+    receipt_token = f"TM-TIP-2026-{int(datetime.now(timezone.utc).timestamp() * 1000) % 100000:05d}"
     tip_doc = {
         "fan_id": str(fan_id),
         "fan_name": fan_user.get("name"),
@@ -472,19 +502,46 @@ def tip_creator_with_credits(
         "platform_fee_credits": fee_credits,
         "track_id": track_id,
         "message": message,
+        "receipt_token": receipt_token,
+        "splits": podcast.get("splits") if podcast else creator.get("splits", []),
         "fan_tx_id": str(fan_tx.get("ledger_entry", {}).get("_id")),
         "creator_tx_id": str(creator_tx.get("ledger_entry", {}).get("_id")),
         "timestamp": datetime.now(timezone.utc),
     }
     db.fan_tips.insert_one(tip_doc)
 
+    # 4. Communications Protocol Audit Vault Record
+    try:
+        import uuid as _uuid
+        db.communications.insert_one({
+            "id": f"COMM-TIP-{_uuid.uuid4().hex[:8].upper()}",
+            "type": "fan_tip_settlement",
+            "event_type": "fan_tip",
+            "channel": "receipt",
+            "recipient_name": creator.get("name", "Creator / Podcaster"),
+            "recipient_email": creator.get("email", "creator@tunemavens.com"),
+            "sender_name": fan_user.get("name", "TuneStream Listener"),
+            "sender_email": fan_user.get("email", "listener@tunestream.co"),
+            "subject": f"Direct Fan Tip Settled: {amount_credits} TM Credits to {creator.get('name')}",
+            "amount_credits": amount_credits,
+            "receipt_token": receipt_token,
+            "splits": podcast.get("splits") if podcast else [],
+            "status": "sent",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as comm_err:
+        logger.warning(f"Could not record comms audit for tip: {comm_err}")
+
     return {
         "ok": True,
         "tip_id": str(tip_doc["_id"]),
+        "receipt_token": receipt_token,
         "gross_credits": amount_credits,
         "creator_net_credits": creator_credits,
         "platform_fee_credits": fee_credits,
         "new_fan_balance": fan_tx.get("current_balance"),
+        "splits": podcast.get("splits") if podcast else [],
+        "creator_name": creator.get("name")
     }
 
 

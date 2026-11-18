@@ -852,10 +852,21 @@ export function PodcasterEpkModal({ show, onClose, onPlayEpisode }) {
     if (!guestForm.guest_name.trim() || !guestForm.guest_email.trim()) return;
     setBookingStatus('Submitting request to Podcaster Studio CRM...');
     try {
+      const payload = {
+        guestName: guestForm.guest_name,
+        guestEmail: guestForm.guest_email,
+        inquiryType: guestForm.proposed_tier === 'guest_pitch' ? 'guest_pitch' : 'sponsorship',
+        companyOrArtistName: guestForm.guest_role,
+        proposedTopic: guestForm.topic_pitch,
+        proposedBudgetCredits: guestForm.budget_credits || 0,
+        guest_name: guestForm.guest_name,
+        guest_email: guestForm.guest_email,
+        topic_pitch: guestForm.topic_pitch
+      };
       const res = await fetch(`/api/podcasts/${show.slug}/book-guest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(guestForm)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       setBookingStatus(data.message || `✓ Request sent to ${show.host}! Reference: ${data.booking?.id || 'POD-CRM-901'}`);
@@ -1059,7 +1070,8 @@ export function PodcasterEpkModal({ show, onClose, onPlayEpisode }) {
                 {rssCopied ? '✓ RSS Feed URL Copied!' : 'Copy RSS 2.0 Syndication Feed'}
               </button>
               <a
-                href={`#/epk/${show.subdomain || show.slug}`}
+                href={`#/epk/${show.subdomain || show.slug}?persona=podcaster`}
+                onClick={() => onClose && onClose()}
                 style={{
                   padding: '7px 14px',
                   background: 'rgba(0, 242, 254, 0.08)',
@@ -1369,7 +1381,7 @@ export function PodcasterEpkModal({ show, onClose, onPlayEpisode }) {
 }
 
 
-function PodcastEpisodesDrawerModal({ show, onClose, onPlayEpisode, onTipHost, formatPrice }) {
+function PodcastEpisodesDrawerModal({ show, onClose, onPlayEpisode, onTipHost, formatPrice, floorLabel }) {
   const [activeTranscriptEp, setActiveTranscriptEp] = useState(null);
 
   if (!show) return null;
@@ -1601,12 +1613,12 @@ function PodcastEpisodesDrawerModal({ show, onClose, onPlayEpisode, onTipHost, f
                   </button>
                   <button
                     type="button"
-                    onClick={() => onTipHost(show)}
+                    onClick={() => onTipHost(show, ep)}
                     style={{
                       padding: '7px 12px',
-                      background: 'rgba(255,255,255,0.05)',
-                      color: '#e2e8f0',
-                      border: '1px solid rgba(255,255,255,0.14)',
+                      background: 'rgba(245, 158, 11, 0.1)',
+                      color: '#f59e0b',
+                      border: '1px solid rgba(245, 158, 11, 0.3)',
                       borderRadius: '3px',
                       fontSize: '11px',
                       fontWeight: 700,
@@ -1617,7 +1629,7 @@ function PodcastEpisodesDrawerModal({ show, onClose, onPlayEpisode, onTipHost, f
                       gap: '5px'
                     }}
                   >
-                    <RiCoinsFill size={13} color="#f59e0b" /> Tip ({formatPrice(5)})
+                    <RiCoinsFill size={13} color="#f59e0b" /> Tip Host ({floorLabel || formatPrice(1)})
                   </button>
                 </div>
               </div>
@@ -1629,14 +1641,559 @@ function PodcastEpisodesDrawerModal({ show, onClose, onPlayEpisode, onTipHost, f
   );
 }
 
+export function TipPodcasterModal({
+  show,
+  episode,
+  onClose,
+  userCredits = 150,
+  setUserCredits,
+  onOpenCreditReload,
+  onTipSuccess,
+  formatPrice,
+  currencyInfo,
+  sessionUser
+}) {
+  const isKes = currencyInfo?.code === 'KES';
+  const floorCredits = isKes ? 50 : 100;
+  const floorPriceLabel = isKes ? 'KSh 50' : formatPrice(1.00);
+
+  const presets = isKes ? [
+    { credits: 50, label: 'KSh 50', desc: 'Floor (Minimum)' },
+    { credits: 250, label: 'KSh 250', desc: 'Appreciation' },
+    { credits: 500, label: 'KSh 500', desc: 'Supporter' },
+    { credits: 1000, label: 'KSh 1,000', desc: 'Superfan' }
+  ] : [
+    { credits: 100, label: formatPrice(1.00), desc: 'Floor (Minimum)' },
+    { credits: 250, label: formatPrice(2.50), desc: 'Appreciation' },
+    { credits: 500, label: formatPrice(5.00), desc: 'Supporter' },
+    { credits: 1000, label: formatPrice(10.00), desc: 'Superfan' }
+  ];
+
+  const [selectedCredits, setSelectedCredits] = useState(floorCredits);
+  const [customAmount, setCustomAmount] = useState('');
+  const [isCustom, setIsCustom] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorNotice, setErrorNotice] = useState('');
+  const [receiptData, setReceiptData] = useState(null);
+
+  if (!show) return null;
+
+  const effectiveCredits = isCustom ? (parseInt(customAmount, 10) || floorCredits) : selectedCredits;
+  const effectivePriceFormatted = isKes
+    ? `KSh ${effectiveCredits.toLocaleString()}`
+    : formatPrice(effectiveCredits / 100);
+
+  const hasSufficientCredits = (userCredits ?? 0) >= effectiveCredits;
+  const splits = show.splits && show.splits.length > 0 ? show.splits : [
+    { name: show.host, role: 'Lead Host', share: 100 }
+  ];
+
+  const netCreatorCredits = Math.round(effectiveCredits * 0.95);
+  const platformFeeCredits = effectiveCredits - netCreatorCredits;
+
+  const handleConfirmTip = async (e) => {
+    if (e) e.preventDefault();
+    if (effectiveCredits < floorCredits) {
+      setErrorNotice(`The minimum tip floor is ${floorCredits} Credits (${floorPriceLabel}).`);
+      return;
+    }
+    if (!hasSufficientCredits) {
+      if (typeof onOpenCreditReload === 'function') {
+        onOpenCreditReload('Top-Up Credits to Tip Podcast Hosts Directly');
+      } else {
+        window.dispatchEvent(new CustomEvent('tunestreamOpenReload'));
+      }
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorNotice('');
+
+    try {
+      const token = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('tunemavens_token')) ||
+                    (typeof localStorage !== 'undefined' && localStorage.getItem('tunemavens_token')) || '';
+      const activeUser = sessionUser || (typeof localStorage !== 'undefined' && JSON.parse(localStorage.getItem('tunemavens_user') || 'null'));
+
+      const payload = {
+        amount_credits: effectiveCredits,
+        amount_currency: isKes ? effectiveCredits : (effectiveCredits / 100),
+        currency: currencyInfo?.code || 'USD',
+        payment_method: 'credits',
+        episode_id: episode?.id || show.slug,
+        message: message.trim() || `Fan tip to ${show.host} (${show.title})`
+      };
+
+      const res = await fetch(`/api/podcasts/${show.slug}/tip`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          'X-Fan-Email': activeUser?.email || 'listener@tunestream.co',
+          'X-Fan-Name': activeUser?.name || 'TuneStream Listener'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || 'Tip transaction could not be processed.');
+      }
+
+      const nextBal = data.new_fan_balance !== undefined
+        ? data.new_fan_balance
+        : Math.max(0, (userCredits ?? 0) - effectiveCredits);
+
+      if (typeof setUserCredits === 'function') {
+        setUserCredits(nextBal);
+      }
+      try {
+        localStorage.setItem('tunemavens_user_credits', String(nextBal));
+      } catch (_) {}
+
+      window.dispatchEvent(new CustomEvent('tunemavens-credits-reloaded', { detail: { newBalance: nextBal } }));
+      window.dispatchEvent(new CustomEvent('tunemavens-tip-sent', { detail: data }));
+
+      const receipt = {
+        receiptToken: data.receipt_token || `TM-TIP-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+        showTitle: show.title,
+        host: show.host,
+        credits: effectiveCredits,
+        priceFormatted: effectivePriceFormatted,
+        splits: data.splits || splits,
+        netCredits: data.creator_net_credits || netCreatorCredits,
+        feeCredits: data.platform_fee_credits || platformFeeCredits,
+        message: payload.message,
+        timestamp: new Date().toLocaleString()
+      };
+
+      setReceiptData(receipt);
+      if (typeof onTipSuccess === 'function') {
+        onTipSuccess(receipt);
+      }
+    } catch (err) {
+      setErrorNotice(err.message || 'Payment processing error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 10060,
+        background: 'rgba(2, 6, 18, 0.88)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget && !isSubmitting) onClose(); }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '560px',
+          background: '#070b1a',
+          border: '1px solid rgba(245, 158, 11, 0.4)',
+          borderRadius: '3px',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.9)',
+          color: '#f8fafc',
+          overflow: 'hidden'
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '20px 24px',
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(7, 11, 26, 0.98) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '3px',
+              background: 'rgba(245, 158, 11, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid rgba(245, 158, 11, 0.3)'
+            }}>
+              <RiCoinsFill size={22} color="#f59e0b" />
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                DIRECT PODCASTER TIPPING PROTOCOL
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: 0 }}>
+                {receiptData ? 'Tip Settlement Confirmed' : `Tip ${show.host}`}
+              </h3>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', padding: '4px' }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div style={{ padding: '24px' }}>
+          {receiptData ? (
+            /* Confirmed Receipt View */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <div style={{
+                padding: '16px',
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid #10b981',
+                borderRadius: '3px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <RiShieldCheckFill size={28} color="#10b981" />
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#34d399' }}>
+                    Dual-Rail Settlement Completed
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#a7f3d0' }}>
+                    Receipt Token: <strong>{receiptData.receiptToken}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '3px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                fontSize: '13px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}>
+                  <span>Recipient:</span>
+                  <strong style={{ color: '#fff' }}>{receiptData.host} ({receiptData.showTitle})</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}>
+                  <span>Gross Fan Tip:</span>
+                  <strong style={{ color: '#00f2fe' }}>{receiptData.credits} Credits ({receiptData.priceFormatted})</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}>
+                  <span>Creator Net (95%):</span>
+                  <span style={{ color: '#34d399' }}>{receiptData.netCredits} Credits</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}>
+                  <span>Platform Fee (5%):</span>
+                  <span style={{ color: '#64748b' }}>{receiptData.feeCredits} Credits</span>
+                </div>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', color: '#94a3b8' }}>
+                  <div style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
+                    Settled Split Cascade Distribution:
+                  </div>
+                  {receiptData.splits.map((s, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#cbd5e1', marginBottom: '2px' }}>
+                      <span>{s.name} ({s.role || 'Collaborator'} - {s.share}%):</span>
+                      <strong style={{ color: '#f59e0b' }}>
+                        {(receiptData.netCredits * (s.share / 100)).toFixed(1)} Credits
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ fontSize: '11.5px', color: '#64748b', textAlign: 'center' }}>
+                ✓ Verified communications audit receipt logged to the TuneMavens ecosystem vault.
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: '#10b981',
+                  color: '#040711',
+                  border: 'none',
+                  borderRadius: '3px',
+                  fontSize: '13px',
+                  fontWeight: 900,
+                  cursor: 'pointer'
+                }}
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            /* Tip Configuration Form */
+            <form onSubmit={handleConfirmTip} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {/* Floor Notice Banner */}
+              <div style={{
+                padding: '10px 14px',
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid rgba(245, 158, 11, 0.25)',
+                borderRadius: '3px',
+                fontSize: '12px',
+                color: '#fbbf24',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>Platform Minimum Floor: <strong>{floorPriceLabel} ({floorCredits} Credits)</strong></span>
+                <span style={{ fontSize: '11px', color: '#cbd5e1' }}>1 Credit = 1 KES = $0.01 USD</span>
+              </div>
+
+              {/* Tiers Grid */}
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
+                  Select Tip Tier
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {presets.map((preset) => {
+                    const isSelected = !isCustom && selectedCredits === preset.credits;
+                    return (
+                      <button
+                        key={preset.credits}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCredits(preset.credits);
+                          setIsCustom(false);
+                          setErrorNotice('');
+                        }}
+                        style={{
+                          padding: '12px',
+                          background: isSelected ? 'rgba(245, 158, 11, 0.18)' : 'rgba(255,255,255,0.03)',
+                          border: isSelected ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '3px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 800, color: isSelected ? '#fbbf24' : '#fff' }}>
+                            {preset.label}
+                          </span>
+                          <span style={{ fontSize: '11px', color: isSelected ? '#f59e0b' : '#64748b', fontWeight: 700 }}>
+                            {preset.credits} TM
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>{preset.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Custom Credits Option */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="number"
+                  min={floorCredits}
+                  step="10"
+                  placeholder={`Custom Credits (Min ${floorCredits})...`}
+                  value={customAmount}
+                  onFocus={() => setIsCustom(true)}
+                  onChange={(e) => {
+                    setCustomAmount(e.target.value);
+                    setIsCustom(true);
+                    setErrorNotice('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px 14px',
+                    background: '#050811',
+                    border: isCustom ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '3px',
+                    color: '#fff',
+                    fontSize: '13px'
+                  }}
+                />
+                {isCustom && (
+                  <span style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 700 }}>
+                    {effectivePriceFormatted}
+                  </span>
+                )}
+              </div>
+
+              {/* Shoutout Message */}
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+                  Fan Shoutout or Private Message (Optional)
+                </label>
+                <input
+                  type="text"
+                  maxLength={180}
+                  placeholder={`Keep up the great work, ${show.host.split('&')[0].trim()}!`}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    background: '#050811',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '3px',
+                    color: '#fff',
+                    fontSize: '13px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Split Cascade Breakdown */}
+              <div style={{
+                padding: '12px 14px',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: '3px',
+                fontSize: '12px'
+              }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
+                  Collaborator Split Cascade (95% Net):
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  {splits.map((s, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                      <span>{s.name} ({s.share}%):</span>
+                      <strong style={{ color: '#00f2fe' }}>
+                        {(netCreatorCredits * (s.share / 100)).toFixed(1)} Credits
+                      </strong>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '11px', marginTop: '4px' }}>
+                    <span>TuneMavens Protocol Fee (5%):</span>
+                    <span>{platformFeeCredits} Credits</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Balance & Reload Warning */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '10px 14px',
+                background: hasSufficientCredits ? 'rgba(0, 242, 254, 0.05)' : 'rgba(239, 68, 68, 0.12)',
+                border: hasSufficientCredits ? '1px solid rgba(0, 242, 254, 0.2)' : '1px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: '3px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>Available Balance</div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: hasSufficientCredits ? '#00f2fe' : '#ef4444' }}>
+                    {(userCredits ?? 0).toLocaleString()} Credits
+                  </div>
+                </div>
+
+                {!hasSufficientCredits && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      if (typeof onOpenCreditReload === 'function') {
+                        onOpenCreditReload('Top-Up Credits to Tip Podcast Hosts Directly');
+                      } else {
+                        window.dispatchEvent(new CustomEvent('tunestreamOpenReload'));
+                      }
+                    }}
+                    style={{
+                      padding: '8px 14px',
+                      background: '#ef4444',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '3px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    + Reload Credits
+                  </button>
+                )}
+              </div>
+
+              {errorNotice && (
+                <div style={{ fontSize: '12px', color: '#f87171', background: 'rgba(239, 68, 68, 0.1)', padding: '8px 12px', borderRadius: '3px' }}>
+                  {errorNotice}
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '3px',
+                    color: '#cbd5e1',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !hasSufficientCredits}
+                  style={{
+                    flex: 2,
+                    padding: '12px',
+                    background: hasSufficientCredits ? '#f59e0b' : '#334155',
+                    color: hasSufficientCredits ? '#040711' : '#94a3b8',
+                    border: 'none',
+                    borderRadius: '3px',
+                    fontSize: '13px',
+                    fontWeight: 900,
+                    cursor: hasSufficientCredits && !isSubmitting ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <RiCoinsFill size={16} />
+                  {isSubmitting ? 'Settling Direct Tip...' : `Confirm Tip (${effectivePriceFormatted} / ${effectiveCredits} Credits)`}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PodcastStreamingHub({
   onPlayTrack,
   userCredits = 150,
   setUserCredits,
   onOpenCreditReload,
-  onOpenPodcasterStudio
+  onOpenPodcasterStudio,
+  onNavigateToPodcasterStudio,
+  sessionUser
 }) {
   const { formatPrice, currencyInfo } = useRegion();
+  const isKes = currencyInfo?.code === 'KES';
+  const floorCredits = isKes ? 50 : 100;
+  const floorLabel = isKes ? 'KSh 50' : formatPrice(1.00);
+
   const [shows, setShows] = useState(AUTHORITATIVE_PODCAST_SHOWS);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1644,6 +2201,8 @@ export default function PodcastStreamingHub({
   const [activeEpkShow, setActiveEpkShow] = useState(null);
   const [activeDrawerShow, setActiveDrawerShow] = useState(null);
   const [activeTranscriptEp, setActiveTranscriptEp] = useState(null);
+  const [activeTipShow, setActiveTipShow] = useState(null);
+  const [activeTipEpisode, setActiveTipEpisode] = useState(null);
   const [tipNotice, setTipNotice] = useState('');
 
   useEffect(() => {
@@ -1719,24 +2278,9 @@ export default function PodcastStreamingHub({
     }));
   };
 
-  const handleTipPodcaster = (show) => {
-    const tipCredits = 50; // $5.00 USD base equivalent
-    const localizedTipValue = formatPrice(5);
-    if ((userCredits ?? 0) < tipCredits) {
-      if (typeof onOpenCreditReload === 'function') {
-        onOpenCreditReload('Top-Up Credits to Tip Podcast Hosts Directly');
-      } else {
-        window.dispatchEvent(new CustomEvent('tunestreamOpenReload'));
-      }
-      return;
-    }
-    if (typeof setUserCredits === 'function') {
-      const next = Math.max(0, userCredits - tipCredits);
-      setUserCredits(next);
-      try { localStorage.setItem('tunemavens_user_credits', String(next)); } catch (_) {}
-    }
-    setTipNotice(`✓ Tipped 50 TM Credits (${localizedTipValue}) directly to ${show.host} (${show.title}) — settled via Split Cascade (${(show.splits || []).map(s => `${s.name} ${s.share}%`).join(' / ')})!`);
-    setTimeout(() => setTipNotice(''), 5000);
+  const handleTipPodcaster = (show, episode = null) => {
+    setActiveTipShow(show);
+    setActiveTipEpisode(episode || null);
   };
 
   const spotlightShow = shows[0] || AUTHORITATIVE_PODCAST_SHOWS[0];
@@ -1870,7 +2414,7 @@ export default function PodcastStreamingHub({
                 gap: '6px'
               }}
             >
-              <RiCoinsFill size={15} color="#f59e0b" /> Tip Hosts ({formatPrice(5)} / 50 Credits)
+              <RiCoinsFill size={15} color="#f59e0b" /> Tip Hosts ({floorLabel} / {floorCredits} Credits)
             </button>
           </div>
         </div>
@@ -2179,9 +2723,9 @@ export default function PodcastStreamingHub({
                     onClick={() => handleTipPodcaster(show)}
                     style={{
                       padding: '8px 10px',
-                      background: 'rgba(255,255,255,0.05)',
-                      color: '#fff',
-                      border: '1px solid rgba(255,255,255,0.14)',
+                      background: 'rgba(245, 158, 11, 0.1)',
+                      color: '#f59e0b',
+                      border: '1px solid rgba(245, 158, 11, 0.35)',
                       borderRadius: '3px',
                       fontSize: '11px',
                       fontWeight: 700,
@@ -2192,7 +2736,7 @@ export default function PodcastStreamingHub({
                       gap: '5px'
                     }}
                   >
-                    <RiCoinsFill size={13} color="#f59e0b" /> Tip ({formatPrice(5)})
+                    <RiCoinsFill size={13} color="#f59e0b" /> Tip Host ({floorLabel})
                   </button>
                 </div>
 
@@ -2248,29 +2792,35 @@ export default function PodcastStreamingHub({
             Every podcaster on TuneMavens gets a customizable Podcaster EPK, automated -16 LUFS broadcast mastering, RSS 2.0 global syndication, and dynamic ad insertion starting at {formatPrice(AUTHORITATIVE_AD_RATES[0].price_usd)} ({formatPrice(AUTHORITATIVE_AD_RATES[0].cpm_usd)} CPM).
           </p>
         </div>
-        <a
-          href="/#/dashboard?tab=podcaster-studio"
+        <button
+          type="button"
           onClick={(e) => {
+            e.preventDefault();
             if (typeof onOpenPodcasterStudio === 'function') {
-              e.preventDefault();
               onOpenPodcasterStudio();
+            } else if (typeof onNavigateToPodcasterStudio === 'function') {
+              onNavigateToPodcasterStudio();
+            } else if (typeof window !== 'undefined') {
+              window.location.hash = '#/dashboard?tab=podcaster-studio';
             }
           }}
           style={{
             padding: '12px 22px',
             background: '#10b981',
             color: '#040711',
+            border: 'none',
             borderRadius: '3px',
             fontSize: '13px',
             fontWeight: 900,
             textDecoration: 'none',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            cursor: 'pointer'
           }}
         >
           <RiMicFill size={16} /> Open TuneMavens Podcaster Studio &rarr;
-        </a>
+        </button>
       </div>
 
       {/* Podcaster EPK Modal */}
@@ -2281,6 +2831,7 @@ export default function PodcastStreamingHub({
           onPlayEpisode={handlePlayPodcastEpisode}
           onTipHost={handleTipPodcaster}
           formatPrice={formatPrice}
+          floorLabel={floorLabel}
         />
       )}
 
@@ -2289,6 +2840,28 @@ export default function PodcastStreamingHub({
           show={activeEpkShow}
           onClose={() => setActiveEpkShow(null)}
           onPlayEpisode={handlePlayPodcastEpisode}
+        />
+      )}
+
+      {/* Direct Fan Tip Modal */}
+      {activeTipShow && (
+        <TipPodcasterModal
+          show={activeTipShow}
+          episode={activeTipEpisode}
+          onClose={() => {
+            setActiveTipShow(null);
+            setActiveTipEpisode(null);
+          }}
+          userCredits={userCredits}
+          setUserCredits={setUserCredits}
+          onOpenCreditReload={onOpenCreditReload}
+          onTipSuccess={(receipt) => {
+            setTipNotice(`✓ Tipped ${receipt.credits} TM Credits (${receipt.priceFormatted}) directly to ${receipt.host} (${receipt.showTitle}) — Receipt: ${receipt.receiptToken}`);
+            setTimeout(() => setTipNotice(''), 6000);
+          }}
+          formatPrice={formatPrice}
+          currencyInfo={currencyInfo}
+          sessionUser={sessionUser}
         />
       )}
     </div>

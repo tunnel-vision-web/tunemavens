@@ -276,6 +276,17 @@ function AppContent() {
     return () => window.removeEventListener('tunestreamOpenReload', handleOpenReload);
   }, []);
 
+  // Sync credits when reloaded anywhere across the ecosystem
+  useEffect(() => {
+    const handleCreditsReloaded = (e) => {
+      if (e.detail && e.detail.newBalance !== undefined) {
+        setUserCredits(e.detail.newBalance);
+      }
+    };
+    window.addEventListener('tunemavens-credits-reloaded', handleCreditsReloaded);
+    return () => window.removeEventListener('tunemavens-credits-reloaded', handleCreditsReloaded);
+  }, []);
+
   // Sync sessionUser credits
   useEffect(() => {
     if (sessionUser?.credits !== undefined) {
@@ -462,7 +473,20 @@ function AppContent() {
         }}
       >
         <Routes location={backgroundLocation}>
-          <Route path="/" element={<NativeAppLandingView sessionUser={sessionUser} onLogout={handleLogout} onPlayTrack={handlePlayGlobalTrack} onOpenPersonalization={() => setShowOnboardingModal(true)} />} />
+          <Route path="/" element={
+            <NativeAppLandingView 
+              sessionUser={sessionUser} 
+              onLogout={handleLogout} 
+              onPlayTrack={handlePlayGlobalTrack} 
+              onOpenPersonalization={() => setShowOnboardingModal(true)} 
+              userCredits={userCredits}
+              setUserCredits={setUserCredits}
+              onOpenCreditReload={(pack) => {
+                setReloadPackageInfo(pack ? { packName: typeof pack === 'string' ? pack : pack.packName } : null);
+                setShowCreditReloadModal(true);
+              }}
+            />
+          } />
           <Route path="/explore" element={<Navigate to="/?view=explore" replace />} />
           <Route path="/concerts" element={<Navigate to="/?view=tours" replace />} />
           <Route path="/events" element={<Navigate to="/?view=tours" replace />} />
@@ -602,6 +626,10 @@ function AppContent() {
         sessionUser={sessionUser}
         suggestedPackageId={reloadPackageInfo ? reloadPackageInfo.packName : null}
         reason={reloadPackageInfo ? `Top-Up ${reloadPackageInfo.packName}` : 'TuneStream Non-Expiring Credits'}
+        onCreditsUpdated={(newCredits) => {
+          setUserCredits(newCredits);
+          try { localStorage.setItem('tunemavens_user_credits', String(newCredits)); } catch (_) {}
+        }}
       />
     </div>
   );
@@ -3733,10 +3761,32 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     );
   };
 
-  const [activeTab, setActiveTab] = useState(initialTab || 'home');
+  const location = useLocation();
+  const getInitialActiveTab = () => {
+    try {
+      const searchParams = new URLSearchParams(location.search);
+      const urlTab = searchParams.get('tab') || (typeof window !== 'undefined' && new URLSearchParams(window.location.hash.split('?')[1] || '').get('tab'));
+      if (urlTab) return urlTab;
+    } catch (_) {}
+    return initialTab || 'home';
+  };
+  const [activeTab, setActiveTab] = useState(getInitialActiveTab);
+
   useEffect(() => {
-    if (initialTab) setActiveTab(initialTab);
-  }, [initialTab]);
+    try {
+      const searchParams = new URLSearchParams(location.search);
+      const urlTab = searchParams.get('tab') || (typeof window !== 'undefined' && new URLSearchParams(window.location.hash.split('?')[1] || '').get('tab'));
+      const urlRole = searchParams.get('role') || (typeof window !== 'undefined' && new URLSearchParams(window.location.hash.split('?')[1] || '').get('role'));
+      if (urlTab) {
+        setActiveTab(urlTab);
+        if (urlTab === 'podcaster-studio' || urlTab.startsWith('podcaster') || urlRole === 'podcaster') {
+          setUserRole('podcaster');
+        }
+      } else if (initialTab) {
+        setActiveTab(initialTab);
+      }
+    } catch (_) {}
+  }, [location.search, location.hash, initialTab]);
   const [globalSearch, setGlobalSearch] = useState('');
 
   const [userRole, setUserRole] = useState(() => localStorage.getItem('tunestream_user_role') || (sessionUser?.role || 'consumer'));
@@ -4235,7 +4285,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
       add('Tour Capital & Underwriting', { id: 'tours-vault', label: 'Tour Underwriting Vault', icon: RiFundsBoxFill, color: '#00f2fe', badge: 'IRR 24%' });
       add('Tour Capital & Underwriting', { id: 'vc-portfolio', label: 'Syndicate Portfolio', icon: RiLineChartFill, color: '#10b981' });
     }
-    if (userRole === 'podcaster') {
+    if (userRole === 'podcaster' || activeTab === 'podcaster-studio') {
       add('Podcaster Studio', { id: 'podcaster-studio', label: 'Podcaster Studio & EPK', icon: RiMicFill, color: '#ec4899', badge: 'STUDIO' });
     }
     add('Discover & Stream', { id: 'home', label: 'For You & Mixes', icon: RiHomeFill });

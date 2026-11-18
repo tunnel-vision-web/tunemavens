@@ -1543,6 +1543,9 @@ function DashboardView({
     if (['vc-portfolio', 'vc-sponsorship', 'tours-vault'].includes(initialTabQuery)) {
       return 'vc';
     }
+    if (['podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests'].includes(initialTabQuery)) {
+      return 'podcaster';
+    }
     if (initialTabQuery && !['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
       if (sessionUser?.role === 'consumer') {
         return 'creator';
@@ -10940,6 +10943,12 @@ function AppContent({
               creatorEpk={creatorEpk} 
               catalogTracks={catalogTracks} 
               sessionUser={sessionUser}
+              userCredits={activeUser?.credits ?? 150}
+              setUserCredits={(c) => {
+                if (sessionUser) setSessionUser(prev => prev ? ({ ...prev, credits: c }) : prev);
+                try { localStorage.setItem('tunemavens_user_credits', String(c)); } catch (_) {}
+              }}
+              onOpenCreditReload={() => setShowCreditReloadModal(true)}
             />
           } />
           <Route path="/explore" element={<Navigate to="/native-apps/tunestream?view=explore" replace />} />
