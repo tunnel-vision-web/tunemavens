@@ -3529,7 +3529,36 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
 
 ---
 
-### Phase 37 — DJ Mixes Free Promotional Streaming & Mandatory IP Owner Crediting Engine (Shipped)
+### Phase 38 — Live Payment Settlement Enforcement & Anti-Bypass Hardening (Shipped)
+- **Problem Statement & Vulnerability Remediation**:
+  - Previously, credit reload touchpoints across the platform were vulnerable to granting credits without deducting money:
+    1. **Card Reloads**: If Stripe was unconfigured or returned an error, the backend fell back to generating fake `CARD-XXXXXX` references and granted credits immediately. Additionally, card details were ignored in favor of a static `tok_visa` mock token, meaning the user's actual card was never tokenized or charged.
+    2. **M-Pesa STK Push**: When STK dispatch encountered gateway issues, mock `ws_CO_` checkout IDs were generated, and a client-facing *"Confirm PIN & Complete Reload"* simulation button triggered `/api/payments/mpesa/confirm-pin`, which minted fake `QG` receipts and deposited credits into user balances without verifying PIN entry on mobile handsets.
+- **Architectural Solutions & Changes**:
+  - **Daraja STK Push Query API Integration (`backend/services/daraja_service.py`)**:
+    - Added `query_stk_status(checkout_request_id: str)` to query Safaricom's official STK push query endpoint (`/mpesa/stkpushquery/v1/query`).
+    - Added disk-backed persistent OAuth token caching (`.daraja_token_cache.json`) to eliminate repeated OAuth round-trips and prevent Incapsula/Imperva WAF 403 rate-limiting on Safaricom's sandbox.
+    - Added browser client `User-Agent` headers and resilient error handling for Daraja API payloads.
+  - **Status Polling & Handset Verification (`backend/routes/payments_router.py`)**:
+    - Enhanced `/api/payments/mpesa/status/{checkout_id}`: when an STK push is pending, it queries Safaricom Daraja directly to confirm if the subscriber completed PIN authorization and if funds were deducted (`ResultCode == 0`).
+    - Explicit failure codes from Safaricom (`1032` canceled by user, `1037` timeout, `1` insufficient funds, `2001` wrong PIN) immediately transition the record to `status: "failed"` and report the failure reason.
+    - Hardened `/api/payments/mpesa/confirm-pin`: eliminated blind credit grants. Requires verified Daraja query confirmation (`ResultCode == 0`) before crediting `TuneLedger`.
+    - Removed mock fallback `ws_CO_` generation from `/api/payments/mpesa/stk-push`. Unsent or rejected STK prompts return `HTTP 502` with descriptive gateway messages.
+  - **Live Card Charging & Tokenization (`backend/routes/payments_router.py`)**:
+    - Enforced full card ingestion validation: 13–19 digit format check, MM/YY expiration parsing, and 3–4 digit CVC verification.
+    - Cards are tokenized using `stripe.Token.create` with real cardholder information and charged via `stripe.Charge.create`.
+    - If the Stripe gateway is unconfigured or returns a decline/card error, the endpoint returns `HTTP 503` or `HTTP 400`. **Zero credits are granted unless `charge.paid == True` and `charge.status == 'succeeded'`.**
+  - **Multi-Workspace Modal Hardening (`CreditReloadModal.jsx`)**:
+    - Updated across `apps/portal`, `apps/syncmavens`, and `apps/tunestream`.
+    - Removed mock simulation buttons and catch-block fallback credit grants.
+    - Implemented a live status polling UI with animated bank settlement indicators and real-time status check triggers that only finalize reloads when Safaricom or Stripe confirms completed payment deduction.
+- **Verification**:
+  - `backend/tests/test_payment_integrity.py`: 16 of 16 tests passing with zero discrepancies.
+  - Verified card requests without active Stripe gateway return `HTTP 503` with balance unchanged.
+  - Verified M-Pesa PIN confirm requests without handset payment return `HTTP 400` with balance unchanged.
+  - Full route verification suite `backend/tests/run_verification.py` passed with all routes operational.
+
+---
 - **Problem Statement & Business Directive**:
   - Previously, un-cleared DJ mixes displayed restrictive sales locks without distinguishing between commercial purchases and streaming access, creating friction for listeners and preventing prospective IP owners from auditioning their music in context.
   - Platform governance required an adjustment to DJ mixes logic:

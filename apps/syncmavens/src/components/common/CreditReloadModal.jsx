@@ -211,14 +211,9 @@ export default function CreditReloadModal({
           setStkData(data);
           setProcessingState('awaiting_pin');
         } else {
-          // Sandbox fallback if backend endpoint is unavailable
-          const mockCheckoutId = `ws_CO_${Date.now()}`;
-          setStkData({
-            CustomerMessage: `Success. Enter your M-Pesa PIN on handset ${cleanPhone} to reload ${activeCredits.toLocaleString()} credits.`,
-            CheckoutRequestID: mockCheckoutId,
-            receipt_number: `MPESA-${Math.floor(100000 + Math.random() * 900000)}`
-          });
-          setProcessingState('awaiting_pin');
+          const errData = await res.json().catch(() => ({}));
+          setErrorMessage(errData.detail || 'Failed to dispatch M-Pesa prompt. Please verify phone number.');
+          setProcessingState('idle');
         }
       } else {
         // Card rail settlement - charges card through backend
@@ -251,38 +246,37 @@ export default function CreditReloadModal({
         }
       }
     } catch (err) {
-      console.warn('Backend payment connection fallback:', err);
-      if (paymentMethod === 'mpesa') {
-        setStkData({
-          CustomerMessage: `Simulating M-Pesa prompt to ${cleanPhone}. Enter PIN to confirm KES ${activeKes.toLocaleString()}.`,
-          CheckoutRequestID: `ws_CO_MOCK_${Date.now()}`,
-          receipt_number: `MPESA-${Math.floor(100000 + Math.random() * 900000)}`
-        });
-        setProcessingState('awaiting_pin');
-      } else {
-        setErrorMessage('Unable to connect to card processing gateway. Please try again.');
-        setProcessingState('idle');
-      }
+      console.warn('Backend payment connection error:', err);
+      setErrorMessage(paymentMethod === 'mpesa' 
+        ? 'Unable to connect to M-Pesa STK push gateway. Please check phone number and retry.'
+        : (err?.message || 'Unable to connect to card processing gateway. Please try again.'));
+      setProcessingState('idle');
     }
   };
 
-  // Complete simulated or validated STK PIN prompt
-  const handleConfirmPinSimulation = async () => {
+  // Check live M-Pesa STK payment completion on Safaricom Daraja
+  const handleCheckMpesaStatus = async () => {
     setProcessingState('verifying');
     const chkId = stkData?.checkout_request_id || stkData?.CheckoutRequestID;
+    if (!chkId) {
+      setProcessingState('idle');
+      return;
+    }
     try {
-      const res = await fetch('/api/payments/mpesa/confirm-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ checkout_request_id: chkId, pin: '1234' })
-      });
+      const res = await fetch(`/api/payments/mpesa/status/${chkId}`);
       if (res.ok) {
         const data = await res.json();
-        finalizeReloadSuccess(data.receipt_number, data.new_balance);
-        return;
+        if (data.status === 'completed') {
+          finalizeReloadSuccess(data.mpesa_receipt || data.receipt_number, data.current_balance);
+          return;
+        } else if (data.status === 'failed') {
+          setProcessingState('idle');
+          setErrorMessage(data.result_desc || 'M-Pesa payment was cancelled or expired on handset.');
+          return;
+        }
       }
     } catch (_) {}
-    finalizeReloadSuccess(stkData?.receipt_number || `MPESA-${Math.floor(100000 + Math.random() * 900000)}`);
+    setProcessingState('awaiting_pin');
   };
 
   const finalizeReloadSuccess = (receiptNo, verifiedBalance = null) => {
@@ -624,7 +618,7 @@ export default function CreditReloadModal({
             </div>
           )}
 
-          {/* AWAITING M-PESA PIN HANDSET SIMULATION SCREEN */}
+          {/* AWAITING M-PESA PIN PROMPT SCREEN */}
           {processingState === 'awaiting_pin' && (
             <div style={{
               background: '#042f2e',
@@ -643,35 +637,43 @@ export default function CreditReloadModal({
                   M-Pesa STK Push Sent to Your Phone!
                 </h3>
                 <p style={{ fontSize: '13px', color: '#99f6e4', margin: '6px 0 0', maxWidth: '500px', lineHeight: 1.5 }}>
-                  {stkData?.CustomerMessage || `Please check your phone ${phoneNumber}. Enter your M-Pesa PIN to authorize payment of KES ${activeKes.toLocaleString()} to Paybill 891230 (TuneMavens Network).`}
+                  {stkData?.CustomerMessage || `Please check your phone ${phoneNumber}. Enter your M-Pesa PIN on your mobile handset to authorize payment of KES ${activeKes.toLocaleString()} to TuneMavens.`}
                 </p>
               </div>
 
-              {/* Handset Mock Screen Preview */}
+              {/* Status Polling Indicator */}
               <div style={{
                 background: '#0f172a',
-                border: '1px solid #334155',
+                border: '1px solid #14b8a6',
                 borderRadius: '8px',
                 padding: '16px',
-                maxWidth: '360px',
+                maxWidth: '380px',
                 width: '100%',
-                textAlign: 'left'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                alignItems: 'center'
               }}>
-                <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, marginBottom: '6px' }}>
-                  SIM TOOLKIT · M-PESA PROMPT
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00f0ff', fontSize: '12px', fontWeight: 700 }}>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#10b981',
+                    display: 'inline-block',
+                    boxShadow: '0 0 8px #10b981'
+                  }} />
+                  <span>Awaiting PIN Authorization &amp; Bank Settlement</span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#f1f5f9', lineHeight: 1.4 }}>
-                  Do you want to pay <strong>KES {activeKes.toLocaleString()}</strong> to <strong>TuneMavens Network</strong> (Acc: {selectedPackage.name.slice(0, 16)})?
-                </div>
-                <div style={{ marginTop: '10px', fontSize: '11px', color: '#94a3b8' }}>
-                  Enter PIN: <span style={{ color: '#00f0ff', letterSpacing: '4px' }}>••••</span>
+                <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.4 }}>
+                  Enter your PIN on your Safaricom mobile handset. Credits will be automatically added to your balance once Safaricom confirms your transaction.
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button
                   type="button"
-                  onClick={handleConfirmPinSimulation}
+                  onClick={handleCheckMpesaStatus}
                   style={{
                     background: '#00f0ff',
                     color: '#000000',
@@ -686,8 +688,8 @@ export default function CreditReloadModal({
                     gap: '6px'
                   }}
                 >
-                  <RiCheckLine size={16} />
-                  <span>Confirm PIN &amp; Complete Reload</span>
+                  <RiRefreshFill size={16} />
+                  <span>Check Payment Status</span>
                 </button>
                 <button
                   type="button"

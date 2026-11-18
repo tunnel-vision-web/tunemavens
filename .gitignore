@@ -3,6 +3,7 @@
 # ============================================================================
 .emergent/
 .ruff_cache/
+.*token_cache.json
 test_reports/
 /tests/
 memory/

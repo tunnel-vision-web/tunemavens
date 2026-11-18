@@ -114,9 +114,9 @@ npm run dev
 - **Permanent Credit Exemption:** VC/Investor accounts are permanently exempt from credit limits and reload reminders.
 
 ### 12. Sovereign Payment Gateways, M-Pesa STK Push & TuneLedger Settlement
-- **Live M-Pesa Daraja STK Push:** Direct handset PIN prompts via Safaricom Daraja STK Push (`/api/payments/mpesa/stk-push`) across East Africa. Users receive instant prompts on their mobile phones to enter their M-Pesa PIN, with real-time status polling (`/api/payments/mpesa/status/{checkout_id}`).
-- **Card Payment Authorization:** Secure card charging (`/api/payments/reload-credits`) validating 13–19 digit cards, CVC, and expiry with Stripe gateway integration.
-- **Server-Authoritative Pricing & Anti-Bypass:** Complete elimination of client-side mock additions. Reload packages are strictly derived from server package tables; client-provided credit amounts or manipulated price figures are rejected.
+- **Live M-Pesa Daraja STK Push & Verification:** Direct handset PIN prompts via Safaricom Daraja STK Push (`/api/payments/mpesa/stk-push`) across East Africa. Users receive instant prompts on their mobile phones to enter their M-Pesa PIN, with live polling (`/api/payments/mpesa/status/{checkout_id}`) and Daraja STK push query verification (`/mpesa/stkpushquery/v1/query`) enforcing that money is deducted before credits are granted.
+- **Card Payment Authorization & Real Charging:** Secure card charging (`/api/payments/reload-credits`) validating 13–19 digit cards, CVC, and expiry with Stripe tokenization and real charge execution (`stripe.Charge.create`). Declines and unconfigured gateways immediately reject reloads with zero credits granted.
+- **Server-Authoritative Pricing & Complete Anti-Bypass:** Complete elimination of client-side mock additions, mock PIN confirmation bypasses, and unverified fallback credits. Reload packages are strictly derived from server package tables; client-provided credit amounts or manipulated price figures are rejected.
 - **TuneLedger Cryptographic Audit Trail:** Every credit deposit, tip, and split generates an append-only, immutable transaction in `db.credit_ledger` via `ledger_service.record_transaction`.
 
 ---

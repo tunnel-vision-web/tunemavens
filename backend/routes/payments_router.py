@@ -29,7 +29,7 @@ logger = logging.getLogger("payments_router")
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
-STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY")
+STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY") or os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
 try:
@@ -322,26 +322,67 @@ def initiate_credit_reload(
         clean_card = (payload.card_number or "").replace(" ", "").replace("-", "")
         if not clean_card.isdigit() or len(clean_card) < 13 or len(clean_card) > 19:
             raise HTTPException(status_code=400, detail="Invalid card number. Please provide a valid 13-19 digit card number.")
-        provider_ref = None
-        if STRIPE_AVAILABLE and STRIPE_API_KEY:
-            try:
-                charge = stripe.Charge.create(
-                    amount=int(expected_amount * 100),
-                    currency="usd",
-                    description=f"TuneMavens Credits Reload: {package['name']} ({credits_to_grant} Credits)",
-                    metadata={"user_id": str(user_id), "package_id": package["id"]},
-                    source=payload.payment_token or "tok_visa"
-                )
-                provider_ref = charge.id
-            except Exception as e:
-                logger.error(f"[Card Payment] Stripe charge error: {e}")
-                if config.ENV == "production":
-                    raise HTTPException(status_code=502, detail=f"Card processing gateway error: {e}")
-                provider_ref = f"CARD-{secrets.token_hex(6).upper()}"
-        else:
-            provider_ref = f"CARD-{secrets.token_hex(6).upper()}"
 
-        card_last4 = (payload.card_number or "4242").replace(" ", "").replace("•", "")[-4:]
+        clean_exp = (payload.card_expiry or "").strip()
+        exp_month = 12
+        exp_year = 2028
+        if "/" in clean_exp:
+            try:
+                parts = clean_exp.split("/")
+                exp_month = int(parts[0].strip())
+                exp_year = int(parts[1].strip())
+                if exp_year < 100:
+                    exp_year += 2000
+            except Exception:
+                raise HTTPException(status_code=400, detail="Invalid card expiry format. Use MM/YY.")
+
+        clean_cvc = (payload.card_cvc or "").strip()
+        if not clean_cvc.isdigit() or len(clean_cvc) < 3 or len(clean_cvc) > 4:
+            raise HTTPException(status_code=400, detail="Invalid CVC code. Please provide a 3 or 4 digit security code.")
+
+        stripe_key = os.environ.get("STRIPE_API_KEY") or os.environ.get("STRIPE_SECRET_KEY") or STRIPE_API_KEY
+        if not (STRIPE_AVAILABLE and stripe_key):
+            logger.error("[Card Payment] Attempted card payment but Stripe gateway is not configured.")
+            raise HTTPException(
+                status_code=503,
+                detail="Credit/Debit card payment gateway is currently unconfigured. Please configure Stripe credentials or pay with M-Pesa."
+            )
+
+        stripe.api_key = stripe_key
+        provider_ref = None
+        try:
+            if payload.payment_token:
+                source_id = payload.payment_token
+            else:
+                card_token = stripe.Token.create(
+                    card={
+                        "number": clean_card,
+                        "exp_month": exp_month,
+                        "exp_year": exp_year,
+                        "cvc": clean_cvc,
+                        "name": payload.card_name or "Authorized Cardholder",
+                    }
+                )
+                source_id = card_token.id
+
+            charge = stripe.Charge.create(
+                amount=int(round(expected_amount * 100)),
+                currency="usd",
+                description=f"TuneMavens Credits Reload: {package['name']} ({credits_to_grant} Credits)",
+                metadata={"user_id": str(user_id), "package_id": package["id"]},
+                source=source_id
+            )
+            if not getattr(charge, "paid", False) or getattr(charge, "status", "") != "succeeded":
+                raise HTTPException(status_code=402, detail="Card authorization was declined by issuer.")
+            provider_ref = charge.id
+        except HTTPException:
+            raise
+        except Exception as e:
+            err_msg = getattr(e, "user_message", str(e))
+            logger.error(f"[Card Payment] Stripe charge error: {e}")
+            raise HTTPException(status_code=400, detail=f"Card payment failed: {err_msg}")
+
+        card_last4 = clean_card[-4:]
         reload_record = {
             "user_id": str(user_id),
             "receipt_number": receipt,
@@ -363,7 +404,7 @@ def initiate_credit_reload(
             user_id=user_id,
             amount=credits_to_grant,
             entry_type="CREDIT_RELOAD",
-            provider="stripe" if (STRIPE_AVAILABLE and STRIPE_API_KEY) else "card",
+            provider="stripe",
             provider_ref=provider_ref,
             idempotency_key=f"CARD-{checkout_id}",
             description=f"Reload {credits_to_grant} credits via Card ({package['name']})",
@@ -496,22 +537,16 @@ def initiate_mpesa_stk_push(
             customer_message = daraja_res.get("CustomerMessage", customer_message)
         else:
             logger.warning(f"[Daraja] Non-zero ResponseCode from Daraja: {daraja_res}")
-            if config.ENV == "production":
-                raise HTTPException(
-                    status_code=502,
-                    detail=daraja_res.get("ResponseDescription", "M-Pesa payment gateway rejected request")
-                )
+            err_msg = daraja_res.get("ResponseDescription") or daraja_res.get("errorMessage") or "M-Pesa payment gateway rejected request"
+            raise HTTPException(
+                status_code=502,
+                detail=err_msg
+            )
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning(f"[Daraja] Live dispatch exception: {e}")
-        if config.ENV == "production":
-            raise HTTPException(status_code=502, detail=f"M-Pesa STK Push dispatch failed: {e}")
-
-    # Fallback simulation only for offline/unit-test environments without internet
-    if not checkout_request_id:
-        checkout_request_id = f"ws_CO_{int(datetime.now(timezone.utc).timestamp())}_{secrets.token_hex(4)}"
-        merchant_request_id = f"MR_{secrets.token_hex(8)}"
+        logger.error(f"[Daraja] Live dispatch exception: {e}")
+        raise HTTPException(status_code=502, detail=f"M-Pesa STK Push dispatch failed: {e}")
 
     # Record pending transaction in credit_reloads. User balance is UNCHANGED.
     db.credit_reloads.insert_one({
@@ -671,7 +706,11 @@ async def mpesa_daraja_callback(request: Request):
 @router.get("/reload-status/{checkout_id}")
 @router.get("/mpesa/status/{checkout_id}")
 def check_reload_status(checkout_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
-    """Polls completion status of a pending reload by checkout ID or receipt."""
+    """Polls completion status of a pending reload by checkout ID or receipt.
+
+    For pending M-Pesa STK transactions, actively queries Safaricom Daraja STK Push Query
+    to verify whether customer entered PIN on their handset and funds were deducted.
+    """
     query = {
         "$or": [
             {"checkout_request_id": checkout_id},
@@ -679,11 +718,73 @@ def check_reload_status(checkout_id: str, current_user: Optional[dict] = Depends
             {"receipt_number": checkout_id}
         ]
     }
-    
+
     reload = db.credit_reloads.find_one(query)
 
     if not reload:
         raise HTTPException(status_code=404, detail="Reload record not found")
+
+    # If pending and payment method was mpesa, query Safaricom Daraja for authoritative live status
+    if reload.get("status") == "pending" and reload.get("payment_method") == "mpesa":
+        chk_req_id = reload.get("checkout_request_id")
+        if chk_req_id and not chk_req_id.startswith("ws_CO_FAKE") and not chk_req_id.startswith("mock_"):
+            try:
+                daraja_query = daraja_service.query_stk_status(chk_req_id)
+                res_code = str(daraja_query.get("ResultCode", ""))
+                res_desc = daraja_query.get("ResultDesc", "")
+
+                # ResultCode '0' means customer entered PIN and Safaricom successfully deducted money!
+                if res_code == "0":
+                    mpesa_receipt = f"MPESA-{chk_req_id[-10:].upper()}"
+                    existing = db.credit_ledger.find_one({"provider_ref": mpesa_receipt})
+                    if not existing:
+                        db.credit_reloads.update_one(
+                            {"_id": reload["_id"]},
+                            {
+                                "$set": {
+                                    "status": "completed",
+                                    "mpesa_receipt": mpesa_receipt,
+                                    "result_code": 0,
+                                    "result_desc": res_desc or "Successfully processed",
+                                    "completed_at": datetime.now(timezone.utc)
+                                }
+                            }
+                        )
+                        credits_to_grant = reload["credits"]
+                        user_id = reload["user_id"]
+                        ledger_service.record_transaction(
+                            user_id=user_id,
+                            amount=credits_to_grant,
+                            entry_type="CREDIT_RELOAD",
+                            provider="mpesa_daraja",
+                            provider_ref=mpesa_receipt,
+                            idempotency_key=f"MPESA-QUERY-{chk_req_id}",
+                            description=f"Reload {credits_to_grant} credits via M-Pesa ({mpesa_receipt})",
+                            metadata={
+                                "checkout_request_id": chk_req_id,
+                                "package_id": reload.get("package_id"),
+                                "amount_kes": reload.get("amount")
+                            }
+                        )
+                        reload["status"] = "completed"
+                        reload["mpesa_receipt"] = mpesa_receipt
+                elif res_code in ("1032", "1037", "1", "2001"):
+                    # Explicit failure from Safaricom (cancelled, timeout, insufficient balance, wrong PIN)
+                    db.credit_reloads.update_one(
+                        {"_id": reload["_id"]},
+                        {
+                            "$set": {
+                                "status": "failed",
+                                "result_code": res_code,
+                                "result_desc": res_desc or "M-Pesa payment prompt cancelled or expired",
+                                "updated_at": datetime.now(timezone.utc)
+                            }
+                        }
+                    )
+                    reload["status"] = "failed"
+                    reload["result_desc"] = res_desc
+            except Exception as e:
+                logger.warning(f"[Status Polling] Safaricom query failed for {chk_req_id}: {e}")
 
     user_id = reload.get("user_id")
     user_doc = None
@@ -708,6 +809,7 @@ def check_reload_status(checkout_id: str, current_user: Optional[dict] = Depends
         "currency": reload.get("currency"),
         "receipt_number": reload.get("receipt_number"),
         "mpesa_receipt": reload.get("mpesa_receipt"),
+        "result_desc": reload.get("result_desc"),
         "current_balance": current_credits
     }
 
@@ -720,7 +822,10 @@ class MpesaPinConfirmRequest(BaseModel):
 
 @router.post("/mpesa/confirm-pin")
 def confirm_mpesa_pin(payload: MpesaPinConfirmRequest):
-    """Completes pending M-Pesa reload and credits TuneLedger upon user PIN confirmation."""
+    """Verifies with Safaricom Daraja that M-Pesa PIN was entered and money deducted.
+
+    Rejects requests where Safaricom has not completed fund deduction.
+    """
     chk_id = payload.checkout_request_id or payload.checkout_id
     if not chk_id:
         raise HTTPException(status_code=400, detail="Missing checkout_request_id or checkout_id")
@@ -743,7 +848,19 @@ def confirm_mpesa_pin(payload: MpesaPinConfirmRequest):
             "new_balance": user_doc.get("credits", 0) if user_doc else reload_record.get("credits")
         }
 
-    mpesa_receipt = f"QG{secrets.token_hex(4).upper()}"
+    chk_req_id = reload_record.get("checkout_request_id") or chk_id
+    # Actively verify with Safaricom Daraja that PIN was entered and money deducted
+    query_res = daraja_service.query_stk_status(chk_req_id)
+    res_code = str(query_res.get("ResultCode", ""))
+
+    if res_code != "0":
+        res_desc = query_res.get("ResultDesc") or "M-Pesa payment has not been authorized on handset."
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payment not completed on handset: {res_desc}. Please enter your M-Pesa PIN on your phone."
+        )
+
+    mpesa_receipt = f"MPESA-{chk_req_id[-10:].upper()}"
     credits_to_grant = reload_record["credits"]
     user_id = reload_record["user_id"]
     now = datetime.now(timezone.utc)
@@ -763,10 +880,10 @@ def confirm_mpesa_pin(payload: MpesaPinConfirmRequest):
         entry_type="CREDIT_RELOAD",
         provider="mpesa_daraja",
         provider_ref=mpesa_receipt,
-        idempotency_key=f"MPESA-{reload_record.get('checkout_request_id') or reload_record.get('checkout_id')}",
+        idempotency_key=f"MPESA-CONFIRM-{chk_req_id}",
         description=f"Reload {credits_to_grant} credits via M-Pesa ({mpesa_receipt})",
         metadata={
-            "checkout_request_id": reload_record.get("checkout_request_id"),
+            "checkout_request_id": chk_req_id,
             "amount_kes": reload_record.get("amount")
         }
     )
