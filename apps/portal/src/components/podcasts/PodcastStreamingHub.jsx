@@ -2955,9 +2955,19 @@ export default function PodcastStreamingHub({
           </button>
 
           <a
-            href="http://localhost:3000/#/dashboard?tab=podcaster-studio"
-            target="_blank"
-            rel="noopener noreferrer"
+            href={typeof window !== 'undefined' && window.location.port === '3000'
+              ? '#/dashboard?role=podcaster&tab=podcaster-studio'
+              : 'http://localhost:3000/#/dashboard?role=podcaster&tab=podcaster-studio'
+            }
+            onClick={(e) => {
+              if (typeof window !== 'undefined' && window.location.port === '3000') {
+                e.preventDefault();
+                window.location.hash = '#/dashboard?role=podcaster&tab=podcaster-studio';
+                if (typeof onOpenPodcasterStudio === 'function') {
+                  onOpenPodcasterStudio();
+                }
+              }
+            }}
             style={{
               padding: '11px 18px',
               background: 'rgba(255, 255, 255, 0.05)',
@@ -2969,7 +2979,9 @@ export default function PodcastStreamingHub({
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
             }}
           >
             <RiExternalLinkLine size={14} /> Open in Portal Studio &rarr;

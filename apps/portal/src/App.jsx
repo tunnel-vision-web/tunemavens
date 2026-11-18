@@ -1490,7 +1490,15 @@ function DashboardView({
     try {
       storedPersona = localStorage.getItem('tunemavens_active_persona');
     } catch (_) {}
-    const reqRole = params.get('role') || (storedPersona && storedPersona !== 'consumer' ? storedPersona : 'creator');
+    const t = params.get('tab');
+    const tabImpliedRole = ['podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcaster-overview', 'podcast-studio'].includes(t)
+      ? 'podcaster'
+      : ['vc-portfolio', 'vc-sponsorship', 'tours-vault', 'vc-discover'].includes(t)
+      ? 'vc'
+      : ['media-house', 'mediahouse'].includes(t)
+      ? 'media_house'
+      : null;
+    const reqRole = params.get('role') || tabImpliedRole || (storedPersona && storedPersona !== 'consumer' ? storedPersona : 'creator');
     const targetApps = DEFAULT_ACTIVE_APPS_BY_ROLE[reqRole] || DEFAULT_ACTIVE_APPS_BY_ROLE.creator;
     const personaNames = {
       creator: 'TuneMavens Studio',
@@ -1521,14 +1529,26 @@ function DashboardView({
 
   // Compute effective role immediately on first render to prevent any consumer backend redirection
   const effectiveRole = useMemo(() => {
+    // 1. Explicit role requested via query param takes highest precedence
     if (reqRoleParam) return reqRoleParam;
+
+    // 2. Persona-specific tabs requested via query param
+    if (['podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcaster-overview', 'podcast-studio'].includes(initialTabQuery)) {
+      return 'podcaster';
+    }
+    if (['vc-portfolio', 'vc-sponsorship', 'tours-vault', 'vc-discover'].includes(initialTabQuery)) {
+      return 'vc';
+    }
+    if (['media-house', 'mediahouse'].includes(initialTabQuery)) {
+      return 'media_house';
+    }
 
     let storedPersona = null;
     try {
       storedPersona = localStorage.getItem('tunemavens_active_persona');
     } catch (_) {}
 
-    // A real logged-in or simulated non-consumer user role must ALWAYS take precedence over any tunestream backend flag
+    // 3. A real logged-in or simulated non-consumer user role
     if (sessionUser?.role && sessionUser.role !== 'consumer') {
       return sessionUser.role;
     }
@@ -1540,13 +1560,7 @@ function DashboardView({
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('tunestream_active_backend') === 'true') {
       return 'consumer';
     }
-    if (['vc-portfolio', 'vc-sponsorship', 'tours-vault'].includes(initialTabQuery)) {
-      return 'vc';
-    }
-    if (['podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests'].includes(initialTabQuery)) {
-      return 'podcaster';
-    }
-    if (initialTabQuery && !['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
+    if (initialTabQuery && !['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
       if (sessionUser?.role === 'consumer') {
         return 'creator';
       }
@@ -1654,7 +1668,14 @@ function DashboardView({
     if (t && t !== activeTab) {
       setActiveTab(t);
     }
-    const r = params.get('role');
+    const tabImpliedRole = ['podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcaster-overview', 'podcast-studio'].includes(t)
+      ? 'podcaster'
+      : ['vc-portfolio', 'vc-sponsorship', 'tours-vault', 'vc-discover'].includes(t)
+      ? 'vc'
+      : ['media-house', 'mediahouse'].includes(t)
+      ? 'media_house'
+      : null;
+    const r = params.get('role') || tabImpliedRole;
     if (r && activeUser && activeUser.role !== r && onUpdateUser) {
       const updated = {
         ...activeUser,
@@ -1663,6 +1684,7 @@ function DashboardView({
       };
       onUpdateUser(updated);
       try {
+        localStorage.setItem('tunemavens_active_persona', r);
         sessionStorage.setItem('tunemavens_session', JSON.stringify(updated));
         localStorage.setItem('tunemavens_saved_user', JSON.stringify(updated));
       } catch (_) {}
@@ -2020,7 +2042,7 @@ function DashboardView({
     const roleAllowed = {
       vc: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
       investor: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
-      admin: ['home', 'backend-admin', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
+      admin: ['home', 'backend-admin', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
       corporate: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media_house: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
@@ -2028,10 +2050,10 @@ function DashboardView({
       dj: ['home', 'dj-mixes', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
       studio: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
       supervisor: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
-      podcaster: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
-      consumer: ['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
+      podcaster: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
+      consumer: ['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
       affiliate: ['home', 'dj-mixes', 'affiliates', 'podcasts', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
-      creator: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'support']
+      creator: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
     if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
@@ -2207,6 +2229,8 @@ function DashboardView({
           />
         );
       case 'podcaster-studio':
+      case 'podcaster-overview':
+      case 'podcast-studio':
         return <PodcasterStudioWorkspace sessionUser={activeUser} initialSection="overview" />;
       case 'podcaster-episodes':
         return <PodcasterStudioWorkspace sessionUser={activeUser} initialSection="episodes" />;
@@ -2524,7 +2548,7 @@ function DashboardView({
         visibleKeys = ['home', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcasts', 'splits', 'corporate-ads', 'social-ai', 'crm', 'inbox', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
         break;
       case 'consumer':
-        visibleKeys = ['home', 'dj-mixes', 'podcasts', 'library', 'tips', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
+        visibleKeys = ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'library', 'tips', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
         break;
       case 'creator':
       default:

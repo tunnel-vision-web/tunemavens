@@ -3593,7 +3593,9 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     1. **Tip Button Label with "+" Floor Reflection**: The tip button must state `Tip Host (Ksh 50+)` including the `+` sign for Kenyan localization (and `Tip Host ($1.00+)` globally, with the hero banner reflecting `Tip Hosts (Ksh 50+ / 50+ Credits)`).
     2. **Tipping Payment Modal Viewport Clamping & Custom Scrollbar**: The payment modal must remain strictly within the browser viewport on all display sizes, utilizing a flex-column layout with a fixed header, scrollable body (`overflowY: 'auto'`), and custom scrollbar styled per TuneMavens theme (`#f59e0b` amber thumb, `#070b1a` deep navy track).
     3. **Custom Tip Amount Slot & Arrow Controls**: Allow the listener to directly type in any custom amount (minimum 50 Credits / KES 50 in Kenya, 100 Credits / $1.00 USD internationally) into the slot, accompanied by `−` and `+` arrow stepper buttons and native input spinner arrows with immediate live updates to the 95% collaborator split cascade distribution.
-    4. **Open TuneMavens Podcast Studio Routing Integrity**: When on `/#/?view=browse-podcasts`, clicking "Open TuneMavens Podcast Studio" must seamlessly open the `PodcasterStudioWorkspace` directly inside the consumer experience (`?view=podcaster-studio`), while also providing a 1-click external link to the full creator portal (`http://localhost:3000/#/dashboard?tab=podcaster-studio`) and wiring dashboard tab transitions.
+    4. **Open TuneMavens Podcast Studio & Portal Studio Termination**:
+       - When on `/#/?view=browse-podcasts`, clicking "Open TuneMavens Podcast Studio" seamlessly opens the `PodcasterStudioWorkspace` directly inside the consumer experience (`?view=podcaster-studio`).
+       - Clicking "Open in Portal Studio" must terminate cleanly at `#/dashboard?role=podcaster&tab=podcaster-studio`: resolves `role=podcaster`, activates the Podcaster Studio Persona, overrides any prior stored non-podcaster persona in localStorage, and mounts `PodcasterStudioWorkspace` with Overview, Episode Publisher, EPK Builder, Ad Rates, and Guest CRM.
     5. **Backend Floor Enforcement**: Ensure backend rejects any sub-floor tips with HTTP 400 Bad Request.
 - **Architectural Solutions & Changes**:
   - **Component Synchronization (`PodcastStreamingHub.jsx` in `tunestream` and `portal`)**:
@@ -3601,13 +3603,16 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Updated the hero banner callout to `Tip Hosts (Ksh 50+ / 50+ Credits)`.
     - Enhanced `TipPodcasterModal` with `maxHeight: 'min(90vh, 760px)'`, flex column, and custom webkit scrollbar rules matching the amber/navy palette.
     - Implemented a dedicated Custom Amount slot with `−` / `+` arrow stepper buttons (stepping by 10 credits, clamped to minimum floor), direct numerical typing with blur validation, and live price/currency preview (`= Ksh 150`).
-    - Wired the "Open TuneMavens Podcast Studio &rarr;" primary button to dynamically switch views to `?view=podcaster-studio` (or trigger `onOpenPodcasterStudio`), plus added an "Open in Portal Studio &rarr;" secondary action.
+    - Fixed "Open in Portal Studio" action to target `#/dashboard?role=podcaster&tab=podcaster-studio` (and `http://localhost:3000/#/dashboard?role=podcaster&tab=podcaster-studio`), executing direct in-app hash navigation when already on port 3000 and clean cross-origin navigation without popup blockers.
+  - **Portal Persona & Dashboard Routing Resolution (`apps/portal/src/App.jsx`)**:
+    - Fixed `effectiveRole` priority: explicit `reqRoleParam` (`role=podcaster`) and podcaster tabs (`podcaster-studio`, `podcaster-episodes`, `podcaster-epk`, etc.) now take immediate precedence over stale `storedPersona` in localStorage.
+    - Updated `demoFallbackUser` and `useEffect` tab/role sync to automatically switch active persona to `podcaster` when opening `tab=podcaster-studio`.
+    - Extended `roleAllowed` across admin, creator, podcaster, and consumer to permit `podcaster-overview` and `podcast-studio`.
+    - Extended `visibleKeys` for consumer to include `podcaster-studio`.
   - **Landing View Navigation (`NativeAppLandingView.jsx` across `tunestream` and `portal`)**:
     - Imported `PodcasterStudioWorkspace` and added `'podcaster-studio'` & `'podcast-studio'` to `headerMeta`.
     - Added `case 'podcaster-studio': case 'podcast-studio':` in `renderContent()` to render `<PodcasterStudioWorkspace sessionUser={sessionUser} />` within the landing container.
     - Updated `renderBrowsePodcasts` to pass `onOpenPodcasterStudio={() => navigate('?view=podcaster-studio')}`.
-  - **App Dashboard Tab Wiring (`App.jsx` across `tunestream` and `portal`)**:
-    - Wired `onOpenPodcasterStudio` and `onNavigateToPodcasterStudio` in `case 'podcasts':` to call `setActiveTab('podcaster-studio')`.
   - **Backend Strict Floor Validation (`backend/routes/podcasts_router.py`)**:
     - Replaced silent floor bumping with strict HTTP 400 validation: if `eff_credits < min_floor`, raises HTTP 400 with a detailed error indicating the localized floor.
 - **Verification**:
