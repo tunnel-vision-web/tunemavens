@@ -10969,7 +10969,7 @@ function AppContent({
               creatorEpk={creatorEpk} 
               catalogTracks={catalogTracks} 
               sessionUser={sessionUser}
-              userCredits={activeUser?.credits ?? 150}
+              userCredits={sessionUser?.credits ?? 150}
               setUserCredits={(c) => {
                 if (sessionUser) setSessionUser(prev => prev ? ({ ...prev, credits: c }) : prev);
                 try { localStorage.setItem('tunemavens_user_credits', String(c)); } catch (_) {}
