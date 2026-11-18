@@ -451,7 +451,7 @@ export default function HiFiAudioPlayer({
       <audio
         ref={audioRef}
         crossOrigin="anonymous"
-        preload="auto"
+        preload="metadata"
         muted={isPlayerMuted || isMutedForAutoplay}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={() => {

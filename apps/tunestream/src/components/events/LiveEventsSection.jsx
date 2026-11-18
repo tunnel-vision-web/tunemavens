@@ -1186,11 +1186,13 @@ export default function LiveEventsSection({ sessionUser }) {
       {/* -------------------------------------------------------------
           MODAL: IN-APP KNOWLEDGE BASE DOC MODAL
           ------------------------------------------------------------- */}
-      <InAppDocModal 
-        isOpen={docModalOpen}
-        onClose={() => setDocModalOpen(false)}
-        initialArticleId={activeDocArticleId}
-      />
+      {docModalOpen && (
+        <InAppDocModal 
+          isOpen={docModalOpen}
+          onClose={() => setDocModalOpen(false)}
+          initialArticleId={activeDocArticleId}
+        />
+      )}
     </section>
   );
 }

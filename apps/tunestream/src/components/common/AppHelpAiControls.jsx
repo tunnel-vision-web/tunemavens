@@ -303,15 +303,17 @@ export default function AppHelpAiControls({
       {/* Mounted via createPortal to document.body, centered in viewport,          */}
       {/* closes on outside click or Esc, leaves user right in their app.           */}
       {/* ========================================================================= */}
-      <InAppDocModal
-        isOpen={docModalOpen}
-        onClose={() => setDocModalOpen(false)}
-        activeContext={currentContext}
-        initialArticleId={selectedDocArticleId || relevantDoc.articleId}
-        contextTitle={relevantDoc.appTitle}
-        sessionUser={sessionUser}
-        onAskAi={handleAskAiAboutArticle}
-      />
+      {docModalOpen && (
+        <InAppDocModal
+          isOpen={docModalOpen}
+          onClose={() => setDocModalOpen(false)}
+          activeContext={currentContext}
+          initialArticleId={selectedDocArticleId || relevantDoc.articleId}
+          contextTitle={relevantDoc.appTitle}
+          sessionUser={sessionUser}
+          onAskAi={handleAskAiAboutArticle}
+        />
+      )}
 
       {/* ========================================================================= */}
       {/* 2. AI ASSISTANT FULLSCREEN OVERLAY MODAL                                  */}

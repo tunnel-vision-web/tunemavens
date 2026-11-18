@@ -30,7 +30,12 @@ import './AppHelpAiControls.css';
  * - Specific issue or claim category
  * - Search query
  */
-export default function InAppDocModal({
+export default function InAppDocModal(props) {
+  if (!props?.isOpen) return null;
+  return <InAppDocModalContent {...props} />;
+}
+
+function InAppDocModalContent({
   isOpen,
   onClose,
   initialArticleId = null,

@@ -569,6 +569,8 @@ export default function NativeAppLandingView({
   });
   const [exploreGenre, setExploreGenre] = useState('all');
   const [exploreSort, setExploreSort] = useState('newest');
+  const [explorePage, setExplorePage] = useState(1);
+  const [podcastPage, setPodcastPage] = useState(1);
   const [activeHiFiTrack, setActiveHiFiTrack] = useState(null);
   const [isHiFiPlaying, setIsHiFiPlaying] = useState(false);
   const creatorSlugParam = searchParams.get('creator');
@@ -666,8 +668,6 @@ export default function NativeAppLandingView({
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [newPlaylistDesc, setNewPlaylistDesc] = useState('');
   const [newPlaylistBg, setNewPlaylistBg] = useState('linear-gradient(135deg, #10b981 0%, #059669 100%)');
-  const [explorePage, setExplorePage] = useState(1);
-  const [podcastPage, setPodcastPage] = useState(1);
 
   const TUNESTREAM_HERO_SLIDES = [
     {
