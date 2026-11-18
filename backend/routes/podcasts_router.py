@@ -1315,7 +1315,11 @@ def tip_podcast_host(
             eff_credits = min_floor
 
     if eff_credits < min_floor:
-        eff_credits = min_floor
+        floor_label = f"KSh {min_floor}" if is_kes else "$1.00"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Minimum tip floor is {min_floor} Credits ({floor_label}+ localized). Tip amount of {eff_credits} credits is below the platform minimum."
+        )
 
     fan_balance = current_user.get("credits", 0)
     if fan_balance < eff_credits:

@@ -2202,6 +2202,8 @@ function DashboardView({
             userCredits={userCredits}
             setUserCredits={setUserCredits}
             onOpenCreditReload={handleOpenCreditReload}
+            onOpenPodcasterStudio={() => setActiveTab('podcaster-studio')}
+            onNavigateToPodcasterStudio={() => setActiveTab('podcaster-studio')}
           />
         );
       case 'podcaster-studio':

@@ -1,4 +1,5 @@
 import PodcastStreamingHub, { AUTHORITATIVE_PODCAST_SHOWS, PodcasterEpkModal } from './components/podcasts/PodcastStreamingHub.jsx';
+import PodcasterStudioWorkspace from './components/podcasts/PodcasterStudioWorkspace.jsx';
 import ConsumerBlogForumView from './components/community/ConsumerBlogForumView.jsx';
 import ConsumerHelpDocsView from './components/community/ConsumerHelpDocsView.jsx';
 import ConsumerSupportDeskView from './components/community/ConsumerSupportDeskView.jsx';
@@ -1030,6 +1031,8 @@ export default function NativeAppLandingView({
         playlists: { title: 'My Playlists', breadcrumb: 'My Suite / Playlists' },
         'create-playlist': { title: 'Create Playlist', breadcrumb: 'My Suite / Create' },
         'browse-podcasts': { title: 'Browse Podcasts', breadcrumb: 'My Suite / Podcasts' },
+        'podcaster-studio': { title: 'TuneMavens Podcast Studio & EPK', breadcrumb: 'My Suite / Podcast Studio' },
+        'podcast-studio': { title: 'TuneMavens Podcast Studio & EPK', breadcrumb: 'My Suite / Podcast Studio' },
         tours: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
         events: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
         concerts: { title: 'Tours, Ticketing & Masterclasses', breadcrumb: 'My Suite / Tours and Events' },
@@ -3071,8 +3074,16 @@ export default function NativeAppLandingView({
           setUserCredits={setUserCredits}
           onOpenCreditReload={onOpenCreditReload}
           onPlayTrack={(track, queue) => handlePlaySong(track, queue)}
-          onNavigateToPodcasterStudio={() => navigate('/dashboard?tab=podcaster-studio')}
-          onOpenPodcasterStudio={() => navigate('/dashboard?tab=podcaster-studio')}
+          onNavigateToPodcasterStudio={() => {
+            const sp = new URLSearchParams(location.search);
+            sp.set('view', 'podcaster-studio');
+            navigate(`?${sp.toString()}`);
+          }}
+          onOpenPodcasterStudio={() => {
+            const sp = new URLSearchParams(location.search);
+            sp.set('view', 'podcaster-studio');
+            navigate(`?${sp.toString()}`);
+          }}
         />
       );
     };
@@ -3669,6 +3680,13 @@ export default function NativeAppLandingView({
           return renderCreatePlaylist();
         case 'browse-podcasts':
           return renderBrowsePodcasts();
+        case 'podcaster-studio':
+        case 'podcast-studio':
+          return (
+            <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 20px 40px' }}>
+              <PodcasterStudioWorkspace sessionUser={sessionUser} />
+            </div>
+          );
         case 'apps':
           return renderApps();
         case 'free':

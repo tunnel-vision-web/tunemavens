@@ -3587,7 +3587,38 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - **Detail View & Player**: Displays a vibrant `Free Promotional Streaming Active` banner and provides 1-click streaming controls.
   - **TuneStream Consumer Streaming Experience (`apps/tunestream/src/App.jsx`)**:
     - Updated `TuneStreamDjMixesPanel` header description and mix cards to reflect that un-cleared sets stream free with full credits, transitioning to commercial sales upon 100% agreement.
-### Phase 39 — TuneStream Podcast Hub: Platform Floor Enforcement (Ksh 50+ / USD 1+), Direct Fan Tipping Protocols, Podcaster Studio Navigation & Functional Integrity (Shipped)
+### Phase 40 — TuneStream Podcast Hub Refinement: "Tip Host (Ksh 50+)" Labeling, Viewport-Bounded Themed Modal with Custom Slot & Stepper Arrows, and Direct Podcast Studio Routing (Shipped)
+- **Problem Statement & Requirements**:
+  - On `http://localhost:3001/#/?view=browse-podcasts`:
+    1. **Tip Button Label with "+" Floor Reflection**: The tip button must state `Tip Host (Ksh 50+)` including the `+` sign for Kenyan localization (and `Tip Host ($1.00+)` globally, with the hero banner reflecting `Tip Hosts (Ksh 50+ / 50+ Credits)`).
+    2. **Tipping Payment Modal Viewport Clamping & Custom Scrollbar**: The payment modal must remain strictly within the browser viewport on all display sizes, utilizing a flex-column layout with a fixed header, scrollable body (`overflowY: 'auto'`), and custom scrollbar styled per TuneMavens theme (`#f59e0b` amber thumb, `#070b1a` deep navy track).
+    3. **Custom Tip Amount Slot & Arrow Controls**: Allow the listener to directly type in any custom amount (minimum 50 Credits / KES 50 in Kenya, 100 Credits / $1.00 USD internationally) into the slot, accompanied by `−` and `+` arrow stepper buttons and native input spinner arrows with immediate live updates to the 95% collaborator split cascade distribution.
+    4. **Open TuneMavens Podcast Studio Routing Integrity**: When on `/#/?view=browse-podcasts`, clicking "Open TuneMavens Podcast Studio" must seamlessly open the `PodcasterStudioWorkspace` directly inside the consumer experience (`?view=podcaster-studio`), while also providing a 1-click external link to the full creator portal (`http://localhost:3000/#/dashboard?tab=podcaster-studio`) and wiring dashboard tab transitions.
+    5. **Backend Floor Enforcement**: Ensure backend rejects any sub-floor tips with HTTP 400 Bad Request.
+- **Architectural Solutions & Changes**:
+  - **Component Synchronization (`PodcastStreamingHub.jsx` in `tunestream` and `portal`)**:
+    - Updated `floorLabel` to `'Ksh 50+'` when localized to KES (`${formatPrice(1.00)}+` for USD), displaying `Tip Host (Ksh 50+)` across podcast show cards and the episode drawer modal.
+    - Updated the hero banner callout to `Tip Hosts (Ksh 50+ / 50+ Credits)`.
+    - Enhanced `TipPodcasterModal` with `maxHeight: 'min(90vh, 760px)'`, flex column, and custom webkit scrollbar rules matching the amber/navy palette.
+    - Implemented a dedicated Custom Amount slot with `−` / `+` arrow stepper buttons (stepping by 10 credits, clamped to minimum floor), direct numerical typing with blur validation, and live price/currency preview (`= Ksh 150`).
+    - Wired the "Open TuneMavens Podcast Studio &rarr;" primary button to dynamically switch views to `?view=podcaster-studio` (or trigger `onOpenPodcasterStudio`), plus added an "Open in Portal Studio &rarr;" secondary action.
+  - **Landing View Navigation (`NativeAppLandingView.jsx` across `tunestream` and `portal`)**:
+    - Imported `PodcasterStudioWorkspace` and added `'podcaster-studio'` & `'podcast-studio'` to `headerMeta`.
+    - Added `case 'podcaster-studio': case 'podcast-studio':` in `renderContent()` to render `<PodcasterStudioWorkspace sessionUser={sessionUser} />` within the landing container.
+    - Updated `renderBrowsePodcasts` to pass `onOpenPodcasterStudio={() => navigate('?view=podcaster-studio')}`.
+  - **App Dashboard Tab Wiring (`App.jsx` across `tunestream` and `portal`)**:
+    - Wired `onOpenPodcasterStudio` and `onNavigateToPodcasterStudio` in `case 'podcasts':` to call `setActiveTab('podcaster-studio')`.
+  - **Backend Strict Floor Validation (`backend/routes/podcasts_router.py`)**:
+    - Replaced silent floor bumping with strict HTTP 400 validation: if `eff_credits < min_floor`, raises HTTP 400 with a detailed error indicating the localized floor.
+- **Verification**:
+  - `FastAPI TestClient` verified:
+    - Sub-floor tip (30 credits) rejected with HTTP 400 Bad Request.
+    - Floor tip (50 credits) approved with HTTP 200, generating atomic ledger transaction (`TM-TIP-2026-XXXXX`), 47.5 creator net credits, and 2.5 platform fee.
+    - RSS 2.0 XML syndication feed verified.
+  - Production builds verified:
+    - `npm run build --workspace=tunestream` (0 errors).
+    - `npm run build --workspace=portal` (0 errors).
+
 - **Problem Statement & Requirements**:
   - On `http://localhost:3001/#/?view=browse-podcasts` (TuneStream Podcast Streaming Hub):
     1. **Tip Floor Reflection**: Previously, the tip button was hardcoded to $5.00 / 50 Credits, failing to reflect the platform's official floor of **Ksh 50+ or USD $1.00+ localized** (50 credits for Kenya / 100 credits for USD and global regions at 1 Credit = 1 KES = $0.01 USD).

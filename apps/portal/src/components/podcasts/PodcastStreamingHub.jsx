@@ -1629,7 +1629,7 @@ function PodcastEpisodesDrawerModal({ show, onClose, onPlayEpisode, onTipHost, f
                       gap: '5px'
                     }}
                   >
-                    <RiCoinsFill size={13} color="#f59e0b" /> Tip Host ({floorLabel || formatPrice(1)})
+                    <RiCoinsFill size={13} color="#f59e0b" /> Tip Host ({floorLabel || (currencyInfo?.code === 'KES' ? 'Ksh 50+' : '$1.00+')})
                   </button>
                 </div>
               </div>
@@ -1655,22 +1655,22 @@ export function TipPodcasterModal({
 }) {
   const isKes = currencyInfo?.code === 'KES';
   const floorCredits = isKes ? 50 : 100;
-  const floorPriceLabel = isKes ? 'KSh 50' : formatPrice(1.00);
+  const floorPriceLabel = isKes ? 'Ksh 50+' : `${formatPrice(1.00)}+`;
 
   const presets = isKes ? [
-    { credits: 50, label: 'KSh 50', desc: 'Floor (Minimum)' },
-    { credits: 250, label: 'KSh 250', desc: 'Appreciation' },
-    { credits: 500, label: 'KSh 500', desc: 'Supporter' },
-    { credits: 1000, label: 'KSh 1,000', desc: 'Superfan' }
+    { credits: 50, label: 'Ksh 50+', desc: 'Platform Minimum Floor' },
+    { credits: 250, label: 'Ksh 250', desc: 'Appreciation' },
+    { credits: 500, label: 'Ksh 500', desc: 'Supporter' },
+    { credits: 1000, label: 'Ksh 1,000', desc: 'Superfan' }
   ] : [
-    { credits: 100, label: formatPrice(1.00), desc: 'Floor (Minimum)' },
+    { credits: 100, label: `${formatPrice(1.00)}+`, desc: 'Platform Minimum Floor' },
     { credits: 250, label: formatPrice(2.50), desc: 'Appreciation' },
     { credits: 500, label: formatPrice(5.00), desc: 'Supporter' },
     { credits: 1000, label: formatPrice(10.00), desc: 'Superfan' }
   ];
 
   const [selectedCredits, setSelectedCredits] = useState(floorCredits);
-  const [customAmount, setCustomAmount] = useState('');
+  const [customAmount, setCustomAmount] = useState(String(floorCredits));
   const [isCustom, setIsCustom] = useState(false);
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1679,10 +1679,15 @@ export function TipPodcasterModal({
 
   if (!show) return null;
 
-  const effectiveCredits = isCustom ? (parseInt(customAmount, 10) || floorCredits) : selectedCredits;
+  const parsedCustom = parseInt(customAmount, 10);
+  const effectiveCredits = isCustom
+    ? (!isNaN(parsedCustom) ? parsedCustom : 0)
+    : selectedCredits;
+
+  const displayCredits = effectiveCredits > 0 ? effectiveCredits : floorCredits;
   const effectivePriceFormatted = isKes
-    ? `KSh ${effectiveCredits.toLocaleString()}`
-    : formatPrice(effectiveCredits / 100);
+    ? `Ksh ${displayCredits.toLocaleString()}`
+    : formatPrice(displayCredits / 100);
 
   const hasSufficientCredits = (userCredits ?? 0) >= effectiveCredits;
   const splits = show.splits && show.splits.length > 0 ? show.splits : [
@@ -1790,7 +1795,8 @@ export function TipPodcasterModal({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '20px'
+        padding: '16px',
+        boxSizing: 'border-box'
       }}
       onClick={(e) => { if (e.target === e.currentTarget && !isSubmitting) onClose(); }}
     >
@@ -1798,22 +1804,41 @@ export function TipPodcasterModal({
         style={{
           width: '100%',
           maxWidth: '560px',
+          maxHeight: 'min(90vh, 760px)',
           background: '#070b1a',
-          border: '1px solid rgba(245, 158, 11, 0.4)',
-          borderRadius: '3px',
-          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.9)',
+          border: '1px solid rgba(245, 158, 11, 0.45)',
+          borderRadius: '4px',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.95), 0 0 24px rgba(245, 158, 11, 0.15)',
           color: '#f8fafc',
+          display: 'flex',
+          flexDirection: 'column',
           overflow: 'hidden'
         }}
       >
+        <style>{`
+          .tm-tip-modal-body::-webkit-scrollbar {
+            width: 6px;
+          }
+          .tm-tip-modal-body::-webkit-scrollbar-track {
+            background: #070b1a;
+          }
+          .tm-tip-modal-body::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 3px;
+          }
+          .tm-tip-modal-body::-webkit-scrollbar-thumb:hover {
+            background: #fbbf24;
+          }
+        `}</style>
         {/* Header */}
         <div style={{
-          padding: '20px 24px',
-          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(7, 11, 26, 0.98) 100%)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          padding: '18px 24px',
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(7, 11, 26, 0.98) 100%)',
+          borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -1847,7 +1872,16 @@ export function TipPodcasterModal({
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: '24px' }}>
+        <div
+          className="tm-tip-modal-body"
+          style={{
+            padding: '22px 24px 26px',
+            overflowY: 'auto',
+            flex: 1,
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#f59e0b #070b1a'
+          }}
+        >
           {receiptData ? (
             /* Confirmed Receipt View */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
@@ -1967,6 +2001,7 @@ export function TipPodcasterModal({
                         type="button"
                         onClick={() => {
                           setSelectedCredits(preset.credits);
+                          setCustomAmount(String(preset.credits));
                           setIsCustom(false);
                           setErrorNotice('');
                         }}
@@ -1997,35 +2032,128 @@ export function TipPodcasterModal({
                 </div>
               </div>
 
-              {/* Custom Credits Option */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input
-                  type="number"
-                  min={floorCredits}
-                  step="10"
-                  placeholder={`Custom Credits (Min ${floorCredits})...`}
-                  value={customAmount}
-                  onFocus={() => setIsCustom(true)}
-                  onChange={(e) => {
-                    setCustomAmount(e.target.value);
-                    setIsCustom(true);
-                    setErrorNotice('');
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '10px 14px',
-                    background: '#050811',
-                    border: isCustom ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '3px',
-                    color: '#fff',
-                    fontSize: '13px'
-                  }}
-                />
-                {isCustom && (
-                  <span style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 700 }}>
-                    {effectivePriceFormatted}
-                  </span>
-                )}
+              {/* Custom Credits Stepper & Numerical Typing Slot */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Custom Amount (Minimum {floorCredits} Credits / {floorPriceLabel})
+                  </label>
+                  {isCustom && (
+                    <span style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 800 }}>
+                      = {effectivePriceFormatted}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#040711',
+                  border: isCustom ? '1px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '3px',
+                  padding: '4px',
+                  transition: 'border-color 0.15s ease'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustom(true);
+                      const current = parseInt(customAmount, 10) || floorCredits;
+                      const next = Math.max(floorCredits, current - 10);
+                      setCustomAmount(String(next));
+                      setErrorNotice('');
+                    }}
+                    title={`Decrease by 10 (Minimum ${floorCredits})`}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '3px',
+                      color: '#fbbf24',
+                      fontSize: '18px',
+                      fontWeight: 900,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      userSelect: 'none'
+                    }}
+                  >
+                    −
+                  </button>
+
+                  <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                    <input
+                      type="number"
+                      min={floorCredits}
+                      step="10"
+                      placeholder={`Custom Credits (Min ${floorCredits})...`}
+                      value={customAmount}
+                      onFocus={() => setIsCustom(true)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomAmount(val);
+                        setIsCustom(true);
+                        setErrorNotice('');
+                      }}
+                      onBlur={() => {
+                        const parsed = parseInt(customAmount, 10);
+                        if (isNaN(parsed) || parsed < floorCredits) {
+                          setCustomAmount(String(floorCredits));
+                          setErrorNotice(`Minimum tip floor is ${floorCredits} Credits (${floorPriceLabel}).`);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#fff',
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        padding: '8px 10px',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, paddingRight: '8px' }}>
+                      Credits
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustom(true);
+                      const current = parseInt(customAmount, 10) || floorCredits;
+                      const next = current + 10;
+                      setCustomAmount(String(next));
+                      setErrorNotice('');
+                    }}
+                    title="Increase by 10 Credits"
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      background: 'rgba(245, 158, 11, 0.18)',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      borderRadius: '3px',
+                      color: '#fbbf24',
+                      fontSize: '18px',
+                      fontWeight: 900,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      userSelect: 'none'
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                  Type any custom amount (min {floorCredits}) directly into the slot or use the − / + buttons and arrows.
+                </div>
               </div>
 
               {/* Shoutout Message */}
@@ -2192,7 +2320,7 @@ export default function PodcastStreamingHub({
   const { formatPrice, currencyInfo } = useRegion();
   const isKes = currencyInfo?.code === 'KES';
   const floorCredits = isKes ? 50 : 100;
-  const floorLabel = isKes ? 'KSh 50' : formatPrice(1.00);
+  const floorLabel = isKes ? 'Ksh 50+' : `${formatPrice(1.00)}+`;
 
   const [shows, setShows] = useState(AUTHORITATIVE_PODCAST_SHOWS);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -2414,7 +2542,7 @@ export default function PodcastStreamingHub({
                 gap: '6px'
               }}
             >
-              <RiCoinsFill size={15} color="#f59e0b" /> Tip Hosts ({floorLabel} / {floorCredits} Credits)
+              <RiCoinsFill size={15} color="#f59e0b" /> Tip Hosts ({floorLabel} / {floorCredits}+ Credits)
             </button>
           </div>
         </div>
@@ -2792,35 +2920,61 @@ export default function PodcastStreamingHub({
             Every podcaster on TuneMavens gets a customizable Podcaster EPK, automated -16 LUFS broadcast mastering, RSS 2.0 global syndication, and dynamic ad insertion starting at {formatPrice(AUTHORITATIVE_AD_RATES[0].price_usd)} ({formatPrice(AUTHORITATIVE_AD_RATES[0].cpm_usd)} CPM).
           </p>
         </div>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            if (typeof onOpenPodcasterStudio === 'function') {
-              onOpenPodcasterStudio();
-            } else if (typeof onNavigateToPodcasterStudio === 'function') {
-              onNavigateToPodcasterStudio();
-            } else if (typeof window !== 'undefined') {
-              window.location.hash = '#/dashboard?tab=podcaster-studio';
-            }
-          }}
-          style={{
-            padding: '12px 22px',
-            background: '#10b981',
-            color: '#040711',
-            border: 'none',
-            borderRadius: '3px',
-            fontSize: '13px',
-            fontWeight: 900,
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer'
-          }}
-        >
-          <RiMicFill size={16} /> Open TuneMavens Podcaster Studio &rarr;
-        </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              if (typeof onOpenPodcasterStudio === 'function') {
+                onOpenPodcasterStudio();
+              } else if (typeof onNavigateToPodcasterStudio === 'function') {
+                onNavigateToPodcasterStudio();
+              } else if (typeof window !== 'undefined') {
+                const sp = new URLSearchParams(window.location.search);
+                sp.set('view', 'podcaster-studio');
+                window.location.hash = `/?${sp.toString()}`;
+              }
+            }}
+            style={{
+              padding: '12px 22px',
+              background: '#10b981',
+              color: '#040711',
+              border: 'none',
+              borderRadius: '3px',
+              fontSize: '13px',
+              fontWeight: 900,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <RiMicFill size={16} /> Open TuneMavens Podcast Studio &rarr;
+          </button>
+
+          <a
+            href="http://localhost:3000/#/dashboard?tab=podcaster-studio"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: '11px 18px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              color: '#cbd5e1',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '3px',
+              fontSize: '12px',
+              fontWeight: 700,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <RiExternalLinkLine size={14} /> Open in Portal Studio &rarr;
+          </a>
+        </div>
       </div>
 
       {/* Podcaster EPK Modal */}

@@ -4478,6 +4478,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
             userCredits={userCredits}
             setUserCredits={setUserCredits}
             onOpenCreditReload={() => setIsCreditReloadOpen(true)}
+            onOpenPodcasterStudio={() => setActiveTab('podcaster-studio')}
+            onNavigateToPodcasterStudio={() => setActiveTab('podcaster-studio')}
           />
         );
       case 'dj-mixes':
