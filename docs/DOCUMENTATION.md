@@ -3559,6 +3559,8 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Full route verification suite `backend/tests/run_verification.py` passed with all routes operational.
 
 ---
+
+### Phase 39 — DJ Mixes Clearance & Free Promotional Streaming Policy (Shipped)
 - **Problem Statement & Business Directive**:
   - Previously, un-cleared DJ mixes displayed restrictive sales locks without distinguishing between commercial purchases and streaming access, creating friction for listeners and preventing prospective IP owners from auditioning their music in context.
   - Platform governance required an adjustment to DJ mixes logic:
@@ -3623,63 +3625,32 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Production builds verified:
     - `npm run build --workspace=tunestream` (0 errors).
     - `npm run build --workspace=portal` (0 errors).
+---
 
-- **Problem Statement & Requirements**:
-  - On `http://localhost:3001/#/?view=browse-podcasts` (TuneStream Podcast Streaming Hub):
-    1. **Tip Floor Reflection**: Previously, the tip button was hardcoded to $5.00 / 50 Credits, failing to reflect the platform's official floor of **Ksh 50+ or USD $1.00+ localized** (50 credits for Kenya / 100 credits for USD and global regions at 1 Credit = 1 KES = $0.01 USD).
-    2. **Tip Button Functionality & Dual-Rail Protocols**: The tip button previously only executed local client-side state manipulation without invoking backend APIs or recording double-entry ledger transactions via TuneLedger. It lacked payment integration, reload triggers for insufficient credits, split cascade distribution preview/settlement, receipt tokens, and communication audit logging.
-    3. **"Open TuneMavens Podcaster Studio" Navigation**: The callout button failed to navigate due to prop name mismatches (`onOpenPodcasterStudio` vs `onNavigateToPodcasterStudio`) and `PlayerDashboard` defaulting to `'home'` instead of reading `tab=podcaster-studio` from URL parameters.
-    4. **Functional Termination Across Podcast Hub**: Required ensuring all buttons, links, modals, chapters, and forms terminate to their correct destinations:
-       - EPK and Ad Rates modal with tabs ('overview', 'sponsorship', 'episodes', 'guest-booking').
-       - Guest booking / sponsor inquiry form submitting to `/api/podcasts/{slug}/book-guest` supporting both camelCase and snake_case models with communications audit trail.
-       - RSS feed copying to clipboard from `/api/podcasts/{slug}/rss.xml`.
-       - Standalone EPK link navigating cleanly to `#/epk/{show.slug}?persona=podcaster`.
-       - Chapter seek jumping directly to audio timestamps.
-       - Synchronized transcript toggle viewing.
-       - Episode drawer and card quick-play playback triggers.
+### Phase 41 — Portal Studio Termination & AppContent activeUser Crash Resolution (Shipped)
+- **Problem Statement & Root Cause**:
+  1. **Dashboard Crash on Load (`ReferenceError: activeUser is not defined`)**:
+     - When navigating to `http://localhost:3000/#/dashboard?role=podcaster&tab=podcaster-studio` (or clicking "Open in Portal Studio" from TuneStream on `http://localhost:3001`), the portal crashed into `GlobalErrorBoundary` (`tunemavens Eneo la kazi Recovery` / `activeUser ni si fafanua`).
+     - **Root Cause**: In `apps/portal/src/App.jsx`, the `/native-apps/:slug` route inside `AppContent` attempted to read `userCredits={activeUser?.credits ?? 150}`. However, `activeUser` was scoped strictly inside the `DashboardView` child component. `AppContent` only had `sessionUser` in scope, throwing an unhandled `ReferenceError` during top-level route tree evaluation.
+  2. **Role & Tab Precedence in Portal Routing**:
+     - Previously, `DashboardView` in `apps/portal/src/App.jsx` evaluated `storedPersona` from `localStorage` before inspecting URL query parameters (`tab` and `role`). Users with prior session state (e.g. `'creator'` or `'consumer'`) had their requested tab overridden, preventing access to `podcaster-studio`.
+  3. **TuneStream Floating Player Occlusion**:
+     - The floating TuneStream web player overlay can occlude footer callouts like "Open in Portal Studio" until minimized or closed.
 - **Architectural Solutions & Changes**:
-  - **Backend Endpoints & Ledger Integration (`backend/routes/podcasts_router.py`, `backend/services/stream_service.py`, `backend/routes/stream_router.py`)**:
-    - Added dedicated `POST /api/podcasts/{slug}/tip` endpoint with minimum floor validation: 50 Credits (KSh 50) in Kenya or 100 Credits ($1.00 USD) in USD/global.
-    - Integrated atomic dual-rail ledger settlement: 95% net creator split distributed across show collaborators according to the show's Split Cascade, 5% TuneMavens platform routing fee.
-    - Enforced insufficient credit balance checking, returning HTTP 400 with available balance vs required credits to trigger the unified reload modal.
-    - Enhanced `tip_creator_with_credits` in `backend/services/stream_service.py` to automatically resolve podcast shows and host profiles from `db.podcasts`, recording collaborator split cascade breakdowns.
-    - Added automated communications protocol audit logging to `db.communications` (`type: "fan_tip_settlement"`, receipt tokens `TM-TIP-2026-XXXXX`).
-    - Updated `GuestBookingCreateRequest` to accept both camelCase and snake_case aliases and record guest booking inquiries to `db.communications` for CRM audit trail.
-  - **Interactive Tip Modal & Floor Enforcement (`TipPodcasterModal`, `PodcastStreamingHub.jsx` across `apps/tunestream` and `apps/portal`)**:
-    - Created `TipPodcasterModal` with tier options starting at the floor:
-      - Kenya (KES): 50 TM (KSh 50 — Floor), 250 TM (KSh 250), 500 TM (KSh 500), 1,000 TM (KSh 1,000), custom amount.
-      - USD / Global: 100 TM ($1.00 — Floor), 250 TM ($2.50), 500 TM ($5.00), 1,000 TM ($10.00), custom amount.
-    - Real-time Split Cascade preview showing exact credit distributions to lead host, co-hosts, and production sound labs.
-    - Live wallet balance detection with warning badge and direct reload prompt if credits are insufficient.
-    - Dual-rail settlement confirmed notice with receipt token, amount, date, recipient, and split details.
-    - Standardized button labels across Hero banner, Drawer modal, and cards to dynamically display localized floor (`Tip Hosts (${floorLabel} / ${floorCredits} Credits)`, `Tip Host (${floorLabel})`).
-  - **Podcaster Studio Routing & Navigation Harmonization**:
-    - Updated `NativeAppLandingView.jsx` across `tunestream` and `portal` to pass `userCredits`, `setUserCredits`, `onOpenCreditReload`, `onOpenPodcasterStudio`, and `onNavigateToPodcasterStudio`.
-    - Updated `PlayerDashboard` in `App.jsx` to dynamically initialize `activeTab` from URL query/hash parameters (`tab=podcaster-studio`).
-    - Automatically sets `userRole` to `'podcaster'` and exposes the Podcaster Studio & EPK navigation tile in the sidebar when visiting `/dashboard?tab=podcaster-studio`.
-    - The callout button now seamlessly transitions the user to the Podcaster Studio workspace with zero broken links.
+  - **Portal Root Scope Fix (`apps/portal/src/App.jsx`)**:
+    - Replaced `activeUser?.credits ?? 150` with `sessionUser?.credits ?? 150` in `AppContent`, eliminating the runtime `ReferenceError` across all portal routes.
+  - **Persona Precedence & Dynamic Tab Synchronization (`apps/portal/src/App.jsx`)**:
+    - Prioritized `reqRoleParam` (`role=podcaster`) and podcaster tab queries (`podcaster-studio`, `podcaster-episodes`, `podcaster-epk`, `podcaster-monetization`, `podcaster-guests`, `podcaster-overview`, `podcast-studio`) ahead of `storedPersona`.
+    - Automated persona synchronization in `useEffect` when switching to podcaster tabs: sets `activeUser.role = 'podcaster'` and persists to `tunemavens_active_persona`.
+    - Whitelisted `podcaster-overview` and `podcast-studio` in `roleAllowed` for consumer, creator, and admin roles.
+  - **Link Termination & In-App Routing (`PodcastStreamingHub.jsx` in `tunestream` and `portal`)**:
+    - Target URL updated to `#/dashboard?role=podcaster&tab=podcaster-studio` (and `http://localhost:3000/#/dashboard?role=podcaster&tab=podcaster-studio`).
+    - Handled in-app navigation for same-origin instances (port 3000) using direct hash navigation, avoiding blank tab popups.
 - **Verification**:
-  - `FastAPI TestClient` tests verified:
-    - KES tip floor settled 50 credits with 47.5 net credits distributed to Zawadi Kiprop (45%), Kofi Mensah (35%), Baraka Sound Labs (20%).
-    - USD tip floor enforced 100 credits ($1.00 minimum floor).
-    - Insufficient balance request returned HTTP 400 with descriptive error.
-    - Communications audit entry confirmed recorded in `db.communications`.
-    - Guest booking endpoint submitted and recorded successfully.
-    - RSS 2.0 XML endpoint returned valid syndication XML.
-  - Production Vite builds for both `portal` and `tunestream` workspaces completed with 0 errors.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  - Browser subagent verified navigation end-to-end:
+    - Clicked "Open in Portal Studio" from `http://localhost:3001/#/?view=browse-podcasts`: terminated at `http://localhost:3000/#/dashboard?role=podcaster&tab=podcaster-studio` with 0 console errors.
+    - Verified full render of Dashboard Sidebar (user badge, navigation rail), Top Banner (`Mtoa huduma Studio`), and the complete Podcaster Studio workspace (Show selector, EPK link, RSS 2.0 button, 5 tabs, KPI telemetry cards, and published episode cards).
+    - Direct URL access to `http://localhost:3000/#/dashboard?role=podcaster&tab=podcaster-studio` verified rendering cleanly without crashes.
+    - Full Vite builds for `portal` and `tunestream` workspaces passing with 0 errors.
 
 
