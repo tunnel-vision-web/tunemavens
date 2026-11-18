@@ -28,6 +28,7 @@ import {
   RiUploadCloud2Line,
   RiImageAddFill,
   RiMusic2Fill,
+  RiHeadphoneFill,
   RiChat3Fill,
   RiSendPlaneFill,
   RiPhoneFill,
@@ -1389,8 +1390,8 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
               onClick={() => setCatalogFilter('pending')}
               data-testid="filter-pending-mixes-btn"
             >
-              <RiLockFill size={15} />
-              <span>Clearance In-Progress ({pendingMixesCount})</span>
+              <RiHeadphoneFill size={15} />
+              <span>Clearance In-Progress · Free to Stream ({pendingMixesCount})</span>
             </button>
             <button
               type="button"
@@ -1495,8 +1496,8 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                             <RiShieldCheckFill /> 100% Cleared · Selling
                           </span>
                         ) : (
-                          <span className="pill pill-amber">
-                            <RiLockFill /> Clearance In Progress ({clearedTracks}/{totalTracks})
+                          <span className="pill pill-cyan">
+                            <RiHeadphoneFill /> Free to Stream · Clearance In Progress ({clearedTracks}/{totalTracks})
                           </span>
                         )}
                       </div>
@@ -1509,7 +1510,7 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                       {/* Mini Track Extraction Snapshot */}
                       <div className="mix-card-playlist-preview">
                         <div className="preview-header">
-                          <span>Extracted Playlist ({totalTracks} Tracks)</span>
+                          <span>Extracted Playlist ({totalTracks} Tracks · IP Credited)</span>
                           <span className="split-badge">
                             {mix.is_original_ip_only ? '90% Sovereign' : '40% DJ / 50% IP'}
                           </span>
@@ -1522,8 +1523,13 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                               onClick={() => seekToTrack(t, mix)}
                             >
                               <span className="track-cue">[{formatSeconds(t.start_time)}]</span>
-                              <span className="track-title-trim">{t.artist} - {t.title}</span>
-                              <span className={`status-dot ${['signed', 'self_owned'].includes(t.clearance_status) ? 'green' : 'amber'}`} />
+                              <span className="track-title-trim">
+                                {t.artist} - {t.title}
+                                <span style={{ color: '#94a3b8', fontSize: '10.5px', marginLeft: '6px' }}>
+                                  (IP: {t.ip_owner_name || 'Credited Owner'})
+                                </span>
+                              </span>
+                              <span className={`status-dot ${['signed', 'self_owned'].includes(t.clearance_status) ? 'green' : 'cyan'}`} />
                             </div>
                           ))}
                           {totalTracks > 3 && (
@@ -1535,10 +1541,21 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                       </div>
                       {/* Card Footer Actions */}
                       <div className="mix-card-footer">
-                        <div className="mix-price-tag">
-                          {formatPrice(mix.commercial_price || 4.99)}
-                          <span className="credits-badge">{Math.round((mix.commercial_price || 4.99) * 100)} Credits</span>
-                        </div>
+                        {mix.sale_locked ? (
+                          <div className="mix-price-tag free-stream">
+                            <span style={{ color: '#22d3ee', fontWeight: 800, fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <RiHeadphoneFill size={14} /> FREE TO STREAM
+                            </span>
+                            <span className="credits-badge" style={{ background: 'rgba(34,211,238,0.12)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.25)' }}>
+                              Full IP Credits Attributed
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="mix-price-tag">
+                            {formatPrice(mix.commercial_price || 4.99)}
+                            <span className="credits-badge">{Math.round((mix.commercial_price || 4.99) * 100)} Credits</span>
+                          </div>
+                        )}
                         <div className="footer-btns">
                           <button
                             className="btn-secondary mini"
@@ -1549,14 +1566,36 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                           >
                             Tracklist & Clearance
                           </button>
-                          <button
-                            className={`btn-primary mini ${mix.sale_locked ? 'locked' : ''}`}
-                            onClick={() => handlePurchaseMix(mix)}
-                            title={mix.sale_locked ? 'Locked: 100% IP agreement required prior to sale' : `Purchase Lossless Mix · ${formatPrice(mix.commercial_price || 4.99)}`}
-                          >
-                            {mix.sale_locked ? <RiLockFill /> : <RiShoppingBag3Fill />}
-                            <span>{mix.sale_locked ? 'Locked' : `Buy · ${formatPrice(mix.commercial_price || 4.99)}`}</span>
-                          </button>
+                          {mix.sale_locked ? (
+                            <>
+                              <button
+                                className="btn-primary mini"
+                                style={{ background: '#22d3ee', color: '#060813', border: 'none' }}
+                                onClick={() => togglePlayMix(mix)}
+                                title="Stream this mix completely free while clearances are in progress"
+                              >
+                                {isCurrentlyPlaying ? <RiPauseFill /> : <RiPlayFill />}
+                                <span>{isCurrentlyPlaying ? 'Pause' : 'Stream Free'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handlePurchaseMix(mix)}
+                                title="Commercial Sales Locked: Free promotional streaming active. Unlocks upon 100% IP agreement."
+                                style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b', borderRadius: '3px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                              >
+                                <RiInformationFill size={14} />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              className="btn-primary mini"
+                              onClick={() => handlePurchaseMix(mix)}
+                              title={`Purchase Lossless Mix · ${formatPrice(mix.commercial_price || 4.99)}`}
+                            >
+                              <RiShoppingBag3Fill />
+                              <span>Buy · {formatPrice(mix.commercial_price || 4.99)}</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1657,15 +1696,34 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                   <span>Sign IP Ownership Warranty</span>
                 </button>
               )}
-              <button
-                className={`btn-primary ${selectedMix.sale_locked ? 'locked' : ''}`}
-                onClick={() => handlePurchaseMix(selectedMix)}
-              >
-                {selectedMix.sale_locked ? <RiLockFill /> : <RiShoppingBag3Fill />}
-                <span>
-                  {selectedMix.sale_locked ? 'Sales Locked (Clearance Incomplete)' : `Buy Mix (${formatPrice(selectedMix.commercial_price)})`}
-                </span>
-              </button>
+              {selectedMix.sale_locked ? (
+                <>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => togglePlayMix(selectedMix)}
+                    title="Stream this mix completely free in lossless audio"
+                  >
+                    {playingMixId === selectedMix.id && isPlaying ? <RiPauseFill /> : <RiPlayFill />}
+                    <span>{playingMixId === selectedMix.id && isPlaying ? 'Pause Stream' : 'Stream Free Now'}</span>
+                  </button>
+                  <button
+                    className="btn-primary locked"
+                    onClick={() => handlePurchaseMix(selectedMix)}
+                    title="Commercial Sales Locked: Mix is free to stream. Commercial sales unlock upon 100% IP clearance."
+                  >
+                    <RiInformationFill />
+                    <span>Commercial Sales Locked (Free Stream Active)</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="btn-primary"
+                  onClick={() => handlePurchaseMix(selectedMix)}
+                >
+                  <RiShoppingBag3Fill />
+                  <span>Buy Mix ({formatPrice(selectedMix.commercial_price)})</span>
+                </button>
+              )}
             </div>
           </div>
           {/* Hero Mix Player Panel */}
@@ -1687,8 +1745,8 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                     <RiShieldCheckFill /> 100% Cleared · Active For Commercial Sales
                   </span>
                 ) : (
-                  <span className="pill pill-amber">
-                    <RiLockFill /> Clearance In Progress ({selectedMix.clearance_summary?.cleared_tracks}/{selectedMix.clearance_summary?.total_tracks} Signed)
+                  <span className="pill pill-cyan">
+                    <RiHeadphoneFill /> Free Promotional Stream · Clearance In Progress ({selectedMix.clearance_summary?.cleared_tracks}/{selectedMix.clearance_summary?.total_tracks} Signed)
                   </span>
                 )}
               </div>
@@ -1731,21 +1789,21 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
             </div>
           </div>
           {/* Prior Agreement Enforcement Callout */}
-          <div className={`prior-agreement-banner ${selectedMix.sale_locked ? 'amber-glow' : 'green-glow'}`}>
+          <div className={`prior-agreement-banner ${selectedMix.sale_locked ? 'cyan-glow' : 'green-glow'}`}>
             <div className="banner-icon-col">
-              {selectedMix.sale_locked ? <RiLockFill /> : <RiLockUnlockFill />}
+              {selectedMix.sale_locked ? <RiHeadphoneFill className="highlight-cyan" /> : <RiLockUnlockFill />}
             </div>
             <div className="banner-text-col">
               <h4>
                 {selectedMix.sale_locked
-                  ? 'Commercial Sales Locked: Prior Complete Agreement In Progress'
+                  ? 'Free Promotional Streaming Active — Commercial Sales Unlock Upon 100% Clearance'
                   : '100% Prior Agreement Verified — Commercial Sales Active!'}
               </h4>
               <p>
                 {selectedMix.is_original_ip_only
                   ? 'This mix is classified as 100% Original IP. No external clearances are required.'
                   : selectedMix.sale_locked
-                  ? 'TuneMavens platform policy mandates: Prior to having any sales, all IP owners must be in complete agreement and sign the requisite contract on our system.'
+                  ? 'TuneMavens platform policy: For mixes awaiting full clearances, audio streaming is 100% free. This gives the DJ and featured recording artists valuable exposure, allows invited IP owners to experience the platform and verify cues firsthand, while consumers enjoy the music. All featured IP owners are fully credited below. Commercial downloads and paid sales will unlock once all clearances are executed.'
                   : 'All featured IP owners have executed their requisite contracts with cryptographic SHA-256 seals. Split Cascade distributions are ready.'}
               </p>
             </div>
@@ -1754,7 +1812,7 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                 <span className="meter-pct">
                   {selectedMix.is_original_ip_only ? 100 : selectedMix.clearance_summary?.clearance_percentage || 0}%
                 </span>
-                <span className="meter-lbl">Agreed</span>
+                <span className="meter-lbl">{selectedMix.sale_locked ? 'Free Stream' : 'Agreed'}</span>
               </div>
             </div>
           </div>
@@ -1797,6 +1855,15 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                 Split Cascade: {selectedMix.dj_split_percentage}% DJ · {selectedMix.track_owners_split_percentage}% Track Owners · {selectedMix.platform_fee_percentage}% Platform
               </div>
             </div>
+
+            {/* Mandatory IP Owner Credits & Attribution Notice */}
+            <div style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.22)', borderRadius: '3px', padding: '10px 14px', margin: '10px 0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#cbd5e1' }}>
+              <RiShieldCheckFill style={{ color: '#22d3ee', flexShrink: 0 }} size={18} />
+              <span>
+                <strong style={{ color: '#22d3ee' }}>Mandatory IP Attribution &amp; Rights Transparency:</strong> All featured songwriters, performing artists, and master copyright owners are credited below. While clearances are pending, the mix is completely free to stream so consumers can enjoy the music and invited IP owners can experience the platform before executing clearance agreements.
+              </span>
+            </div>
+
             <div className="tracklist-cards-list">
               {selectedMix.tracklist?.map((track, idx) => {
                 const isTrackActive = playingMixId === selectedMix.id && activeTrackIndex === idx;
@@ -1826,8 +1893,11 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                     </div>
                     <div className="track-right-col">
                       <div className="track-ip-owner-info">
-                        <div className="ip-name">{track.ip_owner_name}</div>
-                        <div className="ip-email">{track.ip_owner_email}</div>
+                        <div style={{ fontSize: '9.5px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 800 }}>
+                          Credited Rights Holder:
+                        </div>
+                        <div className="ip-name" style={{ color: '#22d3ee', fontWeight: 700 }}>{track.ip_owner_name || 'Rights Holder'}</div>
+                        <div className="ip-email">{track.ip_owner_email || 'Contact pending'}</div>
                       </div>
                       <div className="track-earnings-col">
                         <div className="track-split-share">
@@ -1851,12 +1921,12 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                             <RiCheckFill /> Signed & Sealed
                           </span>
                         ) : track.clearance_status === 'requested' ? (
-                          <span className="pill pill-amber">
-                            <RiTimeFill /> Invite Sent
+                          <span className="pill pill-cyan">
+                            <RiHeadphoneFill /> Free Stream · Invite Sent
                           </span>
                         ) : (
-                          <span className="pill pill-dark">
-                            Pending Invite
+                          <span className="pill pill-cyan">
+                            <RiHeadphoneFill /> Free Stream · IP Credited
                           </span>
                         )}
                       </div>
@@ -2229,51 +2299,84 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
         </div>
       )}
       {/* ===================================================================== */}
-      {/* MODAL: SALE LOCKED GOVERNANCE ENFORCEMENT */}
+      {/* MODAL: SALE LOCKED GOVERNANCE & FREE PROMOTIONAL STREAMING ENFORCEMENT */}
       {/* ===================================================================== */}
       {saleLockedModal && (
         <div className="modal-backdrop">
-          <div className="modal-card card-glass locked-alert">
+          <div className="modal-card card-glass locked-alert" style={{ maxWidth: '640px' }}>
             <div className="modal-header">
               <div className="modal-title-wrap">
-                <RiLockFill className="modal-icon highlight-amber" />
-                <h3>Commercial Sales Locked: 100% Prior Agreement Required</h3>
+                <RiHeadphoneFill className="modal-icon highlight-cyan" />
+                <div>
+                  <h3 style={{ margin: 0 }}>Free Promotional Streaming Active</h3>
+                  <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Commercial Sales Locked · 100% IP Clearance Required For Paid Downloads
+                  </span>
+                </div>
               </div>
               <button className="btn-icon" onClick={() => setSaleLockedModal(null)}>
                 <RiCloseFill />
               </button>
             </div>
             <div className="modal-body">
-              <p className="locked-alert-text">
-                According to platform governance: <strong>Prior to having any sales, all IP owners must be in complete agreement.</strong> 
-                Commercial checkout is held in statutory escrow until every featured recording has an executed clearance agreement.
+              <div style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '3px', padding: '14px 16px', marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 8px', color: '#22d3ee', fontSize: '13.5px', fontWeight: 800 }}>
+                  🎧 Unrestricted Free Streaming Policy (Two-Fold Purpose):
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '18px', color: '#cbd5e1', fontSize: '12.5px', lineHeight: 1.6 }}>
+                  <li>
+                    <strong>DJ &amp; Artist Exposure:</strong> Consumers can enjoy this continuous set 100% free with lossless audio quality, providing immediate reach and fanbase discovery for the curating DJ and all featured performing artists.
+                  </li>
+                  <li>
+                    <strong>Platform Experience for Invited IP Owners:</strong> Invited rights holders have the opportunity to experience TuneMavens firsthand, hear their track in context, verify cue points, and inspect transparent split waterfall ledgers before executing their clearance agreement.
+                  </li>
+                  <li>
+                    <strong>Mandatory IP Attribution:</strong> All featured master copyright owners and songwriters are prominently credited across the tracklist and player.
+                  </li>
+                </ul>
+              </div>
+
+              <p className="locked-alert-text" style={{ fontSize: '12.5px', color: '#94a3b8', margin: '0 0 14px' }}>
+                Commercial checkout and paid MP3/WAV downloads will unlock automatically once <strong>100% of featured IP owners</strong> have executed their digital clearance agreements.
               </p>
+
               <div className="pending-tracks-box">
-                <h4>Pending Rights Holders ({saleLockedModal.pendingTracks.length}):</h4>
+                <h4>Pending Rights Holders Awaiting Clearance ({saleLockedModal.pendingTracks.length}):</h4>
                 <ul>
                   {saleLockedModal.pendingTracks.map((t, i) => (
                     <li key={i}>
-                      <strong>{t.title}</strong> by {t.artist} — Rights Holder: <em>{t.ip_owner_name}</em> ({t.ip_owner_email})
+                      <strong>{t.title}</strong> by {t.artist} — Credited Rights Holder: <em>{t.ip_owner_name}</em> ({t.ip_owner_email || 'Email pending'})
                     </li>
                   ))}
                 </ul>
               </div>
-              <p className="hint-text">
-                You can send reminder emails or direct the IP owners to execute their digital clearance agreements in the portal.
-              </p>
             </div>
-            <div className="modal-footer">
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
               <button className="btn-secondary" onClick={() => setSaleLockedModal(null)}>Close</button>
-              <button
-                className="btn-primary"
-                onClick={() => {
-                  setSaleLockedModal(null);
-                  handleDispatchClearances(saleLockedModal.mix.id);
-                }}
-              >
-                <RiMailSendFill />
-                <span>Send Clearance Reminders to All IP Owners</span>
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  className="btn-primary"
+                  style={{ background: '#22d3ee', color: '#060813', border: 'none' }}
+                  onClick={() => {
+                    const targetMix = saleLockedModal.mix;
+                    setSaleLockedModal(null);
+                    togglePlayMix(targetMix);
+                  }}
+                >
+                  <RiPlayFill />
+                  <span>Stream Mix Free Now</span>
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setSaleLockedModal(null);
+                    handleDispatchClearances(saleLockedModal.mix.id);
+                  }}
+                >
+                  <RiMailSendFill />
+                  <span>Dispatch Reminders</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

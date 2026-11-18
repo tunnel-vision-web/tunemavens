@@ -549,6 +549,9 @@ class DjMix(BaseDocument):
     currency: str = "USD"
     status: str = "draft"  # draft | clearance_pending | all_cleared | published
     sale_locked: bool = True
+    free_to_stream: bool = True
+    streaming_mode: str = "free_promotional"  # free_promotional | commercial
+    ip_credits_mandatory: bool = True
     tracklist: List[DjMixTrackItem] = Field(default_factory=list)
     dj_split_percentage: float = 40.0
     track_owners_split_percentage: float = 50.0

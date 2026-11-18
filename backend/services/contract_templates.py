@@ -320,13 +320,27 @@ def dj_mix_clearance_template(context: dict) -> tuple[str, list[dict]]:
             "id": "prior_consensus_condition",
             "title": "Condition Precedent — 100% IP Owner Agreement Required",
             "body": (
-                "Prior to having any commercial sales, paid downloads, or paywalled streaming of the mix, "
+                "Prior to having any commercial sales, paid downloads, or paywalled transactions of the mix, "
                 "ALL IP owners and rights holders whose works are included in the mix tracklist must be in complete agreement "
                 "and have executed their respective clearance agreements on the TuneMavens platform. "
-                "Commercial monetization remains cryptographically locked by the platform until 100% agreement is verified."
+                "Commercial sales and paid downloads remain cryptographically locked by the platform until 100% agreement is verified."
             ),
             "negotiable": False,
             "non_negotiable_reason": "Platform rule: No commercial sales occur without 100% prior rights-holder consensus.",
+        },
+        {
+            "id": "promotional_free_streaming",
+            "title": "Promotional Free Streaming & Mandatory IP Owner Credits",
+            "body": (
+                f"Prior to receiving 100% clearance from all featured IP owners, the mix '{mix_title}' is completely free to stream "
+                "in lossless audio across TuneMavens and TuneStream. This serves two vital purposes: (1) it provides the Curating DJ "
+                "and featured recording artists immediate global exposure while consumers enjoy their music, and (2) it affords invited "
+                f"IP owners and publishers an active opportunity to experience the platform, review their cue placement, and test the "
+                f"ecosystem firsthand before signing. Full artistic and IP ownership credit shall be prominently displayed for '{track_title}' "
+                f"and rights holder {ip_owner_name} at all times throughout streaming."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Ecosystem promotional policy: Free streaming until cleared with mandatory IP owner crediting.",
         },
         {
             "id": "revenue_splits",

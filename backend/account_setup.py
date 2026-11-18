@@ -712,6 +712,14 @@ def send_dj_mix_clearance_invitation(
       <td style="padding:6px 0;font-weight:600;text-align:right;color:#10b981;">{split_pct:.2f}% of gross (${estimated_payout_per_sale:.2f} / sale)</td>
     </tr>
     <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Streaming Status:</td>
+      <td style="padding:6px 0;font-weight:600;text-align:right;color:#22d3ee;">Free Promotional Stream Active</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">IP Owner Crediting:</td>
+      <td style="padding:6px 0;font-weight:600;text-align:right;color:#a78bfa;">100% Fully Credited</td>
+    </tr>
+    <tr>
       <td style="padding:6px 0;color:#94a3b8;">Condition Precedent:</td>
       <td style="padding:6px 0;font-style:italic;text-align:right;color:#f59e0b;">No sales occur until 100% agreement</td>
     </tr>
@@ -720,6 +728,10 @@ def send_dj_mix_clearance_invitation(
       <td style="padding:6px 0;font-family:monospace;text-align:right;">{contract_id}</td>
     </tr>
   </table>
+</div>
+
+<div style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);border-radius:3px;padding:14px 16px;margin:16px 0;font-size:13px;color:#cbd5e1;line-height:1.5;">
+  <strong style="color:#22d3ee;">Free Promotional Streaming Notice:</strong> Until all clearances are executed, this mix is completely free to stream. This gives you, your artist, and the DJ global exposure while consumers enjoy the music, and gives you the opportunity to experience the TuneMavens platform, hear your track in the set, and review your proposed commercial splits. You are prominently credited as the IP owner across all players and tracklists.
 </div>
 
 <p style="margin:0 0 16px 0;color:#cbd5e1;font-size:14px;">

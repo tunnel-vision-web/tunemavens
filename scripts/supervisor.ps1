@@ -6,9 +6,7 @@ foreach ($port in $targetPorts) {
     if ($conns) {
         $pidsToKill = $conns.OwningProcess | Select-Object -Unique
         foreach ($p in $pidsToKill) {
-            if ($p -and $p -ne 0) {
-                Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
-            }
+            Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
         }
     }
 }
@@ -21,19 +19,19 @@ if (!(Test-Path $logDir)) {
 }
 
 # 1. FastAPI Backend (Port 8001)
-Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--host", "0.0.0.0", "--reload" -WorkingDirectory "c:\BOCM\Apps\tunemavens" -WindowStyle Hidden
+Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--host", "0.0.0.0", "--reload", "--reload-dir", "backend" -WorkingDirectory "c:\BOCM\Apps\tunemavens" -RedirectStandardOutput "$logDir\backend.log" -RedirectStandardError "$logDir\backend_err.log" -WindowStyle Hidden
 
 # 2. Portal (Port 3000)
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\portal" -WindowStyle Hidden
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\portal" -RedirectStandardOutput "$logDir\portal.log" -RedirectStandardError "$logDir\portal_err.log" -WindowStyle Hidden
 
 # 3. TuneStream (Port 3001)
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\tunestream" -WindowStyle Hidden
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\tunestream" -RedirectStandardOutput "$logDir\tunestream.log" -RedirectStandardError "$logDir\tunestream_err.log" -WindowStyle Hidden
 
 # 4. SyncMavens (Port 3002)
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\syncmavens" -WindowStyle Hidden
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\syncmavens" -RedirectStandardOutput "$logDir\syncmavens.log" -RedirectStandardError "$logDir\syncmavens_err.log" -WindowStyle Hidden
 
 # 5. Express API (Port 5000)
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\api" -WindowStyle Hidden
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\api" -RedirectStandardOutput "$logDir\api.log" -RedirectStandardError "$logDir\api_err.log" -WindowStyle Hidden
 
 # Supervisor persistent heartbeat loop
 while ($true) {

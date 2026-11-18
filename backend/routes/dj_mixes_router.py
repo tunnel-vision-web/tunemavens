@@ -613,6 +613,43 @@ def _format_mix_response(doc: dict) -> dict:
     else:
         doc["sale_locked"] = True
 
+    # Free streaming until cleared logic:
+    # For mixes that have not been cleared by IP owners yet, let these mixes be completely
+    # free to stream until clearances are received.
+    # Serves two purposes:
+    # 1. Gives the DJ and artists exposure while consumers enjoy their music.
+    # 2. Allows invited IP owners an opportunity to experience the platform.
+    # All IP owners must be credited.
+    doc["free_to_stream"] = True
+    doc["stream_access"] = "free"
+    doc["streaming_mode"] = "commercial" if all_cleared else "free_promotional"
+    doc["free_stream_until_cleared"] = not all_cleared
+    doc["ip_credits_mandatory"] = True
+    doc["clearance_policy"] = {
+        "free_to_stream": True,
+        "streaming_mode": "commercial" if all_cleared else "free_promotional",
+        "commercial_sales_locked": not all_cleared,
+        "ip_owners_credited": True,
+        "purposes": [
+            "Gives the DJ and featured artists exposure while consumers enjoy the music completely free",
+            "Allows invited IP owners an opportunity to experience the platform, cue points, and split waterfall before signing"
+        ]
+    }
+    doc["credited_ip_owners"] = [
+        {
+            "track_id": t.get("id"),
+            "track_title": t.get("title"),
+            "artist": t.get("artist"),
+            "ip_owner_name": t.get("ip_owner_name", "IP Owner"),
+            "ip_owner_email": t.get("ip_owner_email", ""),
+            "start_time": t.get("start_time", 0),
+            "end_time": t.get("end_time", 0),
+            "clearance_status": t.get("clearance_status", "pending"),
+            "credit_statement": f"Featured Recording: '{t.get('title')}' by {t.get('artist')} · Rights Holder: {t.get('ip_owner_name', 'IP Owner')}"
+        }
+        for t in tracklist
+    ]
+
     return doc
 
 
@@ -852,6 +889,7 @@ def list_dj_mixes(
 
 
 @router.get("/{mix_id}", response_model=dict)
+@alias_router.get("/{mix_id}", response_model=dict)
 def get_dj_mix(mix_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
     """Get single DJ mix with full tracklist playlist and contract clearance status."""
     if not ObjectId.is_valid(mix_id):
@@ -862,6 +900,38 @@ def get_dj_mix(mix_id: str, current_user: Optional[dict] = Depends(get_optional_
         raise HTTPException(status_code=404, detail="DJ Mix not found")
 
     return _format_mix_response(doc)
+
+
+@router.get("/{mix_id}/stream", response_model=dict)
+@alias_router.get("/{mix_id}/stream", response_model=dict)
+def get_dj_mix_stream(mix_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
+    """Streaming access endpoint for DJ mixes.
+    
+    If the mix is pending clearances, it is 100% FREE to stream to provide
+    the DJ and artists exposure and let invited IP owners experience TuneMavens.
+    Full IP owner credits are returned with the stream payload.
+    """
+    if not ObjectId.is_valid(mix_id):
+        raise HTTPException(status_code=400, detail="Invalid mix ID format")
+
+    doc = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="DJ Mix not found")
+
+    formatted = _format_mix_response(doc)
+    return {
+        "status": "success",
+        "mix_id": formatted["id"],
+        "title": formatted["title"],
+        "dj_name": formatted["dj_name"],
+        "audio_url": formatted["audio_url"],
+        "free_to_stream": True,
+        "streaming_mode": formatted["streaming_mode"],
+        "free_stream_until_cleared": formatted["free_stream_until_cleared"],
+        "ip_credits_mandatory": True,
+        "credited_ip_owners": formatted.get("credited_ip_owners", []),
+        "clearance_summary": formatted.get("clearance_summary", {})
+    }
 
 
 @router.put("/{mix_id}/tracklist", response_model=dict)
@@ -1262,8 +1332,16 @@ def purchase_dj_mix(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
                 "error": "Commercial sales locked",
-                "message": "Prior to having any sales, all IP owners must be in complete agreement.",
-                "pending_clearances": pending_tracks
+                "message": (
+                    "Prior to having any sales, all IP owners must be in complete agreement. "
+                    "This mix is completely free to stream while clearances are pending, providing exposure "
+                    "for the DJ and artists and allowing invited IP owners an opportunity to experience the platform with full credits."
+                ),
+                "pending_clearances": pending_tracks,
+                "free_to_stream": True,
+                "streaming_mode": "free_promotional",
+                "purpose": "Free streaming until clearance gives the DJ and artists exposure and lets invited IP owners experience TuneMavens with full attribution.",
+                "ip_owners_credited": True
             }
         )
 

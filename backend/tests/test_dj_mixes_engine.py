@@ -234,3 +234,88 @@ def test_commercial_clearance_lifecycle_and_sale_gate(auth_headers, dj_user):
     assert len(splits["track_allocations"]) == 2
     assert splits["track_allocations"][0]["allocated_amount"] == 1.25
     assert splits["track_allocations"][1]["allocated_amount"] == 1.25
+
+
+def test_free_promotional_streaming_until_cleared_with_ip_credits(auth_headers):
+    # Create mix with pending clearance
+    create_payload = {
+        "title": "Mombasa Sunset Showcase (Pending Clearances)",
+        "description": "Showcase afro-tech set with external recordings.",
+        "genre": "Afro-House",
+        "bpm_avg": 122,
+        "duration_seconds": 1800,
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        "is_original_ip_only": False,
+        "commercial_price": 5.99,
+        "auto_extract_tracks": False
+    }
+    create_res = client.post("/api/dj/mixes", json=create_payload, headers=auth_headers)
+    assert create_res.status_code == 200
+    mix = create_res.json()
+    mix_id = mix["id"]
+
+    # Add tracklist with 2 external IP owners
+    tracklist_payload = {
+        "tracklist": [
+            {
+                "id": "trk_promo_1",
+                "title": "Kilifi Dub",
+                "artist": "Coastal Pioneer",
+                "ip_owner_name": "Coastline Music Ltd",
+                "ip_owner_email": "coast@tunemavens.com",
+                "start_time": 0,
+                "end_time": 900,
+                "clearance_status": "pending"
+            },
+            {
+                "id": "trk_promo_2",
+                "title": "Zanzibar Echoes",
+                "artist": "Taarab Collective",
+                "ip_owner_name": "Indian Ocean Records",
+                "ip_owner_email": "ocean@tunemavens.com",
+                "start_time": 900,
+                "end_time": 1800,
+                "clearance_status": "pending"
+            }
+        ]
+    }
+    client.put(f"/api/dj/mixes/{mix_id}/tracklist", json=tracklist_payload, headers=auth_headers)
+
+    # 1. Fetch mix: verify free promotional streaming is active and IP owners are credited
+    get_res = client.get(f"/api/dj/mixes/{mix_id}")
+    assert get_res.status_code == 200
+    data = get_res.json()
+    assert data["free_to_stream"] is True
+    assert data["streaming_mode"] == "free_promotional"
+    assert data["free_stream_until_cleared"] is True
+    assert data["sale_locked"] is True
+    assert data["ip_credits_mandatory"] is True
+    assert len(data["credited_ip_owners"]) == 2
+    assert "Coastline Music Ltd" in data["credited_ip_owners"][0]["ip_owner_name"]
+    assert "Featured Recording" in data["credited_ip_owners"][0]["credit_statement"]
+
+    # 2. Call explicit /stream endpoint
+    stream_res = client.get(f"/api/dj/mixes/{mix_id}/stream")
+    assert stream_res.status_code == 200
+    stream_data = stream_res.json()
+    assert stream_data["free_to_stream"] is True
+    assert stream_data["streaming_mode"] == "free_promotional"
+    assert len(stream_data["credited_ip_owners"]) == 2
+
+    # 3. Attempting commercial purchase returns 403 explaining promotional free streaming
+    buy_res = client.post(f"/api/dj/mixes/{mix_id}/purchase", json={"payment_method": "wallet"}, headers=auth_headers)
+    assert buy_res.status_code == 403
+    detail = buy_res.json()["detail"]
+    assert detail["free_to_stream"] is True
+    assert detail["streaming_mode"] == "free_promotional"
+    assert "free to stream" in detail["message"].lower()
+
+    # 4. Sign both clearances -> streaming_mode transitions to commercial
+    client.post(f"/api/dj/mixes/{mix_id}/sign-clearance/trk_promo_1", json={"signer_name": "Coast Rep", "signer_email": "coast@tunemavens.com"})
+    sign2 = client.post(f"/api/dj/mixes/{mix_id}/sign-clearance/trk_promo_2", json={"signer_name": "Ocean Rep", "signer_email": "ocean@tunemavens.com"})
+    assert sign2.status_code == 200
+    cleared_mix = sign2.json()["mix"]
+    assert cleared_mix["streaming_mode"] == "commercial"
+    assert cleared_mix["sale_locked"] is False
+    assert cleared_mix["free_stream_until_cleared"] is False
+

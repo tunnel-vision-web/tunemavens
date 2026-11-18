@@ -1896,7 +1896,7 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
           Curated DJ Mixes, Official DJ EPKs &amp; Direct Gig Booking
         </h2>
         <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0, maxWidth: '760px', lineHeight: 1.55 }}>
-          Stream or purchase continuous lossless DJ sets with 100% cleared IP splits (40% DJ / 50% Featured Track Rights Holders / 10% Platform), or open any DJ&apos;s Official EPK to view their rate card, download their tech rider, and book them for a gig.
+          Stream continuous lossless DJ sets. Sets awaiting full clearance are 100% free to stream to provide immediate exposure for the DJ and featured recording artists, and let invited IP owners experience TuneMavens before signing. Cleared sets unlock commercial split sales (40% DJ / 50% Track Rights Holders / 10% Platform). All IP owners are fully credited.
         </p>
       </div>
 
@@ -1988,8 +1988,8 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
                   <span style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(6,8,19,0.85)', color: '#22d3ee', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
                     {mix.genre} · {mix.bpm_avg || 120} BPM
                   </span>
-                  <span style={{ position: 'absolute', top: '10px', right: '10px', background: mix.is_original_ip_only ? 'rgba(168,85,247,0.9)' : 'rgba(16,185,129,0.9)', color: '#fff', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
-                    {mix.is_original_ip_only ? '100% Original IP' : '✓ 100% Rights Cleared'}
+                  <span style={{ position: 'absolute', top: '10px', right: '10px', background: mix.is_original_ip_only ? 'rgba(168,85,247,0.9)' : mix.sale_locked ? 'rgba(34,211,238,0.95)' : 'rgba(16,185,129,0.9)', color: mix.sale_locked && !mix.is_original_ip_only ? '#060813' : '#fff', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
+                    {mix.is_original_ip_only ? '100% Original IP' : mix.sale_locked ? '🎧 Free to Stream · Clearance In Progress' : '✓ 100% Rights Cleared'}
                   </span>
                 </div>
                 <div style={{ padding: '16px' }}>
@@ -2008,12 +2008,14 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
                   {Array.isArray(mix.tracklist) && mix.tracklist.length > 0 && (
                     <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '3px', padding: '8px 10px', marginBottom: '12px' }}>
                       <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>
-                        Extracted Tracklist ({mix.tracklist.length} Tracks · 40% DJ / 50% IP)
+                        Extracted Tracklist ({mix.tracklist.length} Tracks · Full IP Credits)
                       </div>
                       {mix.tracklist.slice(0, 3).map((t, i) => (
                         <div key={t.id || i} style={{ fontSize: '11px', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                          <span>{t.artist} — {t.title}</span>
-                          <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                          <span>{t.artist} — {t.title} <span style={{ color: '#94a3b8', fontSize: '10px' }}>(IP: {t.ip_owner_name || 'Credited Rights Owner'})</span></span>
+                          <span style={{ color: ['signed', 'self_owned'].includes(t.clearance_status) ? '#10b981' : '#22d3ee', fontWeight: 700 }}>
+                            {['signed', 'self_owned'].includes(t.clearance_status) ? '✓ Cleared' : '🎧 Free Stream'}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -2022,8 +2024,17 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
               </div>
               <div style={{ padding: '0 16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>
-                  {formatPrice ? formatPrice(mix.commercial_price || 4.99) : `$${mix.commercial_price || 4.99}`}
-                  <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{Math.round((mix.commercial_price || 4.99) * 100)} TM Credits</span>
+                  {mix.sale_locked ? (
+                    <>
+                      <span style={{ color: '#22d3ee', fontWeight: 900 }}>FREE TO STREAM</span>
+                      <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>Commercial unlocks upon clearance</span>
+                    </>
+                  ) : (
+                    <>
+                      {formatPrice ? formatPrice(mix.commercial_price || 4.99) : `$${mix.commercial_price || 4.99}`}
+                      <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{Math.round((mix.commercial_price || 4.99) * 100)} TM Credits</span>
+                    </>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <a

@@ -3527,6 +3527,43 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Validated menu schema for all 11 personas (`admin`, `creator`, `label`, `vc`, `investor`, `corporate`, `media_house`, `dj`, `studio`, `podcaster`, `consumer`, `affiliate`) with 0 missing item keys.
   - Full multi-workspace build (`npm run build:all`) succeeded with zero errors.
 
+---
+
+### Phase 37 — DJ Mixes Free Promotional Streaming & Mandatory IP Owner Crediting Engine (Shipped)
+- **Problem Statement & Business Directive**:
+  - Previously, un-cleared DJ mixes displayed restrictive sales locks without distinguishing between commercial purchases and streaming access, creating friction for listeners and preventing prospective IP owners from auditioning their music in context.
+  - Platform governance required an adjustment to DJ mixes logic:
+    - Mixes awaiting full IP clearance must be **completely free to stream** until all clearances are received.
+    - Serves two explicit purposes:
+      1. **Exposure**: Gives the curating DJ and featured recording artists instant global audience reach and fan discovery.
+      2. **Platform Experience**: Provides invited IP owners an active opportunity to experience the TuneMavens platform, verify cue sync, and test split waterfall mechanics firsthand before signing.
+    - **Mandatory Attribution**: All featured IP owners, songwriters, and master copyright holders must be prominently credited at all times.
+    - **Strict Commercial Sales Gate**: Paid commercial sales, downloads, and split distributions remain locked until 100% of IP owner agreements are executed.
+- **Architectural Solutions & Changes**:
+  - **Backend Model & Schema (`backend/models.py`)**:
+    - Added `free_to_stream: bool = True`, `streaming_mode: str = "free_promotional"`, and `ip_credits_mandatory: bool = True` to the canonical `DjMix` document schema.
+  - **FastAPI Endpoints & Serialization (`backend/routes/dj_mixes_router.py`)**:
+    - Updated `_format_mix_response` to inject `free_to_stream: True`, `stream_access: "free"`, `streaming_mode: "commercial" | "free_promotional"`, `free_stream_until_cleared: bool`, and a structured `credited_ip_owners` array with per-track `credit_statement` strings (e.g. `Featured Recording: '{title}' by {artist} · Rights Holder: {ip_owner_name}`).
+    - Added dedicated streaming endpoint `GET /api/dj/mixes/{mix_id}/stream` (and alias `GET /api/dj-mixes/{mix_id}/stream`), returning stream audio URLs, clearance summary, and verified IP credits.
+    - Hardened `POST /api/dj/mixes/{mix_id}/purchase` error payload: HTTP 403 response informs users that the mix is in Free Promotional Streaming mode with full IP credits, detailing pending clearances.
+  - **Legal Vault & Contract Templates (`backend/services/contract_templates.py`)**:
+    - Updated the official `dj_mix_clearance` contract template with clause `promotional_free_streaming`: formally binding the promotional free streaming policy and mandatory IP owner attribution terms into digital agreements signed with `SIG-SHA256` seals.
+  - **Notification Protocols (`backend/account_setup.py`)**:
+    - Enhanced `send_dj_mix_clearance_invitation` email template with a dedicated **Free Promotional Streaming Notice** detailing the dual-purpose exposure policy and platform trial for invited IP owners.
+  - **Portal DJ Mixes Manager (`apps/portal/src/components/dj/DJMixesManager.jsx` & `DJMixesManager.css`)**:
+    - **Filter Sub-Tabs**: Updated pending filter to `Clearance In-Progress · Free to Stream` with `<RiHeadphoneFill />`.
+    - **Mix Cards**: Renders cyan `Free to Stream · Clearance In Progress (X/Y)` pill, `FREE TO STREAM` price callout, and a primary `Stream Free` playback trigger alongside an info modal button.
+    - **Interactive Tracklist**: Injected a **Mandatory IP Attribution & Rights Transparency** banner, added dedicated `Credited Rights Holder` labels on each track card, and tagged pending tracks with `Free Stream · Clearance Invited · Full IP Credit`.
+    - **Informational Modal (`saleLockedModal`)**: Detailed the two-fold purpose (exposure + invited IP owner trial), listed credited rights holders, and added a 1-click `Stream Mix Free Now` action.
+    - **Detail View & Player**: Displays a vibrant `Free Promotional Streaming Active` banner and provides 1-click streaming controls.
+  - **TuneStream Consumer Streaming Experience (`apps/tunestream/src/App.jsx`)**:
+    - Updated `TuneStreamDjMixesPanel` header description and mix cards to reflect that un-cleared sets stream free with full credits, transitioning to commercial sales upon 100% agreement.
+- **Verification**:
+  - Automated test suite `backend/tests/test_dj_mixes_engine.py`: 5 of 5 tests passing (including newly authored `test_free_promotional_streaming_until_cleared_with_ip_credits`).
+  - Production Vite builds for both `portal` and `tunestream` completed with 0 errors.
+  - Live API validation confirmed `free_to_stream: True`, `streaming_mode: "free_promotional"`, and full `credited_ip_owners` attribution.
+
+
 
 
 

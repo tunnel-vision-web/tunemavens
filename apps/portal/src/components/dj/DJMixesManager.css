@@ -2575,3 +2575,37 @@
     flex-wrap: wrap !important;
   }
 }
+
+.mix-price-tag.free-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mix-price-tag.free-stream .free-tag-text {
+  color: #22d3ee;
+  font-size: 13.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.credits-badge.free-promo {
+  font-size: 9.5px;
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: 2px;
+  padding: 2px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  display: inline-block;
+  width: fit-content;
+}
+
+.prior-agreement-banner.cyan-glow {
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.08);
+}

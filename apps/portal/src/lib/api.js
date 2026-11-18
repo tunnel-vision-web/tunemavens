@@ -239,6 +239,7 @@ export const djMixesApi = {
     return request(`/api/dj/mixes${qStr ? `?${qStr}` : ''}`);
   },
   getMix: (id) => request(`/api/dj/mixes/${id}`),
+  getMixStream: (id) => request(`/api/dj/mixes/${id}/stream`),
   createMix: (payload) => request('/api/dj/mixes', { method: 'POST', body: payload }),
   extractTracks: (payload) => request('/api/dj/mixes/extract-tracks', { method: 'POST', body: payload }),
   updateTracklist: (id, payload) => request(`/api/dj/mixes/${id}/tracklist`, { method: 'PUT', body: payload }),
