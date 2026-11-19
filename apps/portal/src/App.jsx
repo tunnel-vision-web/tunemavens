@@ -138,37 +138,11 @@ import VcDiscoverCreatorsApp from './components/vc/VcDiscoverCreatorsApp.jsx'
 import AffiliatesView from './views/landing/AffiliatesView.jsx'
 import AffiliateAdminPanel from './components/affiliates/AffiliateAdminPanel.jsx'
 import CatalogueWizard from './components/CatalogueWizard.jsx'
+import ExplicitBadge, { isExplicit, isReleaseExplicit } from './components/common/ExplicitBadge.jsx'
 import ArtistRosterSelector from './components/ArtistRosterSelector.jsx'
 import GenreManagerModal from './components/GenreManagerModal.jsx'
 import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from './lib/genres.js'
-import AppHelpAiControls, * as AppHelpAiControlsModule from './components/common/AppHelpAiControls.jsx'
-
-const GetHelpAskAiButtons = AppHelpAiControlsModule.GetHelpAskAiButtons || AppHelpAiControls?.GetHelpAskAiButtons || function FallbackGetHelpAskAiButtons({ className = '', style = {}, compact = false, iconOnly = false }) {
-  return (
-    <div className={`topbar-help-ai-group ${className}`} style={style} data-testid="topbar-help-ai-group">
-      <button
-        type="button"
-        className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
-        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-help'))}
-        title="Get Help: Open contextual in-app documentation & guides"
-        data-tooltip="Get Help"
-        data-testid="topbar-btn-get-help"
-      >
-        <span className={iconOnly ? 'topbar-item-label' : ''}>Get Help</span>
-      </button>
-      <button
-        type="button"
-        className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
-        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-ai'))}
-        title="Ask AI"
-        data-tooltip="Ask AI (Ayo Copilot)"
-        data-testid="topbar-btn-ask-ai"
-      >
-        <span className={iconOnly ? 'topbar-item-label' : ''}>Ask AI</span>
-      </button>
-    </div>
-  );
-};
+import AppHelpAiControls, { GetHelpAskAiButtons } from './components/common/AppHelpAiControls.jsx'
 import { getRelevantDocLink } from './services/userLifecycleMemory.js'
 import {
   OnboardingStripe, OnboardingWizardModal, RecommendationHero,
@@ -818,7 +792,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
         </button>
 
         {/* Universal Get Help & Ask AI Action Buttons (icons with hover tooltips) */}
-        <GetHelpAskAiButtons iconOnly />
+        <GetHelpAskAiButtons iconOnly activeTab={activeTab} sessionUser={sessionUser} />
 
         {/* Region, Currency & Language Switcher in Dashboard (icons with hover tooltips) */}
         <div className="dashboard-topbar-item">
@@ -1676,7 +1650,7 @@ function DashboardView({
       ? 'media_house'
       : null;
     const r = params.get('role') || tabImpliedRole;
-    if (r && activeUser && activeUser.role !== r && onUpdateUser) {
+    if (r && activeUser && activeUser.role !== 'admin' && activeUser.role !== r && onUpdateUser) {
       const updated = {
         ...activeUser,
         role: r,
@@ -2042,11 +2016,11 @@ function DashboardView({
     const roleAllowed = {
       vc: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
       investor: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
-      admin: ['home', 'backend-admin', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support'],
+      admin: ['home', 'backend-admin', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support', 'media-house', 'media', 'broadcast', 'syndication', 'inbox', 'catalogue-acquisitions'],
       corporate: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
-      media_house: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
-      media: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
-      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'label-team', 'affiliates', 'support'],
+      media_house: ['home', 'media-house', 'media', 'broadcast', 'syndication', 'dj-mixes', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      media: ['home', 'media-house', 'media', 'broadcast', 'syndication', 'dj-mixes', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'label-team', 'affiliates', 'support', 'catalogue-acquisitions'],
       dj: ['home', 'dj-mixes', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
       studio: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
       supervisor: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
@@ -2056,7 +2030,8 @@ function DashboardView({
       creator: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
-    if (activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
+    // Platform administrators enjoy sovereign unrestricted access to all ecosystem apps
+    if (userRole !== 'admin' && activeTab !== 'home' && !allowedTabs.includes(activeTab)) {
       return (
         <DashboardHome 
           sessionUser={sessionUser}
@@ -3383,13 +3358,13 @@ function DashboardView({
               <div className="admin-app-header-left">
                 <span className="admin-app-badge">{activeUser?.role === 'consumer' ? 'TuneStream Listener Suite' : 'App Workspace'}</span>
                 <span className="admin-app-title">
-                  {getRelevantDocLink(activeTab).appTitle}
+                  {getRelevantDocLink(activeTab, activeUser || sessionUser).appTitle}
                 </span>
               </div>
               <div className="admin-app-header-right">
                 <AppHelpAiControls
                   activeContext={activeTab}
-                  sessionUser={sessionUser}
+                  sessionUser={activeUser || sessionUser}
                   onNavigateTab={setActiveTab}
                 />
               </div>
@@ -6573,6 +6548,7 @@ function CataloguePanel({
   const [newTitle, setNewTitle] = useState('');
   const [newArtist, setNewArtist] = useState(activeArtist?.name || sessionUser?.artist_name || sessionUser?.name || 'Ndufo');
   const [newGenre, setNewGenre] = useState('Afro-fusion');
+  const [newAdvisory, setNewAdvisory] = useState('Clean');
   const [newIsrc, setNewIsrc] = useState('');
   const [newArtistSplit, setNewArtistSplit] = useState(50);
   const [newProducerSplit, setNewProducerSplit] = useState(30);
@@ -6698,7 +6674,9 @@ function CataloguePanel({
           coverArt: t.coverArt || t.album_art_url || '',
           coverBg: t.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
           coverText: t.coverText || relName.slice(0, 10),
-          releaseType: t.releaseType || ''
+          releaseType: t.releaseType || '',
+          contentAdvisory: t.contentAdvisory || (t.isExplicit ? 'Explicit' : 'Clean'),
+          isExplicit: isExplicit(t)
         });
       }
       const rel = map.get(relName);
@@ -6708,6 +6686,10 @@ function CataloguePanel({
       }
       if (t.releaseType && !rel.releaseType) {
         rel.releaseType = t.releaseType;
+      }
+      if (isExplicit(t)) {
+        rel.isExplicit = true;
+        rel.contentAdvisory = 'Explicit';
       }
     });
 
@@ -6723,7 +6705,13 @@ function CataloguePanel({
           deducedType = 'Single';
         }
       }
-      return { ...r, releaseType: deducedType };
+      const relIsExplicit = isReleaseExplicit(r);
+      return {
+        ...r,
+        releaseType: deducedType,
+        isExplicit: relIsExplicit,
+        contentAdvisory: relIsExplicit ? 'Explicit' : (r.contentAdvisory || 'Clean')
+      };
     });
   };
 
@@ -6739,7 +6727,9 @@ function CataloguePanel({
       releaseType: rel.releaseType || 'Album',
       coverArt: rel.coverArt || rel.album_art_url || '',
       coverBg: rel.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-      coverText: rel.coverText || rel.title
+      coverText: rel.coverText || rel.title,
+      contentAdvisory: rel.contentAdvisory || (isReleaseExplicit(rel) ? 'Explicit' : 'Clean'),
+      isExplicit: isReleaseExplicit(rel)
     });
     setPreviewArtworkUrl(rel.coverArt || rel.album_art_url || '');
     setPreviewCoverBg(rel.coverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)');
@@ -7013,6 +7003,8 @@ function CataloguePanel({
       coverBg: previewCoverBg || editingAlbum.coverBg,
       coverText: previewCoverText || editingAlbum.coverText,
       syncCleared: true,
+      contentAdvisory: editingAlbum.contentAdvisory || 'Clean',
+      isExplicit: isExplicit(editingAlbum),
       isFeatured: false
     };
     setEditingAlbumTracks(prev => [...prev, newTrk]);
@@ -7324,6 +7316,8 @@ function CataloguePanel({
       coverBg: newCoverBg || 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
       coverText: newCoverText || 'Art',
       syncCleared: true,
+      contentAdvisory: newAdvisory,
+      isExplicit: newAdvisory === 'Explicit',
       isFeatured: false
     };
 
@@ -7726,8 +7720,9 @@ function CataloguePanel({
 
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#fff' }}>
-                        Editing Album: <span style={{ color: '#00f0ff' }}>{editingAlbum.title}</span>
+                      <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>Editing Album: <span style={{ color: '#00f0ff' }}>{editingAlbum.title}</span></span>
+                        {isReleaseExplicit(editingAlbum) && <ExplicitBadge size="sm" showLabel={true} />}
                       </h3>
                       <span style={{
                         background: 'rgba(0, 240, 255, 0.15)',
@@ -8216,15 +8211,16 @@ function CataloguePanel({
                               </span>
 
                               {/* Title Input */}
-                              <div style={{ flex: 1, minWidth: '160px' }}>
+                              <div style={{ flex: 1, minWidth: '160px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <input
                                   type="text"
                                   value={trk.title}
                                   onChange={(e) => handleUpdateAlbumTrack(idx, 'title', e.target.value)}
                                   placeholder="Track Title"
                                   className="form-control"
-                                  style={{ fontSize: '12.5px', fontWeight: 700, color: '#fff', padding: '6px 10px', borderRadius: '3px' }}
+                                  style={{ fontSize: '12.5px', fontWeight: 700, color: '#fff', padding: '6px 10px', borderRadius: '3px', flex: 1 }}
                                 />
+                                {isExplicit(trk) && <ExplicitBadge size="xs" />}
                               </div>
                             </div>
 
@@ -8274,8 +8270,8 @@ function CataloguePanel({
                             </div>
                           </div>
 
-                          {/* Secondary Track Row: Artist, Genre, Splits */}
-                          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 2fr', gap: '8px' }}>
+                          {/* Secondary Track Row: Artist, Genre, Splits, Advisory */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr 1.6fr 1.1fr', gap: '8px', alignItems: 'center' }}>
                             <input
                               type="text"
                               value={trk.artist}
@@ -8303,6 +8299,32 @@ function CataloguePanel({
                               className="form-control"
                               style={{ fontSize: '11px', padding: '5px 8px', borderRadius: '3px' }}
                             />
+                            {/* Advisory Selector with Explicit Badge Indicator */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <select
+                                value={trk.contentAdvisory || (trk.isExplicit ? 'Explicit' : 'Clean')}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  handleUpdateAlbumTrack(idx, 'contentAdvisory', val);
+                                  handleUpdateAlbumTrack(idx, 'isExplicit', val === 'Explicit');
+                                }}
+                                className="form-control"
+                                style={{
+                                  fontSize: '11px',
+                                  padding: '5px 8px',
+                                  borderRadius: '3px',
+                                  color: (trk.contentAdvisory === 'Explicit' || trk.isExplicit) ? '#fca5a5' : '#cbd5e1',
+                                  background: (trk.contentAdvisory === 'Explicit' || trk.isExplicit) ? 'rgba(239, 68, 68, 0.1)' : '#0d1326',
+                                  border: (trk.contentAdvisory === 'Explicit' || trk.isExplicit) ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.1)'
+                                }}
+                                title="Content Advisory"
+                              >
+                                <option value="Clean">Clean / Radio</option>
+                                <option value="Explicit">Explicit Lyrics</option>
+                                <option value="Instrumental">Instrumental</option>
+                              </select>
+                              {isExplicit(trk) && <ExplicitBadge size="xs" />}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -8385,22 +8407,38 @@ function CataloguePanel({
                             </div>
                           )}
 
-                          {/* Release Type Badge */}
+                          {/* Release Type & Explicit Badges (Industry Standard Cover Layout) */}
                           <div style={{
                             position: 'absolute',
                             top: '10px',
                             left: '10px',
-                            background: 'rgba(0,0,0,0.75)',
-                            color: typeColor,
-                            border: `1px solid ${typeColor}`,
-                            padding: '3px 8px',
-                            borderRadius: '3px',
-                            fontSize: '10px',
-                            fontWeight: 900,
-                            letterSpacing: '0.5px',
-                            textTransform: 'uppercase'
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            gap: '5px',
+                            zIndex: 3
                           }}>
-                            {rel.releaseType}
+                            {rel.isExplicit && (
+                              <ExplicitBadge variant="cover" size="sm" />
+                            )}
+                            <div style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              background: 'rgba(0,0,0,0.8)',
+                              color: typeColor,
+                              border: `1px solid ${typeColor}`,
+                              padding: '3px 8px',
+                              borderRadius: '3px',
+                              fontSize: '10px',
+                              fontWeight: 900,
+                              letterSpacing: '0.5px',
+                              textTransform: 'uppercase',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.6)'
+                            }}>
+                              <RiDiscLine size={12} />
+                              <span>{rel.releaseType}</span>
+                            </div>
                           </div>
 
                           {/* Track count badge */}
@@ -8454,18 +8492,25 @@ function CataloguePanel({
                         {/* Release Metadata */}
                         <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, justifyContent: 'space-between' }}>
                           <div>
-                            <h3 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 800, color: '#fff' }}>
-                              {rel.title}
+                            <h3 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span>{rel.title}</span>
+                              {rel.isExplicit && <ExplicitBadge size="xs" />}
                             </h3>
                             <p style={{ margin: '0 0 6px', fontSize: '12px', color: '#94a3b8' }}>
                               {rel.artist}
                             </p>
-                            <div style={{ display: 'flex', gap: '6px', fontSize: '10.5px', color: '#64748b' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10.5px', color: '#64748b' }}>
                               <span>{rel.genre}</span>
                               <span>•</span>
                               <span>{rel.year}</span>
                               <span>•</span>
                               <span style={{ color: 'var(--green)' }}>Sync Cleared</span>
+                              {rel.isExplicit && (
+                                <>
+                                  <span>•</span>
+                                  <span style={{ color: '#ef4444', fontWeight: 700 }}>Explicit</span>
+                                </>
+                              )}
                             </div>
                           </div>
 
@@ -8587,6 +8632,7 @@ function CataloguePanel({
                                       <span style={{ color: '#fff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {t.title}
                                       </span>
+                                      {isExplicit(t) && <ExplicitBadge size="xs" />}
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                       <span style={{ color: '#64748b', fontSize: '10px' }}>{t.duration || '3:30'}</span>
@@ -8795,6 +8841,26 @@ function CataloguePanel({
                           ))}
                         </select>
 
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <select
+                            value={newAdvisory}
+                            onChange={(e) => setNewAdvisory(e.target.value)}
+                            className="form-control"
+                            style={{
+                              fontSize: '12px',
+                              padding: '6px',
+                              borderRadius: '3px',
+                              flex: 1,
+                              color: newAdvisory === 'Explicit' ? '#fca5a5' : '#fff'
+                            }}
+                          >
+                            <option value="Clean">Clean / Radio Friendly</option>
+                            <option value="Explicit">Explicit Lyrics</option>
+                            <option value="Instrumental">Instrumental Only</option>
+                          </select>
+                          {newAdvisory === 'Explicit' && <ExplicitBadge size="sm" showLabel={true} />}
+                        </div>
+
                         <button type="submit" className="btn-primary" style={{ padding: '8px', fontSize: '12px', marginTop: '6px', borderRadius: '3px' }}>Catalog Track</button>
                       </form>
                     </div>
@@ -8906,10 +8972,18 @@ function CataloguePanel({
                                 </button>
                               </td>
                               <td style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--cyan)' }}>{tr.isrc}</td>
-                              <td style={{ fontWeight: '700', color: '#fff' }}>{tr.title}</td>
+                              <td style={{ fontWeight: '700', color: '#fff' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span>{tr.title}</span>
+                                  {isExplicit(tr) && <ExplicitBadge size="xs" />}
+                                </div>
+                              </td>
                               <td>
                                 <div>{tr.artist}</div>
-                                <span style={{ fontSize: '10px', color: '#94a3b8' }}>{tr.release || 'Standalone Master'}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                  <span style={{ fontSize: '10px', color: '#94a3b8' }}>{tr.release || 'Standalone Master'}</span>
+                                  {isExplicit(tr) && <span style={{ fontSize: '9px', color: '#ef4444', fontWeight: 800 }}>• EXPLICIT</span>}
+                                </div>
                               </td>
                               <td>
                                 <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -9063,6 +9137,39 @@ function CataloguePanel({
                       <div style={{ fontSize: '11px', opacity: 0.8 }}>{editingAlbumModal.artist}</div>
                     </div>
                   )}
+
+                  {/* Top-left Explicit & Album Badge overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '8px',
+                    left: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    gap: '4px',
+                    zIndex: 3
+                  }}>
+                    {isReleaseExplicit(editingAlbumModal) && (
+                      <ExplicitBadge variant="cover" size="xs" />
+                    )}
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: 'rgba(0,0,0,0.8)',
+                      color: 'var(--cyan)',
+                      border: '1px solid rgba(0,240,255,0.4)',
+                      padding: '2px 6px',
+                      borderRadius: '3px',
+                      fontSize: '9px',
+                      fontWeight: 900,
+                      letterSpacing: '0.5px',
+                      textTransform: 'uppercase'
+                    }}>
+                      <RiDiscLine size={10} />
+                      <span>{editingAlbumModal?.releaseType || 'ALBUM'}</span>
+                    </div>
+                  </div>
 
                   <span style={{
                     position: 'absolute',

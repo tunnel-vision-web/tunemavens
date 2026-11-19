@@ -23,6 +23,7 @@ import {
   SiDeezer,
 } from 'react-icons/si';
 import { FaAmazon } from 'react-icons/fa';
+import ExplicitBadge from '../common/ExplicitBadge.jsx';
 import tunestreamLogo from '../../assets/logos/tunestream-logo.png';
 import { distroApi } from '../../lib/api.js';
 import { AUTHORITATIVE_CATALOG_TRACKS } from '../../data/authoritativeCatalog.js';
@@ -918,25 +919,35 @@ export default function DistributeReleaseModal({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px', fontWeight: 600 }}>
-                    Explicit Content Advisory
-                  </label>
-                  <select
-                    value={explicit}
-                    onChange={(e) => setExplicit(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      background: '#131b2e',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      borderRadius: '3px',
-                      color: '#fff',
-                      fontSize: '14px',
-                    }}
-                  >
-                    <option value="CLEAN">CLEAN (No profanity)</option>
-                    <option value="EXPLICIT">EXPLICIT (Contains parental advisory)</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', fontWeight: 600, margin: 0 }}>
+                      Explicit Content Advisory
+                    </label>
+                    {explicit === 'EXPLICIT' && (
+                      <ExplicitBadge size="sm" showLabel={true} />
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <select
+                      value={explicit}
+                      onChange={(e) => setExplicit(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        background: '#131b2e',
+                        border: explicit === 'EXPLICIT' ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '3px',
+                        color: explicit === 'EXPLICIT' ? '#fca5a5' : '#fff',
+                        fontSize: '14px',
+                      }}
+                    >
+                      <option value="CLEAN">CLEAN (No profanity)</option>
+                      <option value="EXPLICIT">EXPLICIT (Contains parental advisory)</option>
+                    </select>
+                    {explicit === 'EXPLICIT' && (
+                      <ExplicitBadge size="md" />
+                    )}
+                  </div>
                 </div>
               </div>
 

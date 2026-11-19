@@ -1656,7 +1656,7 @@ function AppContent() {
               </Link>
 
               {/* Universal Get Help & Ask AI Action Buttons */}
-              <GetHelpAskAiButtons iconOnly />
+              <GetHelpAskAiButtons iconOnly activeTab={activeTab} sessionUser={sessionUser} />
 
               {/* Region Switcher */}
               <div className="dashboard-topbar-item">

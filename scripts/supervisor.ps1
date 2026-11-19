@@ -6,9 +6,19 @@ foreach ($port in $targetPorts) {
     if ($conns) {
         $pidsToKill = $conns.OwningProcess | Select-Object -Unique
         foreach ($p in $pidsToKill) {
+            cmd /c "taskkill /F /T /PID $p >nul 2>&1"
             Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
         }
     }
+}
+
+# Clean up any lingering nodemon processes
+Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { 
+    $_.CommandLine -like "*tunemavens*nodemon*" -or 
+    $_.CommandLine -like "*nodemon src/server.js*" 
+} | ForEach-Object {
+    cmd /c "taskkill /F /T /PID $($_.ProcessId) >nul 2>&1"
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
 }
 
 Start-Sleep -Seconds 2

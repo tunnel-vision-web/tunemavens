@@ -66,6 +66,7 @@ import {
   AUTHORITATIVE_CATALOG_ALBUMS
 } from './data/authoritativeCatalog';
 import { catalogApi, streamApi, normalizeMediaUrl, resolveAudioStreamUrl, getApiBase } from './lib/api';
+import ExplicitBadge, { isExplicit, isReleaseExplicit } from './components/common/ExplicitBadge.jsx';
 
 export const PERSONA_ROLES = [
   { id: 'admin', label: 'Administrator', shortLabel: 'Admin', shortDesc: 'All 14 apps & admin panels', icon: RiShieldFill, color: '#38bdf8' },
@@ -2910,13 +2911,68 @@ function TuneStreamExplorePanel({
                   onClick={() => onPlayTrack(track)}
                 >
                   <div className="track-number">{idx + 1}</div>
-                  <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} />
+                  <div style={{ position: 'relative', width: '40px', height: '40px', flexShrink: 0, borderRadius: '3px', overflow: 'hidden' }}>
+                    <img src={normalizeMediaUrl(track.cover || track.coverArt)} alt={track.title} className="track-cover" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300'; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {isExplicit(track) && (
+                      <div style={{ position: 'absolute', top: '2px', left: '2px', zIndex: 2 }}>
+                        <ExplicitBadge size="xs" variant="badge" label="explicit" />
+                      </div>
+                    )}
+                  </div>
                   <div data-no-i18n="true" className="track-details" style={{ width: '220px' }}>
-                    <span className="track-title">{track.title}</span>
+                    <span className="track-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>{track.title}</span>
+                      {isExplicit(track) && (
+                        <span style={{
+                          background: '#000000',
+                          color: '#fff',
+                          border: '1px solid rgba(255,255,255,0.7)',
+                          fontSize: '8.5px',
+                          fontWeight: 900,
+                          padding: '1px 4px',
+                          borderRadius: '2px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.4px',
+                          lineHeight: 1
+                        }}>E</span>
+                      )}
+                    </span>
                     <span className="track-artist">{track.artist}</span>
                   </div>
                   <div data-no-i18n="true" className="track-album" style={{ color: '#64748b' }}>{track.album || track.release}</div>
-                  <div style={{ width: '90px' }}>
+                  <div style={{ width: '90px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px' }}>
+                    {isExplicit(track) && (
+                      <span style={{
+                        fontSize: '9px',
+                        color: '#fff',
+                        background: '#000000',
+                        border: '1px solid rgba(255, 255, 255, 0.75)',
+                        padding: '1px 5px',
+                        borderRadius: '3px',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.8)'
+                      }}>
+                        <span style={{
+                          background: '#ffffff',
+                          color: '#000000',
+                          fontWeight: 900,
+                          fontSize: '7px',
+                          width: '9px',
+                          height: '9px',
+                          borderRadius: '1px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          lineHeight: 1
+                        }}>E</span>
+                        <span>explicit</span>
+                      </span>
+                    )}
                     <span style={{ fontSize: '10px', color: '#00f2fe', background: 'rgba(0, 242, 254, 0.1)', padding: '2px 6px', borderRadius: '3px', fontWeight: 'bold' }}>
                       {track.releaseType || 'Single'}
                     </span>
@@ -4946,7 +5002,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
             </Link>
 
             {/* Universal Get Help & Ask AI Action Buttons */}
-            <GetHelpAskAiButtons />
+            <GetHelpAskAiButtons activeTab={activeTab} sessionUser={activeUser} />
 
             {/* Notification Dropdown */}
             <div className="topbar-popover-container" ref={notifRef}>

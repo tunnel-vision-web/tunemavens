@@ -60,7 +60,7 @@ export default function AppHelpAiControls({
   const inputRef = useRef(null);
 
   const userId = sessionUser?.id || sessionUser?._id || sessionUser?.email || 'guest';
-  const relevantDoc = getRelevantDocLink(currentContext);
+  const relevantDoc = getRelevantDocLink(currentContext, sessionUser);
 
   // Active article being inspected in the in-app doc modal
   const activeDocArticle = HELP_ARTICLES.find(a => a.id === selectedDocArticleId) ||
@@ -122,20 +122,46 @@ export default function AppHelpAiControls({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [docModalOpen, aiOverlayOpen]);
 
+  // Global listeners for open triggers from topbar icon buttons or other UI elements
+  useEffect(() => {
+    const handleOpenHelp = (e) => {
+      const targetArticleId = e?.detail?.articleId || null;
+      const targetContext = e?.detail?.tab || e?.detail?.context || currentContext;
+      const targetUser = e?.detail?.user || sessionUser;
+      handleOpenDocModal(null, targetArticleId, targetContext, targetUser);
+    };
+    const handleOpenAi = (e) => {
+      setAiOverlayOpen(true);
+      if (e?.detail?.prompt) {
+        handleSendMessage(e.detail.prompt);
+      }
+    };
+    window.addEventListener('tunemavens:open-help', handleOpenHelp);
+    window.addEventListener('tunemavens:open-ai', handleOpenAi);
+    return () => {
+      window.removeEventListener('tunemavens:open-help', handleOpenHelp);
+      window.removeEventListener('tunemavens:open-ai', handleOpenAi);
+    };
+  }, [currentContext, sessionUser]);
+
   // Open contextual doc in an in-app overlay modal (leaving active app completely intact)
-  const handleOpenDocModal = (e) => {
-    if (e) e.preventDefault();
-    setSelectedDocArticleId(relevantDoc.articleId);
+  const handleOpenDocModal = (e, customArticleId = null, customContext = null, customUser = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const ctx = customContext || currentContext;
+    const usr = customUser || sessionUser;
+    const resolvedDoc = getRelevantDocLink(ctx, usr);
+    const targetId = customArticleId || resolvedDoc.articleId;
+    setSelectedDocArticleId(targetId);
     setDocFeedbackGiven(false);
     setDocModalOpen(true);
 
     // Record activity in lifecycle memory
-    logUserActivity(sessionUser, {
+    logUserActivity(usr, {
       type: 'doc_view',
       action: 'Opened In-App Documentation',
-      app: relevantDoc.appTitle,
-      summary: `Viewed contextual documentation for ${relevantDoc.appTitle}`,
-      metadata: { context: currentContext, articleId: relevantDoc.articleId }
+      app: resolvedDoc.appTitle,
+      summary: `Viewed contextual documentation for ${resolvedDoc.appTitle}`,
+      metadata: { context: ctx, articleId: targetId }
     });
   };
 
@@ -262,6 +288,47 @@ export default function AppHelpAiControls({
       case 'epk':
       case 'epk-builder':
         return ['How to map custom domain DNS', 'Essential elements of an EPK', 'Adding tour riders to press kit'];
+      case 'backend-admin':
+      case 'admin-team':
+        return ['How does persona RBAC isolation work?', 'Explain multi-host domain routing', 'How are Wall of Fame inductees claimed?', 'Managing enterprise roles & seats'];
+      case 'affiliates':
+      case 'affiliate':
+        return ['How does the 3% to 12% commission matrix calculate?', 'How do 90-day referral cookies work?', 'How to withdraw commissions via M-Pesa?'];
+      case 'podcaster-studio':
+      case 'podcast-studio':
+      case 'podcaster-episodes':
+      case 'podcaster-monetization':
+      case 'podcaster-guests':
+      case 'podcaster-epk':
+      case 'podcasts':
+        return ['How does dynamic audio ad insertion work?', 'How are host-read sponsor splits calculated?', 'What audio format is required for RSS syndication?', 'How to generate broadcast release waivers?'];
+      case 'distribution-tracker':
+        return ['How does DSP metadata delivery telemetry work?', 'What is the delivery status for Apple Music & Spotify?', 'How to resolve ISRC metadata mismatches?'];
+      case 'hosting-manager':
+        return ['How to configure DNS A and CNAME records', 'How does automatic SSL certificate issuance work?', 'Can I host multiple custom domains?'];
+      case 'pos-terminal':
+      case 'pos-inventory':
+      case 'pos-settlement':
+      case 'pos-devices':
+        return ['How does offline M-Pesa STK push work?', 'How does real-time inventory decrement sync?', 'How do nightly concert settlements disburse?'];
+      case 'vc-discover':
+      case 'vc-portfolio':
+      case 'vc-sponsorship':
+      case 'tours-vault':
+        return ['How does tour advance underwriting work?', 'What is the career sponsorship recoupment waterfall?', 'How to evaluate catalog streaming yield?'];
+      case 'communications':
+      case 'communications-vault':
+        return ['How are audit logs preserved?', 'How does the WhatsApp notification protocol work?', 'How to filter automated compliance notices?'];
+      case 'dj-mixes':
+      case 'djpool':
+        return ['Explain 100% prior copyright clearance for DJ sets', 'How does camelot harmonic key matching work?', 'How to export setlist crates to CDJs?'];
+      case 'listener-apps':
+      case 'device-sync':
+      case 'stream-controls':
+      case 'library':
+      case 'radio':
+      case 'explore':
+        return ['How does 24-bit 96kHz lossless playback work?', 'How does offline 8GB crate caching operate?', 'How to tip artists directly via M-Pesa?'];
       default:
         return ['Summarize my lifecycle history', 'How many credits do I have left?', 'How do master vs composition rights work?'];
     }
@@ -554,13 +621,43 @@ export default function AppHelpAiControls({
 
 
 // Reusable Standalone Button Pair for Topbars & Navigation Bars
-export function GetHelpAskAiButtons({ className = '', style = {}, compact = false, iconOnly = false }) {
+export function GetHelpAskAiButtons({
+  className = '',
+  style = {},
+  compact = false,
+  iconOnly = false,
+  activeTab = null,
+  activeContext = null,
+  sessionUser = null
+}) {
+  const triggerOpenHelp = () => {
+    window.dispatchEvent(new CustomEvent('tunemavens:open-help', {
+      detail: {
+        tab: activeTab || activeContext,
+        context: activeContext || activeTab,
+        role: sessionUser?.role || sessionUser?.simulated_role,
+        user: sessionUser
+      }
+    }));
+  };
+
+  const triggerOpenAi = () => {
+    window.dispatchEvent(new CustomEvent('tunemavens:open-ai', {
+      detail: {
+        tab: activeTab || activeContext,
+        context: activeContext || activeTab,
+        role: sessionUser?.role || sessionUser?.simulated_role,
+        user: sessionUser
+      }
+    }));
+  };
+
   return (
     <div className={`topbar-help-ai-group ${className}`} style={style} data-testid="topbar-help-ai-group">
       <button
         type="button"
         className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
-        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-help'))}
+        onClick={triggerOpenHelp}
         title="Get Help: Open contextual in-app documentation & guides"
         data-tooltip="Get Help"
         data-testid="topbar-btn-get-help"
@@ -572,7 +669,7 @@ export function GetHelpAskAiButtons({ className = '', style = {}, compact = fals
       <button
         type="button"
         className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
-        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-ai'))}
+        onClick={triggerOpenAi}
         title="Ask AI: Consult Ayo AI Copilot (Lifecycle Memory Active)"
         data-tooltip="Ask AI (Ayo Copilot)"
         data-testid="topbar-btn-ask-ai"

@@ -11,9 +11,19 @@ foreach ($port in $targetPorts) {
         foreach ($p in $pidsToKill) {
             if ($p -and $p -ne 0) {
                 Write-Host "  Stopping PID $p on port $port" -ForegroundColor DarkYellow
+                cmd /c "taskkill /F /T /PID $p >nul 2>&1"
                 Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
             }
         }
     }
+}
+
+# Clean up any lingering nodemon processes from prior runs
+Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { 
+    $_.CommandLine -like "*tunemavens*nodemon*" -or 
+    $_.CommandLine -like "*nodemon src/server.js*" 
+} | ForEach-Object {
+    cmd /c "taskkill /F /T /PID $($_.ProcessId) >nul 2>&1"
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
 }
 Write-Host "All TuneMavens services stopped." -ForegroundColor Green

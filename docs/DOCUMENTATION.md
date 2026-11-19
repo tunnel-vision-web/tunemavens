@@ -3653,4 +3653,37 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - Direct URL access to `http://localhost:3000/#/dashboard?role=podcaster&tab=podcaster-studio` verified rendering cleanly without crashes.
     - Full Vite builds for `portal` and `tunestream` workspaces passing with 0 errors.
 
+---
+
+### Phase 42 — Catalogue Advisory, Explicit Lyrics Ingestion & Cross-Platform Badging (Shipped)
+- **Problem Statement & Requirements**:
+  - Ingest Wizard on the Catalogue Machine needed Content Advisory options on the Writers and Splits step, adding "Explicit Lyrics" as a standard option alongside "Clean".
+  - In the absence of "Explicit Lyrics", no badge should be displayed.
+  - When "Explicit Lyrics" is selected, an industry-standard explicit icon (`[E] EXPLICIT`) must appear:
+    1. On the Catalogue Machine / Portal: above the album/single format icon or on top of the album cover.
+    2. On the TuneStream frontend (`apps/tunestream`): displayed directly over the album/single artwork, positioned directly above the `'album'` / `'single'` format badge with matching design, identical width (`align-items: stretch`), and solid black background (`#000000`).
+- **Architectural Solutions & Changes**:
+  - **Shared Component (`ExplicitBadge.jsx` in `apps/portal` and `apps/tunestream`)**:
+    - Created modular component supporting multiple design variants:
+      - `variant="badge"`: standard solid black badge (`#000000`, white uppercase `9px` bold text, white `[E]` icon, `1px solid rgba(255, 255, 255, 0.75)` border, `border-radius: 3px`).
+      - `variant="cover"`: Parental Advisory style badge for large album art cards.
+      - `variant="standard"`: compact inline `[ E ]` tag.
+    - Exported evaluation helpers `isExplicit(item)` and `isReleaseExplicit(release)` for uniform checking of metadata flags (`contentAdvisory`, `isExplicit`, track-level flags, title tags).
+  - **Portal Ingest Wizard (`apps/portal/src/components/CatalogueWizard.jsx`)**:
+    - Added Content Advisory radio options on Step 4 (`WRITERS & SPLITS`): `Clean` (Standard / Radio Friendly) and `Explicit Lyrics` (Parental Advisory / Explicit Content).
+    - Preserves advisory status in form state and propagates it to MongoDB `/api/catalog/albums` and `/api/catalog/tracks`.
+    - Renders the explicit badge on album cover thumbnails and directly above the format tag in catalogue tables.
+  - **Backend Synchronization (`backend/routes/catalog_router.py`)**:
+    - Synchronized `contentAdvisory` and `isExplicit` flags across tracks and releases.
+    - Automatically rolls up track-level explicit status so that multi-track releases accurately inherit release-level explicit advisory if any contained track contains explicit lyrics.
+  - **TuneStream Frontend Badges (`apps/tunestream`)**:
+    - **Listen View (`NativeAppLandingView.jsx`)**: Updated Authoritative Albums & EPs, Authoritative Singles, and Trending Releases to wrap format pills in a flex column with `alignItems: 'stretch'`, stacking the black `[E] EXPLICIT` badge directly above the purple `Album` or green `Single` badge.
+    - **Explore View (`NativeAppLandingView.jsx`)**: Updated search & filter grid cards to carry `isExplicit: checkReleaseExplicit(...)` and render the matching-width explicit badge above the release format pill.
+    - **Track Rows & EPK Discography (`App.jsx`, `CreatorEpkView.jsx`)**: Track list thumbnails and creator discography cards render the explicit indicator over artwork thumbnails.
+- **Verification**:
+  - Automated backend tests: `backend/tests/test_catalogue_advisory_explicit.py` verified 100% pass (release and track level advisory rollup and query endpoints).
+  - Production build: `npm --prefix apps/tunestream run build` and `npm --prefix apps/portal run build` compiled with 0 errors.
+  - Browser inspection: Verified `http://localhost:3001/` and `http://localhost:3001/#/?view=explore`. Explicit releases (e.g. *Explicit Midnight Album*) display the black `[E] EXPLICIT` badge directly stacked above `Album` with exact matching width (`69.25px`), while non-explicit releases strictly omit the badge.
+
+
 

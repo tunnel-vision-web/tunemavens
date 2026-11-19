@@ -206,4 +206,11 @@ npm test
 - **Active Persona & Tab Precedence**: Explicit query parameters (`role=podcaster` and podcaster tabs such as `podcaster-studio`, `podcaster-overview`, `podcaster-episodes`) take immediate priority over stale cached persona values in `localStorage`, automatically activating the Podcaster Studio persona, sidebar navigation, and workspace consoles.
 - **Cross-App & In-App Navigation Integrity**: "Open in Portal Studio" seamlessly routes directly to `#/dashboard?role=podcaster&tab=podcaster-studio` on port 3000 via hash navigation, and from TuneStream on port 3001 with full cross-origin tab termination.
 
+### 20. Catalogue Advisory, Explicit Lyrics Ingestion & Cross-Platform Badging
+- **Catalogue Ingest Wizard Advisory Options (`CatalogueWizard.jsx`)**: On the Writers & Splits step, creators and labels can select between **Clean** (Radio Friendly) and **Explicit Lyrics** (Parental Advisory). In the absence of this selection, the explicit badge is omitted.
+- **Industry Standard Explicit Badging (`ExplicitBadge.jsx`)**: Shared modular component rendering industry standard `[E] EXPLICIT` badges across portal and streaming applications with three variants (`badge`, `cover`, `standard`).
+- **Matching-Width Badge Architecture**: In TuneStream (`apps/tunestream`) and Portal (`apps/portal`), explicit releases display the black (`#000000`) explicit badge directly stacked above the purple `Album` or green `Single` format pill with exact matching width (`align-items: stretch`).
+- **Backend Track-to-Release Rollup (`catalog_router.py`)**: Multi-track albums automatically evaluate track-level explicit flags, rolling up release-level explicit advisory across `/api/catalog/albums` and `/api/catalog/tracks`.
+
+
 

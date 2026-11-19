@@ -628,3 +628,20 @@ To reinforce our precision-engineered, tech-forward aesthetic:
 - **Creator Images Carousel Row:** Below the bio, an interactive horizontal photo gallery strip (`130px x 92px` thumbnails) provides navigation between alternate artist press shots, live tour stills, and studio sessions. Clicking any thumbnail dynamically updates the active main profile picture with instant visual indicator (`ACTIVE` badge, cyan glow) and high-contrast toast notification.
 - **AI Header Studio Integration:** Front-and-center AI Header Studio modal accessible directly from the creator profile toolbar and CMS panels, enabling prompt-based 2560x854 retina header re-generation.
 
+---
+
+## 18. Explicit Lyrics & Content Advisory Badging Standard
+
+- **Visual Specification**:
+  - Background: Solid pitch black (`#000000`).
+  - Text: Uppercase `EXPLICIT` (font size `9px`, font weight `800`, letter spacing `0.5px`, text color `#ffffff`).
+  - Icon: White rectangular `[E]` glyph preceding label.
+  - Border: Thin high-contrast border (`1px solid rgba(255, 255, 255, 0.75)`).
+  - Radius: Strict 3px border radius (`border-radius: 3px`).
+- **Stacking & Matching-Width Protocol**:
+  - When rendered over album or single cover artwork, the explicit badge is stacked directly above the `'Album'` or `'Single'` format badge.
+  - The parent badge container must enforce `display: flex; flex-direction: column; align-items: stretch` so that the `EXPLICIT` badge spans the exact same pixel width as the format badge underneath.
+- **Absence Omission**:
+  - In the absence of an explicit advisory (`isExplicit: false` / `contentAdvisory: "Clean"`), the badge must be strictly omitted. No placeholder or empty box may be rendered.
+
+

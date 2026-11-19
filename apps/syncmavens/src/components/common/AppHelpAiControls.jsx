@@ -62,7 +62,7 @@ export default function AppHelpAiControls({
   const inputRef = useRef(null);
 
   const userId = sessionUser?.id || sessionUser?._id || sessionUser?.email || 'guest';
-  const relevantDoc = getRelevantDocLink(currentContext);
+  const relevantDoc = getRelevantDocLink(currentContext, sessionUser);
 
   // Active article being inspected in the in-app doc modal
   const activeDocArticle = HELP_ARTICLES.find(a => a.id === selectedDocArticleId) ||
@@ -126,30 +126,44 @@ export default function AppHelpAiControls({
 
   // Global listeners for open triggers from topbar icon buttons or other UI elements
   useEffect(() => {
-    const handleOpenHelp = () => handleOpenDocModal();
-    const handleOpenAi = () => setAiOverlayOpen(true);
+    const handleOpenHelp = (e) => {
+      const targetArticleId = e?.detail?.articleId || null;
+      const targetContext = e?.detail?.tab || e?.detail?.context || currentContext;
+      const targetUser = e?.detail?.user || sessionUser;
+      handleOpenDocModal(null, targetArticleId, targetContext, targetUser);
+    };
+    const handleOpenAi = (e) => {
+      setAiOverlayOpen(true);
+      if (e?.detail?.prompt) {
+        handleSendMessage(e.detail.prompt);
+      }
+    };
     window.addEventListener('tunemavens:open-help', handleOpenHelp);
     window.addEventListener('tunemavens:open-ai', handleOpenAi);
     return () => {
       window.removeEventListener('tunemavens:open-help', handleOpenHelp);
       window.removeEventListener('tunemavens:open-ai', handleOpenAi);
     };
-  }, [relevantDoc]);
+  }, [currentContext, sessionUser]);
 
   // Open contextual doc in an in-app overlay modal (leaving active app completely intact)
-  const handleOpenDocModal = (e) => {
-    if (e) e.preventDefault();
-    setSelectedDocArticleId(relevantDoc.articleId);
+  const handleOpenDocModal = (e, customArticleId = null, customContext = null, customUser = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const ctx = customContext || currentContext;
+    const usr = customUser || sessionUser;
+    const resolvedDoc = getRelevantDocLink(ctx, usr);
+    const targetId = customArticleId || resolvedDoc.articleId;
+    setSelectedDocArticleId(targetId);
     setDocFeedbackGiven(false);
     setDocModalOpen(true);
 
     // Record activity in lifecycle memory
-    logUserActivity(sessionUser, {
+    logUserActivity(usr, {
       type: 'doc_view',
       action: 'Opened In-App Documentation',
-      app: relevantDoc.appTitle,
-      summary: `Viewed contextual documentation for ${relevantDoc.appTitle}`,
-      metadata: { context: currentContext, articleId: relevantDoc.articleId }
+      app: resolvedDoc.appTitle,
+      summary: `Viewed contextual documentation for ${resolvedDoc.appTitle}`,
+      metadata: { context: ctx, articleId: targetId }
     });
   };
 
@@ -570,13 +584,43 @@ export default function AppHelpAiControls({
 
 
 // Reusable Standalone Button Pair for Topbars & Navigation Bars
-export function GetHelpAskAiButtons({ className = '', style = {}, compact = false, iconOnly = false }) {
+export function GetHelpAskAiButtons({
+  className = '',
+  style = {},
+  compact = false,
+  iconOnly = false,
+  activeTab = null,
+  activeContext = null,
+  sessionUser = null
+}) {
+  const triggerOpenHelp = () => {
+    window.dispatchEvent(new CustomEvent('tunemavens:open-help', {
+      detail: {
+        tab: activeTab || activeContext,
+        context: activeContext || activeTab,
+        role: sessionUser?.role || sessionUser?.simulated_role,
+        user: sessionUser
+      }
+    }));
+  };
+
+  const triggerOpenAi = () => {
+    window.dispatchEvent(new CustomEvent('tunemavens:open-ai', {
+      detail: {
+        tab: activeTab || activeContext,
+        context: activeContext || activeTab,
+        role: sessionUser?.role || sessionUser?.simulated_role,
+        user: sessionUser
+      }
+    }));
+  };
+
   return (
     <div className={`topbar-help-ai-group ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', ...style }} data-testid="topbar-help-ai-group">
       <button
         type="button"
         className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
-        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-help'))}
+        onClick={triggerOpenHelp}
         title="Get Help: Open contextual in-app documentation & guides"
         data-tooltip="Get Help"
         data-testid="topbar-btn-get-help"
@@ -588,7 +632,7 @@ export function GetHelpAskAiButtons({ className = '', style = {}, compact = fals
       <button
         type="button"
         className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
-        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-ai'))}
+        onClick={triggerOpenAi}
         title="Ask AI: Consult Ayo AI Copilot (Lifecycle Memory Active)"
         data-tooltip="Ask AI (Ayo Copilot)"
         data-testid="topbar-btn-ask-ai"

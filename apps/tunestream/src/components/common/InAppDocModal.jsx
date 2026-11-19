@@ -16,7 +16,7 @@ import {
 
 import { HELP_ARTICLES, HELP_CATEGORIES } from '../../data/helpArticles.js';
 import ArticleContentRenderer from './ArticleContentRenderer.jsx';
-import { getRelevantDocLink, logUserActivity } from '../../services/userLifecycleMemory.js';
+import { getRelevantDocLink, PERSONA_PRIMARY_DOCS, logUserActivity } from '../../services/userLifecycleMemory.js';
 import './AppHelpAiControls.css';
 
 /**
@@ -79,7 +79,7 @@ function InAppDocModalContent({
 
   // Context fallback
   const currentContext = activeTab || activeContext || 'home';
-  const relevantDoc = getRelevantDocLink(currentContext);
+  const relevantDoc = getRelevantDocLink(currentContext, sessionUser);
   const resolvedContextTitle = contextTitle || relevantDoc.appTitle || 'TuneMavens Ecosystem';
 
   // Determine active article
@@ -113,18 +113,23 @@ function InAppDocModalContent({
       if (catMatch) return catMatch;
     }
 
-    // 5. Active context mapping
-    if (activeContext) {
-      const doc = getRelevantDocLink(activeContext);
-      if (doc && doc.articleId) {
-        const docMatch = HELP_ARTICLES.find(a => a.id === doc.articleId);
-        if (docMatch) return docMatch;
-      }
+    // 5. Active context and persona mapping
+    const doc = getRelevantDocLink(currentContext, sessionUser);
+    if (doc && doc.articleId) {
+      const docMatch = HELP_ARTICLES.find(a => a.id === doc.articleId);
+      if (docMatch) return docMatch;
     }
 
-    // 6. Default
-    return HELP_ARTICLES[0];
-  }, [selectedArticleId, initialArticleId, searchQuery, category, activeContext]);
+    // 6. Persona role fallback
+    const userRole = sessionUser?.role || sessionUser?.simulated_role;
+    if (userRole && PERSONA_PRIMARY_DOCS && PERSONA_PRIMARY_DOCS[userRole]) {
+      const personaMatch = HELP_ARTICLES.find(a => a.id === PERSONA_PRIMARY_DOCS[userRole].articleId);
+      if (personaMatch) return personaMatch;
+    }
+
+    // 7. Canonical default
+    return HELP_ARTICLES.find(a => a.id === 'master-vs-composition-copyright') || HELP_ARTICLES[0];
+  }, [selectedArticleId, initialArticleId, searchQuery, category, currentContext, sessionUser]);
 
   // Log activity on open
   useEffect(() => {
@@ -143,16 +148,22 @@ function InAppDocModalContent({
     }
   }, [isOpen, activeDocArticle?.id]);
 
-  // Calculate related articles for this issue/section
+  // Calculate related articles for this issue/section and active persona
   const relatedArticles = useMemo(() => {
     if (!activeDocArticle) return [];
 
     const others = HELP_ARTICLES.filter(a => a.id !== activeDocArticle.id);
+    const userRole = sessionUser?.role || sessionUser?.simulated_role;
 
-    // Group 1: Articles in the same category
+    // Group 1: Articles explicitly assigned to active user role
+    const personaMatches = userRole
+      ? others.filter(a => Array.isArray(a.assignedRoles) && a.assignedRoles.includes(userRole))
+      : [];
+
+    // Group 2: Articles in the same category
     const sameCategory = others.filter(a => a.category === activeDocArticle.category);
 
-    // Group 2: Articles sharing tags or keywords
+    // Group 3: Articles sharing tags or keywords
     const currentTags = (activeDocArticle.tags || []).map(t => t.toLowerCase());
     const tagMatches = others.filter(a => {
       if (a.category === activeDocArticle.category) return false;
@@ -160,7 +171,7 @@ function InAppDocModalContent({
       return currentTags.some(t => otherTags.includes(t));
     });
 
-    // Group 3: Contextual cross-links for specific operational issues
+    // Group 4: Contextual cross-links for specific operational issues
     let crossLinks = [];
     if (activeDocArticle.category === 'support') {
       crossLinks = others.filter(a => [
@@ -189,7 +200,7 @@ function InAppDocModalContent({
     }
 
     // Combine and deduplicate
-    const combined = [...sameCategory, ...tagMatches, ...crossLinks];
+    const combined = [...personaMatches, ...sameCategory, ...tagMatches, ...crossLinks];
     const unique = [];
     const seen = new Set();
     for (const item of combined) {
@@ -200,7 +211,7 @@ function InAppDocModalContent({
     }
 
     return unique.slice(0, 8);
-  }, [activeDocArticle]);
+  }, [activeDocArticle, sessionUser]);
 
   // Copy shareable article link
   const handleCopyArticleLink = (articleId) => {
@@ -241,7 +252,7 @@ function InAppDocModalContent({
                 {activeDocArticle.readingTime}
               </span>
               <span className="inapp-doc-app-context-badge">
-                Context: {resolvedContextTitle}
+                <span>Context:</span> <span>{resolvedContextTitle}</span>
               </span>
             </div>
             <h2 className="inapp-doc-title">
@@ -267,17 +278,17 @@ function InAppDocModalContent({
           <div className="inapp-doc-nav-strip">
             <span className="inapp-doc-nav-label">
               <RiCompass3Line size={14} color="var(--cyan)" />
-              Related Guides ({relatedArticles.length}):
+              <span>Related Guides</span> ({relatedArticles.length}):
             </span>
             <div className="inapp-doc-nav-pills">
               {/* Pill for current active article */}
               <button
                 type="button"
                 className="inapp-doc-nav-pill active"
-                title={`Currently viewing: ${activeDocArticle.title}`}
+                title={activeDocArticle.title}
               >
                 <RiBookOpenLine size={12} />
-                <span>{activeDocArticle.title.length > 38 ? `${activeDocArticle.title.substring(0, 35)}...` : activeDocArticle.title}</span>
+                <span style={{ maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeDocArticle.title}</span>
               </button>
 
               {/* Pills for all related articles in this issue/section */}
@@ -293,7 +304,7 @@ function InAppDocModalContent({
                   title={rel.title}
                 >
                   <RiBookOpenLine size={12} color="var(--cyan)" />
-                  <span>{rel.title.length > 38 ? `${rel.title.substring(0, 35)}...` : rel.title}</span>
+                  <span style={{ maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rel.title}</span>
                 </button>
               ))}
             </div>
@@ -444,7 +455,7 @@ function InAppDocModalContent({
               onClick={onClose}
             >
               <RiArrowLeftLine size={14} />
-              <span>Back to {resolvedContextTitle}</span>
+              <span>Back to</span> <span>{resolvedContextTitle}</span>
             </button>
           </div>
         </div>

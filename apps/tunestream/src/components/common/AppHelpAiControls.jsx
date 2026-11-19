@@ -60,7 +60,7 @@ export default function AppHelpAiControls({
   const inputRef = useRef(null);
 
   const userId = sessionUser?.id || sessionUser?._id || sessionUser?.email || 'guest';
-  const relevantDoc = getRelevantDocLink(currentContext);
+  const relevantDoc = getRelevantDocLink(currentContext, sessionUser);
 
   // Active article being inspected in the in-app doc modal
   const activeDocArticle = HELP_ARTICLES.find(a => a.id === selectedDocArticleId) ||
@@ -122,20 +122,46 @@ export default function AppHelpAiControls({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [docModalOpen, aiOverlayOpen]);
 
+  // Global listeners for open triggers from topbar icon buttons or other UI elements
+  useEffect(() => {
+    const handleOpenHelp = (e) => {
+      const targetArticleId = e?.detail?.articleId || null;
+      const targetContext = e?.detail?.tab || e?.detail?.context || currentContext;
+      const targetUser = e?.detail?.user || sessionUser;
+      handleOpenDocModal(null, targetArticleId, targetContext, targetUser);
+    };
+    const handleOpenAi = (e) => {
+      setAiOverlayOpen(true);
+      if (e?.detail?.prompt) {
+        handleSendMessage(e.detail.prompt);
+      }
+    };
+    window.addEventListener('tunemavens:open-help', handleOpenHelp);
+    window.addEventListener('tunemavens:open-ai', handleOpenAi);
+    return () => {
+      window.removeEventListener('tunemavens:open-help', handleOpenHelp);
+      window.removeEventListener('tunemavens:open-ai', handleOpenAi);
+    };
+  }, [currentContext, sessionUser]);
+
   // Open contextual doc in an in-app overlay modal (leaving active app completely intact)
-  const handleOpenDocModal = (e) => {
-    if (e) e.preventDefault();
-    setSelectedDocArticleId(relevantDoc.articleId);
+  const handleOpenDocModal = (e, customArticleId = null, customContext = null, customUser = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const ctx = customContext || currentContext;
+    const usr = customUser || sessionUser;
+    const resolvedDoc = getRelevantDocLink(ctx, usr);
+    const targetId = customArticleId || resolvedDoc.articleId;
+    setSelectedDocArticleId(targetId);
     setDocFeedbackGiven(false);
     setDocModalOpen(true);
 
     // Record activity in lifecycle memory
-    logUserActivity(sessionUser, {
+    logUserActivity(usr, {
       type: 'doc_view',
       action: 'Opened In-App Documentation',
-      app: relevantDoc.appTitle,
-      summary: `Viewed contextual documentation for ${relevantDoc.appTitle}`,
-      metadata: { context: currentContext, articleId: relevantDoc.articleId }
+      app: resolvedDoc.appTitle,
+      summary: `Viewed contextual documentation for ${resolvedDoc.appTitle}`,
+      metadata: { context: ctx, articleId: targetId }
     });
   };
 
@@ -262,6 +288,27 @@ export default function AppHelpAiControls({
       case 'epk':
       case 'epk-builder':
         return ['How to map custom domain DNS', 'Essential elements of an EPK', 'Adding tour riders to press kit'];
+      case 'podcasts':
+      case 'podcaster-studio':
+        return ['How does dynamic audio ad insertion work?', 'How are host-read sponsor splits calculated?', 'What audio format is required for RSS syndication?'];
+      case 'radio':
+        return ['How does live 24-bit lossless radio streaming work?', 'How to submit DJ sets for live airplay?', 'What are lossless broadcast bitrates?'];
+      case 'explore':
+      case 'singles':
+      case 'favorites':
+      case 'library':
+      case 'my-catalog':
+        return ['How does 24-bit FLAC audio fidelity compare to standard streaming?', 'How to download lossless tracks for offline listening?', 'How do artist tips reach creators?'];
+      case 'stream-controls':
+        return ['Configuring 24-bit DAC and EQ settings', 'Understanding audio output headroom and LUFS', 'Switching playback audio devices'];
+      case 'concerts':
+      case 'events':
+        return ['How do VIP digital pass QR tickets work?', 'Buying live concert passes with M-Pesa STK push', 'Direct door-split settlements for artists'];
+      case 'vc-discover':
+      case 'vc-portfolio':
+      case 'vc-sponsorship':
+      case 'tours-vault':
+        return ['How does tour advance underwriting work?', 'What is the career sponsorship recoupment waterfall?', 'How to evaluate catalog streaming yield?'];
       default:
         return ['Summarize my lifecycle history', 'How many credits do I have left?', 'How do master vs composition rights work?'];
     }
@@ -556,29 +603,61 @@ export default function AppHelpAiControls({
 
 
 // Reusable Standalone Button Pair for Topbars & Navigation Bars
-export function GetHelpAskAiButtons({ className = '', style = {}, compact = false }) {
+export function GetHelpAskAiButtons({
+  className = '',
+  style = {},
+  compact = false,
+  iconOnly = false,
+  activeTab = null,
+  activeContext = null,
+  sessionUser = null
+}) {
+  const triggerOpenHelp = () => {
+    window.dispatchEvent(new CustomEvent('tunemavens:open-help', {
+      detail: {
+        tab: activeTab || activeContext,
+        context: activeContext || activeTab,
+        role: sessionUser?.role || sessionUser?.simulated_role,
+        user: sessionUser
+      }
+    }));
+  };
+
+  const triggerOpenAi = () => {
+    window.dispatchEvent(new CustomEvent('tunemavens:open-ai', {
+      detail: {
+        tab: activeTab || activeContext,
+        context: activeContext || activeTab,
+        role: sessionUser?.role || sessionUser?.simulated_role,
+        user: sessionUser
+      }
+    }));
+  };
+
   return (
     <div className={`topbar-help-ai-group ${className}`} style={style} data-testid="topbar-help-ai-group">
       <button
         type="button"
-        className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''}`}
-        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-help'))}
+        className={`topbar-help-btn btn-get-help ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
+        onClick={triggerOpenHelp}
         title="Get Help: Open contextual in-app documentation & guides"
+        data-tooltip="Get Help"
         data-testid="topbar-btn-get-help"
       >
-        <RiBookOpenLine className="topbar-help-icon" size={14} />
-        <span>Get Help</span>
+        <RiBookOpenLine className="topbar-help-icon" size={iconOnly ? 16 : 14} />
+        <span className={iconOnly ? 'topbar-item-label' : ''}>Get Help</span>
       </button>
 
       <button
         type="button"
-        className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''}`}
-        onClick={() => window.dispatchEvent(new CustomEvent('tunemavens:open-ai'))}
+        className={`topbar-help-btn btn-ask-ai-topbar ${compact ? 'compact' : ''} ${iconOnly ? 'topbar-nav-icon-btn' : ''}`}
+        onClick={triggerOpenAi}
         title="Ask AI: Consult Ayo AI Copilot (Lifecycle Memory Active)"
+        data-tooltip="Ask AI (Ayo Copilot)"
         data-testid="topbar-btn-ask-ai"
       >
-        <RiSparklingLine className="topbar-ai-icon" size={14} />
-        <span>Ask AI</span>
+        <RiSparklingLine className="topbar-ai-icon" size={iconOnly ? 16 : 14} />
+        <span className={iconOnly ? 'topbar-item-label' : ''}>Ask AI</span>
         <span className="ai-memory-badge" title="AI Lifecycle Memory Synced" />
       </button>
     </div>

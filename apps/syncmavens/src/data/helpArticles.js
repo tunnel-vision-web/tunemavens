@@ -14,6 +14,7 @@ export const HELP_CATEGORIES = [
   { id: 'account', label: 'Credits & Security', icon: 'RiShieldCheckLine' },
   { id: 'affiliates', label: 'Affiliates & Creator Onboarding', icon: 'RiUserSharedFill' },
   { id: 'support', label: 'Support & AI Claims Desk', icon: 'RiCustomerService2Fill' },
+  { id: 'tours', label: 'Tours, Concerts & Live Ticketing', icon: 'RiTicket2Line' },
 ];
 
 export const HELP_ARTICLES = [
@@ -1183,87 +1184,177 @@ Because there are no recurring subscriptions, support claims regarding billing a
       }
     ]
   }
-];
+,
+  // =========================================================================
+  // CATEGORY: TOURS, CONCERTS & LIVE TICKETING
+  // =========================================================================
+  {
+    id: 'global-tours-live-concerts-ticketing',
+    category: 'tours',
+    title: 'Global Tours, Concert Ticketing & TunePay POS Architecture',
+    readingTime: '8 min read',
+    excerpt: 'Complete operational blueprint for routing international tours, running door box offices with TunePay contactless card and M-Pesa POS terminals, real-time ticket scanning, and programmatic Split Cascade tour recoupment.',
+    tags: ['Live Tours', 'Concert Ticketing', 'TunePay POS', 'M-Pesa STK', 'Split Cascade'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['creator', 'label', 'vc', 'investor'],
+    toolLink: { label: 'Open Tours & Concerts Suite', path: '/tours' },
+    sections: [
+      {
+        heading: 'International Tour Routing & Incubation Corridor',
+        content: `TuneMavens operates a complete 6-phase artist incubation and live tour management pipeline. Taking an artist from Nairobi, Lagos, or London and mounting a high-yield international run requires unifying PR, marketing, logistics, immigration visas, booking agents, and venue technical riders.
 
-export const FREQUENT_FAQS = [
-  {
-    q: 'Do I need platform credits to use the Affiliate Dashboard or onboard creators?',
-    a: 'No, absolutely not. The Affiliate Dashboard, referral link generator, conversion tracking, attribution ledger, and direct creator/label onboarding are 100% free and require zero credits. Platform Unified Credits only apply if you personally choose to use creator tools (such as MasterLab AI audio mastering, SyncMavens sync pitching, or custom domain hosting).'
+Every tour mounted through TuneMavens connects directly to our verified global venue network (The Alchemist Nairobi, Village Underground London, SO36 Berlin, La Gaîté Lyrique Paris, Contact Shibuya Tokyo). Routing is algorithmic: listener density from TuneStream and superfan telemetry from Smart CRM dictate venue sizes, reducing un-ticketed seat risk.`
+      },
+      {
+        heading: 'Integrated Ticketing: Onsale, VIP Passes & M-Pesa STK Push',
+        content: `Fans can reserve passes directly on the platform with local payment rails:
+* **M-Pesa STK Mobile Push**: Instant checkout across East Africa with automatic mobile confirmation and SMS pass dispatch.
+* **TunePay Card & Apple Pay**: Low-friction global checkout with zero hidden currency fees.
+* **Cryptographic QR Passes**: Every ticket contains a cryptographically signed QR code hash that prevents duplicate door admissions.
+* **Smart CRM Integration**: Purchasing a ticket or joining a tour waitlist automatically updates fan lifetime value and adds the superfan to the artist's priority communication segment.`
+      },
+      {
+        heading: 'Live Door Operations & Merch Box Office POS Terminals',
+        content: `On show day, touring teams utilize the **TunePay M-Pesa POS Terminal** and mobile companion devices:
+* **Sub-Second Door Scanning**: Validate digital passes offline and online at venue turnstiles.
+* **Physical Merch Settlement**: Accept contactless cards, vinyl sales, and mobile money at the merch table with automatic inventory reconciliation.
+* **Immediate Nightly Cashout**: Box office and merch receipts flow directly into the tour's Split Cascade ledger.`
+      },
+      {
+        heading: 'Programmatic Recoupment & Night-by-Night Settlement Ledgers',
+        content: `Tour revenues are partitioned through the TuneMavens 7-tier waterfall:
+1. **Tier 1 (Venue & Local Production)**: Sound engineers, lighting technicians, and hall rentals are cleared first.
+2. **Tier 2 (Senior VC Tour Advance)**: Investor capital advances are recouped on a first-dollar senior basis.
+3. **Tier 3 (Band & Crew Per Diems)**: Touring musicians and road crew receive guaranteed per diems.
+4. **Tier 4 (Perpetual Master & Writer Splits)**: Remaining net proceeds distribute automatically to artist and songwriter wallets.`
+      }
+    ]
   },
   {
-    q: 'How does the TuneMavens 3% to 12% affiliate compensation matrix work?',
-    a: 'Modeled after Ditto Music, TuneMavens pays recurring multi-stream commissions ranging from 3% on streaming royalties to 12% on sync clearances and creator credit reloads. Every time someone you refer streams, buys, or licenses music, your commission is recorded automatically on TuneLedger.'
+    id: 'tour-vc-underwriting-career-sponsorship',
+    category: 'tours',
+    title: 'Venture Capital in Live Music: Tour Advances, Career Sponsorship & Senior Recoupment',
+    readingTime: '9 min read',
+    excerpt: 'Institutional guide for venture capital funds and angel syndicates to underwrite non-dilutive live tour advances and directly sponsor creator platform costs (DSP distro, EPK, mastering, CRM) with senior-secured Split Cascade recoupment liens.',
+    tags: ['Venture Capital', 'Tour Advance', 'Creator Sponsorship', 'Non-Dilutive Financing', 'IRR Yield'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['vc', 'investor', 'label', 'creator'],
+    toolLink: { label: 'Open VC Command Center', path: '/dashboard?tab=vc-portfolio&role=vc' },
+    sections: [
+      {
+        heading: 'The Non-Dilutive Live Music Investment Thesis',
+        content: `Traditional venture capital often struggled with music due to long copyright royalty amortization cycles and record label equity dilution. TuneMavens solves this through **data-backed, non-dilutive tour advances and creator career sponsorship**.
+
+Rather than purchasing master catalogs or demanding artist equity, accredited VCs provide liquidity advances for live international tours and pay direct costs for mission-critical platform services (Global DSP Distribution, EPK Pro Hosting, Studio Stem Mastering, SyncMavens Representation, and Smart CRM credits).`
+      },
+      {
+        heading: '1-Click Creator Career Sponsorship Engine',
+        content: `Inside the **VC Command Center**, institutional partners can browse vetted creators seeking product and service facilitation:
+* VCs click **Sponsor Service Costs** on any verified artist card.
+* TuneMavens covers the service fees immediately, unblocking the creator's music releases and marketing campaigns.
+* An automated **Split Cascade Recoupment Lien** is attached to the artist's royalty pipeline, ensuring the VC recoups principal plus agreed yield from incoming streaming and live commerce before non-essential distributions.`
+      },
+      {
+        heading: 'Senior-Secured First-Dollar Waterfall Recoupment',
+        content: `All VC capital commitments in the Tour Vault are protected by senior-secured status:
+* **Nightly Box Office Sweep**: Box office and digital ticket revenues flow through TuneMavens escrow wallets.
+* **Pre-Set Recoupment Cap**: Returns are capped at contractual multiples (e.g. 1.25x to 1.40x advance cap), delivering target IRRs between 18% and 26% within 60 to 120 days.
+* **Instant Wallet Settlement**: Recouped capital is pushed directly to the investor's Split Cascade settlement wallet without invoice disputes.`
+      }
+    ]
   },
   {
-    q: 'Can affiliates directly onboard creators and record labels?',
-    a: 'Yes! From your Linked Network & Onboarding console, you can onboard recording artists, beatmakers, indie record labels, and music supervisors just like a label adds roster talent. Entering their details generates an instant pre-bound invitation link that attaches 100% of their future ecosystem activity to your referral ID.'
-  },
+    id: 'masterclasses-and-creator-workshops',
+    category: 'tours',
+    title: 'Creative Masterclasses & Live Artist Workshops: Monetization & Hybrid Streaming',
+    readingTime: '6 min read',
+    excerpt: 'How creators and touring bands leverage backstage masterclasses, hands-on production labs, and hybrid interactive livestreaming to double per-city gross revenue and cultivate high-value superfans.',
+    tags: ['Masterclasses', 'Artist Workshops', 'Hybrid Streaming', 'Superfan Monetization', 'Eurorack Labs'],
+    popular: false,
+    recommendedReading: false,
+    requiredReading: false,
+    assignedRoles: ['creator', 'label', 'consumer'],
+    toolLink: { label: 'Explore Live Concerts & Masterclasses', path: '/tours?tab=workshops' },
+    sections: [
+      {
+        heading: 'The Masterclass Revenue Multiplier',
+        content: `Touring artists often face empty afternoon hours between morning travel and evening soundcheck. By programming **hands-on 2 to 4-hour creative masterclasses** (e.g. modular synth sound design, Benga guitar arrangements, mixing in Dolby Atmos), artists generate significant ancillary revenue from dedicated producers and superfans.
+
+Masterclass seats are capped at 15 to 30 attendees per stop, commanding premium ticket prices ($80 to $150) that frequently cover daytime hospitality and local travel expenses for the entire band.`
+      },
+      {
+        heading: 'Hybrid Interactive Livestreaming',
+        content: `Every masterclass hosted on the TuneMavens tour circuit supports dual-mode attendance:
+* **In-Person Lab Pass**: Dedicated hardware workstations, hands-on patching, and direct mentorship from touring musicians.
+* **Interactive Livestream Pass**: Low-latency HD streaming via the TuneStream web world, complete with two-way Q&A and session stem downloads.
+Global fans who cannot attend the physical tour stop can still participate, expanding the audience from dozens in a studio to thousands worldwide.`
+      }
+    ]
+  }
+,
+  // =========================================================================
+  // CATEGORY: OMNICHANNEL WHATSAPP COMMUNICATIONS & QUOTA GOVERNANCE
+  // =========================================================================
   {
-    q: 'How do M-Pesa STK affiliate payouts work in Kenya and East Africa?',
-    a: 'Kenyan and East African partners can receive cleared earnings directly to their Safaricom or Airtel mobile money numbers via automated M-Pesa B2C pushes. Payouts are converted from USD to KES at real-time interbank rates with zero transfer fee deductions.'
-  },
-  {
-    q: 'What is the tracking cookie duration for affiliate links?',
-    a: 'Every referral link click sets a persistent 90-day tracking cookie across all TuneMavens subdomains (including TuneStream and SyncMavens). If a creator or fan registers within 90 days of clicking your link, their account is permanently bound to your affiliate profile.'
-  },
-  {
-    q: 'Why are certain articles marked as Recommended Reading during onboarding?',
-    a: 'During onboarding, TuneMavens highlights recommended reading tailored to each user\'s assigned role (creators, record labels, music supervisors, or affiliate partners). These guides are 100% optional and never required to access your dashboard, port tracks, or earn commissions, but provide industry best practices on copyright splits, sync pitching, and multi-stream earnings.'
-  },
-  {
-    q: 'How does the Support & AI Claims Desk resolve disputes?',
-    a: 'When you submit a claim with an ISRC or Split Cascade TxID, TuneSupport AI performs an instant automated diagnosis, validates metadata against catalog records, and places an escrow freeze on disputed split payouts. You can chat with the AI in real time and execute automated settlements with 1 click.'
-  },
-  {
-    q: 'What happens to my royalties when a Split Cascade dispute is filed?',
-    a: 'Disputed payouts are automatically held in TuneLedger escrow to prevent unrecoverable distributions to third parties. Crucially, TuneMavens enforces zero cross-collateralization, meaning undisputed tracks in your catalog continue disbursing revenues normally.'
-  },
-  {
-    q: 'Are DDEX distribution corrections or re-dispatches charged credits?',
-    a: 'Never. If a digital service provider (DSP) rejects a delivery due to metadata duration offsets or container checksum errors, TuneSupport AI authorizes an automated warranty re-dispatch at zero credit cost.'
-  },
-  {
-    q: 'How do credit deductions work across different apps?',
-    a: 'Credits are universally shared across your TuneMavens account. When you purchase a credit pack or receive monthly credits, they can be spent on any tool—including MasterLab AI mastering, SyncMavens brief pitching, domain renewals, or contract generation.'
-  },
-  {
-    q: 'Can I link my own custom domain to my artist EPK?',
-    a: 'Yes! Using the Hosting Manager in your creator dashboard, you can map any custom domain (e.g. yourname.com) to your EPK and fan web world. TuneMavens handles SSL certificate generation automatically at no additional hosting fee.'
-  },
-  {
-    q: 'How does Split Cascade disburse royalty payments?',
-    a: 'After you upload your distributor CSV statements and configure split percentages, the Split Cascade calculation engine computes net shares for each collaborator, applies any recoupment offsets, and transfers funds directly to linked Stripe or M-Pesa accounts.'
-  },
-  {
-    q: 'Do I lose ownership of my music when using TuneMavens Publishing?',
-    a: 'Never. Under Administrator Mode (our standard 10% fee option), you retain 100% of your copyright ownership. TuneMavens simply registers your works and collects mechanical and international performance royalties on your behalf.'
-  },
-  {
-    q: 'What is the difference between an ISRC and an ISWC?',
-    a: 'An ISRC identifies the sound recording (the Master audio), whereas an ISWC identifies the underlying musical work (the lyrics and composition). You need both to collect all master and publishing streaming revenues.'
-  },
-  {
-    q: 'Is registration free, and do I get starter credits?',
-    a: 'Yes! Registering an account is 100% free and includes 150 starter credits to test MasterLab mastering, explore the sync marketplace, and build your digital press kit.'
-  },
-  {
-    q: 'What is TuneCompanion and how does it integrate with TuneStream and SyncMavens?',
-    a: 'TuneCompanion is the cross-platform creator business operating system and live copilot within the TuneMavens ecosystem. Available directly inside the TuneStream backend and across the network, it unites real-time royalty split accounting (TuneLedger), instant M-Pesa STK and Stripe cashouts, live TV/film sync brief matching (SyncMavens Radar), AI release optimization, and authoritative catalog telemetry into one responsive interface.'
-  },
-  {
-    q: 'Can I switch between mobile phone view and full desktop view in TuneCompanion?',
-    a: 'Yes. TuneCompanion includes a built-in Dual Viewport toggle in the top bar. You can switch instantly between the Pocket Phone Frame (simulating the 375px native mobile companion app with touch-friendly cards) and the Expansive Desktop Studio View for full-width multi-column analytics.'
-  },
-  {
-    q: 'How does the TuneCompanion 7-tier split ledger protect my collaborators?',
-    a: 'Unlike static 50/50 splits that lead to disputes over studio bills, TuneCompanion implements programmatic waterfall liquidity: 100% of initial royalties recoup recording and mastering outlays first, followed by producer performance bonuses and sample escrow reserves, before perpetual writer/master equity distributes. Collaborators receive instant disbursement notifications and direct payouts.'
-  },
-  {
-    q: 'Do I need to spend Universal Credits to monitor my telemetry in TuneCompanion?',
-    a: 'No. Accessing the TuneCompanion dashboard, toggling mobile/desktop views, auditing split sheets, reviewing sync briefs, checking listener telemetry, and initiating standard cashouts costs zero credits forever. Platform credits are only consumed when you run deep MasterLab AI mastering passes or submit priority pitches to commercial television sync briefs.'
+    id: 'whatsapp-messaging-alerts',
+    category: 'services',
+    title: 'Instant WhatsApp Real-Time Alerts: 24-Hour Windows, Handshakes & Quota Policy',
+    readingTime: '6 min read',
+    excerpt: 'Comprehensive guide to the TuneMavens WhatsApp notification rail. Learn how the Meta 24-hour customer-service window functions, how to initiate your inbound handshake, and how our KES 500 ($5.00) wallet reload / supervisor & label complimentary policy preserves the monthly 1,000-message cloud quota.',
+    tags: ['WhatsApp Cloud API', 'Real-Time Alerts', '24-Hour Window', 'Quota Governance', 'Handshake Protocol', 'Sync Deals', 'Royalty Payouts'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['creator', 'label', 'supervisor', 'corporate', 'affiliate'],
+    toolLink: { label: 'Open Communications Vault', path: '/communications-vault' },
+    sections: [
+      {
+        heading: 'The Omnichannel WhatsApp Alert Network',
+        content: `In modern music publishing and synchronization, speed is everything. Commercial television supervisors, advertising agencies, and record labels often require track clearances and split confirmations within hours.
+
+To eliminate missed emails and spam-folder delays, TuneMavens operates a direct **Meta WhatsApp Cloud API (v20.0)** communication rail alongside our transactional Resend email infrastructure. When activated, you receive instant, actionable notifications directly on your smartphone for:
+* **Sync Deal Inquiries & Placement Offers**: Immediate briefs from Hollywood, UK, and East African television supervisors.
+* **TuneLedger Split Payouts & Escrow Releases**: Real-time notifications when collaborator splits or advances hit your wallet.
+* **Catalogue Clearance & ISRC Validations**: Updates on track ingestion, metadata sanitization, and streaming deliveries.
+* **Contract Executions & Digital Signatures**: Notifications when counterparties sign synchronization licenses or split agreements.`
+      },
+      {
+        heading: 'The Meta 24-Hour Customer-Service Window & Inbound Handshake',
+        content: `Meta operates strict anti-spam guidelines across the WhatsApp Business Platform. Unlike unrestricted SMS, automated business messaging is governed by the **24-Hour Customer-Service Window**:
+* **Free Unrestricted Messaging Window**: Whenever you send an incoming message to our verified business number, Meta automatically opens a **24-hour service window**. During this window, our cloud server can deliver custom, rich real-time deal alerts, split statements, and track updates to you completely free of charge.
+* **Window Expiration**: Once 24 hours elapse without an inbound message, outbound messaging is paused or restricted to pre-approved standard templates.
+* **The 1-Click Handshake**: To open or refresh your 24-hour window, simply navigate to the **Communications Vault** and tap **"Send Inbound Handshake"** or scan the high-resolution QR code with your smartphone camera. This dispatches a pre-formatted message (\`START TM-YOURHANDLE\`) to our business line (\`+1 555-160-6136\`), instantly triggering our cloud webhook and verifying your active window!`
+      },
+      {
+        heading: 'Quota Governance: 1,000 Free Messages & Access Tiers',
+        content: `Meta allocates **1,000 free service conversation handshakes per calendar month** per WhatsApp Business account. To safeguard this community quota against spam from inactive or unfunded bot accounts, TuneMavens enforces a transparent, tiered access policy:
+
+1. **Music Supervisors, Record Labels & Corporates (Complimentary VIP Access)**:
+   * **Cost**: 100% Free / Unlimited.
+   * **Eligibility**: Verified Music Supervisors, Record Labels, Publishers, and Corporate Brands receive automatic complimentary access with zero wallet balance requirements.
+
+2. **Funded Creators, Artists & Producers (KES 500 or $5.00 Qualified)**:
+   * **Cost**: Fully covered by platform.
+   * **Eligibility**: Creators who have loaded a cumulative minimum of **KES 500 (or $5.00 USD)** into their TuneLedger wallet or maintain an active credit balance of 500 credits enjoy automated WhatsApp delivery for all deal alerts and payouts.
+
+3. **Unfunded Creators & Free Guest Accounts (Email Fallback)**:
+   * **Delivery Rail**: Automatically routed through high-deliverability transactional email (**hello@contact.tunemavens.com via Resend**).
+   * **Upgrade Path**: You can unlock instant WhatsApp push delivery at any time simply by making a one-time KES 500 or $5.00 wallet reload via M-Pesa STK push or card.`
+      },
+      {
+        heading: 'Emergency Direct Dispatch: The Universal wa.me Protocol',
+        content: `Need to correspond directly with a music supervisor or collaborator without waiting for webhook processing? 
+
+Every communication logged in your **Communications Vault** includes an embedded **Universal wa.me Direct Chat** launcher. Tapping this button instantly opens a WhatsApp conversation on your desktop or mobile device with the counterparty's sanitized international number and message context pre-filled, bypassing API sandbox restrictions and token expirations entirely.`
+      }
+    ]
   },
 
-{
+  {
     id: 'ad-injection-and-conversion-telemetry',
     category: 'services',
     title: 'TuneStream Dynamic Audio Ad Injection: 15s/30s Flights, Quartile Auditing & Cryptographic Delivery Certificates',
@@ -1609,5 +1700,84 @@ export const FREQUENT_FAQS = [
 * **Verifiable Airplay Certificates**: Broadcast spins generate cryptographically signed proof-of-airplay certificates (\`TM-BROADCAST-YYYY-XXXX\`) certifying verified transmission for artist royalites.`
       }
     ]
+  }
+];
+
+export const FREQUENT_FAQS = [
+  {
+    q: 'Do I need platform credits to use the Affiliate Dashboard or onboard creators?',
+    a: 'No, absolutely not. The Affiliate Dashboard, referral link generator, conversion tracking, attribution ledger, and direct creator/label onboarding are 100% free and require zero credits. Platform Unified Credits only apply if you personally choose to use creator tools (such as MasterLab AI audio mastering, SyncMavens sync pitching, or custom domain hosting).'
+  },
+  {
+    q: 'How does the TuneMavens 3% to 12% affiliate compensation matrix work?',
+    a: 'Modeled after Ditto Music, TuneMavens pays recurring multi-stream commissions ranging from 3% on streaming royalties to 12% on sync clearances and creator credit reloads. Every time someone you refer streams, buys, or licenses music, your commission is recorded automatically on TuneLedger.'
+  },
+  {
+    q: 'Can affiliates directly onboard creators and record labels?',
+    a: 'Yes! From your Linked Network & Onboarding console, you can onboard recording artists, beatmakers, indie record labels, and music supervisors just like a label adds roster talent. Entering their details generates an instant pre-bound invitation link that attaches 100% of their future ecosystem activity to your referral ID.'
+  },
+  {
+    q: 'How do M-Pesa STK affiliate payouts work in Kenya and East Africa?',
+    a: 'Kenyan and East African partners can receive cleared earnings directly to their Safaricom or Airtel mobile money numbers via automated M-Pesa B2C pushes. Payouts are converted from USD to KES at real-time interbank rates with zero transfer fee deductions.'
+  },
+  {
+    q: 'What is the tracking cookie duration for affiliate links?',
+    a: 'Every referral link click sets a persistent 90-day tracking cookie across all TuneMavens subdomains (including TuneStream and SyncMavens). If a creator or fan registers within 90 days of clicking your link, their account is permanently bound to your affiliate profile.'
+  },
+  {
+    q: 'Why are certain articles marked as Recommended Reading during onboarding?',
+    a: 'During onboarding, TuneMavens highlights recommended reading tailored to each user\'s assigned role (creators, record labels, music supervisors, or affiliate partners). These guides are 100% optional and never required to access your dashboard, port tracks, or earn commissions, but provide industry best practices on copyright splits, sync pitching, and multi-stream earnings.'
+  },
+  {
+    q: 'How does the Support & AI Claims Desk resolve disputes?',
+    a: 'When you submit a claim with an ISRC or Split Cascade TxID, TuneSupport AI performs an instant automated diagnosis, validates metadata against catalog records, and places an escrow freeze on disputed split payouts. You can chat with the AI in real time and execute automated settlements with 1 click.'
+  },
+  {
+    q: 'What happens to my royalties when a Split Cascade dispute is filed?',
+    a: 'Disputed payouts are automatically held in TuneLedger escrow to prevent unrecoverable distributions to third parties. Crucially, TuneMavens enforces zero cross-collateralization, meaning undisputed tracks in your catalog continue disbursing revenues normally.'
+  },
+  {
+    q: 'Are DDEX distribution corrections or re-dispatches charged credits?',
+    a: 'Never. If a digital service provider (DSP) rejects a delivery due to metadata duration offsets or container checksum errors, TuneSupport AI authorizes an automated warranty re-dispatch at zero credit cost.'
+  },
+  {
+    q: 'How do credit deductions work across different apps?',
+    a: 'Credits are universally shared across your TuneMavens account. When you purchase a credit pack or receive monthly credits, they can be spent on any tool—including MasterLab AI mastering, SyncMavens brief pitching, domain renewals, or contract generation.'
+  },
+  {
+    q: 'Can I link my own custom domain to my artist EPK?',
+    a: 'Yes! Using the Hosting Manager in your creator dashboard, you can map any custom domain (e.g. yourname.com) to your EPK and fan web world. TuneMavens handles SSL certificate generation automatically at no additional hosting fee.'
+  },
+  {
+    q: 'How does Split Cascade disburse royalty payments?',
+    a: 'After you upload your distributor CSV statements and configure split percentages, the Split Cascade calculation engine computes net shares for each collaborator, applies any recoupment offsets, and transfers funds directly to linked Stripe or M-Pesa accounts.'
+  },
+  {
+    q: 'Do I lose ownership of my music when using TuneMavens Publishing?',
+    a: 'Never. Under Administrator Mode (our standard 10% fee option), you retain 100% of your copyright ownership. TuneMavens simply registers your works and collects mechanical and international performance royalties on your behalf.'
+  },
+  {
+    q: 'What is the difference between an ISRC and an ISWC?',
+    a: 'An ISRC identifies the sound recording (the Master audio), whereas an ISWC identifies the underlying musical work (the lyrics and composition). You need both to collect all master and publishing streaming revenues.'
+  },
+  {
+    q: 'Is registration free, and do I get starter credits?',
+    a: 'Yes! Registering an account is 100% free and includes 150 starter credits to test MasterLab mastering, explore the sync marketplace, and build your digital press kit.'
+  },
+  {
+    q: 'What is TuneCompanion and how does it integrate with TuneStream and SyncMavens?',
+    a: 'TuneCompanion is the cross-platform creator business operating system and live copilot within the TuneMavens ecosystem. Available directly inside the TuneStream backend and across the network, it unites real-time royalty split accounting (TuneLedger), instant M-Pesa STK and Stripe cashouts, live TV/film sync brief matching (SyncMavens Radar), AI release optimization, and authoritative catalog telemetry into one responsive interface.'
+  },
+  {
+    q: 'Can I switch between mobile phone view and full desktop view in TuneCompanion?',
+    a: 'Yes. TuneCompanion includes a built-in Dual Viewport toggle in the top bar. You can switch instantly between the Pocket Phone Frame (simulating the 375px native mobile companion app with touch-friendly cards) and the Expansive Desktop Studio View for full-width multi-column analytics.'
+  },
+  {
+    q: 'How does the TuneCompanion 7-tier split ledger protect my collaborators?',
+    a: 'Unlike static 50/50 splits that lead to disputes over studio bills, TuneCompanion implements programmatic waterfall liquidity: 100% of initial royalties recoup recording and mastering outlays first, followed by producer performance bonuses and sample escrow reserves, before perpetual writer/master equity distributes. Collaborators receive instant disbursement notifications and direct payouts.'
+  },
+  {
+    q: 'Do I need to spend Universal Credits to monitor my telemetry in TuneCompanion?',
+    a: 'No. Accessing the TuneCompanion dashboard, toggling mobile/desktop views, auditing split sheets, reviewing sync briefs, checking listener telemetry, and initiating standard cashouts costs zero credits forever. Platform credits are only consumed when you run deep MasterLab AI mastering passes or submit priority pitches to commercial television sync briefs.'
   }
 ];

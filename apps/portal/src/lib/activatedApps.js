@@ -13,8 +13,8 @@ export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
   dj: ['djpool', 'tunemavens-library'],
   studio: ['sync-marketplace', 'escrow-contracts'],
   supervisor: ['sync-marketplace', 'escrow-contracts'],
-  media_house: ['sync-marketplace', 'corporate-ads'],
-  media: ['sync-marketplace', 'corporate-ads'],
+  media_house: ['sync-marketplace', 'corporate-ads', 'media-house'],
+  media: ['sync-marketplace', 'corporate-ads', 'media-house'],
   corporate: ['sync-marketplace', 'corporate-ads'],
   affiliate: ['affiliates', 'split-cascade', 'tunemavens-library'],
   consumer: ['tunemavens-library', 'tunemavens-tips'],
@@ -24,7 +24,7 @@ export const DEFAULT_ACTIVE_APPS_BY_ROLE = {
     'epk-builder', 'catalog-porting', 'split-cascade', 'publishing-election',
     'distribution-election', 'djpool', 'sync-marketplace', 'escrow-contracts',
     'tunemavens-library', 'tunemavens-tips', 'tunepay-inventory', 'tunepay-settlement',
-    'tunepay-devices', 'corporate-ads', 'label-team'
+    'tunepay-devices', 'corporate-ads', 'label-team', 'media-house'
   ]
 };
 

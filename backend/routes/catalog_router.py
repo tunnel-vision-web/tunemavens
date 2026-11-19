@@ -542,6 +542,7 @@ def build_creator_albums(subdomain: str, tracks: List[Dict[str, Any]]) -> List[D
             cover = r.get("coverArt") or (matching[0].get("coverArt") if matching else None) or f"https://picsum.photos/seed/{abs(hash(title))}/400"
             first_isrc = (r.get("isrcs") or [matching[0].get("isrc") if matching else "KE-TM1-26-00001"])[0]
 
+            rel_is_explicit = bool(r.get("isExplicit")) or (r.get("contentAdvisory") or "").lower() == "explicit" or any(bool(tr.get("isExplicit")) or (tr.get("contentAdvisory") or "").lower() == "explicit" for tr in matching)
             albums_map[key] = {
                 "id": str(r.get("_id")) if "_id" in r else f"rel-{abs(hash(title))}",
                 "title": title,
@@ -555,7 +556,9 @@ def build_creator_albums(subdomain: str, tracks: List[Dict[str, Any]]) -> List[D
                 "isrcs": r.get("isrcs") or [t.get("isrc") for t in matching if t.get("isrc")],
                 "tracks": matching,
                 "priceCredits": int(r.get("priceCredits") or 50),
-                "artist": r.get("artist") or clean.capitalize()
+                "artist": r.get("artist") or clean.capitalize(),
+                "contentAdvisory": "Explicit" if rel_is_explicit else (r.get("contentAdvisory") or "Clean"),
+                "isExplicit": rel_is_explicit
             }
     except Exception as e:
         logger.warning(f"Error fetching releases in build_creator_albums: {e}")
@@ -569,6 +572,7 @@ def build_creator_albums(subdomain: str, tracks: List[Dict[str, Any]]) -> List[D
         if key not in albums_map:
             matching = [tr for tr in tracks if (tr.get("release") or "").lower().strip() == key]
             cover = t.get("coverArt") or get_authoritative_cover(rel_title)
+            rel_is_explicit = any(bool(tr.get("isExplicit")) or (tr.get("contentAdvisory") or "").lower() == "explicit" for tr in matching)
             albums_map[key] = {
                 "id": f"trk-rel-{abs(hash(rel_title))}",
                 "title": rel_title,
@@ -582,7 +586,9 @@ def build_creator_albums(subdomain: str, tracks: List[Dict[str, Any]]) -> List[D
                 "isrcs": [tr.get("isrc") for tr in matching if tr.get("isrc")],
                 "tracks": matching,
                 "priceCredits": int(t.get("priceCredits") or 50),
-                "artist": t.get("artist") or clean.capitalize()
+                "artist": t.get("artist") or clean.capitalize(),
+                "contentAdvisory": "Explicit" if rel_is_explicit else (t.get("contentAdvisory") or "Clean"),
+                "isExplicit": rel_is_explicit
             }
 
     # 3. Append default canonical albums if not colliding
@@ -871,7 +877,9 @@ def wizard_ingest_release(payload: WizardIngestPayload):
             "publishingSplit": t.get("publishingSplit") or "Writer (50%) / Publisher (50%)",
             "distributionSplit": t.get("distributionSplit") or "Artist (60%) / Producer (25%) / Label (15%)",
             "split": t.get("split") or t.get("distributionSplit") or "Artist (60%) / Producer (25%) / Label (15%)",
-            "syncCleared": t.get("syncCleared", True)
+            "syncCleared": t.get("syncCleared", True),
+            "contentAdvisory": t.get("contentAdvisory") or (payload.globalRights.get("contentAdvisory", "Clean") if payload.globalRights else "Clean"),
+            "isExplicit": bool(t.get("isExplicit")) or (t.get("contentAdvisory") or (payload.globalRights.get("contentAdvisory") if payload.globalRights else "")).lower() == "explicit"
         }
 
         if isrc in existing_isrcs:
@@ -893,6 +901,8 @@ def wizard_ingest_release(payload: WizardIngestPayload):
         "artist": album_artist,
         "trackCount": len(ingested_tracks),
         "isrcs": [t["isrc"] for t in ingested_tracks],
+        "contentAdvisory": project.get("contentAdvisory") or (payload.globalRights.get("contentAdvisory", "Clean") if payload.globalRights else "Clean"),
+        "isExplicit": bool(project.get("isExplicit")) or (project.get("contentAdvisory") or "").lower() == "explicit" or any(t.get("isExplicit") for t in ingested_tracks),
         "created_at": datetime.now(timezone.utc)
     }
     db.releases.update_one(
@@ -933,6 +943,8 @@ def update_catalog_track(isrc: str, payload: Dict[str, Any], subdomain: str = Qu
             found = True
             merged = {**t, **payload}
             merged["isrc"] = isrc  # maintain identity
+            if "contentAdvisory" in payload:
+                merged["isExplicit"] = (payload.get("contentAdvisory") or "").lower() == "explicit"
             updated_tracks.append(merged)
             updated_track_obj = merged
         else:

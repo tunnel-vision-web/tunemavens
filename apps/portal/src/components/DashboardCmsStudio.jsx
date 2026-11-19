@@ -14,6 +14,7 @@ import MediaAssetPickerModal from './MediaAssetPickerModal.jsx'
 import AiArtPromptModal from './AiArtPromptModal.jsx'
 import PersonaEpkEditor from './PersonaEpkEditor.jsx'
 import { loadAuthoritativeGenres, DEFAULT_CANONICAL_GENRES } from '../lib/genres.js'
+import ExplicitBadge, { isReleaseExplicit } from './common/ExplicitBadge.jsx'
 
 const CMS_TABS = [
   { id: 'overview', label: 'CMS Overview & AI Styles', icon: RiLayoutMasonryFill },
@@ -3152,11 +3153,18 @@ export default function DashboardCmsStudio({ sessionUser, epk, setEpk, tracks: i
 
                           return (
                             <div key={alb.id || aIdx} style={{ background: '#0a0d1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '18px', display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-                              <img
-                                src={alb.cover || alb.coverArt || `https://picsum.photos/seed/${encodeURIComponent(alb.title)}/400/400`}
-                                alt={alb.title}
-                                style={{ width: '130px', height: '130px', borderRadius: '4px', objectFit: 'cover', border: `1px solid ${accent}40`, flexShrink: 0 }}
-                              />
+                              <div style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
+                                <img
+                                  src={alb.cover || alb.coverArt || `https://picsum.photos/seed/${encodeURIComponent(alb.title)}/400/400`}
+                                  alt={alb.title}
+                                  style={{ width: '100%', height: '100%', borderRadius: '4px', objectFit: 'cover', border: `1px solid ${accent}40` }}
+                                />
+                                {(isReleaseExplicit(alb) || matchingTracks.some(t => t.contentAdvisory === 'Explicit' || t.isExplicit)) && (
+                                  <div style={{ position: 'absolute', top: '6px', left: '6px', zIndex: 2 }}>
+                                    <ExplicitBadge variant="cover" size="xs" />
+                                  </div>
+                                )}
+                              </div>
                               <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                                   <strong style={{ fontSize: '1.1rem', color: '#fff' }}>{alb.title}</strong>

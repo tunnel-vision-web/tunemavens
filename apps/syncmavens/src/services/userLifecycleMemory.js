@@ -80,7 +80,7 @@ export const APP_DOC_MAPPINGS = {
   },
   // Record Label Administration & Team Seats
   'label-team': {
-    articleId: 'account-security-and-team-roles',
+    articleId: 'account-security-2fa-and-roles',
     fallbackArticleId: 'master-vs-composition-copyright',
     label: 'Team Roles & Label Roster Management',
     appTitle: 'Roster & Team Seats'
@@ -189,7 +189,7 @@ export const APP_DOC_MAPPINGS = {
   },
   // CRM, CMS & Social AI
   'crm': {
-    articleId: 'epk-studio-and-custom-domains',
+    articleId: 'crm-growth-engine-and-inbox',
     fallbackArticleId: 'corporate-ads-and-brand-flights',
     label: 'Smart CRM & Inbound Leads Guide',
     appTitle: 'Intermaven Smart CRM'
@@ -300,7 +300,7 @@ export const APP_DOC_MAPPINGS = {
     label: 'Community & Support Claims Desk',
     appTitle: 'TuneMavens Community'
   },  // Phase 9: Ad Injection & Telemetry
-  'corporate-ads': {
+  'ad-injection': {
     articleId: 'ad-injection-and-conversion-telemetry',
     fallbackArticleId: 'corporate-ads-and-brand-flights',
     label: 'Ad Flight Engine & Telemetry Guide',
@@ -369,28 +369,378 @@ export const APP_DOC_MAPPINGS = {
     appTitle: 'Offline Crates Vault'
   },
 
+  'dj-mixes': {
+    articleId: 'dj-pool-engine-and-dancefloor-clearance',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'DJ Mix Continuous Audio Track Extraction & 100% Prior Clearance',
+    appTitle: 'DJ Mixes & Sovereign Clearance'
+  },
+
+  // SyncMavens Marketplace, Briefs & Superuser Operations
+  'briefs': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'syncmavens-licensing-platform',
+    label: 'Sync Briefs & Music Supervisor Requirements Guide',
+    appTitle: 'Active Sync Briefs'
+  },
+  'briefs_mgmt': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'syncmavens-licensing-platform',
+    label: 'Brief Creation & Supervisor Submission Workflow Guide',
+    appTitle: 'Supervisor Briefs Management'
+  },
+  'pitches': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'syncmavens-licensing-platform',
+    label: 'Creator Track Pitching & Stems Packaging Guide',
+    appTitle: 'My Pitched Tracks'
+  },
+  'pitches_received': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'syncmavens-licensing-platform',
+    label: 'Reviewing Incoming Artist Pitches & Cue Sheets',
+    appTitle: 'Supervisor Pitch Review'
+  },
+  'sync_marketplace': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'syncmavens-licensing-platform',
+    label: 'Sync Placement & Supervisor Pitching Masterclass',
+    appTitle: 'SyncMavens Licensing Marketplace'
+  },
+  'sync_ready_vault': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'music-metadata-isrc-iswc-ipi-upc',
+    label: 'Sync-Ready Catalog Stems & Instrumental Auditions',
+    appTitle: 'Sync-Ready Audio Vault'
+  },
+  'dashboard_publishing': {
+    articleId: 'publishing-deals-admin-vs-copub-vs-buyout',
+    fallbackArticleId: 'master-vs-composition-copyright',
+    label: 'Publishing Deals & Global Mechanicals Guide',
+    appTitle: 'Publishing Administration'
+  },
+  'dashboard_youtube': {
+    articleId: 'music-metadata-isrc-iswc-ipi-upc',
+    fallbackArticleId: 'sync-licensing-masterclass',
+    label: 'YouTube Content ID & Digital Fingerprinting Guide',
+    appTitle: 'YouTube Content ID Sync'
+  },
+  'domain_mappings': {
+    articleId: 'epk-studio-and-custom-domains',
+    fallbackArticleId: 'account-security-2fa-and-roles',
+    label: 'DNS & Custom Domain Verification Guide',
+    appTitle: 'Domain Mappings'
+  },
+  'app_marketplace': {
+    articleId: 'universal-credits-system-guide',
+    fallbackArticleId: 'master-vs-composition-copyright',
+    label: 'App Subscriptions & Universal Credits Guide',
+    appTitle: 'App Marketplace'
+  },
+  'promoted_acts': {
+    articleId: 'corporate-ads-and-brand-flights',
+    fallbackArticleId: 'universal-credits-system-guide',
+    label: 'Promoted Acts & Featured Sponsorships Guide',
+    appTitle: 'Promoted Acts Admin'
+  },
+  'escrow_splits': {
+    articleId: 'studio-split-sheets-guide',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Escrow Contracts & Split Waterfall Guide',
+    appTitle: 'Escrow Splits'
+  },
+  'ledger': {
+    articleId: 'studio-split-sheets-guide',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Split Sheets & Royalty Waterfall Guide',
+    appTitle: 'TuneLedger / Split Cascade'
+  },
+  'affiliates': {
+    articleId: 'affiliate-program-guide',
+    fallbackArticleId: 'affiliate-payouts-mpesa-settlement',
+    label: 'Affiliate Scheme & Multi-Stream Commissions Guide',
+    appTitle: 'Affiliate Partner Network'
+  },
+  'admin-team': {
+    articleId: 'account-security-2fa-and-roles',
+    fallbackArticleId: 'account-security-2fa-and-roles',
+    label: 'Platform Administration & Team Seats Guide',
+    appTitle: 'Site Admin Team & Seats'
+  },
+
   'help': {
     articleId: 'how-support-ticketing-works',
     fallbackArticleId: 'master-vs-composition-copyright',
     label: 'TuneMavens Help & Industry Knowledge Base',
     appTitle: 'Help Center'
+  },
+
+  // Additional Workspace Tabs & Personas
+  'overview': {
+    articleId: 'master-vs-composition-copyright',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Overview & Ecosystem Rights Guide',
+    appTitle: 'Overview Dashboard'
+  },
+  'creator': {
+    articleId: 'master-vs-composition-copyright',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Creator Rights & Royalty Cascades Guide',
+    appTitle: 'TuneCreators Studio'
+  },
+  'creator-companion': {
+    articleId: 'tunecompanion-creator-operating-system',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'TuneCompanion Operating System & Cascades Guide',
+    appTitle: 'TuneCompanion AI OS'
+  },
+  'admin': {
+    articleId: 'account-security-2fa-and-roles',
+    fallbackArticleId: 'community-wall-of-fame-and-epk-induction',
+    label: 'Platform Administration, RBAC & Security Guide',
+    appTitle: 'Administration Console'
+  },
+  'label': {
+    articleId: 'distribution-path-c-and-catalogue-acquisitions',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Record Label Console & Catalogue Acquisitions Guide',
+    appTitle: 'Record Label Operations'
+  },
+  'dj': {
+    articleId: 'dj-pool-engine-and-dancefloor-clearance',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'DJ Pool Engine & Dancefloor Clearance Guide',
+    appTitle: 'DJ Crate & Live Set Hub'
+  },
+  'vc': {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    fallbackArticleId: 'global-tours-live-concerts-ticketing',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'Venture Capital & LP Desk'
+  },
+  'investor': {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    fallbackArticleId: 'global-tours-live-concerts-ticketing',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'Venture Capital & LP Desk'
+  },
+  'podcaster': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Podcast Dynamic Ad Injection & Telemetry Guide',
+    appTitle: 'Podcaster Studio Hub'
+  },
+  'media': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House & Broadcast Hub'
+  },
+  'media_house': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House & Broadcast Hub'
+  },
+  'broadcast': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Broadcast Operations & Syndication Guide',
+    appTitle: 'Broadcast Operations Hub'
+  },
+  'syndication': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Broadcast Syndication Hub'
+  },
+  'corporate': {
+    articleId: 'corporate-ads-and-brand-flights',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'Corporate Ads & Brand Flight Sponsorships Guide',
+    appTitle: 'Corporate Brand Console'
+  },
+  'studio': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'studio-split-sheets-guide',
+    label: 'Recording Studio Splits & Sync Licensing Guide',
+    appTitle: 'Recording Studio Partner'
+  },
+  'supervisor': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'syncmavens-licensing-platform',
+    label: 'Music Supervisor Sync Placement Masterclass',
+    appTitle: 'Sync Licensing Supervisor Desk'
+  },
+  'sync-master': {
+    articleId: 'syncmavens-licensing-platform',
+    fallbackArticleId: 'sync-licensing-masterclass',
+    label: 'SyncMavens Licensing Marketplace Guide',
+    appTitle: 'Sync Master App'
+  },
+  'tunepay': {
+    articleId: 'global-tours-live-concerts-ticketing',
+    fallbackArticleId: 'universal-credits-system-guide',
+    label: 'TunePay Live Concert Merch POS Terminal Guide',
+    appTitle: 'TunePay Universal Wallet'
+  },
+  'tunemavens': {
+    articleId: 'universal-credits-system-guide',
+    fallbackArticleId: 'master-vs-composition-copyright',
+    label: 'Universal Credits & Intermaven Network Guide',
+    appTitle: 'TuneMavens Ecosystem'
+  },
+  'audit-vault': {
+    articleId: 'tuneledger-escrow-dispute-locks',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'TuneLedger Audit Vault & Escrow Locks Guide',
+    appTitle: 'Audit Vault & Escrow'
+  },
+  'publishing-tracker': {
+    articleId: 'publishing-deals-admin-vs-copub-vs-buyout',
+    fallbackArticleId: 'pros-cmos-ascap-bmi-sesac-prs',
+    label: 'Publishing Deals & Global Collection Tracking Guide',
+    appTitle: 'Publishing Collection Tracker'
+  },
+  'wall-of-fame-admin': {
+    articleId: 'community-wall-of-fame-and-epk-induction',
+    fallbackArticleId: 'account-security-2fa-and-roles',
+    label: 'Wall of Fame Nominations & EPK Induction Guide',
+    appTitle: 'Wall of Fame Administration'
+  },
+  'consumer': {
+    articleId: 'tunestream-audiophile-streaming',
+    fallbackArticleId: 'tunestream-offline-crates-and-tipping',
+    label: 'TuneStream Audiophile Streaming & Tipping Guide',
+    appTitle: 'TuneStream Listener Suite'
+  },
+  'GB': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'NG': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'TZ': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'UG': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'US': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'ZA': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' }
+};
+
+/**
+ * Primary documentation article assigned to each persona role
+ */
+export const PERSONA_PRIMARY_DOCS = {
+  creator: {
+    articleId: 'master-vs-composition-copyright',
+    label: 'Master vs. Composition Rights Guide',
+    appTitle: 'TuneMavens Studio'
+  },
+  label: {
+    articleId: 'distribution-path-c-and-catalogue-acquisitions',
+    label: 'Record Label Console & Catalogue Acquisitions Guide',
+    appTitle: 'TuneMavens Records'
+  },
+  dj: {
+    articleId: 'dj-pool-engine-and-dancefloor-clearance',
+    label: 'DJ Pool Engine & Dancefloor Clearance Guide',
+    appTitle: 'DJ Crate & Live Set Console'
+  },
+  supervisor: {
+    articleId: 'sync-licensing-masterclass',
+    label: 'Sync Placement & Supervisor Pitching Masterclass',
+    appTitle: 'Sync Licensing Supervisor'
+  },
+  studio: {
+    articleId: 'studio-split-sheets-guide',
+    label: 'Producer & Songwriter Split Sheets Guide',
+    appTitle: 'Recording Studio Partner'
+  },
+  media_house: {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House & Broadcast Sync'
+  },
+  media: {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House & Broadcast Sync'
+  },
+  corporate: {
+    articleId: 'corporate-ads-and-brand-flights',
+    label: 'Corporate Ad Rates & Brand Flights Guide',
+    appTitle: 'Corporate Brand Partner'
+  },
+  podcaster: {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    label: 'Dynamic Audio Ad Injection & Episode Telemetry Guide',
+    appTitle: 'Podcaster Studio & Ad Insertion'
+  },
+  vc: {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'Venture Capital & LP Desk'
+  },
+  investor: {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'Venture Capital & LP Desk'
+  },
+  affiliate: {
+    articleId: 'affiliate-program-guide',
+    label: 'The TuneMavens Affiliate Scheme Guide',
+    appTitle: 'Affiliate Partner Network'
+  },
+  admin: {
+    articleId: 'account-security-2fa-and-roles',
+    label: 'Account Security, 2FA & Team Roles Guide',
+    appTitle: 'TuneMavens SuperAdmin'
+  },
+  consumer: {
+    articleId: 'tunestream-audiophile-streaming',
+    label: 'TuneStream Audiophile Lossless Streaming Guide',
+    appTitle: 'TuneStream Listener'
   }
 };
 
 /**
- * Get the relevant Help Knowledge Base URL for the current active app or tab
+ * Get the relevant Help Knowledge Base URL for the current active app or tab,
+ * with deep awareness of the user's active persona.
  */
-export function getRelevantDocLink(activeContext) {
-  const mapping = APP_DOC_MAPPINGS[activeContext] || {
+export function getRelevantDocLink(activeContext, userOrRole = null) {
+  // 1. If activeContext is a specific tab/app (other than generic home/overview), use direct mapping
+  if (activeContext && activeContext !== 'home' && activeContext !== 'overview' && APP_DOC_MAPPINGS[activeContext]) {
+    const mapping = APP_DOC_MAPPINGS[activeContext];
+    return {
+      url: `/help?article=${mapping.articleId}`,
+      articleId: mapping.articleId,
+      label: mapping.label,
+      appTitle: mapping.appTitle
+    };
+  }
+
+  // 2. If on 'home', 'overview', or no specific sub-tab, resolve via the active persona
+  const role = typeof userOrRole === 'string'
+    ? userOrRole
+    : (userOrRole?.role || userOrRole?.simulated_role);
+
+  if (role && PERSONA_PRIMARY_DOCS[role]) {
+    const personaDoc = PERSONA_PRIMARY_DOCS[role];
+    return {
+      url: `/help?article=${personaDoc.articleId}`,
+      articleId: personaDoc.articleId,
+      label: personaDoc.label,
+      appTitle: personaDoc.appTitle
+    };
+  }
+
+  // 3. Fallback to mapped 'home' if present, or universal copyright core
+  const homeMapping = APP_DOC_MAPPINGS['home'] || {
     articleId: 'master-vs-composition-copyright',
-    label: 'Help & Industry Knowledge Base',
+    label: 'Master vs. Composition Rights Guide',
     appTitle: 'TuneMavens Ecosystem'
   };
+
   return {
-    url: `/help?article=${mapping.articleId}`,
-    articleId: mapping.articleId,
-    label: mapping.label,
-    appTitle: mapping.appTitle
+    url: `/help?article=${homeMapping.articleId}`,
+    articleId: homeMapping.articleId,
+    label: homeMapping.label,
+    appTitle: homeMapping.appTitle
   };
 }
 

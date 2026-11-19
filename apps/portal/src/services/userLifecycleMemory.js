@@ -80,7 +80,7 @@ export const APP_DOC_MAPPINGS = {
   },
   // Record Label Administration & Team Seats
   'label-team': {
-    articleId: 'account-security-and-team-roles',
+    articleId: 'account-security-2fa-and-roles',
     fallbackArticleId: 'master-vs-composition-copyright',
     label: 'Team Roles & Label Roster Management',
     appTitle: 'Roster & Team Seats'
@@ -219,7 +219,7 @@ export const APP_DOC_MAPPINGS = {
   },
   // CRM, CMS & Social AI
   'crm': {
-    articleId: 'epk-studio-and-custom-domains',
+    articleId: 'crm-growth-engine-and-inbox',
     fallbackArticleId: 'corporate-ads-and-brand-flights',
     label: 'Smart CRM & Inbound Leads Guide',
     appTitle: 'Intermaven Smart CRM'
@@ -330,7 +330,7 @@ export const APP_DOC_MAPPINGS = {
     label: 'Community & Support Claims Desk',
     appTitle: 'TuneMavens Community'
   },  // Phase 9: Ad Injection & Telemetry
-  'corporate-ads': {
+  'ad-injection': {
     articleId: 'ad-injection-and-conversion-telemetry',
     fallbackArticleId: 'corporate-ads-and-brand-flights',
     label: 'Ad Flight Engine & Telemetry Guide',
@@ -400,10 +400,158 @@ export const APP_DOC_MAPPINGS = {
   },
 
   'dj-mixes': {
-    articleId: 'tunestream-audiophile-streaming',
-    fallbackArticleId: 'tuneledger-and-split-cascade',
+    articleId: 'dj-pool-engine-and-dancefloor-clearance',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
     label: 'DJ Mix Continuous Audio Track Extraction & 100% Prior Clearance',
     appTitle: 'DJ Mixes & Sovereign Clearance'
+  },
+
+  // Platform & Superuser Admin
+  'backend-admin': {
+    articleId: 'account-security-2fa-and-roles',
+    fallbackArticleId: 'community-wall-of-fame-and-epk-induction',
+    label: 'Backend Operations, RBAC & Security Guide',
+    appTitle: 'Backend Admin Console'
+  },
+  'admin-team': {
+    articleId: 'account-security-2fa-and-roles',
+    fallbackArticleId: 'account-security-2fa-and-roles',
+    label: 'Platform Administration & Team Seats Guide',
+    appTitle: 'Site Admin Team & Seats'
+  },
+
+  // Affiliate Partner Network
+  'affiliates': {
+    articleId: 'affiliate-program-guide',
+    fallbackArticleId: 'affiliate-payouts-mpesa-settlement',
+    label: 'Affiliate Scheme & Multi-Stream Commissions Guide',
+    appTitle: 'Affiliate Partner Network'
+  },
+  'affiliate': {
+    articleId: 'affiliate-program-guide',
+    fallbackArticleId: 'affiliate-payouts-mpesa-settlement',
+    label: 'Affiliate Scheme & Multi-Stream Commissions Guide',
+    appTitle: 'Affiliate Partner Network'
+  },
+
+  // Communications & Audit Logs
+  'communications': {
+    articleId: 'crm-growth-engine-and-inbox',
+    fallbackArticleId: 'whatsapp-messaging-alerts',
+    label: 'Communications Vault & Audit Logs Guide',
+    appTitle: 'Communications Vault'
+  },
+  'communications-vault': {
+    articleId: 'crm-growth-engine-and-inbox',
+    fallbackArticleId: 'whatsapp-messaging-alerts',
+    label: 'Communications Vault & Audit Logs Guide',
+    appTitle: 'Communications Vault'
+  },
+
+  // Podcaster Studio & Shows Hub
+  'podcaster-studio': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Podcaster Studio & Audio Ad Insertion Guide',
+    appTitle: 'Podcaster Studio Workspace'
+  },
+  'podcast-studio': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Podcaster Studio & Audio Ad Insertion Guide',
+    appTitle: 'Podcaster Studio Workspace'
+  },
+  'podcaster-overview': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Podcaster Studio Overview Guide',
+    appTitle: 'Podcaster Studio Workspace'
+  },
+  'podcaster-episodes': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'Podcast Episode Management & Chapters Guide',
+    appTitle: 'Podcast Episodes'
+  },
+  'podcaster-epk': {
+    articleId: 'epk-studio-and-custom-domains',
+    fallbackArticleId: 'music-metadata-isrc-iswc-ipi-upc',
+    label: 'Podcaster Media Kit & Show EPK Guide',
+    appTitle: 'Podcaster Show EPK'
+  },
+  'podcaster-monetization': {
+    articleId: 'corporate-ads-and-brand-flights',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Podcast Ad Sponsorship Rates & Splits Guide',
+    appTitle: 'Podcast Ad Rates & Splits'
+  },
+  'podcaster-guests': {
+    articleId: 'mycontracts-legal-vault-and-escrow',
+    fallbackArticleId: 'how-support-ticketing-works',
+    label: 'Guest Booking CRM & Broadcast Waivers Guide',
+    appTitle: 'Guest Booking CRM'
+  },
+  'podcasts': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'Podcasts & Shows Streaming Hub Guide',
+    appTitle: 'Podcasts & Shows Hub'
+  },
+
+  // Distribution Radar & Hosting
+  'distribution-tracker': {
+    articleId: 'music-metadata-isrc-iswc-ipi-upc',
+    fallbackArticleId: 'mechanical-royalties-and-mlc',
+    label: 'DSP Ingest Tracking & Delivery Telemetry Guide',
+    appTitle: 'Distribution Radar'
+  },
+  'hosting-manager': {
+    articleId: 'epk-studio-and-custom-domains',
+    fallbackArticleId: 'account-security-2fa-and-roles',
+    label: 'Creator Hosting & Custom Domain Provisioning Guide',
+    appTitle: 'Hosting & Domains'
+  },
+
+  // TunePay POS Terminal
+  'pos-terminal': {
+    articleId: 'global-tours-live-concerts-ticketing',
+    fallbackArticleId: 'live-touring-guarantees-riders-settlements',
+    label: 'TunePay Live Concert Merch POS Terminal Guide',
+    appTitle: 'POS Terminal'
+  },
+
+  // VC Underwriting & Discovery
+  'vc-discover': {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    fallbackArticleId: 'global-tours-live-concerts-ticketing',
+    label: 'Discover Creators & Catalog Underwriting Guide',
+    appTitle: 'Discover Creators & Catalog'
+  },
+
+  // Listener Suite & Devices
+  'listener-apps': {
+    articleId: 'tunestream-audiophile-streaming',
+    fallbackArticleId: 'tunestream-offline-crates-and-tipping',
+    label: 'Listener Apps Suite & Hi-Fi Audio Guide',
+    appTitle: 'Listener Apps Suite'
+  },
+  'device-sync': {
+    articleId: 'tunestream-offline-crates-and-tipping',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'Mobile & Offline Crate Sync Guide',
+    appTitle: 'Mobile & Offline Cache'
+  },
+  'radio': {
+    articleId: 'tunestream-audiophile-streaming',
+    fallbackArticleId: 'media-house-routing-and-broadcast-syndication',
+    label: 'Live 24-Bit Radio Streaming Guide',
+    appTitle: 'Live 24-Bit Radio'
+  },
+  'explore': {
+    articleId: 'tunestream-audiophile-streaming',
+    fallbackArticleId: 'universal-credits-system-guide',
+    label: 'Explore Lossless Audio & Featured Releases Guide',
+    appTitle: 'Explore & Stream'
   },
 
   'help': {
@@ -411,23 +559,274 @@ export const APP_DOC_MAPPINGS = {
     fallbackArticleId: 'master-vs-composition-copyright',
     label: 'TuneMavens Help & Industry Knowledge Base',
     appTitle: 'Help Center'
+  },
+
+  // Additional Workspace Tabs & Personas
+  'overview': {
+    articleId: 'master-vs-composition-copyright',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Overview & Ecosystem Rights Guide',
+    appTitle: 'Overview Dashboard'
+  },
+  'creator': {
+    articleId: 'master-vs-composition-copyright',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Creator Rights & Royalty Cascades Guide',
+    appTitle: 'TuneCreators Studio'
+  },
+  'creator-companion': {
+    articleId: 'tunecompanion-creator-operating-system',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'TuneCompanion Operating System & Cascades Guide',
+    appTitle: 'TuneCompanion AI OS'
+  },
+  'admin': {
+    articleId: 'account-security-2fa-and-roles',
+    fallbackArticleId: 'community-wall-of-fame-and-epk-induction',
+    label: 'Platform Administration, RBAC & Security Guide',
+    appTitle: 'Administration Console'
+  },
+  'label': {
+    articleId: 'distribution-path-c-and-catalogue-acquisitions',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'Record Label Console & Catalogue Acquisitions Guide',
+    appTitle: 'Record Label Operations'
+  },
+  'dj': {
+    articleId: 'dj-pool-engine-and-dancefloor-clearance',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'DJ Pool Engine & Dancefloor Clearance Guide',
+    appTitle: 'DJ Crate & Live Set Hub'
+  },
+  'vc': {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    fallbackArticleId: 'global-tours-live-concerts-ticketing',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'Venture Capital & LP Desk'
+  },
+  'investor': {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    fallbackArticleId: 'global-tours-live-concerts-ticketing',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'Venture Capital & LP Desk'
+  },
+  'podcaster': {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Podcast Dynamic Ad Injection & Telemetry Guide',
+    appTitle: 'Podcaster Studio Hub'
+  },
+  'media': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House & Broadcast Hub'
+  },
+  'media_house': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House & Broadcast Hub'
+  },
+  'broadcast': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Broadcast Operations & Syndication Guide',
+    appTitle: 'Broadcast Operations Hub'
+  },
+  'syndication': {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    fallbackArticleId: 'corporate-ads-and-brand-flights',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Broadcast Syndication Hub'
+  },
+  'corporate': {
+    articleId: 'corporate-ads-and-brand-flights',
+    fallbackArticleId: 'tunestream-audiophile-streaming',
+    label: 'Corporate Ads & Brand Flight Sponsorships Guide',
+    appTitle: 'Corporate Brand Console'
+  },
+  'studio': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'studio-split-sheets-guide',
+    label: 'Recording Studio Splits & Sync Licensing Guide',
+    appTitle: 'Recording Studio Partner'
+  },
+  'supervisor': {
+    articleId: 'sync-licensing-masterclass',
+    fallbackArticleId: 'syncmavens-licensing-platform',
+    label: 'Music Supervisor Sync Placement Masterclass',
+    appTitle: 'Sync Licensing Supervisor Desk'
+  },
+  'sync-master': {
+    articleId: 'syncmavens-licensing-platform',
+    fallbackArticleId: 'sync-licensing-masterclass',
+    label: 'SyncMavens Licensing Marketplace Guide',
+    appTitle: 'Sync Master App'
+  },
+  'tunepay': {
+    articleId: 'global-tours-live-concerts-ticketing',
+    fallbackArticleId: 'universal-credits-system-guide',
+    label: 'TunePay Live Concert Merch POS Terminal Guide',
+    appTitle: 'TunePay Universal Wallet'
+  },
+  'tunemavens': {
+    articleId: 'universal-credits-system-guide',
+    fallbackArticleId: 'master-vs-composition-copyright',
+    label: 'Universal Credits & Intermaven Network Guide',
+    appTitle: 'TuneMavens Ecosystem'
+  },
+  'audit-vault': {
+    articleId: 'tuneledger-escrow-dispute-locks',
+    fallbackArticleId: 'tuneledger-and-split-cascade',
+    label: 'TuneLedger Audit Vault & Escrow Locks Guide',
+    appTitle: 'Audit Vault & Escrow'
+  },
+  'publishing-tracker': {
+    articleId: 'publishing-deals-admin-vs-copub-vs-buyout',
+    fallbackArticleId: 'pros-cmos-ascap-bmi-sesac-prs',
+    label: 'Publishing Deals & Global Collection Tracking Guide',
+    appTitle: 'Publishing Collection Tracker'
+  },
+  'wall-of-fame-admin': {
+    articleId: 'community-wall-of-fame-and-epk-induction',
+    fallbackArticleId: 'account-security-2fa-and-roles',
+    label: 'Wall of Fame Nominations & EPK Induction Guide',
+    appTitle: 'Wall of Fame Administration'
+  },
+  'consumer': {
+    articleId: 'tunestream-audiophile-streaming',
+    fallbackArticleId: 'tunestream-offline-crates-and-tipping',
+    label: 'TuneStream Audiophile Streaming & Tipping Guide',
+    appTitle: 'TuneStream Listener Suite'
+  },
+  'GB': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'NG': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'TZ': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'UG': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'US': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' },
+  'ZA': { articleId: 'ecosystem-localization-and-multi-currency', fallbackArticleId: 'universal-credits-system-guide', label: 'Ecosystem Multi-Currency & Localized Settlement Guide', appTitle: 'Multi-Currency Settlement' }
+};
+
+/**
+ * Primary documentation article assigned to each persona role
+ */
+export const PERSONA_PRIMARY_DOCS = {
+  creator: {
+    articleId: 'master-vs-composition-copyright',
+    label: 'Master vs. Composition Rights Guide',
+    appTitle: 'TuneMavens Studio'
+  },
+  label: {
+    articleId: 'distribution-path-c-and-catalogue-acquisitions',
+    label: 'Record Label Console & Catalogue Acquisitions Guide',
+    appTitle: 'TuneMavens Records'
+  },
+  dj: {
+    articleId: 'dj-pool-engine-and-dancefloor-clearance',
+    label: 'DJ Pool Engine & Dancefloor Clearance Guide',
+    appTitle: 'DJ Crate & Live Set Console'
+  },
+  supervisor: {
+    articleId: 'sync-licensing-masterclass',
+    label: 'Sync Placement & Supervisor Pitching Masterclass',
+    appTitle: 'Sync Licensing Supervisor'
+  },
+  studio: {
+    articleId: 'studio-split-sheets-guide',
+    label: 'Producer & Songwriter Split Sheets Guide',
+    appTitle: 'Recording Studio Partner'
+  },
+  media_house: {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House & Broadcast Sync'
+  },
+  media: {
+    articleId: 'media-house-routing-and-broadcast-syndication',
+    label: 'Media House & Broadcast Syndication Guide',
+    appTitle: 'Media House & Broadcast Sync'
+  },
+  corporate: {
+    articleId: 'corporate-ads-and-brand-flights',
+    label: 'Corporate Ad Rates & Brand Flights Guide',
+    appTitle: 'Corporate Brand Partner'
+  },
+  podcaster: {
+    articleId: 'ad-injection-and-conversion-telemetry',
+    label: 'Dynamic Audio Ad Injection & Episode Telemetry Guide',
+    appTitle: 'Podcaster Studio & Ad Insertion'
+  },
+  vc: {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'Venture Capital & LP Desk'
+  },
+  investor: {
+    articleId: 'tour-vc-underwriting-career-sponsorship',
+    label: 'Tour VC Underwriting & Career Sponsorship Guide',
+    appTitle: 'Venture Capital & LP Desk'
+  },
+  affiliate: {
+    articleId: 'affiliate-program-guide',
+    label: 'The TuneMavens Affiliate Scheme Guide',
+    appTitle: 'Affiliate Partner Network'
+  },
+  admin: {
+    articleId: 'account-security-2fa-and-roles',
+    label: 'Account Security, 2FA & Team Roles Guide',
+    appTitle: 'TuneMavens SuperAdmin'
+  },
+  consumer: {
+    articleId: 'tunestream-audiophile-streaming',
+    label: 'TuneStream Audiophile Lossless Streaming Guide',
+    appTitle: 'TuneStream Listener'
   }
 };
 
 /**
- * Get the relevant Help Knowledge Base URL for the current active app or tab
+ * Get the relevant Help Knowledge Base URL for the current active app or tab,
+ * with deep awareness of the user's active persona.
  */
-export function getRelevantDocLink(activeContext) {
-  const mapping = APP_DOC_MAPPINGS[activeContext] || {
+export function getRelevantDocLink(activeContext, userOrRole = null) {
+  // 1. If activeContext is a specific tab/app (other than generic home/overview), use direct mapping
+  if (activeContext && activeContext !== 'home' && activeContext !== 'overview' && APP_DOC_MAPPINGS[activeContext]) {
+    const mapping = APP_DOC_MAPPINGS[activeContext];
+    return {
+      url: `/help?article=${mapping.articleId}`,
+      articleId: mapping.articleId,
+      label: mapping.label,
+      appTitle: mapping.appTitle
+    };
+  }
+
+  // 2. If on 'home', 'overview', or no specific sub-tab, resolve via the active persona
+  const role = typeof userOrRole === 'string'
+    ? userOrRole
+    : (userOrRole?.role || userOrRole?.simulated_role);
+
+  if (role && PERSONA_PRIMARY_DOCS[role]) {
+    const personaDoc = PERSONA_PRIMARY_DOCS[role];
+    return {
+      url: `/help?article=${personaDoc.articleId}`,
+      articleId: personaDoc.articleId,
+      label: personaDoc.label,
+      appTitle: personaDoc.appTitle
+    };
+  }
+
+  // 3. Fallback to mapped 'home' if present, or universal copyright core
+  const homeMapping = APP_DOC_MAPPINGS['home'] || {
     articleId: 'master-vs-composition-copyright',
-    label: 'Help & Industry Knowledge Base',
+    label: 'Master vs. Composition Rights Guide',
     appTitle: 'TuneMavens Ecosystem'
   };
+
   return {
-    url: `/help?article=${mapping.articleId}`,
-    articleId: mapping.articleId,
-    label: mapping.label,
-    appTitle: mapping.appTitle
+    url: `/help?article=${homeMapping.articleId}`,
+    articleId: homeMapping.articleId,
+    label: homeMapping.label,
+    appTitle: homeMapping.appTitle
   };
 }
 
@@ -746,6 +1145,100 @@ All campaigns feature live impression telemetry, click-through tracking, and aut
       suggestedActions: [
         { label: 'Review Ad Rates Guide', link: '/#/help#corporate-ads-and-brand-flights' },
         { label: 'Open Corporate Console', tab: 'corporate-ads' }
+      ]
+    };
+  }
+
+  if (q.includes('affiliate') || activeTab === 'affiliates' || activeTab === 'affiliate') {
+    return {
+      reply: `The **TuneMavens Affiliate Scheme** is modeled directly on Ditto Music's global partner framework, tailored for multi-stream creator commerce:
+* **Multi-Stream Earnings (3% - 12%)**: Earn 3% on streams/tips, 5% on lossless track sales, 7% on album bundles, 8.5% on multitrack stem packs, 10% on tour passes, and 12% on sync placements.
+* **Persistent Tracking**: 90-day cross-subdomain attribution cookies ensure you receive credit for signups across TuneMavens, TuneStream, and SyncMavens.
+* **Settlement Rails**: Real-time TuneLedger accrual with instant local cashouts via M-Pesa STK (Kenya/East Africa) and Stripe direct bank deposits worldwide.`,
+      suggestedActions: [
+        { label: 'Affiliate Scheme Guide', link: '/#/help#affiliate-program-guide' },
+        { label: 'Open Affiliate Partner Console', tab: 'affiliates' }
+      ]
+    };
+  }
+
+  if (q.includes('broadcast') || q.includes('media house') || q.includes('cue sheet') || activeTab === 'media-house') {
+    return {
+      reply: `**Broadcast Operations & Media House Syndication** automates regulatory compliance and rotation playout:
+* **Playout Routing**: Scheduled rotation feeds across Linear TV, Terrestrial FM, and Satellite channels with automated dayparting.
+* **Cryptographic Certificates**: Each playout emits an airplay certificate verified with SHA-256 hash logging to eliminate undocumented airplay disputes.
+* **Automated PRO Cue Sheets**: One-click generation of audit-ready cue sheets formatted for MCSK, ASCAP, BMI, and SAMRO requirements.
+* **Stem Management**: Fast auditioning of clean radio cuts, instrumentals, and broadcast masters.`,
+      suggestedActions: [
+        { label: 'Media House Syndication Guide', link: '/#/help#media-house-routing-and-broadcast-syndication' },
+        { label: 'Open Broadcast Console', tab: 'media-house' }
+      ]
+    };
+  }
+
+  if (q.includes('podcast') || activeTab === 'podcasts' || activeTab === 'podcaster-studio' || activeTab === 'podcaster-episodes' || activeTab === 'podcaster-monetization' || activeTab === 'podcaster-guests') {
+    return {
+      reply: `**Podcaster Studio & Ad Insertion Suite** streamlines original audio/video show production and monetization:
+* **Dynamic Audio Ad Insertion**: Schedule 15s and 30s preroll, midroll, and postroll flights with quartile telemetry.
+* **Automated Co-Host Splits**: Distribute sponsor revenues and listener tips directly to co-hosts, producers, and editors via TuneLedger.
+* **Guest Booking & Release Waivers**: Capture legally binding digital broadcast waivers and collect guest metadata seamlessly.
+* **Multi-Platform RSS Syndication**: High-fidelity audio encoding with automatic chapter markers and transcript export.`,
+      suggestedActions: [
+        { label: 'Audio Ad Insertion Guide', link: '/#/help#ad-injection-and-conversion-telemetry' },
+        { label: 'Open Podcaster Studio', tab: 'podcaster-studio' }
+      ]
+    };
+  }
+
+  if (q.includes('backend admin') || q.includes('rbac') || activeTab === 'backend-admin' || activeTab === 'admin-team') {
+    return {
+      reply: `**TuneMavens Operations & RBAC Admin Console** provides full administrative observability:
+* **Persona RBAC Matrix**: 11 sovereign persona roles with granular permission gates and security isolation.
+* **Multi-Domain Multi-Host Routing**: Real-time health probes and host mapping across all 5 ecosystem servers (:8001, :3000, :3001, :3002, :5000).
+* **Wall of Fame & Talent Induction**: Manage curated cultural luminary profiles, public claims, and invite tokens.
+* **CRM Lead Pipeline**: Real-time review and status approval of creator, label, brand, and investor lead submissions.`,
+      suggestedActions: [
+        { label: 'Security & 2FA Guide', link: '/#/help#account-security-2fa-and-roles' },
+        { label: 'Launch Backend Admin App', tab: 'backend-admin' }
+      ]
+    };
+  }
+
+  if (q.includes('pos') || activeTab === 'pos-terminal' || activeTab === 'pos-inventory' || activeTab === 'pos-settlement') {
+    return {
+      reply: `**TunePay Live Concert POS Terminal** handles high-volume live merchandise and ticket sales:
+* **Mobile & Card Sales**: Instant M-Pesa STK push and international card processing with offline cache fallback.
+* **Real-Time Inventory Decrement**: Automated inventory tracking across apparel sizes, vinyl, and tour posters.
+* **Nightly Tour Settlement**: Instant cascade calculation deducting venue door/merch concessions before artist payout.`,
+      suggestedActions: [
+        { label: 'Live Tours & POS Architecture', link: '/#/help#global-tours-live-concerts-ticketing' },
+        { label: 'Open POS Terminal', tab: 'pos-terminal' }
+      ]
+    };
+  }
+
+  if (q.includes('distribution radar') || q.includes('telemetry') || activeTab === 'distribution-tracker') {
+    return {
+      reply: `**Distribution Radar & Ingestion Telemetry** tracks your releases across 150+ digital service providers:
+* **DSP Delivery Telemetry**: Real-time ingestion confirmation across Spotify, Apple Music, YouTube Music, and TuneStream Lossless.
+* **DDEX & Metadata Validation**: Automated verification of ISRC, ISWC, and UPC codes to prevent black box royalty traps.
+* **Release Timeline Monitoring**: Live status tracking from Initial Package Ingestion to Live On-Store confirmation.`,
+      suggestedActions: [
+        { label: 'Metadata & ISRC Guide', link: '/#/help#music-metadata-isrc-iswc-ipi-upc' },
+        { label: 'Open Distribution Radar', tab: 'distribution-tracker' }
+      ]
+    };
+  }
+
+  if (q.includes('hosting') || q.includes('dns') || activeTab === 'hosting-manager') {
+    return {
+      reply: `**Creator Hosting & Domains Manager** provisions dedicated custom domains for EPKs and Web Worlds:
+* **Zero-Config SSL Issuance**: Automated Let's Encrypt TLS certificate provisioning and renewal.
+* **Global DNS Cluster**: Anycast CDN routing with sub-50ms edge delivery for artist media and portfolios.
+* **Domain Verification**: Real-time DNS A-record and CNAME verification probes with instant health feedback.`,
+      suggestedActions: [
+        { label: 'EPK & Custom Domains Guide', link: '/#/help#epk-studio-and-custom-domains' },
+        { label: 'Open Hosting Manager', tab: 'hosting-manager' }
       ]
     };
   }

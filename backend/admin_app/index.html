@@ -838,6 +838,9 @@
         <li class="sidebar-nav-item" onclick="switchTab('system-telemetry')" id="nav-system-telemetry">
           <span>⚡</span> System Telemetry & Health
         </li>
+        <li class="sidebar-nav-item" onclick="switchTab('broadcast-ops')" id="nav-broadcast-ops">
+          <span>📡</span> Broadcast Operations
+        </li>
       </ul>
 
       <!-- Recommended Reading for Active Persona -->
@@ -1268,6 +1271,66 @@
         </div>
         <div class="stats-grid" id="telemetryGrid">
           <!-- Rendered by JS -->
+        </div>
+      </section>
+
+      <!-- TAB 6: BROADCAST OPERATIONS & SYNDICATION -->
+      <section id="view-broadcast-ops" style="display: none;">
+        <div class="section-header">
+          <div>
+            <div class="section-title">
+              Broadcast Operations &amp; Syndication Engine
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+              Television &amp; radio rotation playout routing, commercial ad traffic, and automated PRO cue sheets
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="http://localhost:3000/?tab=media-house&role=admin" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+              <span>⚡</span> Launch Standalone App ↗
+            </a>
+            <button class="btn" onclick="loadBroadcastOps()">
+              Refresh Telemetry
+            </button>
+          </div>
+        </div>
+
+        <!-- Broadcast KPI Grid -->
+        <div class="stats-grid" style="margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="stat-label">Active Stations</div>
+            <div class="stat-value" id="bcastStatStations" style="color: var(--cyan);">--</div>
+            <div class="stat-sub">Linear TV &amp; FM Radios</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Aggregated Audience</div>
+            <div class="stat-value" id="bcastStatListeners" style="color: var(--emerald);">--</div>
+            <div class="stat-sub">Simultaneous Live Reach</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">PRO Compliance Score</div>
+            <div class="stat-value" id="bcastStatCompliance" style="color: #a855f7;">--%</div>
+            <div class="stat-sub">Automated Cue Matching</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Verified Airplay Spins</div>
+            <div class="stat-value" id="bcastStatSpins" style="color: #f59e0b;">--</div>
+            <div class="stat-sub">Cryptographic Playouts Today</div>
+          </div>
+        </div>
+
+        <!-- Embedded Interactive Portal Broadcast Suite -->
+        <div class="table-container" style="padding: 0; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--border-color); border-radius: var(--radius);">
+          <div style="background: #0d1527; padding: 12px 18px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 13px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+              <span>Live Broadcast Operations Console (Embedded Portal App)</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn" style="padding: 4px 10px; font-size: 12px;" onclick="reloadBroadcastFrame()">Reload App</button>
+            </div>
+          </div>
+          <iframe id="broadcastOpsIframe" src="http://localhost:3000/?tab=media-house&role=admin" style="width: 100%; height: 820px; border: none; background: #060813;" title="TuneMavens Broadcast Operations"></iframe>
         </div>
       </section>
 
@@ -1760,8 +1823,11 @@
       showToast(`Switched active persona to ${cfg.name}. Permissions & recommended readings updated.`, 'info');
     }
 
+    let currentActiveTab = 'wall-of-fame';
+
     function switchTab(tabId) {
-      const tabs = ['wall-of-fame', 'persona-rbac', 'domain-routing', 'crm-queue', 'crm-growth', 'system-telemetry'];
+      currentActiveTab = tabId;
+      const tabs = ['wall-of-fame', 'persona-rbac', 'domain-routing', 'crm-queue', 'crm-growth', 'system-telemetry', 'broadcast-ops'];
       tabs.forEach(t => {
         const el = document.getElementById(`view-${t}`);
         const navEl = document.getElementById(`nav-${t}`);
@@ -1778,6 +1844,29 @@
       if (tabId === 'crm-queue') loadCrmLeads();
       if (tabId === 'crm-growth') loadCrmGrowth();
       if (tabId === 'system-telemetry') loadTelemetry();
+      if (tabId === 'broadcast-ops') loadBroadcastOps();
+    }
+
+    async function loadBroadcastOps() {
+      try {
+        const res = await fetch('/api/media-house/stats');
+        if (res.ok) {
+          const stats = await res.json();
+          document.getElementById('bcastStatStations').innerText = stats.total_stations || '0';
+          document.getElementById('bcastStatListeners').innerText = (stats.active_listeners_aggregate || 0).toLocaleString();
+          document.getElementById('bcastStatCompliance').innerText = `${stats.pro_compliance_score || 99.8}%`;
+          document.getElementById('bcastStatSpins').innerText = stats.spins_today || '0';
+        }
+      } catch (err) {
+        console.warn('Error loading broadcast telemetry:', err);
+      }
+    }
+
+    function reloadBroadcastFrame() {
+      const frame = document.getElementById('broadcastOpsIframe');
+      if (frame) {
+        frame.src = 'http://localhost:3000/?tab=media-house&role=admin&t=' + Date.now();
+      }
     }
 
     // ===================================================================
@@ -2399,6 +2488,16 @@
     // ===================================================================
     // READ HELP & AUTHORITATIVE ARTICLES
     // ===================================================================
+    const ADMIN_TAB_ARTICLES = {
+      'wall-of-fame': 'wall-of-fame-protocol',
+      'persona-rbac': 'account-security-2fa-and-roles',
+      'domain-routing': 'epk-studio-and-custom-domains',
+      'crm-queue': 'smart-crm-dispatch-guide',
+      'crm-growth': 'smart-crm-dispatch-guide',
+      'system-telemetry': 'rbac-architecture-guide',
+      'broadcast-ops': 'media-house-routing-and-broadcast-syndication'
+    };
+
     async function loadArticles() {
       try {
         const res = await fetch(`/api/admin/console/articles?persona=${currentPersona}`);
@@ -2422,6 +2521,9 @@
         return;
       }
 
+      // Sort persona-recommended articles to the very top
+      filtered.sort((a, b) => (b.is_recommended ? 1 : 0) - (a.is_recommended ? 1 : 0));
+
       container.innerHTML = filtered.map(a => `
         <div class="article-item-card ${a.is_recommended ? 'recommended' : ''}" onclick="viewFullArticle('${a.id}')">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -2429,7 +2531,7 @@
             <span style="font-size: 11px; color: var(--text-dim);">${a.read_time}</span>
           </div>
           <div style="font-weight: 700; color: #ffffff; font-size: 14px; margin-bottom: 4px;">
-            ${a.is_recommended ? '⭐ ' : ''}${a.title}
+            ${a.is_recommended ? '⭐ Recommended for ' + currentPersona.toUpperCase() + ': ' : ''}${a.title}
           </div>
           <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">${a.summary}</div>
         </div>
@@ -2459,9 +2561,14 @@
       document.getElementById('articleSearchInput').style.display = 'block';
     }
 
-    function openArticlesModal() {
-      loadArticles();
-      backToArticlesList();
+    async function openArticlesModal(targetArticleId = null) {
+      await loadArticles();
+      const articleToOpen = targetArticleId || ADMIN_TAB_ARTICLES[currentActiveTab];
+      if (articleToOpen && allArticles.some(a => a.id === articleToOpen)) {
+        viewFullArticle(articleToOpen);
+      } else {
+        backToArticlesList();
+      }
       document.getElementById('articlesModal').style.display = 'flex';
     }
     function closeArticlesModal() {

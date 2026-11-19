@@ -10,6 +10,7 @@ import {
 import { DEFAULT_CANONICAL_GENRES, fetchGenres, getCachedGenres } from '../lib/genres.js';
 import { BASE, tokenStore } from '../lib/api.js';
 import BulkCatalogueIngestModal from './BulkCatalogueIngestModal';
+import ExplicitBadge, { isExplicit } from './common/ExplicitBadge';
 
 const GENRES = DEFAULT_CANONICAL_GENRES;
 
@@ -314,7 +315,8 @@ export default function CatalogueWizard({
         distributionSplit: `Artist (${distroArtistSplit}%) / Producer (${distroProducerSplit}%) / Label (${distroLabelSplit}%)`,
         syncCleared: syncCleared,
         instrumentalAvailable: instrumentalAvailable,
-        contentAdvisory: contentAdvisory
+        contentAdvisory: contentAdvisory,
+        isExplicit: contentAdvisory === 'Explicit'
       };
     });
 
@@ -343,7 +345,8 @@ export default function CatalogueWizard({
       distributionSplit: `Artist (${distroArtistSplit}%) / Producer (${distroProducerSplit}%) / Label (${distroLabelSplit}%)`,
       syncCleared: syncCleared,
       instrumentalAvailable: instrumentalAvailable,
-      contentAdvisory: contentAdvisory
+      contentAdvisory: contentAdvisory,
+      isExplicit: contentAdvisory === 'Explicit'
     };
 
     setTracks(prev => [...prev, newTrack]);
@@ -441,7 +444,8 @@ export default function CatalogueWizard({
           split: `Artist (${distroArtistSplit}%) / Producer (${distroProducerSplit}%) / Label (${distroLabelSplit}%)`,
           syncCleared,
           instrumentalAvailable,
-          contentAdvisory
+          contentAdvisory,
+          isExplicit: contentAdvisory === 'Explicit'
         })));
       }
       setCurrentStep(prev => prev + 1);
@@ -516,7 +520,8 @@ export default function CatalogueWizard({
       split: `Artist (${distroArtistSplit}%) / Producer (${distroProducerSplit}%) / Label (${distroLabelSplit}%)`,
       syncCleared,
       instrumentalAvailable,
-      contentAdvisory
+      contentAdvisory,
+      isExplicit: contentAdvisory === 'Explicit'
     }));
 
     const payload = {
@@ -534,7 +539,9 @@ export default function CatalogueWizard({
         coverBg: subtleEpkGradient,
         coverText: releaseTitle.slice(0, 8) || 'Release',
         labelName: labelName,
-        catalogNumber: catalogNumber
+        catalogNumber: catalogNumber,
+        contentAdvisory,
+        isExplicit: contentAdvisory === 'Explicit'
       },
       tracks: finalTracksPayload,
       globalRights: {
@@ -545,6 +552,7 @@ export default function CatalogueWizard({
         syncCleared,
         instrumentalAvailable,
         contentAdvisory,
+        isExplicit: contentAdvisory === 'Explicit',
         syncNotes
       }
     };
@@ -1264,6 +1272,40 @@ export default function CatalogueWizard({
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
+                {/* On-cover Explicit & Album Icon Badges (Industry Standard Cover Layout) */}
+                <div style={{
+                  position: 'absolute',
+                  top: '6px',
+                  left: '6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: '4px',
+                  zIndex: 4
+                }}>
+                  {contentAdvisory === 'Explicit' && (
+                    <ExplicitBadge variant="cover" size="xs" />
+                  )}
+                  <div style={{
+                    background: 'rgba(0,0,0,0.85)',
+                    backdropFilter: 'blur(4px)',
+                    color: effectiveAccent,
+                    border: `1px solid ${effectiveAccent}44`,
+                    fontSize: '9px',
+                    padding: '2px 6px',
+                    borderRadius: '3px',
+                    fontWeight: 900,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    letterSpacing: '0.4px',
+                    textTransform: 'uppercase'
+                  }}>
+                    <RiDiscFill size={10} />
+                    <span>{releaseType || 'ALBUM'}</span>
+                  </div>
+                </div>
+
                 {coverArtUrl.trim() ? (
                   <>
                     <img
@@ -1271,21 +1313,6 @@ export default function CatalogueWizard({
                       alt={releaseTitle || 'Release Artwork'}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
-                    <div style={{
-                      position: 'absolute',
-                      top: '6px',
-                      left: '6px',
-                      background: 'rgba(0,0,0,0.8)',
-                      backdropFilter: 'blur(4px)',
-                      color: effectiveAccent,
-                      border: `1px solid ${effectiveAccent}44`,
-                      fontSize: '9px',
-                      padding: '2px 6px',
-                      borderRadius: '3px',
-                      fontWeight: 900
-                    }}>
-                      {artworkMode === 'ai' ? 'AI MASTER ART' : 'CUSTOM ARTWORK'}
-                    </div>
                     <button
                       type="button"
                       onClick={() => {
@@ -1308,7 +1335,8 @@ export default function CatalogueWizard({
                         justifyContent: 'center',
                         cursor: 'pointer',
                         fontSize: '11px',
-                        fontWeight: 900
+                        fontWeight: 900,
+                        zIndex: 4
                       }}
                     >
                       ✕
@@ -1961,7 +1989,7 @@ export default function CatalogueWizard({
             </p>
           </div>
 
-          {/* Apply to all tracks toggle banner */}
+          {/* Apply to all tracks & Advisory banner */}
           <div style={{
             background: 'rgba(0, 240, 255, 0.06)',
             border: '1px solid rgba(0, 240, 255, 0.2)',
@@ -1969,7 +1997,9 @@ export default function CatalogueWizard({
             padding: '12px 16px',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px'
           }}>
             <div>
               <strong style={{ fontSize: '13px', color: '#00f0ff' }}>Apply to All Tracks in Release</strong>
@@ -1977,12 +2007,53 @@ export default function CatalogueWizard({
                 All {tracks.length} track(s) in "{releaseTitle || 'this release'}" will adopt these writer and split definitions.
               </div>
             </div>
-            <input
-              type="checkbox"
-              checked={applyToAllTracks}
-              onChange={e => setApplyToAllTracks(e.target.checked)}
-              style={{ width: '18px', height: '18px', accentColor: '#00f0ff', cursor: 'pointer' }}
-            />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: contentAdvisory === 'Explicit' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(0,0,0,0.3)',
+                padding: '6px 10px',
+                borderRadius: '6px',
+                border: contentAdvisory === 'Explicit' ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255,255,255,0.08)'
+              }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+                  Content Advisory:
+                </span>
+                <select
+                  value={contentAdvisory}
+                  onChange={e => setContentAdvisory(e.target.value)}
+                  style={{
+                    background: '#0d1326',
+                    border: contentAdvisory === 'Explicit' ? '1px solid #ef4444' : '1px solid rgba(255,255,255,0.15)',
+                    color: contentAdvisory === 'Explicit' ? '#fca5a5' : '#fff',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="Clean" style={{ background: '#0a0f1d', color: '#fff' }}>Clean / Radio Friendly</option>
+                  <option value="Explicit" style={{ background: '#0a0f1d', color: '#fff' }}>Explicit Lyrics</option>
+                  <option value="Instrumental" style={{ background: '#0a0f1d', color: '#fff' }}>Instrumental Only</option>
+                </select>
+                {contentAdvisory === 'Explicit' && (
+                  <ExplicitBadge size="sm" showLabel={true} />
+                )}
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={applyToAllTracks}
+                  onChange={e => setApplyToAllTracks(e.target.checked)}
+                  style={{ width: '16px', height: '16px', accentColor: '#00f0ff', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Apply to All</span>
+              </label>
+            </div>
           </div>
 
           {/* 1. SONGWRITERS & LYRICISTS */}
@@ -2405,27 +2476,55 @@ export default function CatalogueWizard({
 
               <div style={{
                 background: '#0d1326',
-                padding: '6px 10px',
+                padding: '8px 10px',
                 borderRadius: '4px',
-                border: '1px solid rgba(255,255,255,0.08)'
+                border: contentAdvisory === 'Explicit' ? '1px solid rgba(239, 68, 68, 0.45)' : '1px solid rgba(255,255,255,0.08)',
+                transition: 'border-color 0.2s ease'
               }}>
-                <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Advisory</label>
-                <select
-                  value={contentAdvisory}
-                  onChange={e => setContentAdvisory(e.target.value)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#fff',
-                    fontSize: '12px',
-                    width: '100%',
-                    fontWeight: 700
-                  }}
-                >
-                  <option value="Clean">Clean / Radio Friendly</option>
-                  <option value="Explicit">Explicit Lyrics</option>
-                  <option value="Instrumental">Instrumental Only</option>
-                </select>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', margin: 0 }}>Advisory</label>
+                  {contentAdvisory === 'Explicit' && (
+                    <ExplicitBadge size="xs" showLabel={true} />
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <select
+                    value={contentAdvisory}
+                    onChange={e => setContentAdvisory(e.target.value)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: contentAdvisory === 'Explicit' ? '#fca5a5' : '#fff',
+                      fontSize: '12px',
+                      width: '100%',
+                      fontWeight: 700,
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="Clean" style={{ background: '#0a0f1d', color: '#fff' }}>Clean / Radio Friendly</option>
+                    <option value="Explicit" style={{ background: '#0a0f1d', color: '#fff' }}>Explicit Lyrics</option>
+                    <option value="Instrumental" style={{ background: '#0a0f1d', color: '#fff' }}>Instrumental Only</option>
+                  </select>
+                  {contentAdvisory === 'Explicit' && (
+                    <ExplicitBadge size="sm" />
+                  )}
+                </div>
+                {contentAdvisory === 'Explicit' && (
+                  <div style={{
+                    marginTop: '6px',
+                    paddingTop: '6px',
+                    borderTop: '1px solid rgba(239, 68, 68, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '10.5px',
+                    color: '#f87171'
+                  }}>
+                    <ExplicitBadge size="xs" />
+                    <span>Explicit lyrics badge applied to this release</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2476,8 +2575,20 @@ export default function CatalogueWizard({
               flexShrink: 0,
               boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
               textAlign: 'center',
-              padding: '6px'
+              padding: '6px',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
+              {contentAdvisory === 'Explicit' && (
+                <div style={{
+                  position: 'absolute',
+                  top: '5px',
+                  left: '5px',
+                  zIndex: 3
+                }}>
+                  <ExplicitBadge variant="cover" size="xs" />
+                </div>
+              )}
               {!coverArtUrl.trim() && (releaseTitle || selectedPresetCover.text)}
             </div>
 
@@ -2489,15 +2600,23 @@ export default function CatalogueWizard({
                   fontSize: '11px',
                   fontWeight: 800,
                   padding: '2px 8px',
-                  borderRadius: '3px'
+                  borderRadius: '3px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  {releaseType}
+                  <RiDiscFill size={11} />
+                  <span>{releaseType}</span>
                 </span>
+                {contentAdvisory === 'Explicit' && (
+                  <ExplicitBadge size="sm" showLabel={true} />
+                )}
                 <span style={{ fontSize: '11px', color: '#94a3b8' }}>{genre} • {releaseYear}</span>
               </div>
 
-              <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: '0 0 4px' }}>
-                {releaseTitle}
+              <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>{releaseTitle}</span>
+                {contentAdvisory === 'Explicit' && <ExplicitBadge size="md" />}
               </h2>
               <div style={{ fontSize: '13px', color: '#cbd5e1' }}>
                 by <strong>{primaryArtist}</strong> • {labelName} ({catalogNumber})
@@ -2528,6 +2647,9 @@ export default function CatalogueWizard({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <span style={{ color: '#00f0ff', fontWeight: 800 }}>#{i + 1}</span>
                     <strong style={{ color: '#fff' }}>{t.title}</strong>
+                    {(t.contentAdvisory === 'Explicit' || contentAdvisory === 'Explicit' || t.isExplicit) && (
+                      <ExplicitBadge size="xs" />
+                    )}
                     <span style={{ fontFamily: 'monospace', color: '#94a3b8', fontSize: '11px' }}>{t.isrc}</span>
                   </div>
 

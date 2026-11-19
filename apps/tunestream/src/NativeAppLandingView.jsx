@@ -23,6 +23,7 @@ import { useRegion } from './RegionContext'
 import './Landing.css'
 import TuneStreamNativeApp from './components/native/TuneStreamNativeApp.jsx';
 import AppDownloadModal from './components/common/AppDownloadModal.jsx';
+import ExplicitBadge, { isExplicit, isReleaseExplicit } from './components/common/ExplicitBadge.jsx';
 import LiveEventsSection from './components/events/LiveEventsSection.jsx'
 import ToursView from './views/landing/ToursView.jsx';
 import TourCapitalView from './views/landing/TourCapitalView.jsx';
@@ -579,6 +580,21 @@ export default function NativeAppLandingView({
   const [isHiFiPlaying, setIsHiFiPlaying] = useState(false);
   const creatorSlugParam = searchParams.get('creator');
   const filterParam = searchParams.get('filter');
+
+  const checkReleaseExplicit = (item) => {
+    if (!item) return false;
+    if (isExplicit(item) || isReleaseExplicit(item)) return true;
+    const title = (item.title || item.release || '').toLowerCase().trim();
+    if (title.includes('explicit')) return true;
+    if (Array.isArray(tracks)) {
+      return tracks.some(t => {
+        const rel = (t.release || t.album || '').toLowerCase().trim();
+        const trkTitle = (t.title || '').toLowerCase().trim();
+        return (rel === title || trkTitle === title) && isExplicit(t);
+      });
+    }
+    return false;
+  };
 
   useEffect(() => {
     if (filterParam && ['all', 'creators', 'singles', 'albums', 'dj-mixes', 'playlists'].includes(filterParam)) {
@@ -1684,23 +1700,27 @@ export default function NativeAppLandingView({
       }));
 
       const popularSingles = singlesList.map((t, idx) => ({
+        ...t,
         id: t.id || t.isrc || `s_${idx}`,
         title: t.title,
         artist: t.artist || 'Ndufo',
         dls: `${t.streams || t.plays || '1.0M'} streams`,
         cover: normalizeMediaUrl(t.coverArt || t.cover) || `https://picsum.photos/seed/${t.id || idx}/400/400`,
         isrc: t.isrc,
-        track: t
+        track: t,
+        isExplicit: checkReleaseExplicit(t)
       }));
 
       const popularAlbums = albums.map((a, idx) => ({
+        ...a,
         id: a.id || `alb_${idx}`,
         title: a.title,
         artist: a.artist || 'Ndufo',
         year: a.year || '2026',
         tracksCount: a.tracksCount || (a.tracks ? a.tracks.length : 1),
         cover: normalizeMediaUrl(a.cover || a.coverArt) || `https://picsum.photos/seed/${a.id || idx}/400/400`,
-        type: a.type || 'Album'
+        type: a.type || 'Album',
+        isExplicit: checkReleaseExplicit(a)
       }));
 
       return (
@@ -1731,9 +1751,23 @@ export default function NativeAppLandingView({
                         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
                         onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${song.id}/400/400`; }}
                       />
-                      <div style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.7)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <RiPlayFill size={10} color="#00f2fe" />
-                        <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>Lossless</span>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '6px',
+                        right: '6px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                        gap: '4px',
+                        zIndex: 2
+                      }}>
+                        {isExplicit(song.track || song) && (
+                          <ExplicitBadge size="xs" variant="badge" label="explicit" />
+                        )}
+                        <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <RiPlayFill size={10} color="#00f2fe" />
+                          <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>Lossless</span>
+                        </div>
                       </div>
                     </div>
                     <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</h3>
@@ -1822,8 +1856,57 @@ export default function NativeAppLandingView({
                         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
                         onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${single.id}/400/400`; }}
                       />
-                      <div style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(16, 185, 129, 0.85)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>Single</span>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '6px',
+                        right: '6px',
+                        display: 'inline-flex',
+                        flexDirection: 'column',
+                        alignItems: 'stretch',
+                        gap: '4px',
+                        zIndex: 2
+                      }}>
+                        {checkReleaseExplicit(single) && (
+                          <span
+                            aria-label="Explicit Lyrics Advisory"
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 'bold',
+                              background: '#000000',
+                              color: '#ffffff',
+                              border: '1px solid rgba(255, 255, 255, 0.75)',
+                              padding: '2px 6px',
+                              borderRadius: '3px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.4px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '3px',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.85)'
+                            }}
+                          >
+                            <span style={{
+                              background: '#ffffff',
+                              color: '#000000',
+                              fontWeight: 900,
+                              fontSize: '7.5px',
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '1.5px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              lineHeight: 1
+                            }}>E</span>
+                            <span>explicit</span>
+                          </span>
+                        )}
+                        <div style={{ background: 'rgba(16, 185, 129, 0.85)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }}>
+                          <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>Single</span>
+                        </div>
                       </div>
                     </div>
                     <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{single.title}</h3>
@@ -1855,8 +1938,57 @@ export default function NativeAppLandingView({
                         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
                         onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${album.id}/400/400`; }}
                       />
-                      <div style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(168, 85, 247, 0.85)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>{album.type || 'Album'}</span>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '6px',
+                        right: '6px',
+                        display: 'inline-flex',
+                        flexDirection: 'column',
+                        alignItems: 'stretch',
+                        gap: '4px',
+                        zIndex: 2
+                      }}>
+                        {checkReleaseExplicit(album) && (
+                          <span
+                            aria-label="Explicit Lyrics Advisory"
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 'bold',
+                              background: '#000000',
+                              color: '#ffffff',
+                              border: '1px solid rgba(255, 255, 255, 0.75)',
+                              padding: '2px 6px',
+                              borderRadius: '3px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.4px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '3px',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.85)'
+                            }}
+                          >
+                            <span style={{
+                              background: '#ffffff',
+                              color: '#000000',
+                              fontWeight: 900,
+                              fontSize: '7.5px',
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '1.5px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              lineHeight: 1
+                            }}>E</span>
+                            <span>explicit</span>
+                          </span>
+                        )}
+                        <div style={{ background: 'rgba(168, 85, 247, 0.85)', borderRadius: '3px', padding: '2px 6px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }}>
+                          <span style={{ fontSize: '9px', color: '#fff', fontWeight: 'bold' }}>{album.type || 'Album'}</span>
+                        </div>
                       </div>
                     </div>
                     <h3 data-no-i18n="true" style={{ fontSize: '15px', color: '#fff', margin: '0 0 4px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.title}</h3>
@@ -2090,6 +2222,7 @@ export default function NativeAppLandingView({
 
       const singlesList = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
       const popularSingles = singlesList.map((t, idx) => ({
+        ...t,
         id: t.id || t.isrc || `s_${idx}`,
         title: t.title,
         artist: t.artist || 'Ndufo',
@@ -2099,10 +2232,12 @@ export default function NativeAppLandingView({
         genre: t.genre || 'Afrobeats',
         year: t.year || 2026,
         releaseDate: t.releaseDate || '2026-03-01',
-        track: t
+        track: t,
+        isExplicit: checkReleaseExplicit(t)
       }));
 
       const popularAlbums = albums.map((a, idx) => ({
+        ...a,
         id: a.id || `alb_${idx}`,
         title: a.title,
         artist: a.artist || 'Ndufo',
@@ -2110,7 +2245,8 @@ export default function NativeAppLandingView({
         genre: a.genre || 'Afro-Fusion',
         tracksCount: a.tracksCount || (a.tracks ? a.tracks.length : 1),
         cover: normalizeMediaUrl(a.cover || a.coverArt) || `/uploads/artwork/ndufo_cover.jpg`,
-        type: a.type || 'Album'
+        type: a.type || 'Album',
+        isExplicit: checkReleaseExplicit(a)
       }));
 
       const activePodcastShows = (podcastsList && podcastsList.length > 0) ? podcastsList : AUTHORITATIVE_PODCAST_SHOWS;
@@ -2289,6 +2425,7 @@ export default function NativeAppLandingView({
           cover: s.cover,
           year: Number(s.year) || 2026,
           date: s.releaseDate || '2026-02-15',
+          isExplicit: checkReleaseExplicit(s),
           data: s
         })));
       }
@@ -2305,6 +2442,7 @@ export default function NativeAppLandingView({
           cover: al.cover,
           year: Number(al.year) || 2026,
           date: `${al.year || 2026}-01-01`,
+          isExplicit: checkReleaseExplicit(al),
           data: al
         })));
       }
@@ -2774,19 +2912,71 @@ export default function NativeAppLandingView({
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }} 
                       onError={(e) => { if (e.currentTarget.dataset.fallback) return; e.currentTarget.dataset.fallback = 'true'; e.currentTarget.src = '/uploads/artwork/ndufo_cover.jpg'; }}
                     />
-                    <span style={{ 
-                      position: 'absolute', 
-                      top: '8px', 
-                      left: '8px', 
-                      fontSize: '9px', 
-                      fontWeight: 'bold', 
-                      background: (item.kind === 'dj' || item.data?.creator_type === 'dj') ? 'rgba(168,85,247,0.92)' : item.kind === 'creator' ? 'rgba(0,0,0,0.75)' : item.kind === 'dj-mix' ? 'rgba(0,242,254,0.9)' : item.kind === 'podcaster' ? 'rgba(236,72,153,0.9)' : item.kind === 'podcast' ? 'rgba(34,211,238,0.9)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
-                      color: (item.kind === 'podcast' || item.kind === 'dj-mix') ? '#000' : '#fff', 
-                      padding: '2px 6px', 
-                      borderRadius: '3px' 
+                    <div style={{
+                      position: 'absolute',
+                      top: '8px',
+                      left: '8px',
+                      display: 'inline-flex',
+                      flexDirection: 'column',
+                      alignItems: 'stretch',
+                      gap: '4px',
+                      zIndex: 3
                     }}>
-                      {(item.kind === 'dj' || item.data?.creator_type === 'dj') ? '🎧 RESIDENT DJ EPK' : item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'dj-mix' ? 'CLEARED DJ MIX' : item.kind === 'podcaster' ? 'PODCASTER EPK' : item.kind === 'podcast' ? 'PODCAST EPISODE' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
-                    </span>
+                      {(checkReleaseExplicit(item) || checkReleaseExplicit(item.data) || checkReleaseExplicit(item.data?.track)) && (
+                        <span
+                          aria-label="Explicit Lyrics Advisory"
+                          style={{
+                            fontSize: '9px',
+                            fontWeight: 'bold',
+                            background: '#000000',
+                            color: '#ffffff',
+                            border: '1px solid rgba(255, 255, 255, 0.75)',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.4px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '3px',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.85)'
+                          }}
+                        >
+                          <span style={{
+                            background: '#ffffff',
+                            color: '#000000',
+                            fontWeight: 900,
+                            fontSize: '7.5px',
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '1.5px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            lineHeight: 1
+                          }}>E</span>
+                          <span>explicit</span>
+                        </span>
+                      )}
+                      <span style={{ 
+                        fontSize: '9px', 
+                        fontWeight: 'bold', 
+                        background: (item.kind === 'dj' || item.data?.creator_type === 'dj') ? 'rgba(168,85,247,0.92)' : item.kind === 'creator' ? 'rgba(0,0,0,0.75)' : item.kind === 'dj-mix' ? 'rgba(0,242,254,0.9)' : item.kind === 'podcaster' ? 'rgba(236,72,153,0.9)' : item.kind === 'podcast' ? 'rgba(34,211,238,0.9)' : item.kind === 'single' ? 'rgba(16,185,129,0.85)' : 'rgba(168,85,247,0.85)', 
+                        color: (item.kind === 'podcast' || item.kind === 'dj-mix') ? '#000' : '#fff', 
+                        padding: '2px 6px', 
+                        borderRadius: '3px',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        textAlign: 'center',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {(item.kind === 'dj' || item.data?.creator_type === 'dj') ? '🎧 RESIDENT DJ EPK' : item.kind === 'creator' ? 'CREATOR WEB WORLD' : item.kind === 'dj-mix' ? 'CLEARED DJ MIX' : item.kind === 'podcaster' ? 'PODCASTER EPK' : item.kind === 'podcast' ? 'PODCAST EPISODE' : item.kind === 'single' ? 'SINGLE RELEASE' : (item.data.type || 'ALBUM')}
+                      </span>
+                    </div>
                     {item.kind !== 'creator' && (
                       <button
                         type="button"

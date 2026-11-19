@@ -38,6 +38,7 @@ import {
 } from 'react-icons/ri'
 
 import heroSlide1 from '../../assets/creator_hero_banner.jpg'
+import ExplicitBadge, { isReleaseExplicit, isExplicit } from '../../components/common/ExplicitBadge.jsx'
 import heroSlide2 from '../../assets/creator_hero_slide2.jpg'
 import heroSlide3 from '../../assets/creator_hero_slide3.jpg'
 import { persistAppActivation } from '../../lib/activatedApps.js'
@@ -4810,8 +4811,66 @@ Direct Management Contact: mgmt@intermaven.io`
               {paginatedAlbums.map(a => (
                 <div key={a.id} style={{ background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.4)', border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '4px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    <img src={a.cover} alt={a.title} style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '3px', marginBottom: '14px' }} />
-                    <span style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 700, textTransform: 'uppercase' }}>{a.type} â€¢ {a.year}</span>
+                    <div style={{ position: 'relative', width: '100%', height: '220px', borderRadius: '3px', overflow: 'hidden', marginBottom: '14px' }}>
+                      <img src={a.cover} alt={a.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        left: '8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        gap: '4px',
+                        zIndex: 3
+                      }}>
+                        {isReleaseExplicit(a) && (
+                          <span style={{
+                            fontSize: '9px',
+                            fontWeight: 'bold',
+                            background: '#000000',
+                            color: '#ffffff',
+                            border: '1px solid rgba(255, 255, 255, 0.75)',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.4px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.85)'
+                          }}>
+                            <span style={{
+                              background: '#ffffff',
+                              color: '#000000',
+                              fontWeight: 900,
+                              fontSize: '7.5px',
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '1.5px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              lineHeight: 1
+                            }}>E</span>
+                            <span>explicit</span>
+                          </span>
+                        )}
+                        <span style={{
+                          fontSize: '9px',
+                          fontWeight: 'bold',
+                          background: 'rgba(0,0,0,0.85)',
+                          color: effectiveAccent,
+                          border: `1px solid ${effectiveAccent}66`,
+                          padding: '2px 6px',
+                          borderRadius: '3px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.4px'
+                        }}>
+                          {a.type || 'ALBUM'}
+                        </span>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: effectiveAccent, fontWeight: 700, textTransform: 'uppercase' }}>{a.type} • {a.year}</span>
                     <h3 style={{ margin: '4px 0 6px', fontSize: '1.2rem', fontWeight: 800, color: isLight ? '#0f172a' : '#fff' }}>{a.title}</h3>
                     <div style={{ fontSize: '0.8rem', color: isLight ? '#64748b' : '#94a3b8' }}>{a.tracksCount} Tracks â€¢ {a.streams} Streams</div>
                   </div>
