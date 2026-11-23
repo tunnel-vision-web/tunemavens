@@ -566,6 +566,7 @@ export default function NativeAppLandingView({
   const [artists, setArtists] = useState(AUTHORITATIVE_CATALOG_ARTISTS);
   const [albums, setAlbums] = useState(AUTHORITATIVE_CATALOG_ALBUMS);
   const [podcastsList, setPodcastsList] = useState(AUTHORITATIVE_PODCAST_SHOWS);
+  const [djMixes, setDjMixes] = useState([]);
   const [activePodcasterEpkShow, setActivePodcasterEpkShow] = useState(null);
   const [exploreSearch, setExploreSearch] = useState('');
   const [exploreFilter, setExploreFilter] = useState(() => {
@@ -661,6 +662,16 @@ export default function NativeAppLandingView({
       .then(data => {
         if (data && data.albums && Array.isArray(data.albums) && data.albums.length > 0) {
           setAlbums(data.albums);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${apiBase}/api/dj-mixes`)
+      .then(res => res.json())
+      .then(data => {
+        const arr = Array.isArray(data) ? data : data?.data;
+        if (Array.isArray(arr) && arr.length > 0) {
+          setDjMixes(arr);
         }
       })
       .catch(() => {});
@@ -2281,7 +2292,25 @@ export default function NativeAppLandingView({
         }))
       );
 
-      const popularDjMixes = [
+      const dynamicDjMixes = (djMixes || []).map(m => ({
+        id: m.id || m._id || `mix_${m.title}`,
+        title: m.title,
+        artist: m.dj_name || 'Verified DJ',
+        genre: m.genre ? (m.genre.startsWith('DJ Mix') ? m.genre : `DJ Mix • ${m.genre}`) : 'DJ Mix • Afro-House',
+        bpm: m.bpm_avg || 120,
+        duration: m.duration || `${Math.round((m.duration_seconds || 2400) / 60)}:00`,
+        streams: `${(m.plays_count || 0).toLocaleString()} plays`,
+        cover: normalizeMediaUrl(m.artwork_url) || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
+        audioUrl: m.audio_url || `/api/stream/track/${encodeURIComponent(m.id || m.title || 'preview')}`,
+        year: 2026,
+        is_original_ip_only: m.is_original_ip_only,
+        creation_type: m.creation_type,
+        sale_locked: m.sale_locked,
+        free_to_stream: m.free_to_stream,
+        credited_ip_owners: m.credited_ip_owners || []
+      }));
+
+      const defaultDjMixes = [
         {
           id: 'djmix_kilifi_sunrise',
           title: 'Kilifi New Year Sunrise Ritual (Afro-Tech Set)',
@@ -2330,6 +2359,11 @@ export default function NativeAppLandingView({
           audioUrl: '/api/stream/track/KE-TM1-DJ-004',
           year: 2026
         }
+      ];
+
+      const popularDjMixes = [
+        ...dynamicDjMixes,
+        ...defaultDjMixes.filter(dm => !dynamicDjMixes.some(dyn => dyn.title?.toLowerCase() === dm.title?.toLowerCase() || dyn.id === dm.id))
       ];
 
       const q = exploreSearch.toLowerCase().trim();
