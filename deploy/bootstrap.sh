@@ -96,6 +96,25 @@ NGX_CONF="/etc/nginx/conf.d/tunemavens.conf"
 TEMP_NGX="/tmp/tunemavens_nginx.conf"
 
 cat >"$TEMP_NGX" <<NGX
+map \$host \$tm_sub_landing {
+    default "";
+    ~^(djs|dj)\\. "/#/for/dj";
+    ~^(labels|label)\\. "/#/for/label";
+    ~^(producers|producer|creators|creator)\\. "/#/for/creator";
+    ~^(mediahouses|mediahouse|media)\\. "/#/for/media-house";
+    ~^(podcasters|podcaster)\\. "/#/for/podcaster";
+    ~^(supervisors|supervisor)\\. "/#/for/supervisor";
+    ~^corporate\\. "/#/for/corporate";
+    ~^(capital|vc|investors|investor)\\. "/#/for/vc";
+    ~^(affiliates|affiliate)\\. "/#/affiliates";
+    ~^app\\. "/#/native-apps/tunemavens";
+    ~^companion\\. "/#/native-apps/creator-companion";
+    ~^pos\\. "/#/native-apps/mpesa-pos";
+    ~^apps\\. "/#/apps";
+    ~^tools\\. "/#/tools";
+    ~^stream\\. "/#/stream";
+}
+
 # ==============================================================================
 # 1. Main Portal & Dashboard ($APP_DOMAIN)
 # ==============================================================================
@@ -115,39 +134,12 @@ server {
     proxy_read_timeout 60s;
   }
 
-  location / {
-    # Direct Subdomain Portal & Application Routing
-    if (\$host ~* ^(djs|dj)\\.) {
-      rewrite ^/$ /#/dashboard?role=dj redirect;
-    }
-    if (\$host ~* ^(labels|label)\\.) {
-      rewrite ^/$ /#/dashboard?role=label redirect;
-    }
-    if (\$host ~* ^(producers|producer|creators|creator)\\.) {
-      rewrite ^/$ /#/dashboard?role=creator redirect;
-    }
-    if (\$host ~* ^(mediahouses|mediahouse|media)\\.) {
-      rewrite ^/$ /#/dashboard?role=media_house redirect;
-    }
-    if (\$host ~* ^(podcasters|podcaster)\\.) {
-      rewrite ^/$ /#/dashboard?role=podcaster redirect;
-    }
-    if (\$host ~* ^(supervisors|supervisor)\\.) {
-      rewrite ^/$ /#/dashboard?role=supervisor redirect;
-    }
-    if (\$host ~* ^corporate\\.) {
-      rewrite ^/$ /#/dashboard?role=corporate redirect;
-    }
-    if (\$host ~* ^(capital|vc|investors|investor)\\.) {
-      rewrite ^/$ /#/dashboard?role=vc redirect;
-    }
-    if (\$host ~* ^(affiliates|affiliate)\\.) {
-      rewrite ^/$ /#/affiliates redirect;
-    }
-    if (\$host ~* ^app\\.) {
-      rewrite ^/$ /#/dashboard redirect;
-    }
+  location = / {
+    if (\$tm_sub_landing) { return 302 \$tm_sub_landing; }
+    try_files /index.html =404;
+  }
 
+  location / {
     try_files \$uri \$uri/ /index.html;
   }
 

@@ -7,33 +7,33 @@
 
 export const SUBDOMAIN_TARGETS = {
   // 1. Branded Role Portals
-  djs: { role: 'dj', path: '/dashboard?role=dj', tab: 'home', label: 'DJ Pool Engine & Console' },
-  dj: { role: 'dj', path: '/dashboard?role=dj', tab: 'home', label: 'DJ Pool Engine & Console' },
+  djs: { role: 'dj', path: '/for/dj', tab: 'home', label: 'DJ Pool Engine & Console' },
+  dj: { role: 'dj', path: '/for/dj', tab: 'home', label: 'DJ Pool Engine & Console' },
 
-  labels: { role: 'label', path: '/dashboard?role=label', tab: 'home', label: 'Record Label Console' },
-  label: { role: 'label', path: '/dashboard?role=label', tab: 'home', label: 'Record Label Console' },
+  labels: { role: 'label', path: '/for/label', tab: 'home', label: 'Record Label Console' },
+  label: { role: 'label', path: '/for/label', tab: 'home', label: 'Record Label Console' },
 
-  producers: { role: 'creator', path: '/dashboard?role=creator', tab: 'home', label: 'Producer Pipeline' },
-  producer: { role: 'creator', path: '/dashboard?role=creator', tab: 'home', label: 'Producer Pipeline' },
-  creators: { role: 'creator', path: '/dashboard?role=creator', tab: 'home', label: 'Creator Hub' },
-  creator: { role: 'creator', path: '/dashboard?role=creator', tab: 'home', label: 'Creator Hub' },
+  producers: { role: 'creator', path: '/for/creator', tab: 'home', label: 'Producer Pipeline' },
+  producer: { role: 'creator', path: '/for/creator', tab: 'home', label: 'Producer Pipeline' },
+  creators: { role: 'creator', path: '/for/creator', tab: 'home', label: 'Creator Hub' },
+  creator: { role: 'creator', path: '/for/creator', tab: 'home', label: 'Creator Hub' },
 
-  mediahouses: { role: 'media_house', path: '/dashboard?role=media_house', tab: 'home', label: 'Media House Routing' },
-  mediahouse: { role: 'media_house', path: '/dashboard?role=media_house', tab: 'home', label: 'Media House Routing' },
-  media: { role: 'media_house', path: '/dashboard?role=media_house', tab: 'home', label: 'Media House Routing' },
+  mediahouses: { role: 'media_house', path: '/for/media-house', tab: 'home', label: 'Media House Routing' },
+  mediahouse: { role: 'media_house', path: '/for/media-house', tab: 'home', label: 'Media House Routing' },
+  media: { role: 'media_house', path: '/for/media-house', tab: 'home', label: 'Media House Routing' },
 
-  podcasters: { role: 'podcaster', path: '/dashboard?role=podcaster', tab: 'home', label: 'Podcaster Studio' },
-  podcaster: { role: 'podcaster', path: '/dashboard?role=podcaster', tab: 'home', label: 'Podcaster Studio' },
+  podcasters: { role: 'podcaster', path: '/for/podcaster', tab: 'home', label: 'Podcaster Studio' },
+  podcaster: { role: 'podcaster', path: '/for/podcaster', tab: 'home', label: 'Podcaster Studio' },
 
-  supervisors: { role: 'supervisor', path: '/dashboard?role=supervisor', tab: 'home', label: 'Sync Licensing Supervisor' },
-  supervisor: { role: 'supervisor', path: '/dashboard?role=supervisor', tab: 'home', label: 'Sync Licensing Supervisor' },
+  supervisors: { role: 'supervisor', path: '/for/supervisor', tab: 'home', label: 'Sync Licensing Supervisor' },
+  supervisor: { role: 'supervisor', path: '/for/supervisor', tab: 'home', label: 'Sync Licensing Supervisor' },
 
-  corporate: { role: 'corporate', path: '/dashboard?role=corporate', tab: 'home', label: 'Corporate Brand Partner' },
+  corporate: { role: 'corporate', path: '/for/corporate', tab: 'home', label: 'Corporate Brand Partner' },
 
-  capital: { role: 'vc', path: '/dashboard?role=vc', tab: 'home', label: 'Tour Venture Capital Desk' },
-  vc: { role: 'vc', path: '/dashboard?role=vc', tab: 'home', label: 'Tour Venture Capital Desk' },
-  investors: { role: 'vc', path: '/dashboard?role=vc', tab: 'home', label: 'Tour Venture Capital Desk' },
-  investor: { role: 'vc', path: '/dashboard?role=vc', tab: 'home', label: 'Tour Venture Capital Desk' },
+  capital: { role: 'vc', path: '/for/vc', tab: 'home', label: 'Tour Venture Capital Desk' },
+  vc: { role: 'vc', path: '/for/vc', tab: 'home', label: 'Tour Venture Capital Desk' },
+  investors: { role: 'vc', path: '/for/vc', tab: 'home', label: 'Tour Venture Capital Desk' },
+  investor: { role: 'vc', path: '/for/vc', tab: 'home', label: 'Tour Venture Capital Desk' },
 
   affiliates: { role: 'affiliate', path: '/affiliates', tab: 'affiliates', label: 'Affiliates Partner Network' },
   affiliate: { role: 'affiliate', path: '/affiliates', tab: 'affiliates', label: 'Affiliates Partner Network' },
