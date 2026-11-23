@@ -95,6 +95,11 @@ echo "==> nginx site config"
 NGX_CONF="/etc/nginx/conf.d/tunemavens.conf"
 TEMP_NGX="/tmp/tunemavens_nginx.conf"
 
+# SAFETY: never overwrite a live nginx config that already terminates HTTPS (certbot-managed).
+if [ -f "$NGX_CONF" ] && grep -q "ssl_certificate" "$NGX_CONF" && [ "${FORCE_NGINX:-0}" != "1" ]; then
+  echo "==> $NGX_CONF already has HTTPS (certbot). Skipping nginx rewrite. Set FORCE_NGINX=1 to override."
+else
+
 cat >"$TEMP_NGX" <<NGX
 map \$host \$tm_sub_landing {
     default "";
@@ -227,6 +232,8 @@ systemctl enable --now nginx
 if [ "$CONFIG_CHANGED" = true ]; then
   echo "==> Reloading nginx since configuration changed"
   systemctl reload nginx || systemctl restart nginx
+fi
+
 fi
 
 echo "==> Bootstrap complete."
