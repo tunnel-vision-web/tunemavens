@@ -37,13 +37,20 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install backend requirements & run test suite
-        run: |
-          pip install -r backend/requirements.txt
-          python backend/tests/test_payment_integrity.py
-          python backend/tests/test_landing_page_registry.py
-          python backend/tests/test_seo_rendering.py
-          python backend/tests/test_shared_identity_tunestream.py
+      - name: Install backend requirements
+        run: pip install -r backend/requirements.txt
+
+      - name: Run payment integrity tests
+        run: python backend/tests/test_payment_integrity.py
+
+      - name: Run landing page registry tests
+        run: python backend/tests/test_landing_page_registry.py
+
+      - name: Run SEO rendering tests
+        run: python backend/tests/test_seo_rendering.py
+
+      - name: Run shared identity tests
+        run: python backend/tests/test_shared_identity_tunestream.py
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
