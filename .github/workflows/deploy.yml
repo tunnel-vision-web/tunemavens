@@ -12,6 +12,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: Hostinger Direct Deploy
     timeout-minutes: 15
 
     steps:
@@ -60,13 +61,13 @@ jobs:
       - name: Add VPS host key
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ vars.VPS_HOST || secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Bootstrap VPS (idempotent)
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          VPS_HOST: ${{ vars.VPS_HOST || secrets.VPS_HOST }}
+          VPS_USER: ${{ vars.VPS_USER || secrets.VPS_USER }}
+          APP_DOMAIN: ${{ vars.APP_DOMAIN || secrets.APP_DOMAIN }}
         run: |
           scp deploy/bootstrap.sh "$VPS_USER@$VPS_HOST":/tmp/tm_bootstrap.sh
           ssh "$VPS_USER@$VPS_HOST" \
@@ -74,11 +75,11 @@ jobs:
 
       - name: Deploy latest commit
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          VPS_HOST: ${{ vars.VPS_HOST || secrets.VPS_HOST }}
+          VPS_USER: ${{ vars.VPS_USER || secrets.VPS_USER }}
+          APP_DOMAIN: ${{ vars.APP_DOMAIN || secrets.APP_DOMAIN }}
           MONGO_URL: ${{ secrets.MONGO_URL }}
-          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_NAME: ${{ vars.DB_NAME || secrets.DB_NAME }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           EMERGENT_LLM_KEY: ${{ secrets.EMERGENT_LLM_KEY }}
           GIT_SHA: ${{ github.sha }}
@@ -95,7 +96,7 @@ jobs:
 
       - name: Post-deploy health check
         env:
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          APP_DOMAIN: ${{ vars.APP_DOMAIN || secrets.APP_DOMAIN }}
         run: |
           set -e
           for i in 1 2 3 4 5 6; do
