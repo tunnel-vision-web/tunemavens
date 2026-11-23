@@ -101,7 +101,7 @@ cat >"$TEMP_NGX" <<NGX
 # ==============================================================================
 server {
   listen 80;
-  server_name $APP_DOMAIN www.$APP_DOMAIN djs.$APP_DOMAIN labels.$APP_DOMAIN producers.$APP_DOMAIN mediahouses.$APP_DOMAIN;
+  server_name $APP_DOMAIN www.$APP_DOMAIN *.$APP_DOMAIN;
 
   root $APP_DIR/dist/portal;
   index index.html;
@@ -116,6 +116,38 @@ server {
   }
 
   location / {
+    # Direct Subdomain Portal & Application Routing
+    if (\$host ~* ^(djs|dj)\\.) {
+      rewrite ^/$ /#/dashboard?role=dj redirect;
+    }
+    if (\$host ~* ^(labels|label)\\.) {
+      rewrite ^/$ /#/dashboard?role=label redirect;
+    }
+    if (\$host ~* ^(producers|producer|creators|creator)\\.) {
+      rewrite ^/$ /#/dashboard?role=creator redirect;
+    }
+    if (\$host ~* ^(mediahouses|mediahouse|media)\\.) {
+      rewrite ^/$ /#/dashboard?role=media_house redirect;
+    }
+    if (\$host ~* ^(podcasters|podcaster)\\.) {
+      rewrite ^/$ /#/dashboard?role=podcaster redirect;
+    }
+    if (\$host ~* ^(supervisors|supervisor)\\.) {
+      rewrite ^/$ /#/dashboard?role=supervisor redirect;
+    }
+    if (\$host ~* ^corporate\\.) {
+      rewrite ^/$ /#/dashboard?role=corporate redirect;
+    }
+    if (\$host ~* ^(capital|vc|investors|investor)\\.) {
+      rewrite ^/$ /#/dashboard?role=vc redirect;
+    }
+    if (\$host ~* ^(affiliates|affiliate)\\.) {
+      rewrite ^/$ /#/affiliates redirect;
+    }
+    if (\$host ~* ^app\\.) {
+      rewrite ^/$ /#/dashboard redirect;
+    }
+
     try_files \$uri \$uri/ /index.html;
   }
 

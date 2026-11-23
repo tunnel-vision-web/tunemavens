@@ -1338,7 +1338,7 @@ def tip_creator(
 
         eff_credits = payload.amount_credits
         is_kes = payload.currency == "KES"
-        min_floor = 50 if is_kes else 100
+        min_floor = 50
 
         if eff_credits is None:
             if is_kes and payload.amount_currency:
@@ -1348,7 +1348,7 @@ def tip_creator(
             else:
                 eff_credits = min_floor
 
-        # Enforce floor: Ksh 50+ (50 credits) or USD 1.00+ (100 credits)
+        # Enforce floor: Ksh 50+ (50 credits) or 50 credits minimum
         if eff_credits < min_floor:
             eff_credits = min_floor
 

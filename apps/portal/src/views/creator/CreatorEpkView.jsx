@@ -18,6 +18,7 @@ import {
 } from './PersonaEpkSections.jsx';
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { getSubdomain, RESERVED_SUBDOMAINS } from '../../lib/subdomainRouter.js'
 // JSZip dynamically loaded on download
 import {
   RiHomeFill, RiUserFill, RiCalendarEventFill, RiVideoFill,
@@ -89,11 +90,13 @@ export function CreatorEpkView(props = {}) {
   const passedEpk = props.creatorEpk
   const lastSavedSub = (typeof localStorage !== 'undefined' ? localStorage.getItem('last_saved_epk_subdomain') : null) || ''
   const passedSlug = (passedEpk?.subdomain || '').toLowerCase().trim()
-  // Prioritize URL username, then last saved EPK subdomain (e.g. ndufo), then session user, then passedEpk (if not generic kip/aisha), then 'ndufo'
+  // Prioritize URL username, creator subdomain (e.g. ndufo.tunemavens.com), then last saved EPK subdomain, session user, then passedEpk, then 'ndufo'
+  const currentSub = getSubdomain();
+  const subCreator = (currentSub && !RESERVED_SUBDOMAINS.has(currentSub)) ? currentSub : null;
   const fallbackUsername = (lastSavedSub && lastSavedSub !== 'kip' && lastSavedSub !== 'aisha')
     ? lastSavedSub
-    : (props.sessionUser?.username || (passedSlug && passedSlug !== 'kip' && passedSlug !== 'aisha' ? passedSlug : 'ndufo'))
-  const effectiveUsername = username || fallbackUsername
+    : (props.sessionUser?.username || (passedSlug && passedSlug !== 'kip' && passedSlug !== 'aisha' ? passedSlug : (subCreator || 'ndufo')))
+  const effectiveUsername = username || subCreator || fallbackUsername
   const rawArtistName = effectiveUsername ? effectiveUsername.replace(/[-_]/g, ' ') : 'Ndufo'
   const artistName = rawArtistName.charAt(0).toUpperCase() + rawArtistName.slice(1)
   const artistSlug = effectiveUsername.toLowerCase().replace(/[^a-z0-9]/g, '')

@@ -93,6 +93,18 @@ import DashboardTourModal from './components/common/DashboardTourModal.jsx'
 
 import HomeView from './views/landing/HomeView.jsx'
 import ToolsView from './views/landing/ToolsView.jsx'
+import { getSubdomain, resolveSubdomainRoute, getSubdomainRole } from './lib/subdomainRouter.js'
+
+function HomeViewOrSubdomainRouter({ sessionUser }) {
+  const currentSub = getSubdomain();
+  if (currentSub) {
+    const target = resolveSubdomainRoute(currentSub);
+    if (target?.path) {
+      return <Navigate to={target.path} replace />;
+    }
+  }
+  return <HomeView sessionUser={sessionUser} />;
+}
 import AppsView from './views/landing/AppsView.jsx'
 import NativeAppsView from './views/landing/NativeAppsView.jsx'
 import NativeAppLandingView from './views/landing/NativeAppLandingView.jsx'
@@ -1472,7 +1484,8 @@ function DashboardView({
       : ['media-house', 'mediahouse'].includes(t)
       ? 'media_house'
       : null;
-    const reqRole = params.get('role') || tabImpliedRole || (storedPersona && storedPersona !== 'consumer' ? storedPersona : 'creator');
+    const subRole = getSubdomainRole(null, location.search);
+    const reqRole = params.get('role') || tabImpliedRole || subRole || (storedPersona && storedPersona !== 'consumer' ? storedPersona : 'creator');
     const targetApps = DEFAULT_ACTIVE_APPS_BY_ROLE[reqRole] || DEFAULT_ACTIVE_APPS_BY_ROLE.creator;
     const personaNames = {
       creator: 'TuneMavens Studio',
@@ -1515,6 +1528,12 @@ function DashboardView({
     }
     if (['media-house', 'mediahouse'].includes(initialTabQuery)) {
       return 'media_house';
+    }
+
+    // 3. Subdomain implied role (e.g. djs.tunemavens.com implies 'dj')
+    const subRole = getSubdomainRole(null, location.search);
+    if (subRole) {
+      return subRole;
     }
 
     let storedPersona = null;
@@ -11042,6 +11061,18 @@ function AppContent({
     }
   }, [location.pathname]);
 
+  // Subdomain auto-routing inside React Router
+  useEffect(() => {
+    const sub = getSubdomain(null, location.search);
+    if (!sub) return;
+    const target = resolveSubdomainRoute(sub);
+    if (!target) return;
+
+    if (location.pathname === '/') {
+      navigate(target.path, { replace: true });
+    }
+  }, [location.pathname, location.search, navigate]);
+
   const isAuthModalActive = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/set-password' || location.pathname === '/verify-email';
   const backgroundLocation = isAuthModalActive ? { pathname: lastNonAuthPath } : location;
 
@@ -11059,7 +11090,7 @@ function AppContent({
 
 
         <Routes location={backgroundLocation}>
-          <Route path="/" element={<HomeView sessionUser={sessionUser} />} />
+          <Route path="/" element={<HomeViewOrSubdomainRouter sessionUser={sessionUser} />} />
           <Route path="/tools" element={<ToolsView sessionUser={sessionUser} />} />
           <Route path="/apps" element={<AppsView sessionUser={sessionUser} />} />
           <Route path="/native-apps" element={<NativeAppsView />} />

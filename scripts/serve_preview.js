@@ -92,6 +92,82 @@ function createAppServer(appName, distPath, port, proxyPrefixes, targetPort = 80
         pathname = req.url.split('?')[0];
       }
 
+      // Extract Subdomain from Host header or ?subdomain= query
+      const rawHost = (req.headers.host || '').toLowerCase().split(':')[0];
+      let sub = null;
+      if (rawHost && rawHost !== 'localhost' && rawHost !== '127.0.0.1' && rawHost !== 'tunemavens.com' && rawHost !== 'intermaven.io') {
+        const parts = rawHost.split('.');
+        if (parts[0] === 'www') {
+          if (parts.length > 3) sub = parts[1];
+        } else if (parts.length >= 2) {
+          sub = parts[0];
+        }
+      }
+
+      try {
+        const parsedUrl = new URL(req.url, `http://localhost:${port}`);
+        if (parsedUrl.searchParams.get('subdomain')) {
+          sub = parsedUrl.searchParams.get('subdomain').toLowerCase();
+        }
+      } catch (_) {}
+
+      // Cross-app routing for dedicated apps
+      if (port === 3000) {
+        if (sub === 'tunestream' || (rawHost && rawHost.includes('tunestream.co'))) {
+          return proxyRequest(req, res, 3001);
+        }
+        if (sub === 'syncmavens' || (rawHost && rawHost.includes('syncmavens.com'))) {
+          return proxyRequest(req, res, 3002);
+        }
+      }
+
+      // Subdomain root redirects for direct portal ingress
+      if (sub && pathname === '/') {
+        const SUB_REDIRECTS = {
+          djs: '/#/dashboard?role=dj',
+          dj: '/#/dashboard?role=dj',
+          labels: '/#/dashboard?role=label',
+          label: '/#/dashboard?role=label',
+          producers: '/#/dashboard?role=creator',
+          producer: '/#/dashboard?role=creator',
+          creators: '/#/dashboard?role=creator',
+          creator: '/#/dashboard?role=creator',
+          mediahouses: '/#/dashboard?role=media_house',
+          mediahouse: '/#/dashboard?role=media_house',
+          media: '/#/dashboard?role=media_house',
+          podcasters: '/#/dashboard?role=podcaster',
+          podcaster: '/#/dashboard?role=podcaster',
+          supervisors: '/#/dashboard?role=supervisor',
+          supervisor: '/#/dashboard?role=supervisor',
+          corporate: '/#/dashboard?role=corporate',
+          capital: '/#/dashboard?role=vc',
+          vc: '/#/dashboard?role=vc',
+          investors: '/#/dashboard?role=vc',
+          investor: '/#/dashboard?role=vc',
+          affiliates: '/#/affiliates',
+          affiliate: '/#/affiliates',
+          app: '/#/native-apps/tunemavens',
+          companion: '/#/native-apps/creator-companion',
+          pos: '/#/native-apps/mpesa-pos',
+          apps: '/#/apps',
+          tools: '/#/tools',
+          deck: '/#/apps#pitch-deck',
+          brand: '/#/apps#brand-kit',
+          epk: '/#/epk',
+          stream: '/#/stream'
+        };
+        const RESERVED = new Set(['www', 'api', 'admin', 'mail', 'smtp', 'pop', 'imap', 'ftp', 'cname', 'dev', 'staging', 'test']);
+        if (SUB_REDIRECTS[sub]) {
+          res.writeHead(302, { Location: SUB_REDIRECTS[sub] });
+          res.end();
+          return;
+        } else if (!RESERVED.has(sub)) {
+          res.writeHead(302, { Location: `/#/epk/${encodeURIComponent(sub)}` });
+          res.end();
+          return;
+        }
+      }
+
       // Check proxy paths
       const shouldProxy = proxyPrefixes.some(prefix => pathname.startsWith(prefix));
       if (shouldProxy) {

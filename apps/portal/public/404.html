@@ -47,19 +47,124 @@
         }).catch(function() {});
       }
 
-      // Automatically route path-based navigation to HashRouter routes
+      // Authoritative Subdomain & Ingress Route Dispatcher
       (function() {
-        var p = window.location.pathname;
-        if (!window.location.hash && p !== '/' && p !== '/index.html') {
-          if (p.startsWith('/dashboard')) {
-            window.location.replace('/#' + p + window.location.search);
-          } else if (p.startsWith('/for/dj') || p.startsWith('/for-djs')) {
-            window.location.replace('/#/dashboard?role=dj');
-          } else if (p.startsWith('/for/creator') || p.startsWith('/for-creators')) {
-            window.location.replace('/#/dashboard?role=creator');
-          } else if (p.startsWith('/for/label') || p.startsWith('/for-labels')) {
-            window.location.replace('/#/dashboard?role=label');
+        try {
+          var host = (window.location.hostname || '').toLowerCase().trim();
+          var p = window.location.pathname || '/';
+          var h = window.location.hash || '';
+          var s = window.location.search || '';
+
+          // 1. Extract subdomain from query param or hostname
+          var sub = null;
+          if (s) {
+            var searchParams = new URLSearchParams(s);
+            if (searchParams.get('subdomain')) {
+              sub = searchParams.get('subdomain').toLowerCase().trim();
+            }
           }
+
+          if (!sub && host && host !== 'localhost' && host !== '127.0.0.1' && host !== 'tunemavens.com' && host !== 'intermaven.io' && host !== 'tunestream.co' && host !== 'syncmavens.com') {
+            var parts = host.split('.');
+            if (parts[0] === 'www') {
+              if (parts.length > 3) sub = parts[1];
+            } else if (parts.length >= 2) {
+              sub = parts[0];
+            }
+          }
+
+          var SUB_MAP = {
+            'djs': '/dashboard?role=dj',
+            'dj': '/dashboard?role=dj',
+            'labels': '/dashboard?role=label',
+            'label': '/dashboard?role=label',
+            'producers': '/dashboard?role=creator',
+            'producer': '/dashboard?role=creator',
+            'creators': '/dashboard?role=creator',
+            'creator': '/dashboard?role=creator',
+            'mediahouses': '/dashboard?role=media_house',
+            'mediahouse': '/dashboard?role=media_house',
+            'media': '/dashboard?role=media_house',
+            'podcasters': '/dashboard?role=podcaster',
+            'podcaster': '/dashboard?role=podcaster',
+            'supervisors': '/dashboard?role=supervisor',
+            'supervisor': '/dashboard?role=supervisor',
+            'corporate': '/dashboard?role=corporate',
+            'capital': '/dashboard?role=vc',
+            'vc': '/dashboard?role=vc',
+            'investors': '/dashboard?role=vc',
+            'investor': '/dashboard?role=vc',
+            'affiliates': '/affiliates',
+            'affiliate': '/affiliates',
+            'app': '/native-apps/tunemavens',
+            'companion': '/native-apps/creator-companion',
+            'pos': '/native-apps/mpesa-pos',
+            'apps': '/apps',
+            'tools': '/tools',
+            'deck': '/apps#pitch-deck',
+            'brand': '/apps#brand-kit',
+            'epk': '/epk',
+            'stream': '/stream',
+            'tunestream': '/stream',
+            'sync': '/apps#sync-pitch',
+            'syncmavens': '/apps#sync-pitch',
+            'admin': '/admin'
+          };
+
+          var RESERVED = {
+            'www': 1, 'api': 1, 'admin': 1, 'mail': 1, 'smtp': 1, 'pop': 1, 'imap': 1,
+            'ftp': 1, 'cname': 1, 'dev': 1, 'staging': 1, 'test': 1, 'status': 1,
+            'cdn': 1, 'static': 1, 'assets': 1, 'ws': 1, 'wss': 1
+          };
+
+          // Route subdomains directly when accessing the site root
+          if (sub && !RESERVED[sub]) {
+            var isRoot = (!h || h === '#' || h === '#/');
+            if (SUB_MAP[sub]) {
+              var target = SUB_MAP[sub];
+              if (isRoot || p === '/' || p === '/index.html') {
+                var q = s ? (s.startsWith('?') ? s : '?' + s) : '';
+                if (target.indexOf('?') !== -1 && q) {
+                  q = '&' + q.replace(/^\?/, '');
+                }
+                window.location.replace('/#' + target + q);
+                return;
+              }
+            } else {
+              // Unreserved subdomain -> Creator Web World (EPK)
+              if (isRoot || p === '/' || p === '/index.html') {
+                window.location.replace('/#/epk/' + encodeURIComponent(sub) + s);
+                return;
+              }
+            }
+          }
+
+          // Path-based route fallback into HashRouter
+          if (!h && p !== '/' && p !== '/index.html') {
+            if (p.startsWith('/dashboard')) {
+              window.location.replace('/#' + p + s);
+            } else if (p.startsWith('/for/dj') || p.startsWith('/for-djs')) {
+              window.location.replace('/#/dashboard?role=dj' + (s ? '&' + s.replace(/^\?/, '') : ''));
+            } else if (p.startsWith('/for/label') || p.startsWith('/for-labels')) {
+              window.location.replace('/#/dashboard?role=label' + (s ? '&' + s.replace(/^\?/, '') : ''));
+            } else if (p.startsWith('/for/creator') || p.startsWith('/for-creators') || p.startsWith('/for/producer') || p.startsWith('/for-producers')) {
+              window.location.replace('/#/dashboard?role=creator' + (s ? '&' + s.replace(/^\?/, '') : ''));
+            } else if (p.startsWith('/for/media-house') || p.startsWith('/for-mediahouses') || p.startsWith('/for/media')) {
+              window.location.replace('/#/dashboard?role=media_house' + (s ? '&' + s.replace(/^\?/, '') : ''));
+            } else if (p.startsWith('/for/podcaster') || p.startsWith('/for-podcasters')) {
+              window.location.replace('/#/dashboard?role=podcaster' + (s ? '&' + s.replace(/^\?/, '') : ''));
+            } else if (p.startsWith('/for/supervisor') || p.startsWith('/for-supervisors')) {
+              window.location.replace('/#/dashboard?role=supervisor' + (s ? '&' + s.replace(/^\?/, '') : ''));
+            } else if (p.startsWith('/for/corporate') || p.startsWith('/for-corporate')) {
+              window.location.replace('/#/dashboard?role=corporate' + (s ? '&' + s.replace(/^\?/, '') : ''));
+            } else if (p.startsWith('/for/vc') || p.startsWith('/for-vc') || p.startsWith('/for-investors')) {
+              window.location.replace('/#/dashboard?role=vc' + (s ? '&' + s.replace(/^\?/, '') : ''));
+            } else if (p.startsWith('/epk') || p.startsWith('/stream') || p.startsWith('/tools') || p.startsWith('/apps') || p.startsWith('/native-apps') || p.startsWith('/pricing') || p.startsWith('/affiliates') || p.startsWith('/about') || p.startsWith('/support') || p.startsWith('/help') || p.startsWith('/login') || p.startsWith('/register')) {
+              window.location.replace('/#' + p + s);
+            }
+          }
+        } catch (e) {
+          console.warn('[Subdomain Ingress Notice]:', e);
         }
       })();
     </script>
