@@ -2609,3 +2609,76 @@
   border-color: rgba(34, 211, 238, 0.35);
   box-shadow: 0 0 20px rgba(34, 211, 238, 0.08);
 }
+
+/* DJ Mixes Revision Updates */
+.pathway-card.selected.amber {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.pathway-icon.amber {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.dj-format-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.dj-format-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dj-format-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dj-format-option.active {
+  background: rgba(34, 211, 238, 0.08);
+  border-color: #22d3ee;
+}
+
+.dj-format-option .opt-icon {
+  font-size: 24px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dj-format-option.active .opt-icon {
+  color: #22d3ee;
+}
+
+.dj-format-option.active .opt-icon.cyan {
+  color: #22d3ee;
+}
+
+.dj-format-option.active .opt-icon.purple {
+  color: #c084fc;
+}
+
+.dj-format-option strong {
+  display: block;
+  font-size: 13.5px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.dj-format-option span {
+  display: block;
+  font-size: 11.5px;
+  color: #94a3b8;
+  line-height: 1.4;
+}

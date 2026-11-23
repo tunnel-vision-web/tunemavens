@@ -164,7 +164,14 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
     audio_url: SAMPLE_AUDIO,
     artwork_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
     commercial_price: 4.99,
+    creation_type: 'curated_mix', // 'curated_mix' | 'remix_original_beat' | 'original_creation'
     is_original_ip_only: false,
+    is_remix_original_beat: false,
+    original_song_title: '',
+    original_song_artist: '',
+    original_song_owner: '',
+    original_song_email: '',
+    remix_beat_description: '',
     dj_split_percentage: 40.0,
     track_owners_split_percentage: 50.0,
     platform_fee_percentage: 10.0,
@@ -508,20 +515,52 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
   // -------------------------------------------------------------------------
   const handleSaveMix = async () => {
     if (!newMix.title.trim()) {
-      showNotification('Please enter a mix title', 'error');
+      showNotification('Please enter a title for your DJ mix or rework', 'error');
       return;
     }
-    if (newMix.tracklist.length === 0) {
+
+    let finalTracklist = [...newMix.tracklist];
+    if (newMix.creation_type === 'remix_original_beat' && finalTracklist.length === 0) {
+      if (newMix.original_song_title?.trim()) {
+        finalTracklist = [{
+          id: Math.random().toString(36).substring(2, 9),
+          title: newMix.original_song_title.trim(),
+          artist: newMix.original_song_artist?.trim() || 'Featured Artist',
+          ip_owner_name: newMix.original_song_owner?.trim() || `${newMix.original_song_artist?.trim() || 'Artist'} Publishing`,
+          ip_owner_email: newMix.original_song_email?.trim() || 'rights@tunemavens.com',
+          start_time: 0,
+          end_time: newMix.duration_seconds || 360,
+          duration_seconds: newMix.duration_seconds || 360,
+          split_percentage: 100.0,
+          clearance_status: 'pending',
+          genre: newMix.genre,
+          bpm: newMix.bpm_avg
+        }];
+      } else {
+        showNotification('Please specify the original song title being reworked with your beat', 'error');
+        return;
+      }
+    } else if (finalTracklist.length === 0) {
       showNotification('Please extract or add at least one track to the playlist', 'error');
       return;
     }
+
     try {
       setIsSubmitting(true);
       const res = await djMixesApi.createMix({
         ...newMix,
+        tracklist: finalTracklist,
         auto_extract_tracks: false
       });
-      showNotification(`DJ Mix "${res.title}" created successfully!`);
+
+      if (newMix.creation_type === 'remix_original_beat') {
+        showNotification(`DJ Remix "${res.title}" created! Streaming 100% free with creator accreditation. Dispatch clearance to unlock commercial sales.`);
+      } else if (newMix.creation_type === 'original_creation' || newMix.is_original_ip_only) {
+        showNotification(`100% Original DJ Creation "${res.title}" published and immediately monetized!`);
+      } else {
+        showNotification(`DJ Mix "${res.title}" created! Uncleared songs stream completely free with full creator accreditation.`);
+      }
+
       await fetchMixes();
       setSelectedMix(res);
       setActiveView('detail');
@@ -758,18 +797,146 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
           {uploadStep === 1 && (
             <div className="wizard-step-content">
               <h3 className="section-title">Step 1: Mix Profile & Audio Ingestion</h3>
-              <p className="section-desc">Provide audio stream link, artwork, and technical performance details.</p>
+              <p className="section-desc">Select your release format, audio master, artwork, and technical performance details.</p>
+              
+              {/* DJ Creation & Mix Format Selector */}
+              <div className="form-group full-width" style={{ marginBottom: '18px' }}>
+                <label style={{ fontWeight: 800, fontSize: '13.5px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <RiDiscFill style={{ color: '#22d3ee' }} />
+                  Select DJ Creation Format &amp; Release Type *
+                </label>
+                <div className="dj-format-selector-grid">
+                  <div
+                    className={`dj-format-option ${newMix.creation_type === 'curated_mix' ? 'active' : ''}`}
+                    onClick={() => setNewMix({
+                      ...newMix,
+                      creation_type: 'curated_mix',
+                      is_original_ip_only: false,
+                      is_remix_original_beat: false,
+                      dj_split_percentage: 40.0,
+                      track_owners_split_percentage: 50.0
+                    })}
+                  >
+                    <RiDiscFill className="opt-icon" />
+                    <div>
+                      <strong>Curated DJ Mix (Multi-Artist Set)</strong>
+                      <span>Continuous mix featuring third-party recordings. Any un-cleared songs stream completely free with zero selling and full creator accreditation.</span>
+                    </div>
+                  </div>
+                  <div
+                    className={`dj-format-option ${newMix.creation_type === 'remix_original_beat' ? 'active' : ''}`}
+                    onClick={() => setNewMix({
+                      ...newMix,
+                      creation_type: 'remix_original_beat',
+                      is_original_ip_only: false,
+                      is_remix_original_beat: true,
+                      dj_split_percentage: 50.0,
+                      track_owners_split_percentage: 40.0,
+                      duration_seconds: newMix.duration_seconds > 600 ? 360 : newMix.duration_seconds
+                    })}
+                  >
+                    <RiEqualizerFill className="opt-icon cyan" />
+                    <div>
+                      <strong>DJ Remix / Song Rework with Original Beat</strong>
+                      <span>New version of a song with your originally produced beat. Streams 100% free with full creator accreditation until cleared. Once cleared, can be sold &amp; streamed!</span>
+                    </div>
+                  </div>
+                  <div
+                    className={`dj-format-option ${newMix.creation_type === 'original_creation' ? 'active' : ''}`}
+                    onClick={() => setNewMix({
+                      ...newMix,
+                      creation_type: 'original_creation',
+                      is_original_ip_only: true,
+                      is_remix_original_beat: false,
+                      dj_split_percentage: 90.0,
+                      track_owners_split_percentage: 0.0
+                    })}
+                  >
+                    <RiSparklingFill className="opt-icon purple" />
+                    <div>
+                      <strong>100% DJ Original Creation / Mix</strong>
+                      <span>Mixes and creations that are entirely your own original IP. Zero clearances needed. Monetized immediately for commercial sales &amp; streaming.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="form-grid-2">
-                <div className="form-group">
-                  <label>Mix Title *</label>
+                <div className="form-group full-width">
+                  <label>{newMix.creation_type === 'remix_original_beat' ? 'Remix / Rework Title *' : 'Mix / Release Title *'}</label>
                   <input
                     type="text"
                     className="input-dark"
-                    placeholder="e.g. Alchemist Sunset Afro House Session Vol. 3"
+                    placeholder={
+                      newMix.creation_type === 'remix_original_beat'
+                        ? 'e.g. Midnight Grooves (DJ Kalonje Original 3-Step Afro-Tech Rework)'
+                        : newMix.creation_type === 'original_creation'
+                        ? 'e.g. Sovereign Modular Analog Synth Live Odyssey'
+                        : 'e.g. Alchemist Sunset Afro House Session Vol. 3'
+                    }
                     value={newMix.title}
                     onChange={e => setNewMix({ ...newMix, title: e.target.value })}
                   />
                 </div>
+
+                {/* Additional metadata fields when DJ Remix with Original Beat is chosen */}
+                {newMix.creation_type === 'remix_original_beat' && (
+                  <>
+                    <div className="form-group">
+                      <label>Original Song Title *</label>
+                      <input
+                        type="text"
+                        className="input-dark"
+                        placeholder="e.g. Midnight Grooves"
+                        value={newMix.original_song_title}
+                        onChange={e => setNewMix({ ...newMix, original_song_title: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Original Artist / Songwriter *</label>
+                      <input
+                        type="text"
+                        className="input-dark"
+                        placeholder="e.g. Aisha Okoro"
+                        value={newMix.original_song_artist}
+                        onChange={e => setNewMix({ ...newMix, original_song_artist: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Song Rights Holder / Label / Publisher</label>
+                      <input
+                        type="text"
+                        className="input-dark"
+                        placeholder="e.g. Aisha Okoro Music Publishing Ltd"
+                        value={newMix.original_song_owner}
+                        onChange={e => setNewMix({ ...newMix, original_song_owner: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Song Rights Holder Email (for Clearance Invitation)</label>
+                      <input
+                        type="email"
+                        className="input-dark"
+                        placeholder="e.g. publisher@aishaokoro.com"
+                        value={newMix.original_song_email}
+                        onChange={e => setNewMix({ ...newMix, original_song_email: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group full-width">
+                      <label>DJ Originally Produced Beat &amp; Arrangement Notes</label>
+                      <input
+                        type="text"
+                        className="input-dark"
+                        placeholder="e.g. Original 3-step Amapiano drum patterns, analog bassline, and melodic chord progression produced live by DJ"
+                        value={newMix.remix_beat_description}
+                        onChange={e => setNewMix({ ...newMix, remix_beat_description: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div className="form-group">
                   <label>Genre</label>
                   <select
@@ -792,13 +959,22 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                   />
                 </div>
                 <div className="form-group">
-                  <label>Duration (Minutes)</label>
+                  <label>{newMix.creation_type === 'remix_original_beat' ? 'Duration (Seconds or Minutes)' : 'Duration (Minutes)'}</label>
                   <input
                     type="number"
                     className="input-dark"
-                    value={Math.round(newMix.duration_seconds / 60)}
-                    onChange={e => setNewMix({ ...newMix, duration_seconds: (parseInt(e.target.value, 10) || 60) * 60 })}
+                    value={newMix.creation_type === 'remix_original_beat' ? newMix.duration_seconds : Math.round(newMix.duration_seconds / 60)}
+                    onChange={e => {
+                      const val = parseInt(e.target.value, 10) || 60;
+                      setNewMix({
+                        ...newMix,
+                        duration_seconds: newMix.creation_type === 'remix_original_beat' ? val : val * 60
+                      });
+                    }}
                   />
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                    {formatSeconds(newMix.duration_seconds)} total playback length
+                  </span>
                 </div>
                 {/* Drag and Drop File Upload Zones */}
                 <div className="form-group full-width">
@@ -1010,50 +1186,97 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
           {/* Step 2: Publishing Pathway */}
           {uploadStep === 2 && (
             <div className="wizard-step-content">
-              <h3 className="section-title">Step 2: Choose Your Rights & Publishing Pathway</h3>
+              <h3 className="section-title">Step 2: Choose Your Rights &amp; Publishing Pathway</h3>
               <p className="section-desc">
-                Select whether this mix consists entirely of your own productions or contains third-party works requiring commercial clearance.
+                Select your clearance roadmap according to the exact rights model of this release:
               </p>
               <div className="pathway-cards-grid">
+                {/* Pathway 1: Curated Multi-Artist Mix */}
                 <div
-                  className={`pathway-card ${newMix.is_original_ip_only ? 'selected purple' : ''}`}
-                  onClick={() => setNewMix({ ...newMix, is_original_ip_only: true })}
-                >
-                  <div className="pathway-icon purple">
-                    <RiSparklingFill />
-                  </div>
-                  <div className="pathway-title">Pathway A: 100% Original IP</div>
-                  <div className="pathway-badge-row">
-                    <span className="pill pill-purple">Instant Publish</span>
-                    <span className="pill pill-green">Zero Clearance Needed</span>
-                  </div>
-                  <p className="pathway-desc">
-                    You produced, performed, and hold 100% of all master and publishing rights for every track in this mix.
-                    Requires a digital legal certification warranty. Mix is published immediately upon submission with commercial sales active.
-                  </p>
-                  <div className="pathway-check">
-                    {newMix.is_original_ip_only && <RiCheckFill />}
-                  </div>
-                </div>
-                <div
-                  className={`pathway-card ${!newMix.is_original_ip_only ? 'selected cyan' : ''}`}
-                  onClick={() => setNewMix({ ...newMix, is_original_ip_only: false })}
+                  className={`pathway-card ${newMix.creation_type === 'curated_mix' && !newMix.is_original_ip_only ? 'selected cyan' : ''}`}
+                  onClick={() => setNewMix({
+                    ...newMix,
+                    creation_type: 'curated_mix',
+                    is_original_ip_only: false,
+                    is_remix_original_beat: false,
+                    dj_split_percentage: 40.0,
+                    track_owners_split_percentage: 50.0
+                  })}
                 >
                   <div className="pathway-icon cyan">
                     <RiShieldCheckFill />
                   </div>
-                  <div className="pathway-title">Pathway B: Multi-Artist Commercial Clearance</div>
+                  <div className="pathway-title">Pathway 1: Multi-Artist Curated DJ Mix</div>
                   <div className="pathway-badge-row">
-                    <span className="pill pill-cyan">Split Cascade Enabled</span>
-                    <span className="pill pill-amber">100% Prior Agreement Required</span>
+                    <span className="pill pill-cyan">Free Stream Until Cleared</span>
+                    <span className="pill pill-green">Full Creator Accreditation</span>
                   </div>
                   <p className="pathway-desc">
-                    Mix includes songs or stems from other artists or record labels.
-                    The system will extract all tracks, send email requests and binding digital contracts to each IP owner,
-                    and enforce complete consensus before any commercial sales can occur.
+                    In the event that this DJ mix has any songs that have not been cleared yet, these will stream completely free
+                    and there shall be strictly NO selling, but with full accreditation to each creator/IP owner.
+                    Commercial sales unlock automatically once 100% of IP owners execute digital clearance agreements.
                   </p>
                   <div className="pathway-check">
-                    {!newMix.is_original_ip_only && <RiCheckFill />}
+                    {newMix.creation_type === 'curated_mix' && !newMix.is_original_ip_only && <RiCheckFill />}
+                  </div>
+                </div>
+
+                {/* Pathway 2: DJ Remix / Original Beat Rework */}
+                <div
+                  className={`pathway-card ${newMix.creation_type === 'remix_original_beat' ? 'selected amber' : ''}`}
+                  onClick={() => setNewMix({
+                    ...newMix,
+                    creation_type: 'remix_original_beat',
+                    is_original_ip_only: false,
+                    is_remix_original_beat: true,
+                    dj_split_percentage: 50.0,
+                    track_owners_split_percentage: 40.0
+                  })}
+                >
+                  <div className="pathway-icon amber">
+                    <RiEqualizerFill />
+                  </div>
+                  <div className="pathway-title">Pathway 2: DJ Remix with Original Beat</div>
+                  <div className="pathway-badge-row">
+                    <span className="pill pill-amber">Clearance Required</span>
+                    <span className="pill pill-green">Sell &amp; Stream Post-Clearance</span>
+                  </div>
+                  <p className="pathway-desc">
+                    You created a new version of a song with your originally created beat.
+                    Prior to clearance, this will stream completely free with full creator accreditation to the song's IP owner.
+                    After clearance is executed by the IP owner, this can be sold as a commercial download and/or streamed with split cascade royalties!
+                  </p>
+                  <div className="pathway-check">
+                    {newMix.creation_type === 'remix_original_beat' && <RiCheckFill />}
+                  </div>
+                </div>
+
+                {/* Pathway 3: 100% DJ Original Creation */}
+                <div
+                  className={`pathway-card ${newMix.creation_type === 'original_creation' || newMix.is_original_ip_only ? 'selected purple' : ''}`}
+                  onClick={() => setNewMix({
+                    ...newMix,
+                    creation_type: 'original_creation',
+                    is_original_ip_only: true,
+                    is_remix_original_beat: false,
+                    dj_split_percentage: 90.0,
+                    track_owners_split_percentage: 0.0
+                  })}
+                >
+                  <div className="pathway-icon purple">
+                    <RiSparklingFill />
+                  </div>
+                  <div className="pathway-title">Pathway 3: 100% DJ Original Creation</div>
+                  <div className="pathway-badge-row">
+                    <span className="pill pill-purple">Instant Monetization</span>
+                    <span className="pill pill-green">Zero Clearance Needed</span>
+                  </div>
+                  <p className="pathway-desc">
+                    A DJ mix or musical creations that are entirely your own original composition, beats, and production.
+                    Zero third-party clearances required. These can be monetized immediately for commercial sales and streaming from day one with 90% sovereign payout!
+                  </p>
+                  <div className="pathway-check">
+                    {(newMix.creation_type === 'original_creation' || newMix.is_original_ip_only) && <RiCheckFill />}
                   </div>
                 </div>
               </div>
@@ -1063,12 +1286,32 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                   className="btn-primary"
                   onClick={() => {
                     setUploadStep(3);
-                    if (newMix.tracklist.length === 0) {
+                    if (newMix.creation_type === 'remix_original_beat') {
+                      if (newMix.original_song_title?.trim() && newMix.tracklist.length === 0) {
+                        setNewMix(prev => ({
+                          ...prev,
+                          tracklist: [{
+                            id: Math.random().toString(36).substring(2, 9),
+                            title: prev.original_song_title.trim(),
+                            artist: prev.original_song_artist?.trim() || 'Featured Artist',
+                            ip_owner_name: prev.original_song_owner?.trim() || `${prev.original_song_artist?.trim() || 'Artist'} Publishing`,
+                            ip_owner_email: prev.original_song_email?.trim() || 'rights@tunemavens.com',
+                            start_time: 0,
+                            end_time: prev.duration_seconds || 360,
+                            duration_seconds: prev.duration_seconds || 360,
+                            split_percentage: 100.0,
+                            clearance_status: 'pending',
+                            genre: prev.genre,
+                            bpm: prev.bpm_avg
+                          }]
+                        }));
+                      }
+                    } else if (newMix.tracklist.length === 0) {
                       handleExtractTracks();
                     }
                   }}
                 >
-                  Continue to Track Extraction →
+                  Continue to Track Extraction &amp; Attribution →
                 </button>
               </div>
             </div>
@@ -1099,6 +1342,44 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                   </button>
                 </div>
               </div>
+              {/* Conditional Rights & Clearance Policy Banner based on creation_type */}
+              {newMix.creation_type === 'remix_original_beat' ? (
+                <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '3px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <RiEqualizerFill style={{ color: '#f59e0b', fontSize: '24px', flexShrink: 0 }} />
+                  <div style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.5 }}>
+                    <strong style={{ color: '#f59e0b', display: 'block', marginBottom: '2px' }}>
+                      Requirement 2: DJ Remix / Song Rework with Originally Produced Beat
+                    </strong>
+                    You have reworked <em>"{newMix.original_song_title || 'Original Song'}"</em> ({newMix.original_song_artist || 'Artist'}) with your own originally produced beat.
+                    Prior to clearance, this rework streams <strong>100% free</strong> with <strong>mandatory full accreditation</strong> to the creator/IP owner, and sales are locked.
+                    Once clearance is executed by the IP owner, this can be sold as a commercial download and/or streamed with your 50% DJ Beat / 40% Song Owner / 10% Platform split cascade!
+                  </div>
+                </div>
+              ) : (newMix.creation_type === 'original_creation' || newMix.is_original_ip_only) ? (
+                <div style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: '3px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <RiSparklingFill style={{ color: '#a855f7', fontSize: '24px', flexShrink: 0 }} />
+                  <div style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.5 }}>
+                    <strong style={{ color: '#a855f7', display: 'block', marginBottom: '2px' }}>
+                      Requirement 3: 100% DJ Original Creation &amp; Sovereign Production
+                    </strong>
+                    This release is entirely your own original composition, beats, and production. Zero third-party clearances required.
+                    Monetized immediately from day one with 90% direct sovereign payout!
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '3px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <RiHeadphoneFill style={{ color: '#22d3ee', fontSize: '24px', flexShrink: 0 }} />
+                  <div style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.5 }}>
+                    <strong style={{ color: '#22d3ee', display: 'block', marginBottom: '2px' }}>
+                      Requirement 1: Curated Multi-Artist DJ Mix Governance
+                    </strong>
+                    In the event that this DJ mix has any songs that have not been cleared yet, these will stream completely free
+                    and there shall be strictly NO selling, but with full accreditation to each creator/IP owner.
+                    Commercial sales unlock automatically once 100% of IP owners execute digital clearance agreements.
+                  </div>
+                </div>
+              )}
+
               {/* Optional Cue Sheet / Text Import Box */}
               <div className="cue-import-accordion">
                 <details>
@@ -1272,23 +1553,23 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                 <div className="waterfall-bars">
                   <div className="waterfall-item">
                     <div className="waterfall-label">
-                      <span>DJ Curation / Performance Share</span>
-                      <strong>{newMix.is_original_ip_only ? 90 : newMix.dj_split_percentage}%</strong>
+                      <span>{newMix.creation_type === 'remix_original_beat' ? 'DJ Originally Produced Beat Share' : 'DJ Curation / Performance Share'}</span>
+                      <strong>{newMix.is_original_ip_only || newMix.creation_type === 'original_creation' ? 90 : newMix.dj_split_percentage}%</strong>
                     </div>
                     <div className="bar-track">
                       <div
                         className="bar-fill cyan"
-                        style={{ width: `${newMix.is_original_ip_only ? 90 : newMix.dj_split_percentage}%` }}
+                        style={{ width: `${newMix.is_original_ip_only || newMix.creation_type === 'original_creation' ? 90 : newMix.dj_split_percentage}%` }}
                       />
                     </div>
                     <span className="waterfall-payout">
-                      {formatPrice((newMix.is_original_ip_only ? 0.9 : (newMix.dj_split_percentage / 100)) * newMix.commercial_price)} per sale
+                      {formatPrice(((newMix.is_original_ip_only || newMix.creation_type === 'original_creation') ? 0.9 : (newMix.dj_split_percentage / 100)) * newMix.commercial_price)} per sale
                     </span>
                   </div>
-                  {!newMix.is_original_ip_only && (
+                  {!newMix.is_original_ip_only && newMix.creation_type !== 'original_creation' && (
                     <div className="waterfall-item">
                       <div className="waterfall-label">
-                        <span>Track IP Owners Pool ({newMix.tracklist.length} Rights Holders)</span>
+                        <span>{newMix.creation_type === 'remix_original_beat' ? `Original Song Rights Holder (${newMix.original_song_artist || 'Artist'})` : `Track IP Owners Pool (${newMix.tracklist.length} Rights Holders)`}</span>
                         <strong>{newMix.track_owners_split_percentage}%</strong>
                       </div>
                       <div className="bar-track">
@@ -1298,8 +1579,8 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                         />
                       </div>
                       <span className="waterfall-payout">
-                        {formatPrice((newMix.track_owners_split_percentage / 100) * newMix.commercial_price)} total (
-                        {formatPrice(((newMix.track_owners_split_percentage / 100) * newMix.commercial_price) / (newMix.tracklist.length || 1))} / track)
+                        {formatPrice((newMix.track_owners_split_percentage / 100) * newMix.commercial_price)} total
+                        {newMix.creation_type !== 'remix_original_beat' && ` (${formatPrice(((newMix.track_owners_split_percentage / 100) * newMix.commercial_price) / (newMix.tracklist.length || 1))} / track)`}
                       </span>
                     </div>
                   )}
@@ -1323,9 +1604,11 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                 <div>
                   <strong>Platform Rule & Condition Precedent:</strong>
                   <p>
-                    {newMix.is_original_ip_only
+                    {newMix.creation_type === 'remix_original_beat'
+                      ? `Prior to clearance from ${newMix.original_song_owner || newMix.original_song_artist || 'the song rights holder'}, this rework streams completely free with mandatory attribution and zero selling. After clearance is signed, it unlocks to sell and stream with agreed splits (50% DJ Beat / 40% Song Owner / 10% Platform).`
+                      : (newMix.is_original_ip_only || newMix.creation_type === 'original_creation')
                       ? 'You are publishing under Sovereign Original IP terms. You will electronically sign a warranty confirming sole copyright.'
-                      : 'Prior to having any sales, ALL IP owners whose music is included in this tracklist must execute their clearance agreement on TuneMavens. Commercial checkout will be locked until 100% agreement is completed.'}
+                      : 'In the event that this DJ mix has any songs that have not been cleared yet, these will stream completely free and there shall be NO selling, but with full accreditation to the creator/IP owner. Commercial checkout will be locked until 100% agreement is completed.'}
                   </p>
                 </div>
               </div>
@@ -1349,16 +1632,22 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
       {/* ===================================================================== */}
       {activeView === 'catalog' && (() => {
         const myMixesCount = mixes.filter(m => m.user_id === String(sessionUser?._id || sessionUser?.id) || m.dj_name === (sessionUser?.brand_name || sessionUser?.name || 'DJ')).length;
-        const pendingMixesCount = mixes.filter(m => m.sale_locked && !m.is_original_ip_only).length;
-        const readyMixesCount = mixes.filter(m => !m.sale_locked || m.is_original_ip_only).length;
+        const remixesCount = mixes.filter(m => m.creation_type === 'remix_original_beat').length;
+        const originalCount = mixes.filter(m => m.creation_type === 'original_creation' || m.is_original_ip_only).length;
+        const pendingMixesCount = mixes.filter(m => m.sale_locked && !m.is_original_ip_only && m.creation_type !== 'original_creation').length;
+        const readyMixesCount = mixes.filter(m => (!m.sale_locked || m.is_original_ip_only || m.creation_type === 'original_creation')).length;
         const displayedMixes = mixes.filter(mix => {
           if (catalogFilter === 'my-mixes') {
             const isMine = mix.user_id === String(sessionUser?._id || sessionUser?.id) || mix.dj_name === (sessionUser?.brand_name || sessionUser?.name || 'DJ');
             if (!isMine) return false;
+          } else if (catalogFilter === 'remixes') {
+            if (mix.creation_type !== 'remix_original_beat') return false;
+          } else if (catalogFilter === 'original') {
+            if (mix.creation_type !== 'original_creation' && !mix.is_original_ip_only) return false;
           } else if (catalogFilter === 'pending') {
-            if (!mix.sale_locked || mix.is_original_ip_only) return false;
+            if (!mix.sale_locked || mix.is_original_ip_only || mix.creation_type === 'original_creation') return false;
           } else if (catalogFilter === 'ready') {
-            if (mix.sale_locked && !mix.is_original_ip_only) return false;
+            if (mix.sale_locked && !mix.is_original_ip_only && mix.creation_type !== 'original_creation') return false;
           }
           return true;
         });
@@ -1382,7 +1671,25 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
               data-testid="filter-my-mixes-btn"
             >
               <RiUserVoiceFill size={15} />
-              <span>My Uploaded Mixes ({myMixesCount})</span>
+              <span>My Uploads ({myMixesCount})</span>
+            </button>
+            <button
+              type="button"
+              className={`catalog-tab-btn ${catalogFilter === 'remixes' ? 'active' : ''}`}
+              onClick={() => setCatalogFilter('remixes')}
+              data-testid="filter-remixes-btn"
+            >
+              <RiEqualizerFill size={15} />
+              <span>DJ Remixes (Original Beats) ({remixesCount})</span>
+            </button>
+            <button
+              type="button"
+              className={`catalog-tab-btn ${catalogFilter === 'original' ? 'active' : ''}`}
+              onClick={() => setCatalogFilter('original')}
+              data-testid="filter-original-btn"
+            >
+              <RiSparklingFill size={15} />
+              <span>100% Original IP ({originalCount})</span>
             </button>
             <button
               type="button"
@@ -1391,7 +1698,7 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
               data-testid="filter-pending-mixes-btn"
             >
               <RiHeadphoneFill size={15} />
-              <span>Clearance In-Progress · Free to Stream ({pendingMixesCount})</span>
+              <span>Free to Stream · Clearance In-Progress ({pendingMixesCount})</span>
             </button>
             <button
               type="button"
@@ -1487,9 +1794,19 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                     <div className="mix-card-body">
                       <div className="mix-card-top-row">
                         <span className="mix-genre-tag">{mix.genre} · {mix.bpm_avg} BPM</span>
-                        {mix.is_original_ip_only ? (
+                        {mix.creation_type === 'remix_original_beat' ? (
+                          mix.sale_locked ? (
+                            <span className="pill pill-amber">
+                              <RiEqualizerFill /> DJ Remix (Original Beat) · Free Stream
+                            </span>
+                          ) : (
+                            <span className="pill pill-green">
+                              <RiShieldCheckFill /> DJ Remix · Cleared to Sell &amp; Stream
+                            </span>
+                          )
+                        ) : (mix.is_original_ip_only || mix.creation_type === 'original_creation') ? (
                           <span className="pill pill-purple">
-                            <RiSparklingFill /> 100% Original IP
+                            <RiSparklingFill /> 100% Original IP · Sovereign
                           </span>
                         ) : isAllCleared ? (
                           <span className="pill pill-green">
@@ -1510,9 +1827,17 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                       {/* Mini Track Extraction Snapshot */}
                       <div className="mix-card-playlist-preview">
                         <div className="preview-header">
-                          <span>Extracted Playlist ({totalTracks} Tracks · IP Credited)</span>
+                          <span>
+                            {mix.creation_type === 'remix_original_beat'
+                              ? `Rework: ${mix.original_song_title || 'Original Song'} (IP Credited)`
+                              : `Extracted Playlist (${totalTracks} Tracks · IP Credited)`}
+                          </span>
                           <span className="split-badge">
-                            {mix.is_original_ip_only ? '90% Sovereign' : '40% DJ / 50% IP'}
+                            {mix.creation_type === 'remix_original_beat'
+                              ? '50% DJ Beat / 40% Song IP'
+                              : (mix.is_original_ip_only || mix.creation_type === 'original_creation')
+                              ? '90% Sovereign'
+                              : '40% DJ / 50% IP'}
                           </span>
                         </div>
                         <div className="preview-tracks">
@@ -1736,7 +2061,17 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
             <div className="detail-hero-meta">
               <div className="detail-badge-row">
                 <span className="mix-genre-tag">{selectedMix.genre} · {selectedMix.bpm_avg} BPM</span>
-                {selectedMix.is_original_ip_only ? (
+                {selectedMix.creation_type === 'remix_original_beat' ? (
+                  selectedMix.sale_locked ? (
+                    <span className="pill pill-amber">
+                      <RiEqualizerFill /> DJ Remix (Original Beat) · Free Stream Until Cleared
+                    </span>
+                  ) : (
+                    <span className="pill pill-green">
+                      <RiShieldCheckFill /> DJ Remix · Cleared to Sell &amp; Stream
+                    </span>
+                  )
+                ) : (selectedMix.is_original_ip_only || selectedMix.creation_type === 'original_creation') ? (
                   <span className="pill pill-purple">
                     <RiSparklingFill /> 100% Original IP · Sovereign Release
                   </span>
@@ -1789,18 +2124,32 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
             </div>
           </div>
           {/* Prior Agreement Enforcement Callout */}
-          <div className={`prior-agreement-banner ${selectedMix.sale_locked ? 'cyan-glow' : 'green-glow'}`}>
+          <div className={`prior-agreement-banner ${selectedMix.creation_type === 'remix_original_beat' ? (selectedMix.sale_locked ? 'amber-glow' : 'green-glow') : (selectedMix.sale_locked ? 'cyan-glow' : 'green-glow')}`}>
             <div className="banner-icon-col">
-              {selectedMix.sale_locked ? <RiHeadphoneFill className="highlight-cyan" /> : <RiLockUnlockFill />}
+              {selectedMix.creation_type === 'remix_original_beat' ? (
+                selectedMix.sale_locked ? <RiEqualizerFill style={{ color: '#f59e0b', fontSize: '24px' }} /> : <RiLockUnlockFill />
+              ) : selectedMix.sale_locked ? (
+                <RiHeadphoneFill className="highlight-cyan" />
+              ) : (
+                <RiLockUnlockFill />
+              )}
             </div>
             <div className="banner-text-col">
               <h4>
-                {selectedMix.sale_locked
+                {selectedMix.creation_type === 'remix_original_beat'
+                  ? (selectedMix.sale_locked
+                    ? 'DJ Remix with Original Beat — Free Promotional Streaming Active'
+                    : 'DJ Remix Clearance Verified — Commercial Sales & Streaming Active!')
+                  : selectedMix.sale_locked
                   ? 'Free Promotional Streaming Active — Commercial Sales Unlock Upon 100% Clearance'
                   : '100% Prior Agreement Verified — Commercial Sales Active!'}
               </h4>
               <p>
-                {selectedMix.is_original_ip_only
+                {selectedMix.creation_type === 'remix_original_beat'
+                  ? (selectedMix.sale_locked
+                    ? `Platform policy: This track is a DJ rework of "${selectedMix.original_song_title || 'Original Song'}" featuring an originally produced beat by ${selectedMix.dj_name}. Prior to clearance from the original creator, this remix streams 100% free with mandatory full accreditation to the creator/IP owner, and no commercial selling is permitted. Once the IP owner executes the clearance contract, it will unlock for commercial sales and streaming with an agreed split cascade (50% DJ Beatmaker / 40% Song Rights Holder / 10% Platform).`
+                    : 'The original song rights holder has executed the clearance contract. This original beat remix is now actively streaming and available for commercial sale with real-time split payouts.')
+                  : (selectedMix.is_original_ip_only || selectedMix.creation_type === 'original_creation')
                   ? 'This mix is classified as 100% Original IP. No external clearances are required.'
                   : selectedMix.sale_locked
                   ? 'TuneMavens platform policy: For mixes awaiting full clearances, audio streaming is 100% free. This gives the DJ and featured recording artists valuable exposure, allows invited IP owners to experience the platform and verify cues firsthand, while consumers enjoy the music. All featured IP owners are fully credited below. Commercial downloads and paid sales will unlock once all clearances are executed.'
@@ -1810,7 +2159,7 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
             <div className="banner-meter">
               <div className="meter-circle">
                 <span className="meter-pct">
-                  {selectedMix.is_original_ip_only ? 100 : selectedMix.clearance_summary?.clearance_percentage || 0}%
+                  {(selectedMix.is_original_ip_only || selectedMix.creation_type === 'original_creation') ? 100 : selectedMix.clearance_summary?.clearance_percentage || 0}%
                 </span>
                 <span className="meter-lbl">{selectedMix.sale_locked ? 'Free Stream' : 'Agreed'}</span>
               </div>
@@ -2230,31 +2579,54 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
             <div className="modal-body">
               <div className="contract-preview-box">
                 <div className="contract-header">
-                  <h4>DJ Mix Commercial Distribution & Revenue Split License</h4>
+                  <h4>
+                    {contractModal.mix.creation_type === 'remix_original_beat'
+                      ? 'DJ Remix (Original Beat) Derivative Work Clearance & Commercial Split License'
+                      : 'DJ Mix Commercial Distribution & Revenue Split License'}
+                  </h4>
                   <div className="contract-id">Reference: {contractModal.track.contract_id || `TM-CLR-${contractModal.mix.id}`}</div>
                 </div>
                 <div className="contract-clause">
                   <strong>Clause 1: Scope & Non-Exclusive Commercial Grant</strong>
                   <p>
-                    The Rights Holder (<strong>{contractModal.track.ip_owner_name}</strong>) grants Curating DJ (<strong>{contractModal.mix.dj_name}</strong>) 
-                    and TuneMavens a worldwide non-exclusive digital distribution license to include the master recording and underlying 
-                    composition of <strong>"{contractModal.track.title}"</strong> ({contractModal.track.artist}) as part of 
-                    the continuous DJ mix entitled <strong>"{contractModal.mix.title}"</strong>.
+                    {contractModal.mix.creation_type === 'remix_original_beat' ? (
+                      <>
+                        The Rights Holder (<strong>{contractModal.track.ip_owner_name}</strong>) grants Curating DJ (<strong>{contractModal.mix.dj_name}</strong>) 
+                        and TuneMavens a worldwide non-exclusive digital distribution license for the derivative rework of 
+                        <strong>"{contractModal.track.title}"</strong> ({contractModal.track.artist}) combined with the DJ's originally produced beat and arrangement.
+                      </>
+                    ) : (
+                      <>
+                        The Rights Holder (<strong>{contractModal.track.ip_owner_name}</strong>) grants Curating DJ (<strong>{contractModal.mix.dj_name}</strong>) 
+                        and TuneMavens a worldwide non-exclusive digital distribution license to include the master recording and underlying 
+                        composition of <strong>"{contractModal.track.title}"</strong> ({contractModal.track.artist}) as part of 
+                        the continuous DJ mix entitled <strong>"{contractModal.mix.title}"</strong>.
+                      </>
+                    )}
                   </p>
                 </div>
                 <div className="contract-clause">
                   <strong>Clause 2: Prior Agreement Requirement (Condition Precedent)</strong>
                   <p>
-                    TuneMavens platform governance mandates that prior to having any sales or monetized downloads, all IP owners 
-                    featured in the tracklist must be in complete agreement. Commercial sales remain locked until all parties execute this agreement.
+                    {contractModal.mix.creation_type === 'remix_original_beat'
+                      ? 'Prior to clearance, this rework streams completely free with mandatory attribution to the creator/IP owner and strictly no selling. Upon electronic signature of this clearance, the remix is unlocked for commercial download sales and streaming.'
+                      : 'TuneMavens platform governance mandates that prior to having any sales or monetized downloads, all IP owners featured in the tracklist must be in complete agreement. Commercial sales remain locked until all parties execute this agreement.'}
                   </p>
                 </div>
                 <div className="contract-clause">
                   <strong>Clause 3: Revenue Split Waterfall</strong>
                   <p>
-                    Gross revenue collected from retail sales ({formatPrice(contractModal.mix.commercial_price)} / ${contractModal.mix.commercial_price?.toFixed(2)} USD) is allocated via the TuneLedger:
-                    DJ Curation Share ({contractModal.mix.dj_split_percentage}%), Track IP Owners Pool ({contractModal.mix.track_owners_split_percentage}% 
-                    distributed according to cue points), and TuneMavens Escrow/Admin (10%).
+                    {contractModal.mix.creation_type === 'remix_original_beat' ? (
+                      <>
+                        Gross revenue collected from retail sales ({formatPrice(contractModal.mix.commercial_price)} / ${contractModal.mix.commercial_price?.toFixed(2)} USD) is allocated via the TuneLedger: 
+                        DJ Originally Created Beatmaker ({contractModal.mix.dj_split_percentage}%), Original Song Rights Holder ({contractModal.mix.track_owners_split_percentage}%), and TuneMavens Escrow/Admin (10%).
+                      </>
+                    ) : (
+                      <>
+                        Gross revenue collected from retail sales ({formatPrice(contractModal.mix.commercial_price)} / ${contractModal.mix.commercial_price?.toFixed(2)} USD) is allocated via the TuneLedger: 
+                        DJ Curation Share ({contractModal.mix.dj_split_percentage}%), Track IP Owners Pool ({contractModal.mix.track_owners_split_percentage}% distributed according to cue points), and TuneMavens Escrow/Admin (10%).
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

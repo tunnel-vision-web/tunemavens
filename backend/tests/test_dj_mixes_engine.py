@@ -319,3 +319,191 @@ def test_free_promotional_streaming_until_cleared_with_ip_credits(auth_headers):
     assert cleared_mix["sale_locked"] is False
     assert cleared_mix["free_stream_until_cleared"] is False
 
+
+def test_dj_remix_with_original_beat_lifecycle(auth_headers, dj_user):
+    """Test Requirement 2:
+    DJ creates a new version of a song with their originally created beat.
+    Before clearance: streams completely free, strictly no selling, with full accreditation to creator/IP owner.
+    After clearance: can be sold and/or streamed with split cascade revenue payouts.
+    """
+    create_payload = {
+        "title": "Aisha Okoro - Nairobi Sunset (DJ Master Afro-Tech Original Beat Rework)",
+        "description": "Original high-energy Afro-Tech drum and synth arrangement composed by DJ Master over Aisha Okoro's vocal track.",
+        "genre": "Afro House",
+        "bpm_avg": 124,
+        "duration_seconds": 360,
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        "creation_type": "remix_original_beat",
+        "is_remix_original_beat": True,
+        "original_song_title": "Nairobi Sunset",
+        "original_song_artist": "Aisha Okoro",
+        "remix_beat_description": "Original Afro-Tech beat production and 3-step percussions composed by DJ Master",
+        "commercial_price": 4.00,
+        "dj_split_percentage": 50.0,
+        "track_owners_split_percentage": 40.0,
+        "platform_fee_percentage": 10.0,
+        "tracklist": [
+            {
+                "id": "trk_remix_og",
+                "title": "Nairobi Sunset",
+                "artist": "Aisha Okoro",
+                "ip_owner_name": "Aisha Okoro Publishing Ltd",
+                "ip_owner_email": "aisha@tunemavens.com",
+                "start_time": 0,
+                "end_time": 360,
+                "duration_seconds": 360,
+                "split_percentage": 100.0,
+                "clearance_status": "pending"
+            }
+        ]
+    }
+    create_res = client.post("/api/dj/mixes", json=create_payload, headers=auth_headers)
+    assert create_res.status_code == 200
+    remix = create_res.json()
+    remix_id = remix["id"]
+    assert remix["creation_type"] == "remix_original_beat"
+    assert remix["is_remix_original_beat"] is True
+
+    # 1. PRE-CLEARANCE CHECKS:
+    # Streams completely free, strictly no selling, full accreditation to original creator/IP owner
+    assert remix["free_to_stream"] is True
+    assert remix["streaming_mode"] == "free_promotional"
+    assert remix["free_stream_until_cleared"] is True
+    assert remix["sale_locked"] is True
+    assert remix["can_sell"] is False
+    assert remix["can_stream"] is True
+    assert remix["ip_credits_mandatory"] is True
+    assert len(remix["credited_ip_owners"]) == 1
+    # Check that accreditation statement credits both original song creator and DJ's originally created beat
+    credit_stmt = remix["credited_ip_owners"][0]["credit_statement"]
+    assert "Original Composition & Recording" in credit_stmt
+    assert "Aisha Okoro" in credit_stmt
+    assert "Originally Created Beat" in credit_stmt
+
+    # Attempting purchase prior to clearance MUST be blocked (403)
+    blocked_buy = client.post(f"/api/dj/mixes/{remix_id}/purchase", json={"payment_method": "wallet"}, headers=auth_headers)
+    assert blocked_buy.status_code == 403
+    detail = blocked_buy.json()["detail"]
+    assert detail["error"] == "Commercial sales locked"
+    assert detail["creation_type"] == "remix_original_beat"
+    assert "free to stream" in detail["message"].lower()
+
+    # Streaming endpoint confirms promotional free streaming and accreditation
+    stream_res = client.get(f"/api/dj/mixes/{remix_id}/stream")
+    assert stream_res.status_code == 200
+    stream_data = stream_res.json()
+    assert stream_data["free_to_stream"] is True
+    assert stream_data["streaming_mode"] == "free_promotional"
+    assert stream_data["can_sell"] is False
+
+    # 2. DISPATCH CLEARANCE:
+    dispatch_res = client.post(f"/api/dj/mixes/{remix_id}/request-clearance", headers=auth_headers)
+    assert dispatch_res.status_code == 200
+    # Verify contract created has kind="dj_remix_clearance"
+    contract = db.contracts.find_one({"linked_deal_id": remix_id, "kind": "dj_remix_clearance"})
+    assert contract is not None
+    assert "DJ Remix & Original Beat Production" in contract["title"]
+
+    # 3. SIGN CLEARANCE:
+    sign_res = client.post(
+        f"/api/dj/mixes/{remix_id}/sign-clearance/trk_remix_og",
+        json={"signer_name": "Aisha Okoro", "signer_email": "aisha@tunemavens.com"},
+        headers=auth_headers
+    )
+    assert sign_res.status_code == 200
+    sign_data = sign_res.json()
+    assert sign_data["all_cleared"] is True
+    cleared_remix = sign_data["mix"]
+
+    # 4. POST-CLEARANCE CHECKS:
+    # Now unlocked: can be sold AND streamed commercially!
+    assert cleared_remix["sale_locked"] is False
+    assert cleared_remix["can_sell"] is True
+    assert cleared_remix["streaming_mode"] == "commercial"
+    assert cleared_remix["status"] == "published"
+    assert cleared_remix["clearance_policy"]["commercial_monetization_unlocked"] is True
+
+    # 5. COMMERCIAL PURCHASE SUCCEEDS:
+    # Revenue split cascade executes: 50% DJ Beat Producer / 40% Original Song IP Owner / 10% Platform fee
+    buy_res = client.post(f"/api/dj/mixes/{remix_id}/purchase", json={"payment_method": "wallet"}, headers=auth_headers)
+    assert buy_res.status_code == 200
+    buy_result = buy_res.json()
+    assert buy_result["status"] == "success"
+    assert buy_result["price_paid"] == 4.00
+    splits = buy_result["splits_distributed"]
+    # DJ Beatmaker: 50% of 4.00 = 2.00
+    assert splits["dj_payout"] == 2.00
+    # Platform: 10% of 4.00 = 0.40
+    assert splits["platform_fee"] == 0.40
+    # Original Song IP Owner: 40% of 4.00 = 1.60
+    assert splits["track_owners_pool"] == 1.60
+    assert len(splits["track_allocations"]) == 1
+    assert splits["track_allocations"][0]["allocated_amount"] == 1.60
+
+
+def test_dj_entirely_own_original_creation_monetization(auth_headers, dj_user):
+    """Test Requirement 3:
+    DJ has a mix/creations that are entirely his own, and these can be monetized.
+    Immediately published, sale_locked=False, monetized from day one with 90% sovereign payout.
+    """
+    create_payload = {
+        "title": "Sovereign Modular Analog Beats Live Experience",
+        "description": "Entirely original hardware synth and drum machine performance with 100% DJ-owned beats and compositions.",
+        "genre": "Techno",
+        "bpm_avg": 132,
+        "duration_seconds": 1800,
+        "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        "creation_type": "original_creation",
+        "is_original_ip_only": True,
+        "commercial_price": 6.00,
+        "auto_extract_tracks": False,
+        "tracklist": [
+            {
+                "id": "trk_self_1",
+                "title": "Subharmonic Resonance (Original Beat)",
+                "artist": "DJ Test Master",
+                "ip_owner_name": "DJ Test Master",
+                "ip_owner_email": "dj_curator_test@tunemavens.com",
+                "start_time": 0,
+                "end_time": 900,
+                "duration_seconds": 900,
+                "split_percentage": 50.0,
+                "clearance_status": "self_owned"
+            },
+            {
+                "id": "trk_self_2",
+                "title": "Acid Grid Oscillation (Original Beat)",
+                "artist": "DJ Test Master",
+                "ip_owner_name": "DJ Test Master",
+                "ip_owner_email": "dj_curator_test@tunemavens.com",
+                "start_time": 900,
+                "end_time": 1800,
+                "duration_seconds": 900,
+                "split_percentage": 50.0,
+                "clearance_status": "self_owned"
+            }
+        ]
+    }
+    create_res = client.post("/api/dj/mixes", json=create_payload, headers=auth_headers)
+    assert create_res.status_code == 200
+    mix = create_res.json()
+    mix_id = mix["id"]
+    assert mix["creation_type"] == "original_creation"
+    assert mix["is_original_ip_only"] is True
+    assert mix["sale_locked"] is False
+    assert mix["can_sell"] is True
+    assert mix["status"] == "published"
+    assert mix["clearance_policy"]["commercial_monetization_unlocked"] is True
+
+    # Commercial purchase succeeds immediately without clearance delay
+    buy_res = client.post(f"/api/dj/mixes/{mix_id}/purchase", json={"payment_method": "wallet"}, headers=auth_headers)
+    assert buy_res.status_code == 200
+    buy_data = buy_res.json()
+    assert buy_data["status"] == "success"
+    assert buy_data["price_paid"] == 6.00
+    splits = buy_data["splits_distributed"]
+    # 90% goes to DJ ($5.40) and 10% platform ($0.60)
+    assert splits["dj_payout"] == 5.40
+    assert splits["platform_fee"] == 0.60
+
+

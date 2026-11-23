@@ -3685,5 +3685,67 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - Production build: `npm --prefix apps/tunestream run build` and `npm --prefix apps/portal run build` compiled with 0 errors.
   - Browser inspection: Verified `http://localhost:3001/` and `http://localhost:3001/#/?view=explore`. Explicit releases (e.g. *Explicit Midnight Album*) display the black `[E] EXPLICIT` badge directly stacked above `Album` with exact matching width (`69.25px`), while non-explicit releases strictly omit the badge.
 
+---
 
+### Phase 43 — DJ Mix Revisions: Free Promotional Streaming with IP Accreditation, DJ Remixes with Original Beats & Sovereign 100% Original DJ Creations (Shipped)
+- **Problem Statement & Authoritative Requirements**:
+  1. **Requirement 1 (Curated DJ Mixes with Uncleared Songs)**: In the event that a DJ Mix contains any songs that have not been cleared yet, these must stream completely free with strictly zero selling, while providing mandatory full accreditation to each creator/IP owner. Commercial sales remain locked until 100% of IP owners execute digital clearance agreements.
+  2. **Requirement 2 (DJ Remixes / Reworks with DJ's Originally Created Beat)**: There are times when a DJ creates a new version of a song (DJ Mix / Rework) with their own originally created beat. Prior to clearance, this rework streams 100% free with full accreditation to the song's IP owner, with no selling permitted. After clearance is executed by the rights holder, this track can be sold as a commercial download and/or streamed with an agreed revenue split cascade: **50% DJ Beatmaker / 40% Song Rights Holder / 10% TuneMavens Platform**.
+  3. **Requirement 3 (100% DJ Original Creations & Mixes)**: A DJ may have a mix or musical creations that are entirely their own original beats, arrangements, and compositions. These require zero third-party clearances and are monetized immediately from day one for commercial sales and streaming with a **90% Sovereign DJ Payout** (10% Platform Protocol Fee).
+  - All three creation formats must be deeply integrated into the DJ Mix upload workflow across all wizard steps, technical ingests, contracts, email/in-app notifications, and catalog/stream interfaces.
+
+- **Architectural Solutions & Changes**:
+  - **Backend Data Models (`backend/models.py`)**:
+    - Enhanced `DjMix` model with canonical creation attributes:
+      - `creation_type: str = "curated_mix"` (`curated_mix`, `remix_original_beat`, `original_creation`).
+      - `is_remix_original_beat: bool = False`.
+      - `original_song_title: Optional[str]`, `original_song_artist: Optional[str]`, `original_song_owner: Optional[str]`, `original_song_email: Optional[str]`.
+      - `remix_beat_description: Optional[str]`.
+      - `clearance_policy: Optional[dict]` containing runtime monetization policy flags (`pre_clearance_free_streaming`, `post_clearance_commercial_sales`, `post_clearance_commercial_streaming`, `mandatory_ip_accreditation`).
+  - **Contract Engine & Digital Legal Templates (`backend/services/contract_templates.py`)**:
+    - Created authoritative `dj_remix_clearance` contract template with specialized legal clauses:
+      - *Derivative Work & Original Beat License*: Grants non-exclusive rights to distribute the rework pairing the master vocal/composition with the DJ's original beat.
+      - *Pre-Clearance Free Promotional Stream*: Codifies that the track streams free with mandatory creator accreditation and zero sales before clearance.
+      - *Post-Clearance Commercial Distribution*: Authorizes commercial paid downloads and paid streaming upon execution.
+      - *Split Cascade*: Enforces 50% DJ Beatmaker, 40% Song Rights Holder, and 10% Platform administration escrow.
+  - **Notifications & Account Setup (`backend/account_setup.py`)**:
+    - Implemented `send_dj_remix_clearance_invitation(...)` with dedicated transactional notifications explaining the original beat rework, pre-clearance free streaming policy, attribution transparency, and post-clearance monetization unlocks.
+  - **FastAPI DJ Mixes Engine (`backend/routes/dj_mixes_router.py`)**:
+    - Updated `MixCreateRequest` and `create_dj_mix` to route all 3 creation types with proper default splits:
+      - `remix_original_beat`: defaults to 50% DJ / 40% Track Owner / 10% Platform; automatically synthesizes tracklist entry from original song metadata.
+      - `original_creation`: defaults to 90% DJ / 10% Platform, `is_original_ip_only=True`, `sale_locked=False`.
+      - `curated_mix`: defaults to 40% DJ / 50% Track Owners / 10% Platform, `sale_locked=True` if any track is pending.
+    - Updated `_format_mix_response(doc)` to compute `creation_type`, `sale_locked`, `can_sell`, `can_stream`, `free_stream_until_cleared`, `clearance_policy`, and `credited_ip_owners` with dual attribution (original creator + DJ beatmaker).
+    - Hardened `purchase_dj_mix` to enforce 403 Forbidden with distinct descriptive messages:
+      - `remix_original_beat`: *"Commercial checkout locked. This DJ remix features an originally produced beat reworking '{original_song_title}'. It streams completely free with mandatory attribution to creator '{original_song_artist}'. Commercial downloads unlock once the rights holder signs the clearance agreement."*
+      - `curated_mix`: *"Commercial checkout is locked. In accordance with platform governance, this DJ mix contains un-cleared recordings and streams 100% free with full creator accreditation."*
+    - Updated `list_dj_mixes` to support query filtering by `creation_type` (`curated_mix`, `remix_original_beat`, `original_creation`).
+    - Seeded authoritative DJ Remix: `"Midnight Grooves (DJ Maphoria Original 3-Step Beat Rework)"` with pre-clearance status, original beat description, and Aisha Okoro accreditation.
+  - **Frontend DJ Portal (`apps/portal/src/components/dj/DJMixesManager.jsx` & `.css`)**:
+    - **Step 1 (Technical Details)**: Added 3-way Creation Format selector cards (`Curated DJ Mix`, `DJ Remix with Original Beat`, `100% DJ Original Creation`). When Remix is selected, dynamic inputs appear for *Original Song Title*, *Original Song Artist*, *Song Rights Holder / Label*, *Rights Holder Email*, and *DJ Beat & Arrangement Notes*.
+    - **Step 2 (Rights & Publishing Pathway)**: Tailored cards highlighting the 3 distinct pathways and user requirements (amber theme for Remixes, purple for Original IP, cyan for Curated Mixes).
+    - **Step 3 (Track Extraction & Ingest)**: Dynamic policy banner reflecting the exact clearance and attribution rules for the chosen format.
+    - **Step 4 (Revenue Split Cascade & Legal Precedent)**: Waterfall preview dynamically calculates splits (50/40/10 for remixes, 90/10 for original creations, 40/50/10 for curated mixes) with tailored condition precedent notices.
+    - **Catalog View**:
+      - Sub-tab switcher with dedicated filters: `All Mixes`, `My Uploads`, `DJ Remixes (Original Beats)`, `100% Original IP`, `Free to Stream · Clearance In-Progress`, and `Commercial Ready`.
+      - Mix card badges dynamically distinguish between `DJ Remix (Original Beat) · Free Stream` (amber), `DJ Remix · Cleared to Sell & Stream` (green), `100% Original IP · Sovereign` (purple), and `Curated Free Stream` (cyan).
+      - Playlist preview and footer price tags clearly state "FREE TO STREAM · Full IP Credits Attributed" when sales are locked.
+    - **Mix Detail View**:
+      - Hero badge row and prior agreement enforcement callout display format-specific legal explanations.
+      - Contract review modal loads the derivative rework clearance license for remixes.
+      - Sale locked modal explains the two-fold free streaming policy (DJ/artist exposure + platform experience for invited IP owners).
+  - **TuneStream Consumer Hub (`apps/tunestream/src/App.jsx`)**:
+    - Updated `TuneStreamDjMixesPanel` with `🎛️ DJ Remix (Original Beat) · Free Stream` and `✓ DJ Remix · Cleared to Sell & Stream` status badges.
+    - Added seed remix `Midnight Grooves (DJ Maphoria Original 3-Step Beat Rework)` to authoritative mixes list.
+
+- **Verification & Test Suite**:
+  - Automated backend tests: `python -m pytest backend/tests/test_dj_mixes_engine.py` passed **7/7 tests** in 34.33s:
+    - `test_dj_remix_with_original_beat_lifecycle`: Verifies pre-clearance free streaming, 403 purchase lock, original song creator accreditation, contract generation (`dj_remix_clearance`), electronic signature execution, post-clearance purchase unlock, and 50/40/10 split cascade settlement.
+    - `test_dj_entirely_own_original_creation_monetization`: Verifies immediate monetization, zero clearance delays, and 90% sovereign DJ payout.
+    - `test_mix_sales_locked_when_unapproved`: Verifies curated mix purchase locking while un-cleared.
+    - `test_mix_sales_unlocked_after_all_clearances`: Verifies commercial unlock upon 100% sign-off.
+    - `test_mix_clearance_lifecycle`: Verifies request dispatch, contract signing, and SHA-256 seal generation.
+    - `test_tracklist_boundary_extraction`: Verifies waveform cue sheet parsing.
+    - `test_mix_purchase_split_cascade`: Verifies TuneLedger split cascade settlement.
+  - Persona & Catalogue Suite: `python backend/tests/verify_personas_mixes_catalogue.py` executed cleanly with 100% success across all personas and DJ mix creation.
 

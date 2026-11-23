@@ -765,6 +765,98 @@ def send_dj_mix_clearance_invitation(
     )
 
 
+def send_dj_remix_clearance_invitation(
+    to: str,
+    name: str,
+    mix_title: str,
+    track_title: str,
+    dj_name: str,
+    contract_id: str,
+    split_pct: float,
+    commercial_price: float = 4.99,
+    mix_id: str = "",
+    role: str = "creator"
+) -> str:
+    """Dispatched when a DJ creates a new version of a song with an original beat and requests clearance."""
+    first = (name or "there").split()[0]
+    estimated_payout_per_sale = (split_pct / 100.0) * commercial_price
+
+    inner_html = f"""
+<h2 style="margin:0 0 12px 0;color:#f8fafc;font-size:20px;font-weight:700;">DJ Remix & Original Beat Clearance Request</h2>
+<p style="margin:0 0 16px 0;color:#cbd5e1;font-size:14px;">Hi {first}, DJ <strong>{dj_name}</strong> has created a new version of your song <strong>"{track_title}"</strong> using their originally produced beat/instrumental, and is requesting your clearance approval on TuneMavens.</p>
+
+<div style="background:#131c2d;border:1px solid #1e293b;border-radius:3px;padding:18px 20px;margin:20px 0;">
+  <div style="font-size:16px;font-weight:700;color:#f8fafc;margin-bottom:8px;">Remix Title: {mix_title}</div>
+  <div style="font-size:14px;color:#22d3ee;margin-bottom:12px;">Original Song: <strong>{track_title}</strong> (Credited Rights Holder: {name})</div>
+  <div style="font-size:13px;color:#a78bfa;margin-bottom:12px;">Beat Producer: <strong>{dj_name}</strong> (Original Composition & Production)</div>
+  
+  <table style="width:100%;border-collapse:collapse;font-size:13px;color:#cbd5e1;margin-top:10px;">
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Commercial Retail Price:</td>
+      <td style="padding:6px 0;font-weight:600;text-align:right;">${commercial_price:.2f} USD</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Proposed Revenue Split:</td>
+      <td style="padding:6px 0;font-weight:600;text-align:right;color:#10b981;">{split_pct:.2f}% of gross (${estimated_payout_per_sale:.2f} / sale or monetized stream)</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Current Streaming Status:</td>
+      <td style="padding:6px 0;font-weight:600;text-align:right;color:#22d3ee;">100% Free Promotional Streaming Active</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Creator Accreditation:</td>
+      <td style="padding:6px 0;font-weight:600;text-align:right;color:#a78bfa;">100% Fully Credited as Song & Master Rights Owner</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Commercial Selling Status:</td>
+      <td style="padding:6px 0;font-style:italic;text-align:right;color:#f59e0b;">Strictly NO selling until your clearance approval</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#94a3b8;">Agreement Ref:</td>
+      <td style="padding:6px 0;font-family:monospace;text-align:right;">{contract_id}</td>
+    </tr>
+  </table>
+</div>
+
+<div style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);border-radius:3px;padding:14px 16px;margin:16px 0;font-size:13px;color:#cbd5e1;line-height:1.5;">
+  <strong style="color:#22d3ee;">Policy & Monetization Roadmap:</strong>
+  <ul style="margin:6px 0 0;padding-left:18px;">
+    <li><strong>Before Clearance:</strong> This rework is streaming 100% free with full accreditation to you, giving your song exposure to club and festival audiences. There is strictly no commercial selling permitted.</li>
+    <li><strong>After Clearance:</strong> Once you review and sign this clearance agreement, this new version can be <strong>sold as a commercial download and/or monetized on stream</strong>, distributing your {split_pct:.1f}% royalty share directly to your wallet in real-time.</li>
+  </ul>
+</div>
+
+<p style="margin:0 0 16px 0;color:#cbd5e1;font-size:14px;">
+  Review the audio production, inspect the proposed split waterfall, and execute the clearance agreement with cryptographic SHA-256 seal.
+</p>
+<div style="margin:20px 0;">
+  {_button(f"{PUBLIC_APP_URL}/#/contracts?id={contract_id}&mix_id={mix_id}", "Review Rework & Sign Clearance Agreement")}
+</div>"""
+
+    html = _email_wrapper(inner_html, "DJ Remix Clearance Request", role)
+    text = (
+        f"DJ Remix Clearance Request from {dj_name}: Clearance requested for new original beat version of '{track_title}'. "
+        f"Proposed split: {split_pct:.2f}% (${estimated_payout_per_sale:.2f}/sale). Review on TuneMavens: Contract {contract_id}."
+    )
+    return send_email(
+        to=to,
+        subject=f"Action Required: Clearance for Original Beat DJ Remix of '{track_title}' by {dj_name}",
+        html=html,
+        text=text,
+        event_type="dj_remix_clearance_request",
+        role=role,
+        recipient_name=name,
+        metadata={
+            "contract_id": contract_id,
+            "mix_title": mix_title,
+            "track_title": track_title,
+            "dj_name": dj_name,
+            "split_pct": split_pct,
+            "mix_id": mix_id
+        }
+    )
+
+
 # Re-export WhatsApp communication primitives
 from services.whatsapp_service import send_whatsapp, sanitize_phone_number, generate_wa_direct_url
 

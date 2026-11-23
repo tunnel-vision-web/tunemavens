@@ -18,10 +18,11 @@ foreach ($port in $targetPorts) {
     }
 }
 
-# Clean up any lingering nodemon processes from prior runs
+# Clean up any lingering nodemon or preview processes from prior runs
 Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { 
     $_.CommandLine -like "*tunemavens*nodemon*" -or 
-    $_.CommandLine -like "*nodemon src/server.js*" 
+    $_.CommandLine -like "*nodemon src/server.js*" -or
+    $_.CommandLine -like "*serve_preview.js*"
 } | ForEach-Object {
     cmd /c "taskkill /F /T /PID $($_.ProcessId) >nul 2>&1"
     Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue

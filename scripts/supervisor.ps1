@@ -1,5 +1,11 @@
 # TuneMavens Ecosystem Background Supervisor
 $targetPorts = @(3000, 3001, 3002, 5000, 8001)
+$root = "c:\BOCM\Apps\tunemavens"
+$logDir = "$root\logs"
+
+if (!(Test-Path $logDir)) {
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+}
 
 foreach ($port in $targetPorts) {
     $conns = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
@@ -12,10 +18,11 @@ foreach ($port in $targetPorts) {
     }
 }
 
-# Clean up any lingering nodemon processes
+# Clean up any lingering node/preview/nodemon processes from prior runs
 Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { 
     $_.CommandLine -like "*tunemavens*nodemon*" -or 
-    $_.CommandLine -like "*nodemon src/server.js*" 
+    $_.CommandLine -like "*nodemon src/server.js*" -or
+    $_.CommandLine -like "*serve_preview.js*"
 } | ForEach-Object {
     cmd /c "taskkill /F /T /PID $($_.ProcessId) >nul 2>&1"
     Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
@@ -23,27 +30,36 @@ Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
 
 Start-Sleep -Seconds 2
 
-$logDir = "c:\BOCM\Apps\tunemavens\logs"
-if (!(Test-Path $logDir)) {
-    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+function Start-FastApiBackend {
+    Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--host", "0.0.0.0", "--reload", "--reload-dir", "backend" -WorkingDirectory $root -RedirectStandardOutput "$logDir\backend.log" -RedirectStandardError "$logDir\backend_err.log" -WindowStyle Hidden
 }
 
-# 1. FastAPI Backend (Port 8001)
-Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--host", "0.0.0.0", "--reload", "--reload-dir", "backend" -WorkingDirectory "c:\BOCM\Apps\tunemavens" -RedirectStandardOutput "$logDir\backend.log" -RedirectStandardError "$logDir\backend_err.log" -WindowStyle Hidden
+function Start-ExpressApi {
+    Start-Process -FilePath "node" -ArgumentList "src/server.js" -WorkingDirectory "$root\apps\api" -RedirectStandardOutput "$logDir\api.log" -RedirectStandardError "$logDir\api_err.log" -WindowStyle Hidden
+}
 
-# 2. Portal (Port 3000)
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\portal" -RedirectStandardOutput "$logDir\portal.log" -RedirectStandardError "$logDir\portal_err.log" -WindowStyle Hidden
+function Start-Frontends {
+    Start-Process -FilePath "node" -ArgumentList "scripts/serve_preview.js" -WorkingDirectory $root -RedirectStandardOutput "$logDir\frontends.log" -RedirectStandardError "$logDir\frontends_err.log" -WindowStyle Hidden
+}
 
-# 3. TuneStream (Port 3001)
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\tunestream" -RedirectStandardOutput "$logDir\tunestream.log" -RedirectStandardError "$logDir\tunestream_err.log" -WindowStyle Hidden
+# Initial Startup
+Start-FastApiBackend
+Start-ExpressApi
+Start-Frontends
 
-# 4. SyncMavens (Port 3002)
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\syncmavens" -RedirectStandardOutput "$logDir\syncmavens.log" -RedirectStandardError "$logDir\syncmavens_err.log" -WindowStyle Hidden
-
-# 5. Express API (Port 5000)
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "npm.cmd run dev" -WorkingDirectory "c:\BOCM\Apps\tunemavens\apps\api" -RedirectStandardOutput "$logDir\api.log" -RedirectStandardError "$logDir\api_err.log" -WindowStyle Hidden
-
-# Supervisor persistent heartbeat loop
+# Supervisor persistent heartbeat & auto-heal loop
 while ($true) {
-    Start-Sleep -Seconds 30
+    Start-Sleep -Seconds 15
+    $activeConns = Get-NetTCPConnection -LocalPort $targetPorts -State Listen -ErrorAction SilentlyContinue
+    $activePorts = @($activeConns | ForEach-Object { $_.LocalPort })
+
+    if ($activePorts -notcontains 8001) {
+        Start-FastApiBackend
+    }
+    if ($activePorts -notcontains 5000) {
+        Start-ExpressApi
+    }
+    if (($activePorts -notcontains 3000) -or ($activePorts -notcontains 3001) -or ($activePorts -notcontains 3002)) {
+        Start-Frontends
+    }
 }

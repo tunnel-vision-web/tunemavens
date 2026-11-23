@@ -1744,6 +1744,32 @@ function TuneStreamControlsPanel() {
 
 export const AUTHORITATIVE_DJ_MIXES = [
   {
+    id: 'djmix_midnight_grooves_remix',
+    title: 'Midnight Grooves (DJ Maphoria Original 3-Step Beat Rework)',
+    dj_name: 'DJ Maphoria',
+    creation_type: 'remix_original_beat',
+    is_remix_original_beat: true,
+    original_song_title: 'Midnight Grooves',
+    original_song_artist: 'Aisha Okoro',
+    remix_beat_description: 'Original 3-step Amapiano drum patterns, analog bassline, and melodic chord progression produced live by DJ Maphoria',
+    genre: 'Amapiano',
+    bpm_avg: 114,
+    duration_seconds: 360,
+    duration: '06:00',
+    plays_count: 850,
+    commercial_price: 3.99,
+    dj_split_percentage: 50.0,
+    track_owners_split_percentage: 40.0,
+    is_original_ip_only: false,
+    sale_locked: true,
+    artwork_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
+    audio_url: '/api/stream/track/KE-TM1-DJ-005',
+    description: 'New version of Aisha Okoro’s Midnight Grooves with DJ Maphoria’s originally produced 3-step beat. Streams completely free with full accreditation until cleared.',
+    tracklist: [
+      { id: 'remix_track_1', title: 'Midnight Grooves', artist: 'Aisha Okoro', ip_owner_name: 'Aisha Okoro Music Publishing Ltd', ip_owner_email: 'aisha@tunemavens.com', start_time: 0, end_time: 360, duration_seconds: 360, split_percentage: 100.0, clearance_status: 'requested' },
+    ],
+  },
+  {
     id: 'djmix_kilifi_sunrise',
     title: 'Kilifi New Year Sunrise Ritual (Afro-Tech Set)',
     dj_name: 'DJ K-Souldier',
@@ -2017,8 +2043,8 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
                   <span style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(6,8,19,0.85)', color: '#22d3ee', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
                     {mix.genre} · {mix.bpm_avg || 120} BPM
                   </span>
-                  <span style={{ position: 'absolute', top: '10px', right: '10px', background: mix.is_original_ip_only ? 'rgba(168,85,247,0.9)' : mix.sale_locked ? 'rgba(34,211,238,0.95)' : 'rgba(16,185,129,0.9)', color: mix.sale_locked && !mix.is_original_ip_only ? '#060813' : '#fff', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
-                    {mix.is_original_ip_only ? '100% Original IP' : mix.sale_locked ? '🎧 Free to Stream · Clearance In Progress' : '✓ 100% Rights Cleared'}
+                  <span style={{ position: 'absolute', top: '10px', right: '10px', background: mix.creation_type === 'remix_original_beat' ? (mix.sale_locked ? 'rgba(245,158,11,0.95)' : 'rgba(16,185,129,0.9)') : mix.is_original_ip_only ? 'rgba(168,85,247,0.9)' : mix.sale_locked ? 'rgba(34,211,238,0.95)' : 'rgba(16,185,129,0.9)', color: (mix.sale_locked && mix.creation_type !== 'remix_original_beat' && !mix.is_original_ip_only) ? '#060813' : '#fff', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
+                    {mix.creation_type === 'remix_original_beat' ? (mix.sale_locked ? '🎛️ DJ Remix (Original Beat) · Free Stream' : '✓ DJ Remix · Cleared to Sell & Stream') : mix.is_original_ip_only ? '100% Original IP' : mix.sale_locked ? '🎧 Free to Stream · Clearance In Progress' : '✓ 100% Rights Cleared'}
                   </span>
                 </div>
                 <div style={{ padding: '16px' }}>

@@ -390,11 +390,109 @@ def dj_mix_clearance_template(context: dict) -> tuple[str, list[dict]]:
     return title, clauses
 
 
+def dj_remix_clearance_template(context: dict) -> tuple[str, list[dict]]:
+    mix_title = context.get("mix_title") or context.get("remix_title") or "DJ Remix with Original Beat"
+    dj_name = context.get("dj_name") or "DJ Beat Producer"
+    track_title = context.get("track_title") or context.get("original_song_title") or "Featured Recording"
+    artist = context.get("artist") or context.get("original_song_artist") or "Featured Artist"
+    ip_owner_name = context.get("ip_owner_name") or "Song Rights Holder"
+    price = float(context.get("commercial_price") or 4.99)
+    dj_split_pct = float(context.get("dj_split_pct") or 50.0)
+    track_owners_split_pct = float(context.get("track_owners_split_pct") or 40.0)
+    platform_fee_pct = float(context.get("platform_fee_pct") or 10.0)
+
+    title = f"DJ Remix & Original Beat Production Clearance License — '{track_title}' (Rework by {dj_name})"
+    clauses = [
+        {
+            "id": "parties",
+            "title": "Parties & Engagement",
+            "body": (
+                f"This Agreement is entered into between {dj_name} (the \"DJ Beat Producer\"), "
+                f"{ip_owner_name} (the \"Song Rights Holder & IP Owner\" of the original recording/composition '{track_title}' performed by {artist}), "
+                "and TuneMavens (the \"Platform & Escrow Administrator\"). All parties agree to binding electronic execution."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Standard multi-party identification for derivative work clearance enforceability.",
+        },
+        {
+            "id": "scope_and_derivative_grant",
+            "title": "Scope & Derivative Work License Grant",
+            "body": (
+                f"The Song Rights Holder grants {dj_name} and TuneMavens a worldwide, non-exclusive commercial license "
+                f"to synchronize and combine the master recording and/or underlying musical composition of '{track_title}' "
+                f"with an originally produced beat/instrumental composed by {dj_name}, creating the derivative DJ remix/rework "
+                f"entitled '{mix_title}'."
+            ),
+            "negotiable": True,
+        },
+        {
+            "id": "pre_clearance_free_streaming",
+            "title": "Pre-Clearance Status: Promotional Free Streaming & Mandatory Accreditation",
+            "body": (
+                f"In the event that clearance is pending or has not been fully executed, the rework '{mix_title}' will stream "
+                f"completely free in lossless audio across TuneMavens and TuneStream. There shall be strictly NO commercial selling "
+                f"or paid downloads prior to clearance. Full and prominent accreditation to the creator/IP owner ({ip_owner_name} / {artist}) "
+                f"is strictly enforced across all playback interfaces."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Mandatory platform policy: Uncleared DJ reworks stream free with complete creator accreditation.",
+        },
+        {
+            "id": "post_clearance_commercial_monetization",
+            "title": "Post-Clearance Status: Commercial Sale & Monetized Streaming",
+            "body": (
+                "Upon mutual electronic execution of this Agreement by the Song Rights Holder, all commercial locks are dissolved. "
+                f"The DJ remix '{mix_title}' can be sold as a digital download and/or streamed as monetized commercial audio, "
+                "with automated real-time royalty distributions triggered on every retail sale and monetized stream."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Platform rule: Commercial sales and monetized streaming unlock immediately upon clearance.",
+        },
+        {
+            "id": "revenue_splits",
+            "title": "Revenue Waterfall & Split Cascade",
+            "body": (
+                f"Gross commercial revenue generated from the sale or streaming of '{mix_title}' (retail baseline: ${price:.2f} USD) "
+                f"shall be automatically distributed via the TuneMavens Split Cascade as follows: "
+                f"{dj_split_pct:.1f}% to DJ Beat Producer ({dj_name}); "
+                f"{track_owners_split_pct:.1f}% to Original Song Rights Holder ({ip_owner_name}); "
+                f"and {platform_fee_pct:.1f}% to TuneMavens for protocol processing and escrow administration."
+            ),
+            "negotiable": True,
+        },
+        {
+            "id": "attribution_and_metadata",
+            "title": "Accreditation & Creator Credit Integrity",
+            "body": (
+                f"The release shall at all times be officially accredited as '{track_title} ({dj_name} Remix / Original Beat Rework)', "
+                f"crediting {artist} as original performer/songwriter and {dj_name} as beatmaker/producer. Proper ISRC and publishing "
+                "metadata shall be attached in all digital streams and file downloads."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Accreditation to both the original creator and beatmaker is mandatory.",
+        },
+        {
+            "id": "warranties_and_seal",
+            "title": "Warranties & Cryptographic Seal",
+            "body": (
+                "The Song Rights Holder warrants that they possess the legal power to grant this derivative synchronization license. "
+                f"{dj_name} warrants that the newly created beat/instrumental is their original production. "
+                "Both parties agree that electronic signatures executed on TuneMavens carry full legal validity under applicable digital commerce laws "
+                "and are permanently sealed with tamper-evident SHA-256 cryptographic signatures."
+            ),
+            "negotiable": False,
+            "non_negotiable_reason": "Standard mutual copyright and authenticity warranty block.",
+        },
+    ]
+    return title, clauses
+
+
 TEMPLATES = {
     "publishing": publishing_template,
     "distribution": distribution_template,
     "catalogue_acquisition": catalogue_acquisition_template,
     "dj_mix_clearance": dj_mix_clearance_template,
+    "dj_remix_clearance": dj_remix_clearance_template,
 }
 
 

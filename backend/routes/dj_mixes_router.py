@@ -27,6 +27,7 @@ from models import Contract, ContractClause, ContractInvitee, DjMix, DjMixTrackI
 from services.contract_templates import build_contract
 from account_setup import (
     send_dj_mix_clearance_invitation,
+    send_dj_remix_clearance_invitation,
     send_contract_executed_notification,
 )
 
@@ -67,7 +68,12 @@ class MixCreateRequest(BaseModel):
     duration_seconds: Optional[int] = 3600
     audio_url: str
     artwork_url: Optional[str] = ""
+    creation_type: Optional[str] = "curated_mix"  # "curated_mix" | "remix_original_beat" | "original_creation"
     is_original_ip_only: Optional[bool] = False
+    is_remix_original_beat: Optional[bool] = False
+    original_song_title: Optional[str] = None
+    original_song_artist: Optional[str] = None
+    remix_beat_description: Optional[str] = None
     commercial_price: Optional[float] = 4.99
     currency: Optional[str] = "USD"
     dj_split_percentage: Optional[float] = 40.0
@@ -560,6 +566,55 @@ def seed_dj_mixes_if_empty():
             "total_revenue": 0.0,
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc)
+        },
+        {
+            "user_id": "seed_dj_pro",
+            "dj_name": "DJ Maphoria",
+            "title": "Midnight Grooves (DJ Maphoria Original 3-Step Beat Rework)",
+            "description": "Original Amapiano 3-step beat production and log drum arrangement by DJ Maphoria synchronized with Vibe Master's vocal recording.",
+            "genre": "Amapiano",
+            "bpm_avg": 114,
+            "duration_seconds": 360,
+            "audio_url": sample_audio,
+            "artwork_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80",
+            "creation_type": "remix_original_beat",
+            "is_original_ip_only": False,
+            "is_remix_original_beat": True,
+            "original_song_title": "Midnight Grooves",
+            "original_song_artist": "Vibe Master",
+            "remix_beat_description": "Original 3-step Amapiano beat and log drum arrangement produced live by DJ Maphoria",
+            "commercial_price": 3.49,
+            "currency": "USD",
+            "status": "published",
+            "sale_locked": False,
+            "dj_split_percentage": 50.0,
+            "track_owners_split_percentage": 40.0,
+            "platform_fee_percentage": 10.0,
+            "tracklist": [
+                {
+                    "id": "rmx1",
+                    "title": "Midnight Grooves (Original Composition)",
+                    "artist": "Vibe Master",
+                    "ip_owner_name": "Vibe Master Music",
+                    "ip_owner_email": "vibemaster@tunemavens.com",
+                    "start_time": 0,
+                    "end_time": 360,
+                    "duration_seconds": 360,
+                    "split_percentage": 100.0,
+                    "clearance_status": "signed",
+                    "signed_at": datetime.now(timezone.utc),
+                    "signature_name": "Marcus Vance",
+                    "signature_hash": "SIG-SHA256-RMX-VIBE-001",
+                    "bpm": 114,
+                    "key": "4A"
+                }
+            ],
+            "published_at": datetime.now(timezone.utc),
+            "plays_count": 890,
+            "sales_count": 27,
+            "total_revenue": 94.23,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
         }
     ]
 
@@ -590,7 +645,19 @@ def _format_mix_response(doc: dict) -> dict:
         else:
             pending_count += 1
 
-    is_original = doc.get("is_original_ip_only", False)
+    # Determine creation_type: curated_mix | remix_original_beat | original_creation
+    creation_type = doc.get("creation_type")
+    if not creation_type:
+        if doc.get("is_original_ip_only"):
+            creation_type = "original_creation"
+        elif doc.get("is_remix_original_beat"):
+            creation_type = "remix_original_beat"
+        else:
+            creation_type = "curated_mix"
+    doc["creation_type"] = creation_type
+    doc["is_remix_original_beat"] = (creation_type == "remix_original_beat")
+
+    is_original = (creation_type == "original_creation") or doc.get("is_original_ip_only", False)
     all_cleared = is_original or (total_tracks > 0 and cleared_count == total_tracks)
     
     doc["clearance_summary"] = {
@@ -607,48 +674,73 @@ def _format_mix_response(doc: dict) -> dict:
     if not audio_url or audio_url.endswith(".mp4") or "ForBiggerBlazes" in audio_url:
         doc["audio_url"] = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
 
-    # Ensure sale_locked status correctly reflects complete agreement
-    if is_original or all_cleared:
-        doc["sale_locked"] = False
-    else:
-        doc["sale_locked"] = True
-
-    # Free streaming until cleared logic:
-    # For mixes that have not been cleared by IP owners yet, let these mixes be completely
-    # free to stream until clearances are received.
-    # Serves two purposes:
-    # 1. Gives the DJ and artists exposure while consumers enjoy their music.
-    # 2. Allows invited IP owners an opportunity to experience the platform.
-    # All IP owners must be credited.
-    doc["free_to_stream"] = True
-    doc["stream_access"] = "free"
-    doc["streaming_mode"] = "commercial" if all_cleared else "free_promotional"
+    # Core Policy Enforcement:
+    # 1. Un-cleared songs stream completely free, zero selling, full creator/IP owner accreditation.
+    # 2. DJ remix of a song with original beat: after clearance can be sold and/or streamed.
+    # 3. DJ mix/creations entirely his own can be monetized immediately.
+    doc["sale_locked"] = not all_cleared
+    doc["can_sell"] = all_cleared
+    doc["can_stream"] = True
+    doc["commercial_streaming_eligible"] = all_cleared
     doc["free_stream_until_cleared"] = not all_cleared
+    doc["free_to_stream"] = True
+    doc["streaming_mode"] = "commercial" if all_cleared else "free_promotional"
     doc["ip_credits_mandatory"] = True
+
+    if creation_type == "original_creation" or is_original:
+        rule_desc = "100% DJ Original Creation. Zero third-party clearances required. Monetized immediately for commercial sales and streaming from day one."
+        category_label = "100% DJ Original Creation"
+    elif creation_type == "remix_original_beat":
+        if all_cleared:
+            rule_desc = "DJ created a new version with an original beat. Clearance executed by song IP owner. Unlocked to be sold and streamed with split cascade payouts."
+        else:
+            rule_desc = "DJ created a new version with an original beat. Currently streams 100% free with full accreditation to the song's creator/IP owner. Strictly no selling until clearance is executed; unlocks to be sold and streamed post-clearance."
+        category_label = "DJ Remix / Original Beat Rework"
+    else:
+        if all_cleared:
+            rule_desc = "100% of featured IP owners have executed clearance agreements. Unlocked for commercial sales and streaming."
+        else:
+            rule_desc = "In the event that a DJ mix has any songs that have not been cleared yet, these stream completely free with strictly no selling and full accreditation to the creator/IP owner."
+        category_label = "Multi-Artist Curated DJ Mix"
+
     doc["clearance_policy"] = {
+        "creation_type": creation_type,
+        "category_label": category_label,
+        "policy_rule": rule_desc,
         "free_to_stream": True,
         "streaming_mode": "commercial" if all_cleared else "free_promotional",
         "commercial_sales_locked": not all_cleared,
+        "commercial_monetization_unlocked": all_cleared,
         "ip_owners_credited": True,
-        "purposes": [
-            "Gives the DJ and featured artists exposure while consumers enjoy the music completely free",
-            "Allows invited IP owners an opportunity to experience the platform, cue points, and split waterfall before signing"
+        "governance_rules": [
+            "In the event that a DJ mix has any songs that have not been cleared yet, these stream completely free with zero selling and full accreditation to the creator/IP owner.",
+            "When a DJ creates a new version of a song with their originally created beat, after clearance this can be sold and/or streamed with revenue splits.",
+            "Creations that are entirely the DJ's own original IP are monetized immediately without clearance delays."
         ]
     }
-    doc["credited_ip_owners"] = [
-        {
+
+    dj_name = doc.get("dj_name", "DJ")
+    credited = []
+    for t in tracklist:
+        t_owner = t.get("ip_owner_name", "IP Owner")
+        t_artist = t.get("artist", "")
+        t_title = t.get("title", "")
+        if creation_type == "remix_original_beat":
+            stmt = f"Original Composition & Recording: '{t_title}' by {t_artist} · Rights Holder: {t_owner} · Originally Created Beat: {dj_name}"
+        else:
+            stmt = f"Featured Recording: '{t_title}' by {t_artist} · Rights Holder: {t_owner}"
+        credited.append({
             "track_id": t.get("id"),
-            "track_title": t.get("title"),
-            "artist": t.get("artist"),
-            "ip_owner_name": t.get("ip_owner_name", "IP Owner"),
+            "track_title": t_title,
+            "artist": t_artist,
+            "ip_owner_name": t_owner,
             "ip_owner_email": t.get("ip_owner_email", ""),
             "start_time": t.get("start_time", 0),
             "end_time": t.get("end_time", 0),
             "clearance_status": t.get("clearance_status", "pending"),
-            "credit_statement": f"Featured Recording: '{t.get('title')}' by {t.get('artist')} · Rights Holder: {t.get('ip_owner_name', 'IP Owner')}"
-        }
-        for t in tracklist
-    ]
+            "credit_statement": stmt
+        })
+    doc["credited_ip_owners"] = credited
 
     return doc
 
@@ -813,9 +905,63 @@ def create_dj_mix(payload: MixCreateRequest, current_user: Optional[dict] = Depe
         )
         tracklist = extraction.get("tracklist", [])
 
-    is_original = bool(payload.is_original_ip_only)
-    initial_status = "published" if is_original else "draft"
-    sale_locked = not is_original
+    # Evaluate creation_type according to the 3 platform rules:
+    # 1. Curated mix with external songs (uncleared songs stream completely free, zero selling, full accreditation)
+    # 2. DJ remix of a song with original beat (after clearance can be sold and/or streamed)
+    # 3. 100% DJ original creation (monetized immediately)
+    creation_type = payload.creation_type or "curated_mix"
+    if payload.is_original_ip_only or creation_type == "original_creation":
+        creation_type = "original_creation"
+        is_original = True
+        is_remix = False
+    elif payload.is_remix_original_beat or creation_type == "remix_original_beat":
+        creation_type = "remix_original_beat"
+        is_original = False
+        is_remix = True
+    else:
+        creation_type = "curated_mix"
+        is_original = False
+        is_remix = False
+
+    # For DJ Remix with original beat: if tracklist is empty, synthesize from original song fields
+    if is_remix and not tracklist and payload.original_song_title:
+        orig_song_title = payload.original_song_title.strip()
+        orig_artist = (payload.original_song_artist or "Featured Artist").strip()
+        tracklist = [{
+            "id": secrets.token_hex(4),
+            "title": orig_song_title,
+            "artist": orig_artist,
+            "ip_owner_name": f"{orig_artist} Publishing & Master Rights",
+            "ip_owner_email": f"{re.sub(r'[^a-zA-Z0-9]', '', orig_artist.lower())}@tunemavens.com",
+            "start_time": 0,
+            "end_time": payload.duration_seconds or 360,
+            "duration_seconds": payload.duration_seconds or 360,
+            "split_percentage": 100.0,
+            "clearance_status": "pending",
+            "genre": payload.genre or "Afro House",
+            "bpm": payload.bpm_avg or 124
+        }]
+
+    # Determine default splits based on creation type
+    if is_original:
+        dj_split = payload.dj_split_percentage if payload.dj_split_percentage is not None and payload.dj_split_percentage != 40.0 else 90.0
+        track_split = 0.0
+        platform_split = 10.0
+        initial_status = "published"
+        sale_locked = False
+    elif is_remix:
+        dj_split = payload.dj_split_percentage if payload.dj_split_percentage is not None and payload.dj_split_percentage != 40.0 else 50.0
+        track_split = payload.track_owners_split_percentage if payload.track_owners_split_percentage is not None and payload.track_owners_split_percentage != 50.0 else 40.0
+        platform_split = payload.platform_fee_percentage or 10.0
+        initial_status = "clearance_pending"
+        sale_locked = True
+    else:
+        dj_split = payload.dj_split_percentage or 40.0
+        track_split = payload.track_owners_split_percentage or 50.0
+        platform_split = payload.platform_fee_percentage or 10.0
+        all_already_cleared = len(tracklist) > 0 and all(t.get("clearance_status") in ("signed", "self_owned") for t in tracklist)
+        initial_status = "published" if all_already_cleared else "draft"
+        sale_locked = not all_already_cleared
 
     if is_original and tracklist:
         for t in tracklist:
@@ -833,15 +979,20 @@ def create_dj_mix(payload: MixCreateRequest, current_user: Optional[dict] = Depe
         duration_seconds=payload.duration_seconds or 3600,
         audio_url=payload.audio_url,
         artwork_url=payload.artwork_url or "",
+        creation_type=creation_type,
         is_original_ip_only=is_original,
+        is_remix_original_beat=is_remix,
+        original_song_title=payload.original_song_title,
+        original_song_artist=payload.original_song_artist,
+        remix_beat_description=payload.remix_beat_description,
         commercial_price=payload.commercial_price or 4.99,
         currency=payload.currency or "USD",
         status=initial_status,
         sale_locked=sale_locked,
         tracklist=tracklist,
-        dj_split_percentage=payload.dj_split_percentage or 40.0,
-        track_owners_split_percentage=payload.track_owners_split_percentage or 50.0,
-        platform_fee_percentage=payload.platform_fee_percentage or 10.0,
+        dj_split_percentage=dj_split,
+        track_owners_split_percentage=track_split,
+        platform_fee_percentage=platform_split,
         published_at=datetime.now(timezone.utc) if is_original else None
     )
 
@@ -856,11 +1007,33 @@ def create_dj_mix(payload: MixCreateRequest, current_user: Optional[dict] = Depe
 def list_dj_mixes(
     mine_only: bool = False,
     genre: Optional[str] = None,
+    creation_type: Optional[str] = None,
     q: Optional[str] = None,
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """List DJ mixes with clearance summary, playlist tracks, and commercial readiness."""
     query = {}
+    if mine_only:
+        if not current_user:
+            return []
+        query["user_id"] = str(current_user["_id"])
+    else:
+        # Public catalog shows published or user's own mixes
+        or_conditions = [
+            {"status": "published"},
+            {"status": "clearance_pending"}
+        ]
+        if current_user:
+            or_conditions.append({"user_id": str(current_user["_id"])})
+        query["$or"] = or_conditions
+
+    if creation_type and creation_type.lower() != "all":
+        if creation_type == "remix_original_beat":
+            query["$or"] = [{"creation_type": "remix_original_beat"}, {"is_remix_original_beat": True}]
+        elif creation_type == "original_creation":
+            query["$or"] = [{"creation_type": "original_creation"}, {"is_original_ip_only": True}]
+        else:
+            query["creation_type"] = creation_type
     if mine_only:
         if not current_user:
             return []
@@ -924,13 +1097,17 @@ def get_dj_mix_stream(mix_id: str, current_user: Optional[dict] = Depends(get_op
         "mix_id": formatted["id"],
         "title": formatted["title"],
         "dj_name": formatted["dj_name"],
+        "creation_type": formatted.get("creation_type", "curated_mix"),
         "audio_url": formatted["audio_url"],
         "free_to_stream": True,
         "streaming_mode": formatted["streaming_mode"],
         "free_stream_until_cleared": formatted["free_stream_until_cleared"],
+        "sale_locked": formatted.get("sale_locked", True),
+        "can_sell": formatted.get("can_sell", False),
         "ip_credits_mandatory": True,
         "credited_ip_owners": formatted.get("credited_ip_owners", []),
-        "clearance_summary": formatted.get("clearance_summary", {})
+        "clearance_summary": formatted.get("clearance_summary", {}),
+        "clearance_policy": formatted.get("clearance_policy", {})
     }
 
 
@@ -1106,12 +1283,14 @@ def request_all_clearances(
         }
 
         # Build contract clauses using the official template
-        c_title, c_clauses = build_contract("dj_mix_clearance", context)
+        is_remix_work = (mix.get("creation_type") == "remix_original_beat" or mix.get("is_remix_original_beat"))
+        contract_kind = "dj_remix_clearance" if is_remix_work else "dj_mix_clearance"
+        c_title, c_clauses = build_contract(contract_kind, context)
         share_token = secrets.token_urlsafe(24)
 
         contract_doc = {
             "owner_id": str(current_user["_id"]),
-            "kind": "dj_mix_clearance",
+            "kind": contract_kind,
             "linked_deal_id": mix_id,
             "title": c_title,
             "status": "negotiating",
@@ -1136,18 +1315,32 @@ def request_all_clearances(
 
         # Dispatch real email notification via account_setup
         try:
-            send_dj_mix_clearance_invitation(
-                to=owner_email,
-                name=owner_name,
-                mix_title=mix_title,
-                track_title=t.get("title", ""),
-                dj_name=dj_name,
-                contract_id=contract_id_str,
-                split_pct=pro_rated_pct,
-                commercial_price=commercial_price,
-                mix_id=mix_id,
-                role="creator"
-            )
+            if is_remix_work:
+                send_dj_remix_clearance_invitation(
+                    to=owner_email,
+                    name=owner_name,
+                    mix_title=mix_title,
+                    track_title=t.get("title", ""),
+                    dj_name=dj_name,
+                    contract_id=contract_id_str,
+                    split_pct=pro_rated_pct,
+                    commercial_price=commercial_price,
+                    mix_id=mix_id,
+                    role="creator"
+                )
+            else:
+                send_dj_mix_clearance_invitation(
+                    to=owner_email,
+                    name=owner_name,
+                    mix_title=mix_title,
+                    track_title=t.get("title", ""),
+                    dj_name=dj_name,
+                    contract_id=contract_id_str,
+                    split_pct=pro_rated_pct,
+                    commercial_price=commercial_price,
+                    mix_id=mix_id,
+                    role="creator"
+                )
         except Exception:
             pass
 
@@ -1323,20 +1516,30 @@ def purchase_dj_mix(
         len(tracklist) > 0 and all(t.get("clearance_status") in ("signed", "self_owned") for t in tracklist)
     )
 
+    creation_type = mix.get("creation_type", "curated_mix")
     if mix.get("sale_locked", True) or not all_agreed:
         pending_tracks = [
             t.get("title") for t in tracklist
             if t.get("clearance_status") not in ("signed", "self_owned")
         ]
+        if creation_type == "remix_original_beat" or mix.get("is_remix_original_beat"):
+            lock_msg = (
+                "Prior to having any sales, the original song creator/IP owner must clear this rework. "
+                "This DJ remix created with an original beat is completely free to stream while clearance is pending, "
+                "providing exposure for the artist and DJ with full creator accreditation. After clearance, this can be sold and/or streamed."
+            )
+        else:
+            lock_msg = (
+                "Prior to having any sales, all IP owners must be in complete agreement. "
+                "This mix is completely free to stream while clearances are pending, providing exposure "
+                "for the DJ and artists and allowing invited IP owners an opportunity to experience the platform with full credits."
+            )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
                 "error": "Commercial sales locked",
-                "message": (
-                    "Prior to having any sales, all IP owners must be in complete agreement. "
-                    "This mix is completely free to stream while clearances are pending, providing exposure "
-                    "for the DJ and artists and allowing invited IP owners an opportunity to experience the platform with full credits."
-                ),
+                "message": lock_msg,
+                "creation_type": creation_type,
                 "pending_clearances": pending_tracks,
                 "free_to_stream": True,
                 "streaming_mode": "free_promotional",

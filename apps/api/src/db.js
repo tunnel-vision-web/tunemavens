@@ -12,6 +12,11 @@ export const pool = new Pool({
   connectionTimeoutMillis: 5000 // 5 seconds timeout
 });
 
+// Prevent unhandled error events from crashing the process when PostgreSQL is offline
+pool.on('error', (err) => {
+  console.warn('[Database Pool Warning]', err.message);
+});
+
 // Resilient test query to log connectivity on startup
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {

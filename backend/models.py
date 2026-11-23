@@ -544,7 +544,12 @@ class DjMix(BaseDocument):
     duration_seconds: int = 3600
     audio_url: str
     artwork_url: Optional[str] = ""
+    creation_type: str = "curated_mix"  # curated_mix | remix_original_beat | original_creation
     is_original_ip_only: bool = False
+    is_remix_original_beat: bool = False
+    original_song_title: Optional[str] = None
+    original_song_artist: Optional[str] = None
+    remix_beat_description: Optional[str] = None
     commercial_price: float = 4.99
     currency: str = "USD"
     status: str = "draft"  # draft | clearance_pending | all_cleared | published
@@ -563,6 +568,7 @@ class DjMix(BaseDocument):
     sales_count: int = 0
     total_revenue: float = 0.0
     communication_log: List[dict] = Field(default_factory=list)
+    clearance_policy: Optional[dict] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
