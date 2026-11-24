@@ -29,7 +29,7 @@ S3_PUBLIC_URL_PREFIX = os.environ.get("S3_PUBLIC_URL_PREFIX")  # Optional Custom
 
 # Local fallback settings
 LOCAL_UPLOADS_DIR = Path(os.environ.get("LOCAL_UPLOADS_DIR", "uploads"))
-LOCAL_UPLOADS_URL_PREFIX = os.environ.get("LOCAL_UPLOADS_URL_PREFIX", "http://localhost:8001/uploads")
+LOCAL_UPLOADS_URL_PREFIX = os.environ.get("LOCAL_UPLOADS_URL_PREFIX", "/api/uploads")
 
 
 class StorageManager:

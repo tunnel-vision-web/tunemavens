@@ -10,12 +10,11 @@
  */
 export const getApiBase = () => {
   const envUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '';
-  if (envUrl) return envUrl.replace(/\/$/, '');
+  if (envUrl && !envUrl.includes('onrender.com')) return envUrl.replace(/\/$/, '');
 
   if (typeof window !== 'undefined' && window.location) {
-    const host = window.location.hostname;
-    if (host.includes('tunemavens.com') || host.includes('onrender.com')) {
-      return 'https://tunemavens-backend.onrender.com';
+    if (window.location.protocol === 'capacitor:' || window.location.protocol === 'file:') {
+      return 'https://tunemavens.com';
     }
   }
   return '';
@@ -247,6 +246,12 @@ export const djMixesApi = {
   requestClearance: (id) => request(`/api/dj/mixes/${id}/request-clearance`, { method: 'POST' }),
   signClearance: (mixId, trackId, payload) => request(`/api/dj/mixes/${mixId}/sign-clearance/${trackId}`, { method: 'POST', body: payload }),
   purchaseMix: (id, payload = {}) => request(`/api/dj/mixes/${id}/purchase`, { method: 'POST', body: payload }),
+  updatePricing: (id, payload) => request(`/api/dj/mixes/${id}/pricing`, { method: 'PUT', body: payload }),
+  downloadMix: (id) => request(`/api/dj/mixes/${id}/download`),
+  getPricingRecommendation: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/dj/mixes/pricing-recommendation${qs ? `?${qs}` : ''}`);
+  },
   sendMessage: (id, payload) => request(`/api/dj/mixes/${id}/messages`, { method: 'POST', body: payload }),
   getCommunication: (id) => request(`/api/dj/mixes/${id}/communication`),
   resendReminder: (id, trackId) => request(`/api/dj/mixes/${id}/resend-reminder/${trackId}`, { method: 'POST' }),
@@ -465,15 +470,27 @@ export const communicationsApi = {
 export function normalizeMediaUrl(url) {
   if (!url || typeof url !== 'string') return '';
   let trimmed = url.trim();
-  if (trimmed.includes(':8001/uploads/')) {
-    trimmed = trimmed.substring(trimmed.indexOf('/uploads/'));
+  if (trimmed.includes(':8001/api/uploads/')) {
+    trimmed = trimmed.substring(trimmed.indexOf('/api/uploads/'));
+  } else if (trimmed.includes(':8001/uploads/')) {
+    trimmed = `/api${trimmed.substring(trimmed.indexOf('/uploads/'))}`;
   } else if (trimmed.includes(':8001/heroes/')) {
-    trimmed = trimmed.substring(trimmed.indexOf('/heroes/'));
+    trimmed = `/api${trimmed.substring(trimmed.indexOf('/heroes/'))}`;
   } else if (trimmed.includes(':8001/headers/')) {
-    trimmed = trimmed.substring(trimmed.indexOf('/headers/'));
+    trimmed = `/api${trimmed.substring(trimmed.indexOf('/headers/'))}`;
+  } else if (trimmed.startsWith('/uploads/') || trimmed.startsWith('/heroes/') || trimmed.startsWith('/headers/')) {
+    trimmed = `/api${trimmed}`;
   }
   const apiBase = getApiBase();
-  if (apiBase && (trimmed.startsWith('/uploads/') || trimmed.startsWith('/heroes/') || trimmed.startsWith('/headers/'))) {
+  if (
+    apiBase &&
+    (trimmed.startsWith('/api/uploads/') ||
+      trimmed.startsWith('/api/heroes/') ||
+      trimmed.startsWith('/api/headers/') ||
+      trimmed.startsWith('/uploads/') ||
+      trimmed.startsWith('/heroes/') ||
+      trimmed.startsWith('/headers/'))
+  ) {
     return `${apiBase}${trimmed}`;
   }
   return trimmed;

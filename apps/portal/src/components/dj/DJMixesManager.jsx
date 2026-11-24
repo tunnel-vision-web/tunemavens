@@ -220,15 +220,11 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
       setAudioFileInfo({
         name: file.name,
         size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
-        type: file.type || 'audio/wav'
+        type: file.type || 'audio/wav',
+        previewUrl: objUrl
       });
-      // Immediately set audio_url to valid blob preview so validation passes
-      setNewMix(prev => ({
-        ...prev,
-        audio_url: objUrl
-      }));
 
-      // Decode audio duration automatically
+      // Decode audio duration automatically from local preview without storing blob: as final audio_url
       const tempAudio = new Audio();
       tempAudio.src = objUrl;
       tempAudio.onloadedmetadata = () => {
@@ -239,17 +235,20 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
         }));
       };
 
-      // Persistent upload to backend storage
+      // Persistent upload to backend storage (must complete before publishing)
       try {
         const uploadRes = await storageApi.uploadFile(file, 'audio');
-        const finalUrl = uploadRes?.url || uploadRes?.public_url;
+        const finalUrl = uploadRes?.url || uploadRes?.public_url || uploadRes?.asset?.media_url;
         if (finalUrl) {
           setNewMix(prev => ({ ...prev, audio_url: finalUrl }));
+          showNotification(`Audio uploaded to server: ${file.name}`);
+        } else {
+          showNotification('Audio upload returned no URL. Please retry.', 'error');
         }
       } catch (err) {
-        console.warn('Backend storage upload note (using local URL):', err);
+        console.warn('Backend storage upload error:', err);
+        showNotification(`Audio upload failed (${err.message || 'network error'}). Please retry.`, 'error');
       }
-      showNotification(`Audio file ready: ${file.name}`);
     } catch (err) {
       showNotification('Failed to read audio file: ' + err.message, 'error');
     } finally {
@@ -266,15 +265,14 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
         size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
         previewUrl: objUrl
       });
-      setNewMix(prev => ({ ...prev, artwork_url: objUrl }));
       try {
         const uploadRes = await storageApi.uploadFile(file, 'artwork');
-        const finalUrl = uploadRes?.url || uploadRes?.public_url;
+        const finalUrl = uploadRes?.url || uploadRes?.public_url || uploadRes?.asset?.media_url;
         if (finalUrl) {
           setNewMix(prev => ({ ...prev, artwork_url: finalUrl }));
         }
       } catch (err) {
-        console.warn('Backend storage upload note (using local preview):', err);
+        console.warn('Backend artwork upload note:', err);
       }
       showNotification(`Artwork image loaded: ${file.name}`);
     } catch (err) {
@@ -513,7 +511,23 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
   // -------------------------------------------------------------------------
   // Mix Creation & Publishing Flow
   // -------------------------------------------------------------------------
+  const computeRecommendedMixPriceUsd = (mixObj) => {
+    const cType = mixObj?.creation_type || (mixObj?.is_original_ip_only ? 'original_creation' : 'curated_mix');
+    const base = cType === 'original_creation' ? 7.0 : cType === 'remix_original_beat' ? 6.0 : 5.0;
+    const mins = Math.max(0, Number(mixObj?.duration_seconds || 3600) / 60);
+    const extra = Math.min(3.0, Math.max(0, (mins - 60) / 30) * 0.5);
+    return Number((Math.round((base + extra) * 2) / 2 - 0.01).toFixed(2));
+  };
+
   const handleSaveMix = async () => {
+    if (audioUploading || artworkUploading) {
+      showNotification('Please wait for your audio/artwork file upload to finish before publishing.', 'error');
+      return;
+    }
+    if (String(newMix.audio_url || '').startsWith('blob:')) {
+      showNotification('Audio upload did not complete. Please re-upload your audio file before publishing.', 'error');
+      return;
+    }
     if (!newMix.title.trim()) {
       showNotification('Please enter a title for your DJ mix or rework', 'error');
       return;
@@ -1521,35 +1535,76 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                   : ' Split shares will be codified into binding digital contracts dispatched to each IP owner.'}
               </p>
               <div className="split-config-card">
-                <div className="split-price-row">
-                  <div>
-                    <label className="stat-label">
-                      Commercial Retail Download / Stream Price ({currencyInfo?.code || 'USD'})
-                      <span className="label-sub"> · 1 USD = 100 TM Credits = 100 KES</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.50"
-                      min="0.50"
-                      className="input-dark price-input"
-                      value={currency === 'USD' ? newMix.commercial_price : convertPrice(newMix.commercial_price)}
-                      onChange={e => {
-                        const val = parseFloat(e.target.value) || 0;
-                        const rate = EXCHANGE_RATES[currency] || 1;
-                        const usdVal = currency === 'USD' ? val : (val / rate);
-                        setNewMix({ ...newMix, commercial_price: Math.max(0.50, Number(usdVal.toFixed(2))) });
-                      }}
-                    />
-                    <div className="price-converted-hint">
-                      <span>Live Equivalent: <strong>{formatPrice(newMix.commercial_price)}</strong></span>
-                      <span> · <strong>{Math.round(newMix.commercial_price * 100).toLocaleString()} TM Credits</strong></span>
+                {(() => {
+                  const recUsd = computeRecommendedMixPriceUsd(newMix);
+                  const recCredits = Math.round(recUsd * 100);
+                  return (
+                    <div className="split-price-row">
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
+                          <label className="stat-label" style={{ margin: 0 }}>
+                            Commercial Retail Download / Stream Price ({currencyInfo?.code || 'USD'})
+                            <span className="label-sub"> · 1 USD = 100 TM Credits = 100 KES (Set Your Own Price)</span>
+                          </label>
+                          <button
+                            type="button"
+                            data-testid="dj-mix-apply-recommended-price-btn"
+                            onClick={() => setNewMix({ ...newMix, commercial_price: recUsd })}
+                            style={{ background: 'rgba(34,211,238,0.14)', border: '1px solid rgba(34,211,238,0.45)', color: '#22d3ee', borderRadius: '3px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 800, cursor: 'pointer' }}
+                            title="Apply platform recommended price (you can adjust anytime)"
+                          >
+                            ★ Recommended: {formatPrice(recUsd)} ({recCredits} Credits) — Apply
+                          </button>
+                        </div>
+                        <input
+                          type="number"
+                          step="0.50"
+                          min="0.50"
+                          max="100"
+                          data-testid="dj-mix-custom-price-input"
+                          className="input-dark price-input"
+                          value={currency === 'USD' ? newMix.commercial_price : convertPrice(newMix.commercial_price)}
+                          onChange={e => {
+                            const val = parseFloat(e.target.value) || 0;
+                            const rate = EXCHANGE_RATES[currency] || 1;
+                            const usdVal = currency === 'USD' ? val : (val / rate);
+                            setNewMix({ ...newMix, commercial_price: Math.min(100, Math.max(0.50, Number(usdVal.toFixed(2)))) });
+                          }}
+                        />
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+                          {[2.99, 4.99, 5.99, 6.99, 9.99].map((presetUsd) => (
+                            <button
+                              key={presetUsd}
+                              type="button"
+                              onClick={() => setNewMix({ ...newMix, commercial_price: presetUsd })}
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '3px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                border: Number(newMix.commercial_price) === presetUsd ? '1px solid #22d3ee' : '1px solid rgba(255,255,255,0.12)',
+                                background: Number(newMix.commercial_price) === presetUsd ? 'rgba(34,211,238,0.18)' : 'rgba(255,255,255,0.04)',
+                                color: Number(newMix.commercial_price) === presetUsd ? '#22d3ee' : '#cbd5e1',
+                              }}
+                            >
+                              {formatPrice(presetUsd)} ({Math.round(presetUsd * 100)} Cr){presetUsd === recUsd ? ' ★' : ''}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="price-converted-hint" style={{ marginTop: '8px' }}>
+                          <span>Your Custom Price: <strong>{formatPrice(newMix.commercial_price)}</strong></span>
+                          <span> · <strong>{Math.round(newMix.commercial_price * 100).toLocaleString()} TM Credits</strong></span>
+                          <span> · Recommended: <strong>{formatPrice(recUsd)}</strong></span>
+                        </div>
+                      </div>
+                      <div className="price-preview-callout">
+                        <RiMoneyDollarCircleFill />
+                        <span>DJs &amp; creators set their own price. Every sale settles in real-time via TuneLedger Split Cascade.</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="price-preview-callout">
-                    <RiMoneyDollarCircleFill />
-                    <span>Every sale is settled in real-time through the TuneLedger Split Cascade.</span>
-                  </div>
-                </div>
+                  );
+                })()}
                 <div className="waterfall-bars">
                   <div className="waterfall-item">
                     <div className="waterfall-label">
@@ -2168,9 +2223,47 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
           {/* Localized Sovereign Financial Ledger Overview */}
           <div className="detail-financial-strip">
             <div className="financial-metric-card cyan">
-              <span className="fin-lbl">Commercial Price</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                <span className="fin-lbl">Commercial Price</span>
+                <button
+                  type="button"
+                  data-testid="detail-adjust-mix-price-btn"
+                  onClick={async () => {
+                    const recUsd = selectedMix.recommended_price || computeRecommendedMixPriceUsd(selectedMix);
+                    const rate = EXCHANGE_RATES[currency] || 1;
+                    const currCode = currencyInfo?.code || currency || 'USD';
+                    const currentLocal = currency === 'USD' ? Number(selectedMix.commercial_price || recUsd).toFixed(2) : convertPrice(selectedMix.commercial_price || recUsd);
+                    const minLocal = currency === 'USD' ? '0.50' : convertPrice(0.5);
+                    const maxLocal = currency === 'USD' ? '100.00' : convertPrice(100);
+                    const raw = window.prompt(
+                      `Adjust retail price in ${currCode} (${minLocal} - ${maxLocal} ${currCode}).\nPlatform Recommended Price: ${formatPrice(recUsd)} (${Math.round(recUsd * 100)} TM Credits):`,
+                      String(currentLocal)
+                    );
+                    if (raw === null) return;
+                    const parsed = parseFloat(raw);
+                    const usdVal = currency === 'USD' ? parsed : parsed / rate;
+                    if (Number.isNaN(usdVal) || usdVal < 0.5 || usdVal > 100) {
+                      showNotification(`Price must be between ${formatPrice(0.5)} and ${formatPrice(100)}.`, 'error');
+                      return;
+                    }
+                    try {
+                      const updated = await djMixesApi.updatePricing(selectedMix.id, { commercial_price: Number(usdVal.toFixed(2)) });
+                      setSelectedMix(updated);
+                      await fetchMixes();
+                      showNotification(`Updated price to ${formatPrice(usdVal)} (${Math.round(usdVal * 100)} TM Credits)`);
+                    } catch (err) {
+                      showNotification(err?.message || 'Could not update mix price', 'error');
+                    }
+                  }}
+                  style={{ background: 'rgba(34,211,238,0.14)', border: '1px solid rgba(34,211,238,0.4)', color: '#22d3ee', borderRadius: '3px', padding: '2px 7px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}
+                >
+                  Adjust Price
+                </button>
+              </div>
               <div className="fin-val highlight-cyan">{formatPrice(selectedMix.commercial_price)}</div>
-              <span className="fin-sub">{Math.round((selectedMix.commercial_price || 0) * 100)} Unified TM Credits</span>
+              <span className="fin-sub">
+                {Math.round((selectedMix.commercial_price || 0) * 100)} Unified TM Credits · Rec: {formatPrice(selectedMix.recommended_price || computeRecommendedMixPriceUsd(selectedMix))}
+              </span>
             </div>
             <div className="financial-metric-card green">
               <span className="fin-lbl">Total Gross Revenue</span>
@@ -2970,8 +3063,18 @@ export default function DJMixesManager({ sessionUser, initialView = 'catalog', o
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn-primary" onClick={() => setPurchaseSuccessModal(null)}>
+            <div className="modal-footer" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <a
+                href={`/api/stream/download/${encodeURIComponent(purchaseSuccessModal.mix?.id || purchaseSuccessModal.mix?.title || 'mix')}`}
+                download={`${purchaseSuccessModal.mix?.dj_name || 'DJ'} - ${purchaseSuccessModal.mix?.title || 'Mix'}.mp3`}
+                data-testid="purchase-success-download-mix-btn"
+                className="btn-primary"
+                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#10b981', color: '#060813', fontWeight: 800 }}
+              >
+                <RiDownloadCloud2Fill />
+                <span>Download Lossless Mix Now</span>
+              </a>
+              <button className="btn-secondary" onClick={() => setPurchaseSuccessModal(null)}>
                 Done
               </button>
             </div>

@@ -59,23 +59,58 @@ if not uploads_dir:
         uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
 
-# Audio streaming fallback route: handles static audio requests (/uploads/audio/...) with range support and preview synthesis
+# Audio streaming fallback route: handles static audio requests (/uploads/audio/... and /api/uploads/audio/...) with range support and preview synthesis
 @app.api_route("/uploads/audio/{filename:path}", methods=["GET", "HEAD"])
+@app.api_route("/api/uploads/audio/{filename:path}", methods=["GET", "HEAD"])
 def stream_upload_audio_file(filename: str, request: Request):
     """Serves static audio file if on disk, else delegates to stream router for preview synthesis."""
+    import re as _re
     from routes.stream_router import stream_catalog_track
-    clean_name = filename.replace(".wav", "").replace(".mp3", "").replace(".flac", "").replace(".ogg", "")
+    clean_name = _re.sub(r"\.(wav|mp3|flac|ogg|m4a|aac|aiff)$", "", filename, flags=_re.IGNORECASE)
     return stream_catalog_track(clean_name, request=request)
 
+
+@app.api_route("/uploads/artwork/{filename:path}", methods=["GET", "HEAD"])
+@app.api_route("/api/uploads/artwork/{filename:path}", methods=["GET", "HEAD"])
+def serve_upload_artwork_file(filename: str):
+    """Serves uploaded artwork if on disk, else falls back to a bundled high-res retina cover."""
+    from fastapi.responses import FileResponse, RedirectResponse
+    safe_name = os.path.basename(filename)
+    candidate_paths = [
+        os.path.join(uploads_dir, "artwork", safe_name),
+        os.path.join("uploads", "artwork", safe_name),
+        os.path.join("backend", "uploads", "artwork", safe_name),
+    ]
+    for p in candidate_paths:
+        if os.path.exists(p) and os.path.isfile(p):
+            return FileResponse(p)
+    # Fallback to bundled retina artwork if file was uploaded on an older ephemeral container
+    fallback_dirs = [
+        os.path.join(uploads_dir, "ai_assets"),
+        os.path.join(uploads_dir, "headers"),
+        os.path.join(uploads_dir, "heroes"),
+    ]
+    for fdir in fallback_dirs:
+        if os.path.exists(fdir):
+            imgs = sorted([f for f in os.listdir(fdir) if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))])
+            if imgs:
+                pick = imgs[abs(hash(safe_name)) % len(imgs)]
+                return FileResponse(os.path.join(fdir, pick))
+    return RedirectResponse(url="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80")
+
+
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+app.mount("/api/uploads", StaticFiles(directory=uploads_dir), name="api_uploads")
 
 headers_dir = os.path.join(uploads_dir, "headers")
 os.makedirs(headers_dir, exist_ok=True)
 app.mount("/headers", StaticFiles(directory=headers_dir), name="headers")
+app.mount("/api/headers", StaticFiles(directory=headers_dir), name="api_headers")
 
 heroes_dir = os.path.join(uploads_dir, "heroes")
 os.makedirs(heroes_dir, exist_ok=True)
 app.mount("/heroes", StaticFiles(directory=heroes_dir), name="heroes")
+app.mount("/api/heroes", StaticFiles(directory=heroes_dir), name="api_heroes")
 
 ENV = os.environ.get("ENV", "development")
 cors_origins = list(CORS_ORIGINS) if CORS_ORIGINS != ["*"] else []

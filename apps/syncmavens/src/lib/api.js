@@ -10,12 +10,11 @@
  */
 export const getApiBase = () => {
   const envUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '';
-  if (envUrl) return envUrl.replace(/\/$/, '');
+  if (envUrl && !envUrl.includes('onrender.com')) return envUrl.replace(/\/$/, '');
 
   if (typeof window !== 'undefined' && window.location) {
-    const host = window.location.hostname;
-    if (host.includes('tunemavens.com') || host.includes('syncmavens.com') || host.includes('onrender.com')) {
-      return 'https://tunemavens-backend.onrender.com';
+    if (window.location.protocol === 'capacitor:' || window.location.protocol === 'file:') {
+      return 'https://syncmavens.com';
     }
   }
   return '';

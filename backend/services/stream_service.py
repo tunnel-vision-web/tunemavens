@@ -109,9 +109,47 @@ def get_track_or_release(identifier: str) -> Optional[Dict[str, Any]]:
         query_id = ObjectId(clean_id)
     except Exception:
         query_id = clean_id
-    release = db.releases.find_one({"$or": [{"_id": query_id}, {"title": {"$regex": f"^{clean_id}$", "$options": "i"}}]})
+    release = db.releases.find_one({"$or": [{"_id": query_id}, {"title": {"$regex": f"^{re.escape(clean_id)}$", "$options": "i"}}]})
     if release:
         return release
+
+    # 4. Search in db.dj_mixes and db.dj_pool_tracks
+    mix = db.dj_mixes.find_one({
+        "$or": [
+            {"_id": query_id},
+            {"title": {"$regex": f"^{re.escape(clean_id)}$", "$options": "i"}},
+            {"audio_url": {"$regex": re.escape(clean_id), "$options": "i"}},
+        ]
+    })
+    if mix:
+        return {
+            "id": str(mix.get("_id")),
+            "title": mix.get("title"),
+            "artist": mix.get("dj_name", "Resident DJ"),
+            "genre": mix.get("genre", "Afro-House"),
+            "audioUrl": mix.get("audio_url"),
+            "priceCredits": int(round(float(mix.get("commercial_price") or 4.99) * 100)),
+            "sale_locked": bool(mix.get("sale_locked", True)),
+            "user_id": mix.get("user_id"),
+            "is_dj_mix": True,
+        }
+
+    pool_track = db.dj_pool_tracks.find_one({
+        "$or": [
+            {"_id": query_id},
+            {"title": {"$regex": f"^{re.escape(clean_id)}$", "$options": "i"}},
+        ]
+    })
+    if pool_track:
+        return {
+            "id": str(pool_track.get("_id")),
+            "title": pool_track.get("title"),
+            "artist": pool_track.get("artist", "TuneMavens Roster"),
+            "genre": pool_track.get("genre", "Afro-House"),
+            "audioUrl": pool_track.get("audio_url"),
+            "priceCredits": int(pool_track.get("priceCredits") or 50),
+            "user_id": pool_track.get("user_id"),
+        }
 
     return None
 

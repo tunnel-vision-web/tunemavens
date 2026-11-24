@@ -551,6 +551,7 @@ class DjMix(BaseDocument):
     original_song_artist: Optional[str] = None
     remix_beat_description: Optional[str] = None
     commercial_price: float = 4.99
+    recommended_price: Optional[float] = None
     currency: str = "USD"
     status: str = "draft"  # draft | clearance_pending | all_cleared | published
     sale_locked: bool = True

@@ -1289,7 +1289,7 @@ function TuneStreamHomePanel({ sessionUser, tracks = [], artists = [], userCredi
   );
 }
 
-function TuneStreamLibraryPanel({ tracks = [], onPlayTrack }) {
+function TuneStreamLibraryPanel({ tracks = [], onPlayTrack, onBuyDownloadTrack }) {
   const [crates, setCrates] = useState([
     { id: 'crate_1', name: 'Nairobi Cyberwave Crate', count: 14, genre: 'Afro-Synth', cover: '/uploads/artwork/ndufo_cover.jpg' },
     { id: 'crate_2', name: 'Sunset Chill & Drive', count: 22, genre: 'Amapiano', cover: '/heroes/ndufo_hero_slide1_retina.jpg' },
@@ -1432,8 +1432,18 @@ function TuneStreamLibraryPanel({ tracks = [], onPlayTrack }) {
                   <div style={{ fontSize: '11px', color: '#94a3b8' }}>{t.artist}</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '10px', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '3px' }}>24-Bit FLAC Cached</span>
+                {onBuyDownloadTrack && (
+                  <button
+                    type="button"
+                    data-testid="library-download-track-btn"
+                    onClick={() => onBuyDownloadTrack(t)}
+                    style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', color: '#10b981', padding: '5px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <RiDownloadLine size={13} /> Download FLAC
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => onPlayTrack && onPlayTrack(t)}
@@ -1879,11 +1889,13 @@ function resolveArtistPersona(artist) {
   return 'artist';
 }
 
-function TuneStreamDjMixesPanel({ onPlayTrack }) {
+function TuneStreamDjMixesPanel({ onPlayTrack, userCredits, setUserCredits, isCreditExempt, onOpenCreditReload }) {
   const { formatPrice } = useRegion();
   const [mixes, setMixes] = useState(AUTHORITATIVE_DJ_MIXES);
   const [genreFilter, setGenreFilter] = useState('All');
   const [search, setSearch] = useState('');
+  const [purchasingId, setPurchasingId] = useState(null);
+  const [mixNotice, setMixNotice] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -1901,9 +1913,9 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
     return () => { cancelled = true; };
   }, []);
 
-  const genres = ['All', 'Afro-House', 'Afro House', 'Amapiano', 'Afrobeats', 'Electronic', 'Hip-Hop'];
+  const genres = ['All', 'Afro-House', 'Amapiano', 'Afrobeats', 'Hip-Hop', 'Electronic'];
   const filtered = mixes.filter((m) => {
-    if (genreFilter !== 'All' && !(m.genre || '').toLowerCase().includes(genreFilter.toLowerCase().replace('-', ' '))) {
+    if (genreFilter !== 'All' && !(m.genre || '').toLowerCase().replace('-', ' ').includes(genreFilter.toLowerCase().replace('-', ' '))) {
       return false;
     }
     if (search.trim()) {
@@ -1927,10 +1939,78 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
       releaseType: 'DJ Mix',
       genre: mix.genre || 'Afro-House',
       duration: mix.duration || `${Math.round((mix.duration_seconds || 2400) / 60)}:00`,
-      cover: mix.artwork_url,
-      coverArt: mix.artwork_url,
-      audioUrl: mix.audio_url || `/api/stream/track/${encodeURIComponent(mix.id || mix.title || 'preview')}`,
+      cover: normalizeMediaUrl(mix.artwork_url),
+      coverArt: normalizeMediaUrl(mix.artwork_url),
+      audioUrl: normalizeMediaUrl(mix.audio_url) || `/api/stream/track/${encodeURIComponent(mix.id || mix.title || 'preview')}`,
     });
+  };
+
+  const handleBuyAndDownloadMix = async (mix) => {
+    if (!mix) return;
+    if (mix.sale_locked) {
+      setMixNotice({
+        type: 'info',
+        text: `"${mix.title}" has pending IP clearances: it streams 100% free with full creator credits, and downloads unlock once all IP owners sign.`,
+      });
+      return;
+    }
+    const costCredits = mix.price_credits || Math.round((mix.commercial_price || 4.99) * 100);
+    if (!isCreditExempt && typeof userCredits === 'number' && userCredits < costCredits) {
+      setMixNotice({
+        type: 'error',
+        text: `Insufficient credits (${userCredits} available, ${costCredits} needed). Top up your wallet to purchase & download "${mix.title}".`,
+      });
+      if (onOpenCreditReload) onOpenCreditReload();
+      return;
+    }
+    const apiBase = getApiBase();
+    const mixId = mix.id || mix._id;
+    setPurchasingId(mixId || mix.title);
+    try {
+      const token = localStorage.getItem('tunemavens_token') || sessionStorage.getItem('tunemavens_token') || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const endpoint = mixId && String(mixId).length === 24
+        ? `${apiBase}/api/dj/mixes/${encodeURIComponent(mixId)}/purchase`
+        : `${apiBase}/api/stream/purchase/${encodeURIComponent(mixId || mix.title)}`;
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ payment_method: 'wallet' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = typeof data?.detail === 'string' ? data.detail : data?.detail?.message || 'Could not complete purchase.';
+        setMixNotice({ type: 'error', text: msg });
+        if (res.status === 402 && onOpenCreditReload) onOpenCreditReload();
+        return;
+      }
+      const charged = typeof data.credits_charged === 'number' ? data.credits_charged : (isCreditExempt ? 0 : costCredits);
+      if (!isCreditExempt && setUserCredits && charged > 0) {
+        const nextBal = typeof data.remaining_credits === 'number' ? data.remaining_credits : Math.max(0, (userCredits || 0) - charged);
+        setUserCredits(nextBal);
+        localStorage.setItem('tunemavens_user_credits', String(nextBal));
+        window.dispatchEvent(new CustomEvent('tunemavens_credits_updated', { detail: { newBalance: nextBal } }));
+      }
+      const dlUrl = `${apiBase}/api/stream/download/${encodeURIComponent(mixId || mix.title)}`;
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = `${mix.dj_name || 'DJ'} - ${mix.title || 'Mix'}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setMixNotice({
+        type: 'success',
+        text: data.already_owned
+          ? `Already owned — downloading "${mix.title}" (0 credits charged).`
+          : `Purchased & downloading "${mix.title}" (${charged} TM Credits · Split Cascade settled).`,
+      });
+    } catch (err) {
+      setMixNotice({ type: 'error', text: err.message || 'Purchase failed.' });
+    } finally {
+      setPurchasingId(null);
+    }
   };
 
   const featuredDjs = [
@@ -2025,6 +2105,27 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
         />
       </div>
 
+      {mixNotice && (
+        <div
+          data-testid="dj-mix-action-notice"
+          style={{
+            padding: '12px 16px',
+            borderRadius: '3px',
+            background: mixNotice.type === 'error' ? 'rgba(239,68,68,0.12)' : mixNotice.type === 'info' ? 'rgba(34,211,238,0.12)' : 'rgba(16,185,129,0.12)',
+            border: `1px solid ${mixNotice.type === 'error' ? 'rgba(239,68,68,0.4)' : mixNotice.type === 'info' ? 'rgba(34,211,238,0.4)' : 'rgba(16,185,129,0.4)'}`,
+            color: mixNotice.type === 'error' ? '#fca5a5' : mixNotice.type === 'info' ? '#22d3ee' : '#10b981',
+            fontSize: '12.5px',
+            fontWeight: 700,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <span>{mixNotice.text}</span>
+          <button type="button" onClick={() => setMixNotice(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontWeight: 900 }}>✕</button>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '16px' }}>
         {filtered.map((mix) => {
           const djSlug = resolveDjSlug(mix.dj_name);
@@ -2036,7 +2137,8 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
               <div>
                 <div style={{ position: 'relative', height: '170px', overflow: 'hidden', background: '#0e1424' }}>
                   <img
-                    src={mix.artwork_url || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
+                    src={normalizeMediaUrl(mix.artwork_url) || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
+                    onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'; }}
                     alt={mix.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
@@ -2082,27 +2184,43 @@ function TuneStreamDjMixesPanel({ onPlayTrack }) {
                   {mix.sale_locked ? (
                     <>
                       <span style={{ color: '#22d3ee', fontWeight: 900 }}>FREE TO STREAM</span>
-                      <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>Commercial unlocks upon clearance</span>
+                      <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>Downloads unlock upon IP clearance</span>
                     </>
                   ) : (
                     <>
                       {formatPrice ? formatPrice(mix.commercial_price || 4.99) : `$${mix.commercial_price || 4.99}`}
-                      <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{Math.round((mix.commercial_price || 4.99) * 100)} TM Credits</span>
+                      <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>
+                        {mix.price_credits || Math.round((mix.commercial_price || 4.99) * 100)} TM Credits
+                        {mix.recommended_price ? ` · Rec: ${formatPrice ? formatPrice(Number(mix.recommended_price)) : `$${Number(mix.recommended_price).toFixed(2)}`}` : ''}
+                      </span>
                     </>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <a
                     href={`#/epk/${djSlug}?persona=dj`}
                     data-testid="dj-mix-epk-link"
-                    style={{ padding: '8px 11px', background: 'rgba(34,211,238,0.12)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.4)', borderRadius: '3px', fontSize: '11.5px', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    style={{ padding: '8px 10px', background: 'rgba(34,211,238,0.12)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.4)', borderRadius: '3px', fontSize: '11px', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                   >
-                    🌐 DJ EPK &amp; Book
+                    🌐 DJ EPK
                   </a>
+                  {!mix.sale_locked && (
+                    <button
+                      type="button"
+                      data-testid="tunestream-buy-download-mix-btn"
+                      disabled={purchasingId === (mix.id || mix.title)}
+                      onClick={() => handleBuyAndDownloadMix(mix)}
+                      style={{ padding: '8px 11px', background: 'rgba(16,185,129,0.16)', color: '#10b981', border: '1px solid rgba(16,185,129,0.45)', borderRadius: '3px', fontSize: '11.5px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      title="Purchase & Download Lossless Mix via TuneLedger Split Cascade"
+                    >
+                      <RiDownloadLine size={14} />
+                      {purchasingId === (mix.id || mix.title) ? 'Processing...' : (isCreditExempt ? 'Download (Exempt)' : 'Buy & Download')}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => handlePlayMix(mix)}
-                    style={{ padding: '8px 14px', background: '#22d3ee', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                    style={{ padding: '8px 13px', background: '#22d3ee', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
                   >
                     <RiPlayFill size={15} /> Stream Mix
                   </button>
@@ -2128,6 +2246,7 @@ function TuneStreamExplorePanel({
   searchQuery: externalSearchQuery,
   onSearchChange
 }) {
+  const { formatPrice } = useRegion();
   const [filterMode, setFilterMode] = useState(initialFilter);
   const [sortBy, setSortBy] = useState('newest');
   const [genreFilter, setGenreFilter] = useState('all');
@@ -2267,8 +2386,10 @@ function TuneStreamExplorePanel({
     }
     if (sortBy === 'title') return String(a[keyTitle] || a.name || '').localeCompare(String(b[keyTitle] || b.name || ''));
     if (sortBy === 'genre') return String(a[keyGenre] || a.category || '').localeCompare(String(b[keyGenre] || b.category || ''));
-    if (sortBy === 'oldest') return 1;
-    return -1;
+    const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const dbTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+    if (sortBy === 'oldest') return da - dbTime;
+    return dbTime - da;
   };
 
   displayedTracks.sort((a, b) => sortSorter(a, b, 'title', 'genre'));
@@ -2662,7 +2783,8 @@ function TuneStreamExplorePanel({
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                       <img
-                        src={mix.artwork_url || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
+                        src={normalizeMediaUrl(mix.artwork_url) || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'}
+                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80'; }}
                         alt={mix.title}
                         style={{ width: '56px', height: '56px', borderRadius: '3px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.12)' }}
                       />
@@ -2682,8 +2804,8 @@ function TuneStreamExplorePanel({
                     <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.45, margin: 0 }}>{mix.description}</p>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px', gap: '6px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
-                      {mix.is_original_ip_only ? '✓ 100% Sovereign IP' : `✓ ${mix.tracklist?.length || 3} Tracks Cleared`}
+                    <span style={{ fontSize: '11px', color: mix.sale_locked ? '#22d3ee' : '#10b981', fontWeight: 700 }}>
+                      {mix.is_original_ip_only ? '✓ 100% Sovereign IP' : mix.sale_locked ? '🎧 Free to Stream · IP Credits Active' : `✓ ${mix.tracklist?.length || 3} Tracks Cleared (${formatPrice ? formatPrice(Number(mix.commercial_price || 4.99)) : `$${Number(mix.commercial_price || 4.99).toFixed(2)}`})`}
                     </span>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <a
@@ -2704,9 +2826,9 @@ function TuneStreamExplorePanel({
                             releaseType: 'DJ Mix',
                             genre: mix.genre || 'Afro-House',
                             duration: mix.duration || `${Math.round((mix.duration_seconds || 2400) / 60)}:00`,
-                            cover: mix.artwork_url,
-                            coverArt: mix.artwork_url,
-                            audioUrl: mix.audio_url || `/api/stream/track/${encodeURIComponent(mix.id || mix.title || 'preview')}`,
+                            cover: normalizeMediaUrl(mix.artwork_url),
+                            coverArt: normalizeMediaUrl(mix.artwork_url),
+                            audioUrl: normalizeMediaUrl(mix.audio_url) || `/api/stream/track/${encodeURIComponent(mix.id || mix.title || 'preview')}`,
                           })
                         }
                         style={{ padding: '7px 12px', background: '#00f2fe', color: '#060813', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -3037,7 +3159,8 @@ function TuneStreamExplorePanel({
   );
 }
 
-function TuneStreamSinglesPanel({ tracks = [], currentTrack, isPlaying, likes = [], onLike, onPlayTrack }) {
+function TuneStreamSinglesPanel({ tracks = [], currentTrack, isPlaying, likes = [], onLike, onPlayTrack, onBuyDownloadTrack, isCreditExempt }) {
+  const { formatPrice } = useRegion();
   const [searchQuery, setSearchQuery] = useState('');
   const allSingles = tracks.filter(t => t.releaseType === 'Single' || (t.release && t.release.toLowerCase().includes('single')));
   
@@ -3117,6 +3240,21 @@ function TuneStreamSinglesPanel({ tracks = [], currentTrack, isPlaying, likes = 
               </div>
               <div className="track-plays" style={{ color: '#64748b' }}>{track.plays}</div>
               <div className="track-duration" style={{ color: '#64748b' }}>{track.duration}</div>
+              {onBuyDownloadTrack && (
+                <button
+                  type="button"
+                  data-testid="singles-buy-download-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onBuyDownloadTrack(track);
+                  }}
+                  style={{ padding: '5px 10px', background: 'rgba(16,185,129,0.14)', color: '#10b981', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '3px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', marginRight: '6px' }}
+                  title={`Purchase & Download Lossless FLAC (${formatPrice ? formatPrice((track.priceCredits || 50) / 100) : `$${((track.priceCredits || 50) / 100).toFixed(2)}`} · ${track.priceCredits || 50} TM Credits)`}
+                >
+                  <RiDownloadLine size={13} />
+                  {isCreditExempt ? 'Download' : `${formatPrice ? formatPrice((track.priceCredits || 50) / 100) : `$${((track.priceCredits || 50) / 100).toFixed(2)}`} · ${track.priceCredits || 50} Cr`}
+                </button>
+              )}
               <button 
                 className={`btn-like ${likes.includes(track.id) ? 'liked' : ''}`}
                 onClick={(e) => {
@@ -3438,17 +3576,28 @@ function TuneStreamUploadPanel({
   handleDrag,
   handleDrop,
   fileName,
-  setFileName
+  onFileSelected,
+  isUploadingAudio
 }) {
+  const { formatPrice } = useRegion();
+  const relType = uploadForm.releaseType || 'Single';
+  const recCredits = relType === 'DJ Mix' ? 499 : relType === 'Extended Club / Dubplate' ? 100 : 50;
+  const recUsd = (recCredits / 100).toFixed(2);
+  const currentCredits = Number(uploadForm.priceCredits ?? recCredits);
+  const currentUsd = (currentCredits / 100).toFixed(2);
+  const formattedCurrentPrice = formatPrice ? formatPrice(currentCredits / 100) : `$${currentUsd} USD`;
+  const formattedRecPrice = formatPrice ? formatPrice(recCredits / 100) : `$${recUsd}`;
+  const formattedUnitPrice = formatPrice ? formatPrice(1) : '$1.00 USD';
+
   return (
     <div className="dashboard-card" style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '3px' }}>
       <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: '800', color: '#fff' }}>
-        <RiUpload2Line style={{ color: '#00f2fe' }} /> Lossless Catalogue Audio Ingestion
+        <RiUpload2Line style={{ color: '#00f2fe' }} /> Lossless Catalogue &amp; DJ Mix Audio Ingestion
       </h4>
       
       {uploadSuccess && (
         <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '12px', borderRadius: '3px', color: '#10b981', fontSize: '13px', marginBottom: '16px' }}>
-          ✓ Track successfully ingested and synced to TuneMavens backend repository!
+          ✓ Audio successfully ingested and synced to TuneMavens backend repository!
         </div>
       )}
 
@@ -3459,30 +3608,46 @@ function TuneStreamUploadPanel({
       )}
 
       <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Track Title</label>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Track / DJ Mix Title</label>
             <input 
               type="text" 
-              placeholder="e.g. Dream Escape" 
+              placeholder="e.g. African Underground Vol 20" 
               value={uploadForm.title} 
               onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })}
               style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Primary Artist Name</label>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Primary Artist / DJ Name</label>
             <input 
               type="text" 
-              placeholder="e.g. Ndufo" 
+              placeholder="e.g. DJ CJ Kenya" 
               value={uploadForm.artist} 
               onChange={e => setUploadForm({ ...uploadForm, artist: e.target.value })}
               style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
             />
           </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Release Format</label>
+            <select
+              value={relType}
+              onChange={e => {
+                const nextType = e.target.value;
+                const nextRec = nextType === 'DJ Mix' ? 499 : nextType === 'Extended Club / Dubplate' ? 100 : 50;
+                setUploadForm({ ...uploadForm, releaseType: nextType, priceCredits: nextRec });
+              }}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
+            >
+              <option value="Single">Master Single Track</option>
+              <option value="Extended Club / Dubplate">Extended Club / Dubplate Edit</option>
+              <option value="DJ Mix">Continuous DJ Mix / Set</option>
+            </select>
+          </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.4fr', gap: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Genre</label>
             <select 
@@ -3493,20 +3658,50 @@ function TuneStreamUploadPanel({
               <option value="Afro-House">Afro-House</option>
               <option value="Amapiano">Amapiano</option>
               <option value="Afrobeats">Afrobeats</option>
+              <option value="Hip-Hop">Hip-Hop</option>
               <option value="Deep-House">Deep-House</option>
               <option value="Afro-fusion">Afro-fusion</option>
               <option value="Synthwave">Synthwave</option>
             </select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Royalty Split Cascade Setup (Creator/Label)</label>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>Royalty Split Cascade (Creator/IP)</label>
             <input 
               type="text" 
-              placeholder="e.g. 70/30" 
+              placeholder="e.g. 70/30 or 40/50/10" 
               value={uploadForm.splits} 
               onChange={e => setUploadForm({ ...uploadForm, splits: e.target.value })}
               style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', color: '#fff', outline: 'none' }}
             />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>
+                Creator Retail Price (TM Credits · {formattedCurrentPrice})
+              </label>
+              <button
+                type="button"
+                data-testid="upload-apply-recommended-price-btn"
+                onClick={() => setUploadForm({ ...uploadForm, priceCredits: recCredits })}
+                style={{ background: 'rgba(0,242,254,0.12)', border: '1px solid rgba(0,242,254,0.35)', color: '#00f2fe', borderRadius: '3px', padding: '2px 7px', fontSize: '10.5px', fontWeight: 800, cursor: 'pointer' }}
+                title="Reset to platform recommended price for this format"
+              >
+                Recommended: {recCredits} Cr ({formattedRecPrice})
+              </button>
+            </div>
+            <input
+              type="number"
+              min="10"
+              max="10000"
+              step="5"
+              data-testid="upload-custom-price-credits-input"
+              value={currentCredits}
+              onChange={e => setUploadForm({ ...uploadForm, priceCredits: Math.max(10, parseInt(e.target.value, 10) || recCredits) })}
+              style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(0,242,254,0.35)', borderRadius: '3px', color: '#fff', outline: 'none', fontWeight: 800 }}
+            />
+            <span style={{ fontSize: '10.5px', color: '#64748b' }}>
+              Flexible creator pricing: adjust freely (100 Credits = {formattedUnitPrice}).
+            </span>
           </div>
         </div>
 
@@ -3528,23 +3723,27 @@ function TuneStreamUploadPanel({
               cursor: 'pointer'
             }}
           >
-            {fileName ? (
+            {isUploadingAudio ? (
+              <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '14px' }}>
+                ⏳ Uploading audio to TuneMavens server ({fileName})... Please wait before publishing.
+              </div>
+            ) : fileName ? (
               <div style={{ color: '#00f2fe', fontWeight: 'bold', fontSize: '14px' }}>
-                📁 Ready for Ingestion: {fileName}
+                📁 Ready for Ingestion: {fileName} {uploadForm.uploadedAudioUrl ? '✓ Uploaded to Vault' : ''}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                 <RiUpload2Line size={32} style={{ color: '#94a3b8' }} />
                 <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Drag &amp; drop audio files here, or browse local device</span>
-                <span style={{ fontSize: '11px', color: '#64748b' }}>Supports Lossless FLAC/WAV up to 150MB</span>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>Supports Lossless FLAC/WAV/MP3 up to 200MB</span>
               </div>
             )}
             <input 
               type="file" 
               accept="audio/*" 
               onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setFileName(e.target.files[0].name);
+                if (e.target.files && e.target.files[0] && onFileSelected) {
+                  onFileSelected(e.target.files[0]);
                 }
               }}
               style={{ display: 'none' }}
@@ -3558,10 +3757,11 @@ function TuneStreamUploadPanel({
 
         <button 
           type="submit" 
+          disabled={isUploadingAudio}
           className="btn-play-hero" 
-          style={{ marginTop: '10px', justifyContent: 'center', padding: '10px', borderRadius: '3px', background: '#00f2fe', color: '#000', border: 'none', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          style={{ marginTop: '10px', justifyContent: 'center', padding: '10px', borderRadius: '3px', background: isUploadingAudio ? '#475569' : '#00f2fe', color: '#000', border: 'none', fontWeight: '800', cursor: isUploadingAudio ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
         >
-          <RiUpload2Line /> Ingest &amp; Publish Track
+          <RiUpload2Line /> {isUploadingAudio ? 'Waiting for File Upload...' : `Ingest & Publish ${relType} (${currentCredits} Credits / ${formattedCurrentPrice})`}
         </button>
       </form>
     </div>
@@ -3978,6 +4178,13 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     icon: RiHeadphoneFill,
     color: '#00f2fe'
   };
+  const isAdminUser = Boolean(
+    activeUser?.is_admin === true ||
+    activeUser?.original_role === 'admin' ||
+    sessionUser?.is_admin === true ||
+    sessionUser?.original_role === 'admin' ||
+    sessionUser?.role === 'admin'
+  );
   const isAdminSimulated = Boolean(activeUser.is_admin && userRole !== 'admin');
 
   const handleNotificationAction = (n) => {
@@ -4084,11 +4291,12 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
   const [artists, setArtists] = useState(AUTHORITATIVE_CATALOG_ARTISTS);
   const [albums, setAlbums] = useState(AUTHORITATIVE_CATALOG_ALBUMS);
 
-  const [uploadForm, setUploadForm] = useState({ title: '', artist: 'Ndufo', genre: 'Afro-House', splits: '100/0' });
+  const [uploadForm, setUploadForm] = useState({ title: '', artist: 'Ndufo', genre: 'Afro-House', splits: '100/0', releaseType: 'Single', priceCredits: 50, uploadedAudioUrl: '' });
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
   // Live fetch from backend API endpoints on mount
   useEffect(() => {
@@ -4377,6 +4585,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     add('Discover & Stream', { id: 'radio', label: 'Live Radio Node', icon: RiRadioLine });
     add('Discover & Stream', { id: 'singles', label: 'Singles Showcase', icon: RiMusicLine });
     add('Discover & Stream', { id: 'artists', label: 'Roster Creators', icon: RiUserLine });
+    add('Discover & Stream', { id: 'upload', label: 'Upload Track / DJ Mix', icon: RiUpload2Line, color: '#10b981', badge: 'UPLOAD' });
 
     // My Collection
     add('My Collection', { id: 'library', label: 'My Playlist Crates', icon: RiFolderMusicLine, color: '#a855f7', badge: 'CRATES' });
@@ -4399,11 +4608,102 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     return categories;
   };
 
+  const isCreditExemptRole = userRole === 'vc' || userRole === 'investor' || userRole === 'admin' || userRole === 'supervisor' || isAdminUser;
+
+  const handleBuyDownloadTrack = async (track) => {
+    if (!track) return;
+    const costCredits = Number(track.priceCredits || 50);
+    if (!isCreditExemptRole && typeof userCredits === 'number' && userCredits < costCredits) {
+      setIsCreditReloadOpen(true);
+      return;
+    }
+    const apiBase = getApiBase();
+    const trackKey = track.isrc || track.id || track.title;
+    try {
+      const token = localStorage.getItem('tunemavens_token') || sessionStorage.getItem('tunemavens_token') || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`${apiBase}/api/stream/purchase/${encodeURIComponent(trackKey)}`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ payment_method: 'wallet' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 402) setIsCreditReloadOpen(true);
+        return;
+      }
+      const charged = typeof data.credits_charged === 'number' ? data.credits_charged : (isCreditExemptRole ? 0 : costCredits);
+      if (!isCreditExemptRole && charged > 0) {
+        const nextBal = typeof data.remaining_credits === 'number' ? data.remaining_credits : Math.max(0, (userCredits || 0) - charged);
+        setUserCredits(nextBal);
+        localStorage.setItem('tunemavens_user_credits', String(nextBal));
+        window.dispatchEvent(new CustomEvent('tunemavens_credits_updated', { detail: { newBalance: nextBal } }));
+      }
+    } catch (_) {
+      // Allow direct download fallback if offline or demo session
+    }
+    const dlUrl = `${apiBase}/api/stream/download/${encodeURIComponent(trackKey)}`;
+    const a = document.createElement('a');
+    a.href = dlUrl;
+    a.download = `${track.artist || 'TuneStream'} - ${track.title || 'Track'}.wav`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTipToast({
+      artist: track.artist || 'Creator',
+      amount: isCreditExemptRole ? 0 : costCredits,
+      trackTitle: `Downloading Lossless Master: ${track.title}`,
+    });
+    setTimeout(() => setTipToast(null), 4000);
+  };
+
+  const handleUploadFileSelected = async (file) => {
+    if (!file) return;
+    setUploadError('');
+    setFileName(file.name);
+    setIsUploadingAudio(true);
+    try {
+      const apiBase = getApiBase();
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'audio');
+      formData.append('media_type', 'audio');
+      const token = localStorage.getItem('tunemavens_token') || sessionStorage.getItem('tunemavens_token') || '';
+      const res = await fetch(`${apiBase}/api/storage/upload`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const url = normalizeMediaUrl(data?.url || data?.public_url || data?.asset?.media_url || '');
+        if (url) {
+          setUploadForm((prev) => ({
+            ...prev,
+            uploadedAudioUrl: url,
+            title: prev.title || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' '),
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('Audio storage upload note:', err);
+    } finally {
+      setIsUploadingAudio(false);
+    }
+  };
+
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
     setUploadError('');
     setUploadSuccess(false);
 
+    if (isUploadingAudio) {
+      setUploadError('Please wait for the audio file upload to complete before publishing.');
+      return;
+    }
     if (!uploadForm.title.trim()) {
       setUploadError('Track title is required.');
       return;
@@ -4417,7 +4717,12 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
       return;
     }
 
+    const relType = uploadForm.releaseType || 'Single';
+    const recCredits = relType === 'DJ Mix' ? 499 : relType === 'Extended Club / Dubplate' ? 100 : 50;
+    const priceCredits = Math.max(10, Number(uploadForm.priceCredits || recCredits));
+    const priceUsd = Number((priceCredits / 100).toFixed(2));
     const newIsrc = `KE-TM1-26-${Math.floor(10000 + Math.random() * 89999)}`;
+    const resolvedAudioUrl = uploadForm.uploadedAudioUrl || `/api/stream/track/${newIsrc}`;
     const newTrack = {
       id: Date.now(),
       isrc: newIsrc,
@@ -4426,13 +4731,15 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
       artist: uploadForm.artist,
       album: uploadForm.title,
       release: uploadForm.title,
-      releaseType: 'Single',
+      releaseType: relType,
       year: '2026',
       genre: uploadForm.genre || 'Afro-House',
-      duration: '3:30',
+      duration: relType === 'DJ Mix' ? '60:00' : '3:30',
       plays: '1 play',
       streams: '1 play',
-      priceCredits: 50,
+      priceCredits,
+      priceUsd,
+      recommendedPriceCredits: recCredits,
       cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
       coverArt: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80',
       coverText: uploadForm.title.slice(0, 10),
@@ -4440,16 +4747,36 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
       splits: uploadForm.splits || '100/0',
       split: uploadForm.splits || '100/0',
       status: 'Approved',
-      audioUrl: `/api/stream/track/${newIsrc}`
+      audioUrl: resolvedAudioUrl
     };
 
     try {
       const apiBase = getApiBase();
+      const token = localStorage.getItem('tunemavens_token') || sessionStorage.getItem('tunemavens_token') || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
       await fetch(`${apiBase}/api/catalog/tracks?subdomain=ndufo`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(newTrack)
       });
+      if (relType === 'DJ Mix') {
+        await fetch(`${apiBase}/api/dj/mixes`, {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            title: uploadForm.title,
+            dj_name: uploadForm.artist,
+            genre: uploadForm.genre || 'Afro-House',
+            audio_url: resolvedAudioUrl,
+            commercial_price: priceUsd,
+            creation_type: 'curated_mix',
+            auto_extract_tracks: true,
+          }),
+        });
+      }
     } catch (err) {
       console.warn('Backend sync note:', err);
     }
@@ -4459,7 +4786,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     saveUnifiedCatalog(updated);
     setUploadSuccess(true);
     setFileName('');
-    setUploadForm({ title: '', artist: 'Ndufo', genre: 'Afro-House', splits: '100/0' });
+    setUploadForm({ title: '', artist: 'Ndufo', genre: 'Afro-House', splits: '100/0', releaseType: 'Single', priceCredits: 50, uploadedAudioUrl: '' });
   };
 
   const handleDrag = (e) => {
@@ -4478,8 +4805,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('audio/')) {
-        setFileName(file.name);
+      if (file.type.startsWith('audio/') || /\.(mp3|wav|flac|ogg|m4a|aac|aiff)$/i.test(file.name)) {
+        handleUploadFileSelected(file);
       } else {
         setUploadError('Invalid file type. Only audio files (MP3, WAV, FLAC) are supported.');
       }
@@ -4523,6 +4850,24 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
             likes={likes}
             onPlayTrack={handleTrackSelect}
             onLike={handleLike}
+            onBuyDownloadTrack={handleBuyDownloadTrack}
+            isCreditExempt={isCreditExemptRole}
+          />
+        );
+      case 'upload':
+        return (
+          <TuneStreamUploadPanel
+            uploadForm={uploadForm}
+            setUploadForm={setUploadForm}
+            uploadSuccess={uploadSuccess}
+            uploadError={uploadError}
+            handleUploadSubmit={handleUploadSubmit}
+            dragActive={dragActive}
+            handleDrag={handleDrag}
+            handleDrop={handleDrop}
+            fileName={fileName}
+            onFileSelected={handleUploadFileSelected}
+            isUploadingAudio={isUploadingAudio}
           />
         );
       case 'artists':
@@ -4542,6 +4887,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
           <TuneStreamLibraryPanel
             tracks={catalogTracks}
             onPlayTrack={handleTrackSelect}
+            onBuyDownloadTrack={handleBuyDownloadTrack}
           />
         );
       case 'favorites':
@@ -4565,7 +4911,15 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
           />
         );
       case 'dj-mixes':
-        return <TuneStreamDjMixesPanel onPlayTrack={handleTrackSelect} />;
+        return (
+          <TuneStreamDjMixesPanel
+            onPlayTrack={handleTrackSelect}
+            userCredits={userCredits}
+            setUserCredits={setUserCredits}
+            isCreditExempt={isCreditExemptRole}
+            onOpenCreditReload={() => setIsCreditReloadOpen(true)}
+          />
+        );
       case 'vc-discover':
         return <VcDiscoverCreatorsApp sessionUser={activeUser} onNavigateTab={setActiveTab} />;
       case 'podcaster-studio':

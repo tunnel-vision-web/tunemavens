@@ -34,6 +34,60 @@ from account_setup import (
 router = APIRouter(prefix="/api/dj/mixes", tags=["DJ Mixes"])
 alias_router = APIRouter(prefix="/api/dj-mixes", tags=["DJ Mixes Alias"])
 
+# Platform-wide credit rate (single source of truth, mirrors apps/*/src/**/pricingPlans.js):
+# 1 Credit = 1 KES = $0.01 USD  ->  $1.00 USD = 100 Credits
+CREDITS_PER_USD = 100
+MIN_MIX_PRICE_USD = 0.50
+MAX_MIX_PRICE_USD = 100.00
+CREDIT_EXEMPT_ROLES = ("admin", "vc", "investor", "supervisor")
+
+
+def normalize_media_url(url: Optional[str]) -> str:
+    """Make stored media URLs portable: route /uploads, /heroes, /headers through /api/... so Nginx proxies them."""
+    if not url or not isinstance(url, str):
+        return ""
+    u = url.strip()
+    m = re.match(r"^https?://(?:localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?(/api/(?:uploads|heroes|headers)/.*)$", u, re.I)
+    if m:
+        return m.group(1)
+    m2 = re.match(r"^https?://(?:localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?(/(?:uploads|heroes|headers)/.*)$", u, re.I)
+    if m2:
+        return f"/api{m2.group(1)}"
+    if u.startswith(("/uploads/", "/heroes/", "/headers/")):
+        return f"/api{u}"
+    return u
+
+
+def is_unplayable_media_url(url: Optional[str]) -> bool:
+    """Browser-session-only URLs (blob:/data:/file:) can never be streamed by other listeners."""
+    return bool(url) and url.strip().lower().startswith(("blob:", "data:", "file:"))
+
+
+def recommend_mix_price(duration_seconds: Optional[int], creation_type: Optional[str], track_count: int = 0) -> dict:
+    """Recommended retail price (USD). DJs may always override within MIN/MAX bounds."""
+    base = {"original_creation": 7.00, "remix_original_beat": 6.00}.get(creation_type or "curated_mix", 5.00)
+    minutes = max(0, int(duration_seconds or 3600) / 60)
+    extra = min(3.0, max(0.0, (minutes - 60) / 30) * 0.5)   # +$0.50 per extra 30 min over 1h, capped at +$3
+    rec = round(round((base + extra) * 2) / 2 - 0.01, 2)
+    return {
+        "recommended_price_usd": rec,
+        "recommended_price_credits": int(round(rec * CREDITS_PER_USD)),
+        "min_price_usd": MIN_MIX_PRICE_USD,
+        "max_price_usd": MAX_MIX_PRICE_USD,
+        "credits_per_usd": CREDITS_PER_USD,
+        "basis": f"{creation_type or 'curated_mix'} · {int(minutes)} min",
+    }
+
+
+def _validate_price(price: float) -> float:
+    if price < MIN_MIX_PRICE_USD or price > MAX_MIX_PRICE_USD:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Price must be between ${MIN_MIX_PRICE_USD:.2f} and ${MAX_MIX_PRICE_USD:.2f} USD.",
+        )
+    return round(float(price), 2)
+
+
 
 # ---------------------------------------------------------------------------
 # Request & Response Shapes
@@ -74,7 +128,7 @@ class MixCreateRequest(BaseModel):
     original_song_title: Optional[str] = None
     original_song_artist: Optional[str] = None
     remix_beat_description: Optional[str] = None
-    commercial_price: Optional[float] = 4.99
+    commercial_price: Optional[float] = None  # None -> platform-recommended price; DJs can set any price in bounds
     currency: Optional[str] = "USD"
     dj_split_percentage: Optional[float] = 40.0
     track_owners_split_percentage: Optional[float] = 50.0
@@ -128,8 +182,217 @@ class PurchaseMixRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Seed Helper
+# Seed & Asset Reconciliation Helper
 # ---------------------------------------------------------------------------
+def _norm_mix_key(text: Optional[str]) -> str:
+    if not text:
+        return ""
+    base = re.sub(r"\.(mp3|wav|flac|ogg|m4a|aac|aiff)$", "", str(text).strip(), flags=re.I)
+    return re.sub(r"[^a-z0-9]+", "", base.lower())
+
+
+def reconcile_dj_mixes_and_assets():
+    """Repairs blob:/localhost URLs on uploaded DJ mixes, recovers orphaned mix audio assets, and removes duplicate seed records."""
+    try:
+        audio_assets = list(db.assets.find({"media_type": "audio"}).sort("created_at", -1))
+        image_assets = list(db.assets.find({"media_type": "image"}).sort("created_at", -1))
+    except Exception:
+        audio_assets, image_assets = [], []
+
+    # Remove dummy placeholder test record if present
+    try:
+        db.dj_mixes.delete_many({"title": "Test", "audio_url": "http://example.com/test.mp3"})
+    except Exception:
+        pass
+
+    all_mixes = list(db.dj_mixes.find({}))
+    user_dj_name_map = {}
+    for m in all_mixes:
+        uid = str(m.get("user_id") or "")
+        if uid and m.get("dj_name") and uid not in user_dj_name_map:
+            user_dj_name_map[uid] = m["dj_name"]
+
+    # 1. Repair blob: or localhost URLs on existing mixes using db.assets
+    for m in all_mixes:
+        updates = {}
+        raw_audio = m.get("audio_url", "")
+        raw_art = m.get("artwork_url", "")
+        m_key = _norm_mix_key(m.get("title"))
+
+        if is_unplayable_media_url(raw_audio) or not raw_audio:
+            matched_url = ""
+            for a in audio_assets:
+                f_key = _norm_mix_key(a.get("filename"))
+                t_key = _norm_mix_key(a.get("title"))
+                if m_key and (m_key == f_key or m_key == t_key or (len(m_key) >= 8 and (m_key in f_key or f_key in m_key))):
+                    cand = normalize_media_url(a.get("media_url"))
+                    if cand and not is_unplayable_media_url(cand):
+                        matched_url = cand
+                        break
+            if matched_url:
+                updates["audio_url"] = matched_url
+                m["audio_url"] = matched_url
+        else:
+            norm_a = normalize_media_url(raw_audio)
+            if norm_a != raw_audio:
+                updates["audio_url"] = norm_a
+                m["audio_url"] = norm_a
+
+        if raw_art and not is_unplayable_media_url(raw_art):
+            norm_art = normalize_media_url(raw_art)
+            if norm_art != raw_art:
+                updates["artwork_url"] = norm_art
+                m["artwork_url"] = norm_art
+
+        if updates:
+            try:
+                db.dj_mixes.update_one({"_id": m["_id"]}, {"$set": updates})
+            except Exception:
+                pass
+
+    # 2. Recover any large DJ Mix audio upload in db.assets that never got a db.dj_mixes record
+    existing_keys = set()
+    existing_urls = set()
+    for m in all_mixes:
+        existing_keys.add(_norm_mix_key(m.get("title")))
+        if m.get("audio_url"):
+            existing_urls.add(normalize_media_url(m.get("audio_url")))
+
+    for a in audio_assets:
+        fname = str(a.get("filename") or "")
+        atitle = str(a.get("title") or "")
+        size_b = int(a.get("size_bytes") or 0)
+        a_url = normalize_media_url(a.get("media_url"))
+        if not a_url or is_unplayable_media_url(a_url):
+            continue
+        f_key = _norm_mix_key(fname)
+        t_key = _norm_mix_key(atitle)
+        if (f_key and f_key in existing_keys) or (t_key and t_key in existing_keys) or (a_url in existing_urls):
+            continue
+        combined_lower = f"{fname} {atitle}".lower()
+        is_dj_mix_asset = size_b >= 20_000_000 and any(k in combined_lower for k in (" by dj ", " mix", " vol ", " vol.", "dj cj"))
+        if not is_dj_mix_asset:
+            continue
+
+        uid = str(a.get("user_id") or "")
+        dj_name = user_dj_name_map.get(uid)
+        if not dj_name:
+            m_dj = re.search(r"\bby\s+(dj\s+[^.]+)", fname, flags=re.I)
+            if m_dj:
+                dj_name = m_dj.group(1).strip()
+        if not dj_name and ObjectId.is_valid(uid):
+            u_doc = db.users.find_one({"_id": ObjectId(uid)})
+            if u_doc:
+                dj_name = u_doc.get("display_name") or u_doc.get("name") or u_doc.get("username")
+        dj_name = dj_name or "DJ CJ Kenya"
+
+        clean_title = re.sub(r"\.(mp3|wav|flac|ogg|m4a|aac|aiff)$", "", fname, flags=re.I).strip() or atitle or "Curated DJ Mix"
+        genre = "Afro House"
+        if any(w in combined_lower for w in ("hip hop", "hip-hop", "underground", "wenyeji")):
+            genre = "Hip-Hop"
+        elif any(w in combined_lower for w in ("benga", "rhumba", "katitu", "yaba")):
+            genre = "Afrobeats"
+
+        art_url = ""
+        for img in image_assets:
+            if str(img.get("user_id") or "") == uid and img.get("media_url"):
+                art_url = normalize_media_url(img.get("media_url"))
+                break
+
+        rec_price = recommend_mix_price(3600, "curated_mix", 4)["recommended_price_usd"]
+        recovered_doc = {
+            "user_id": uid or "seed_dj_pro",
+            "dj_name": dj_name,
+            "title": clean_title,
+            "description": f"Full-length curated DJ mix by {dj_name}. Streams 100% free with full IP accreditation while rights clearances are in progress.",
+            "genre": genre,
+            "bpm_avg": 122,
+            "duration_seconds": 3600,
+            "audio_url": a_url,
+            "artwork_url": art_url,
+            "creation_type": "curated_mix",
+            "is_original_ip_only": False,
+            "is_remix_original_beat": False,
+            "commercial_price": rec_price,
+            "recommended_price": rec_price,
+            "currency": "USD",
+            "status": "clearance_pending",
+            "sale_locked": True,
+            "free_to_stream": True,
+            "streaming_mode": "free_promotional",
+            "ip_credits_mandatory": True,
+            "dj_split_percentage": 40.0,
+            "track_owners_split_percentage": 50.0,
+            "platform_fee_percentage": 10.0,
+            "tracklist": [
+                {
+                    "id": "t1",
+                    "title": f"{clean_title} (Opening Selection)",
+                    "artist": dj_name,
+                    "ip_owner_name": "Featured Recording Rights Holder",
+                    "ip_owner_email": "clearances@tunemavens.com",
+                    "start_time": 0,
+                    "end_time": 1800,
+                    "duration_seconds": 1800,
+                    "split_percentage": 50.0,
+                    "clearance_status": "pending",
+                    "bpm": 122,
+                    "key": "8A",
+                },
+                {
+                    "id": "t2",
+                    "title": f"{clean_title} (Peak Hour Transition)",
+                    "artist": dj_name,
+                    "ip_owner_name": "Featured Publishing Rights Holder",
+                    "ip_owner_email": "clearances@tunemavens.com",
+                    "start_time": 1800,
+                    "end_time": 3600,
+                    "duration_seconds": 1800,
+                    "split_percentage": 50.0,
+                    "clearance_status": "pending",
+                    "bpm": 124,
+                    "key": "9A",
+                },
+            ],
+            "plays_count": 0,
+            "sales_count": 0,
+            "total_revenue": 0.0,
+            "created_at": a.get("created_at") or datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        try:
+            db.dj_mixes.insert_one(recovered_doc)
+            existing_keys.add(f_key)
+            existing_urls.add(a_url)
+        except Exception:
+            pass
+
+    # 3. Deduplicate repeated seed/test records by (normalized title, normalized dj_name)
+    all_mixes_after = list(db.dj_mixes.find({}).sort("created_at", -1))
+    seen_groups = {}
+    duplicate_ids = []
+    for m in all_mixes_after:
+        g_key = (_norm_mix_key(m.get("title")), _norm_mix_key(m.get("dj_name")))
+        if not g_key[0]:
+            continue
+        if g_key not in seen_groups:
+            seen_groups[g_key] = m
+        else:
+            keeper = seen_groups[g_key]
+            m_has_upload = "/uploads/" in str(m.get("audio_url") or "")
+            k_has_upload = "/uploads/" in str(keeper.get("audio_url") or "")
+            if m_has_upload and not k_has_upload:
+                duplicate_ids.append(keeper["_id"])
+                seen_groups[g_key] = m
+            else:
+                duplicate_ids.append(m["_id"])
+    if duplicate_ids:
+        try:
+            db.dj_mixes.delete_many({"_id": {"$in": duplicate_ids}})
+        except Exception:
+            pass
+
+
 def seed_dj_mixes_if_empty():
     """Seed initial high-production DJ mix with tracklist and clearance state."""
     sample_audio = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
@@ -140,6 +403,13 @@ def seed_dj_mixes_if_empty():
             {"audio_url": {"$regex": r"\.mp4($|\?)"}},
             {"$set": {"audio_url": sample_audio}}
         )
+    except Exception:
+        pass
+
+    try:
+        # Policy: uncleared mixes must stream free (sale-locked), never hidden as drafts
+        db.dj_mixes.update_many({"status": "draft"}, {"$set": {"status": "clearance_pending", "sale_locked": True}})
+        reconcile_dj_mixes_and_assets()
     except Exception:
         pass
 
@@ -669,10 +939,26 @@ def _format_mix_response(doc: dict) -> dict:
         "consensus_reached": all_cleared
     }
 
-    # Ensure audio_url is always a clean playable audio stream
-    audio_url = doc.get("audio_url", "")
-    if not audio_url or audio_url.endswith(".mp4") or "ForBiggerBlazes" in audio_url:
+    # Ensure audio_url is always a clean, portable, playable audio stream
+    raw_audio = doc.get("audio_url", "")
+    doc["audio_available"] = not is_unplayable_media_url(raw_audio)
+    audio_url = normalize_media_url(raw_audio)
+    if is_unplayable_media_url(raw_audio):
+        # Browser-only blob: URLs can never play for other listeners; flag instead of serving a fake track
+        doc["audio_url"] = ""
+    elif not audio_url or audio_url.endswith(".mp4") or "ForBiggerBlazes" in audio_url:
         doc["audio_url"] = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    else:
+        doc["audio_url"] = audio_url
+    art = doc.get("artwork_url", "")
+    doc["artwork_url"] = "" if is_unplayable_media_url(art) else normalize_media_url(art)
+
+    # Pricing: creators set their own price; platform recommendation is advisory
+    rec = recommend_mix_price(doc.get("duration_seconds"), doc.get("creation_type"), total_tracks)
+    doc["recommended_price"] = rec["recommended_price_usd"]
+    doc["commercial_price"] = float(doc.get("commercial_price") or rec["recommended_price_usd"])
+    doc["price_credits"] = int(round(doc["commercial_price"] * CREDITS_PER_USD))
+    doc["pricing"] = rec
 
     # Core Policy Enforcement:
     # 1. Un-cleared songs stream completely free, zero selling, full creator/IP owner accreditation.
@@ -858,17 +1144,32 @@ def extract_tracks_from_mix(payload: ExtractTracksRequest, current_user: Optiona
     }
 
 
+@router.get("/pricing-recommendation", response_model=dict)
+@alias_router.get("/pricing-recommendation", response_model=dict)
+def get_pricing_recommendation(
+    duration_seconds: int = 3600,
+    creation_type: str = "curated_mix",
+    track_count: int = 0,
+):
+    """Recommended retail price for a mix. Advisory only: DJs/creators set their own final price."""
+    return recommend_mix_price(duration_seconds, creation_type, track_count)
+
+
 @router.post("", response_model=dict)
 @alias_router.post("", response_model=dict)
 def create_dj_mix(payload: MixCreateRequest, current_user: Optional[dict] = Depends(get_optional_user)):
     """Upload / register a new DJ mix on the platform."""
     if not current_user:
-        current_user = db.users.find_one({"role": "dj"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
-            "_id": ObjectId(),
-            "name": "DJ Kalonje",
-            "email": "dj@tunemavens.com",
-            "role": "dj"
-        }
+        raise HTTPException(status_code=401, detail="Sign in to upload a DJ mix.")
+
+    # Upload integrity: a mix must reference a durable, streamable file (not a browser-only blob: URL)
+    if is_unplayable_media_url(payload.audio_url):
+        raise HTTPException(
+            status_code=400,
+            detail="The audio file upload did not complete, so this mix would be unplayable. Please re-upload the audio file and try again.",
+        )
+    payload.audio_url = normalize_media_url(payload.audio_url)
+    payload.artwork_url = "" if is_unplayable_media_url(payload.artwork_url) else normalize_media_url(payload.artwork_url)
 
     dj_name = (
         current_user.get("display_name")
@@ -960,7 +1261,8 @@ def create_dj_mix(payload: MixCreateRequest, current_user: Optional[dict] = Depe
         track_split = payload.track_owners_split_percentage or 50.0
         platform_split = payload.platform_fee_percentage or 10.0
         all_already_cleared = len(tracklist) > 0 and all(t.get("clearance_status") in ("signed", "self_owned") for t in tracklist)
-        initial_status = "published" if all_already_cleared else "draft"
+        # Policy: uncleared curated mixes stream free (sale-locked) rather than hidden as drafts
+        initial_status = "published" if all_already_cleared else "clearance_pending"
         sale_locked = not all_already_cleared
 
     if is_original and tracklist:
@@ -968,6 +1270,9 @@ def create_dj_mix(payload: MixCreateRequest, current_user: Optional[dict] = Depe
             t["clearance_status"] = "self_owned"
             t["ip_owner_name"] = dj_name
             t["ip_owner_email"] = current_user.get("email", "")
+
+    rec = recommend_mix_price(payload.duration_seconds, creation_type, len(tracklist))
+    final_price = _validate_price(payload.commercial_price) if payload.commercial_price is not None else rec["recommended_price_usd"]
 
     mix = DjMix(
         user_id=str(current_user["_id"]),
@@ -985,7 +1290,8 @@ def create_dj_mix(payload: MixCreateRequest, current_user: Optional[dict] = Depe
         original_song_title=payload.original_song_title,
         original_song_artist=payload.original_song_artist,
         remix_beat_description=payload.remix_beat_description,
-        commercial_price=payload.commercial_price or 4.99,
+        commercial_price=final_price,
+        recommended_price=rec["recommended_price_usd"],
         currency=payload.currency or "USD",
         status=initial_status,
         sale_locked=sale_locked,
@@ -1012,53 +1318,58 @@ def list_dj_mixes(
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """List DJ mixes with clearance summary, playlist tracks, and commercial readiness."""
-    query = {}
+    and_clauses = []
     if mine_only:
         if not current_user:
             return []
-        query["user_id"] = str(current_user["_id"])
+        and_clauses.append({"user_id": str(current_user["_id"])})
     else:
-        # Public catalog shows published or user's own mixes
         or_conditions = [
             {"status": "published"},
-            {"status": "clearance_pending"}
+            {"status": "clearance_pending"},
+            {"status": "draft"},
         ]
         if current_user:
             or_conditions.append({"user_id": str(current_user["_id"])})
-        query["$or"] = or_conditions
+        and_clauses.append({"$or": or_conditions})
 
     if creation_type and creation_type.lower() != "all":
         if creation_type == "remix_original_beat":
-            query["$or"] = [{"creation_type": "remix_original_beat"}, {"is_remix_original_beat": True}]
+            and_clauses.append({"$or": [{"creation_type": "remix_original_beat"}, {"is_remix_original_beat": True}]})
         elif creation_type == "original_creation":
-            query["$or"] = [{"creation_type": "original_creation"}, {"is_original_ip_only": True}]
+            and_clauses.append({"$or": [{"creation_type": "original_creation"}, {"is_original_ip_only": True}]})
         else:
-            query["creation_type"] = creation_type
-    if mine_only:
-        if not current_user:
-            return []
-        query["user_id"] = str(current_user["_id"])
-    else:
-        # Public catalog shows published or user's own mixes
-        or_conditions = [
-            {"status": "published"},
-            {"status": "clearance_pending"}
-        ]
-        if current_user:
-            or_conditions.append({"user_id": str(current_user["_id"])})
-        query["$or"] = or_conditions
+            and_clauses.append({"creation_type": creation_type})
 
     if genre and genre.lower() != "all":
-        query["genre"] = {"$regex": f"^{genre}$", "$options": "i"}
+        and_clauses.append({"genre": {"$regex": f"^{genre}$", "$options": "i"}})
 
     if q and q.strip():
         search_rgx = {"$regex": q.strip(), "$options": "i"}
-        query["$and"] = [
-            {"$or": [{"title": search_rgx}, {"dj_name": search_rgx}, {"genre": search_rgx}]}
-        ]
+        and_clauses.append({"$or": [{"title": search_rgx}, {"dj_name": search_rgx}, {"genre": search_rgx}]})
 
+    query = {"$and": and_clauses} if and_clauses else {}
     docs = list(db.dj_mixes.find(query).sort("created_at", -1))
-    return [_format_mix_response(d) for d in docs]
+
+    # Deduplicate by (title, dj_name), keeping the most recent / uploaded version, and prioritize real DJs over test fixtures
+    seen_keys = set()
+    unique_docs = []
+    for d in docs:
+        key = (_norm_mix_key(d.get("title")), _norm_mix_key(d.get("dj_name")))
+        if key[0] and key in seen_keys:
+            continue
+        if key[0]:
+            seen_keys.add(key)
+        unique_docs.append(_format_mix_response(d))
+
+    def _mix_priority(item: dict) -> tuple:
+        dj = (item.get("dj_name") or "").strip().lower()
+        is_test_dj = dj in ("test dj", "test affiliate", "dj test master") or "test" in dj
+        has_real_upload = "/uploads/" in (item.get("audio_url") or "")
+        return (1 if is_test_dj else 0, 0 if has_real_upload else 1)
+
+    unique_docs.sort(key=_mix_priority)
+    return unique_docs
 
 
 @router.get("/{mix_id}", response_model=dict)
@@ -1498,12 +1809,8 @@ def purchase_dj_mix(
         raise HTTPException(status_code=400, detail="Invalid mix ID format")
 
     if not current_user:
-        current_user = db.users.find_one({"role": "consumer"}) or db.users.find_one({"email": "creator_member@tunemavens.com"}) or {
-            "_id": ObjectId(),
-            "name": "TuneStream Fan",
-            "email": "fan@tunemavens.com",
-            "role": "consumer"
-        }
+        # Credit policy: purchases are always charged to a real, authenticated account
+        raise HTTPException(status_code=401, detail="Sign in to purchase this mix.")
 
     mix = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
     if not mix:
@@ -1549,9 +1856,50 @@ def purchase_dj_mix(
         )
 
     price = float(mix.get("commercial_price", 4.99))
+
+    # Idempotent ownership: never charge a buyer twice for the same mix
+    prior_sale = db.dj_mix_sales.find_one({"mix_id": mix_id, "buyer_id": str(current_user["_id"])})
+    if prior_sale:
+        return {
+            "status": "success",
+            "already_owned": True,
+            "message": f"You already own '{mix.get('title')}'. No credits were charged.",
+            "order_reference": prior_sale.get("order_reference"),
+            "price_paid": 0.0,
+            "credits_charged": 0,
+            "splits_distributed": prior_sale.get("split_cascade", {}),
+        }
     dj_pct = float(mix.get("dj_split_percentage", 40.0))
     track_pool_pct = float(mix.get("track_owners_split_percentage", 50.0))
     platform_pct = float(mix.get("platform_fee_percentage", 10.0))
+
+    # Credit policy: purchases debit TM Credits via TuneLedger (1 USD = 100 credits).
+    # Admin / VC / investor / supervisor accounts are credit-exempt; owners aren't charged for their own mix.
+    # Only the unified wallet settles purchases: card / M-Pesa must first top up credits through the
+    # verified payments flow (a client-supplied payment_method alone is never proof of payment).
+    credits_charged = 0
+    is_exempt = current_user.get("role") in CREDIT_EXEMPT_ROLES or current_user.get("is_admin") is True
+    is_mix_owner = str(mix.get("user_id")) == str(current_user.get("_id"))
+    if not is_exempt and not is_mix_owner:
+        if (payload.payment_method or "wallet") != "wallet":
+            raise HTTPException(
+                status_code=402,
+                detail="Top up TM Credits with M-Pesa or card first, then complete this purchase with your credit wallet.",
+            )
+        from services import ledger_service
+        credits_charged = max(1, int(round(price * CREDITS_PER_USD)))
+        try:
+            ledger_service.record_transaction(
+                user_id=current_user["_id"],
+                amount=-credits_charged,
+                entry_type="CREDIT_SPEND_DJ_MIX",
+                provider="tunemavens_dj_mixes",
+                provider_ref=f"MIX-{mix_id}-{secrets.token_hex(4).upper()}",
+                description=f"Purchase DJ mix {mix.get('title')} for {credits_charged} credits",
+                metadata={"mix_id": mix_id, "price_usd": price},
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=402, detail=str(e))
 
     # Split Cascade distributions:
     dj_payout = round((dj_pct / 100.0) * price, 2)
@@ -1581,6 +1929,7 @@ def purchase_dj_mix(
         "buyer_id": str(current_user["_id"]),
         "buyer_email": current_user.get("email"),
         "gross_amount": price,
+        "credits_charged": credits_charged,
         "currency": mix.get("currency", "USD"),
         "split_cascade": {
             "dj_payout": dj_payout,
@@ -1607,9 +1956,71 @@ def purchase_dj_mix(
         "message": f"Successfully purchased '{mix.get('title')}'. Mix unlocked for lossless streaming and offline playback.",
         "order_reference": order_ref,
         "price_paid": price,
+        "credits_charged": credits_charged,
         "splits_distributed": sale_record["split_cascade"]
     }
 
+
+
+class MixPricingUpdateRequest(BaseModel):
+    commercial_price: float
+
+
+@router.put("/{mix_id}/pricing", response_model=dict)
+@alias_router.put("/{mix_id}/pricing", response_model=dict)
+def update_mix_pricing(mix_id: str, payload: MixPricingUpdateRequest, current_user: dict = Depends(get_current_user)):
+    """DJs/creators can change their mix price at any time (platform recommendation is advisory)."""
+    if not ObjectId.is_valid(mix_id):
+        raise HTTPException(status_code=400, detail="Invalid mix ID format")
+    mix = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
+    if not mix:
+        raise HTTPException(status_code=404, detail="DJ Mix not found")
+    if str(mix.get("user_id")) != str(current_user["_id"]) and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Only the mix owner can change its price.")
+    price = _validate_price(payload.commercial_price)
+    db.dj_mixes.update_one(
+        {"_id": ObjectId(mix_id)},
+        {"$set": {"commercial_price": price, "updated_at": datetime.now(timezone.utc)}},
+    )
+    return _format_mix_response(db.dj_mixes.find_one({"_id": ObjectId(mix_id)}))
+
+
+@router.get("/{mix_id}/download", response_model=dict)
+@alias_router.get("/{mix_id}/download", response_model=dict)
+def download_dj_mix(mix_id: str, current_user: dict = Depends(get_current_user)):
+    """Paid download entitlement: owner, credit-exempt accounts, or a buyer of a cleared mix.
+
+    Uncleared (sale-locked) mixes are stream-only; there is no download path for them.
+    """
+    if not ObjectId.is_valid(mix_id):
+        raise HTTPException(status_code=400, detail="Invalid mix ID format")
+    doc = db.dj_mixes.find_one({"_id": ObjectId(mix_id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="DJ Mix not found")
+    formatted = _format_mix_response(dict(doc))
+
+    uid = str(current_user["_id"])
+    is_owner = str(doc.get("user_id")) == uid
+    is_exempt = current_user.get("role") in CREDIT_EXEMPT_ROLES or current_user.get("is_admin") is True
+    if formatted.get("sale_locked") and not is_owner and not is_exempt:
+        raise HTTPException(
+            status_code=403,
+            detail="This mix has uncleared tracks: it is free to stream with full IP credits, but downloads unlock after clearance.",
+        )
+    purchased = db.dj_mix_sales.find_one({"mix_id": mix_id, "buyer_id": uid}) is not None
+    if not (is_owner or is_exempt or purchased):
+        raise HTTPException(status_code=402, detail="Purchase this mix to download it.")
+    if not formatted.get("audio_available", True):
+        raise HTTPException(status_code=409, detail="The audio file for this mix is missing. The DJ must re-upload it.")
+    db.dj_mixes.update_one({"_id": ObjectId(mix_id)}, {"$inc": {"downloads_count": 1}})
+    return {
+        "status": "success",
+        "mix_id": mix_id,
+        "title": formatted["title"],
+        "dj_name": formatted["dj_name"],
+        "download_url": formatted["audio_url"],
+        "credited_ip_owners": formatted.get("credited_ip_owners", []),
+    }
 
 
 # ---------------------------------------------------------------------------

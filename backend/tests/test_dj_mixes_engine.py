@@ -507,3 +507,110 @@ def test_dj_entirely_own_original_creation_monetization(auth_headers, dj_user):
     assert splits["platform_fee"] == 0.60
 
 
+def test_flexible_pricing_credit_policy_and_download_gate(auth_headers, dj_user):
+    """Verifies recommended pricing, creator price adjustment, credit deduction, and download gating."""
+    from routes.dj_mixes_router import reconcile_dj_mixes_and_assets
+
+    # 1. Pricing recommendation endpoint
+    rec_res = client.get("/api/dj/mixes/pricing-recommendation?duration_seconds=5400&creation_type=curated_mix")
+    assert rec_res.status_code == 200
+    rec = rec_res.json()
+    assert rec["recommended_price_usd"] == 5.49
+    assert rec["recommended_price_credits"] == 549
+    assert rec["credits_per_usd"] == 100
+
+    # 2. Create an uncleared mix without specifying price -> receives recommended price
+    uncleared_res = client.post(
+        "/api/dj/mixes",
+        json={
+            "title": "NairobiClub Sessions (Commercial Compilation Vol 2)",
+            "genre": "Afro House",
+            "duration_seconds": 3600,
+            "audio_url": "/api/uploads/audio/enenda.wav",
+            "creation_type": "curated_mix",
+            "auto_extract_tracks": True,
+        },
+        headers=auth_headers,
+    )
+    assert uncleared_res.status_code == 200
+    u_mix = uncleared_res.json()
+    u_id = u_mix["id"]
+    assert u_mix["sale_locked"] is True
+    assert u_mix["commercial_price"] == 4.99
+    assert u_mix["recommended_price"] == 4.99
+    assert u_mix["price_credits"] == 499
+
+    # 3. DJ adjusts their price freely via PUT /api/dj/mixes/{id}/pricing
+    price_res = client.put(
+        f"/api/dj/mixes/{u_id}/pricing",
+        json={"commercial_price": 3.50},
+        headers=auth_headers,
+    )
+    assert price_res.status_code == 200
+    assert price_res.json()["commercial_price"] == 3.50
+    assert price_res.json()["price_credits"] == 350
+
+    # 4. Create a consumer buyer account to test credit policy & download gate
+    buyer_email = "test_mix_buyer_policy@tunemavens.com"
+    db.users.delete_many({"email": buyer_email})
+    buyer_ins = db.users.insert_one({
+        "email": buyer_email,
+        "username": "test_mix_buyer_policy",
+        "name": "Mix Policy Buyer",
+        "role": "consumer",
+        "credits": 500,
+        "created_at": datetime.now(timezone.utc),
+    })
+    buyer_id = buyer_ins.inserted_id
+    buyer_headers = {"Authorization": f"Bearer {create_access_token(sub=str(buyer_id))}"}
+
+    try:
+        # Uncleared mix download by non-owner consumer MUST be blocked (403)
+        blocked_dl = client.get(f"/api/dj/mixes/{u_id}/download", headers=buyer_headers)
+        assert blocked_dl.status_code == 403
+
+        # Create a 100% original mix priced at $3.50 (350 credits)
+        orig_res = client.post(
+            "/api/dj/mixes",
+            json={
+                "title": "Neon Synthesizer Odyssey (100% Original Live Set)",
+                "genre": "Electronic",
+                "duration_seconds": 3600,
+                "audio_url": "/api/uploads/audio/enenda.wav",
+                "creation_type": "original_creation",
+                "is_original_ip_only": True,
+                "commercial_price": 3.50,
+            },
+            headers=auth_headers,
+        )
+        assert orig_res.status_code == 200
+        o_id = orig_res.json()["id"]
+
+        # Unpurchased download by consumer MUST return 402
+        unpaid_dl = client.get(f"/api/dj/mixes/{o_id}/download", headers=buyer_headers)
+        assert unpaid_dl.status_code == 402
+
+        # Purchase deducts 350 credits from buyer's 500 credit wallet -> 150 remaining
+        buy_ok = client.post(f"/api/dj/mixes/{o_id}/purchase", json={"payment_method": "wallet"}, headers=buyer_headers)
+        assert buy_ok.status_code == 200
+        assert buy_ok.json()["credits_charged"] == 350
+        updated_buyer = db.users.find_one({"_id": buyer_id})
+        assert updated_buyer["credits"] == 150
+
+        # Idempotent re-purchase charges 0 credits
+        rebuy = client.post(f"/api/dj/mixes/{o_id}/purchase", json={"payment_method": "wallet"}, headers=buyer_headers)
+        assert rebuy.status_code == 200
+        assert rebuy.json()["already_owned"] is True
+        assert rebuy.json()["credits_charged"] == 0
+
+        # Download now succeeds (200)
+        paid_dl = client.get(f"/api/dj/mixes/{o_id}/download", headers=buyer_headers)
+        assert paid_dl.status_code == 200
+        assert paid_dl.json()["download_url"]
+    finally:
+        db.users.delete_many({"_id": buyer_id})
+        db.dj_mixes.delete_one({"title": "NairobiClub Sessions (Commercial Compilation Vol 2)"})
+        reconcile_dj_mixes_and_assets()
+
+
+

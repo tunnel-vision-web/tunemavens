@@ -95,7 +95,21 @@ chown "$APP_USER:$APP_USER" "$SHARED_DIR/backend.env"
 chmod 600 "$SHARED_DIR/backend.env"
 
 # --------------------------------------------------------------------------
-# 5. Restart backend + reload nginx
+# 5. Ensure Nginx allows large audio mix uploads (up to 250MB) without touching certbot SSL config
+# --------------------------------------------------------------------------
+echo "==> Ensuring Nginx large upload limits"
+cat > /etc/nginx/conf.d/00-tunemavens-uploads.conf <<'NGX_UPLOADS'
+client_max_body_size 250M;
+client_body_timeout 300s;
+proxy_read_timeout 300s;
+proxy_send_timeout 300s;
+NGX_UPLOADS
+if ! nginx -t >/dev/null 2>&1; then
+  rm -f /etc/nginx/conf.d/00-tunemavens-uploads.conf
+fi
+
+# --------------------------------------------------------------------------
+# 6. Restart backend + reload nginx
 # --------------------------------------------------------------------------
 echo "==> Restarting backend service"
 systemctl restart tunemavens-backend

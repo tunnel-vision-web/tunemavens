@@ -3749,3 +3749,42 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - `test_mix_purchase_split_cascade`: Verifies TuneLedger split cascade settlement.
   - Persona & Catalogue Suite: `python backend/tests/verify_personas_mixes_catalogue.py` executed cleanly with 100% success across all personas and DJ mix creation.
 
+---
+
+### TuneStream Online Production Audit: Affiliate Login Fix, DJ Mix Asset Reconciliation, Flexible Creator Pricing with Recommended Defaults, Localized Pricing & End-to-End Credit Policy Enforcement (2026-11-24)
+
+- **Problem Statement & Objectives**:
+  1. **Affiliate Login Recovery**: Resolve the `ReferenceError: isAdminUser is not defined` crash (`TuneStream Player Recovery` error boundary) triggered when an affiliate or non-admin user logged into `tunestream.co`.
+  2. **Missing DJ Mixes on TuneStream Frontend**: Ensure all uploaded DJ mixes—including `"AFRICAN UNDERGROUND VOL 20 WENYEJI BIZ Mix 2026"` and the 3 additional DJ CJ Kenya mixes (`"BENGA DAIMA VOL 4 KATITU BOYS BAND BY DJ CJ Kenya"`, `"JUSTICE 4 OUR MASHUJAA BY DJ CJ Kenya"`, and `"AFRICAN RHUMBA VOL 20 BEST OF IT'S YABA by DJ CJ Kenya"`)—appear at the top of the TuneStream frontend and stream reliably.
+  3. **Flexible Creator & DJ Pricing with Platform Recommendations**: Empower DJs and creators to set and adjust their own retail price for tracks and mixes while surfacing an advisory platform-recommended price and ensuring all pricing is localized across all currencies via `useRegion().formatPrice`.
+  4. **End-to-End Upload, Stream, Purchase & Download Credit Policy Enforcement**: Verify and harden the complete lifecycle so that uncleared mixes stream 100% free (sale/download locked with `403 Forbidden`), cleared mixes and tracks debit the creator's custom price in TM Credits (`1 USD = 100 TM Credits = 100 KES`) via `TuneLedger`, repeat downloads are idempotent (`0` credits), and permanently credit-exempt roles (`admin`, `vc`, `investor`, `supervisor`) are never charged.
+
+- **Architectural Solutions & Changes**:
+  - **1. Affiliate Login Fix (`apps/tunestream/src/App.jsx`)**:
+    - Defined `isAdminUser` inside `PlayerDashboard` (`Boolean(activeUser?.is_admin === true || activeUser?.original_role === 'admin' || sessionUser?.is_admin === true || sessionUser?.original_role === 'admin' || sessionUser?.role === 'admin')`) so the topbar account simulation reset badge evaluates safely for affiliate and consumer logins.
+  - **2. Same-Origin Production API & `/api/uploads` Media Proxy (`apps/*/src/lib/api.js`, `apps/*/.env.production`, `backend/server.py`, `backend/services/s3_storage.py`, `deploy/deploy.sh`)**:
+    - Removed legacy `https://tunemavens-backend.onrender.com` references from `apps/tunestream/.env.production`, `apps/portal/.env.production`, `apps/syncmavens/.env.production`, and `getApiBase()` so web clients route `/api/...` requests same-origin through the Hostinger VPS Nginx reverse proxy.
+    - Mounted `/api/uploads`, `/api/heroes`, and `/api/headers` in `backend/server.py` (with case-insensitive `.MP3`/`.WAV` streaming and artwork fallback) and updated `LOCAL_UPLOADS_URL_PREFIX` to `"/api/uploads"` in `backend/services/s3_storage.py` so uploaded media files always resolve through Nginx's `/api/` proxy block.
+    - Added `/etc/nginx/conf.d/00-tunemavens-uploads.conf` (`client_max_body_size 250M;`, `300s` timeouts) in `deploy/deploy.sh` to support 150MB+ lossless DJ mix uploads without modifying certbot-managed SSL server blocks.
+  - **3. DJ Mix Asset Reconciliation, Deduplication & Upload Guardrails (`backend/routes/dj_mixes_router.py`, `apps/portal/src/components/dj/DJMixesManager.jsx`, `apps/tunestream/src/App.jsx`, `apps/tunestream/src/NativeAppLandingView.jsx`)**:
+    - Implemented `reconcile_dj_mixes_and_assets()` in `backend/routes/dj_mixes_router.py` to:
+      - Repair any mix stored with a temporary browser `blob:` or `http://localhost:8001/uploads/...` URL by matching against `db.assets` and normalizing to `/api/uploads/...`.
+      - Automatically recover large DJ mix audio uploads in `db.assets` (such as `"BENGA DAIMA VOL 4 KATITU BOYS BAND BY DJ CJ Kenya.MP3"`) into `db.dj_mixes`.
+      - Deduplicate repeated seed/test records in `db.dj_mixes` and prioritize real DJ uploads ahead of test fixtures.
+    - Hardened `DJMixesManager.jsx` and `TuneStreamUploadPanel` so `blob:` object URLs are only used for local duration decoding and form submission is blocked while an audio file upload is in progress.
+    - Fixed sorting in `NativeAppLandingView.jsx` (using `m.created_at` instead of a static date) and `TuneStreamExplorePanel` (`sortSorter` timestamp comparison).
+  - **4. Flexible Creator & DJ Pricing with Localized Recommended Prices (`backend/routes/dj_mixes_router.py`, `backend/routes/catalog_router.py`, `apps/portal/src/components/dj/DJMixesManager.jsx`, `apps/tunestream/src/App.jsx`, `PersonaEpkSections.jsx`)**:
+    - Added `GET /api/dj/mixes/pricing-recommendation` and `PUT /api/dj/mixes/{mix_id}/pricing` in `backend/routes/dj_mixes_router.py` (calculating recommended prices by creation type and duration while allowing creators to set or update any price between `$0.50` and `$100.00`).
+    - Added `GET /api/catalog/pricing-recommendation` and custom `priceCredits` / `priceUsd` persistence in `backend/routes/catalog_router.py` (`50 Credits / $0.50` recommended for Singles, `100 Credits / $1.00` for Extended Club / Dubplates, `499 Credits / $4.99` for DJ Mixes).
+    - Localized all price displays, recommended price badges, preset pills, and price-adjustment dialogs across `DJMixesManager.jsx`, `TuneStreamDjMixesPanel`, `TuneStreamExplorePanel`, `TuneStreamSinglesPanel`, `TuneStreamUploadPanel`, `NativeAppLandingView.jsx`, and `PersonaEpkSections.jsx` using `useRegion().formatPrice` and canonical `1 USD = 100 TM Credits = 100 KES` conversion.
+  - **5. End-to-End Purchase & Download Credit Policy Enforcement (`backend/routes/dj_mixes_router.py`, `backend/routes/stream_router.py`, `backend/routes/djpool_router.py`, `backend/services/stream_service.py`)**:
+    - Added `GET /api/dj/mixes/{mix_id}/download`, `POST /api/stream/purchase/{identifier}`, and `GET /api/stream/download/{identifier}`.
+    - Enforced strict `403 Forbidden` download/sale locks on uncleared DJ mixes across `/api/dj/mixes/{id}/purchase`, `/api/dj/mixes/{id}/download`, `/api/stream/purchase/{id}`, `/api/stream/download/{id}`, `/api/stream/offline-cache/{id}`, and `/api/djpool/download/{id}`.
+    - Connected wallet purchases to `ledger_service.record_transaction` at `100 Credits = $1.00 USD`, with idempotent re-download protection (`already_owned: True`, `0` credits charged) and permanent credit exemption for `admin`, `vc`, `investor`, and `supervisor` accounts.
+    - Added **Buy & Download** / **Download Lossless Mix** actions across `TuneStreamDjMixesPanel`, `TuneStreamSinglesPanel`, `TuneStreamLibraryPanel`, and `DJMixesManager.jsx`.
+
+- **Verification**:
+  - `python -m pytest backend/tests/test_dj_mixes_engine.py -q` passed **8/8 tests** (including `test_flexible_pricing_credit_policy_and_download_gate`).
+  - Production frontend builds (`npm run build:portal`, `npm run build:tunestream`, `npm run build:syncmavens`) completed with zero errors and zero `onrender.com` references.
+
+

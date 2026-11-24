@@ -508,6 +508,17 @@ def download_promo_track(track_id: str, current_user: dict = Depends(get_current
             mix_doc = db.dj_mixes.find_one({"_id": ObjectId(track_id)})
             if mix_doc:
                 track_doc = mix_doc
+                # Credit/clearance policy: uncleared mixes are stream-only (zero selling/downloads)
+                _tl = mix_doc.get("tracklist", [])
+                _cleared = mix_doc.get("is_original_ip_only", False) or (
+                    len(_tl) > 0 and all(t.get("clearance_status") in ("signed", "self_owned") for t in _tl)
+                )
+                _privileged = is_admin or mix_doc.get("user_id") == str(current_user["_id"])
+                if not _cleared and not _privileged:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="This mix has uncleared tracks: it is free to stream with full IP credits, but downloads unlock only after clearance."
+                    )
                 title = mix_doc.get("title", "Sovereign DJ Mix")
                 artist = mix_doc.get("dj_name", "Resident DJ")
                 bpm = mix_doc.get("bpm_avg", 124)

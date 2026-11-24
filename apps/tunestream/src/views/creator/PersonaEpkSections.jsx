@@ -156,7 +156,7 @@ export const DEFAULT_DJ_EPK_MIXES = [
     duration: '45:00',
     duration_seconds: 2700,
     commercial_price: 5.99,
-    price_credits: 60,
+    price_credits: 599,
     is_original_ip_only: false,
     status: 'published_for_sale',
     streams: '14.8K',
@@ -179,7 +179,7 @@ export const DEFAULT_DJ_EPK_MIXES = [
     duration: '40:00',
     duration_seconds: 2400,
     commercial_price: 4.99,
-    price_credits: 50,
+    price_credits: 499,
     is_original_ip_only: false,
     status: 'published_for_sale',
     streams: '21.3K',
@@ -201,7 +201,7 @@ export const DEFAULT_DJ_EPK_MIXES = [
     duration: '52:00',
     duration_seconds: 3120,
     commercial_price: 6.49,
-    price_credits: 65,
+    price_credits: 649,
     is_original_ip_only: false,
     status: 'published_for_sale',
     streams: '19.4K',
@@ -223,7 +223,7 @@ export const DEFAULT_DJ_EPK_MIXES = [
     duration: '36:00',
     duration_seconds: 2160,
     commercial_price: 6.99,
-    price_credits: 70,
+    price_credits: 699,
     is_original_ip_only: true,
     status: 'published_for_sale',
     streams: '11.2K',
@@ -244,7 +244,7 @@ export const DEFAULT_DJ_EPK_MIXES = [
     duration: '38:00',
     duration_seconds: 2280,
     commercial_price: 3.99,
-    price_credits: 40,
+    price_credits: 399,
     is_original_ip_only: false,
     status: 'published_for_sale',
     streams: '16.5K',
@@ -1073,7 +1073,7 @@ export function DjMixesAndSetsSection({
         {filteredMixes.map((mix) => {
           const isPurchased = purchasedMixIds.includes(mix.id);
           const priceUsd = Number(mix.commercial_price || 4.99);
-          const credits = mix.price_credits || Math.round(priceUsd * 10);
+          const credits = mix.price_credits || Math.round(priceUsd * 100);
           const tracklist = Array.isArray(mix.tracklist) ? mix.tracklist : [];
           const isExpanded = expandedTracklistId === mix.id;
 

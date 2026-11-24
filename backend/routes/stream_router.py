@@ -1023,7 +1023,12 @@ def get_track_offline_manifest(
     """Provides cryptographic offline license lease and 24-bit FLAC cache metadata."""
     clean_id = identifier.strip()
     target_track = get_track_or_release(clean_id)
-    
+    if target_track and target_track.get("sale_locked"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This DJ mix has uncleared tracks: it streams 100% free with IP credits, but offline downloads unlock after clearance.",
+        )
+
     title = target_track.get("title", clean_id) if target_track else clean_id
     artist = target_track.get("artist", "TuneStream Creator") if target_track else "TuneStream Creator"
     genre = target_track.get("genre", "Afrobeats / High Fidelity") if target_track else "Afrobeats / High Fidelity"
@@ -1392,6 +1397,157 @@ def report_content(
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+class TrackPurchaseRequest(BaseModel):
+    payment_method: Optional[str] = "wallet"
+
+
+@router.post("/purchase/{identifier}")
+def purchase_track_or_mix(
+    identifier: str,
+    payload: Optional[TrackPurchaseRequest] = None,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Purchases a lossless track or cleared DJ mix using TM Credits via TuneLedger.
+
+    Credit Policy:
+    - 1 USD = 100 TM Credits = 100 KES.
+    - Creators/DJs set their own price (recommended default: 50 credits / $0.50 for single, 499 credits / $4.99 for DJ mix).
+    - Uncleared DJ mixes (sale_locked=True) cannot be sold or downloaded (403 Forbidden).
+    - Admin, VC, Investor, and Supervisor accounts are permanently credit-exempt (0 credits charged).
+    - Repeat purchases by the same user are idempotent (0 credits charged).
+    """
+    import secrets
+    from services import ledger_service
+
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Sign in to purchase and download lossless tracks.")
+
+    clean_id = identifier.strip()
+    target = get_track_or_release(clean_id)
+    if not target:
+        target = {
+            "id": clean_id,
+            "isrc": clean_id,
+            "title": clean_id,
+            "artist": "TuneMavens Creator",
+            "priceCredits": 50,
+        }
+
+    uid = str(current_user["_id"])
+    is_exempt = current_user.get("role") in ("admin", "vc", "investor", "supervisor") or current_user.get("is_admin") is True
+    is_owner = str(target.get("user_id") or "") == uid
+
+    if target.get("sale_locked") and not is_exempt and not is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This mix has uncleared tracks: it streams 100% free with IP credits, but commercial purchase and downloads unlock after clearance.",
+        )
+
+    price_credits = int(target.get("priceCredits") or round(float(target.get("priceUsd") or 0.50) * 100) or 50)
+    price_usd = round(price_credits / 100.0, 2)
+
+    prior = db.track_purchases.find_one({"track_id": clean_id, "buyer_id": uid})
+    if prior:
+        return {
+            "status": "success",
+            "ok": True,
+            "already_owned": True,
+            "track_id": clean_id,
+            "title": target.get("title", clean_id),
+            "artist": target.get("artist", "TuneMavens Creator"),
+            "credits_charged": 0,
+            "remaining_credits": current_user.get("credits", 0),
+            "order_reference": prior.get("order_reference"),
+            "download_url": f"/api/stream/download/{clean_id}",
+            "message": f"You already own '{target.get('title', clean_id)}'. Ready for lossless download.",
+        }
+
+    credits_charged = 0
+    remaining_credits = int(current_user.get("credits", 0))
+    method = (payload.payment_method if payload and payload.payment_method else "wallet").lower()
+
+    if not is_exempt and not is_owner:
+        if method != "wallet":
+            raise HTTPException(
+                status_code=402,
+                detail="Top up TM Credits with M-Pesa or card first, then complete this purchase with your credit wallet.",
+            )
+        credits_charged = max(1, price_credits)
+        try:
+            ledger_res = ledger_service.record_transaction(
+                user_id=current_user["_id"],
+                amount=-credits_charged,
+                entry_type="CREDIT_SPEND_TRACK_DOWNLOAD",
+                provider="tunestream_store",
+                provider_ref=f"TRK-{clean_id[:16]}-{secrets.token_hex(4).upper()}",
+                description=f"Lossless purchase & download: {target.get('title', clean_id)} ({credits_charged} TM Credits)",
+                metadata={"track_id": clean_id, "price_credits": credits_charged, "price_usd": price_usd},
+            )
+            remaining_credits = ledger_res["current_balance"]
+        except ValueError as e:
+            raise HTTPException(status_code=402, detail=str(e))
+
+    order_ref = f"TM-DL-{datetime.now(timezone.utc).year}-{secrets.token_hex(4).upper()}"
+    purchase_doc = {
+        "order_reference": order_ref,
+        "track_id": clean_id,
+        "title": target.get("title", clean_id),
+        "artist": target.get("artist", "TuneMavens Creator"),
+        "buyer_id": uid,
+        "buyer_email": current_user.get("email"),
+        "credits_charged": credits_charged,
+        "price_usd": price_usd,
+        "purchased_at": datetime.now(timezone.utc),
+    }
+    db.track_purchases.insert_one(purchase_doc)
+
+    return {
+        "status": "success",
+        "ok": True,
+        "already_owned": False,
+        "track_id": clean_id,
+        "title": target.get("title", clean_id),
+        "artist": target.get("artist", "TuneMavens Creator"),
+        "credits_charged": credits_charged,
+        "remaining_credits": remaining_credits,
+        "order_reference": order_ref,
+        "download_url": f"/api/stream/download/{clean_id}",
+        "message": f"Purchased '{target.get('title', clean_id)}'. Downloading lossless master...",
+    }
+
+
+@router.get("/download/{identifier}")
+def download_track_or_mix_file(
+    identifier: str,
+    request: FastAPIRequest = None,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Downloads a lossless audio file with attachment Content-Disposition header after verifying clearance/purchase policy."""
+    import re as _re
+    clean_id = identifier.strip()
+    target = get_track_or_release(clean_id)
+
+    uid = str(current_user["_id"]) if current_user and current_user.get("_id") else ""
+    is_exempt = bool(current_user and (current_user.get("role") in ("admin", "vc", "investor", "supervisor") or current_user.get("is_admin") is True))
+    is_owner = bool(uid and target and str(target.get("user_id") or "") == uid)
+
+    if target and target.get("sale_locked") and not is_exempt and not is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This DJ mix has uncleared tracks: it streams 100% free with IP credits, but downloads unlock after clearance.",
+        )
+
+    response = stream_catalog_track(identifier=clean_id, request=request, current_user=current_user)
+    title_str = (target.get("title") if target else None) or clean_id
+    artist_str = (target.get("artist") if target else None) or "TuneStream"
+    safe_base = _re.sub(r"[^a-zA-Z0-9 _.-]+", "", f"{artist_str} - {title_str}").strip() or "TuneStream_Master"
+    ext = ".mp3" if getattr(response, "media_type", "") == "audio/mpeg" else ".wav"
+    if not safe_base.lower().endswith((".mp3", ".wav", ".flac")):
+        safe_base = f"{safe_base}{ext}"
+    response.headers["Content-Disposition"] = f'attachment; filename="{safe_base}"'
+    return response
 
 
 # ==============================================================================

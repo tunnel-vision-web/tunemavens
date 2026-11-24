@@ -789,6 +789,37 @@ def get_catalog_albums(subdomain: str = Query("ndufo")):
     }
 
 
+@router.get("/pricing-recommendation", response_model=Dict[str, Any])
+def get_catalog_pricing_recommendation(
+    release_type: str = Query("Single"),
+    track_count: int = Query(1),
+    duration_seconds: int = Query(210),
+):
+    """Advisory pricing recommendation for creators and DJs (creators always set their own final price)."""
+    rt = (release_type or "Single").lower()
+    if "mix" in rt:
+        rec_usd = 4.99
+    elif "album" in rt:
+        rec_usd = max(4.99, round(min(14.99, max(5, track_count) * 0.50 - 0.01), 2))
+    elif "ep" in rt:
+        rec_usd = 2.49
+    elif "extended" in rt or "club" in rt or duration_seconds > 360:
+        rec_usd = 0.99
+    else:
+        rec_usd = 0.50
+    rec_credits = int(round(rec_usd * 100))
+    return {
+        "release_type": release_type,
+        "recommended_price_usd": rec_usd,
+        "recommended_price_credits": rec_credits,
+        "min_price_usd": 0.10,
+        "min_price_credits": 10,
+        "max_price_usd": 100.00,
+        "max_price_credits": 10000,
+        "credits_per_usd": 100,
+    }
+
+
 @router.post("/tracks", response_model=Dict[str, Any])
 def add_catalog_track(payload: Dict[str, Any], subdomain: str = Query("ndufo")):
     """Add or append single or multiple tracks into the catalog."""
@@ -809,6 +840,16 @@ def add_catalog_track(payload: Dict[str, Any], subdomain: str = Query("ndufo")):
         item["status"] = item.get("status", "valid")
         if not item.get("coverArt"):
             item["coverArt"] = get_authoritative_cover(item.get("title", "track"))
+        rel_type = (item.get("releaseType") or "Single").lower()
+        rec_credits = 499 if "mix" in rel_type else (500 if "album" in rel_type else 50)
+        custom_credits = item.get("priceCredits")
+        if custom_credits is None and item.get("priceUsd") is not None:
+            custom_credits = int(round(float(item["priceUsd"]) * 100))
+        final_credits = max(10, int(custom_credits if custom_credits is not None else rec_credits))
+        item["priceCredits"] = final_credits
+        item["priceUsd"] = round(final_credits / 100.0, 2)
+        item["recommendedPriceCredits"] = rec_credits
+        item["recommendedPriceUsd"] = round(rec_credits / 100.0, 2)
         
         # Replace if ISRC exists, otherwise prepend
         if isrc in existing_isrcs:
@@ -864,7 +905,10 @@ def wizard_ingest_release(payload: WizardIngestPayload):
             "genre": t.get("genre") or album_genre,
             "duration": t.get("duration") or "3:30",
             "streams": t.get("streams") or "100K",
-            "priceCredits": int(t.get("priceCredits") or 50),
+            "priceCredits": max(10, int(t.get("priceCredits") or (round(float(t["priceUsd"]) * 100) if t.get("priceUsd") else 50))),
+            "priceUsd": round(max(10, int(t.get("priceCredits") or (round(float(t["priceUsd"]) * 100) if t.get("priceUsd") else 50))) / 100.0, 2),
+            "recommendedPriceCredits": 50,
+            "recommendedPriceUsd": 0.50,
             "coverArt": t.get("coverArt") or album_cover,
             "coverText": title.split(" ")[0] or "Track",
             "coverBg": t.get("coverBg") or "linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)",

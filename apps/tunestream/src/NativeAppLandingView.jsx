@@ -2301,8 +2301,12 @@ export default function NativeAppLandingView({
         duration: m.duration || `${Math.round((m.duration_seconds || 2400) / 60)}:00`,
         streams: `${(m.plays_count || 0).toLocaleString()} plays`,
         cover: normalizeMediaUrl(m.artwork_url) || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
-        audioUrl: m.audio_url || `/api/stream/track/${encodeURIComponent(m.id || m.title || 'preview')}`,
+        audioUrl: normalizeMediaUrl(m.audio_url) || `/api/stream/track/${encodeURIComponent(m.id || m.title || 'preview')}`,
         year: 2026,
+        date: m.created_at || '2026-03-14',
+        commercial_price: m.commercial_price,
+        recommended_price: m.recommended_price,
+        price_credits: m.price_credits,
         is_original_ip_only: m.is_original_ip_only,
         creation_type: m.creation_type,
         sale_locked: m.sale_locked,
@@ -2439,10 +2443,10 @@ export default function NativeAppLandingView({
           subtitle: `Curated by ${dm.artist} · ${dm.bpm} BPM`,
           genre: dm.genre,
           metaLeft: `${dm.duration} · ${dm.streams}`,
-          metaRight: 'Stream Mix ▶',
+          metaRight: dm.sale_locked ? 'Free Stream ▶' : `Stream / Buy (${formatPrice ? formatPrice(Number(dm.commercial_price || 4.99)) : `$${Number(dm.commercial_price || 4.99).toFixed(2)}`}) ▶`,
           cover: dm.cover,
           year: 2026,
-          date: '2026-03-14',
+          date: dm.date || '2026-03-14',
           data: dm
         })));
       }
@@ -2521,10 +2525,10 @@ export default function NativeAppLandingView({
           subtitle: `Curated by ${dm.artist} · ${dm.bpm} BPM`,
           genre: dm.genre,
           metaLeft: `${dm.duration} · ${dm.streams}`,
-          metaRight: 'Stream Mix ▶',
+          metaRight: dm.sale_locked ? 'Free Stream ▶' : `Stream / Buy (${formatPrice ? formatPrice(Number(dm.commercial_price || 4.99)) : `$${Number(dm.commercial_price || 4.99).toFixed(2)}`}) ▶`,
           cover: dm.cover,
           year: 2026,
-          date: '2026-03-14',
+          date: dm.date || '2026-03-14',
           data: dm
         })));
       }
