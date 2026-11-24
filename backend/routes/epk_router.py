@@ -1,5 +1,6 @@
 import os
 import io
+import re
 import urllib.parse
 import urllib.request
 from PIL import Image, ImageEnhance, ImageFilter, ImageDraw
@@ -199,13 +200,43 @@ def get_public_epk(subdomain: str, response: Response):
     default_hero_url_2 = "/heroes/ndufo_hero_slide2_retina.jpg"
     default_hero_url_3 = "/heroes/ndufo_hero_slide3_retina.jpg"
 
-    if not epk_doc and not cms_data:
-        # Return fallback template shape with full hero presentation
-        return {
+    dj_slugs = {
+        "khalid", "khalidwaves", "djksouldier", "dj-k-souldier", "djzinhlevibes", "dj-zinhle-vibes",
+        "djmaphoria", "dj-maphoria", "selectorkofi", "selector-kofi", "djkalonje", "dj-kalonje", "dj_kalonje",
+        "djcjkenya", "dj-cj-kenya"
+    }
+    dj_display_names = {
+        "khalid": "Khalid Waves",
+        "khalidwaves": "Khalid Waves",
+        "djksouldier": "DJ K-Souldier",
+        "dj-k-souldier": "DJ K-Souldier",
+        "djzinhlevibes": "DJ Zinhle Vibes",
+        "dj-zinhle-vibes": "DJ Zinhle Vibes",
+        "djmaphoria": "DJ Maphoria",
+        "dj-maphoria": "DJ Maphoria",
+        "selectorkofi": "Selector Kofi",
+        "selector-kofi": "Selector Kofi",
+        "djkalonje": "DJ Kalonje",
+        "djcjkenya": "DJ CJ Kenya",
+        "dj-cj-kenya": "DJ CJ Kenya",
+    }
+
+    merged = {}
+    if epk_doc:
+        merged = {k: v for k, v in epk_doc.items() if k != "_id"}
+        merged["_id"] = str(epk_doc["_id"])
+    elif cms_data:
+        merged = dict(cms_data)
+        merged["subdomain"] = clean_subdomain
+    else:
+        # Fallback template shape with creator-specific hero presentation
+        display_title = dj_display_names.get(clean_subdomain) or clean_subdomain.capitalize()
+        merged = {
             "subdomain": clean_subdomain,
-            "artist_name": clean_subdomain.capitalize(),
-            "headline": "Official Intermaven Creator Web World",
-            "bio": f"Welcome to the official Electronic Press Kit for {clean_subdomain.capitalize()}.",
+            "artist_name": display_title,
+            "siteName": display_title,
+            "headline": f"Official {display_title} Web World",
+            "bio": f"Welcome to the official Electronic Press Kit for {display_title}.",
             "accentColor": "#00f0ff",
             "secondaryColor": "#ff007f",
             "fontFamily": "Sansation, sans-serif",
@@ -216,36 +247,28 @@ def get_public_epk(subdomain: str, response: Response):
                 {
                     "id": 1,
                     "img": default_hero_url,
-                    "title1": clean_subdomain.capitalize(),
-                    "title2": "Soulful Afro-fusion Musician",
-                    "title3": "High-Quality Digital Singles • Collector Vinyl & CDs • Direct Fan Ticketing"
+                    "title1": display_title,
+                    "title2": "Verified Sovereign Creator",
+                    "title3": "High-Quality Continuous Audio • Direct Fan Engagement • Direct Escrow Settlement"
                 },
                 {
                     "id": 2,
                     "img": default_hero_url_2,
-                    "title1": "World Tour 2026 Live Showcase",
-                    "title2": "Headline Dates: Tokyo, London & Nairobi",
+                    "title1": f"{display_title} Live Showcase",
+                    "title2": "Club Residencies & Festival Mainstages",
                     "title3": "VIP Fan Pass & Direct Ticketing via TuneBooking"
                 },
                 {
                     "id": 3,
                     "img": default_hero_url_3,
-                    "title1": f"{clean_subdomain.capitalize()} — Master Audio",
+                    "title1": f"{display_title} — Master Audio",
                     "title2": "Lossless Audio & Direct Fan Passes",
                     "title3": "Exclusive VIP Vault Access"
                 }
             ],
-            "videos": get_default_videos(clean_subdomain.capitalize()),
+            "videos": get_default_videos(display_title),
             "is_default": True
         }
-
-    merged = {}
-    if epk_doc:
-        merged = {k: v for k, v in epk_doc.items() if k != "_id"}
-        merged["_id"] = str(epk_doc["_id"])
-    else:
-        merged = dict(cms_data)
-        merged["subdomain"] = clean_subdomain
 
     if cms_data:
         cms_ver = cms_doc.get("version", 1)
@@ -317,38 +340,33 @@ def get_public_epk(subdomain: str, response: Response):
     if not merged.get("videos") or not len(merged["videos"]):
         merged["videos"] = get_default_videos(merged.get("artist_name") or clean_subdomain.capitalize())
 
-    # Ensure tracks and albums are synchronized from catalogue
-    if not merged.get("albums") or not len(merged["albums"]):
+    # Ensure tracks and albums are synchronized strictly from this creator's catalogue
+    tracks = merged.get("tracks") or []
+    if not tracks:
+        cat_doc = db.catalog_tracks.find_one({"subdomain": clean_subdomain})
+        tracks = cat_doc.get("tracks", []) if cat_doc else []
+    if not tracks:
+        artist_query = {"$or": [
+            {"subdomain": clean_subdomain},
+            {"artist": {"$regex": f"^{re.escape(merged.get('artist_name') or clean_subdomain)}$", "$options": "i"}}
+        ]}
+        direct_tracks = list(db.tracks.find(artist_query))
+        if direct_tracks:
+            tracks = [{**t, "_id": str(t.get("_id"))} for t in direct_tracks]
+    merged["tracks"] = tracks
+    if tracks:
         try:
             from routes.catalog_router import build_creator_albums
-            tracks = merged.get("tracks") or []
-            if not tracks:
-                cat_doc = db.catalog_tracks.find_one({"subdomain": clean_subdomain})
-                tracks = cat_doc.get("tracks", []) if cat_doc else []
-                if tracks:
-                    merged["tracks"] = tracks
             merged["albums"] = build_creator_albums(clean_subdomain, tracks)
         except Exception:
-            pass
+            merged["albums"] = merged.get("albums") or []
+    else:
+        merged["albums"] = merged.get("albums") or []
 
     if "_id" not in merged:
         merged["_id"] = clean_subdomain
 
     # Infer and attach persona / creator_type and DJ-specific EPK payload
-    dj_slugs = {"khalid", "khalidwaves", "djksouldier", "dj-k-souldier", "djzinhlevibes", "dj-zinhle-vibes", "djmaphoria", "dj-maphoria", "selectorkofi", "selector-kofi", "djkalonje", "dj-kalonje", "dj_kalonje"}
-    dj_display_names = {
-        "khalid": "Khalid Waves",
-        "khalidwaves": "Khalid Waves",
-        "djksouldier": "DJ K-Souldier",
-        "dj-k-souldier": "DJ K-Souldier",
-        "djzinhlevibes": "DJ Zinhle Vibes",
-        "dj-zinhle-vibes": "DJ Zinhle Vibes",
-        "djmaphoria": "DJ Maphoria",
-        "dj-maphoria": "DJ Maphoria",
-        "selectorkofi": "Selector Kofi",
-        "selector-kofi": "Selector Kofi",
-        "djkalonje": "DJ Kalonje",
-    }
     if clean_subdomain in dj_slugs or clean_subdomain.startswith("dj") or clean_subdomain.startswith("selector"):
         merged["creator_type"] = "dj"
         merged["persona"] = "dj"
@@ -368,6 +386,62 @@ def get_public_epk(subdomain: str, response: Response):
     elif not merged.get("creator_type"):
         merged["creator_type"] = "artist"
         merged["persona"] = "artist"
+
+    # Fetch DJ mixes strictly belonging to this creator / DJ
+    effective_name = merged.get("artist_name") or clean_subdomain
+    dj_query = {
+        "$or": [
+            {"subdomain": clean_subdomain},
+            {"dj_name": {"$regex": f"^{re.escape(effective_name)}$", "$options": "i"}},
+            {"dj_name": {"$regex": re.escape(clean_subdomain), "$options": "i"}},
+            {"dj_handle": {"$regex": re.escape(clean_subdomain), "$options": "i"}},
+            {"user_id": clean_subdomain},
+        ]
+    }
+    creator_mixes = list(db.dj_mixes.find(dj_query))
+    serialized_mixes = []
+    for m in creator_mixes:
+        serialized_mixes.append({
+            "id": str(m.get("_id")),
+            "title": m.get("title"),
+            "dj_name": m.get("dj_name") or effective_name,
+            "genre": m.get("genre", "Afro-House"),
+            "duration": m.get("duration", "45:00"),
+            "bpm_avg": m.get("bpm_avg", 120),
+            "commercial_price": float(m.get("commercial_price") or 4.99),
+            "recommended_price": float(m.get("recommended_price") or m.get("commercial_price") or 4.99),
+            "price_credits": int(m.get("price_credits") or 500),
+            "audio_url": m.get("audio_url"),
+            "artwork_url": m.get("artwork_url") or m.get("cover_image_url") or "/uploads/artwork/default_dj_mix.jpg",
+            "is_original_ip_only": bool(m.get("is_original_ip_only", False)),
+            "sale_locked": bool(m.get("sale_locked", True)),
+            "status": m.get("status", "published_for_sale"),
+            "tracklist": m.get("tracklist", []),
+            "created_at": str(m.get("created_at", ""))
+        })
+    merged["dj_mixes"] = serialized_mixes
+
+    # Fetch playlists strictly belonging to this creator
+    creator_playlists = list(db.playlists.find({
+        "$or": [
+            {"subdomain": clean_subdomain},
+            {"user_id": clean_subdomain},
+            {"creator": {"$regex": f"^{re.escape(effective_name)}$", "$options": "i"}},
+            {"creator_id": clean_subdomain}
+        ]
+    }))
+    merged["playlists"] = [
+        {
+            "id": str(p.get("_id")),
+            "title": p.get("title") or p.get("name"),
+            "name": p.get("name") or p.get("title"),
+            "description": p.get("description", ""),
+            "cover": p.get("cover") or p.get("coverArt"),
+            "tracks": p.get("tracks", []),
+            "track_count": len(p.get("tracks", []))
+        }
+        for p in creator_playlists
+    ]
 
     return merged
 

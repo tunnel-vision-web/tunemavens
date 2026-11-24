@@ -465,7 +465,8 @@ export default function HiFiAudioPlayer({
           // Ignore aborted requests (code 1 = MEDIA_ERR_ABORTED) triggered by user track changes
           if (mediaErr && mediaErr.code === 1) return;
           const apiBase = getApiBase();
-          const fallback = `${apiBase || ''}/api/stream/track/${encodeURIComponent(currentTrack?.isrc || currentTrack?.id || 'KE-TM1-26-60013')}`;
+          const fallbackId = currentTrack?.id || currentTrack?.isrc || (currentTrack?.title ? encodeURIComponent(currentTrack.title) : 'preview');
+          const fallback = `${apiBase || ''}/api/stream/track/${encodeURIComponent(fallbackId)}`;
           if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.includes('/api/stream/track/')) {
             console.warn('Primary stream unreachable; switching to resilient synthesizer fallback', mediaErr ? `(Code ${mediaErr.code})` : '');
             audioRef.current.src = fallback;

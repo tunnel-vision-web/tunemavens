@@ -504,10 +504,9 @@ export function normalizeMediaUrl(url) {
  */
 export function resolveAudioStreamUrl(trackOrUrl) {
   const backendBase = getApiBase();
-  const defaultFallback = `${backendBase || ''}/api/stream/track/KE-TM1-26-60013`;
 
   if (!trackOrUrl) {
-    return defaultFallback;
+    return `${backendBase || ''}/api/stream/track/preview`;
   }
 
   let candidate = '';
@@ -524,7 +523,7 @@ export function resolveAudioStreamUrl(trackOrUrl) {
       trackOrUrl.url ||
       ''
     ).trim();
-    identifier = trackOrUrl.isrc || trackOrUrl.id || trackOrUrl.title || '';
+    identifier = trackOrUrl.id || trackOrUrl.isrc || trackOrUrl.title || '';
   }
 
   // 1. Any path pointing to /uploads/audio/ must route to the backend stream engine
@@ -569,7 +568,7 @@ export function resolveAudioStreamUrl(trackOrUrl) {
     return `${backendBase || ''}/api/stream/track/${encodeURIComponent(identifier)}`;
   }
 
-  return defaultFallback;
+  return `${backendBase || ''}/api/stream/track/preview`;
 }
 
 // --- Streaming, Consumer Audio & Tipping Engine (Phase 2) ---

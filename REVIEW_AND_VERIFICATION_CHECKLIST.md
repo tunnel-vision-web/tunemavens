@@ -124,4 +124,29 @@ backend/tests/test_track_e.py::test_nginx_configuration_file_exists PASSED [ 100
 ====================== 17 passed in 63.45s ======================
 ```
 
+---
+
+## 5. Phase 10: Audio Playback Engine & EPK Creator Scoping Audit (November 2026)
+
+### ✅ Track F: Audio Stream Resolution & Fallback Elimination
+- **Fix**: Removed hardcoded fallback to `KE-TM1-26-60013` (`Enenda` by Ndufo) and eliminated random disk file selection in `backend/routes/stream_router.py`.
+- **Unique Audio Delivery**:
+  - Implemented dedicated synthesized high-fidelity preview generator (`generate_synthesized_preview`) dynamically keyed to the requested release/mix title.
+  - Direct static file serving for high-bitrate masters on disk (`/uploads/audio/`).
+  - DJ mix audio URLs and IDs accurately resolve directly through `get_track_or_release` without cross-track contamination.
+  - Range request streaming (HTTP 206) with byte-level precision for scrubbing and seeking across all player instances (`HiFiAudioPlayer.jsx`, `NativeAppLandingView.jsx`, `CreatorEpkView.jsx`).
+
+### ✅ Track G: EPK Creator Isolation & Content Scoping
+- **Fix**: Replaced broad platform-wide fallback injections with strict creator-specific scoping in `backend/routes/epk_router.py`, `CreatorEpkView.jsx`, and `PersonaEpkSections.jsx`.
+- **Creator Guarantees**:
+  - **DJ Mixes**: On any DJ's EPK (e.g. `/epk/djcjkenya`), only mixes belonging to that creator (`subdomain`, `dj_name`, `user_id`) are displayed. Cross-contamination from other DJs or platform defaults is eliminated.
+  - **Discography & Albums**: Discography entries and releases strictly match the specific creator's identity; default mock albums are only displayed for Ndufo.
+  - **Playlists**: EPK playlist selection dropdowns strictly list the creator's own published playlists and persona-specific collections (DJ sets for DJs, episodes for podcasters, beat store for producers, singles for artists) with no random listener playlists.
+  - **Empty States**: If a creator has no published releases or mixes, authentic creator-branded empty states are shown rather than falling back to other artists' works.
+
+### ✅ Track H: Credit Policy & Localized Pricing
+- **Parity Principle**: Strictly preserves `1 USD = 100 TM Credits = 100 KES`.
+- **Flexible Creator Pricing**: Creators and DJs have full autonomy to customize commercial pricing and download rates, backed by recommended defaults ($4.99 / 500 Credits for commercial DJ mixes).
+- **Localization**: All prices, totals, and receipts are formatted dynamically via `useRegion().formatPrice` respecting detected or selected country/currency.
+
 

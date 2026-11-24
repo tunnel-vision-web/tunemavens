@@ -761,7 +761,10 @@ export function CreatorEpkView(props = {}) {
     { id: 8, title: 'Savannah Sunset (Radio Cut)', isrc: 'KE-TM1-26-00049', streams: '1.1M', duration: '3:22', release: 'Single 2025', priceCredits: 40, coverArt: 'https://picsum.photos/seed/savannahsunset/600/600' },
     { id: 9, title: 'Serengeti Sunrise (Ambient Mix)', isrc: 'KE-TM1-26-00050', streams: '650K', duration: '5:10', release: 'VIP 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/serengetisunrise/600/600' }
   ]
-  const rawTracks = (epkData?.tracks && Array.isArray(epkData.tracks) && epkData.tracks.length > 0) ? epkData.tracks : defaultTracks
+  const isNdufo = (effectiveArtistName || '').toLowerCase().includes('ndufo') || (artistSlug || '').toLowerCase().includes('ndufo');
+  const rawTracks = (epkData?.tracks && Array.isArray(epkData.tracks) && epkData.tracks.length > 0)
+    ? epkData.tracks
+    : (isNdufo ? defaultTracks : []);
   const tracks = rawTracks.map((t, idx) => ({
     ...t,
     id: t.id || idx + 1,
@@ -798,25 +801,35 @@ export function CreatorEpkView(props = {}) {
       ? epkData.dj_mixes
       : (Array.isArray(epkData?.djMixes) && epkData.djMixes.length > 0)
         ? epkData.djMixes
-        : DEFAULT_DJ_EPK_MIXES;
-    return raw.map((m, idx) => ({
-      id: m.id || `dj-mix-${idx}`,
-      title: m.title || `DJ Set #${idx + 1}`,
-      artist: m.dj_name || m.artist || effectiveArtistName,
-      dj_name: m.dj_name || effectiveArtistName,
-      isrc: m.isrc || `MIX-DJ-${idx + 1}`,
-      duration: m.duration || '60:00',
-      audioUrl: m.audio_url || m.audioUrl || m.fileUrl || m.url || '/uploads/audio/enenda.wav',
-      coverArt: m.artwork_url || m.coverArt || m.cover || 'https://picsum.photos/seed/dj_mix_cover/400',
-      badge: '🎧 DJ Mix • Lossless Master',
-      category: m.genre || 'Electronic / Live Set'
-    }));
-  }, [epkData?.dj_mixes, epkData?.djMixes, effectiveArtistName]);
+        : [];
+    const cleanName = (effectiveArtistName || '').toLowerCase().trim();
+    const cleanSlug = (artistSlug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return raw
+      .filter(m => {
+        const mDj = (m.dj_name || m.artist || '').toLowerCase();
+        const mSub = (m.subdomain || m.user_id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return !mDj || mDj.includes(cleanName) || cleanName.includes(mDj) || mSub.includes(cleanSlug) || cleanSlug.includes(mSub);
+      })
+      .map((m, idx) => ({
+        id: m.id || m._id || `dj-mix-${idx}`,
+        title: m.title || `DJ Set #${idx + 1}`,
+        artist: m.dj_name || m.artist || effectiveArtistName,
+        dj_name: m.dj_name || effectiveArtistName,
+        isrc: m.isrc || `MIX-DJ-${idx + 1}`,
+        duration: m.duration || '60:00',
+        audioUrl: resolveAudioStreamUrl(m.audio_url || m.audioUrl || m.id || m.title),
+        coverArt: m.artwork_url || m.coverArt || m.cover || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800',
+        badge: '🎧 DJ Mix • Lossless Master',
+        category: m.genre || 'Electronic / Live Set',
+        is_dj_mix: true
+      }));
+  }, [epkData?.dj_mixes, epkData?.djMixes, effectiveArtistName, artistSlug]);
 
   const podcasterEpisodeTracks = React.useMemo(() => {
+    if (creatorType !== 'podcaster') return [];
     const raw = (Array.isArray(epkData?.episodes) && epkData.episodes.length > 0)
       ? epkData.episodes
-      : DEFAULT_PODCASTER_EPISODES;
+      : [];
     return raw.map((ep, idx) => ({
       id: ep.id || `pod-ep-${idx}`,
       title: ep.title || `Episode #${idx + 1}`,
@@ -824,17 +837,18 @@ export function CreatorEpkView(props = {}) {
       host: ep.host || effectiveArtistName,
       isrc: ep.isrc || `POD-EP-${idx + 1}`,
       duration: ep.duration || '40:00',
-      audioUrl: ep.audioUrl || ep.audio_url || ep.fileUrl || ep.url || '/uploads/audio/enenda.wav',
+      audioUrl: resolveAudioStreamUrl(ep.audioUrl || ep.audio_url || ep.fileUrl || ep.url || ep.id || ep.title),
       coverArt: ep.coverArt || ep.artwork_url || ep.cover || 'https://picsum.photos/seed/podcast_cover/400',
       badge: `🎙️ Episode ${ep.episodeNumber || idx + 1} • Stereo Master`,
       category: 'Podcast Episode'
     }));
-  }, [epkData?.episodes, effectiveArtistName]);
+  }, [epkData?.episodes, effectiveArtistName, creatorType]);
 
   const producerBeatTracks = React.useMemo(() => {
+    if (creatorType !== 'producer') return [];
     const raw = (Array.isArray(epkData?.beats) && epkData.beats.length > 0)
       ? epkData.beats
-      : CANONICAL_PRODUCER_BEATS;
+      : [];
     return raw.map((b, idx) => ({
       id: b.id || `beat-${idx}`,
       title: b.title || `Beat #${idx + 1}`,
@@ -862,37 +876,29 @@ export function CreatorEpkView(props = {}) {
     }
   }, [creatorType]);
 
-  // Compute active playlist tracks
+  // Compute active playlist tracks strictly scoped to this creator's catalog
   const currentPlaylistTracks = React.useMemo(() => {
     if (selectedPlaylistId === 'mixes') {
-      return djMixTracks.length > 0 ? djMixTracks : tracks;
+      return djMixTracks;
     }
     if (selectedPlaylistId === 'episodes') {
-      return podcasterEpisodeTracks.length > 0 ? podcasterEpisodeTracks : tracks;
+      return podcasterEpisodeTracks;
     }
     if (selectedPlaylistId === 'beats') {
-      return producerBeatTracks.length > 0 ? producerBeatTracks : tracks;
-    }
-    if (selectedPlaylistId === 'vault') {
-      return [
-        { id: 901, title: 'Nairobi Cyberwave (VIP MP3 Single)', isrc: 'KE-TM1-26-901', streams: 'VIP Vault', duration: '3:45', release: 'VIP 2026', priceCredits: 40, coverArt: 'https://picsum.photos/seed/cyberwave_master/600/600', audioUrl: '/uploads/audio/enenda.wav', badge: 'VIP Vault' },
-        { id: 902, title: 'Sunset over Rift Valley (Acoustic VIP)', isrc: 'KE-TM1-26-902', streams: 'VIP Vault', duration: '4:12', release: 'VIP 2026', priceCredits: 40, coverArt: 'https://picsum.photos/seed/riftvalley_master/600/600', audioUrl: '/uploads/audio/enenda.wav', badge: 'VIP Vault' },
-        { id: 903, title: 'Afro-Synth Cascade (Unreleased Club Dub)', isrc: 'KE-TM1-26-903', streams: 'VIP Vault', duration: '3:18', release: 'VIP 2026', priceCredits: 45, coverArt: 'https://picsum.photos/seed/afrosynth_master/600/600', audioUrl: '/uploads/audio/enenda.wav', badge: 'VIP Vault' }
-      ];
+      return producerBeatTracks;
     }
     if (selectedPlaylistId === 'top') {
       return [...tracks].slice(0, 5);
     }
-    const fp = (fanPlaylists || []).find(p => String(p.id) === String(selectedPlaylistId));
-    if (fp) {
-      const pTracks = tracks.filter(t => (fp.trackIds || []).includes(t.id));
-      return pTracks.length > 0 ? pTracks : tracks;
+    const creatorPl = (epkData?.playlists || []).find(p => String(p.id) === String(selectedPlaylistId));
+    if (creatorPl && Array.isArray(creatorPl.tracks) && creatorPl.tracks.length > 0) {
+      return creatorPl.tracks;
     }
     if (creatorType === 'dj' && djMixTracks.length > 0) return djMixTracks;
     if (creatorType === 'podcaster' && podcasterEpisodeTracks.length > 0) return podcasterEpisodeTracks;
     if (creatorType === 'producer' && producerBeatTracks.length > 0) return producerBeatTracks;
     return tracks;
-  }, [selectedPlaylistId, tracks, djMixTracks, podcasterEpisodeTracks, producerBeatTracks, fanPlaylists, creatorType]);
+  }, [selectedPlaylistId, tracks, djMixTracks, podcasterEpisodeTracks, producerBeatTracks, epkData?.playlists, creatorType]);
 
   // Active track resolved from activeTrack preference first, then current playlist selection
   const currentTrack = activeTrack || currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || tracks[0];
@@ -937,7 +943,7 @@ export function CreatorEpkView(props = {}) {
           .then(() => setIsPlaying(true))
           .catch((err) => {
             console.warn('TuneStream direct play error, falling back to stream preview:', err);
-            audio.src = resolveAudioStreamUrl('KE-TM1-26-60013');
+            audio.src = resolveAudioStreamUrl(track?.id || track?.title || 'preview');
             audio.load();
             audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
           });
@@ -995,7 +1001,7 @@ export function CreatorEpkView(props = {}) {
           .then(() => setIsPlaying(true))
           .catch((err) => {
             console.warn('Playback error on rawSrc, falling back to stream preview:', err);
-            audio.src = resolveAudioStreamUrl('KE-TM1-26-60013');
+            audio.src = resolveAudioStreamUrl(normalizedTrack?.id || normalizedTrack?.title || 'preview');
             audio.load();
             audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
           });
@@ -1216,14 +1222,16 @@ export function CreatorEpkView(props = {}) {
       });
     }
 
-    // 3. Fallback default albums to keep discography full
-    defaultMockAlbums.forEach(defAlb => {
-      const key = defAlb.title.toLowerCase().trim();
-      if (!seenTitles.has(key)) {
-        seenTitles.add(key);
-        list.push(defAlb);
-      }
-    });
+    // 3. Fallback default albums only for Ndufo if no albums configured
+    if (isNdufo) {
+      defaultMockAlbums.forEach(defAlb => {
+        const key = defAlb.title.toLowerCase().trim();
+        if (!seenTitles.has(key)) {
+          seenTitles.add(key);
+          list.push(defAlb);
+        }
+      });
+    }
 
     return list;
   }, [epkData?.albums, tracks]);
@@ -2393,7 +2401,7 @@ Direct Management Contact: mgmt@intermaven.io`
       }
       audio.play().catch(e => {
         console.warn('EPK audio play error, trying fallback:', e)
-        const fallback = resolveAudioStreamUrl('KE-TM1-26-60013')
+        const fallback = resolveAudioStreamUrl(currentTrack?.id || currentTrack?.title || 'preview')
         if (audio.src && !audio.src.includes('/api/stream/track/')) {
           audio.src = fallback
           audio.load()
@@ -2416,7 +2424,7 @@ Direct Management Contact: mgmt@intermaven.io`
       if (isPlaying) {
         audio.play().catch(e => {
           console.warn('EPK track play error, trying fallback:', e)
-          const fallback = resolveAudioStreamUrl('KE-TM1-26-60013')
+          const fallback = resolveAudioStreamUrl(currentTrack?.id || currentTrack?.title || 'preview')
           if (audio.src && !audio.src.includes('/api/stream/track/')) {
             audio.src = fallback
             audio.load()
@@ -2970,7 +2978,7 @@ Direct Management Contact: mgmt@intermaven.io`
         onEnded={handleTrackAdvance}
         onError={(e) => {
           console.warn('Audio playback error, attempting fallback to stream synthesizer', e)
-          const fallback = resolveAudioStreamUrl('KE-TM1-26-60013')
+          const fallback = resolveAudioStreamUrl(currentTrack?.id || currentTrack?.title || 'preview')
           if (epkAudioRef.current && epkAudioRef.current.src && !epkAudioRef.current.src.includes('/api/stream/track/')) {
             epkAudioRef.current.src = fallback
             epkAudioRef.current.load()
@@ -10119,7 +10127,9 @@ Direct Management Contact: mgmt@intermaven.io`
                   {creatorType === 'producer' && (
                     <option value="beats">🎹 Producer Beat Store ({producerBeatTracks.length} Beats)</option>
                   )}
-                  <option value="all">🎵 All Singles ({tracks.length} Tracks)</option>
+                  {tracks.length > 0 && (
+                    <option value="all">🎵 All Singles ({tracks.length} Tracks)</option>
+                  )}
                   {creatorType !== 'dj' && djMixTracks.length > 0 && (
                     <option value="mixes">🎧 DJ Mixes & Live Sets ({djMixTracks.length} Sets)</option>
                   )}
@@ -10129,10 +10139,11 @@ Direct Management Contact: mgmt@intermaven.io`
                   {creatorType !== 'producer' && producerBeatTracks.length > 0 && (
                     <option value="beats">🎹 Producer Beats ({producerBeatTracks.length} Beats)</option>
                   )}
-                  <option value="vault">🔒 VIP Fan Vault Exclusives (3 Tracks)</option>
-                  <option value="top">🔥 Top Singles (5 Tracks)</option>
-                  {fanPlaylists.map(pl => (
-                    <option key={pl.id} value={pl.id}>📁 {pl.name} ({(pl.trackIds || []).length} Tracks)</option>
+                  {tracks.length >= 5 && (
+                    <option value="top">🔥 Top Singles (5 Tracks)</option>
+                  )}
+                  {(epkData?.playlists || []).map(pl => (
+                    <option key={pl.id} value={pl.id}>📁 {pl.name || pl.title} ({pl.track_count || (pl.tracks || []).length} Tracks)</option>
                   ))}
                 </select>
               </div>

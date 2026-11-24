@@ -4413,7 +4413,11 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
   
   const handleTrackSelect = (track) => {
     if (!track) return;
-    setCurrentTrack(track);
+    const resolvedTrack = {
+      ...track,
+      audioUrl: resolveAudioStreamUrl(track)
+    };
+    setCurrentTrack(resolvedTrack);
     setIsPlayerOpen(true);
     setIsPlaying(true);
     eventLoggedRef.current = false;
@@ -5706,7 +5710,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
         <HiFiAudioPlayer
           track={currentTrack}
           tracks={catalogTracks}
-          playlistName="Featured Playlist: Global Afrobeat & Amapiano Masters"
+          playlistName={currentTrack?.is_dj_mix ? `Official DJ Mix: ${currentTrack.title}` : (currentTrack?.album || "Featured Tracks")}
           isPlaying={isPlaying}
           sessionUser={sessionUser}
           onTogglePlay={(p) => setIsPlaying(typeof p === 'boolean' ? p : !isPlaying)}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { resolveAudioStreamUrl } from '../../lib/api.js';
 import {
   RiHomeFill,
   RiUserFill,
@@ -953,8 +954,8 @@ export function DjMixesAndSetsSection({
   accentColor = '#00f2fe',
   onBookDjClick
 }) {
-  const [liveMixes, setLiveMixes] = useState(() => (Array.isArray(mixes) && mixes.length > 0 ? mixes : DEFAULT_DJ_EPK_MIXES));
-  const [filterScope, setFilterScope] = useState('all'); // 'dj' | 'all'
+  const [liveMixes, setLiveMixes] = useState(() => (Array.isArray(mixes) && mixes.length > 0 ? mixes : []));
+  const [filterScope, setFilterScope] = useState('dj'); // 'dj' strictly scoped to this creator's EPK
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [expandedTracklistId, setExpandedTracklistId] = useState(null);
   const [checkoutMix, setCheckoutMix] = useState(null);
@@ -965,6 +966,9 @@ export function DjMixesAndSetsSection({
 
   const customMixesCount = Array.isArray(mixes) ? mixes.length : 0;
   const customMixesKey = Array.isArray(mixes) ? mixes.map((m) => m.id || m.title || '').join('|') : '';
+
+  const cleanDjSlug = (djSlug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanDjName = (djName || '').toLowerCase().trim();
 
   useEffect(() => {
     if (Array.isArray(mixes) && mixes.length > 0) {
@@ -979,15 +983,18 @@ export function DjMixesAndSetsSection({
         const arr = Array.isArray(data) ? data : data?.data;
         if (Array.isArray(arr) && arr.length > 0) {
           const clearedOnly = arr.filter((m) => m.status === 'published_for_sale' || m.status === 'published' || m.is_original_ip_only);
-          if (clearedOnly.length > 0) setLiveMixes(clearedOnly);
+          const thisDjOnly = clearedOnly.filter((m) => {
+            const mDj = (m.dj_name || '').toLowerCase();
+            const mHandle = (m.dj_handle || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const mSub = (m.subdomain || m.user_id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            return mDj.includes(cleanDjName) || cleanDjName.includes(mDj) || mHandle.includes(cleanDjSlug) || cleanDjSlug.includes(mHandle) || mSub.includes(cleanDjSlug);
+          });
+          setLiveMixes(thisDjOnly);
         }
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [customMixesCount, customMixesKey]);
-
-  const cleanDjSlug = (djSlug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const cleanDjName = (djName || '').toLowerCase().trim();
+  }, [customMixesCount, customMixesKey, cleanDjName, cleanDjSlug]);
 
   // Sort mixes so the current DJ's mixes appear first
   const sortedMixes = [...liveMixes].sort((a, b) => {
@@ -1169,7 +1176,8 @@ export function DjMixesAndSetsSection({
                         artist: mix.dj_name || djName,
                         dj_name: mix.dj_name || djName,
                         isrc: mix.isrc || `KE-DJM-26-00${String(mix.id || '1').slice(-3)}`,
-                        audioUrl: mix.audio_url || mix.audioUrl || '/uploads/audio/enenda.wav',
+                        audioUrl: resolveAudioStreamUrl(mix.audio_url || mix.audioUrl || mix.id || mix.title),
+                        is_dj_mix: true,
                         duration: mix.duration || '45:00',
                         coverArt: mix.artwork_url || mix.coverArt,
                         priceCredits: credits,

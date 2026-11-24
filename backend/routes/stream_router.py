@@ -198,30 +198,9 @@ def stream_catalog_track(
             if "soundhelix.com" not in audio_url and "localhost" not in audio_url and "127.0.0.1" not in audio_url:
                 return RedirectResponse(url=audio_url)
 
-    # 3. Fallback: Stream real studio catalog audio from uploads/audio
-    search_dirs = [
-        os.path.join(os.environ.get("LOCAL_UPLOADS_DIR", "uploads"), "audio"),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "audio"),
-        "uploads/audio",
-        "backend/uploads/audio"
-    ]
-    real_files = []
-    for s_dir in search_dirs:
-        if os.path.exists(s_dir):
-            for fname in sorted(os.listdir(s_dir)):
-                if fname.lower().endswith(('.wav', '.mp3', '.flac', '.ogg')) and not fname.startswith('.'):
-                    full_p = os.path.join(s_dir, fname)
-                    if os.path.isfile(full_p) and full_p not in real_files:
-                        real_files.append(full_p)
-    if real_files:
-        pick_idx = abs(hash(clean_id)) % len(real_files)
-        chosen_file = real_files[pick_idx]
-        ext = Path(chosen_file).suffix.lower()
-        media_type = "audio/wav" if ext == ".wav" else ("audio/flac" if ext == ".flac" else "audio/mpeg")
-        return FileResponse(chosen_file, media_type=media_type)
-
-    # 4. Ultimate fallback if disk has 0 audio files: Stream synthesized preview
-    title = target_track.get("title") if target_track else clean_id
+    # 3. Dedicated synthesized high-fidelity preview generator for the specific requested track/mix
+    # (Never randomly pick unrelated studio tracks like Enenda for different releases)
+    title = (target_track.get("title") if target_track else None) or clean_id
     wav_bytes = generate_synthesized_preview(seed_text=title, duration_sec=45.0)
     total_len = len(wav_bytes)
 
@@ -324,7 +303,7 @@ DEFAULT_ALT_INTRO_TRACKS = [
         "genre": "Ambient / Afro-Chill",
         "duration": "2:45",
         "coverArt": "/uploads/artwork/674a412e-1be4-44ba-8125-e7aa4190b437.jpg",
-        "audioUrl": "/uploads/audio/enenda.wav"
+        "audioUrl": "/uploads/audio/haiya.wav"
     },
     {
         "isrc": "KE-TM1-24-INTRO-02",
@@ -333,7 +312,7 @@ DEFAULT_ALT_INTRO_TRACKS = [
         "genre": "Afro-House / Deep",
         "duration": "3:10",
         "coverArt": "/heroes/ndufo_hero_slide1_retina.jpg",
-        "audioUrl": "/uploads/audio/enenda.wav"
+        "audioUrl": "/uploads/audio/pray_tell.wav"
     },
     {
         "isrc": "KE-TM1-24-INTRO-03",
@@ -342,7 +321,7 @@ DEFAULT_ALT_INTRO_TRACKS = [
         "genre": "Cyberwave / Electronic",
         "duration": "3:20",
         "coverArt": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
-        "audioUrl": "/uploads/audio/enenda.wav"
+        "audioUrl": "/uploads/audio/running.wav"
     }
 ]
 
@@ -373,7 +352,7 @@ DEFAULT_FEATURED_PLAYLIST = {
             "genre": "Afro-House",
             "duration": "3:48",
             "coverArt": "/heroes/ndufo_hero_slide1_retina.jpg",
-            "audioUrl": "/uploads/audio/enenda.wav",
+            "audioUrl": "/uploads/audio/pray_tell.wav",
             "priceCredits": 50,
             "isFeatured": True
         },
@@ -385,7 +364,7 @@ DEFAULT_FEATURED_PLAYLIST = {
             "genre": "Deep-House & Club",
             "duration": "4:12",
             "coverArt": "/uploads/ai_assets/retina_art_9846064_2048x2048.jpg",
-            "audioUrl": "/uploads/audio/enenda.wav",
+            "audioUrl": "/uploads/audio/haiya.wav",
             "priceCredits": 50,
             "isFeatured": True
         },
@@ -397,7 +376,7 @@ DEFAULT_FEATURED_PLAYLIST = {
             "genre": "Gengetone & Trap",
             "duration": "3:20",
             "coverArt": "/heroes/ndufo_hero_slide2_retina.jpg",
-            "audioUrl": "/uploads/audio/enenda.wav",
+            "audioUrl": "/uploads/audio/running.wav",
             "priceCredits": 50,
             "isFeatured": True
         }

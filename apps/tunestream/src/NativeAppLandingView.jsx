@@ -11,7 +11,7 @@ import {
   AUTHORITATIVE_CATALOG_ARTISTS, 
   AUTHORITATIVE_CATALOG_ALBUMS 
 } from './data/authoritativeCatalog';
-import { normalizeMediaUrl, getApiBase } from './lib/api';
+import { normalizeMediaUrl, resolveAudioStreamUrl, getApiBase } from './lib/api';
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { RiHeadphoneFill, RiLineChartFill, RiBankCardFill, RiAppleFill, RiDownloadFill, RiArrowRightFill, RiSmartphoneFill, RiPlayFill, RiDiscFill, RiDatabase2Fill, RiMicFill, RiCpuFill, RiGlobalFill, RiTicket2Fill, RiEqualizerFill, RiLinksFill, RiRadioFill, RiWifiFill, RiMusicFill, RiResetLeftFill, RiPauseFill, RiArrowRightSFill, RiExternalLinkFill, RiSettings3Fill, RiFolderAddFill, RiCoinsFill, RiVolumeMuteFill, RiCloseFill, RiMenuFill, RiSearchLine, RiArrowDownSLine, RiCheckFill } from 'react-icons/ri'
@@ -2301,7 +2301,8 @@ export default function NativeAppLandingView({
         duration: m.duration || `${Math.round((m.duration_seconds || 2400) / 60)}:00`,
         streams: `${(m.plays_count || 0).toLocaleString()} plays`,
         cover: normalizeMediaUrl(m.artwork_url) || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
-        audioUrl: normalizeMediaUrl(m.audio_url) || `/api/stream/track/${encodeURIComponent(m.id || m.title || 'preview')}`,
+        audioUrl: resolveAudioStreamUrl(m.audio_url || m.id || m.title),
+        is_dj_mix: true,
         year: 2026,
         date: m.created_at || '2026-03-14',
         commercial_price: m.commercial_price,
@@ -3858,17 +3859,23 @@ export default function NativeAppLandingView({
     };
 
     const handlePlaySong = (song, queue = null) => {
-    const match = (tracks && tracks.find(t => t.id === song.id || t.isrc === song.isrc || t.title === song.title)) || song;
-    if (typeof onPlayTrack === 'function') {
-      onPlayTrack(match);
-    } else {
-      setActiveHiFiTrack(match);
-      setIsHiFiPlaying(true);
-    }
-    window.dispatchEvent(new CustomEvent('tunestreamPlayTrack', {
-      detail: { track: match, queue: queue || tracks }
-    }));
-  };
+      if (!song) return;
+      const isMix = song.is_dj_mix || song.genre?.includes('DJ Mix') || song.bpm || song.commercial_price;
+      const match = (!isMix && tracks && tracks.find(t => t.id === song.id || (t.isrc && t.isrc === song.isrc))) || song;
+      const resolvedTrack = {
+        ...match,
+        audioUrl: resolveAudioStreamUrl(match)
+      };
+      if (typeof onPlayTrack === 'function') {
+        onPlayTrack(resolvedTrack);
+      } else {
+        setActiveHiFiTrack(resolvedTrack);
+        setIsHiFiPlaying(true);
+      }
+      window.dispatchEvent(new CustomEvent('tunestreamPlayTrack', {
+        detail: { track: resolvedTrack, queue: queue || tracks }
+      }));
+    };
 
   const handleArtistClick = (artist) => {
     setSelectedCreatorProfile(artist);

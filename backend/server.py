@@ -66,6 +66,15 @@ def stream_upload_audio_file(filename: str, request: Request):
     """Serves static audio file if on disk, else delegates to stream router for preview synthesis."""
     import re as _re
     from routes.stream_router import stream_catalog_track
+    from fastapi.responses import FileResponse
+    from pathlib import Path
+    safe_name = os.path.basename(filename)
+    for sdir in [uploads_dir, os.path.join(uploads_dir, "audio"), "uploads/audio", "backend/uploads/audio"]:
+        p = os.path.join(sdir, safe_name)
+        if os.path.exists(p) and os.path.isfile(p) and os.path.getsize(p) > 1024:
+            ext = Path(p).suffix.lower()
+            media_type = "audio/wav" if ext == ".wav" else ("audio/flac" if ext == ".flac" else "audio/mpeg")
+            return FileResponse(p, media_type=media_type)
     clean_name = _re.sub(r"\.(wav|mp3|flac|ogg|m4a|aac|aiff)$", "", filename, flags=_re.IGNORECASE)
     return stream_catalog_track(clean_name, request=request)
 

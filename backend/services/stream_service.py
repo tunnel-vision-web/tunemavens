@@ -117,6 +117,8 @@ def get_track_or_release(identifier: str) -> Optional[Dict[str, Any]]:
     mix = db.dj_mixes.find_one({
         "$or": [
             {"_id": query_id},
+            {"_id": clean_id},
+            {"id": clean_id},
             {"title": {"$regex": f"^{re.escape(clean_id)}$", "$options": "i"}},
             {"audio_url": {"$regex": re.escape(clean_id), "$options": "i"}},
         ]
